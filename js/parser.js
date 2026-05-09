@@ -16,8 +16,8 @@
    * Is stat a flat (non-%) type?
    */
   function isFlat(typeId) {
-    // 3=HP flat, 5=ATK flat, 7=DEF flat — others are % or SPD/CRate/CDmg/ACC/RES (all treated as scalar)
-    return typeId === 3 || typeId === 5 || typeId === 7;
+    // Real SWEX mapping: 1=HP flat, 3=ATK flat, 5=DEF flat
+    return typeId === 1 || typeId === 3 || typeId === 5;
   }
 
   /**
@@ -26,17 +26,17 @@
    * Simplified: each substat scored 0–1 relative to max Legend roll.
    */
   const SUB_MAX = {
-    1:  6,    // SPD
+    1:  1875, // HP flat
     2:  8,    // HP%
-    3:  1875, // HP flat
+    3:  100,  // ATK flat
     4:  8,    // ATK%
-    5:  100,  // ATK flat
+    5:  100,  // DEF flat
     6:  8,    // DEF%
-    7:  100,  // DEF flat
     8:  6,    // CRate
     9:  7,    // CDmg
     10: 8,    // RES
     11: 8,    // ACC
+    12: 6,    // SPD
   };
 
   function calcEfficiency(rune) {

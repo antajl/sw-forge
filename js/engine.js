@@ -130,7 +130,7 @@
   // ---- BAD FLAT check ----
   function hasBadFlat(rune) {
     // Flat HP / ATK / DEF as substat on a non-1/3/5 slot = bad
-    const badFlatIds = [3, 5, 7]; // HP, ATK, DEF flat
+    const badFlatIds = [1, 3, 5]; // HP, ATK, DEF flat
     for (const s of rune.substats) {
       if (badFlatIds.includes(s.type)) return true;
     }
@@ -156,6 +156,41 @@
     return { can: false };
   }
 
+  // ---- GEM POTENTIAL ----
+  function checkGem(rune, stage, settings) {
+    const key = modeKey(stage, rune.gradeStr);
+    const th  = settings.thresholds;
+    const GRINDABLE = new Set(['SPD', 'HP%', 'ATK%', 'DEF%', 'ACC', 'RES']);
+    const statScores = Object.fromEntries(
+      Object.entries(th).map(([stat, vals]) => [stat, vals[key] || 0])
+    );
+
+    let bestCandidate = null;
+    for (const s of rune.substats) {
+      if (GRINDABLE.has(s.name)) continue;
+      for (const target of GRINDABLE) {
+        const score = statScores[target] || 0;
+        if (score < 10) continue;
+        if (!bestCandidate || score > bestCandidate.score) {
+          bestCandidate = { can: true, from: s.name, to: target, score };
+        }
+      }
+    }
+    return bestCandidate || { can: false };
+  }
+
+  function matchReappRule(rune, settings) {
+    const rc = settings.reapp || {};
+    if (rune.eff > (rc.maxEff ?? 65)) return false;
+    if (rc.sets?.length && !rc.sets.includes(rune.setName)) return false;
+    if (rc.innateStats?.length && (!rune.innate_name || !rc.innateStats.includes(rune.innate_name))) return false;
+    if ([2,4,6].includes(rune.slot)) {
+      const allowed = rc.mainBySlot?.[rune.slot] || [];
+      if (allowed.length && !allowed.includes(rune.mainName)) return false;
+    }
+    return true;
+  }
+
   // ---- VERDICT ----
   function getVerdict(rune, stage, settings, roleResult) {
     const hasRole = roleResult !== '';
@@ -173,16 +208,19 @@
     const grind = checkGrind(rune, stage, settings);
     if (grind.can) return 'Grind';
 
-    // Reapp: equipped on a monster and stats are bad for intended role
-    // (simplified: low eff + has role = candidate for reapp)
-    if (rune.eff < 65 && hasRole) return 'Reapp';
+    // Gem: has a role and can replace weak/non-grindable stat
+    const gem = checkGem(rune, stage, settings);
+    if (gem.can && rune.level >= 12) return 'Gem';
+
+    // Reapp: low efficiency but still role-eligible
+    if (hasRole && matchReappRule(rune, settings)) return 'Reapp';
 
     return 'Keep';
   }
 
   // ---- MAIN ENGINE ----
   // Role priority order (highest priority first, same as your Best Role formula)
-  const ROLE_PRIORITY = ['Bruiser', 'Fast Utility', 'Heavy Resist', 'Bomber', 'Classic DPS', 'Slow DPS', 'Duo Roll', 'High Roll'];
+  const BASE_ROLE_PRIORITY = ['Bruiser', 'Fast Utility', 'Heavy Resist', 'Bomber', 'Classic DPS', 'Slow DPS', 'Duo Roll', 'High Roll'];
 
   function processRune(rune, stage, settings) {
     // Run all role checks
@@ -194,9 +232,14 @@
       results[role] = checkRole(rune, role, stage, settings);
     }
 
+    const dynamicPriority = [
+      ...BASE_ROLE_PRIORITY,
+      ...Object.keys(settings.roles || {}).filter(r => !BASE_ROLE_PRIORITY.includes(r))
+    ];
+
     // Best role by priority
     let bestRole = '';
-    for (const role of ROLE_PRIORITY) {
+    for (const role of dynamicPriority) {
       if (results[role]) { bestRole = role; break; }
     }
 
@@ -204,6 +247,7 @@
     rune.verdict = getVerdict(rune, stage, settings, bestRole);
     rune.badFlat = hasBadFlat(rune);
     rune.grindInfo = checkGrind(rune, stage, settings);
+    rune.gemInfo = checkGem(rune, stage, settings);
 
     return rune;
   }
@@ -214,5 +258,5 @@
 
   window.SWRM.processAll   = processAll;
   window.SWRM.processRune  = processRune;
-  window.SWRM.ROLE_PRIORITY = ROLE_PRIORITY;
+  window.SWRM.ROLE_PRIORITY = BASE_ROLE_PRIORITY;
 })();

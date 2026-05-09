@@ -6,12 +6,14 @@
   const { parseSWEX, processAll, ROLE_PRIORITY, settings: cfg,
           STAT_NAMES, SET_NAMES, GRADE_SHORT, saveSettings,
           DEFAULT_THRESHOLDS, DEFAULT_HR_THRESHOLDS, DEFAULT_HR_COEFF,
-          DEFAULT_DUO_THRESHOLDS, DEFAULT_ROLES } = window.SWRM;
+          DEFAULT_DUO_THRESHOLDS, DEFAULT_ROLES, DEFAULT_REAPP } = window.SWRM;
 
   let allRunes = [];
+  let processedRunes = [];
   let stage    = 'Mid';
   let sortKey  = 'eff';
   let sortDir  = 'desc';
+  let globalMinLevel = 0;
 
   // ===================== TABS =====================
   document.querySelectorAll('.tab').forEach(btn => {
@@ -38,6 +40,15 @@
     if (allRunes.length) reprocess();
   });
 
+  document.getElementById('global-min-level')?.addEventListener('input', e => {
+    globalMinLevel = Math.max(0, Math.min(15, parseInt(e.target.value || '0', 10) || 0));
+    if (processedRunes.length) {
+      const visible = getVisibleRunes();
+      renderDashboard(visible);
+      renderTable(visible);
+    }
+  });
+
   // ===================== FILE UPLOAD =====================
   document.getElementById('json-upload').addEventListener('change', e => {
     const file = e.target.files[0];
@@ -45,9 +56,20 @@
     const reader = new FileReader();
     reader.onload = ev => {
       try {
-        const json = JSON.parse(ev.target.result);
+        const jsonText = ev.target.result;
+        const json = JSON.parse(jsonText);
         allRunes = parseSWEX(json);
         reprocess();
+        try {
+          const slots = JSON.parse(localStorage.getItem('swrm_db_slots_v1') || '[]');
+          if (Array.isArray(slots) && slots.length === 4) {
+            const active = slots.find(s => s.active) || slots[0];
+            active.name = file.name;
+            active.uploadedAt = new Date().toLocaleString();
+            active.jsonText = jsonText;
+            localStorage.setItem('swrm_db_slots_v1', JSON.stringify(slots));
+          }
+        } catch(storeErr) {}
         document.getElementById('upload-prompt').classList.add('hidden');
         document.getElementById('tab-dashboard').classList.remove('hidden');
         // activate dashboard tab
@@ -62,10 +84,14 @@
   });
 
   function reprocess() {
-    const processed = processAll(allRunes, stage, window.SWRM.settings);
-    allRunes = processed;
-    renderDashboard(processed);
-    renderTable(processed);
+    processedRunes = processAll(allRunes, stage, window.SWRM.settings);
+    const visible = getVisibleRunes();
+    renderDashboard(visible);
+    renderTable(visible);
+  }
+
+  function getVisibleRunes() {
+    return processedRunes.filter(r => r.level >= globalMinLevel);
   }
 
   // ===================== DASHBOARD =====================
@@ -74,7 +100,9 @@
     const roleCounts = {};
     const roleEff    = {};
     const setCounts  = {};
+    const setEff     = {};
     const slotCounts = {1:0,2:0,3:0,4:0,5:0,6:0};
+    const slotMain = {1:{},2:{},3:{},4:{},5:{},6:{}};
     const effBuckets = new Array(20).fill(0); // 5% buckets: 0-4, 5-9, ..., 95-99, 100+
 
     for (const r of runes) {
@@ -87,7 +115,10 @@
       }
 
       setCounts[r.setName] = (setCounts[r.setName] || 0) + 1;
+      setEff[r.setName] = setEff[r.setName] || [];
+      setEff[r.setName].push(r.eff);
       slotCounts[r.slot]   = (slotCounts[r.slot]   || 0) + 1;
+      slotMain[r.slot][r.mainName] = (slotMain[r.slot][r.mainName] || 0) + 1;
 
       const bucket = Math.min(19, Math.floor(r.eff / 5));
       effBuckets[bucket]++;
@@ -100,12 +131,14 @@
     setText('sc-sell',  counts.Sell  || 0, '.sc-value');
     setText('sc-grind', counts.Grind || 0, '.sc-value');
     setText('sc-finish',counts.Finish|| 0, '.sc-value');
-    setText('sc-reapp', (counts.Reapp||0) + (counts.Upgrade||0), '.sc-value');
+    setText('sc-reapp', counts.Reapp || 0, '.sc-value');
+    setText('sc-upgrade', counts.Upgrade || 0, '.sc-value');
+    setText('sc-gem', counts.Gem || 0, '.sc-value');
 
     // Role chart
     const roleEl = document.getElementById('role-chart');
     roleEl.innerHTML = '';
-    const sortedRoles = ROLE_PRIORITY.filter(r => roleCounts[r]);
+    const sortedRoles = Object.keys(roleCounts).sort((a, b) => (roleCounts[b] || 0) - (roleCounts[a] || 0));
     const maxCount = Math.max(...sortedRoles.map(r => roleCounts[r] || 0), 1);
     for (const role of sortedRoles) {
       const cnt = roleCounts[role] || 0;
@@ -130,6 +163,7 @@
     const maxSet  = topSets[0]?.[1] || 1;
     for (const [name, cnt] of topSets) {
       const pct = ((cnt / maxSet) * 100).toFixed(1);
+      const avg = (setEff[name].reduce((a,b)=>a+b,0) / setEff[name].length).toFixed(1);
       setEl.innerHTML += `
         <div class="chart-row">
           <div class="chart-label">${name}</div>
@@ -138,6 +172,7 @@
               <span class="chart-bar-val">${cnt}</span>
             </div>
           </div>
+          <div class="chart-avg">${avg}%</div>
         </div>`;
     }
 
@@ -148,9 +183,14 @@
     for (let s = 1; s <= 6; s++) {
       const cnt = slotCounts[s] || 0;
       const pct = ((cnt / maxSlot) * 100).toFixed(1);
+      const topMain = Object.entries(slotMain[s])
+        .sort((a,b) => b[1] - a[1])
+        .slice(0, 2)
+        .map(([stat, c]) => `${stat} ${c}`)
+        .join(' | ');
       slotEl.innerHTML += `
         <div class="chart-row">
-          <div class="chart-label">Slot ${s}</div>
+          <div class="chart-label">Slot ${s}<br><small>${topMain || '—'}</small></div>
           <div class="chart-bar-wrap">
             <div class="chart-bar" style="width:${pct}%; background: linear-gradient(90deg,#b06aff,#7b5fff)">
               <span class="chart-bar-val">${cnt}</span>
@@ -233,7 +273,12 @@
 
     // Render up to 500 rows (virtual scroll TODO)
     const rows = filteredRunes.slice(0, 500);
+    const verdictFilter = document.getElementById('filter-verdict')?.value || '';
+    const showTarget = verdictFilter === 'Grind' || verdictFilter === 'Gem';
+    document.getElementById('target-col-header')?.classList.toggle('hidden', !showTarget);
+    document.getElementById('rune-table')?.classList.toggle('show-target', showTarget);
     tbody.innerHTML = rows.map(r => runeRow(r)).join('');
+    renderRuneSummary(filteredRunes);
   }
 
   function statChip(s) {
@@ -267,6 +312,12 @@
     const vCls   = `verdict-${(r.verdict||'').toLowerCase()}`;
     const rCls   = roleClass(r.role);
     const subs   = r.substats.slice(0, 4);
+    const innate = r.innate_name ? `${r.innate_name} ${r.innate_val}` : '—';
+    const target = r.verdict === 'Grind'
+      ? (r.grindInfo?.stat || '—')
+      : r.verdict === 'Gem'
+        ? `${r.gemInfo?.from || '—'} → ${r.gemInfo?.to || '—'}`
+        : '—';
 
     return `<tr>
       <td>${r.slot}</td>
@@ -274,14 +325,49 @@
       <td>${grade}</td>
       <td>${r.level}</td>
       <td><span class="stat-chip ${statClass(r.mainName)}">${r.mainName}</span></td>
+      <td>${innate}</td>
       <td>${statChip(subs[0])}</td>
       <td>${statChip(subs[1])}</td>
       <td>${statChip(subs[2])}</td>
       <td>${statChip(subs[3])}</td>
+      <td class="target-col-cell">${target}</td>
       <td class="${effCls}">${r.eff}%</td>
       <td><span class="role-tag ${rCls}">${r.role || '—'}</span></td>
       <td class="${vCls}">${r.verdict || '—'}</td>
     </tr>`;
+  }
+
+  function renderRuneSummary(runes) {
+    const box = document.getElementById('rune-summary');
+    if (!box) return;
+
+    const byVerdict = {};
+    const byRole = {};
+    for (const r of runes) {
+      byVerdict[r.verdict] = byVerdict[r.verdict] || { c: 0, e: 0 };
+      byVerdict[r.verdict].c++;
+      byVerdict[r.verdict].e += r.eff;
+      if (r.role) {
+        byRole[r.role] = byRole[r.role] || { c: 0, e: 0 };
+        byRole[r.role].c++;
+        byRole[r.role].e += r.eff;
+      }
+    }
+
+    let html = `<div class="summary-title">Rune Summary</div>`;
+    html += `<div class="summary-row"><span>Total</span><span>${runes.length}</span></div>`;
+    ['Keep','Grind','Gem','Finish','Upgrade','Reapp','Sell'].forEach(v => {
+      const item = byVerdict[v];
+      if (!item) return;
+      html += `<div class="summary-row"><span>${v}</span><span>${item.c} <span class="summary-eff">${(item.e / item.c).toFixed(1)}%</span></span></div>`;
+    });
+    html += `<div class="summary-title" style="margin-top:10px">Roles</div>`;
+    Object.keys(byRole).sort((a, b) => byRole[b].c - byRole[a].c).forEach(role => {
+      const item = byRole[role];
+      if (!item) return;
+      html += `<div class="summary-row"><span>${role}</span><span>${item.c} <span class="summary-eff">${(item.e / item.c).toFixed(1)}%</span></span></div>`;
+    });
+    box.innerHTML = html;
   }
 
   // Table sorting
@@ -292,17 +378,79 @@
       else { sortKey = key; sortDir = 'desc'; }
       document.querySelectorAll('th').forEach(t => t.classList.remove('sort-asc','sort-desc'));
       th.classList.add(sortDir === 'asc' ? 'sort-asc' : 'sort-desc');
-      applyFiltersAndSort(allRunes);
+      applyFiltersAndSort(getVisibleRunes());
     });
   });
 
   // Table filters
   ['search-box','filter-verdict','filter-role','filter-grade'].forEach(id => {
-    document.getElementById(id)?.addEventListener('input', () => applyFiltersAndSort(allRunes));
-    document.getElementById(id)?.addEventListener('change', () => applyFiltersAndSort(allRunes));
+    document.getElementById(id)?.addEventListener('input', () => applyFiltersAndSort(getVisibleRunes()));
+    document.getElementById(id)?.addEventListener('change', () => applyFiltersAndSort(getVisibleRunes()));
   });
 
   // ===================== SETTINGS UI =====================
+  function parseList(v) {
+    return (v || '').split(',').map(s => s.trim()).filter(Boolean);
+  }
+
+  function refreshRoleFilterOptions() {
+    const roleSelect = document.getElementById('filter-role');
+    if (!roleSelect) return;
+    const current = roleSelect.value;
+    const roles = ['High Roll', 'Duo Roll', ...Object.keys(window.SWRM.settings.roles)];
+    roleSelect.innerHTML = `<option value="">All Roles</option>${roles.map(r => `<option value="${r}">${r}</option>`).join('')}`;
+    if (roles.includes(current)) roleSelect.value = current;
+  }
+
+  function renderRoleSettings() {
+    const wrap = document.getElementById('roles-settings-wrap');
+    if (!wrap) return;
+    const roles = window.SWRM.settings.roles;
+    let html = '';
+    for (const [roleName, roleCfg] of Object.entries(roles)) {
+      html += `<div style="margin-bottom:24px; padding:16px; background:var(--bg3); border-radius:var(--radius-lg); border:1px solid var(--border)">`;
+      html += `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px">`;
+      html += `<div style="font-family:var(--font-head);font-size:1rem;font-weight:700;color:var(--text-hi)">${roleName}</div>`;
+      html += `<button class="btn-ghost btn-remove-role" data-role-remove="${roleName}" ${Object.keys(roles).length <= 1 ? 'disabled' : ''}>Remove</button>`;
+      html += `</div>`;
+      html += `<div style="font-size:0.75rem;color:var(--text-dim);margin-bottom:6px;font-family:var(--font-head);letter-spacing:0.08em;text-transform:uppercase">Substats</div>`;
+      html += `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">`;
+      for (const [stat, val] of Object.entries(roleCfg.substats)) {
+        html += `<label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:var(--text)">
+          <span style="min-width:50px">${stat}</span>
+          <select data-role="${roleName}" data-field="substats" data-stat="${stat}" style="padding:3px 8px">
+            ${['Include','None','Exclude'].map(o => `<option ${val===o?'selected':''}>${o}</option>`).join('')}
+          </select>
+        </label>`;
+      }
+      html += `</div>`;
+      html += `<div style="display:flex;gap:16px;margin-bottom:8px">`;
+      ['Early','Mid','Late'].forEach(s => {
+        html += `<label style="font-size:0.82rem;color:var(--text)">Must Have (${s}):
+          <input type="text" data-role="${roleName}" data-field="mustHave" data-stage="${s}" value="${roleCfg.mustHave[s] || ''}" style="width:70px;margin-left:6px;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:3px 6px;border-radius:4px;font-family:var(--font-mono);font-size:0.8rem">
+        </label>`;
+      });
+      html += `</div>`;
+      html += `<div style="display:flex;gap:16px;">`;
+      ['Early','Mid','Late'].forEach(s => {
+        html += `<label style="font-size:0.82rem;color:var(--text)">Min Stats (${s}):
+          <input type="number" data-role="${roleName}" data-field="minStats" data-stage="${s}" value="${roleCfg.minStats[s] ?? 1}" min="0" max="6" style="width:50px;margin-left:6px;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:3px 6px;border-radius:4px;font-family:var(--font-mono);font-size:0.8rem">
+        </label>`;
+      });
+      html += `</div>`;
+      html += `</div>`;
+    }
+    wrap.innerHTML = html;
+    wrap.querySelectorAll('.btn-remove-role').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const key = btn.dataset.roleRemove;
+        if (Object.keys(window.SWRM.settings.roles).length <= 1) return;
+        delete window.SWRM.settings.roles[key];
+        renderRoleSettings();
+        refreshRoleFilterOptions();
+      });
+    });
+  }
   function buildThresholdTable(containerId, thresholds, settingsKey) {
     const stages = ['Early','Mid','Late'];
     const grades = ['Leg','Hero'];
@@ -351,54 +499,28 @@
     document.getElementById('dr-table-wrap').innerHTML = html;
   })();
 
-  // Role settings
-  (function() {
-    const wrap = document.getElementById('roles-settings-wrap');
-    if (!wrap) return;
-    const roles = window.SWRM.settings.roles;
-    let html = '';
-    for (const [roleName, cfg] of Object.entries(roles)) {
-      html += `<div style="margin-bottom:24px; padding:16px; background:var(--bg3); border-radius:var(--radius-lg); border:1px solid var(--border)">`;
-      html += `<div style="font-family:var(--font-head);font-size:1rem;font-weight:700;color:var(--text-hi);margin-bottom:12px">${roleName}</div>`;
+  renderRoleSettings();
+  refreshRoleFilterOptions();
 
-      // Substats
-      html += `<div style="font-size:0.75rem;color:var(--text-dim);margin-bottom:6px;font-family:var(--font-head);letter-spacing:0.08em;text-transform:uppercase">Substats</div>`;
-      html += `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">`;
-      for (const [stat, val] of Object.entries(cfg.substats)) {
-        html += `<label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:var(--text)">
-          <span style="min-width:50px">${stat}</span>
-          <select data-role="${roleName}" data-field="substats" data-stat="${stat}" style="padding:3px 8px">
-            ${['Include','None','Exclude'].map(o => `<option ${val===o?'selected':''}>${o}</option>`).join('')}
-          </select>
-        </label>`;
-      }
-      html += `</div>`;
+  document.getElementById('btn-add-role')?.addEventListener('click', () => {
+    const input = document.getElementById('new-role-name');
+    const name = (input?.value || '').trim();
+    if (!name) return;
+    if (window.SWRM.settings.roles[name]) return alert('Role already exists');
+    const template = JSON.parse(JSON.stringify(window.SWRM.settings.roles['Bruiser'] || DEFAULT_ROLES['Bruiser']));
+    window.SWRM.settings.roles[name] = template;
+    input.value = '';
+    renderRoleSettings();
+    refreshRoleFilterOptions();
+  });
 
-      // Must have
-      html += `<div style="display:flex;gap:16px;margin-bottom:8px">`;
-      ['Early','Mid','Late'].forEach(s => {
-        html += `<label style="font-size:0.82rem;color:var(--text)">Must Have (${s}):
-          <input type="text" data-role="${roleName}" data-field="mustHave" data-stage="${s}"
-            value="${cfg.mustHave[s] || ''}"
-            style="width:70px;margin-left:6px;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:3px 6px;border-radius:4px;font-family:var(--font-mono);font-size:0.8rem">
-        </label>`;
-      });
-      html += `</div>`;
-
-      // Min stats
-      html += `<div style="display:flex;gap:16px;">`;
-      ['Early','Mid','Late'].forEach(s => {
-        html += `<label style="font-size:0.82rem;color:var(--text)">Min Stats (${s}):
-          <input type="number" data-role="${roleName}" data-field="minStats" data-stage="${s}"
-            value="${cfg.minStats[s] ?? 1}" min="0" max="6"
-            style="width:50px;margin-left:6px;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:3px 6px;border-radius:4px;font-family:var(--font-mono);font-size:0.8rem">
-        </label>`;
-      });
-      html += `</div>`;
-      html += `</div>`;
-    }
-    wrap.innerHTML = html;
-  })();
+  const reapp = window.SWRM.settings.reapp || {};
+  document.getElementById('reapp-sets').value = (reapp.sets || []).join(', ');
+  document.getElementById('reapp-innate').value = (reapp.innateStats || []).join(', ');
+  document.getElementById('reapp-main2').value = (reapp.mainBySlot?.[2] || []).join(', ');
+  document.getElementById('reapp-main4').value = (reapp.mainBySlot?.[4] || []).join(', ');
+  document.getElementById('reapp-main6').value = (reapp.mainBySlot?.[6] || []).join(', ');
+  document.getElementById('reapp-max-eff').value = reapp.maxEff ?? 65;
 
   // Save settings
   document.getElementById('btn-save-settings').addEventListener('click', () => {
@@ -437,8 +559,20 @@
       if (s.roles[role]) s.roles[role].minStats[stage] = parseInt(inp.value) || 1;
     });
 
+    s.reapp = {
+      maxEff: parseFloat(document.getElementById('reapp-max-eff').value) || 65,
+      sets: parseList(document.getElementById('reapp-sets').value),
+      innateStats: parseList(document.getElementById('reapp-innate').value),
+      mainBySlot: {
+        2: parseList(document.getElementById('reapp-main2').value),
+        4: parseList(document.getElementById('reapp-main4').value),
+        6: parseList(document.getElementById('reapp-main6').value),
+      }
+    };
+
     saveSettings(s);
-    if (allRunes.length) reprocess();
+    refreshRoleFilterOptions();
+    if (processedRunes.length) reprocess();
     alert('Settings saved & recalculated!');
   });
 
@@ -451,9 +585,167 @@
       hrCoeff:       DEFAULT_HR_COEFF,
       duoThresholds: JSON.parse(JSON.stringify(DEFAULT_DUO_THRESHOLDS)),
       roles:         JSON.parse(JSON.stringify(DEFAULT_ROLES)),
+      reapp:         JSON.parse(JSON.stringify(DEFAULT_REAPP)),
     };
     localStorage.removeItem('swrm_settings_v1');
     location.reload();
   });
+
+  // ===================== APP SETTINGS =====================
+  const DB_SLOTS_KEY = 'swrm_db_slots_v1';
+  const CHANGELOG_KEY = 'swrm_changelog_v1';
+  const APP_LANG_KEY = 'swrm_app_lang_v1';
+
+  function loadDbSlots() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(DB_SLOTS_KEY) || '[]');
+      if (Array.isArray(parsed) && parsed.length === 4) return parsed;
+    } catch(e) {}
+    return Array.from({ length: 4 }).map((_, i) => ({ id: i + 1, name: '', uploadedAt: '', jsonText: '', active: i === 0 }));
+  }
+
+  function saveDbSlots(slots) {
+    localStorage.setItem(DB_SLOTS_KEY, JSON.stringify(slots));
+  }
+
+  function renderDbSlots() {
+    const wrap = document.getElementById('db-slots-wrap');
+    if (!wrap) return;
+    const slots = loadDbSlots();
+    wrap.innerHTML = slots.map(slot => `
+      <div class="db-slot" data-slot="${slot.id}">
+        <div class="db-slot-title">Database Slot ${slot.id} ${slot.active ? '(Current)' : ''}</div>
+        <div class="db-slot-meta">Name: ${slot.name || '—'}</div>
+        <div class="db-slot-meta">Uploaded: ${slot.uploadedAt || '—'}</div>
+        <div class="db-slot-actions">
+          <button class="btn-ghost" data-db-action="clipboard" data-slot="${slot.id}">Clipboard</button>
+          <button class="btn-ghost" data-db-action="upload" data-slot="${slot.id}">Upload</button>
+          <button class="btn-ghost" data-db-action="download" data-slot="${slot.id}">Download</button>
+          <button class="btn-ghost" data-db-action="delete" data-slot="${slot.id}">Delete</button>
+          ${slot.active ? '' : `<button class="btn-primary" data-db-action="swap" data-slot="${slot.id}">Swap</button>`}
+        </div>
+      </div>`).join('');
+  }
+
+  function parseAndLoadJson(jsonText) {
+    const json = JSON.parse(jsonText);
+    allRunes = parseSWEX(json);
+    reprocess();
+    document.getElementById('upload-prompt').classList.add('hidden');
+  }
+
+  document.getElementById('open-app-settings')?.addEventListener('click', () => {
+    const panel = document.getElementById('app-settings-panel');
+    panel.classList.toggle('hidden');
+    if (!panel.classList.contains('hidden')) renderDbSlots();
+  });
+
+  const appLangSelect = document.getElementById('app-language');
+  if (appLangSelect) {
+    const savedLang = localStorage.getItem(APP_LANG_KEY) || 'en';
+    appLangSelect.value = savedLang;
+    appLangSelect.addEventListener('change', () => {
+      localStorage.setItem(APP_LANG_KEY, appLangSelect.value);
+    });
+  }
+
+  document.getElementById('db-slots-wrap')?.addEventListener('click', async (e) => {
+    const btn = e.target.closest('[data-db-action]');
+    if (!btn) return;
+    const action = btn.dataset.dbAction;
+    const slotId = Number(btn.dataset.slot);
+    const slots = loadDbSlots();
+    const idx = slots.findIndex(s => s.id === slotId);
+    if (idx < 0) return;
+    const slot = slots[idx];
+
+    if (action === 'clipboard') {
+      const text = await navigator.clipboard.readText();
+      if (!text) return;
+      slot.jsonText = text;
+      slot.uploadedAt = new Date().toLocaleString();
+      slot.name = slot.name || `Clipboard ${slotId}`;
+      saveDbSlots(slots);
+      renderDbSlots();
+      return;
+    }
+    if (action === 'upload') {
+      const inp = document.createElement('input');
+      inp.type = 'file';
+      inp.accept = '.json';
+      inp.onchange = ev => {
+        const file = ev.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = event => {
+          slot.jsonText = event.target.result;
+          slot.uploadedAt = new Date().toLocaleString();
+          slot.name = file.name;
+          saveDbSlots(slots);
+          renderDbSlots();
+        };
+        reader.readAsText(file);
+      };
+      inp.click();
+      return;
+    }
+    if (action === 'download') {
+      if (!slot.jsonText) return;
+      const blob = new Blob([slot.jsonText], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = slot.name || `slot-${slot.id}.json`;
+      a.click();
+      return;
+    }
+    if (action === 'delete') {
+      slots[idx] = { ...slots[idx], name: '', uploadedAt: '', jsonText: '' };
+      saveDbSlots(slots);
+      renderDbSlots();
+      return;
+    }
+    if (action === 'swap') {
+      if (!slot.jsonText) return alert('Selected slot is empty');
+      slots.forEach(s => { s.active = s.id === slot.id; });
+      saveDbSlots(slots);
+      try {
+        parseAndLoadJson(slot.jsonText);
+      } catch(err) {
+        alert('Failed to parse slot JSON: ' + err.message);
+      }
+      renderDbSlots();
+    }
+  });
+
+  // ===================== CHANGELOG =====================
+  function loadChangelog() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(CHANGELOG_KEY) || '[]');
+      if (Array.isArray(parsed)) return parsed;
+    } catch(e) {}
+    return [];
+  }
+  function saveChangelog(items) {
+    localStorage.setItem(CHANGELOG_KEY, JSON.stringify(items));
+  }
+  function renderChangelog() {
+    const list = document.getElementById('changelog-list');
+    if (!list) return;
+    const items = loadChangelog();
+    list.innerHTML = items.length
+      ? items.map(it => `<p><strong>${it.date}</strong> — ${it.text}</p>`).join('')
+      : '<p>No changelog entries yet.</p>';
+  }
+  document.getElementById('btn-add-changelog')?.addEventListener('click', () => {
+    const input = document.getElementById('changelog-input');
+    const text = (input?.value || '').trim();
+    if (!text) return;
+    const items = loadChangelog();
+    items.unshift({ date: new Date().toLocaleString(), text });
+    saveChangelog(items);
+    input.value = '';
+    renderChangelog();
+  });
+  renderChangelog();
 
 })();

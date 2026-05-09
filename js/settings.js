@@ -4,10 +4,10 @@
 // =============================================
 
 const STAT_NAMES = {
-  1:  'SPD',    2:  'HP%',    3:  'HP',
-  4:  'ATK%',   5:  'ATK',    6:  'DEF%',
-  7:  'DEF',    8:  'CRate',  9:  'CDmg',
-  10: 'RES',   11: 'ACC'
+  1:  'HP',     2:  'HP%',    3:  'ATK',
+  4:  'ATK%',   5:  'DEF',    6:  'DEF%',
+  8:  'CRate',  9:  'CDmg',   10: 'RES',
+  11: 'ACC',    12: 'SPD'
 };
 
 const SET_NAMES = {
@@ -24,9 +24,9 @@ const GRADE_NAMES = { 1:'Common', 2:'Magic', 3:'Rare', 4:'Hero', 5:'Legend' };
 const GRADE_SHORT = { 4:'Hero', 5:'Legend' };
 
 const SLOT_MAIN_FIXED = {
-  1: { type: 5,  name: 'ATK' },   // Flat ATK
-  3: { type: 7,  name: 'DEF' },   // Flat DEF
-  5: { type: 3,  name: 'HP'  }    // Flat HP
+  1: { type: 3,  name: 'ATK' },   // Flat ATK
+  3: { type: 5,  name: 'DEF' },   // Flat DEF
+  5: { type: 1,  name: 'HP'  }    // Flat HP
 };
 
 // ---- THRESHOLDS ----
@@ -124,6 +124,17 @@ const DEFAULT_ROLES = {
   },
 };
 
+const DEFAULT_REAPP = {
+  maxEff: 65,
+  sets: ['Violent', 'Will', 'Swift'],
+  innateStats: ['SPD'],
+  mainBySlot: {
+    2: ['SPD', 'HP%', 'ATK%', 'DEF%'],
+    4: ['HP%', 'ATK%', 'DEF%', 'CRate', 'CDmg'],
+    6: ['HP%', 'ATK%', 'DEF%', 'ACC', 'RES']
+  }
+};
+
 // ---- EFFICIENCY MAX VALUES (Legend 6★ for each stat) ----
 // Used to calculate efficiency %
 const EFF_MAX = {
@@ -164,6 +175,7 @@ function getSettings() {
     hrCoeff:       saved?.hrCoeff       ?? DEFAULT_HR_COEFF,
     duoThresholds: saved?.duoThresholds || JSON.parse(JSON.stringify(DEFAULT_DUO_THRESHOLDS)),
     roles:         saved?.roles         || JSON.parse(JSON.stringify(DEFAULT_ROLES)),
+    reapp:         saved?.reapp         || JSON.parse(JSON.stringify(DEFAULT_REAPP)),
   };
 }
 
@@ -181,4 +193,5 @@ window.SWRM.DEFAULT_THRESHOLDS = DEFAULT_THRESHOLDS;
 window.SWRM.DEFAULT_HR_THRESHOLDS = DEFAULT_HR_THRESHOLDS;
 window.SWRM.DEFAULT_HR_COEFF = DEFAULT_HR_COEFF;
 window.SWRM.DEFAULT_DUO_THRESHOLDS = DEFAULT_DUO_THRESHOLDS;
+window.SWRM.DEFAULT_REAPP = DEFAULT_REAPP;
 window.SWRM.saveSettings = saveSettings;

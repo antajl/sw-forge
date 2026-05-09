@@ -14,18 +14,23 @@
   <header class="site-header">
     <div class="header-inner">
       <div class="logo">
-        <span class="logo-icon">⬡</span>
         <span class="logo-text">SW <strong>RUNE</strong> MASTER</span>
       </div>
       <nav class="tabs">
         <button class="tab active" data-tab="dashboard">Dashboard</button>
         <button class="tab" data-tab="runetable">Rune Table</button>
-        <button class="tab" data-tab="settings">Settings</button>
+        <button class="tab" data-tab="settings">Rune Rules</button>
+        <button class="tab" data-tab="guide">Guide</button>
+        <button class="tab" data-tab="changelog">Changelog</button>
       </nav>
       <div class="header-actions">
         <label class="upload-btn" for="json-upload">
           <span>⬆ Load JSON</span>
           <input type="file" id="json-upload" accept=".json" hidden />
+        </label>
+        <label class="level-filter">
+          Min Lvl
+          <input type="number" id="global-min-level" min="0" max="15" value="0" />
         </label>
         <div class="stage-select-wrap">
           <select id="stage-select">
@@ -34,9 +39,25 @@
             <option value="Late">Late</option>
           </select>
         </div>
+        <button id="open-app-settings" class="btn-ghost">Settings</button>
       </div>
     </div>
   </header>
+
+  <div id="app-settings-panel" class="app-settings-panel hidden">
+    <div class="panel">
+      <div class="panel-title">App Settings</div>
+      <div class="db-settings-header">
+        <label>Language
+          <select id="app-language">
+            <option value="en" selected>English</option>
+            <option value="ru">Russian</option>
+          </select>
+        </label>
+      </div>
+      <div id="db-slots-wrap" class="db-slots-wrap"></div>
+    </div>
+  </div>
 
   <!-- MAIN -->
   <main>
@@ -82,6 +103,14 @@
             <div class="sc-label">Reapp</div>
             <div class="sc-value">—</div>
           </div>
+          <div class="stat-card finish" id="sc-upgrade">
+            <div class="sc-label">Upgrade</div>
+            <div class="sc-value">—</div>
+          </div>
+          <div class="stat-card grind" id="sc-gem">
+            <div class="sc-label">Gem</div>
+            <div class="sc-value">—</div>
+          </div>
         </div>
 
         <!-- Role distribution chart -->
@@ -113,54 +142,63 @@
 
     <!-- RUNE TABLE TAB -->
     <section id="tab-runetable" class="tab-content hidden">
-      <div class="table-controls">
-        <input type="text" id="search-box" placeholder="Search by set, stat, role..." />
-        <select id="filter-verdict">
-          <option value="">All Verdicts</option>
-          <option value="Keep">Keep</option>
-          <option value="Sell">Sell</option>
-          <option value="Grind">Grind</option>
-          <option value="Finish">Finish</option>
-          <option value="Reapp">Reapp</option>
-        </select>
-        <select id="filter-role">
-          <option value="">All Roles</option>
-          <option value="High Roll">High Roll</option>
-          <option value="Duo Roll">Duo Roll</option>
-          <option value="Classic DPS">Classic DPS</option>
-          <option value="Slow DPS">Slow DPS</option>
-          <option value="Fast Utility">Fast Utility</option>
-          <option value="Bomber">Bomber</option>
-          <option value="Heavy Resist">Heavy Resist</option>
-          <option value="Bruiser">Bruiser</option>
-        </select>
-        <select id="filter-grade">
-          <option value="">All Grades</option>
-          <option value="Legend">Legend</option>
-          <option value="Hero">Hero</option>
-        </select>
-        <span id="table-count" class="table-count">0 runes</span>
-      </div>
-      <div class="table-wrap">
-        <table id="rune-table">
-          <thead>
-            <tr>
-              <th data-sort="slot">Slot</th>
-              <th data-sort="set">Set</th>
-              <th data-sort="grade">Grade</th>
-              <th data-sort="level">Lvl</th>
-              <th data-sort="main">Main</th>
-              <th data-sort="s1">Sub 1</th>
-              <th data-sort="s2">Sub 2</th>
-              <th data-sort="s3">Sub 3</th>
-              <th data-sort="s4">Sub 4</th>
-              <th data-sort="eff">Eff%</th>
-              <th data-sort="role">Role</th>
-              <th data-sort="verdict">Verdict</th>
-            </tr>
-          </thead>
-          <tbody id="rune-tbody"></tbody>
-        </table>
+      <div class="table-layout">
+        <div class="table-main">
+          <div class="table-controls">
+            <input type="text" id="search-box" placeholder="Search by set, stat, role..." />
+            <select id="filter-verdict">
+              <option value="">All Verdicts</option>
+              <option value="Keep">Keep</option>
+              <option value="Sell">Sell</option>
+              <option value="Grind">Grind</option>
+              <option value="Gem">Gem</option>
+              <option value="Finish">Finish</option>
+              <option value="Upgrade">Upgrade</option>
+              <option value="Reapp">Reapp</option>
+            </select>
+            <select id="filter-role">
+              <option value="">All Roles</option>
+              <option value="High Roll">High Roll</option>
+              <option value="Duo Roll">Duo Roll</option>
+              <option value="Classic DPS">Classic DPS</option>
+              <option value="Slow DPS">Slow DPS</option>
+              <option value="Fast Utility">Fast Utility</option>
+              <option value="Bomber">Bomber</option>
+              <option value="Heavy Resist">Heavy Resist</option>
+              <option value="Bruiser">Bruiser</option>
+            </select>
+            <select id="filter-grade">
+              <option value="">All Grades</option>
+              <option value="Legend">Legend</option>
+              <option value="Hero">Hero</option>
+            </select>
+            <span id="table-count" class="table-count">0 runes</span>
+          </div>
+          <div class="table-wrap">
+            <table id="rune-table">
+              <thead>
+                <tr>
+                  <th data-sort="slot">Slot</th>
+                  <th data-sort="set">Set</th>
+                  <th data-sort="grade">Grade</th>
+                  <th data-sort="level">Lvl</th>
+                  <th data-sort="main">Main</th>
+                  <th>Innate</th>
+                  <th data-sort="s1">Sub 1</th>
+                  <th data-sort="s2">Sub 2</th>
+                  <th data-sort="s3">Sub 3</th>
+                  <th data-sort="s4">Sub 4</th>
+                  <th id="target-col-header" class="hidden">Target</th>
+                  <th data-sort="eff">Eff%</th>
+                  <th data-sort="role">Role</th>
+                  <th data-sort="verdict">Verdict</th>
+                </tr>
+              </thead>
+              <tbody id="rune-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+        <aside class="table-summary" id="rune-summary"></aside>
       </div>
     </section>
 
@@ -169,30 +207,23 @@
       <div class="settings-layout">
         <div class="settings-sidebar">
           <button class="stab active" data-stab="thresholds">Thresholds</button>
-          <button class="stab" data-stab="highroll">High Roll</button>
-          <button class="stab" data-stab="duoroll">Duo Roll</button>
           <button class="stab" data-stab="roles">Role Filters</button>
+          <button class="stab" data-stab="reapp">Reapp Rules</button>
         </div>
         <div class="settings-content">
           <!-- Thresholds -->
           <div id="stab-thresholds" class="stab-content">
             <h3>General Thresholds</h3>
-            <p class="settings-desc">Base thresholds used across role filters. Values are per-stage (Early / Mid / Late) and per-grade (Legend / Hero).</p>
+            <p class="settings-desc">All thresholds live here: base thresholds, high roll thresholds and duo roll thresholds.</p>
             <div id="threshold-table-wrap"></div>
-          </div>
-          <!-- High Roll -->
-          <div id="stab-highroll" class="stab-content hidden">
             <h3>High Roll Thresholds</h3>
-            <p class="settings-desc">A rune qualifies as High Roll if at least one substat meets or exceeds these values. The <strong>Partner coefficient</strong> defines the soft threshold (% of main threshold) that a second stat must reach.</p>
+            <p class="settings-desc">A rune qualifies as High Roll if at least one substat meets or exceeds these values.</p>
             <div id="hr-table-wrap"></div>
             <div class="settings-row">
               <label>Partner coefficient</label>
               <input type="number" id="hr-coeff" step="0.05" min="0.5" max="1" value="0.7" />
               <span class="hint">e.g. 0.70 = 70% of threshold</span>
             </div>
-          </div>
-          <!-- Duo Roll -->
-          <div id="stab-duoroll" class="stab-content hidden">
             <h3>Duo Roll Thresholds</h3>
             <p class="settings-desc">Synergy pairs. Both stats must reach their respective minimum values.</p>
             <div id="dr-table-wrap"></div>
@@ -200,14 +231,80 @@
           <!-- Roles -->
           <div id="stab-roles" class="stab-content hidden">
             <h3>Role Filters</h3>
-            <p class="settings-desc">Configure accepted main stats, substat inclusion, must-haves and minimum counts per role.</p>
+            <p class="settings-desc">Configure role rules. You can add a custom role or remove existing roles (minimum one role must remain).</p>
+            <div class="settings-row">
+              <label>New role</label>
+              <input type="text" id="new-role-name" placeholder="e.g. Control SPD" />
+              <button id="btn-add-role" class="btn-ghost">+ Add role</button>
+            </div>
             <div id="roles-settings-wrap"></div>
+          </div>
+          <div id="stab-reapp" class="stab-content hidden">
+            <h3>Reapp Candidate Rules</h3>
+            <p class="settings-desc">If a rune has low efficiency and matches these filters, verdict can be Reapp.</p>
+            <div class="settings-row">
+              <label>Allowed sets (comma)</label>
+              <input type="text" id="reapp-sets" placeholder="Violent, Will, Swift" />
+            </div>
+            <div class="settings-row">
+              <label>Innate stats (comma)</label>
+              <input type="text" id="reapp-innate" placeholder="SPD, HP%, ACC" />
+            </div>
+            <div class="settings-row">
+              <label>Slot 2 mains (comma)</label>
+              <input type="text" id="reapp-main2" placeholder="SPD, HP%, ATK%, DEF%" />
+            </div>
+            <div class="settings-row">
+              <label>Slot 4 mains (comma)</label>
+              <input type="text" id="reapp-main4" placeholder="HP%, ATK%, DEF%, CRate, CDmg" />
+            </div>
+            <div class="settings-row">
+              <label>Slot 6 mains (comma)</label>
+              <input type="text" id="reapp-main6" placeholder="HP%, ATK%, DEF%, ACC, RES" />
+            </div>
+            <div class="settings-row">
+              <label>Max efficiency for Reapp</label>
+              <input type="number" id="reapp-max-eff" min="0" max="100" step="0.5" />
+            </div>
           </div>
         </div>
       </div>
       <div class="settings-actions">
         <button id="btn-save-settings" class="btn-primary">Save & Recalculate</button>
         <button id="btn-reset-settings" class="btn-ghost">Reset to Defaults</button>
+      </div>
+    </section>
+
+    <section id="tab-guide" class="tab-content hidden">
+      <div class="panel">
+        <div class="panel-title">Guide</div>
+        <div class="guide-list">
+          <p><strong>Data flow:</strong> Export JSON from SWEX and load it directly. SWOP CSV is not required.</p>
+          <p><strong>Database slots:</strong> Open top-right Settings to store up to 4 JSON databases. Use Swap to switch active DB instantly.</p>
+          <p><strong>Dashboard cards:</strong> Total, Keep, Sell, Grind, Gem, Finish, Upgrade and Reapp are recalculated for the selected stage.</p>
+          <p><strong>Global Min Lvl:</strong> Header filter applies to all dashboard charts and Rune Table at the same time.</p>
+          <p><strong>Role Distribution:</strong> Shows count and average efficiency per role. Custom roles appear automatically after saving rules.</p>
+          <p><strong>Set Distribution:</strong> Bars show set count and average efficiency to identify high-value sets.</p>
+          <p><strong>Slot Distribution:</strong> For each slot, you see count and top main stat patterns.</p>
+          <p><strong>Rune Table basics:</strong> Search, filter by verdict/role/grade, sort by columns, and inspect innate + substats.</p>
+          <p><strong>Target column:</strong> Appears for Grind/Gem views. Grind shows upgradable stat; Gem shows suggested replacement target.</p>
+          <p><strong>Rune Summary panel:</strong> Right side summary shows counts and average efficiency by verdict and role for filtered rows.</p>
+          <p><strong>Rune Rules / Thresholds:</strong> Base thresholds, High Roll thresholds, Duo Roll thresholds and partner coefficient are edited in one place.</p>
+          <p><strong>Role Filters:</strong> Add custom roles with +Add role, tune Include/Exclude rules, and remove roles (at least one role is kept).</p>
+          <p><strong>Reapp Rules:</strong> Configure allowed sets, innate stats, main stats by slot and max efficiency for Reapp verdict.</p>
+          <p><strong>Changelog:</strong> Keep project notes directly in-app using the Changelog tab.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-changelog" class="tab-content hidden">
+      <div class="panel">
+        <div class="panel-title">Changelog</div>
+        <div class="settings-row">
+          <input type="text" id="changelog-input" placeholder="Write what changed..." />
+          <button id="btn-add-changelog" class="btn-primary">Add</button>
+        </div>
+        <div id="changelog-list" class="guide-list"></div>
       </div>
     </section>
 

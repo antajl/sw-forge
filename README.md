@@ -1,2 +1,49 @@
-# sw-rune-master
-Rune Optimizer for Summoners War based on spreadsheet logic
+# SW Rune Master
+
+A client-side rune analyzer for Summoners War, powered by your SWEX JSON export.
+
+🔗 **Live site:** https://antajl.github.io/sw-rune-master/
+
+---
+
+## Features
+
+- **Load SWEX JSON** — drag & drop your export file, all processing happens in the browser
+- **Dashboard** — role distribution, set/slot breakdown, efficiency histogram, verdict summary
+- **Rune Table** — sortable, filterable table with stat chips, roles and verdicts
+- **Settings** — fully configurable thresholds, High Roll partner coefficient, Duo Roll pairs, and per-role filters (substats, must-haves, min stats)
+
+## How to use
+
+1. Export your account with [SWEX](https://github.com/Xzandro/sw-exporter/releases/latest)
+2. Open the site and click **Load JSON**
+3. Select your stage (Early / Mid / Late)
+4. Review your runes and action list
+
+## Role system
+
+| Role | Key stats |
+|---|---|
+| Bruiser | SPD + HP% + ATK% + DEF% + CRate |
+| Fast Utility | SPD + HP%/DEF%/ACC |
+| Heavy Resist | HP% + DEF% + RES |
+| Bomber | ATK% + ACC |
+| Classic DPS | SPD + ATK% + CRate + CDmg |
+| Slow DPS | ATK% + CRate + CDmg (no SPD) |
+| Duo Roll | Synergy pairs (SPD+X, CRate+CDmg, etc.) |
+| High Roll | One exceptional stat + partner |
+
+## Development
+
+Pure HTML + CSS + JS, no build step needed. Just edit and push to `main`.
+
+```
+sw-rune-master/
+├── index.html
+├── css/style.css
+├── js/
+│   ├── settings.js   ← thresholds & defaults
+│   ├── parser.js     ← SWEX JSON parsing
+│   ├── engine.js     ← role detection & verdicts
+│   └── ui.js         ← rendering & interactions
+```

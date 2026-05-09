@@ -1,126 +1,221 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>SW Rune Master - v0.2</title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: #e0e0e0; padding: 20px; line-height: 1.6; }
-        .container { max-width: 1000px; margin: 0 auto; }
-        .upload-section { background: #1e1e1e; padding: 30px; border-radius: 8px; border: 1px dashed #444; text-align: center; margin-bottom: 20px; }
-        input[type="file"] { margin: 15px 0; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #1e1e1e; }
-        th, td { border: 1px solid #333; padding: 12px; text-align: left; font-size: 14px; }
-        th { background: #252525; color: #4a90e2; }
-        tr:hover { background: #252525; }
-        .match { color: #4caf50; font-weight: bold; background: rgba(76, 175, 80, 0.1); }
-        .sell { color: #f44336; opacity: 0.6; }
-        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; }
-        .stats-preview { font-size: 12px; color: #aaa; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SW Rune Master</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-    <div class="container">
-        <h2>SW Rune Master <span style="font-size: 0.5em; color: #666;">v0.2</span></h2>
-        
-        <div class="upload-section">
-            <p>Выберите ваш JSON файл из SWEX (обычно называется <i>yourname-optimizer.json</i>)</p>
-            <input type="file" id="fileInput" accept=".json">
-            <div id="status">Ожидание файла...</div>
+
+  <!-- HEADER -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-icon">⬡</span>
+        <span class="logo-text">SW <strong>RUNE</strong> MASTER</span>
+      </div>
+      <nav class="tabs">
+        <button class="tab active" data-tab="dashboard">Dashboard</button>
+        <button class="tab" data-tab="runetable">Rune Table</button>
+        <button class="tab" data-tab="settings">Settings</button>
+      </nav>
+      <div class="header-actions">
+        <label class="upload-btn" for="json-upload">
+          <span>⬆ Load JSON</span>
+          <input type="file" id="json-upload" accept=".json" hidden />
+        </label>
+        <div class="stage-select-wrap">
+          <select id="stage-select">
+            <option value="Early">Early</option>
+            <option value="Mid" selected>Mid</option>
+            <option value="Late">Late</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main>
+
+    <!-- UPLOAD PROMPT (shown when no data) -->
+    <section id="upload-prompt" class="upload-prompt">
+      <div class="prompt-card">
+        <div class="prompt-icon">⬡</div>
+        <h2>Load your SWEX JSON</h2>
+        <p>Export your account data from <strong>Summoners War Exporter (SWEX)</strong> and load the JSON file here to analyze your rune collection.</p>
+        <label class="upload-btn-large" for="json-upload">Choose JSON file</label>
+        <p class="prompt-hint">All processing happens in your browser — your data never leaves your device.</p>
+      </div>
+    </section>
+
+    <!-- DASHBOARD TAB -->
+    <section id="tab-dashboard" class="tab-content hidden">
+      <div class="dashboard-grid">
+
+        <!-- Summary cards -->
+        <div class="summary-strip">
+          <div class="stat-card" id="sc-total">
+            <div class="sc-label">Total Runes</div>
+            <div class="sc-value">—</div>
+          </div>
+          <div class="stat-card keep" id="sc-keep">
+            <div class="sc-label">Keep</div>
+            <div class="sc-value">—</div>
+          </div>
+          <div class="stat-card sell" id="sc-sell">
+            <div class="sc-label">Sell</div>
+            <div class="sc-value">—</div>
+          </div>
+          <div class="stat-card grind" id="sc-grind">
+            <div class="sc-label">Grind</div>
+            <div class="sc-value">—</div>
+          </div>
+          <div class="stat-card finish" id="sc-finish">
+            <div class="sc-label">Finish</div>
+            <div class="sc-value">—</div>
+          </div>
+          <div class="stat-card reapp" id="sc-reapp">
+            <div class="sc-label">Reapp</div>
+            <div class="sc-value">—</div>
+          </div>
         </div>
 
-        <table id="resultTable">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Grade</th>
-                    <th>Set</th>
-                    <th>Slot</th>
-                    <th>Main Stat</th>
-                    <th>Substats Preview</th>
-                    <th>Verdict</th>
-                </tr>
-            </thead>
-            <tbody>
-                </tbody>
+        <!-- Role distribution chart -->
+        <div class="panel" id="panel-roles">
+          <div class="panel-title">Role Distribution</div>
+          <div id="role-chart" class="role-chart"></div>
+        </div>
+
+        <!-- Set distribution -->
+        <div class="panel" id="panel-sets">
+          <div class="panel-title">Set Distribution</div>
+          <div id="set-chart" class="set-chart"></div>
+        </div>
+
+        <!-- Slot distribution -->
+        <div class="panel" id="panel-slots">
+          <div class="panel-title">Slot Distribution</div>
+          <div id="slot-chart" class="slot-chart"></div>
+        </div>
+
+        <!-- Efficiency histogram -->
+        <div class="panel panel-wide" id="panel-eff">
+          <div class="panel-title">Efficiency Distribution</div>
+          <div id="eff-chart" class="eff-chart"></div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- RUNE TABLE TAB -->
+    <section id="tab-runetable" class="tab-content hidden">
+      <div class="table-controls">
+        <input type="text" id="search-box" placeholder="Search by set, stat, role..." />
+        <select id="filter-verdict">
+          <option value="">All Verdicts</option>
+          <option value="Keep">Keep</option>
+          <option value="Sell">Sell</option>
+          <option value="Grind">Grind</option>
+          <option value="Finish">Finish</option>
+          <option value="Reapp">Reapp</option>
+        </select>
+        <select id="filter-role">
+          <option value="">All Roles</option>
+          <option value="High Roll">High Roll</option>
+          <option value="Duo Roll">Duo Roll</option>
+          <option value="Classic DPS">Classic DPS</option>
+          <option value="Slow DPS">Slow DPS</option>
+          <option value="Fast Utility">Fast Utility</option>
+          <option value="Bomber">Bomber</option>
+          <option value="Heavy Resist">Heavy Resist</option>
+          <option value="Bruiser">Bruiser</option>
+        </select>
+        <select id="filter-grade">
+          <option value="">All Grades</option>
+          <option value="Legend">Legend</option>
+          <option value="Hero">Hero</option>
+        </select>
+        <span id="table-count" class="table-count">0 runes</span>
+      </div>
+      <div class="table-wrap">
+        <table id="rune-table">
+          <thead>
+            <tr>
+              <th data-sort="slot">Slot</th>
+              <th data-sort="set">Set</th>
+              <th data-sort="grade">Grade</th>
+              <th data-sort="level">Lvl</th>
+              <th data-sort="main">Main</th>
+              <th data-sort="s1">Sub 1</th>
+              <th data-sort="s2">Sub 2</th>
+              <th data-sort="s3">Sub 3</th>
+              <th data-sort="s4">Sub 4</th>
+              <th data-sort="eff">Eff%</th>
+              <th data-sort="role">Role</th>
+              <th data-sort="verdict">Verdict</th>
+            </tr>
+          </thead>
+          <tbody id="rune-tbody"></tbody>
         </table>
-    </div>
+      </div>
+    </section>
 
-    <script>
-        const THRESHOLDS = { "SPD": 15, "HP%": 20, "DEF%": 20, "ATK%": 17, "CRate": 13, "CDmg": 16, "ACC": 18, "RES": 18 };
-        const COEFF = 0.7;
-        
-        const statMap = { 1: "HP%", 2: "HP", 3: "ATK%", 4: "ATK", 5: "DEF%", 6: "DEF", 8: "SPD", 9: "CRate", 10: "CDmg", 11: "RES", 12: "ACC" };
-        const setMap = { 1: "Energy", 2: "Guard", 3: "Swift", 4: "Blade", 5: "Rage", 6: "Focus", 7: "Endure", 8: "Fatal", 10: "Despair", 11: "Vampire", 13: "Violent", 14: "Nemesis", 15: "Will", 16: "Shield", 17: "Revenge", 18: "Destroy", 19: "Fight", 20: "Determination", 21: "Enhance", 22: "Accuracy", 23: "Tolerance" };
+    <!-- SETTINGS TAB -->
+    <section id="tab-settings" class="tab-content hidden">
+      <div class="settings-layout">
+        <div class="settings-sidebar">
+          <button class="stab active" data-stab="thresholds">Thresholds</button>
+          <button class="stab" data-stab="highroll">High Roll</button>
+          <button class="stab" data-stab="duoroll">Duo Roll</button>
+          <button class="stab" data-stab="roles">Role Filters</button>
+        </div>
+        <div class="settings-content">
+          <!-- Thresholds -->
+          <div id="stab-thresholds" class="stab-content">
+            <h3>General Thresholds</h3>
+            <p class="settings-desc">Base thresholds used across role filters. Values are per-stage (Early / Mid / Late) and per-grade (Legend / Hero).</p>
+            <div id="threshold-table-wrap"></div>
+          </div>
+          <!-- High Roll -->
+          <div id="stab-highroll" class="stab-content hidden">
+            <h3>High Roll Thresholds</h3>
+            <p class="settings-desc">A rune qualifies as High Roll if at least one substat meets or exceeds these values. The <strong>Partner coefficient</strong> defines the soft threshold (% of main threshold) that a second stat must reach.</p>
+            <div id="hr-table-wrap"></div>
+            <div class="settings-row">
+              <label>Partner coefficient</label>
+              <input type="number" id="hr-coeff" step="0.05" min="0.5" max="1" value="0.7" />
+              <span class="hint">e.g. 0.70 = 70% of threshold</span>
+            </div>
+          </div>
+          <!-- Duo Roll -->
+          <div id="stab-duoroll" class="stab-content hidden">
+            <h3>Duo Roll Thresholds</h3>
+            <p class="settings-desc">Synergy pairs. Both stats must reach their respective minimum values.</p>
+            <div id="dr-table-wrap"></div>
+          </div>
+          <!-- Roles -->
+          <div id="stab-roles" class="stab-content hidden">
+            <h3>Role Filters</h3>
+            <p class="settings-desc">Configure accepted main stats, substat inclusion, must-haves and minimum counts per role.</p>
+            <div id="roles-settings-wrap"></div>
+          </div>
+        </div>
+      </div>
+      <div class="settings-actions">
+        <button id="btn-save-settings" class="btn-primary">Save & Recalculate</button>
+        <button id="btn-reset-settings" class="btn-ghost">Reset to Defaults</button>
+      </div>
+    </section>
 
-        document.getElementById('fileInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
+  </main>
 
-            const reader = new FileReader();
-            document.getElementById('status').innerText = "Обработка...";
-
-            reader.onload = function(e) {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    const runes = data.runes || [];
-                    renderRunes(runes);
-                    document.getElementById('status').innerText = `Готово! Обработано рун: ${runes.length}`;
-                } catch (err) {
-                    alert("Ошибка при чтении JSON. Убедитесь, что это правильный файл SWEX.");
-                    document.getElementById('status').innerText = "Ошибка.";
-                }
-            };
-            reader.readAsText(file);
-        });
-
-        function renderRunes(runes) {
-            const tbody = document.querySelector('#resultTable tbody');
-            tbody.innerHTML = '';
-
-            runes.forEach(rune => {
-                const grade = rune.class >= 6 ? "Legend" : "Hero"; 
-                const substats = rune.sec_eff || [];
-                
-                let hasHighRoll = false;
-                let partnerScore = 0;
-                let subTexts = [];
-
-                substats.forEach(eff => {
-                    const statName = statMap[eff[0]];
-                    const val = eff[1] + eff[3]; // Base + Enchant/Grind (упрощенно)
-                    const threshold = THRESHOLDS[statName];
-
-                    if (statName) subTexts.push(`${statName}+${val}`);
-
-                    if (threshold) {
-                        if (val >= threshold) {
-                            hasHighRoll = true;
-                            partnerScore += 1;
-                        } else if (val >= threshold * COEFF) {
-                            partnerScore += 1;
-                        }
-                    }
-                });
-
-                let verdict = "Sell";
-                if (hasHighRoll) {
-                    if (grade === "Legend" || partnerScore >= 2) {
-                        verdict = "Keep";
-                    }
-                }
-
-                const row = `<tr>
-                    <td>${rune.rune_id}</td>
-                    <td>${grade}</td>
-                    <td>${setMap[rune.set_id] || "Unknown"}</td>
-                    <td>${rune.slot_no}</td>
-                    <td>${statMap[rune.pri_eff[0]]}</td>
-                    <td class="stats-preview">${subTexts.join(', ')}</td>
-                    <td class="${verdict === 'Keep' ? 'match' : 'sell'}">${verdict}</td>
-                </tr>`;
-                tbody.innerHTML += row;
-            });
-        }
-    </script>
+  <script src="js/settings.js"></script>
+  <script src="js/parser.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/ui.js"></script>
 </body>
 </html>

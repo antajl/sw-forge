@@ -90,6 +90,20 @@ const TRANSLATIONS = {
     // App settings
     appSettings: 'App Settings',
     language: 'Language',
+    theme: 'Theme',
+    dbSlot: 'Database Slot',
+    current: 'Current',
+    name: 'Name',
+    uploaded: 'Uploaded',
+    clipboard: 'Clipboard',
+    upload: 'Upload',
+    download: 'Download',
+    delete: 'Delete',
+    swap: 'Swap',
+    slotEmpty: 'Selected slot is empty',
+    parseError: 'Failed to parse slot JSON: ',
+    dbSlotsTitle: 'Database Slots',
+    dbSlotsDesc: 'Store up to 4 different JSON databases and switch between them instantly.',
     
     // Stages
     early: 'Early',
@@ -162,6 +176,20 @@ const TRANSLATIONS = {
     // App settings
     appSettings: 'Настройки Приложения',
     language: 'Язык',
+    theme: 'Тема',
+    dbSlot: 'Слот Базы Данных',
+    current: 'Текущий',
+    name: 'Имя',
+    uploaded: 'Загружен',
+    clipboard: 'Буфер',
+    upload: 'Загрузить',
+    download: 'Скачать',
+    delete: 'Удалить',
+    swap: 'Переключить',
+    slotEmpty: 'Выбранный слот пуст',
+    parseError: 'Ошибка разбора JSON слота: ',
+    dbSlotsTitle: 'Слоты Базы Данных',
+    dbSlotsDesc: 'Сохраняйте до 4 различных JSON баз данных и переключайтесь между ними мгновенно.',
     
     // Stages
     early: 'Ранняя',

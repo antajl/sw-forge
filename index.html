@@ -22,16 +22,9 @@
         <button class="tab" data-tab="settings">Rune Rules</button>
         <button class="tab" data-tab="guide">Guide</button>
         <button class="tab" data-tab="changelog">Changelog</button>
+        <button class="tab" data-tab="app-settings">App Settings</button>
       </nav>
       <div class="header-actions">
-        <label class="upload-btn" for="json-upload">
-          <span>⬆ Load JSON</span>
-          <input type="file" id="json-upload" accept=".json" hidden />
-        </label>
-        <label class="level-filter">
-          Min Lvl
-          <input type="number" id="global-min-level" min="0" max="15" value="0" />
-        </label>
         <div class="stage-select-wrap">
           <select id="stage-select">
             <option value="Early">Early</option>
@@ -39,44 +32,37 @@
             <option value="Late">Late</option>
           </select>
         </div>
-        <button id="theme-toggle" class="btn-ghost">🌙</button>
-        <button id="open-app-settings" class="btn-ghost">Settings</button>
-      </div>
+        <div class="game-stage-metrics" id="game-stage-metrics">
+          <span class="stage-metric">Late stats: <strong id="highroll-percent">0%</strong></span>
+          <span class="stage-metric">Keep Eff: <strong id="keep-eff">0</strong></span>
+          <span class="stage-metric">Meta sets: <strong id="meta-sets-percent">0%</strong></span>
+          <button class="btn-auto-stage" id="btn-auto-stage">Auto</button>
+        </div>
+        <button class="upload-btn" id="btn-upload-json" title="Load JSON file">⬆ Load JSON</button>
+              </div>
     </div>
   </header>
-
-  <div id="app-settings-panel" class="app-settings-panel hidden">
-    <div class="panel">
-      <div class="panel-title">App Settings</div>
-      <div class="db-settings-header">
-        <label>Language
-          <select id="app-language">
-            <option value="en" selected>English</option>
-            <option value="ru">Russian</option>
-          </select>
-        </label>
-      </div>
-      <div id="db-slots-wrap" class="db-slots-wrap"></div>
-    </div>
-  </div>
 
   <!-- MAIN -->
   <main>
 
-    <!-- UPLOAD PROMPT (shown when no data) -->
-    <section id="upload-prompt" class="upload-prompt">
-      <div class="prompt-card">
-        <div class="prompt-icon">⬡</div>
-        <h2>Load your SWEX JSON</h2>
-        <p>Export your account data from <strong>Summoners War Exporter (SWEX)</strong> and load the JSON file here to analyze your rune collection.</p>
-        <label class="upload-btn-large" for="json-upload">Choose JSON file</label>
-        <p class="prompt-hint">All processing happens in your browser — your data never leaves your device.</p>
-      </div>
-    </section>
-
     <!-- DASHBOARD TAB -->
     <section id="tab-dashboard" class="tab-content hidden">
       <div class="dashboard-grid">
+
+        <!-- Dashboard Controls -->
+        <div class="dashboard-controls">
+          <label class="level-filter">Min Level
+            <select id="global-min-level">
+              <option value="0">+0</option>
+              <option value="3">+3</option>
+              <option value="6">+6</option>
+              <option value="9">+9</option>
+              <option value="12">+12</option>
+              <option value="15">+15</option>
+            </select>
+          </label>
+        </div>
 
         <!-- Summary cards -->
         <div class="summary-strip">
@@ -175,13 +161,6 @@
             </select>
             <span id="table-count" class="table-count">0 runes</span>
           </div>
-          <div id="game-stage-recommendation" class="game-stage-card">
-            <div class="stage-card-title">Рекомендуемый этап</div>
-            <div class="stage-card-content">
-              <div class="recommended-stage" id="recommended-stage">—</div>
-              <div class="stage-stats" id="stage-stats">Загрузите руны для анализа</div>
-            </div>
-          </div>
           <div class="table-wrap">
             <table id="rune-table">
               <thead>
@@ -195,10 +174,11 @@
                   <th data-sort="s2">Sub 2</th>
                   <th data-sort="s3">Sub 3</th>
                   <th data-sort="s4">Sub 4</th>
-                  <th id="target-col-header" class="hidden">Target</th>
                   <th data-sort="eff">Eff%</th>
                   <th data-sort="role">Role</th>
                   <th data-sort="verdict">Verdict</th>
+                  <th data-sort="slot">Slot</th>
+                  <th id="target-col-header" class="hidden">Target</th>
                 </tr>
               </thead>
               <tbody id="rune-tbody"></tbody>
@@ -211,69 +191,58 @@
 
     <!-- SETTINGS TAB -->
     <section id="tab-settings" class="tab-content hidden">
-      <div class="settings-layout">
-        <div class="settings-sidebar">
-          <button class="stab active" data-stab="thresholds">Thresholds</button>
-          <button class="stab" data-stab="roles">Role Filters</button>
-          <button class="stab" data-stab="reapp">Reapp Rules</button>
+      <div class="settings-two-col">
+        <div class="settings-col-left">
+          <h3>High Roll Thresholds</h3>
+          <p class="settings-desc">A rune qualifies as High Roll if at least one substat meets or exceeds these values.</p>
+          <div id="hr-table-wrap"></div>
+          <div class="settings-row">
+            <label>Partner coefficient</label>
+            <input type="number" id="hr-coeff" step="0.05" min="0.5" max="1" value="0.7" />
+            <span class="hint">e.g. 0.70 = 70% of threshold</span>
+          </div>
+
+          <h3>Duo Roll Thresholds</h3>
+          <p class="settings-desc">Synergy pairs. Both stats must reach their respective minimum values.</p>
+          <div id="dr-table-wrap"></div>
+
+          <h3>Reapp Candidate Rules</h3>
+          <p class="settings-desc">If a rune has low efficiency and matches these filters, verdict can be Reapp.</p>
+          <div class="settings-row">
+            <label>Allowed sets (comma)</label>
+            <input type="text" id="reapp-sets" placeholder="Violent, Will, Swift" />
+          </div>
+          <div class="settings-row">
+            <label>Innate stats (comma)</label>
+            <input type="text" id="reapp-innate" placeholder="SPD, HP%, ACC" />
+          </div>
+          <div class="settings-row">
+            <label>Slot 2 mains (comma)</label>
+            <input type="text" id="reapp-main2" placeholder="SPD, HP%, ATK%, DEF%" />
+          </div>
+          <div class="settings-row">
+            <label>Slot 4 mains (comma)</label>
+            <input type="text" id="reapp-main4" placeholder="HP%, ATK%, DEF%, CRate, CDmg" />
+          </div>
+          <div class="settings-row">
+            <label>Slot 6 mains (comma)</label>
+            <input type="text" id="reapp-main6" placeholder="HP%, ATK%, DEF%, ACC, RES" />
+          </div>
+          <div class="settings-row">
+            <label>Max efficiency for Reapp</label>
+            <input type="number" id="reapp-max-eff" min="0" max="100" step="0.5" />
+          </div>
         </div>
-        <div class="settings-content">
-          <!-- Thresholds -->
-          <div id="stab-thresholds" class="stab-content">
-            <h3>General Thresholds</h3>
-            <p class="settings-desc">All thresholds live here: base thresholds, high roll thresholds and duo roll thresholds.</p>
-            <div id="threshold-table-wrap"></div>
-            <h3>High Roll Thresholds</h3>
-            <p class="settings-desc">A rune qualifies as High Roll if at least one substat meets or exceeds these values.</p>
-            <div id="hr-table-wrap"></div>
-            <div class="settings-row">
-              <label>Partner coefficient</label>
-              <input type="number" id="hr-coeff" step="0.05" min="0.5" max="1" value="0.7" />
-              <span class="hint">e.g. 0.70 = 70% of threshold</span>
-            </div>
-            <h3>Duo Roll Thresholds</h3>
-            <p class="settings-desc">Synergy pairs. Both stats must reach their respective minimum values.</p>
-            <div id="dr-table-wrap"></div>
+
+        <div class="settings-col-right">
+          <h3>Role Filters</h3>
+          <p class="settings-desc">Configure role rules. You can add a custom role or remove existing roles (minimum one role must remain).</p>
+          <div class="settings-row">
+            <label>New role</label>
+            <input type="text" id="new-role-name" placeholder="e.g. Control SPD" />
+            <button id="btn-add-role" class="btn-ghost">+ Add role</button>
           </div>
-          <!-- Roles -->
-          <div id="stab-roles" class="stab-content hidden">
-            <h3>Role Filters</h3>
-            <p class="settings-desc">Configure role rules. You can add a custom role or remove existing roles (minimum one role must remain).</p>
-            <div class="settings-row">
-              <label>New role</label>
-              <input type="text" id="new-role-name" placeholder="e.g. Control SPD" />
-              <button id="btn-add-role" class="btn-ghost">+ Add role</button>
-            </div>
-            <div id="roles-settings-wrap"></div>
-          </div>
-          <div id="stab-reapp" class="stab-content hidden">
-            <h3>Reapp Candidate Rules</h3>
-            <p class="settings-desc">If a rune has low efficiency and matches these filters, verdict can be Reapp.</p>
-            <div class="settings-row">
-              <label>Allowed sets (comma)</label>
-              <input type="text" id="reapp-sets" placeholder="Violent, Will, Swift" />
-            </div>
-            <div class="settings-row">
-              <label>Innate stats (comma)</label>
-              <input type="text" id="reapp-innate" placeholder="SPD, HP%, ACC" />
-            </div>
-            <div class="settings-row">
-              <label>Slot 2 mains (comma)</label>
-              <input type="text" id="reapp-main2" placeholder="SPD, HP%, ATK%, DEF%" />
-            </div>
-            <div class="settings-row">
-              <label>Slot 4 mains (comma)</label>
-              <input type="text" id="reapp-main4" placeholder="HP%, ATK%, DEF%, CRate, CDmg" />
-            </div>
-            <div class="settings-row">
-              <label>Slot 6 mains (comma)</label>
-              <input type="text" id="reapp-main6" placeholder="HP%, ATK%, DEF%, ACC, RES" />
-            </div>
-            <div class="settings-row">
-              <label>Max efficiency for Reapp</label>
-              <input type="number" id="reapp-max-eff" min="0" max="100" step="0.5" />
-            </div>
-          </div>
+          <div id="roles-settings-wrap"></div>
         </div>
       </div>
       <div class="settings-actions">
@@ -315,7 +284,48 @@
       </div>
     </section>
 
+    <!-- APP SETTINGS TAB -->
+    <section id="tab-app-settings" class="tab-content hidden">
+      <div class="settings-layout">
+        <div class="settings-content">
+          <h3>General Settings</h3>
+          
+          <div class="db-settings-header">
+            <label>Language
+              <select id="app-language">
+                <option value="en">English</option>
+                <option value="ru">Русский</option>
+              </select>
+            </label>
+            <label>Theme
+              <select id="app-theme">
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+              </select>
+            </label>
+          </div>
+          
+          <h3 id="db-slots-title">Database Slots</h3>
+          <p id="db-slots-desc" class="settings-desc">Store up to 4 different JSON databases and switch between them instantly.</p>
+          <div id="db-slots-wrap"></div>
+        </div>
+      </div>
+    </section>
+
   </main>
+
+  <!-- UPLOAD PROMPT OVERLAY (shown when no data) -->
+  <section id="upload-prompt" class="upload-prompt">
+    <div class="prompt-card">
+      <button class="close-upload" id="close-upload-prompt" title="Close">×</button>
+      <div class="prompt-icon">⬡</div>
+      <h2>Load your SWEX JSON</h2>
+      <p>Export your account data from <strong>Summoners War Exporter (SWEX)</strong> and load the JSON file here to analyze your rune collection.</p>
+      <label class="upload-btn-large" for="json-upload">Choose JSON file</label>
+      <input type="file" id="json-upload" accept=".json" hidden />
+      <p class="prompt-hint">All processing happens in your browser — your data never leaves your device.</p>
+    </div>
+  </section>
 
   <script src="js/settings.js"></script>
   <script src="js/parser.js"></script>

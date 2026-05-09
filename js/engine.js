@@ -384,65 +384,6 @@
     return 'Keep';
   }
 
-  // ---- GAME STAGE DETECTION ----
-  function detectGameStage(runes, settings) {
-    // Filter runes +9 and above
-    const eligibleRunes = runes.filter(r => r.level >= 9);
-    
-    if (eligibleRunes.length === 0) {
-      return { stage: 'Early', stats: 'No eligible runes (+9 and above)' };
-    }
-
-    // 1. High Roll percentage (40% weight)
-    const highRollRunes = eligibleRunes.filter(r => {
-      const sm = statMap(r);
-      const key = modeKey('Mid', r.gradeStr); // Use Mid stage for detection
-      const th = settings.hrThresholds;
-      
-      for (const [stat, tvals] of Object.entries(th)) {
-        const threshold = tvals[key];
-        if (threshold && (sm[stat] || 0) >= threshold) {
-          return true;
-        }
-      }
-      return false;
-    });
-    
-    const pct_any = (highRollRunes.length / eligibleRunes.length) * 100;
-
-    // 2. Keep efficiency average (30% weight)
-    const keepRunes = eligibleRunes.filter(r => r.verdict === 'Keep');
-    const avg_keep = keepRunes.length > 0 
-      ? keepRunes.reduce((sum, r) => sum + r.eff, 0) / keepRunes.length 
-      : 0;
-    const norm_keep = avg_keep / 130; // Normalize to max 1.0
-
-    // 3. Meta sets percentage (30% weight)
-    const metaSets = ['Violent', 'Swift', 'Will'];
-    const metaKeepRunes = keepRunes.filter(r => metaSets.includes(r.setName));
-    const pct_meta = keepRunes.length > 0 
-      ? (metaKeepRunes.length / keepRunes.length) * 100 
-      : 0;
-
-    // 4. Final score calculation
-    const score = (pct_any * 0.40) + (norm_keep * 30) + (pct_meta * 0.30);
-
-    // 5. Classification
-    let stage;
-    if (score >= 50) {
-      stage = 'Late';
-    } else if (score >= 25) {
-      stage = 'Mid';
-    } else {
-      stage = 'Early';
-    }
-
-    // 6. Diagnostic string
-    const stats = `Late stats: ${pct_any.toFixed(1)}% | Keep Eff: ${avg_keep.toFixed(1)} | Meta sets: ${pct_meta.toFixed(1)}%`;
-
-    return { stage, stats, score: score.toFixed(1) };
-  }
-
   // ---- MAIN ENGINE ----
   // Role priority order (highest priority first, same as your Best Role formula)
   const BASE_ROLE_PRIORITY = ['Fast CC', 'Classic DPS', 'Bomber', 'Tank', 'Bruiser', 'Slow DPS', 'Duo Roll', 'High Roll'];
@@ -484,9 +425,7 @@
     return runes.map(r => processRune(r, stage, settings));
   }
 
-  window.SWRM = window.SWRM || {};
-  window.SWRM.parseSWEX = parseSWEX;
-  window.SWRM.processAll = processAll;
-  window.SWRM.ROLE_PRIORITY = ROLE_PRIORITY;
-  window.SWRM.detectGameStage = detectGameStage;
+  window.SWRM.processAll   = processAll;
+  window.SWRM.processRune  = processRune;
+  window.SWRM.ROLE_PRIORITY = BASE_ROLE_PRIORITY;
 })();

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test SW Rune Master</title>
+</head>
+<body>
+    <div id="test-output"></div>
+    
+    <script src="js/settings.js"></script>
+    <script src="js/parser.js"></script>
+    <script src="js/engine.js"></script>
+    <script src="js/ui.js"></script>
+    
+    <script>
+        // Test if everything loads without errors
+        window.addEventListener('load', () => {
+            const output = document.getElementById('test-output');
+            
+            try {
+                // Check if window.SWRM is properly initialized
+                if (window.SWRM && window.SWRM.settings) {
+                    output.innerHTML = '<div style="color: green;">✓ SWRM object initialized successfully</div>';
+                    
+                    // Test key functions exist
+                    const functions = ['parseSWEX', 'processAll', 'analyzeGameStage', 'TRANSLATIONS'];
+                    functions.forEach(func => {
+                        if (window.SWRM[func]) {
+                            output.innerHTML += `<div style="color: green;">✓ ${func} exists</div>`;
+                        } else {
+                            output.innerHTML += `<div style="color: red;">✗ ${func} missing</div>`;
+                        }
+                    });
+                    
+                    // Test settings
+                    if (window.SWRM.settings.thresholds) {
+                        output.innerHTML += '<div style="color: green;">✓ Settings loaded</div>';
+                    } else {
+                        output.innerHTML += '<div style="color: red;">✗ Settings not loaded</div>';
+                    }
+                } else {
+                    output.innerHTML = '<div style="color: red;">✗ SWRM object not initialized</div>';
+                }
+            } catch (error) {
+                output.innerHTML = `<div style="color: red;">Error: ${error.message}</div>`;
+            }
+        });
+    </script>
+</body>
+</html>

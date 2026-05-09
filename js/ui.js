@@ -71,8 +71,11 @@
     // Update header elements
     const uploadLabel = document.querySelector('label[for="json-upload"] span');
     if (uploadLabel) uploadLabel.textContent = '⬆ ' + t.loadJson;
-    const levelFilter = document.querySelector('label.level-filter');
-    if (levelFilter) levelFilter.innerHTML = `${t.minLvl}<input type="number" id="global-min-level" min="0" max="15" value="0" />`;
+    const levelLabel = document.querySelector('.dashboard-controls label.level-filter');
+    if (levelLabel) {
+      const textNode = levelLabel.childNodes[0];
+      if (textNode) textNode.textContent = t.minLvl;
+    }
     const settingsBtn = document.getElementById('open-app-settings');
     if (settingsBtn) settingsBtn.textContent = t.settings;
     
@@ -197,72 +200,64 @@
 
   function updateSettingsLabels() {
     const t = TRANSLATIONS[currentLang];
+    const settingsTab = document.getElementById('tab-settings');
+    if (!settingsTab) return;
     
-    // Update settings tabs
-    const thresholdsTab = document.querySelector('[data-stab="thresholds"]');
-    if (thresholdsTab) thresholdsTab.textContent = t.thresholds;
-    const rolesTab = document.querySelector('[data-stab="roles"]');
-    if (rolesTab) rolesTab.textContent = t.roleFilters;
-    const reappTab = document.querySelector('[data-stab="reapp"]');
-    if (reappTab) reappTab.textContent = t.reappRules;
+    // Update headings in order: High Roll, Duo Roll, Role Filters, Reapp Rules
+    const h3s = settingsTab.querySelectorAll('h3');
+    if (h3s[0]) h3s[0].textContent = t.highRollThresholds;
+    if (h3s[1]) h3s[1].textContent = t.duoRollThresholds;
+    if (h3s[2]) h3s[2].textContent = t.roleFilters;
+    if (h3s[3]) h3s[3].textContent = t.reappCandidateRules;
     
-    // Update settings content
-    const stabThresholds = document.getElementById('stab-thresholds');
-    if (stabThresholds) {
-      const h3s = stabThresholds.querySelectorAll('h3');
-      if (h3s[0]) h3s[0].textContent = t.highRollThresholds;
-      if (h3s[1]) h3s[1].textContent = t.duoRollThresholds;
-      
-      const descs = stabThresholds.querySelectorAll('.settings-desc');
-      if (descs[0]) descs[0].textContent = 'A rune qualifies as High Roll if at least one substat meets or exceeds these values.';
-      if (descs[1]) descs[1].textContent = 'Synergy pairs. Both stats must reach their respective minimum values.';
-      
-      const partnerLabel = stabThresholds.querySelector('label');
-      if (partnerLabel && partnerLabel.textContent.includes('Partner coefficient')) {
-        partnerLabel.innerHTML = `${t.partnerCoeff}<input type="number" id="hr-coeff" step="0.05" min="0.5" max="1" value="0.7" /><span class="hint">e.g. 0.70 = 70% of threshold</span>`;
+    // Update descriptions in order
+    const descs = settingsTab.querySelectorAll('.settings-desc');
+    if (descs[0]) descs[0].textContent = 'A rune qualifies as High Roll if at least one substat meets or exceeds these values.';
+    if (descs[1]) descs[1].textContent = 'Synergy pairs. Both stats must reach their respective minimum values.';
+    if (descs[2]) descs[2].textContent = t.configureRoleRules;
+    if (descs[3]) descs[3].textContent = t.reappDescription;
+    
+    // Update partner coefficient label (only text node, keep input)
+    const partnerRow = document.getElementById('hr-coeff')?.closest('.settings-row');
+    if (partnerRow) {
+      const partnerLabel = partnerRow.querySelector('label');
+      if (partnerLabel) {
+        const textNode = partnerLabel.childNodes[0];
+        if (textNode) textNode.textContent = t.partnerCoeff + ' ';
       }
     }
     
-    const stabRoles = document.getElementById('stab-roles');
-    if (stabRoles) {
-      const h3 = stabRoles.querySelector('h3');
-      if (h3) h3.textContent = t.roleFilters;
-      const desc = stabRoles.querySelector('.settings-desc');
-      if (desc) desc.textContent = t.configureRoleRules;
-      
-      const newRoleLabel = stabRoles.querySelector('label');
+    // Update new role label (only text node, keep input)
+    const newRoleRow = document.getElementById('new-role-name')?.closest('.settings-row');
+    if (newRoleRow) {
+      const newRoleLabel = newRoleRow.querySelector('label');
       if (newRoleLabel) {
-        newRoleLabel.innerHTML = `${t.newRole}<input type="text" id="new-role-name" placeholder="e.g. Control SPD" />`;
+        const textNode = newRoleLabel.childNodes[0];
+        if (textNode) textNode.textContent = t.newRole + ' ';
       }
-      const addBtn = stabRoles.querySelector('#btn-add-role');
-      if (addBtn) addBtn.textContent = t.addRole;
     }
+    const addBtn = document.getElementById('btn-add-role');
+    if (addBtn) addBtn.textContent = t.addRole;
     
-    const stabReapp = document.getElementById('stab-reapp');
-    if (stabReapp) {
-      const h3 = stabReapp.querySelector('h3');
-      if (h3) h3.textContent = t.reappCandidateRules;
-      const desc = stabReapp.querySelector('.settings-desc');
-      if (desc) desc.textContent = t.reappDescription;
-      
-      const labels = stabReapp.querySelectorAll('label');
-      const labelTexts = [
-        t.allowedSets,
-        t.innateStats,
-        t.slot2Mains,
-        t.slot4Mains,
-        t.slot6Mains,
-        t.maxEffReapp
-      ];
-      
-      labels.forEach((label, index) => {
-        if (labelTexts[index]) {
-          const input = label.querySelector('input');
-          const placeholder = input ? input.placeholder : '';
-          label.innerHTML = `${labelTexts[index]}${input ? `<input type="${input.type}" id="${input.id}" placeholder="${placeholder}" />` : ''}`;
+    // Update reapp labels (only text nodes, keep inputs)
+    const reappInputs = [
+      { id: 'reapp-sets', text: t.allowedSets },
+      { id: 'reapp-innate', text: t.innateStats },
+      { id: 'reapp-main2', text: t.slot2Mains },
+      { id: 'reapp-main4', text: t.slot4Mains },
+      { id: 'reapp-main6', text: t.slot6Mains },
+      { id: 'reapp-max-eff', text: t.maxEffReapp },
+    ];
+    reappInputs.forEach(({ id, text }) => {
+      const input = document.getElementById(id);
+      if (input) {
+        const label = input.closest('.settings-row')?.querySelector('label');
+        if (label) {
+          const textNode = label.childNodes[0];
+          if (textNode) textNode.textContent = text + ' ';
         }
-      });
-    }
+      }
+    });
     
     // Update settings actions
     const saveBtn = document.getElementById('btn-save-settings');
@@ -273,22 +268,38 @@
 
   function updateAppSettingsLabels() {
     const t = TRANSLATIONS[currentLang];
-    const panelTitle = document.querySelector('#app-settings-panel .panel-title');
-    if (panelTitle) panelTitle.textContent = t.appSettings;
     
-    const langLabel = document.querySelector('#app-settings-panel label');
-    if (langLabel && (langLabel.textContent.includes('Language') || langLabel.textContent.includes('Язык'))) {
-      // Update only the label text, not the select element
+    // Update language label in app settings tab
+    const langLabel = document.querySelector('#tab-app-settings .db-settings-header label:first-child');
+    if (langLabel) {
       const select = document.getElementById('app-language');
       if (select) {
         select.value = currentLang;
-        // Update only the text before the select
         const textNode = langLabel.childNodes[0];
         if (textNode) {
           textNode.textContent = t.language + ' ';
         }
       }
     }
+    
+    // Update theme label in app settings tab
+    const themeLabel = document.querySelector('#tab-app-settings .db-settings-header label:last-child');
+    if (themeLabel) {
+      const select = document.getElementById('app-theme');
+      if (select) {
+        const textNode = themeLabel.childNodes[0];
+        if (textNode) {
+          textNode.textContent = t.theme + ' ';
+        }
+      }
+    }
+    
+    // Update database slots title and description in app settings tab
+    const dbSlotsTitle = document.getElementById('db-slots-title');
+    if (dbSlotsTitle) dbSlotsTitle.textContent = t.dbSlotsTitle;
+    
+    const dbSlotsDesc = document.getElementById('db-slots-desc');
+    if (dbSlotsDesc) dbSlotsDesc.textContent = t.dbSlotsDesc;
   }
 
   // ===================== TABS =====================
@@ -298,15 +309,11 @@
       document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
       btn.classList.add('active');
       document.getElementById(`tab-${btn.dataset.tab}`).classList.remove('hidden');
-    });
-  });
-
-  document.querySelectorAll('.stab').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.stab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.stab-content').forEach(t => t.classList.add('hidden'));
-      btn.classList.add('active');
-      document.getElementById(`stab-${btn.dataset.stab}`).classList.remove('hidden');
+      
+      // Render db slots when app settings tab is opened
+      if (btn.dataset.tab === 'app-settings') {
+        renderDbSlots();
+      }
     });
   });
 
@@ -316,8 +323,27 @@
     if (allRunes.length) reprocess();
   });
 
-  document.getElementById('global-min-level')?.addEventListener('input', e => {
-    globalMinLevel = Math.max(0, Math.min(15, parseInt(e.target.value || '0', 10) || 0));
+  // Auto Game Stage button
+  document.getElementById('btn-auto-stage').addEventListener('click', () => {
+    const metrics = analyzeGameStage(allRunes);
+    const recommendedStage = getRecommendedStage(parseFloat(metrics.score));
+    
+    // Обновляем select и переменную stage
+    const stageSelect = document.getElementById('stage-select');
+    stageSelect.value = recommendedStage;
+    stage = recommendedStage;
+    
+    // Пересчитываем руны с новой стадией
+    if (allRunes.length) reprocess();
+    
+    // Показываем уведомление
+    const score = parseFloat(metrics.score);
+    const message = `Auto-selected: ${recommendedStage} (Score: ${metrics.score})`;
+    console.log(message);
+  });
+
+  document.getElementById('global-min-level')?.addEventListener('change', e => {
+    globalMinLevel = parseInt(e.target.value || '0', 10) || 0;
     if (processedRunes.length) {
       const visible = getVisibleRunes();
       renderDashboard(visible);
@@ -326,34 +352,34 @@
   });
 
   // ===================== FILE UPLOAD =====================
-  document.getElementById('json-upload').addEventListener('change', e => {
+  document.getElementById('json-upload').addEventListener('change', async e => {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = ev => {
+    reader.onload = async ev => {
       try {
         const jsonText = ev.target.result;
         const json = JSON.parse(jsonText);
-        if (window.SWRM && window.SWRM.parseSWEX) {
-          allRunes = window.SWRM.parseSWEX(json);
-          reprocess();
-        } else {
-          console.error('SWRM not loaded yet');
-          alert('Пожалуйста, обновите страницу и попробуйте снова');
-        }
-        try {
-          const slots = JSON.parse(localStorage.getItem('swrm_db_slots_v1') || '[]');
-          if (Array.isArray(slots) && slots.length === 4) {
-            const active = slots.find(s => s.active) || slots[0];
-            active.name = file.name;
-            active.uploadedAt = new Date().toLocaleString();
-            active.jsonText = jsonText;
-            localStorage.setItem('swrm_db_slots_v1', JSON.stringify(slots));
-          }
-        } catch(storeErr) {}
+        allRunes = parseSWEX(json);
+        reprocess();
+        
+        // Save to the first empty slot or active slot
+        const slots = loadDbSlots();
+        const activeSlot = slots.find(s => s.active);
+        const firstEmpty = slots.find(s => !s.name);
+        const targetSlot = activeSlot || firstEmpty || slots[0];
+        targetSlot.name = file.name;
+        targetSlot.uploadedAt = new Date().toLocaleString();
+        targetSlot.active = true;
+        slots.forEach(s => { if (s.id !== targetSlot.id) s.active = false; });
+        saveDbSlots(slots);
+        
+        // Save actual JSON to IndexedDB
+        await saveSlotData(targetSlot.id, jsonText);
+        
         document.getElementById('upload-prompt').classList.add('hidden');
+        document.getElementById('btn-upload-json').classList.add('hidden');
         document.getElementById('tab-dashboard').classList.remove('hidden');
-        // activate dashboard tab
         document.querySelectorAll('.tab').forEach(t => {
           t.classList.toggle('active', t.dataset.tab === 'dashboard');
         });
@@ -364,20 +390,74 @@
     reader.readAsText(file);
   });
 
+  // Close upload prompt overlay
+  document.getElementById('close-upload-prompt')?.addEventListener('click', () => {
+    document.getElementById('upload-prompt').classList.add('hidden');
+    document.getElementById('btn-upload-json').classList.remove('hidden');
+  });
+
+  // Re-open upload prompt from header button
+  document.getElementById('btn-upload-json')?.addEventListener('click', () => {
+    document.getElementById('upload-prompt').classList.remove('hidden');
+    document.getElementById('btn-upload-json').classList.add('hidden');
+  });
+
   function reprocess() {
-    if (window.SWRM && window.SWRM.processAll) {
-      processedRunes = window.SWRM.processAll(allRunes, stage, window.SWRM.settings);
-      const visible = getVisibleRunes();
-      renderDashboard(visible);
-      renderTable(visible);
-    } else {
-      console.error('SWRM.processAll not available');
-      alert('Функции обработки рун еще не загрузились. Пожалуйста, обновите страницу.');
-    }
+    processedRunes = processAll(allRunes, stage, window.SWRM.settings);
+    const visible = getVisibleRunes();
+    renderDashboard(visible);
+    renderTable(visible);
   }
 
   function getVisibleRunes() {
     return processedRunes.filter(r => r.level >= globalMinLevel);
+  }
+
+  // ===================== GAME STAGE ANALYSIS =====================
+  function analyzeGameStage(runes) {
+    // Анализируем только руны +9 и выше
+    const eligibleRunes = runes.filter(r => r.level >= 9);
+    if (eligibleRunes.length === 0) {
+      return {
+        highRollPercent: 0,
+        keepEff: 0,
+        metaSetsPercent: 0,
+        score: 0
+      };
+    }
+
+    // 1. High Roll % (40% веса)
+    const highRollRunes = eligibleRunes.filter(r => r.role === 'High Roll');
+    const highRollPercent = (highRollRunes.length / eligibleRunes.length) * 100;
+
+    // 2. Эффективность Keep рун (30% веса)
+    const keepRunes = eligibleRunes.filter(r => r.verdict === 'Keep');
+    const keepEff = keepRunes.length > 0 
+      ? (keepRunes.reduce((sum, r) => sum + r.eff, 0) / keepRunes.length) / 130 * 100
+      : 0;
+
+    // 3. Мета-сеты (30% веса) - Violent, Swift, Will
+    const metaSets = ['Violent', 'Swift', 'Will'];
+    const metaSetRunes = keepRunes.filter(r => metaSets.includes(r.setName));
+    const metaSetsPercent = keepRunes.length > 0 
+      ? (metaSetRunes.length / keepRunes.length) * 100
+      : 0;
+
+    // Расчет итогового Score
+    const score = (highRollPercent * 0.4) + (keepEff * 0.3) + (metaSetsPercent * 0.3);
+
+    return {
+      highRollPercent: highRollPercent.toFixed(1),
+      keepEff: keepEff.toFixed(1),
+      metaSetsPercent: metaSetsPercent.toFixed(1),
+      score: score.toFixed(1)
+    };
+  }
+
+  function getRecommendedStage(score) {
+    if (score >= 70) return 'Late';
+    if (score >= 40) return 'Mid';
+    return 'Early';
   }
 
   // ===================== DASHBOARD =====================
@@ -390,6 +470,12 @@
     const slotCounts = {1:0,2:0,3:0,4:0,5:0,6:0};
     const slotMain = {1:{},2:{},3:{},4:{},5:{},6:{}};
     const effBuckets = new Array(20).fill(0); // 5% buckets: 0-4, 5-9, ..., 95-99, 100+
+
+    // Обновляем метрики Game Stage
+    const metrics = analyzeGameStage(runes);
+    document.getElementById('highroll-percent').textContent = metrics.highRollPercent + '%';
+    document.getElementById('keep-eff').textContent = metrics.keepEff;
+    document.getElementById('meta-sets-percent').textContent = metrics.metaSetsPercent + '%';
 
     for (const r of runes) {
       counts[r.verdict] = (counts[r.verdict] || 0) + 1;
@@ -612,33 +698,17 @@
       <td>${r.setName}</td>
       <td><span class="stat-chip">Lvl ${r.level}</span></td>
       <td><span class="stat-chip ${statClass(r.mainName)}">${r.mainName}</span></td>
-      <td><span class="stat-chip">${innate}</span></td>
-      <td>${statChip(subs[0])}</td>
-      <td>${statChip(subs[1])}</td>
-      <td>${statChip(subs[2])}</td>
-      <td>${statChip(subs[3])}</td>
+      <td>${innate ? `<span class="stat-chip">${innate}</span>` : ''}</td>
+      <td>${subs[0] ? statChip(subs[0]) : ''}</td>
+      <td>${subs[1] ? statChip(subs[1]) : ''}</td>
+      <td>${subs[2] ? statChip(subs[2]) : ''}</td>
+      <td>${subs[3] ? statChip(subs[3]) : ''}</td>
       <td class="${effCls}">${r.eff}%</td>
       <td><span class="role-tag ${rCls}">${r.role || ''}</span></td>
       <td><span class="verdict-tag ${(r.verdict||'').toLowerCase()}">${r.verdict || ''}</span></td>
+      <td>${r.slot}</td>
+      <td class="target-col-cell">${target ? `<span class="stat-chip">${target}</span>` : ''}</td>
     </tr>`;
-  }
-
-  function updateGameStageRecommendation(runes) {
-    const stageCard = document.getElementById('game-stage-recommendation');
-    if (!stageCard || !window.SWRM.detectGameStage) return;
-    
-    const stageElement = document.getElementById('recommended-stage');
-    const statsElement = document.getElementById('stage-stats');
-    
-    if (runes.length === 0) {
-      stageElement.textContent = '—';
-      statsElement.textContent = 'Загрузите руны для анализа';
-      return;
-    }
-    
-    const detection = window.SWRM.detectGameStage(runes, window.SWRM.settings);
-    stageElement.textContent = detection.stage;
-    statsElement.textContent = detection.stats;
   }
 
   function renderRuneSummary(runes) {
@@ -871,9 +941,6 @@
     alert('Settings saved & recalculated!');
   });
 
-  // Theme toggle
-  document.getElementById('theme-toggle')?.addEventListener('click', toggleTheme);
-
   // Language switcher
   document.addEventListener('change', (e) => {
     if (e.target && e.target.id === 'app-language') {
@@ -881,41 +948,29 @@
     }
   });
 
-  // Initialize variables from window.SWRM
-  function initFromSWRM() {
-    if (window.SWRM) {
-      parseSWEX = window.SWRM.parseSWEX;
-      processAll = window.SWRM.processAll;
-      ROLE_PRIORITY = window.SWRM.ROLE_PRIORITY;
-      settings = window.SWRM.settings;
-      STAT_NAMES = window.SWRM.STAT_NAMES;
-      SET_NAMES = window.SWRM.SET_NAMES;
-      GRADE_SHORT = window.SWRM.GRADE_SHORT;
-      saveSettings = window.SWRM.saveSettings;
-      DEFAULT_THRESHOLDS = window.SWRM.DEFAULT_THRESHOLDS;
-      DEFAULT_HR_THRESHOLDS = window.SWRM.DEFAULT_HR_THRESHOLDS;
-      DEFAULT_HR_COEFF = window.SWRM.DEFAULT_HR_COEFF;
-      DEFAULT_DUO_THRESHOLDS = window.SWRM.DEFAULT_DUO_THRESHOLDS;
-      DEFAULT_ROLES = window.SWRM.DEFAULT_ROLES;
-      DEFAULT_REAPP = window.SWRM.DEFAULT_REAPP;
-      TRANSLATIONS = window.SWRM.TRANSLATIONS;
+  // App Settings - Theme switcher
+  document.addEventListener('change', (e) => {
+    if (e.target && e.target.id === 'app-theme') {
+      const newTheme = e.target.value;
+      document.body.classList.toggle('dark', newTheme === 'dark');
+      localStorage.setItem('theme', newTheme);
     }
-  }
+  });
 
-// Initialize on page load
+  // Initialize on page load
   document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     updateLanguage(currentLang);
     
-    // Initialize variables after all scripts are loaded
-    setTimeout(() => {
-      initFromSWRM();
-      
-      // Initialize stage recommendation after all scripts are loaded
-      if (window.SWRM && window.SWRM.detectGameStage && processedRunes.length > 0) {
-        updateGameStageRecommendation(processedRunes);
-      }
-    }, 100);
+    // Initialize App Settings
+    const appThemeSelect = document.getElementById('app-theme');
+    if (appThemeSelect) {
+      const currentTheme = localStorage.getItem('theme') || 'light';
+      appThemeSelect.value = currentTheme;
+    }
+    
+    // Initialize Database slots
+    renderDbSlots();
   });
 
   // Reset settings
@@ -933,53 +988,120 @@
   });
 
   // ===================== APP SETTINGS =====================
-  const DB_SLOTS_KEY = 'swrm_db_slots_v1';
+  const DB_SLOTS_META_KEY = 'swrm_db_slots_meta_v1';
   const CHANGELOG_KEY = 'swrm_changelog_v1';
   const APP_LANG_KEY = 'swrm_app_lang_v1';
 
+  // IndexedDB setup for large JSON files
+  const DB_NAME = 'SWRM';
+  const DB_VERSION = 1;
+  const STORE_NAME = 'slots';
+  let idb = null;
+
+  async function initIndexedDB() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, DB_VERSION);
+      req.onerror = () => reject(req.error);
+      req.onsuccess = () => { idb = req.result; resolve(idb); };
+      req.onupgradeneeded = (ev) => {
+        const db = ev.target.result;
+        if (!db.objectStoreNames.contains(STORE_NAME)) {
+          db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+        }
+      };
+    });
+  }
+
+  async function saveSlotData(slotId, jsonText) {
+    if (!idb) await initIndexedDB();
+    return new Promise((resolve, reject) => {
+      const tx = idb.transaction([STORE_NAME], 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      const req = store.put({ id: slotId, jsonText });
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  async function loadSlotData(slotId) {
+    if (!idb) await initIndexedDB();
+    return new Promise((resolve, reject) => {
+      const tx = idb.transaction([STORE_NAME], 'readonly');
+      const store = tx.objectStore(STORE_NAME);
+      const req = store.get(slotId);
+      req.onsuccess = () => resolve(req.result?.jsonText || '');
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  async function deleteSlotData(slotId) {
+    if (!idb) await initIndexedDB();
+    return new Promise((resolve, reject) => {
+      const tx = idb.transaction([STORE_NAME], 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      const req = store.delete(slotId);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  }
+
   function loadDbSlots() {
     try {
-      const parsed = JSON.parse(localStorage.getItem(DB_SLOTS_KEY) || '[]');
+      const parsed = JSON.parse(localStorage.getItem(DB_SLOTS_META_KEY) || '[]');
       if (Array.isArray(parsed) && parsed.length === 4) return parsed;
     } catch(e) {}
-    return Array.from({ length: 4 }).map((_, i) => ({ id: i + 1, name: '', uploadedAt: '', jsonText: '', active: i === 0 }));
+    return Array.from({ length: 4 }).map((_, i) => ({ id: i + 1, name: '', uploadedAt: '', active: i === 0 }));
   }
 
   function saveDbSlots(slots) {
-    localStorage.setItem(DB_SLOTS_KEY, JSON.stringify(slots));
+    // Save only metadata (no jsonText) to localStorage
+    const meta = slots.map(s => ({ id: s.id, name: s.name, uploadedAt: s.uploadedAt, active: s.active }));
+    localStorage.setItem(DB_SLOTS_META_KEY, JSON.stringify(meta));
   }
 
   function renderDbSlots() {
     const wrap = document.getElementById('db-slots-wrap');
-    if (!wrap) return;
+    if (!wrap) {
+      console.error('db-slots-wrap element not found');
+      return;
+    }
     const slots = loadDbSlots();
-    wrap.innerHTML = slots.map(slot => `
+    const t = TRANSLATIONS && TRANSLATIONS[currentLang] ? TRANSLATIONS[currentLang] : {};
+    
+    wrap.innerHTML = slots.map(slot => {
+      const hasData = !!slot.name;
+      return `
       <div class="db-slot" data-slot="${slot.id}">
-        <div class="db-slot-title">Database Slot ${slot.id} ${slot.active ? '(Current)' : ''}</div>
-        <div class="db-slot-meta">Name: ${slot.name || '—'}</div>
-        <div class="db-slot-meta">Uploaded: ${slot.uploadedAt || '—'}</div>
+        <div class="db-slot-title">${t.dbSlot || 'Database Slot'} ${slot.id} ${slot.active ? `(${t.current || 'Current'})` : ''}</div>
+        <div class="db-slot-meta">${t.name || 'Name'}: ${slot.name || '—'}</div>
+        <div class="db-slot-meta">${t.uploaded || 'Uploaded'}: ${slot.uploadedAt || '—'}</div>
         <div class="db-slot-actions">
-          <button class="btn-ghost" data-db-action="clipboard" data-slot="${slot.id}">Clipboard</button>
-          <button class="btn-ghost" data-db-action="upload" data-slot="${slot.id}">Upload</button>
-          <button class="btn-ghost" data-db-action="download" data-slot="${slot.id}">Download</button>
-          <button class="btn-ghost" data-db-action="delete" data-slot="${slot.id}">Delete</button>
-          ${slot.active ? '' : `<button class="btn-primary" data-db-action="swap" data-slot="${slot.id}">Swap</button>`}
+          <button class="btn-ghost" data-db-action="clipboard" data-slot="${slot.id}">${t.clipboard || 'Clipboard'}</button>
+          <button class="btn-ghost" data-db-action="upload" data-slot="${slot.id}">${t.upload || 'Upload'}</button>
+          <button class="btn-ghost" ${hasData ? '' : 'disabled'} data-db-action="download" data-slot="${slot.id}">${t.download || 'Download'}</button>
+          <button class="btn-ghost" ${hasData ? '' : 'disabled'} data-db-action="delete" data-slot="${slot.id}">${t.delete || 'Delete'}</button>
+          ${slot.active || !hasData ? '' : `<button class="btn-primary" data-db-action="swap" data-slot="${slot.id}">${t.swap || 'Swap'}</button>`}
         </div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
+  }
+
+  function processJsonData(jsonText) {
+    const json = JSON.parse(jsonText);
+    allRunes = parseSWEX(json);
+    reprocess();
+    document.getElementById('upload-prompt').classList.add('hidden');
+    document.getElementById('btn-upload-json').classList.add('hidden');
   }
 
   function parseAndLoadJson(jsonText) {
-    const json = JSON.parse(jsonText);
-    allRunes = window.SWRM.parseSWEX(json);
-    reprocess();
-    document.getElementById('upload-prompt').classList.add('hidden');
+    processJsonData(jsonText);
+    document.getElementById('tab-dashboard').classList.remove('hidden');
+    // activate dashboard tab
+    document.querySelectorAll('.tab').forEach(t => {
+      t.classList.toggle('active', t.dataset.tab === 'dashboard');
+    });
   }
-
-  document.getElementById('open-app-settings')?.addEventListener('click', () => {
-    const panel = document.getElementById('app-settings-panel');
-    panel.classList.toggle('hidden');
-    if (!panel.classList.contains('hidden')) renderDbSlots();
-  });
 
   const appLangSelect = document.getElementById('app-language');
   if (appLangSelect) {
@@ -987,72 +1109,128 @@
     appLangSelect.value = savedLang;
     appLangSelect.addEventListener('change', () => {
       localStorage.setItem(APP_LANG_KEY, appLangSelect.value);
+      currentLang = appLangSelect.value;
+      updateLanguage(currentLang);
+    });
+  }
+
+  const appThemeSelect = document.getElementById('app-theme');
+  if (appThemeSelect) {
+    appThemeSelect.value = currentTheme;
+    appThemeSelect.addEventListener('change', () => {
+      currentTheme = appThemeSelect.value;
+      localStorage.setItem('swrm-theme', currentTheme);
+      initTheme();
     });
   }
 
   document.getElementById('db-slots-wrap')?.addEventListener('click', async (e) => {
     const btn = e.target.closest('[data-db-action]');
     if (!btn) return;
+    e.stopPropagation();
+    
     const action = btn.dataset.dbAction;
     const slotId = Number(btn.dataset.slot);
+    console.log('Slot action:', action, 'slotId:', slotId);
+    
     const slots = loadDbSlots();
     const idx = slots.findIndex(s => s.id === slotId);
     if (idx < 0) return;
     const slot = slots[idx];
+    const t = TRANSLATIONS[currentLang];
 
     if (action === 'clipboard') {
-      const text = await navigator.clipboard.readText();
-      if (!text) return;
-      slot.jsonText = text;
-      slot.uploadedAt = new Date().toLocaleString();
-      slot.name = slot.name || `Clipboard ${slotId}`;
-      saveDbSlots(slots);
-      renderDbSlots();
+      try {
+        const text = await navigator.clipboard.readText();
+        if (!text) return;
+        await saveSlotData(slotId, text);
+        slot.uploadedAt = new Date().toLocaleString();
+        slot.name = slot.name || `Clipboard ${slotId}`;
+        saveDbSlots(slots);
+        renderDbSlots();
+      } catch(err) {
+        alert('Clipboard access denied or not available');
+      }
       return;
     }
+    
     if (action === 'upload') {
+      console.log('Upload clicked for slot', slotId);
       const inp = document.createElement('input');
       inp.type = 'file';
       inp.accept = '.json';
-      inp.onchange = ev => {
+      inp.style.display = 'none';
+      document.body.appendChild(inp);
+      
+      inp.addEventListener('change', async ev => {
+        console.log('File selected');
         const file = ev.target.files?.[0];
-        if (!file) return;
+        if (!file) {
+          console.log('No file selected');
+          return;
+        }
+        console.log('Reading file:', file.name);
         const reader = new FileReader();
-        reader.onload = event => {
-          slot.jsonText = event.target.result;
-          slot.uploadedAt = new Date().toLocaleString();
-          slot.name = file.name;
-          saveDbSlots(slots);
-          renderDbSlots();
+        reader.onload = async event => {
+          try {
+            console.log('File read successfully, length:', event.target.result.length);
+            await saveSlotData(slotId, event.target.result);
+            slot.name = file.name;
+            slot.uploadedAt = new Date().toLocaleString();
+            saveDbSlots(slots);
+            renderDbSlots();
+            console.log('Slot saved and rendered');
+          } catch(err) {
+            console.error('Error saving to IndexedDB:', err);
+            alert('Failed to save file: ' + err.message);
+          }
         };
+        reader.onerror = () => console.error('File read error');
         reader.readAsText(file);
-      };
+        document.body.removeChild(inp);
+      });
+      
       inp.click();
       return;
     }
+    
     if (action === 'download') {
-      if (!slot.jsonText) return;
-      const blob = new Blob([slot.jsonText], { type: 'application/json' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = slot.name || `slot-${slot.id}.json`;
-      a.click();
-      return;
-    }
-    if (action === 'delete') {
-      slots[idx] = { ...slots[idx], name: '', uploadedAt: '', jsonText: '' };
-      saveDbSlots(slots);
-      renderDbSlots();
-      return;
-    }
-    if (action === 'swap') {
-      if (!slot.jsonText) return alert('Selected slot is empty');
-      slots.forEach(s => { s.active = s.id === slot.id; });
-      saveDbSlots(slots);
       try {
-        parseAndLoadJson(slot.jsonText);
+        const jsonText = await loadSlotData(slotId);
+        if (!jsonText) return;
+        const blob = new Blob([jsonText], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = slot.name || `slot-${slot.id}.json`;
+        a.click();
       } catch(err) {
-        alert('Failed to parse slot JSON: ' + err.message);
+        alert('Failed to load slot data: ' + err.message);
+      }
+      return;
+    }
+    
+    if (action === 'delete') {
+      if (!confirm(`Delete slot ${slot.id}?`)) return;
+      try {
+        await deleteSlotData(slotId);
+        slots[idx] = { id: slot.id, name: '', uploadedAt: '', active: slot.active };
+        saveDbSlots(slots);
+        renderDbSlots();
+      } catch(err) {
+        alert('Failed to delete slot: ' + err.message);
+      }
+      return;
+    }
+    
+    if (action === 'swap') {
+      try {
+        const jsonText = await loadSlotData(slotId);
+        if (!jsonText) return alert(t.slotEmpty || 'Selected slot is empty');
+        slots.forEach(s => { s.active = s.id === slot.id; });
+        saveDbSlots(slots);
+        processJsonData(jsonText);
+      } catch(err) {
+        alert((t.parseError || 'Failed to parse slot JSON: ') + err.message);
       }
       renderDbSlots();
     }

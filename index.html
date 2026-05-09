@@ -2,71 +2,95 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>SW Rune Optimizer v0.1</title>
+    <title>SW Rune Master - v0.2</title>
     <style>
-        body { font-family: sans-serif; background: #1a1a1a; color: #e0e0e0; padding: 20px; }
-        textarea { width: 100%; height: 150px; background: #2d2d2d; color: #fff; border: 1px solid #444; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #444; padding: 10px; text-align: left; }
-        th { background: #333; }
-        .match { color: #4caf50; font-weight: bold; }
-        .sell { color: #f44336; }
-        button { padding: 10px 20px; background: #4a90e2; border: none; color: white; cursor: pointer; margin-top: 10px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: #e0e0e0; padding: 20px; line-height: 1.6; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .upload-section { background: #1e1e1e; padding: 30px; border-radius: 8px; border: 1px dashed #444; text-align: center; margin-bottom: 20px; }
+        input[type="file"] { margin: 15px 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #1e1e1e; }
+        th, td { border: 1px solid #333; padding: 12px; text-align: left; font-size: 14px; }
+        th { background: #252525; color: #4a90e2; }
+        tr:hover { background: #252525; }
+        .match { color: #4caf50; font-weight: bold; background: rgba(76, 175, 80, 0.1); }
+        .sell { color: #f44336; opacity: 0.6; }
+        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+        .stats-preview { font-size: 12px; color: #aaa; }
     </style>
 </head>
 <body>
-    <h2>SW Rune Optimizer Prototype</h2>
-    <p>Вставь содержимое JSON файла сюда:</p>
-    <textarea id="jsonInput" placeholder='{"runes": [...]}'></textarea>
-    <br>
-    <button onclick="processRunes()">Рассчитать High Roll</button>
+    <div class="container">
+        <h2>SW Rune Master <span style="font-size: 0.5em; color: #666;">v0.2</span></h2>
+        
+        <div class="upload-section">
+            <p>Выберите ваш JSON файл из SWEX (обычно называется <i>yourname-optimizer.json</i>)</p>
+            <input type="file" id="fileInput" accept=".json">
+            <div id="status">Ожидание файла...</div>
+        </div>
 
-    <table id="resultTable">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Grade</th>
-                <th>Set</th>
-                <th>Slot</th>
-                <th>Result</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
+        <table id="resultTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Grade</th>
+                    <th>Set</th>
+                    <th>Slot</th>
+                    <th>Main Stat</th>
+                    <th>Substats Preview</th>
+                    <th>Verdict</th>
+                </tr>
+            </thead>
+            <tbody>
+                </tbody>
+        </table>
+    </div>
 
     <script>
-        // Твои пороги Mid_Hero (из Settings)
-        const THRESHOLDS = {
-            "SPD": 15, "HP%": 20, "DEF%": 20, "ATK%": 17, 
-            "CRate": 13, "CDmg": 16, "ACC": 18, "RES": 18
-        };
+        const THRESHOLDS = { "SPD": 15, "HP%": 20, "DEF%": 20, "ATK%": 17, "CRate": 13, "CDmg": 16, "ACC": 18, "RES": 18 };
         const COEFF = 0.7;
+        
+        const statMap = { 1: "HP%", 2: "HP", 3: "ATK%", 4: "ATK", 5: "DEF%", 6: "DEF", 8: "SPD", 9: "CRate", 10: "CDmg", 11: "RES", 12: "ACC" };
+        const setMap = { 1: "Energy", 2: "Guard", 3: "Swift", 4: "Blade", 5: "Rage", 6: "Focus", 7: "Endure", 8: "Fatal", 10: "Despair", 11: "Vampire", 13: "Violent", 14: "Nemesis", 15: "Will", 16: "Shield", 17: "Revenge", 18: "Destroy", 19: "Fight", 20: "Determination", 21: "Enhance", 22: "Accuracy", 23: "Tolerance" };
 
-        // Маппинг статов из игры (id в название)
-        const statMap = { 8: "SPD", 1: "HP%", 2: "HP", 3: "ATK%", 4: "ATK", 5: "DEF%", 6: "DEF", 9: "CRate", 10: "CDmg", 11: "RES", 12: "ACC" };
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
 
-        function processRunes() {
-            const input = document.getElementById('jsonInput').value;
-            let data;
-            try {
-                data = JSON.parse(input);
-            } catch(e) { alert("Ошибка в JSON!"); return; }
+            const reader = new FileReader();
+            document.getElementById('status').innerText = "Обработка...";
 
-            const runes = data.runes || [];
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    const runes = data.runes || [];
+                    renderRunes(runes);
+                    document.getElementById('status').innerText = `Готово! Обработано рун: ${runes.length}`;
+                } catch (err) {
+                    alert("Ошибка при чтении JSON. Убедитесь, что это правильный файл SWEX.");
+                    document.getElementById('status').innerText = "Ошибка.";
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        function renderRunes(runes) {
             const tbody = document.querySelector('#resultTable tbody');
             tbody.innerHTML = '';
 
             runes.forEach(rune => {
-                const grade = rune.class >= 6 ? "Legend" : "Hero"; // Упростим для теста
+                const grade = rune.class >= 6 ? "Legend" : "Hero"; 
                 const substats = rune.sec_eff || [];
                 
                 let hasHighRoll = false;
                 let partnerScore = 0;
+                let subTexts = [];
 
                 substats.forEach(eff => {
                     const statName = statMap[eff[0]];
-                    const val = eff[1] + eff[3]; // База + проки
+                    const val = eff[1] + eff[3]; // Base + Enchant/Grind (упрощенно)
                     const threshold = THRESHOLDS[statName];
+
+                    if (statName) subTexts.push(`${statName}+${val}`);
 
                     if (threshold) {
                         if (val >= threshold) {
@@ -78,22 +102,21 @@
                     }
                 });
 
-                // Твоя логика:
-                // Legend: Match если есть хоть один High Roll
-                // Hero: Match если есть High Roll И хотя бы один напарник (score >= 2)
-                let verdict = "No";
+                let verdict = "Sell";
                 if (hasHighRoll) {
                     if (grade === "Legend" || partnerScore >= 2) {
-                        verdict = "Match";
+                        verdict = "Keep";
                     }
                 }
 
                 const row = `<tr>
                     <td>${rune.rune_id}</td>
                     <td>${grade}</td>
-                    <td>Set ${rune.set_id}</td>
+                    <td>${setMap[rune.set_id] || "Unknown"}</td>
                     <td>${rune.slot_no}</td>
-                    <td class="${verdict === 'Match' ? 'match' : 'sell'}">${verdict}</td>
+                    <td>${statMap[rune.pri_eff[0]]}</td>
+                    <td class="stats-preview">${subTexts.join(', ')}</td>
+                    <td class="${verdict === 'Keep' ? 'match' : 'sell'}">${verdict}</td>
                 </tr>`;
                 tbody.innerHTML += row;
             });

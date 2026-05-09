@@ -20,6 +20,7 @@
         <button class="tab active" data-tab="dashboard">Dashboard</button>
         <button class="tab" data-tab="runetable">Rune Table</button>
         <button class="tab" data-tab="settings">Rune Rules</button>
+        <button class="tab" data-tab="advanced-formulas">Advanced Formulas</button>
         <button class="tab" data-tab="guide">Guide</button>
         <button class="tab" data-tab="changelog">Changelog</button>
         <button class="tab" data-tab="app-settings">App Settings</button>
@@ -251,6 +252,22 @@
       </div>
     </section>
 
+    <!-- ADVANCED FORMULAS TAB -->
+    <section id="tab-advanced-formulas" class="tab-content hidden">
+      <div class="settings-layout">
+        <div class="settings-content">
+          <h3>Advanced Formula System</h3>
+          <p class="settings-desc">Comprehensive formula settings mirroring Google Sheets logic. Each formula can be enabled/disabled and configured with detailed parameters.</p>
+          
+          <div id="advanced-formulas-wrap"></div>
+        </div>
+      </div>
+      <div class="settings-actions">
+        <button id="btn-save-advanced-formulas" class="btn-primary">Save & Recalculate</button>
+        <button id="btn-reset-advanced-formulas" class="btn-ghost">Reset to Defaults</button>
+      </div>
+    </section>
+
     <section id="tab-guide" class="tab-content hidden">
       <div class="panel">
         <div class="panel-title">Guide</div>
@@ -330,6 +347,7 @@
   <script src="js/settings.js"></script>
   <script src="js/parser.js"></script>
   <script src="js/engine.js"></script>
+  <script src="js/advanced-formulas.js"></script>
   <script src="js/ui.js"></script>
 </body>
 </html>

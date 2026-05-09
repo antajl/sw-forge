@@ -401,22 +401,31 @@
       results[role] = checkRole(rune, role, stage, settings);
     }
 
+    // Run advanced formula checks
+    const advancedResults = window.SWRM.processAdvancedFormulas?.(rune, stage, settings) || {};
+    
+    // Merge results - advanced formulas take priority
+    const mergedResults = { ...results, ...advancedResults };
+
     const dynamicPriority = [
       ...BASE_ROLE_PRIORITY,
-      ...Object.keys(settings.roles || {}).filter(r => !BASE_ROLE_PRIORITY.includes(r))
+      ...Object.keys(settings.roles || {}).filter(r => !BASE_ROLE_PRIORITY.includes(r)),
+      ...Object.keys(settings.formulas || {}).filter(f => !BASE_ROLE_PRIORITY.includes(f))
     ];
 
     // Best role by priority
     let bestRole = '';
     for (const role of dynamicPriority) {
-      if (results[role]) { bestRole = role; break; }
+      if (mergedResults[role]) { bestRole = role; break; }
     }
 
     rune.role    = bestRole;
-    rune.verdict = getVerdict(rune, stage, settings, bestRole);
+    rune.verdict = window.SWRM.getAdvancedVerdict?.(rune, stage, settings, mergedResults) || 
+                   getVerdict(rune, stage, settings, bestRole);
     rune.badFlat = hasBadFlat(rune, stage);
     rune.grindInfo = checkGrind(rune, stage, settings);
     rune.gemInfo = checkGem(rune, stage, settings);
+    rune.formulaResults = mergedResults; // Store all formula results for debugging
 
     return rune;
   }

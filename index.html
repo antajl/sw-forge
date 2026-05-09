@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>SW Rune Optimizer v0.1</title>
+    <style>
+        body { font-family: sans-serif; background: #1a1a1a; color: #e0e0e0; padding: 20px; }
+        textarea { width: 100%; height: 150px; background: #2d2d2d; color: #fff; border: 1px solid #444; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #444; padding: 10px; text-align: left; }
+        th { background: #333; }
+        .match { color: #4caf50; font-weight: bold; }
+        .sell { color: #f44336; }
+        button { padding: 10px 20px; background: #4a90e2; border: none; color: white; cursor: pointer; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h2>SW Rune Optimizer Prototype</h2>
+    <p>Вставь содержимое JSON файла сюда:</p>
+    <textarea id="jsonInput" placeholder='{"runes": [...]}'></textarea>
+    <br>
+    <button onclick="processRunes()">Рассчитать High Roll</button>
+
+    <table id="resultTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Grade</th>
+                <th>Set</th>
+                <th>Slot</th>
+                <th>Result</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script>
+        // Твои пороги Mid_Hero (из Settings)
+        const THRESHOLDS = {
+            "SPD": 15, "HP%": 20, "DEF%": 20, "ATK%": 17, 
+            "CRate": 13, "CDmg": 16, "ACC": 18, "RES": 18
+        };
+        const COEFF = 0.7;
+
+        // Маппинг статов из игры (id в название)
+        const statMap = { 8: "SPD", 1: "HP%", 2: "HP", 3: "ATK%", 4: "ATK", 5: "DEF%", 6: "DEF", 9: "CRate", 10: "CDmg", 11: "RES", 12: "ACC" };
+
+        function processRunes() {
+            const input = document.getElementById('jsonInput').value;
+            let data;
+            try {
+                data = JSON.parse(input);
+            } catch(e) { alert("Ошибка в JSON!"); return; }
+
+            const runes = data.runes || [];
+            const tbody = document.querySelector('#resultTable tbody');
+            tbody.innerHTML = '';
+
+            runes.forEach(rune => {
+                const grade = rune.class >= 6 ? "Legend" : "Hero"; // Упростим для теста
+                const substats = rune.sec_eff || [];
+                
+                let hasHighRoll = false;
+                let partnerScore = 0;
+
+                substats.forEach(eff => {
+                    const statName = statMap[eff[0]];
+                    const val = eff[1] + eff[3]; // База + проки
+                    const threshold = THRESHOLDS[statName];
+
+                    if (threshold) {
+                        if (val >= threshold) {
+                            hasHighRoll = true;
+                            partnerScore += 1;
+                        } else if (val >= threshold * COEFF) {
+                            partnerScore += 1;
+                        }
+                    }
+                });
+
+                // Твоя логика:
+                // Legend: Match если есть хоть один High Roll
+                // Hero: Match если есть High Roll И хотя бы один напарник (score >= 2)
+                let verdict = "No";
+                if (hasHighRoll) {
+                    if (grade === "Legend" || partnerScore >= 2) {
+                        verdict = "Match";
+                    }
+                }
+
+                const row = `<tr>
+                    <td>${rune.rune_id}</td>
+                    <td>${grade}</td>
+                    <td>Set ${rune.set_id}</td>
+                    <td>${rune.slot_no}</td>
+                    <td class="${verdict === 'Match' ? 'match' : 'sell'}">${verdict}</td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
+        }
+    </script>
+</body>
+</html>

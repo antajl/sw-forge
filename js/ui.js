@@ -306,11 +306,6 @@ updateDashboardLabels();
       if (btn.dataset.tab === 'app-settings') {
         renderDbSlots();
       }
-      
-      // Render advanced formulas when advanced formulas tab is opened
-      if (btn.dataset.tab === 'advanced-formulas') {
-        renderAdvancedFormulas();
-      }
     });
   });
 
@@ -360,7 +355,33 @@ updateDashboardLabels();
         allRunes = parseSWEX(json);
         reprocess();
         
-        // Save to the first empty slot or active slot
+        // Check file size and save to appropriate storage
+        const fileSizeKB = Math.round(jsonText.length / 1024);
+        const maxLocalStorageSize = 4 * 1024; // 4MB limit for localStorage
+        
+        if (fileSizeKB <= maxLocalStorageSize) {
+          // Use localStorage for small files
+          localStorage.setItem('loadedRunes', jsonText);
+          localStorage.setItem('loadedRunesName', file.name);
+          localStorage.setItem('loadedRunesDate', new Date().toISOString());
+          localStorage.setItem('loadedRunesSize', fileSizeKB.toString());
+          console.log(`Saved ${file.name} (${fileSizeKB}KB) to localStorage`);
+        } else {
+          // Use IndexedDB for large files
+          try {
+            await saveSlotData('current-runes', jsonText);
+            localStorage.setItem('loadedRunesName', file.name);
+            localStorage.setItem('loadedRunesDate', new Date().toISOString());
+            localStorage.setItem('loadedRunesSize', fileSizeKB.toString());
+            localStorage.setItem('loadedRunesStorage', 'indexeddb');
+            console.log(`Saved ${file.name} (${fileSizeKB}KB) to IndexedDB`);
+          } catch (err) {
+            alert(`Failed to save large file (${fileSizeKB}KB): ${err.message}`);
+            return;
+          }
+        }
+        
+        // Save to first empty slot or active slot
         const slots = loadDbSlots();
         const activeSlot = slots.find(s => s.active);
         const firstEmpty = slots.find(s => !s.name);
@@ -391,6 +412,54 @@ updateDashboardLabels();
   document.getElementById('close-upload-prompt')?.addEventListener('click', () => {
     document.getElementById('upload-prompt').classList.add('hidden');
     document.getElementById('btn-upload-json').classList.remove('hidden');
+  });
+
+  // Clear saved runes button
+  document.getElementById('btn-clear-saved-runes')?.addEventListener('click', async () => {
+    if (confirm('Are you sure you want to clear all saved runes? This will remove the currently loaded runes from browser storage.')) {
+      // Clear localStorage
+      localStorage.removeItem('loadedRunes');
+      localStorage.removeItem('loadedRunesName');
+      localStorage.removeItem('loadedRunesDate');
+      localStorage.removeItem('loadedRunesStorage');
+      localStorage.removeItem('loadedRunesSize');
+      
+      // Clear IndexedDB
+      try {
+        await deleteSlotData('current-runes');
+        console.log('Cleared runes from IndexedDB');
+      } catch (err) {
+        console.log('No IndexedDB data to clear:', err.message);
+      }
+      
+      // Reset application state
+      allRunes = [];
+      processedRunes = [];
+      
+      // Show upload prompt again
+      document.getElementById('upload-prompt').classList.remove('hidden');
+      document.getElementById('btn-upload-json').classList.remove('hidden');
+      document.getElementById('tab-dashboard').classList.add('hidden');
+      document.querySelectorAll('.tab').forEach(t => {
+        t.classList.toggle('active', t.dataset.tab === 'guide');
+      });
+      document.getElementById('tab-guide').classList.remove('hidden');
+      
+      // Clear dashboard
+      document.getElementById('sc-total').querySelector('.sc-value').textContent = '—';
+      document.getElementById('sc-keep').querySelector('.sc-value').textContent = '—';
+      document.getElementById('sc-sell').querySelector('.sc-value').textContent = '—';
+      document.getElementById('sc-grind').querySelector('.sc-value').textContent = '—';
+      document.getElementById('sc-finish').querySelector('.sc-value').textContent = '—';
+      document.getElementById('sc-reapp').querySelector('.sc-value').textContent = '—';
+      document.getElementById('sc-upgrade').querySelector('.sc-value').textContent = '—';
+      document.getElementById('sc-gem').querySelector('.sc-value').textContent = '—';
+      
+      // Clear rune table
+      document.getElementById('rune-table-body').innerHTML = '';
+      
+      console.log('Cleared saved runes from browser storage');
+    }
   });
 
   // Re-open upload prompt from header button
@@ -904,7 +973,7 @@ updateDashboardLabels();
   
   function handleAdvancedFormulaChange(e) {
     const element = e.target;
-    const formulaName = element.dataset.formula;
+    const formulaName = element.dataset.formula || element.dataset.role;
     const field = element.dataset.field;
     
     if (!formulaName || !field) return;
@@ -918,48 +987,84 @@ updateDashboardLabels();
       value = element.value;
     }
     
+    // Check if this is a formula or legacy role
+    const isFormula = window.SWRM.settings.formulas && window.SWRM.settings.formulas[formulaName] !== undefined;
+    
     // Update settings object
     const settings = window.SWRM.settings;
-    if (!settings.formulas) settings.formulas = {};
-    if (!settings.formulas[formulaName]) settings.formulas[formulaName] = {};
     
-    // Handle nested properties
-    if (field === 'enabled') {
-      settings.formulas[formulaName].enabled = value;
-    } else if (field === 'acceptedMains') {
-      const slot = parseInt(element.dataset.slot);
-      const index = parseInt(element.dataset.index);
-      if (!settings.formulas[formulaName].acceptedMains) settings.formulas[formulaName].acceptedMains = {};
-      if (!settings.formulas[formulaName].acceptedMains[slot]) settings.formulas[formulaName].acceptedMains[slot] = ['None', 'None', 'None'];
-      settings.formulas[formulaName].acceptedMains[slot][index] = value;
-    } else if (field === 'substats') {
-      const stat = element.dataset.stat;
-      const stage = element.dataset.stage;
-      if (!settings.formulas[formulaName].substats) settings.formulas[formulaName].substats = {};
-      if (!settings.formulas[formulaName].substats[stat]) settings.formulas[formulaName].substats[stat] = {};
-      settings.formulas[formulaName].substats[stat][stage] = value;
-    } else if (field === 'mustHave') {
-      const stage = element.dataset.stage;
-      if (!settings.formulas[formulaName].mustHave) settings.formulas[formulaName].mustHave = {};
-      settings.formulas[formulaName].mustHave[stage] = value === '' ? null : value;
-    } else if (field === 'slotRequirements') {
-      const slot = parseInt(element.dataset.slot);
-      const stage = element.dataset.stage;
-      if (!settings.formulas[formulaName].slotRequirements) settings.formulas[formulaName].slotRequirements = {};
-      if (!settings.formulas[formulaName].slotRequirements[slot]) settings.formulas[formulaName].slotRequirements[slot] = {};
-      settings.formulas[formulaName].slotRequirements[slot][stage] = value;
-    } else if (field === 'minStats') {
-      const slotType = element.dataset.slot;
-      const stage = element.dataset.stage;
-      if (!settings.formulas[formulaName].minStats) settings.formulas[formulaName].minStats = {};
-      if (!settings.formulas[formulaName].minStats[slotType]) settings.formulas[formulaName].minStats[slotType] = {};
-      settings.formulas[formulaName].minStats[slotType][stage] = value;
-    } else if (field === 'requireHR') {
-      const anchorType = element.dataset.anchor;
-      const stage = element.dataset.stage;
-      if (!settings.formulas[formulaName].requireHR) settings.formulas[formulaName].requireHR = {};
-      if (!settings.formulas[formulaName].requireHR[anchorType]) settings.formulas[formulaName].requireHR[anchorType] = {};
-      settings.formulas[formulaName].requireHR[anchorType][stage] = value;
+    if (isFormula) {
+      // Update formula settings
+      if (!settings.formulas) settings.formulas = {};
+      if (!settings.formulas[formulaName]) settings.formulas[formulaName] = {};
+      
+      // Handle nested properties
+      if (field === 'enabled') {
+        settings.formulas[formulaName].enabled = value;
+      } else if (field === 'acceptedMains') {
+        const slot = parseInt(element.dataset.slot);
+        const index = parseInt(element.dataset.index);
+        if (!settings.formulas[formulaName].acceptedMains) settings.formulas[formulaName].acceptedMains = {};
+        if (!settings.formulas[formulaName].acceptedMains[slot]) settings.formulas[formulaName].acceptedMains[slot] = ['None', 'None', 'None'];
+        settings.formulas[formulaName].acceptedMains[slot][index] = value;
+      } else if (field === 'substats') {
+        const stat = element.dataset.stat;
+        const stage = element.dataset.stage;
+        if (!settings.formulas[formulaName].substats) settings.formulas[formulaName].substats = {};
+        if (!settings.formulas[formulaName].substats[stat]) settings.formulas[formulaName].substats[stat] = {};
+        settings.formulas[formulaName].substats[stat][stage] = value;
+      } else if (field === 'mustHave') {
+        const stage = element.dataset.stage;
+        if (!settings.formulas[formulaName].mustHave) settings.formulas[formulaName].mustHave = {};
+        settings.formulas[formulaName].mustHave[stage] = value === '' ? null : value;
+      } else if (field === 'slotRequirements') {
+        const slot = parseInt(element.dataset.slot);
+        const stage = element.dataset.stage;
+        if (!settings.formulas[formulaName].slotRequirements) settings.formulas[formulaName].slotRequirements = {};
+        if (!settings.formulas[formulaName].slotRequirements[slot]) settings.formulas[formulaName].slotRequirements[slot] = {};
+        settings.formulas[formulaName].slotRequirements[slot][stage] = value;
+      } else if (field === 'minStats') {
+        const slotType = element.dataset.slot;
+        const stage = element.dataset.stage;
+        if (!settings.formulas[formulaName].minStats) settings.formulas[formulaName].minStats = {};
+        if (!settings.formulas[formulaName].minStats[slotType]) settings.formulas[formulaName].minStats[slotType] = {};
+        settings.formulas[formulaName].minStats[slotType][stage] = value;
+      } else if (field === 'requireHR') {
+        const anchorType = element.dataset.anchor;
+        const stage = element.dataset.stage;
+        if (!settings.formulas[formulaName].requireHR) settings.formulas[formulaName].requireHR = {};
+        if (!settings.formulas[formulaName].requireHR[anchorType]) settings.formulas[formulaName].requireHR[anchorType] = {};
+        settings.formulas[formulaName].requireHR[anchorType][stage] = value;
+      }
+    } else {
+      // Update legacy role settings
+      if (!settings.roles) settings.roles = {};
+      if (!settings.roles[formulaName]) settings.roles[formulaName] = {};
+      
+      // Handle nested properties for legacy roles
+      if (field === 'substats') {
+        const stat = element.dataset.stat;
+        const stage = element.dataset.stage;
+        if (!settings.roles[formulaName].substats) settings.roles[formulaName].substats = {};
+        if (!settings.roles[formulaName].substats[stat]) settings.roles[formulaName].substats[stat] = {};
+        settings.roles[formulaName].substats[stat][stage] = value;
+      } else if (field === 'mustHave') {
+        const stage = element.dataset.stage;
+        if (!settings.roles[formulaName].mustHave) settings.roles[formulaName].mustHave = {};
+        settings.roles[formulaName].mustHave[stage] = value === '' ? null : value;
+      } else if (field === 'minStats') {
+        const slotType = element.dataset.slot;
+        const stage = element.dataset.stage;
+        if (!settings.roles[formulaName].minStats) settings.roles[formulaName].minStats = {};
+        if (!settings.roles[formulaName].minStats[slotType]) settings.roles[formulaName].minStats[slotType] = {};
+        settings.roles[formulaName].minStats[slotType][stage] = value;
+      } else if (field === 'requireHR') {
+        const anchorType = element.dataset.anchor;
+        const stage = element.dataset.stage;
+        if (!settings.roles[formulaName].requireHR) settings.roles[formulaName].requireHR = {};
+        if (!settings.roles[formulaName].requireHR[anchorType]) settings.roles[formulaName].requireHR[anchorType] = {};
+        settings.roles[formulaName].requireHR[anchorType][stage] = value;
+      }
     }
   }
 
@@ -968,65 +1073,258 @@ updateDashboardLabels();
     return (v || '').split(',').map(s => s.trim()).filter(Boolean);
   }
 
+  function renderRoleSettings() {
+    const navWrap = document.getElementById('role-nav-list');
+    const contentWrap = document.getElementById('roles-settings-wrap');
+    const selector = document.getElementById('role-selector');
+    
+    if (!navWrap || !contentWrap || !selector) return;
+    
+    // Use advanced formulas if available, otherwise fall back to legacy roles
+    const formulas = window.SWRM.settings.formulas || {};
+    const roles = window.SWRM.settings.roles || {};
+    
+    // Combine all roles/formulas
+    const allRoles = { ...formulas, ...roles };
+    let currentActiveRole = '';
+    
+    // Render navigation list
+    let navHtml = '';
+    for (const [roleName, roleCfg] of Object.entries(allRoles)) {
+      const isActive = currentActiveRole === '' || currentActiveRole === roleName;
+      const isFormula = formulas[roleName] !== undefined;
+      const displayName = roleName + (isFormula ? '' : ' (Legacy)');
+      
+      navHtml += `<div class="role-nav-item ${isActive ? 'active' : ''}" data-role="${roleName}">${displayName}</div>`;
+    }
+    navWrap.innerHTML = navHtml;
+    
+    // Update role selector dropdown
+    let selectorHtml = '<option value="">Choose a role...</option>';
+    for (const roleName of Object.keys(allRoles)) {
+      selectorHtml += `<option value="${roleName}">${roleName}</option>`;
+    }
+    selector.innerHTML = selectorHtml;
+    
+    // Render content for active role - UNIFIED INTERFACE FOR ALL ROLES
+    function renderActiveRole(roleName) {
+      currentActiveRole = roleName;
+      const roleCfg = allRoles[roleName];
+      const isFormula = formulas[roleName] !== undefined;
+      
+      let html = '';
+      
+      // UNIFIED INTERFACE - All roles get the same advanced interface
+      html += `<div style="margin-bottom:20px">`;
+      
+      // Role header with enable toggle
+      html += `<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px">`;
+      html += `<div style="font-family:var(--font-head);font-size:1.1rem;font-weight:700;color:var(--text-hi)">${roleName}${isFormula ? '' : ' (Legacy)'}</div>`;
+      
+      if (isFormula) {
+        html += `<label style="display:flex;align-items:center;gap:8px;font-size:0.9rem;color:var(--text)">
+          <input type="checkbox" data-formula="${roleName}" data-field="enabled" ${roleCfg.enabled ? 'checked' : ''} style="width:18px;height:18px">
+          Enable Formula
+        </label>`;
+      } else {
+        html += `<button class="btn-ghost btn-remove-role" data-role-remove="${roleName}" ${Object.keys(roles).length <= 1 ? 'disabled' : ''}>Remove</button>`;
+      }
+      html += `</div>`;
+      
+      // Accepted Mains section - FOR ALL ROLES
+      html += `<div style="margin-bottom:16px">`;
+      html += `<div style="font-size:0.85rem;color:var(--text-dim);margin-bottom:8px;font-family:var(--font-head);letter-spacing:0.08em;text-transform:uppercase">Accepted Mains</div>`;
+      html += `<div style="display:grid;grid-template-columns:80px repeat(3,1fr);gap:8px;font-size:0.82rem;">`;
+      html += `<div style="font-weight:600;color:var(--text)">Slot</div><div>Main 1</div><div>Main 2</div><div>Main 3</div>`;
+      
+      for (const slot of [2, 4, 6]) {
+        const mains = roleCfg.acceptedMains?.[slot] || (isFormula ? ['None', 'None', 'None'] : ['HP%', 'ATK%', 'DEF%']);
+        html += `<div style="font-weight:600;color:var(--text)">Slot ${slot}</div>`;
+        for (let i = 0; i < 3; i++) {
+          const dataAttr = isFormula ? `data-formula="${roleName}" data-field="acceptedMains" data-slot="${slot}" data-index="${i}"` : `data-role="${roleName}" data-field="acceptedMains" data-slot="${slot}" data-index="${i}"`;
+          html += `<select ${dataAttr} style="padding:4px 8px;font-size:0.8rem">`;
+          const options = ['None', 'SPD', 'HP%', 'ATK%', 'DEF%', 'CRate', 'CDmg', 'ACC', 'RES'];
+          for (const opt of options) {
+            html += `<option value="${opt}" ${mains[i] === opt ? 'selected' : ''}>${opt}</option>`;
+          }
+          html += `</select>`;
+        }
+      }
+      html += `</div></div>`;
+      
+      // Sub-stats section - FOR ALL ROLES
+      html += `<div style="margin-bottom:16px">`;
+      html += `<div style="font-size:0.85rem;color:var(--text-dim);margin-bottom:8px;font-family:var(--font-head);letter-spacing:0.08em;text-transform:uppercase">Sub-stats</div>`;
+      html += `<div style="display:grid;grid-template-columns:80px repeat(3,1fr);gap:8px;font-size:0.82rem;">`;
+      html += `<div style="font-weight:600;color:var(--text)">Stat</div><div>Early</div><div>Mid</div><div>Late</div>`;
+      
+      const stats = ['SPD', 'HP%', 'ATK%', 'DEF%', 'CRate', 'CDmg', 'ACC', 'RES'];
+      for (const stat of stats) {
+        html += `<div style="font-weight:600;color:var(--text)">${stat}</div>`;
+        for (const stage of ['Early', 'Mid', 'Late']) {
+          const value = (isFormula ? roleCfg.substats?.[stat]?.[stage] : roleCfg.substats?.[stat]) || 'None';
+          const dataAttr = isFormula ? `data-formula="${roleName}" data-field="substats" data-stat="${stat}" data-stage="${stage}"` : `data-role="${roleName}" data-field="substats" data-stat="${stat}" data-stage="${stage}"`;
+          html += `<select ${dataAttr} style="padding:4px 8px;font-size:0.8rem">`;
+          const options = ['Include', 'None', 'Exclude'];
+          for (const opt of options) {
+            html += `<option value="${opt}" ${value === opt ? 'selected' : ''}>${opt}</option>`;
+          }
+          html += `</select>`;
+        }
+      }
+      html += `</div></div>`;
+      
+      // Must Have section - FOR ALL ROLES
+      html += `<div style="margin-bottom:16px">`;
+      html += `<div style="font-size:0.85rem;color:var(--text-dim);margin-bottom:8px;font-family:var(--font-head);letter-spacing:0.08em;text-transform:uppercase">Must Have (Required Substat)</div>`;
+      html += `<div style="display:grid;grid-template-columns:80px repeat(3,1fr);gap:8px;font-size:0.82rem;">`;
+      html += `<div style="font-weight:600;color:var(--text)">Stage</div><div>Early</div><div>Mid</div><div>Late</div>`;
+      html += `<div style="font-weight:600;color:var(--text)">Required</div>`;
+      
+      for (const stage of ['Early', 'Mid', 'Late']) {
+        const value = (isFormula ? roleCfg.mustHave?.[stage] : roleCfg.mustHave?.[stage]) || '';
+        const dataAttr = isFormula ? `data-formula="${roleName}" data-field="mustHave" data-stage="${stage}"` : `data-role="${roleName}" data-field="mustHave" data-stage="${stage}"`;
+        html += `<select ${dataAttr} style="padding:4px 8px;font-size:0.8rem">`;
+        const options = ['', 'None', 'SPD', 'HP%', 'ATK%', 'DEF%', 'CRate', 'CDmg', 'ACC', 'RES'];
+        for (const opt of options) {
+          html += `<option value="${opt}" ${value === opt ? 'selected' : ''}>${opt}</option>`;
+        }
+        html += `</select>`;
+      }
+      html += `</div></div>`;
+      
+      // Slot Requirements section - FOR ALL ROLES
+      html += `<div style="margin-bottom:16px">`;
+      html += `<div style="font-size:0.85rem;color:var(--text-dim);margin-bottom:8px;font-family:var(--font-head);letter-spacing:0.08em;text-transform:uppercase">Slot Requirements (Required Stats per Slot)</div>`;
+      html += `<div style="display:grid;grid-template-columns:80px repeat(3,1fr);gap:8px;font-size:0.82rem;">`;
+      html += `<div style="font-weight:600;color:var(--text)">Slot</div><div>Early</div><div>Mid</div><div>Late</div>`;
+      
+      for (const slot of [2, 4, 6]) {
+        html += `<div style="font-weight:600;color:var(--text)">Slot ${slot}</div>`;
+        for (const stage of ['Early', 'Mid', 'Late']) {
+          const value = (isFormula ? roleCfg.slotRequirements?.[slot]?.[stage] : 'None') || 'None';
+          const dataAttr = isFormula ? `data-formula="${roleName}" data-field="slotRequirements" data-slot="${slot}" data-stage="${stage}"` : `data-role="${roleName}" data-field="slotRequirements" data-slot="${slot}" data-stage="${stage}"`;
+          html += `<select ${dataAttr} style="padding:4px 8px;font-size:0.8rem">`;
+          const options = ['None', 'SPD', 'HP%', 'ATK%', 'DEF%', 'CRate', 'CDmg', 'ACC', 'RES'];
+          for (const opt of options) {
+            html += `<option value="${opt}" ${value === opt ? 'selected' : ''}>${opt}</option>`;
+          }
+          html += `</select>`;
+        }
+      }
+      html += `</div></div>`;
+      
+      // Min Stats section - FOR ALL ROLES
+      html += `<div style="margin-bottom:16px">`;
+      html += `<div style="font-size:0.85rem;color:var(--text-dim);margin-bottom:8px;font-family:var(--font-head);letter-spacing:0.08em;text-transform:uppercase">Min Stats (excluding Must Have)</div>`;
+      html += `<div style="display:grid;grid-template-columns:80px repeat(3,1fr);gap:8px;font-size:0.82rem;">`;
+      html += `<div style="font-weight:600;color:var(--text)">Slot Type</div><div>Early</div><div>Mid</div><div>Late</div>`;
+      
+      const slotTypes = ['1/3/5', 'Slot 2', 'Slot 4', 'Slot 6'];
+      for (const slotType of slotTypes) {
+        html += `<div style="font-weight:600;color:var(--text)">${slotType}</div>`;
+        for (const stage of ['Early', 'Mid', 'Late']) {
+          const value = (isFormula ? roleCfg.minStats?.[slotType]?.[stage] : roleCfg.minStats?.[stage]) || 1;
+          const dataAttr = isFormula ? `data-formula="${roleName}" data-field="minStats" data-slot="${slotType}" data-stage="${stage}"` : `data-role="${roleName}" data-field="minStats" data-slot="${slotType}" data-stage="${stage}"`;
+          html += `<input type="number" ${dataAttr} value="${value}" min="0" max="4" style="padding:4px 8px;font-size:0.8rem;width:60px">`;
+        }
+      }
+      html += `</div></div>`;
+      
+      // Anchor Requirements section - FOR ALL ROLES
+      html += `<div style="margin-bottom:16px">`;
+      html += `<div style="font-size:0.85rem;color:var(--text-dim);margin-bottom:8px;font-family:var(--font-head);letter-spacing:0.08em;text-transform:uppercase">Anchor Requirements (High Roll for Hero/Legend)</div>`;
+      html += `<div style="display:grid;grid-template-columns:140px repeat(3,1fr);gap:8px;font-size:0.82rem;">`;
+      html += `<div style="font-weight:600;color:var(--text)">Requirement</div><div>Early</div><div>Mid</div><div>Late</div>`;
+      
+      const anchorTypes = ['High Roll for Hero', 'High Roll for Legend'];
+      for (const anchorType of anchorTypes) {
+        html += `<div style="font-weight:600;color:var(--text)">${anchorType}</div>`;
+        for (const stage of ['Early', 'Mid', 'Late']) {
+          const value = (isFormula ? roleCfg.requireHR?.[anchorType]?.[stage] : false) || false;
+          const dataAttr = isFormula ? `data-formula="${roleName}" data-field="requireHR" data-anchor="${anchorType}" data-stage="${stage}"` : `data-role="${roleName}" data-field="requireHR" data-anchor="${anchorType}" data-stage="${stage}"`;
+          html += `<input type="checkbox" ${dataAttr} ${value ? 'checked' : ''} style="width:18px;height:18px">`;
+        }
+      }
+      html += `</div></div>`;
+      
+      html += `</div>`;
+      
+      contentWrap.innerHTML = html;
+      
+      // Add event listeners
+      contentWrap.querySelectorAll('input[data-formula], select[data-formula], input[data-role], select[data-role]').forEach(element => {
+        element.addEventListener('change', handleAdvancedFormulaChange);
+      });
+      
+      // Remove role buttons for legacy roles
+      contentWrap.querySelectorAll('.btn-remove-role').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const roleName = btn.dataset.roleRemove;
+          if (Object.keys(roles).length <= 1) return;
+          delete window.SWRM.settings.roles[roleName];
+          renderRoleSettings();
+        });
+      });
+    }
+    
+    // Set first role as active by default
+    const firstRole = Object.keys(allRoles)[0];
+    if (firstRole) {
+      renderActiveRole(firstRole);
+    }
+    
+    // Add navigation click handlers (only once)
+    if (!navWrap.dataset.handlersAdded) {
+      navWrap.querySelectorAll('.role-nav-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const roleName = item.dataset.role;
+          
+          // Update active state
+          navWrap.querySelectorAll('.role-nav-item').forEach(navItem => {
+            navItem.classList.remove('active');
+          });
+          item.classList.add('active');
+          
+          // Update selector
+          selector.value = roleName;
+          
+          // Render content
+          renderActiveRole(roleName);
+        });
+      });
+      navWrap.dataset.handlersAdded = 'true';
+    }
+    
+    // Add selector change handler
+    selector.addEventListener('change', () => {
+      const roleName = selector.value;
+      if (roleName) {
+        // Update active state
+        navWrap.querySelectorAll('.role-nav-item').forEach(navItem => {
+          navItem.classList.remove('active');
+          if (navItem.dataset.role === roleName) {
+            navItem.classList.add('active');
+          }
+        });
+        
+        // Render content
+        renderActiveRole(roleName);
+      }
+    });
+  }
+
   function refreshRoleFilterOptions() {
     const roleSelect = document.getElementById('filter-role');
     if (!roleSelect) return;
     const current = roleSelect.value;
-    const roles = ['High Roll', 'Duo Roll', ...Object.keys(window.SWRM.settings.roles)];
+    const formulas = Object.keys(window.SWRM.settings.formulas || {});
+    const roles = ['High Roll', 'Duo Roll', ...formulas, ...Object.keys(window.SWRM.settings.roles)];
     const t = TRANSLATIONS[currentLang];
     roleSelect.innerHTML = `<option value="">${t.allRoles}</option>${roles.map(r => `<option value="${r}">${r}</option>`).join('')}`;
     if (roles.includes(current)) roleSelect.value = current;
   }
 
-  function renderRoleSettings() {
-    const wrap = document.getElementById('roles-settings-wrap');
-    if (!wrap) return;
-    const roles = window.SWRM.settings.roles;
-    let html = '';
-    for (const [roleName, roleCfg] of Object.entries(roles)) {
-      html += `<div style="margin-bottom:24px; padding:16px; background:var(--bg3); border-radius:var(--radius-lg); border:1px solid var(--border)">`;
-      html += `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px">`;
-      html += `<div style="font-family:var(--font-head);font-size:1rem;font-weight:700;color:var(--text-hi)">${roleName}</div>`;
-      html += `<button class="btn-ghost btn-remove-role" data-role-remove="${roleName}" ${Object.keys(roles).length <= 1 ? 'disabled' : ''}>Remove</button>`;
-      html += `</div>`;
-      html += `<div style="font-size:0.75rem;color:var(--text-dim);margin-bottom:6px;font-family:var(--font-head);letter-spacing:0.08em;text-transform:uppercase">Substats</div>`;
-      html += `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">`;
-      for (const [stat, val] of Object.entries(roleCfg.substats)) {
-        html += `<label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:var(--text)">
-          <span style="min-width:50px">${stat}</span>
-          <select data-role="${roleName}" data-field="substats" data-stat="${stat}" style="padding:3px 8px">
-            ${['Include','None','Exclude'].map(o => `<option ${val===o?'selected':''}>${o}</option>`).join('')}
-          </select>
-        </label>`;
-      }
-      html += `</div>`;
-      html += `<div style="display:flex;gap:16px;margin-bottom:8px">`;
-      ['Early','Mid','Late'].forEach(s => {
-        html += `<label style="font-size:0.82rem;color:var(--text)">Must Have (${s}):
-          <input type="text" data-role="${roleName}" data-field="mustHave" data-stage="${s}" value="${roleCfg.mustHave[s] || ''}" style="width:70px;margin-left:6px;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:3px 6px;border-radius:4px;font-family:var(--font-mono);font-size:0.8rem">
-        </label>`;
-      });
-      html += `</div>`;
-      html += `<div style="display:flex;gap:16px;">`;
-      ['Early','Mid','Late'].forEach(s => {
-        html += `<label style="font-size:0.82rem;color:var(--text)">Min Stats (${s}):
-          <input type="number" data-role="${roleName}" data-field="minStats" data-stage="${s}" value="${roleCfg.minStats[s] ?? 1}" min="0" max="6" style="width:50px;margin-left:6px;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:3px 6px;border-radius:4px;font-family:var(--font-mono);font-size:0.8rem">
-        </label>`;
-      });
-      html += `</div>`;
-      html += `</div>`;
-    }
-    wrap.innerHTML = html;
-    wrap.querySelectorAll('.btn-remove-role').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const key = btn.dataset.roleRemove;
-        if (Object.keys(window.SWRM.settings.roles).length <= 1) return;
-        delete window.SWRM.settings.roles[key];
-        renderRoleSettings();
-        refreshRoleFilterOptions();
-      });
-    });
-  }
   function buildThresholdTable(containerId, thresholds, settingsKey) {
     const stages = ['Early','Mid','Late'];
     const grades = ['Leg','Hero'];
@@ -1074,18 +1372,54 @@ updateDashboardLabels();
     document.getElementById('dr-table-wrap').innerHTML = html;
   })();
 
-  renderRoleSettings();
   refreshRoleFilterOptions();
+  renderRoleSettings();
 
   document.getElementById('btn-add-role')?.addEventListener('click', () => {
-    const input = document.getElementById('new-role-name');
-    const name = (input?.value || '').trim();
+    const name = document.getElementById('new-role-name').value.trim();
     if (!name) return;
-    if (window.SWRM.settings.roles[name]) return alert('Role already exists');
-    const template = JSON.parse(JSON.stringify(window.SWRM.settings.roles['Bruiser'] || DEFAULT_ROLES['Bruiser']));
-    window.SWRM.settings.roles[name] = template;
-    input.value = '';
-    renderRoleSettings();
+    
+    // Create new role with full formula interface
+    const template = {
+      enabled: true,
+      acceptedMains: {
+        2: ['None', 'None', 'None'],
+        4: ['None', 'None', 'None'],
+        6: ['None', 'None', 'None']
+      },
+      substats: {
+        SPD: { Early: 'None', Mid: 'None', Late: 'None' },
+        'HP%': { Early: 'None', Mid: 'None', Late: 'None' },
+        'ATK%': { Early: 'None', Mid: 'None', Late: 'None' },
+        'DEF%': { Early: 'None', Mid: 'None', Late: 'None' },
+        CRate: { Early: 'None', Mid: 'None', Late: 'None' },
+        CDmg: { Early: 'None', Mid: 'None', Late: 'None' },
+        ACC: { Early: 'None', Mid: 'None', Late: 'None' },
+        RES: { Early: 'None', Mid: 'None', Late: 'None' }
+      },
+      mustHave: { Early: null, Mid: null, Late: null },
+      slotRequirements: {
+        2: { Early: 'None', Mid: 'None', Late: 'None' },
+        4: { Early: 'None', Mid: 'None', Late: 'None' },
+        6: { Early: 'None', Mid: 'None', Late: 'None' }
+      },
+      minStats: {
+        '1/3/5': { Early: 1, Mid: 1, Late: 1 },
+        'Slot 2': { Early: 1, Mid: 1, Late: 1 },
+        'Slot 4': { Early: 1, Mid: 1, Late: 1 },
+        'Slot 6': { Early: 1, Mid: 1, Late: 1 }
+      },
+      requireHR: {
+        'High Roll for Hero': { Early: false, Mid: false, Late: false },
+        'High Roll for Legend': { Early: false, Mid: false, Late: false }
+      }
+    };
+    
+    // Add as formula (not legacy role)
+    if (!window.SWRM.settings.formulas) window.SWRM.settings.formulas = {};
+    window.SWRM.settings.formulas[name] = template;
+    
+    document.getElementById('new-role-name').value = '';
     refreshRoleFilterOptions();
   });
 
@@ -1142,23 +1476,7 @@ updateDashboardLabels();
     alert('Settings saved & recalculated!');
   });
 
-  // Advanced formulas save/reset buttons
-  document.getElementById('btn-save-advanced-formulas').addEventListener('click', () => {
-    saveSettings(window.SWRM.settings);
-    if (processedRunes.length) reprocess();
-    alert('Advanced formulas saved & recalculated!');
-  });
-
-  document.getElementById('btn-reset-advanced-formulas').addEventListener('click', () => {
-    if (confirm('Reset all advanced formulas to default values?')) {
-      window.SWRM.settings.formulas = JSON.parse(JSON.stringify(window.SWRM.DEFAULT_FORMULAS));
-      saveSettings(window.SWRM.settings);
-      renderAdvancedFormulas();
-      if (processedRunes.length) reprocess();
-      alert('Advanced formulas reset to defaults!');
-    }
-  });
-
+  
   // Language switcher
   document.addEventListener('change', (e) => {
     if (e.target && e.target.id === 'app-language') {
@@ -1176,9 +1494,60 @@ updateDashboardLabels();
   });
 
   // Initialize on page load
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('DOMContentLoaded', async () => {
     initTheme();
     updateLanguage(currentLang);
+    
+    // Check for saved runes in localStorage or IndexedDB
+    const savedRunes = localStorage.getItem('loadedRunes');
+    const savedRunesName = localStorage.getItem('loadedRunesName');
+    const savedRunesDate = localStorage.getItem('loadedRunesDate');
+    const savedRunesStorage = localStorage.getItem('loadedRunesStorage');
+    
+    if (savedRunesName && savedRunesDate) {
+      try {
+        let json;
+        
+        if (savedRunesStorage === 'indexeddb') {
+          // Load from IndexedDB for large files
+          json = await loadSlotData('current-runes');
+          if (!json) {
+            console.log('No data found in IndexedDB, falling back to localStorage');
+            json = JSON.parse(savedRunes || '[]');
+          }
+        } else {
+          // Load from localStorage for small files
+          json = JSON.parse(savedRunes || '[]');
+        }
+        
+        if (json && json.length > 0) {
+          allRunes = parseSWEX(json);
+          reprocess();
+          
+          // Update UI to show loaded runes
+          document.getElementById('upload-prompt').classList.add('hidden');
+          document.getElementById('btn-upload-json').classList.add('hidden');
+          document.getElementById('tab-dashboard').classList.remove('hidden');
+          document.querySelectorAll('.tab').forEach(t => {
+            t.classList.toggle('active', t.dataset.tab === 'dashboard');
+          });
+          
+          // Show notification about restored runes
+          const date = new Date(savedRunesDate);
+          const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+          const storageType = savedRunesStorage === 'indexeddb' ? 'IndexedDB' : 'localStorage';
+          console.log(`Restored runes from ${savedRunesName} (${storageType}, loaded on ${dateStr})`);
+        }
+      } catch (err) {
+        console.error('Failed to restore saved runes:', err);
+        // Clear corrupted data
+        localStorage.removeItem('loadedRunes');
+        localStorage.removeItem('loadedRunesName');
+        localStorage.removeItem('loadedRunesDate');
+        localStorage.removeItem('loadedRunesStorage');
+        localStorage.removeItem('loadedRunesSize');
+      }
+    }
     
     // Initialize App Settings
     const appThemeSelect = document.getElementById('app-theme');

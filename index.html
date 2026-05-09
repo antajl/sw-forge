@@ -20,7 +20,6 @@
         <button class="tab active" data-tab="dashboard">Dashboard</button>
         <button class="tab" data-tab="runetable">Rune Table</button>
         <button class="tab" data-tab="settings">Rune Rules</button>
-        <button class="tab" data-tab="advanced-formulas">Advanced Formulas</button>
         <button class="tab" data-tab="guide">Guide</button>
         <button class="tab" data-tab="changelog">Changelog</button>
         <button class="tab" data-tab="app-settings">App Settings</button>
@@ -239,32 +238,27 @@
           <h3>Role Filters</h3>
           <p class="settings-desc">Configure role rules. You can add a custom role or remove existing roles (minimum one role must remain).</p>
           <div class="settings-row">
-            <label>New role</label>
-            <input type="text" id="new-role-name" placeholder="e.g. Control SPD" />
+            <label>Select Role</label>
+            <select id="role-selector" style="margin-right:10px; padding:5px 10px;">
+              <option value="">Choose a role...</option>
+            </select>
+            <input type="text" id="new-role-name" placeholder="e.g. Control SPD" style="margin-right:10px; padding:5px 10px;" />
             <button id="btn-add-role" class="btn-ghost">+ Add role</button>
           </div>
-          <div id="roles-settings-wrap"></div>
+          <div class="role-layout">
+            <div class="role-nav">
+              <div class="role-nav-header">Roles</div>
+              <div id="role-nav-list"></div>
+            </div>
+            <div class="role-content">
+              <div id="roles-settings-wrap"></div>
+            </div>
+          </div>
         </div>
       </div>
       <div class="settings-actions">
         <button id="btn-save-settings" class="btn-primary">Save & Recalculate</button>
         <button id="btn-reset-settings" class="btn-ghost">Reset to Defaults</button>
-      </div>
-    </section>
-
-    <!-- ADVANCED FORMULAS TAB -->
-    <section id="tab-advanced-formulas" class="tab-content hidden">
-      <div class="settings-layout">
-        <div class="settings-content">
-          <h3>Advanced Formula System</h3>
-          <p class="settings-desc">Comprehensive formula settings mirroring Google Sheets logic. Each formula can be enabled/disabled and configured with detailed parameters.</p>
-          
-          <div id="advanced-formulas-wrap"></div>
-        </div>
-      </div>
-      <div class="settings-actions">
-        <button id="btn-save-advanced-formulas" class="btn-primary">Save & Recalculate</button>
-        <button id="btn-reset-advanced-formulas" class="btn-ghost">Reset to Defaults</button>
       </div>
     </section>
 
@@ -338,8 +332,13 @@
       <div class="prompt-icon">⬡</div>
       <h2>Load your SWEX JSON</h2>
       <p>Export your account data from <strong>Summoners War Exporter (SWEX)</strong> and load the JSON file here to analyze your rune collection.</p>
-      <label class="upload-btn-large" for="json-upload">Choose JSON file</label>
-      <input type="file" id="json-upload" accept=".json" hidden />
+      <div class="prompt-actions">
+        <label for="json-upload" class="upload-label">Choose JSON file</label>
+        <input type="file" id="json-upload" accept=".json,application/json" />
+      </div>
+      <div class="prompt-actions" style="margin-top: 10px;">
+        <button class="btn-ghost" id="btn-clear-saved-runes" style="font-size: 0.85rem; padding: 8px 16px;">Clear Saved Runes</button>
+      </div>
       <p class="prompt-hint">All processing happens in your browser — your data never leaves your device.</p>
     </div>
   </section>

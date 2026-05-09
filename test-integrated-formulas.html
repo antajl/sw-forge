@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Integrated Formulas Test</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+    .result { margin: 10px 0; padding: 10px; background: #f5f5f5; }
+    .pass { color: green; }
+    .fail { color: red; }
+    .formula-config { background: #f9f9f9; padding: 10px; margin: 10px 0; border-radius: 5px; }
+  </style>
+</head>
+<body>
+  <h1>Integrated Formulas System Test</h1>
+  
+  <div class="test-section">
+    <h2>System Integration Test</h2>
+    <div id="integration-result"></div>
+  </div>
+  
+  <div class="test-section">
+    <h2>Classic DPS Formula Configuration</h2>
+    <div id="classic-dps-config"></div>
+  </div>
+  
+  <div class="test-section">
+    <h2>Formula Logic Test</h2>
+    <div id="logic-result"></div>
+  </div>
+
+  <script src="js/settings.js"></script>
+  <script src="js/advanced-formulas.js"></script>
+  <script src="js/engine.js"></script>
+  <script>
+    // Test 1: System Integration
+    function testIntegration() {
+      const result = document.getElementById('integration-result');
+      let html = '';
+      
+      try {
+        if (typeof window.SWRM !== 'undefined') {
+          html += '<div class="result pass">✓ SWRM object loaded</div>';
+          
+          if (window.SWRM.settings && window.SWRM.settings.formulas) {
+            html += '<div class="result pass">✓ Formulas integrated in settings</div>';
+            
+            const formulaCount = Object.keys(window.SWRM.settings.formulas).length;
+            html += `<div class="result pass">✓ ${formulaCount} formulas available</div>`;
+            
+            // Check if Classic DPS exists
+            if (window.SWRM.settings.formulas['Classic DPS']) {
+              html += '<div class="result pass">✓ Classic DPS formula found</div>';
+            } else {
+              html += '<div class="result fail">✗ Classic DPS formula not found</div>';
+            }
+          } else {
+            html += '<div class="result fail">✗ Formulas not integrated in settings</div>';
+          }
+          
+          if (window.SWRM.checkFormula) {
+            html += '<div class="result pass">✓ checkFormula function available</div>';
+          } else {
+            html += '<div class="result fail">✗ checkFormula function not available</div>';
+          }
+          
+          if (window.SWRM.processAdvancedFormulas) {
+            html += '<div class="result pass">✓ processAdvancedFormulas function available</div>';
+          } else {
+            html += '<div class="result fail">✗ processAdvancedFormulas function not available</div>';
+          }
+          
+        } else {
+          html += '<div class="result fail">✗ SWRM object not loaded</div>';
+        }
+      } catch (error) {
+        html += `<div class="result fail">✗ Error: ${error.message}</div>`;
+      }
+      
+      result.innerHTML = html;
+    }
+    
+    // Test 2: Classic DPS Configuration
+    function testClassicDPSConfig() {
+      const result = document.getElementById('classic-dps-config');
+      let html = '';
+      
+      try {
+        const classicDPS = window.SWRM.settings.formulas['Classic DPS'];
+        if (classicDPS) {
+          html += '<div class="formula-config">';
+          html += '<h3>Classic DPS Configuration:</h3>';
+          html += '<div><strong>Enabled:</strong> ' + (classicDPS.enabled ? 'Yes' : 'No') + '</div>';
+          
+          if (classicDPS.acceptedMains) {
+            html += '<h4>Accepted Mains:</h4>';
+            html += '<div>Slot 2: ' + classicDPS.acceptedMains[2].join(', ') + '</div>';
+            html += '<div>Slot 4: ' + classicDPS.acceptedMains[4].join(', ') + '</div>';
+            html += '<div>Slot 6: ' + classicDPS.acceptedMains[6].join(', ') + '</div>';
+          }
+          
+          if (classicDPS.substats) {
+            html += '<h4>Sub-stats (Mid stage):</h4>';
+            for (const [stat, stages] of Object.entries(classicDPS.substats)) {
+              html += `<div>${stat}: ${stages.Mid}</div>`;
+            }
+          }
+          
+          if (classicDPS.mustHave) {
+            html += '<h4>Must Have:</h4>';
+            html += '<div>Early: ' + (classicDPS.mustHave.Early || 'None') + '</div>';
+            html += '<div>Mid: ' + (classicDPS.mustHave.Mid || 'None') + '</div>';
+            html += '<div>Late: ' + (classicDPS.mustHave.Late || 'None') + '</div>';
+          }
+          
+          if (classicDPS.slotRequirements) {
+            html += '<h4>Slot Requirements (Mid stage):</h4>';
+            for (const [slot, stages] of Object.entries(classicDPS.slotRequirements)) {
+              html += `<div>Slot ${slot}: ${stages.Mid}</div>`;
+            }
+          }
+          
+          if (classicDPS.minStats) {
+            html += '<h4>Min Stats (Mid stage):</h4>';
+            for (const [slotType, stages] of Object.entries(classicDPS.minStats)) {
+              html += `<div>${slotType}: ${stages.Mid}</div>`;
+            }
+          }
+          
+          if (classicDPS.requireHR) {
+            html += '<h4>Anchor Requirements (Mid stage):</h4>';
+            for (const [anchorType, stages] of Object.entries(classicDPS.requireHR)) {
+              html += `<div>${anchorType}: ${stages.Mid ? 'Required' : 'Not Required'}</div>`;
+            }
+          }
+          
+          html += '</div>';
+        } else {
+          html += '<div class="result fail">✗ Classic DPS configuration not found</div>';
+        }
+        
+      } catch (error) {
+        html += `<div class="result fail">✗ Error: ${error.message}</div>`;
+      }
+      
+      result.innerHTML = html;
+    }
+    
+    // Test 3: Formula Logic
+    function testLogic() {
+      const result = document.getElementById('logic-result');
+      let html = '';
+      
+      try {
+        // Create test rune that should match Classic DPS
+        const testRune = {
+          slot: 2,
+          mainName: 'SPD',
+          gradeStr: 'Hero',
+          level: 12,
+          eff: 85,
+          substats: [
+            { name: 'SPD', val: 15, grind: 0 },
+            { name: 'ATK%', val: 8, grind: 0 },
+            { name: 'CRate', val: 12, grind: 0 },
+            { name: 'CDmg', val: 20, grind: 0 }
+          ],
+          innate_name: null,
+          innate_val: null
+        };
+        
+        // Test Classic DPS formula
+        const classicResult = window.SWRM.checkFormula(testRune, 'Classic DPS', 'Mid', window.SWRM.settings);
+        html += `<div class="result ${classicResult ? 'pass' : 'fail'}">✓ Classic DPS check: ${classicResult ? 'PASS' : 'FAIL'}</div>`;
+        
+        // Test processAdvancedFormulas
+        const advancedResults = window.SWRM.processAdvancedFormulas(testRune, 'Mid', window.SWRM.settings);
+        if (advancedResults && typeof advancedResults === 'object') {
+          html += '<div class="result pass">✓ processAdvancedFormulas returns object</div>';
+          html += '<div><strong>All Formula Results:</strong></div>';
+          for (const [formula, result] of Object.entries(advancedResults)) {
+            html += `<div class="result ${result ? 'pass' : 'fail'}">  ${formula}: ${result ? 'MATCH' : 'NO MATCH'}</div>`;
+          }
+        } else {
+          html += '<div class="result fail">✗ processAdvancedFormulas failed</div>';
+        }
+        
+        // Test getBestFormulaMatch
+        const bestFormula = window.SWRM.getBestFormulaMatch(advancedResults, window.SWRM.settings);
+        html += `<div class="result pass">✓ Best formula: ${bestFormula || 'None'}</div>`;
+        
+        // Test getAdvancedVerdict
+        const verdict = window.SWRM.getAdvancedVerdict(testRune, 'Mid', window.SWRM.settings, advancedResults);
+        html += `<div class="result pass">✓ Verdict: ${verdict}</div>`;
+        
+      } catch (error) {
+        html += `<div class="result fail">✗ Error: ${error.message}</div>`;
+      }
+      
+      result.innerHTML = html;
+    }
+    
+    // Run all tests
+    window.addEventListener('load', () => {
+      testIntegration();
+      testClassicDPSConfig();
+      testLogic();
+    });
+  </script>
+</body>
+</html>

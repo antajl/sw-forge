@@ -437,4 +437,10 @@
   window.SWRM.processAll   = processAll;
   window.SWRM.processRune  = processRune;
   window.SWRM.ROLE_PRIORITY = BASE_ROLE_PRIORITY;
+  
+  // Export helper functions for advanced formulas
+  window.SWRM.hasBadFlat = hasBadFlat;
+  window.SWRM.checkGrind = checkGrind;
+  window.SWRM.checkGem = checkGem;
+  window.SWRM.matchReappRule = matchReappRule;
 })();

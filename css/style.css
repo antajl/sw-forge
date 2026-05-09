@@ -661,8 +661,8 @@ table.show-target .target-col-cell { display: table-cell; }
 }
 .settings-two-col {
   display: grid;
-  grid-template-columns: minmax(420px, 1fr) minmax(420px, 1fr);
-  gap: 64px;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
   width: 100%;
   padding: 0 48px 20px;
   align-items: start;
@@ -762,4 +762,61 @@ table.show-target .target-col-cell { display: table-cell; }
   .header-inner { gap: 12px; }
   .logo-text { display: none; }
   .settings-two-col { grid-template-columns: 1fr; gap: 32px; padding: 0 16px 20px; }
+}
+
+/* Role Navigation Styles */
+.role-layout {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 20px;
+  margin-top: 16px;
+}
+
+.role-nav {
+  background: var(--bg3);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  padding: 16px;
+}
+
+.role-nav-header {
+  font-family: var(--font-head);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-hi);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.role-nav-item {
+  padding: 8px 12px;
+  margin: 2px 0;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--text);
+  transition: background 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.role-nav-item:hover {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+.role-nav-item.active {
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: 600;
+  border-color: var(--accent);
+}
+
+.role-content {
+  background: var(--bg3);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  padding: 20px;
+  max-height: 600px;
+  overflow-y: auto;
 }

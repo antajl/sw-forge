@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Advanced Formulas Test</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+    .result { margin: 10px 0; padding: 10px; background: #f5f5f5; }
+    .pass { color: green; }
+    .fail { color: red; }
+  </style>
+</head>
+<body>
+  <h1>Advanced Formulas System Test</h1>
+  
+  <div class="test-section">
+    <h2>Loading Test</h2>
+    <div id="loading-result"></div>
+  </div>
+  
+  <div class="test-section">
+    <h2>Formula Configuration Test</h2>
+    <div id="config-result"></div>
+  </div>
+  
+  <div class="test-section">
+    <h2>Formula Logic Test</h2>
+    <div id="logic-result"></div>
+  </div>
+
+  <script src="js/settings.js"></script>
+  <script src="js/advanced-formulas.js"></script>
+  <script>
+    // Test 1: Loading
+    function testLoading() {
+      const result = document.getElementById('loading-result');
+      let html = '';
+      
+      try {
+        if (typeof window.SWRM !== 'undefined') {
+          html += '<div class="result pass">✓ SWRM object loaded</div>';
+          
+          if (window.SWRM.settings && window.SWRM.settings.formulas) {
+            html += '<div class="result pass">✓ Formulas loaded in settings</div>';
+            
+            const formulaCount = Object.keys(window.SWRM.settings.formulas).length;
+            html += `<div class="result pass">✓ ${formulaCount} formulas found</div>`;
+          } else {
+            html += '<div class="result fail">✗ Formulas not found in settings</div>';
+          }
+          
+          if (window.SWRM.checkFormula) {
+            html += '<div class="result pass">✓ checkFormula function available</div>';
+          } else {
+            html += '<div class="result fail">✗ checkFormula function not available</div>';
+          }
+          
+        } else {
+          html += '<div class="result fail">✗ SWRM object not loaded</div>';
+        }
+      } catch (error) {
+        html += `<div class="result fail">✗ Error: ${error.message}</div>`;
+      }
+      
+      result.innerHTML = html;
+    }
+    
+    // Test 2: Configuration
+    function testConfiguration() {
+      const result = document.getElementById('config-result');
+      let html = '';
+      
+      try {
+        const formulas = window.SWRM.settings.formulas;
+        
+        // Test Classic DPS configuration
+        const classicDPS = formulas['Classic DPS'];
+        if (classicDPS) {
+          html += '<div class="result pass">✓ Classic DPS formula found</div>';
+          
+          if (classicDPS.enabled !== undefined) {
+            html += '<div class="result pass">✓ Classic DPS has enabled flag</div>';
+          }
+          
+          if (classicDPS.acceptedMains) {
+            html += '<div class="result pass">✓ Classic DPS has acceptedMains</div>';
+          }
+          
+          if (classicDPS.substats) {
+            html += '<div class="result pass">✓ Classic DPS has substats</div>';
+          }
+          
+          if (classicDPS.mustHave) {
+            html += '<div class="result pass">✓ Classic DPS has mustHave</div>';
+          }
+          
+          if (classicDPS.slotRequirements) {
+            html += '<div class="result pass">✓ Classic DPS has slotRequirements</div>';
+          }
+          
+          if (classicDPS.minStats) {
+            html += '<div class="result pass">✓ Classic DPS has minStats</div>';
+          }
+          
+          if (classicDPS.requireHR) {
+            html += '<div class="result pass">✓ Classic DPS has requireHR</div>';
+          }
+        } else {
+          html += '<div class="result fail">✗ Classic DPS formula not found</div>';
+        }
+        
+      } catch (error) {
+        html += `<div class="result fail">✗ Error: ${error.message}</div>`;
+      }
+      
+      result.innerHTML = html;
+    }
+    
+    // Test 3: Formula Logic
+    function testLogic() {
+      const result = document.getElementById('logic-result');
+      let html = '';
+      
+      try {
+        // Create test rune
+        const testRune = {
+          slot: 2,
+          mainName: 'SPD',
+          gradeStr: 'Hero',
+          level: 12,
+          eff: 85,
+          substats: [
+            { name: 'SPD', val: 15, grind: 0 },
+            { name: 'ATK%', val: 8, grind: 0 },
+            { name: 'CRate', val: 12, grind: 0 },
+            { name: 'CDmg', val: 20, grind: 0 }
+          ],
+          innate_name: null,
+          innate_val: null
+        };
+        
+        // Test Classic DPS formula
+        const classicResult = window.SWRM.checkFormula(testRune, 'Classic DPS', 'Mid', window.SWRM.settings);
+        html += `<div class="result ${classicResult ? 'pass' : 'fail'}">✓ Classic DPS check: ${classicResult ? 'PASS' : 'FAIL'}</div>`;
+        
+        // Test Slow DPS formula
+        const slowResult = window.SWRM.checkFormula(testRune, 'Slow DPS', 'Mid', window.SWRM.settings);
+        html += `<div class="result ${slowResult ? 'pass' : 'fail'}">✓ Slow DPS check: ${slowResult ? 'PASS' : 'FAIL'}</div>`;
+        
+        // Test processAdvancedFormulas
+        const advancedResults = window.SWRM.processAdvancedFormulas(testRune, 'Mid', window.SWRM.settings);
+        if (advancedResults && typeof advancedResults === 'object') {
+          html += '<div class="result pass">✓ processAdvancedFormulas returns object</div>';
+          html += `<div class="result">Results: ${JSON.stringify(advancedResults, null, 2)}</div>`;
+        } else {
+          html += '<div class="result fail">✗ processAdvancedFormulas failed</div>';
+        }
+        
+      } catch (error) {
+        html += `<div class="result fail">✗ Error: ${error.message}</div>`;
+      }
+      
+      result.innerHTML = html;
+    }
+    
+    // Run all tests
+    window.addEventListener('load', () => {
+      testLoading();
+      testConfiguration();
+      testLogic();
+    });
+  </script>
+</body>
+</html>

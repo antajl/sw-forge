@@ -29,29 +29,19 @@
   function checkHighRoll(rune, stage, settings) {
     const key  = modeKey(stage, rune.gradeStr);
     const th   = settings.hrThresholds;
-    const coeff = settings.hrCoeff;
     const sm   = statMap(rune);
     const isLegend = rune.gradeStr === 'Legend';
 
     // Check if any substat hits the high roll threshold
-    let hasHighRoll = false;
     for (const [stat, tvals] of Object.entries(th)) {
       const threshold = tvals[key];
-      if (threshold && (sm[stat] || 0) >= threshold) { hasHighRoll = true; break; }
+      if (threshold && (sm[stat] || 0) >= threshold) {
+        // Found one high roll stat - that's enough
+        return true;
+      }
     }
-    if (!hasHighRoll) return false;
-
-    // Legend: always pass
-    if (isLegend) return true;
-
-    // Hero: require a partner stat at soft threshold
-    let softCount = 0;
-    for (const [stat, tvals] of Object.entries(th)) {
-      const threshold = tvals[key];
-      if (threshold && (sm[stat] || 0) >= threshold * coeff) softCount++;
-    }
-    // softCount >= 2: the main High Roll stat + at least 1 partner
-    return softCount >= 2;
+    
+    return false;
   }
 
   // ---- DUO ROLL ----
@@ -85,6 +75,106 @@
     if (hp >= dr.HP_for_RES[key] && res >= dr.RES_for_HP[key]) return true;
 
     return false;
+  }
+
+  // ---- CLASSIC DPS ----
+  function checkClassicDPS(rune, stage, settings) {
+    const cfg = settings.roles['Classic DPS'];
+    if (!cfg) return false;
+    
+    const sm = statMap(rune);
+    const isLegend = rune.gradeStr === 'Legend';
+    const isHero = rune.gradeStr === 'Hero';
+    
+    // Check if main stat is accepted for this slot
+    const acceptedMains = cfg.acceptedMains[rune.slot] || [];
+    if (acceptedMains.length > 0 && !acceptedMains.includes(rune.mainName)) {
+      return false;
+    }
+    
+    // Count DPS stats present
+    const dpsStats = ['SPD', 'CRate', 'CDmg', 'ATK%'];
+    const presentDpsStats = dpsStats.filter(stat => (sm[stat] || 0) > 0);
+    
+    // Include innate stat in calculations
+    let effectiveStats = new Set(presentDpsStats);
+    if (rune.innate_name && dpsStats.includes(rune.innate_name)) {
+      effectiveStats.add(rune.innate_name);
+    }
+    
+    // Slot logic from description
+    let requiredStats;
+    let minStats;
+    
+    if ([1, 3, 5].includes(rune.slot)) {
+      // Slots 1/3/5: SPD + 2+ DPS stats
+      requiredStats = effectiveStats.has('SPD') && effectiveStats.size >= 3;
+      minStats = cfg.minStats['1/3/5'] || 2;
+    } else if (rune.slot === 2 && rune.mainName === 'SPD') {
+      // Slot 2 with SPD main: CRate + 1+ DPS stat
+      requiredStats = effectiveStats.has('CRate') && effectiveStats.size >= 2;
+      minStats = cfg.minStats['Slot 2'] || 1;
+    } else if (rune.slot === 4 && rune.mainName === 'CRate') {
+      // Slot 4 with CRate main: SPD + 1+ DPS stat
+      requiredStats = effectiveStats.has('SPD') && effectiveStats.size >= 2;
+      minStats = cfg.minStats['Slot 4'] || 1;
+    } else if ([2, 4, 6].includes(rune.slot) && ['ATK%', 'CDmg'].includes(rune.mainName)) {
+      // Slots 2/4/6 with ATK%/CDmg main: SPD + CRate
+      requiredStats = effectiveStats.has('SPD') && effectiveStats.has('CRate');
+      minStats = cfg.minStats['Slot 6'] || 1;
+    } else {
+      // Other slots: general logic
+      requiredStats = effectiveStats.size >= (cfg.minStats['1/3/5'] || 2);
+      minStats = cfg.minStats['1/3/5'] || 2;
+    }
+    
+    if (!requiredStats) return false;
+    
+    // Check minimum stats requirement
+    if (effectiveStats.size < minStats) return false;
+    
+    // Must have requirement
+    const mustHave = cfg.mustHave[stage];
+    if (mustHave && !effectiveStats.has(mustHave)) return false;
+    
+    // Hero anchor requirement
+    if (isHero) {
+      const hrKey = `${stage}_Hero`;
+      const needHR = cfg.requireHR?.[hrKey];
+      if (needHR) {
+        // At least one DPS stat must reach Hero High Roll threshold
+        const thresholds = settings.hrThresholds;
+        let hasAnchor = false;
+        for (const stat of effectiveStats) {
+          const threshold = thresholds[stat]?.[hrKey];
+          if (threshold && (sm[stat] || 0) >= threshold) {
+            hasAnchor = true;
+            break;
+          }
+        }
+        if (!hasAnchor) return false;
+      }
+    }
+    
+    // Legend anchor requirement (if configured)
+    if (isLegend) {
+      const hrKey = `${stage}_Leg`;
+      const needHR = cfg.requireHR?.[hrKey];
+      if (needHR) {
+        const thresholds = settings.hrThresholds;
+        let hasAnchor = false;
+        for (const stat of effectiveStats) {
+          const threshold = thresholds[stat]?.[hrKey];
+          if (threshold && (sm[stat] || 0) >= threshold) {
+            hasAnchor = true;
+            break;
+          }
+        }
+        if (!hasAnchor) return false;
+      }
+    }
+    
+    return true;
   }
 
   // ---- ROLE FILTER ----
@@ -128,13 +218,26 @@
   }
 
   // ---- BAD FLAT check ----
-  function hasBadFlat(rune) {
-    // Flat HP / ATK / DEF as substat on a non-1/3/5 slot = bad
-    const badFlatIds = [1, 3, 5]; // HP, ATK, DEF flat
+  function hasBadFlat(rune, stage) {
+    // Flat HP / ATK / DEF substats worth replacing with a gem
+    // Early/Mid: 2+ flats. Late: 1+ flat
+    // Only counts clean flats — no rolls (ATK/DEF ≤20, HP ≤200), no gem, no grind
+    const flatIds = [1, 3, 5]; // HP, ATK, DEF flat
+    const flatThresholds = { 1: 200, 3: 20, 5: 20 }; // HP, ATK, DEF
+    
+    let cleanFlatCount = 0;
     for (const s of rune.substats) {
-      if (badFlatIds.includes(s.type)) return true;
+      if (flatIds.includes(s.type)) {
+        const threshold = flatThresholds[s.type];
+        // Check if it's a clean flat (below base threshold = not rolled)
+        if (s.val <= threshold && s.grind === 0) {
+          cleanFlatCount++;
+        }
+      }
     }
-    return false;
+    
+    const requiredFlats = stage === 'Late' ? 1 : 2;
+    return cleanFlatCount >= requiredFlats;
   }
 
   // ---- GRIND POTENTIAL ----
@@ -170,7 +273,8 @@
       if (GRINDABLE.has(s.name)) continue;
       for (const target of GRINDABLE) {
         const score = statScores[target] || 0;
-        if (score < 10) continue;
+        // Much higher threshold for gem consideration
+        if (score < 15) continue;
         if (!bestCandidate || score > bestCandidate.score) {
           bestCandidate = { can: true, from: s.name, to: target, score };
         }
@@ -180,47 +284,168 @@
   }
 
   function matchReappRule(rune, settings) {
+    // Legend only
+    if (rune.gradeStr !== 'Legend') return false;
+    
     const rc = settings.reapp || {};
     if (rune.eff > (rc.maxEff ?? 65)) return false;
+    
+    // Meta sets only
     if (rc.sets?.length && !rc.sets.includes(rune.setName)) return false;
-    if (rc.innateStats?.length && (!rune.innate_name || !rc.innateStats.includes(rune.innate_name))) return false;
+    
+    // Exclude flat innate stats (ATK/DEF/HP) that would permanently limit the rune's potential
+    if (rune.innate_name && ['ATK', 'DEF', 'HP'].includes(rune.innate_name)) return false;
+    
+    // Valuable main stats only
     if ([2,4,6].includes(rune.slot)) {
       const allowed = rc.mainBySlot?.[rune.slot] || [];
       if (allowed.length && !allowed.includes(rune.mainName)) return false;
     }
+    
     return true;
   }
 
   // ---- VERDICT ----
   function getVerdict(rune, stage, settings, roleResult) {
     const hasRole = roleResult !== '';
-
-    // Sell: no role, no High Roll match, no Duo Roll match
-    if (!hasRole) return 'Sell';
-
-    // Upgrade: low level rune that could become good
-    if (rune.level < 9 && rune.grade === 5 && rune.eff >= 60) return 'Upgrade';
-
-    // Finish: +9 or lower but has a role
-    if (rune.level < 12 && hasRole) return 'Finish';
-
-    // Grind
+    const isHero = rune.gradeStr === 'Hero';
+    const isLegend = rune.gradeStr === 'Legend';
+    const hasHighDuo = roleResult === 'High Roll' || roleResult === 'Duo Roll';
+    
+    // Priority order: Upgrade → Finish → Reapp → (Gem if Flat) → (Keep, or Grind if Keep-worthy) → Sell
+    
+    // 1. Upgrade: below +9, power up first
+    if (rune.level < 9) {
+      return 'Upgrade';
+    }
+    
+    // 2. Finish: +9 with potential, take to +12
+    if (rune.level < 12 && hasRole) {
+      // Check efficiency thresholds for Hero without High Roll/Duo Roll
+      if (isHero && !hasHighDuo) {
+        const effThreshold = stage === 'Late' ? 85 : (stage === 'Mid' ? 85 : 65);
+        if (rune.eff < effThreshold) return 'Sell';
+      }
+      return 'Finish';
+    }
+    
+    // 3. Reapp: Legend with good set/main, bad subs (skipped if any other filter matched)
+    if (hasRole && isLegend && matchReappRule(rune, settings)) {
+      // Only Reapp if no other role matched (but we have hasRole = true, so this needs refinement)
+      // For now, check if this is ONLY a Reapp candidate
+      if (roleResult === 'Classic DPS' || roleResult === 'Slow DPS' || roleResult === 'Bomber' || 
+          roleResult === 'Bruiser' || roleResult === 'Fast Utility' || roleResult === 'Heavy Resist') {
+        // Has other roles, don't Reapp
+      } else {
+        return 'Reapp';
+      }
+    }
+    
+    // 4. Gem: good but has a flat stat to replace
+    if (hasRole && hasBadFlat(rune, stage)) {
+      const gem = checkGem(rune, stage, settings);
+      if (gem.can) {
+        // Check if rune is strong enough for Gem
+        const effThreshold = stage === 'Late' ? 70 : (stage === 'Mid' ? 55 : 40);
+        if (rune.eff >= effThreshold) {
+          // Additional check for Hero without High Roll/Duo Roll
+          if (isHero && !hasHighDuo) {
+            const heroEffThreshold = stage === 'Late' ? 82 : (stage === 'Mid' ? 67 : 52);
+            if (rune.eff < heroEffThreshold) return 'Sell';
+          }
+          return 'Gem';
+        } else {
+          return 'Sell';
+        }
+      }
+    }
+    
+    // 5. Check if rune qualifies for Keep at all
+    if (!hasRole) {
+      // No role matching - check efficiency thresholds
+      const effThreshold = stage === 'Late' ? 65 : (stage === 'Mid' ? 50 : 35);
+      if (isHero && !hasHighDuo) {
+        const heroEffThreshold = stage === 'Late' ? 80 : (stage === 'Mid' ? 65 : 50);
+        if (rune.eff < heroEffThreshold) return 'Sell';
+      } else if (rune.eff < effThreshold) {
+        return 'Sell';
+      } else {
+        return 'Sell'; // No role but meets efficiency - still Sell per logic
+      }
+    }
+    
+    // 6. Grind: Keep-quality, one grindstone from High Roll
     const grind = checkGrind(rune, stage, settings);
-    if (grind.can) return 'Grind';
-
-    // Gem: has a role and can replace weak/non-grindable stat
-    const gem = checkGem(rune, stage, settings);
-    if (gem.can && rune.level >= 12) return 'Gem';
-
-    // Reapp: low efficiency but still role-eligible
-    if (hasRole && matchReappRule(rune, settings)) return 'Reapp';
-
+    if (grind.can) {
+      return 'Grind';
+    }
+    
+    // 7. Keep: strong stats, ready to equip
     return 'Keep';
+  }
+
+  // ---- GAME STAGE DETECTION ----
+  function detectGameStage(runes, settings) {
+    // Filter runes +9 and above
+    const eligibleRunes = runes.filter(r => r.level >= 9);
+    
+    if (eligibleRunes.length === 0) {
+      return { stage: 'Early', stats: 'No eligible runes (+9 and above)' };
+    }
+
+    // 1. High Roll percentage (40% weight)
+    const highRollRunes = eligibleRunes.filter(r => {
+      const sm = statMap(r);
+      const key = modeKey('Mid', r.gradeStr); // Use Mid stage for detection
+      const th = settings.hrThresholds;
+      
+      for (const [stat, tvals] of Object.entries(th)) {
+        const threshold = tvals[key];
+        if (threshold && (sm[stat] || 0) >= threshold) {
+          return true;
+        }
+      }
+      return false;
+    });
+    
+    const pct_any = (highRollRunes.length / eligibleRunes.length) * 100;
+
+    // 2. Keep efficiency average (30% weight)
+    const keepRunes = eligibleRunes.filter(r => r.verdict === 'Keep');
+    const avg_keep = keepRunes.length > 0 
+      ? keepRunes.reduce((sum, r) => sum + r.eff, 0) / keepRunes.length 
+      : 0;
+    const norm_keep = avg_keep / 130; // Normalize to max 1.0
+
+    // 3. Meta sets percentage (30% weight)
+    const metaSets = ['Violent', 'Swift', 'Will'];
+    const metaKeepRunes = keepRunes.filter(r => metaSets.includes(r.setName));
+    const pct_meta = keepRunes.length > 0 
+      ? (metaKeepRunes.length / keepRunes.length) * 100 
+      : 0;
+
+    // 4. Final score calculation
+    const score = (pct_any * 0.40) + (norm_keep * 30) + (pct_meta * 0.30);
+
+    // 5. Classification
+    let stage;
+    if (score >= 50) {
+      stage = 'Late';
+    } else if (score >= 25) {
+      stage = 'Mid';
+    } else {
+      stage = 'Early';
+    }
+
+    // 6. Diagnostic string
+    const stats = `Late stats: ${pct_any.toFixed(1)}% | Keep Eff: ${avg_keep.toFixed(1)} | Meta sets: ${pct_meta.toFixed(1)}%`;
+
+    return { stage, stats, score: score.toFixed(1) };
   }
 
   // ---- MAIN ENGINE ----
   // Role priority order (highest priority first, same as your Best Role formula)
-  const BASE_ROLE_PRIORITY = ['Bruiser', 'Fast Utility', 'Heavy Resist', 'Bomber', 'Classic DPS', 'Slow DPS', 'Duo Roll', 'High Roll'];
+  const BASE_ROLE_PRIORITY = ['Fast CC', 'Classic DPS', 'Bomber', 'Tank', 'Bruiser', 'Slow DPS', 'Duo Roll', 'High Roll'];
 
   function processRune(rune, stage, settings) {
     // Run all role checks
@@ -228,7 +453,10 @@
 
     results['High Roll'] = checkHighRoll(rune, stage, settings);
     results['Duo Roll']  = checkDuoRoll(rune, stage, settings);
+    results['Classic DPS'] = checkClassicDPS(rune, stage, settings);
+    
     for (const role of Object.keys(settings.roles)) {
+      if (role === 'Classic DPS') continue; // Skip since we handle it above
       results[role] = checkRole(rune, role, stage, settings);
     }
 
@@ -245,7 +473,7 @@
 
     rune.role    = bestRole;
     rune.verdict = getVerdict(rune, stage, settings, bestRole);
-    rune.badFlat = hasBadFlat(rune);
+    rune.badFlat = hasBadFlat(rune, stage);
     rune.grindInfo = checkGrind(rune, stage, settings);
     rune.gemInfo = checkGem(rune, stage, settings);
 
@@ -256,7 +484,9 @@
     return runes.map(r => processRune(r, stage, settings));
   }
 
-  window.SWRM.processAll   = processAll;
-  window.SWRM.processRune  = processRune;
-  window.SWRM.ROLE_PRIORITY = BASE_ROLE_PRIORITY;
+  window.SWRM = window.SWRM || {};
+  window.SWRM.parseSWEX = parseSWEX;
+  window.SWRM.processAll = processAll;
+  window.SWRM.ROLE_PRIORITY = ROLE_PRIORITY;
+  window.SWRM.detectGameStage = detectGameStage;
 })();

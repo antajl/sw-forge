@@ -39,6 +39,7 @@
             <option value="Late">Late</option>
           </select>
         </div>
+        <button id="theme-toggle" class="btn-ghost">🌙</button>
         <button id="open-app-settings" class="btn-ghost">Settings</button>
       </div>
     </div>
@@ -174,13 +175,19 @@
             </select>
             <span id="table-count" class="table-count">0 runes</span>
           </div>
+          <div id="game-stage-recommendation" class="game-stage-card">
+            <div class="stage-card-title">Рекомендуемый этап</div>
+            <div class="stage-card-content">
+              <div class="recommended-stage" id="recommended-stage">—</div>
+              <div class="stage-stats" id="stage-stats">Загрузите руны для анализа</div>
+            </div>
+          </div>
           <div class="table-wrap">
             <table id="rune-table">
               <thead>
                 <tr>
-                  <th data-sort="slot">Slot</th>
-                  <th data-sort="set">Set</th>
                   <th data-sort="grade">Grade</th>
+                  <th data-sort="set">Set</th>
                   <th data-sort="level">Lvl</th>
                   <th data-sort="main">Main</th>
                   <th>Innate</th>

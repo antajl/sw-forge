@@ -6,7 +6,7 @@
   const { parseSWEX, processAll, ROLE_PRIORITY, settings: cfg,
           STAT_NAMES, SET_NAMES, GRADE_SHORT, saveSettings,
           DEFAULT_THRESHOLDS, DEFAULT_HR_THRESHOLDS, DEFAULT_HR_COEFF,
-          DEFAULT_DUO_THRESHOLDS, DEFAULT_ROLES, DEFAULT_REAPP } = window.SWRM;
+          DEFAULT_DUO_THRESHOLDS, DEFAULT_ROLES, DEFAULT_REAPP, TRANSLATIONS } = window.SWRM;
 
   let allRunes = [];
   let processedRunes = [];
@@ -14,6 +14,282 @@
   let sortKey  = 'eff';
   let sortDir  = 'desc';
   let globalMinLevel = 0;
+  let currentLang = localStorage.getItem('swrm-lang') || 'en';
+  let currentTheme = localStorage.getItem('swrm-theme') || 'light';
+
+  // ===================== THEME =====================
+  function toggleTheme() {
+    const body = document.body;
+    const themeBtn = document.getElementById('theme-toggle');
+    
+    if (currentTheme === 'dark') {
+      body.classList.add('light-theme');
+      themeBtn.textContent = '☀️';
+      currentTheme = 'light';
+    } else {
+      body.classList.remove('light-theme');
+      themeBtn.textContent = '🌙';
+      currentTheme = 'dark';
+    }
+    
+    localStorage.setItem('swrm-theme', currentTheme);
+  }
+
+  function initTheme() {
+    const themeBtn = document.getElementById('theme-toggle');
+    if (currentTheme === 'light') {
+      document.body.classList.add('light-theme');
+      if (themeBtn) themeBtn.textContent = '☀️';
+    } else {
+      if (themeBtn) themeBtn.textContent = '🌙';
+    }
+  }
+
+  // ===================== LANGUAGE =====================
+  function updateLanguage(lang) {
+    currentLang = lang;
+    localStorage.setItem('swrm-lang', lang);
+    const t = TRANSLATIONS[lang];
+    
+    // Update title
+    document.title = t.title;
+    const logoText = document.querySelector('.logo-text');
+    if (logoText) logoText.innerHTML = `SW <strong>${t.title.substring(3)}</strong>`;
+    
+    // Update tabs
+    const dashboardTab = document.querySelector('[data-tab="dashboard"]');
+    if (dashboardTab) dashboardTab.textContent = t.dashboard;
+    const runeTableTab = document.querySelector('[data-tab="runetable"]');
+    if (runeTableTab) runeTableTab.textContent = t.runeTable;
+    const settingsTab = document.querySelector('[data-tab="settings"]');
+    if (settingsTab) settingsTab.textContent = t.runeRules;
+    const guideTab = document.querySelector('[data-tab="guide"]');
+    if (guideTab) guideTab.textContent = t.guide;
+    const changelogTab = document.querySelector('[data-tab="changelog"]');
+    if (changelogTab) changelogTab.textContent = t.changelog;
+    
+    // Update header elements
+    const uploadLabel = document.querySelector('label[for="json-upload"] span');
+    if (uploadLabel) uploadLabel.textContent = '⬆ ' + t.loadJson;
+    const levelFilter = document.querySelector('label.level-filter');
+    if (levelFilter) levelFilter.innerHTML = `${t.minLvl}<input type="number" id="global-min-level" min="0" max="15" value="0" />`;
+    const settingsBtn = document.getElementById('open-app-settings');
+    if (settingsBtn) settingsBtn.textContent = t.settings;
+    
+    // Update stage options
+    const stageSelect = document.getElementById('stage-select');
+    stageSelect.innerHTML = `
+      <option value="Early">${t.early}</option>
+      <option value="Mid" selected>${t.mid}</option>
+      <option value="Late">${t.late}</option>
+    `;
+    
+    // Update upload prompt
+    const uploadPrompt = document.getElementById('upload-prompt');
+    if (uploadPrompt) {
+      uploadPrompt.querySelector('h2').textContent = t.loadYourSWEX;
+      uploadPrompt.querySelector('p').innerHTML = t.uploadDescription;
+      uploadPrompt.querySelector('.upload-btn-large').textContent = t.chooseJsonFile;
+      uploadPrompt.querySelector('.prompt-hint').textContent = t.privacyNote;
+    }
+    
+    // Update dashboard cards
+    updateDashboardLabels();
+    
+    // Update table elements
+    updateTableLabels();
+    refreshRoleFilterOptions();
+    
+    // Update settings
+    updateSettingsLabels();
+    
+    // Update app settings panel
+    updateAppSettingsLabels();
+  }
+
+  function updateDashboardLabels() {
+    const t = TRANSLATIONS[currentLang];
+    const labels = {
+      'sc-total': t.totalRunes,
+      'sc-keep': t.keep,
+      'sc-sell': t.sell,
+      'sc-grind': t.grind,
+      'sc-finish': t.finish,
+      'sc-reapp': t.reapp,
+      'sc-upgrade': t.upgrade,
+      'sc-gem': t.gem
+    };
+    
+    Object.entries(labels).forEach(([id, text]) => {
+      const element = document.getElementById(id);
+      if (element) {
+        const label = element.querySelector('.sc-label');
+        if (label) label.textContent = text;
+      }
+    });
+    
+    // Update chart titles
+    const chartTitles = {
+      'panel-roles': t.roleDistribution,
+      'panel-sets': t.setDistribution,
+      'panel-slots': t.slotDistribution,
+      'panel-eff': t.efficiencyDistribution
+    };
+    
+    Object.entries(chartTitles).forEach(([id, text]) => {
+      const element = document.getElementById(id);
+      if (element) {
+        const title = element.querySelector('.panel-title');
+        if (title) title.textContent = text;
+      }
+    });
+  }
+
+  function updateTableLabels() {
+    const t = TRANSLATIONS[currentLang];
+    
+    // Update search and filters
+    const searchBox = document.getElementById('search-box');
+    if (searchBox) searchBox.placeholder = t.searchPlaceholder;
+    
+    const filterVerdict = document.getElementById('filter-verdict');
+    if (filterVerdict) {
+      filterVerdict.innerHTML = `<option value="">${t.allVerdicts}</option>
+        <option value="Keep">${t.keep}</option>
+        <option value="Sell">${t.sell}</option>
+        <option value="Grind">${t.grind}</option>
+        <option value="Gem">${t.gem}</option>
+        <option value="Finish">${t.finish}</option>
+        <option value="Upgrade">${t.upgrade}</option>
+        <option value="Reapp">${t.reapp}</option>`;
+    }
+    
+    const filterRole = document.getElementById('filter-role');
+    if (filterRole) {
+      filterRole.innerHTML = `<option value="">${t.allRoles}</option>
+        <option value="High Roll">High Roll</option>
+        <option value="Duo Roll">Duo Roll</option>
+        <option value="Classic DPS">Classic DPS</option>
+        <option value="Slow DPS">Slow DPS</option>
+        <option value="Fast Utility">Fast Utility</option>
+        <option value="Bomber">Bomber</option>
+        <option value="Heavy Resist">Heavy Resist</option>
+        <option value="Bruiser">Bruiser</option>`;
+    }
+    
+    const filterGrade = document.getElementById('filter-grade');
+    if (filterGrade) {
+      filterGrade.innerHTML = `<option value="">${t.allGrades}</option>
+        <option value="Legend">Legend</option>
+        <option value="Hero">Hero</option>`;
+    }
+    
+    // Update table count text
+    const tableCount = document.getElementById('table-count');
+    if (tableCount) {
+      const currentText = tableCount.textContent;
+      const number = currentText.match(/\d+/);
+      if (number) {
+        tableCount.textContent = `${number[0]} ${t.runes}`;
+      }
+    }
+  }
+
+  function updateSettingsLabels() {
+    const t = TRANSLATIONS[currentLang];
+    
+    // Update settings tabs
+    const thresholdsTab = document.querySelector('[data-stab="thresholds"]');
+    if (thresholdsTab) thresholdsTab.textContent = t.thresholds;
+    const rolesTab = document.querySelector('[data-stab="roles"]');
+    if (rolesTab) rolesTab.textContent = t.roleFilters;
+    const reappTab = document.querySelector('[data-stab="reapp"]');
+    if (reappTab) reappTab.textContent = t.reappRules;
+    
+    // Update settings content
+    const stabThresholds = document.getElementById('stab-thresholds');
+    if (stabThresholds) {
+      const h3s = stabThresholds.querySelectorAll('h3');
+      if (h3s[0]) h3s[0].textContent = t.highRollThresholds;
+      if (h3s[1]) h3s[1].textContent = t.duoRollThresholds;
+      
+      const descs = stabThresholds.querySelectorAll('.settings-desc');
+      if (descs[0]) descs[0].textContent = 'A rune qualifies as High Roll if at least one substat meets or exceeds these values.';
+      if (descs[1]) descs[1].textContent = 'Synergy pairs. Both stats must reach their respective minimum values.';
+      
+      const partnerLabel = stabThresholds.querySelector('label');
+      if (partnerLabel && partnerLabel.textContent.includes('Partner coefficient')) {
+        partnerLabel.innerHTML = `${t.partnerCoeff}<input type="number" id="hr-coeff" step="0.05" min="0.5" max="1" value="0.7" /><span class="hint">e.g. 0.70 = 70% of threshold</span>`;
+      }
+    }
+    
+    const stabRoles = document.getElementById('stab-roles');
+    if (stabRoles) {
+      const h3 = stabRoles.querySelector('h3');
+      if (h3) h3.textContent = t.roleFilters;
+      const desc = stabRoles.querySelector('.settings-desc');
+      if (desc) desc.textContent = t.configureRoleRules;
+      
+      const newRoleLabel = stabRoles.querySelector('label');
+      if (newRoleLabel) {
+        newRoleLabel.innerHTML = `${t.newRole}<input type="text" id="new-role-name" placeholder="e.g. Control SPD" />`;
+      }
+      const addBtn = stabRoles.querySelector('#btn-add-role');
+      if (addBtn) addBtn.textContent = t.addRole;
+    }
+    
+    const stabReapp = document.getElementById('stab-reapp');
+    if (stabReapp) {
+      const h3 = stabReapp.querySelector('h3');
+      if (h3) h3.textContent = t.reappCandidateRules;
+      const desc = stabReapp.querySelector('.settings-desc');
+      if (desc) desc.textContent = t.reappDescription;
+      
+      const labels = stabReapp.querySelectorAll('label');
+      const labelTexts = [
+        t.allowedSets,
+        t.innateStats,
+        t.slot2Mains,
+        t.slot4Mains,
+        t.slot6Mains,
+        t.maxEffReapp
+      ];
+      
+      labels.forEach((label, index) => {
+        if (labelTexts[index]) {
+          const input = label.querySelector('input');
+          const placeholder = input ? input.placeholder : '';
+          label.innerHTML = `${labelTexts[index]}${input ? `<input type="${input.type}" id="${input.id}" placeholder="${placeholder}" />` : ''}`;
+        }
+      });
+    }
+    
+    // Update settings actions
+    const saveBtn = document.getElementById('btn-save-settings');
+    if (saveBtn) saveBtn.textContent = t.saveRecalculate;
+    const resetBtn = document.getElementById('btn-reset-settings');
+    if (resetBtn) resetBtn.textContent = t.resetDefaults;
+  }
+
+  function updateAppSettingsLabels() {
+    const t = TRANSLATIONS[currentLang];
+    const panelTitle = document.querySelector('#app-settings-panel .panel-title');
+    if (panelTitle) panelTitle.textContent = t.appSettings;
+    
+    const langLabel = document.querySelector('#app-settings-panel label');
+    if (langLabel && (langLabel.textContent.includes('Language') || langLabel.textContent.includes('Язык'))) {
+      // Update only the label text, not the select element
+      const select = document.getElementById('app-language');
+      if (select) {
+        select.value = currentLang;
+        // Update only the text before the select
+        const textNode = langLabel.childNodes[0];
+        if (textNode) {
+          textNode.textContent = t.language + ' ';
+        }
+      }
+    }
+  }
 
   // ===================== TABS =====================
   document.querySelectorAll('.tab').forEach(btn => {
@@ -58,8 +334,13 @@
       try {
         const jsonText = ev.target.result;
         const json = JSON.parse(jsonText);
-        allRunes = parseSWEX(json);
-        reprocess();
+        if (window.SWRM && window.SWRM.parseSWEX) {
+          allRunes = window.SWRM.parseSWEX(json);
+          reprocess();
+        } else {
+          console.error('SWRM not loaded yet');
+          alert('Пожалуйста, обновите страницу и попробуйте снова');
+        }
         try {
           const slots = JSON.parse(localStorage.getItem('swrm_db_slots_v1') || '[]');
           if (Array.isArray(slots) && slots.length === 4) {
@@ -84,10 +365,15 @@
   });
 
   function reprocess() {
-    processedRunes = processAll(allRunes, stage, window.SWRM.settings);
-    const visible = getVisibleRunes();
-    renderDashboard(visible);
-    renderTable(visible);
+    if (window.SWRM && window.SWRM.processAll) {
+      processedRunes = window.SWRM.processAll(allRunes, stage, window.SWRM.settings);
+      const visible = getVisibleRunes();
+      renderDashboard(visible);
+      renderTable(visible);
+    } else {
+      console.error('SWRM.processAll not available');
+      alert('Функции обработки рун еще не загрузились. Пожалуйста, обновите страницу.');
+    }
   }
 
   function getVisibleRunes() {
@@ -269,7 +555,10 @@
     const tbody = document.getElementById('rune-tbody');
     if (!tbody) return;
     const countEl = document.getElementById('table-count');
-    if (countEl) countEl.textContent = `${filteredRunes.length} runes`;
+    if (countEl) {
+      const t = TRANSLATIONS[currentLang];
+      countEl.textContent = `${filteredRunes.length} ${t.runes}`;
+    }
 
     // Render up to 500 rows (virtual scroll TODO)
     const rows = filteredRunes.slice(0, 500);
@@ -296,45 +585,60 @@
 
   function roleClass(role) {
     const m = {
-      'High Roll':'highroll','Bruiser':'bruiser','Fast Utility':'fastutil',
+      'High Roll':'highroll','Bruiser':'bruiser','Fast CC':'fastcc',
       'Classic DPS':'classicdps','Slow DPS':'slowdps','Bomber':'bomber',
-      'Heavy Resist':'heavyres','Duo Roll':'duoroll'
+      'Tank':'tank','Duo Roll':'duoroll'
     };
     return m[role] || '';
   }
 
   function runeRow(r) {
     const grade = r.gradeStr === 'Legend'
-      ? '<span class="badge badge-legend">Legend</span>'
-      : '<span class="badge badge-hero">Hero</span>';
+      ? '<span class="grade-tag legend">Legend</span>'
+      : '<span class="grade-tag hero">Hero</span>';
 
     const effCls = r.eff >= 90 ? 'eff-hi' : r.eff >= 75 ? 'eff-mid' : 'eff-lo';
-    const vCls   = `verdict-${(r.verdict||'').toLowerCase()}`;
     const rCls   = roleClass(r.role);
     const subs   = r.substats.slice(0, 4);
-    const innate = r.innate_name ? `${r.innate_name} ${r.innate_val}` : '—';
+    const innate = r.innate_name ? `${r.innate_name} ${r.innate_val}` : '';
     const target = r.verdict === 'Grind'
-      ? (r.grindInfo?.stat || '—')
+      ? (r.grindInfo?.stat || '')
       : r.verdict === 'Gem'
-        ? `${r.gemInfo?.from || '—'} → ${r.gemInfo?.to || '—'}`
-        : '—';
+        ? `${r.gemInfo?.from || ''} → ${r.gemInfo?.to || ''}`
+        : '';
 
     return `<tr>
-      <td>${r.slot}</td>
-      <td>${r.setName}</td>
       <td>${grade}</td>
-      <td>${r.level}</td>
+      <td>${r.setName}</td>
+      <td><span class="stat-chip">Lvl ${r.level}</span></td>
       <td><span class="stat-chip ${statClass(r.mainName)}">${r.mainName}</span></td>
-      <td>${innate}</td>
+      <td><span class="stat-chip">${innate}</span></td>
       <td>${statChip(subs[0])}</td>
       <td>${statChip(subs[1])}</td>
       <td>${statChip(subs[2])}</td>
       <td>${statChip(subs[3])}</td>
-      <td class="target-col-cell">${target}</td>
       <td class="${effCls}">${r.eff}%</td>
-      <td><span class="role-tag ${rCls}">${r.role || '—'}</span></td>
-      <td class="${vCls}">${r.verdict || '—'}</td>
+      <td><span class="role-tag ${rCls}">${r.role || ''}</span></td>
+      <td><span class="verdict-tag ${(r.verdict||'').toLowerCase()}">${r.verdict || ''}</span></td>
     </tr>`;
+  }
+
+  function updateGameStageRecommendation(runes) {
+    const stageCard = document.getElementById('game-stage-recommendation');
+    if (!stageCard || !window.SWRM.detectGameStage) return;
+    
+    const stageElement = document.getElementById('recommended-stage');
+    const statsElement = document.getElementById('stage-stats');
+    
+    if (runes.length === 0) {
+      stageElement.textContent = '—';
+      statsElement.textContent = 'Загрузите руны для анализа';
+      return;
+    }
+    
+    const detection = window.SWRM.detectGameStage(runes, window.SWRM.settings);
+    stageElement.textContent = detection.stage;
+    statsElement.textContent = detection.stats;
   }
 
   function renderRuneSummary(runes) {
@@ -398,7 +702,8 @@
     if (!roleSelect) return;
     const current = roleSelect.value;
     const roles = ['High Roll', 'Duo Roll', ...Object.keys(window.SWRM.settings.roles)];
-    roleSelect.innerHTML = `<option value="">All Roles</option>${roles.map(r => `<option value="${r}">${r}</option>`).join('')}`;
+    const t = TRANSLATIONS[currentLang];
+    roleSelect.innerHTML = `<option value="">${t.allRoles}</option>${roles.map(r => `<option value="${r}">${r}</option>`).join('')}`;
     if (roles.includes(current)) roleSelect.value = current;
   }
 
@@ -472,7 +777,6 @@
     document.getElementById(containerId).innerHTML = html;
   }
 
-  buildThresholdTable('threshold-table-wrap', window.SWRM.settings.thresholds, 'thresholds');
   buildThresholdTable('hr-table-wrap', window.SWRM.settings.hrThresholds, 'hrThresholds');
 
   document.getElementById('hr-coeff').value = window.SWRM.settings.hrCoeff;
@@ -526,15 +830,6 @@
   document.getElementById('btn-save-settings').addEventListener('click', () => {
     const s = window.SWRM.settings;
 
-    // Collect threshold inputs
-    document.querySelectorAll('input[data-settings]').forEach(inp => {
-      const key  = inp.dataset.settings;
-      const stat = inp.dataset.stat;
-      const col  = inp.dataset.col;
-      const val  = parseFloat(inp.value);
-      if (!isNaN(val) && s[key] && s[key][stat]) s[key][stat][col] = val;
-    });
-
     // HR coeff
     s.hrCoeff = parseFloat(document.getElementById('hr-coeff').value) || 0.7;
 
@@ -576,11 +871,57 @@
     alert('Settings saved & recalculated!');
   });
 
+  // Theme toggle
+  document.getElementById('theme-toggle')?.addEventListener('click', toggleTheme);
+
+  // Language switcher
+  document.addEventListener('change', (e) => {
+    if (e.target && e.target.id === 'app-language') {
+      updateLanguage(e.target.value);
+    }
+  });
+
+  // Initialize variables from window.SWRM
+  function initFromSWRM() {
+    if (window.SWRM) {
+      parseSWEX = window.SWRM.parseSWEX;
+      processAll = window.SWRM.processAll;
+      ROLE_PRIORITY = window.SWRM.ROLE_PRIORITY;
+      settings = window.SWRM.settings;
+      STAT_NAMES = window.SWRM.STAT_NAMES;
+      SET_NAMES = window.SWRM.SET_NAMES;
+      GRADE_SHORT = window.SWRM.GRADE_SHORT;
+      saveSettings = window.SWRM.saveSettings;
+      DEFAULT_THRESHOLDS = window.SWRM.DEFAULT_THRESHOLDS;
+      DEFAULT_HR_THRESHOLDS = window.SWRM.DEFAULT_HR_THRESHOLDS;
+      DEFAULT_HR_COEFF = window.SWRM.DEFAULT_HR_COEFF;
+      DEFAULT_DUO_THRESHOLDS = window.SWRM.DEFAULT_DUO_THRESHOLDS;
+      DEFAULT_ROLES = window.SWRM.DEFAULT_ROLES;
+      DEFAULT_REAPP = window.SWRM.DEFAULT_REAPP;
+      TRANSLATIONS = window.SWRM.TRANSLATIONS;
+    }
+  }
+
+// Initialize on page load
+  document.addEventListener('DOMContentLoaded', () => {
+    initTheme();
+    updateLanguage(currentLang);
+    
+    // Initialize variables after all scripts are loaded
+    setTimeout(() => {
+      initFromSWRM();
+      
+      // Initialize stage recommendation after all scripts are loaded
+      if (window.SWRM && window.SWRM.detectGameStage && processedRunes.length > 0) {
+        updateGameStageRecommendation(processedRunes);
+      }
+    }, 100);
+  });
+
   // Reset settings
   document.getElementById('btn-reset-settings').addEventListener('click', () => {
     if (!confirm('Reset all settings to defaults?')) return;
     window.SWRM.settings = {
-      thresholds:    JSON.parse(JSON.stringify(DEFAULT_THRESHOLDS)),
       hrThresholds:  JSON.parse(JSON.stringify(DEFAULT_HR_THRESHOLDS)),
       hrCoeff:       DEFAULT_HR_COEFF,
       duoThresholds: JSON.parse(JSON.stringify(DEFAULT_DUO_THRESHOLDS)),
@@ -629,7 +970,7 @@
 
   function parseAndLoadJson(jsonText) {
     const json = JSON.parse(jsonText);
-    allRunes = parseSWEX(json);
+    allRunes = window.SWRM.parseSWEX(json);
     reprocess();
     document.getElementById('upload-prompt').classList.add('hidden');
   }

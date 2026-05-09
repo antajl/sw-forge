@@ -22,11 +22,13 @@
   --purple:   #b06aff;
   --teal:     #2dd4c4;
 
-  --keep:    #3ddc84;
-  --sell:    #ff4e6a;
-  --grind:   #f5c842;
-  --finish:  #4e9eff;
-  --reapp:   #b06aff;
+  --keep:    #a5d6a7;
+  --sell:    #ef9a9a;
+  --grind:   #7ec8c8;
+  --finish:  #90caf9;
+  --reapp:   #fff176;
+  --upgrade: #ffcc80;
+  --gem:     #ce93d8;
 
   --font-ui:   'Exo 2', sans-serif;
   --font-head: 'Rajdhani', sans-serif;
@@ -35,6 +37,75 @@
   --radius: 6px;
   --radius-lg: 10px;
   --glow-accent: 0 0 20px rgba(78,158,255,0.25);
+}
+
+.light-theme {
+  --bg:       #f5efe7;
+  --bg2:      #faf9f6;
+  --bg3:      #ffffff;
+  --surface:  #ffffff;
+  --border:   #e0d5c7;
+  --border2:  #d4c4b0;
+  --text:     #3a3a3a;
+  --text-dim: #7a7a7a;
+  --text-hi:  #2a2a2a;
+
+  --accent:   #4e9eff;
+  --accent2:  #7b5fff;
+  --gold:     #f5c842;
+  --green:    #3ddc84;
+  --red:      #ff4e6a;
+  --orange:   #ff8c42;
+  --purple:   #b06aff;
+  --teal:     #2dd4c4;
+
+  --keep:    #a5d6a7;
+  --sell:    #ef9a9a;
+  --grind:   #7ec8c8;
+  --finish:  #90caf9;
+  --reapp:   #fff176;
+  --upgrade: #ffcc80;
+  --gem:     #ce93d8;
+
+  --glow-accent: 0 0 20px rgba(78,158,255,0.15);
+}
+
+/* Russian language fixes */
+html[lang="ru"], 
+body:has(#app-language[value="ru"]) {
+  --font-ui-size: 0.9em;
+}
+
+.tab, .stab, .btn-ghost, .btn-primary {
+  font-size: 0.85em;
+  white-space: nowrap;
+}
+
+.tab[data-tab="settings"],
+.tab[data-tab="runetable"] {
+  font-size: 0.8em;
+}
+
+/* Light theme header fix */
+.light-theme .site-header {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+}
+
+.light-theme .header-inner {
+  background: var(--bg2);
+}
+
+/* Less contrast for light theme */
+.light-theme {
+  --accent:   #3a7bc8;
+  --accent2:  #6b4f9f;
+  --gold:     #d4a035;
+  --green:    #2ba86a;
+  --red:      #d04356;
+  --orange:   #e07a35;
+  --purple:   #8b5bb3;
+  --teal:     #1ba39c;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -268,7 +339,7 @@ main { max-width: 1440px; margin: 0 auto; padding: 24px; }
 .chart-bar-wrap { flex: 1; background: var(--surface); border-radius: 3px; height: 18px; overflow: hidden; }
 .chart-bar {
   height: 100%; border-radius: 3px;
-  background: linear-gradient(90deg, var(--accent2), var(--accent));
+  background: linear-gradient(90deg, var(--grind), var(--keep));
   transition: width 0.5s cubic-bezier(.4,0,.2,1);
   display: flex; align-items: center; justify-content: flex-end;
   padding-right: 6px;
@@ -284,12 +355,12 @@ main { max-width: 1440px; margin: 0 auto; padding: 24px; }
 .eff-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .eff-bar {
   width: 100%; border-radius: 2px 2px 0 0;
-  background: var(--accent2);
+  background: var(--grind);
   transition: height 0.4s;
   min-height: 2px;
 }
-.eff-bar.good { background: var(--green); }
-.eff-bar.great { background: var(--gold); }
+.eff-bar.good { background: var(--keep); }
+.eff-bar.great { background: var(--finish); }
 .eff-label { font-size: 0.6rem; color: var(--text-dim); }
 
 /* ===================== RUNE TABLE ===================== */
@@ -354,6 +425,61 @@ main { max-width: 1440px; margin: 0 auto; padding: 24px; }
   padding: 4px 6px;
 }
 
+/* Stage selector - make it more prominent */
+.stage-select-wrap {
+  position: relative;
+}
+#stage-select {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: var(--radius-lg);
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(78,158,255,0.3);
+  transition: all 0.2s;
+}
+#stage-select:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(78,158,255,0.4);
+}
+#stage-select:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Game stage recommendation card */
+.game-stage-card {
+  background: linear-gradient(135deg, var(--surface), var(--bg3));
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.stage-card-title {
+  font-family: var(--font-head); font-size: 0.8rem;
+  font-weight: 700; letter-spacing: 0.08em;
+  color: var(--text-dim); margin-bottom: 8px;
+  text-transform: uppercase;
+}
+.stage-card-content {
+  display: flex; flex-direction: column; gap: 8px;
+}
+.recommended-stage {
+  font-family: var(--font-head); font-size: 1.4rem;
+  font-weight: 700; color: var(--accent);
+  text-shadow: 0 1px 2px rgba(78,158,255,0.2);
+}
+.stage-stats {
+  font-family: var(--font-mono); font-size: 0.75rem;
+  color: var(--text-dim); line-height: 1.4;
+}
+
 .guide-list p {
   margin-bottom: 8px;
   color: var(--text);
@@ -398,69 +524,58 @@ table.show-target .target-col-cell { display: table-cell; }
 .badge-legend { background: rgba(245,200,66,0.15); color: var(--gold); border: 1px solid rgba(245,200,66,0.3); }
 .badge-hero   { background: rgba(176,106,255,0.15); color: var(--purple); border: 1px solid rgba(176,106,255,0.3); }
 
-/* Verdict badges */
-.verdict-keep   { color: var(--keep); font-weight: 700; }
-.verdict-sell   { color: var(--sell); }
-.verdict-grind  { color: var(--grind); font-weight: 600; }
-.verdict-gem    { color: var(--teal); font-weight: 600; }
-.verdict-finish { color: var(--finish); }
-.verdict-reapp  { color: var(--purple); }
-.verdict-upgrade{ color: var(--accent); font-weight: 600; }
 
 /* Efficiency color */
 .eff-hi  { color: var(--green); font-family: var(--font-mono); }
 .eff-mid { color: var(--gold); font-family: var(--font-mono); }
 .eff-lo  { color: var(--text-dim); font-family: var(--font-mono); }
-
-/* Stat chips */
 .stat-chip {
   display: inline-flex; align-items: center; gap: 3px;
   padding: 2px 6px; border-radius: 3px;
   font-family: var(--font-mono); font-size: 0.75rem;
   background: var(--bg3); border: 1px solid var(--border);
   white-space: nowrap;
+  color: #333;
 }
-.stat-chip.spd   { border-color: rgba(78,158,255,0.4); color: var(--accent); }
-.stat-chip.hp    { border-color: rgba(61,220,132,0.4); color: var(--green); }
-.stat-chip.atk   { border-color: rgba(255,76,106,0.4); color: var(--red); }
-.stat-chip.def   { border-color: rgba(78,158,255,0.3); color: #7ec8ff; }
-.stat-chip.cr    { border-color: rgba(245,200,66,0.4); color: var(--gold); }
-.stat-chip.cd    { border-color: rgba(255,140,66,0.4); color: var(--orange); }
-.stat-chip.acc   { border-color: rgba(45,212,196,0.4); color: var(--teal); }
-.stat-chip.res   { border-color: rgba(176,106,255,0.4); color: var(--purple); }
-.stat-chip.flat  { opacity: 0.55; }
+
+/* Grade badges */
+.grade-tag {
+  font-family: var(--font-head); font-size: 0.72rem; font-weight: 600;
+  letter-spacing: 0.04em; color: var(--text-dim);
+  padding: 2px 6px; border-radius: 3px;
+}
+.grade-tag.legend { background: linear-gradient(135deg, #ffd700, #ffed4e); color: #000; }
+.grade-tag.hero   { background: linear-gradient(135deg, #9b59b6, #c39bd3); color: #000; }
 
 /* Role label */
 .role-tag {
   font-family: var(--font-head); font-size: 0.72rem; font-weight: 600;
   letter-spacing: 0.04em; color: var(--text-dim);
+  padding: 2px 6px; border-radius: 3px;
 }
-.role-tag.highroll  { color: var(--gold); }
-.role-tag.bruiser   { color: var(--red); }
-.role-tag.fastutil  { color: var(--teal); }
-.role-tag.classicdps{ color: var(--accent); }
-.role-tag.slowdps   { color: var(--purple); }
-.role-tag.bomber    { color: var(--orange); }
-.role-tag.heavyres  { color: #7ec8ff; }
-.role-tag.duoroll   { color: var(--green); }
+.role-tag.highroll  { background: var(--gold); color: #333; }
+.role-tag.bruiser   { background: var(--sell); color: #333; }
+.role-tag.fastcc    { background: var(--teal); color: #333; }
+.role-tag.tank      { background: var(--purple); color: #333; }
+.role-tag.bomber   { background: var(--orange); color: #333; }
+.role-tag.classicdps { background: var(--accent); color: #fff; }
+.role-tag.slowdps  { background: var(--accent2); color: #fff; }
+.role-tag.duoroll  { background: var(--gold); color: #333; }
 
-/* ===================== SETTINGS ===================== */
-.settings-layout {
-  display: flex; gap: 20px; align-items: flex-start;
+/* Verdict badges */
+.verdict-tag {
+  font-family: var(--font-head); font-size: 0.72rem; font-weight: 600;
+  letter-spacing: 0.04em; color: var(--text-dim);
+  padding: 2px 6px; border-radius: 3px;
 }
-.settings-sidebar {
-  display: flex; flex-direction: column; gap: 4px;
-  min-width: 160px; flex-shrink: 0;
-}
-.stab {
-  background: none; border: none; cursor: pointer;
-  font-family: var(--font-head); font-size: 0.85rem; font-weight: 600;
-  letter-spacing: 0.06em; text-transform: uppercase;
-  color: var(--text-dim); padding: 8px 14px;
-  border-radius: var(--radius); text-align: left;
-  transition: all 0.15s; border-left: 2px solid transparent;
-}
-.stab:hover { color: var(--text); background: var(--surface); }
+.verdict-tag.keep    { background: var(--keep); color: #333; }
+.verdict-tag.sell    { background: var(--sell); color: #333; }
+.verdict-tag.grind   { background: var(--grind); color: #333; }
+.verdict-tag.finish  { background: var(--finish); color: #333; }
+.verdict-tag.reapp   { background: var(--reapp); color: #333; }
+.verdict-tag.upgrade { background: var(--upgrade); color: #333; }
+.verdict-tag.gem     { background: var(--gem); color: #333; }
+
 .stab.active {
   color: var(--accent); background: rgba(78,158,255,0.08);
   border-left-color: var(--accent);

@@ -1,6 +1,5 @@
 // =============================================
 // settings.js — Default thresholds & config
-// Mirrors your Google Sheets Settings structure
 // =============================================
 
 const STAT_NAMES = {
@@ -23,6 +22,154 @@ const SET_NAMES = {
 const GRADE_NAMES = { 1:'Common', 2:'Magic', 3:'Rare', 4:'Hero', 5:'Legend' };
 const GRADE_SHORT = { 4:'Hero', 5:'Legend' };
 
+// ==== TRANSLATIONS ====
+const TRANSLATIONS = {
+  en: {
+    // Header
+    title: 'SW Rune Master',
+    dashboard: 'Dashboard',
+    runeTable: 'Rune Table',
+    runeRules: 'Rune Rules',
+    guide: 'Guide',
+    changelog: 'Changelog',
+    loadJson: 'Load JSON',
+    minLvl: 'Min Lvl',
+    settings: 'Settings',
+    
+    // Upload prompt
+    loadYourSWEX: 'Load your SWEX JSON',
+    uploadDescription: 'Export your account data from <strong>Summoners War Exporter (SWEX)</strong> and load the JSON file here to analyze your rune collection.',
+    chooseJsonFile: 'Choose JSON file',
+    privacyNote: 'All processing happens in your browser — your data never leaves your device.',
+    
+    // Dashboard cards
+    totalRunes: 'Total Runes',
+    keep: 'Keep',
+    sell: 'Sell',
+    grind: 'Grind',
+    finish: 'Finish',
+    reapp: 'Reapp',
+    upgrade: 'Upgrade',
+    gem: 'Gem',
+    
+    // Charts
+    roleDistribution: 'Role Distribution',
+    setDistribution: 'Set Distribution',
+    slotDistribution: 'Slot Distribution',
+    efficiencyDistribution: 'Efficiency Distribution',
+    
+    // Table
+    searchPlaceholder: 'Search by set, stat, role...',
+    allVerdicts: 'All Verdicts',
+    allRoles: 'All Roles',
+    allGrades: 'All Grades',
+    runes: 'runes',
+    
+    // Settings
+    thresholds: 'Thresholds',
+    roleFilters: 'Role Filters',
+    reappRules: 'Reapp Rules',
+    generalThresholds: 'General Thresholds',
+    highRollThresholds: 'High Roll Thresholds',
+    duoRollThresholds: 'Duo Roll Thresholds',
+    partnerCoeff: 'Partner coefficient',
+    configureRoleRules: 'Configure role rules. You can add a custom role or remove existing roles (minimum one role must remain).',
+    newRole: 'New role',
+    addRole: '+ Add role',
+    reappCandidateRules: 'Reapp Candidate Rules',
+    reappDescription: 'If a rune has low efficiency and matches these filters, verdict can be Reapp.',
+    allowedSets: 'Allowed sets (comma)',
+    innateStats: 'Innate stats (comma)',
+    slot2Mains: 'Slot 2 mains (comma)',
+    slot4Mains: 'Slot 4 mains (comma)',
+    slot6Mains: 'Slot 6 mains (comma)',
+    maxEffReapp: 'Max efficiency for Reapp',
+    saveRecalculate: 'Save & Recalculate',
+    resetDefaults: 'Reset to Defaults',
+    
+    // App settings
+    appSettings: 'App Settings',
+    language: 'Language',
+    
+    // Stages
+    early: 'Early',
+    mid: 'Mid',
+    late: 'Late'
+  },
+  ru: {
+    // Header
+    title: 'SW Rune Master',
+    dashboard: 'Панель',
+    runeTable: 'Таблица Рун',
+    runeRules: 'Правила Рун',
+    guide: 'Инструкция',
+    changelog: 'Изменения',
+    loadJson: 'Загрузить JSON',
+    minLvl: 'Мин Ур',
+    settings: 'Настройки',
+    
+    // Upload prompt
+    loadYourSWEX: 'Загрузите ваш SWEX JSON',
+    uploadDescription: 'Экспортируйте данные аккаунта из <strong>Summoners War Exporter (SWEX)</strong> и загрузите JSON файл здесь для анализа вашей коллекции рун.',
+    chooseJsonFile: 'Выбрать JSON файл',
+    privacyNote: 'Все обработка происходит в вашем браузере — ваши данные никогда не покидают ваше устройство.',
+    
+    // Dashboard cards
+    totalRunes: 'Всего Рун',
+    keep: 'Оставить',
+    sell: 'Продать',
+    grind: 'Прокачать',
+    finish: 'Докачать',
+    reapp: 'Переставить',
+    upgrade: 'Улучшить',
+    gem: 'Камень',
+    
+    // Charts
+    roleDistribution: 'Распределение Ролей',
+    setDistribution: 'Распределение Сетов',
+    slotDistribution: 'Распределение Слотов',
+    efficiencyDistribution: 'Распределение Эффективности',
+    
+    // Table
+    searchPlaceholder: 'Поиск по сету, стату, роли...',
+    allVerdicts: 'Все Вердикты',
+    allRoles: 'Все Роли',
+    allGrades: 'Все Грейды',
+    runes: 'рун',
+    
+    // Settings
+    thresholds: 'Пороги',
+    roleFilters: 'Фильтры Ролей',
+    reappRules: 'Правила Перестановки',
+    generalThresholds: 'Общие Пороги',
+    highRollThresholds: 'Пороги Высоких Показателей',
+    duoRollThresholds: 'Пороги Парных Показателей',
+    partnerCoeff: 'Коэффициент партнера',
+    configureRoleRules: 'Настройте правила ролей. Вы можете добавить пользовательскую роль или удалить существующие (должна остаться минимум одна роль).',
+    newRole: 'Новая роль',
+    addRole: '+ Добавить роль',
+    reappCandidateRules: 'Правила Кандидатов на Перестановку',
+    reappDescription: 'Если у руны низкая эффективность и она соответствует этим фильтрам, вердикт может быть "Переставить".',
+    allowedSets: 'Разрешенные сеты (через запятую)',
+    innateStats: 'Врожденные статы (через запятую)',
+    slot2Mains: 'Основные статы слота 2 (через запятую)',
+    slot4Mains: 'Основные статы слота 4 (через запятую)',
+    slot6Mains: 'Основные статы слота 6 (через запятую)',
+    maxEffReapp: 'Макс. эффективность для Перестановки',
+    saveRecalculate: 'Сохранить & Пересчитать',
+    resetDefaults: 'Сбросить по умолчанию',
+    
+    // App settings
+    appSettings: 'Настройки Приложения',
+    language: 'Язык',
+    
+    // Stages
+    early: 'Ранняя',
+    mid: 'Средняя',
+    late: 'Поздняя'
+  }
+};
+
 const SLOT_MAIN_FIXED = {
   1: { type: 3,  name: 'ATK' },   // Flat ATK
   3: { type: 5,  name: 'DEF' },   // Flat DEF
@@ -42,17 +189,8 @@ const DEFAULT_THRESHOLDS = {
   RES:   { Early_Leg:18, Early_Hero:14, Mid_Leg:22, Mid_Hero:18, Late_Leg:27, Late_Hero:23 },
 };
 
-// High Roll thresholds (separate from general)
-const DEFAULT_HR_THRESHOLDS = {
-  SPD:   { Early_Leg:14, Early_Hero:10, Mid_Leg:17, Mid_Hero:15, Late_Leg:21, Late_Hero:18 },
-  'HP%': { Early_Leg:18, Early_Hero:14, Mid_Leg:21, Mid_Hero:20, Late_Leg:25, Late_Hero:24 },
-  'DEF%':{ Early_Leg:18, Early_Hero:14, Mid_Leg:21, Mid_Hero:20, Late_Leg:25, Late_Hero:24 },
-  'ATK%':{ Early_Leg:16, Early_Hero:12, Mid_Leg:18, Mid_Hero:17, Late_Leg:23, Late_Hero:21 },
-  CRate: { Early_Leg:11, Early_Hero:8,  Mid_Leg:14, Mid_Hero:13, Late_Leg:17, Late_Hero:16 },
-  CDmg:  { Early_Leg:14, Early_Hero:10, Mid_Leg:17, Mid_Hero:16, Late_Leg:21, Late_Hero:20 },
-  ACC:   { Early_Leg:18, Early_Hero:14, Mid_Leg:22, Mid_Hero:18, Late_Leg:27, Late_Hero:23 },
-  RES:   { Early_Leg:18, Early_Hero:14, Mid_Leg:22, Mid_Hero:18, Late_Leg:27, Late_Hero:23 },
-};
+// Теперь High Roll всегда равен обычным порогам
+const DEFAULT_HR_THRESHOLDS = DEFAULT_THRESHOLDS;
 const DEFAULT_HR_COEFF = 0.70; // partner soft threshold
 
 // Duo Roll pairs
@@ -98,7 +236,7 @@ const DEFAULT_ROLES = {
     minStats: { Early:1, Mid:1, Late:2 },
     requireHR: { Early_Hero:false, Mid_Hero:false, Late_Hero:false, Early_Leg:false, Mid_Leg:false, Late_Leg:false },
   },
-  'Fast Utility': {
+  'Fast CC': {
     substats: { SPD:'Include', 'HP%':'Include', 'DEF%':'Include', ACC:'Include',
                 'ATK%':'None', CRate:'None', CDmg:'None', RES:'None' },
     mustHave: { Early: 'SPD', Mid: 'SPD', Late: 'SPD' },
@@ -106,13 +244,13 @@ const DEFAULT_ROLES = {
     minStats: { Early:1, Mid:2, Late:2 },
     requireHR: { Early_Hero:false, Mid_Hero:false, Late_Hero:true, Early_Leg:false, Mid_Leg:false, Late_Leg:true },
   },
-  'Heavy Resist': {
+  'Tank': {
     substats: { 'HP%':'Include', 'DEF%':'Include', RES:'Include',
                 SPD:'None', 'ATK%':'None', CRate:'None', CDmg:'None', ACC:'None' },
     mustHave: { Early: 'RES', Mid: 'RES', Late: 'RES' },
     acceptedMains: { 2:['HP%','DEF%'], 4:['HP%','DEF%'], 6:['HP%','DEF%','RES'] },
     minStats: { Early:1, Mid:2, Late:2 },
-    requireHR: { Early_Hero:false, Mid_Hero:false, Late_Hero:false, Early_Leg:false, Mid_Leg:false, Late_Leg:false },
+    requireHR: { Early_Hero:false, Mid_Hero:false, Late_Hero:true, Early_Leg:false, Mid_Leg:false, Late_Leg:true },
   },
   'Bruiser': {
     substats: { SPD:'Include', 'HP%':'Include', 'ATK%':'Include', 'DEF%':'Include',
@@ -125,13 +263,13 @@ const DEFAULT_ROLES = {
 };
 
 const DEFAULT_REAPP = {
-  maxEff: 65,
-  sets: ['Violent', 'Will', 'Swift'],
-  innateStats: ['SPD'],
+  maxEff: 75,
+  sets: ['Violent', 'Will', 'Swift', 'Despair', 'Fatal', 'Rage', 'Nemesis', 'Revenge', 'Destroy', 'Vampire', 'Blade'],
+  innateStats: ['SPD', 'HP%', 'ATK%', 'DEF%'],
   mainBySlot: {
-    2: ['SPD', 'HP%', 'ATK%', 'DEF%'],
-    4: ['HP%', 'ATK%', 'DEF%', 'CRate', 'CDmg'],
-    6: ['HP%', 'ATK%', 'DEF%', 'ACC', 'RES']
+    2: ['SPD'],
+    4: ['CDmg'],
+    6: ['ATK%', 'HP%']
   }
 };
 
@@ -195,3 +333,4 @@ window.SWRM.DEFAULT_HR_COEFF = DEFAULT_HR_COEFF;
 window.SWRM.DEFAULT_DUO_THRESHOLDS = DEFAULT_DUO_THRESHOLDS;
 window.SWRM.DEFAULT_REAPP = DEFAULT_REAPP;
 window.SWRM.saveSettings = saveSettings;
+window.SWRM.TRANSLATIONS = TRANSLATIONS;

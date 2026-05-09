@@ -32,18 +32,3 @@ A client-side rune analyzer for Summoners War, powered by your SWEX JSON export.
 | Slow DPS | ATK% + CRate + CDmg (no SPD) |
 | Duo Roll | Synergy pairs (SPD+X, CRate+CDmg, etc.) |
 | High Roll | One exceptional stat + partner |
-
-## Development
-
-Pure HTML + CSS + JS, no build step needed. Just edit and push to `main`.
-
-```
-sw-rune-master/
-├── index.html
-├── css/style.css
-├── js/
-│   ├── settings.js   ← thresholds & defaults
-│   ├── parser.js     ← SWEX JSON parsing
-│   ├── engine.js     ← role detection & verdicts
-│   └── ui.js         ← rendering & interactions
-```

@@ -211,7 +211,7 @@
     const enabled = Object.entries(formulaResults || {})
       .filter(([name, matched]) => matched && isFormulaEnabled(name, settings))
       .map(([name]) => name);
-    const priority = ['Classic DPS', 'Slow DPS', 'Bomber', 'Fast Utility', 'Heavy Resist', 'Bruiser'];
+    const priority = ['Classic DPS', 'Slow DPS', 'Bomber', 'Fast CC', 'Tank', 'Bruiser'];
     for (let i = 0; i < priority.length; i++) {
       if (enabled.includes(priority[i])) return priority[i];
     }
@@ -249,7 +249,7 @@
     if (hasRole && isLegend && window.SWRM.matchReappRule?.(rune, settings)) {
       const skipReapp = typeof window.SWRM.isPrimaryBuildRole === 'function'
         ? window.SWRM.isPrimaryBuildRole(bestRole)
-        : ['Classic DPS', 'Slow DPS', 'Bomber', 'Bruiser', 'Fast Utility', 'Heavy Resist', 'Fast CC', 'Tank'].includes(bestRole);
+        : ['Classic DPS', 'Slow DPS', 'Bomber', 'Bruiser', 'Fast CC', 'Tank'].includes(bestRole);
       if (!skipReapp) {
         return 'Reapp';
       }

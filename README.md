@@ -25,8 +25,8 @@ A client-side rune analyzer for Summoners War, powered by your SWEX JSON export.
 | Role | Key stats |
 |---|---|
 | Bruiser | SPD + HP% + ATK% + DEF% + CRate |
-| Fast Utility | SPD + HP%/DEF%/ACC |
-| Heavy Resist | HP% + DEF% + RES |
+| Fast CC | SPD + HP%/DEF%/ACC |
+| Tank | HP% + DEF% + RES |
 | Bomber | ATK% + ACC |
 | Classic DPS | SPD + ATK% + CRate + CDmg |
 | Slow DPS | ATK% + CRate + CDmg (no SPD) |

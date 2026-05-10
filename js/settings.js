@@ -394,11 +394,7 @@ const DEFAULT_DUO_THRESHOLDS = {
 const DEFAULT_FORMULAS = {
   'Classic DPS': {
     enabled: true,
-    acceptedMains: {
-      2: ['SPD', 'None', 'None'],
-      4: ['CRate', 'CDmg', 'None'],
-      6: ['ATK%', 'None', 'None']
-    },
+    acceptedMains: { 2: ['SPD', 'None', 'None'], 4: ['CRate', 'CDmg', 'None'], 6: ['ATK%', 'None', 'None'] },
     substats: {
       SPD: { Early: 'Include', Mid: 'Include', Late: 'Include' },
       'HP%': { Early: 'None', Mid: 'None', Late: 'None' },
@@ -409,30 +405,14 @@ const DEFAULT_FORMULAS = {
       ACC: { Early: 'None', Mid: 'None', Late: 'None' },
       RES: { Early: 'None', Mid: 'None', Late: 'None' }
     },
-    mustHave: { Early: null, Mid: 'SPD', Late: 'SPD' },
-    slotRequirements: {
-      2: { Early: 'CRate', Mid: 'CRate', Late: 'CRate' },
-      4: { Early: 'SPD', Mid: 'SPD', Late: 'SPD' },
-      6: { Early: 'CRate', Mid: 'CRate', Late: 'CRate' }
-    },
-    minStats: {
-      '1/3/5': { Early: 1, Mid: 2, Late: 3 },
-      'Slot 2': { Early: 1, Mid: 1, Late: 1 },
-      'Slot 4': { Early: 1, Mid: 1, Late: 1 },
-      'Slot 6': { Early: 1, Mid: 1, Late: 1 }
-    },
-    requireHR: {
-      'High Roll for Hero': { Early: false, Mid: false, Late: true },
-      'High Roll for Legend': { Early: false, Mid: false, Late: true }
-    }
+    mustHave: { Early: 'None', Mid: 'SPD', Late: 'SPD' },
+    slotRequirements: { 2: { Early: 'CRate', Mid: 'CRate', Late: 'CRate' }, 4: { Early: 'SPD', Mid: 'SPD', Late: 'SPD' }, 6: { Early: 'CRate', Mid: 'CRate', Late: 'CRate' } },
+    minStats: { '1/3/5': { Early: 1, Mid: 2, Late: 3 }, 'Slot 2': { Early: 1, Mid: 1, Late: 1 }, 'Slot 4': { Early: 1, Mid: 1, Late: 1 }, 'Slot 6': { Early: 1, Mid: 1, Late: 1 } },
+    requireHR: { 'High Roll for Hero': { Early: false, Mid: true, Late: true }, 'High Roll for Legend': { Early: false, Mid: false, Late: true } }
   },
   'Slow DPS': {
     enabled: true,
-    acceptedMains: {
-      2: ['ATK%', 'None', 'None'],
-      4: ['CRate', 'CDmg', 'None'],
-      6: ['ATK%', 'None', 'None']
-    },
+    acceptedMains: { 2: ['ATK%', 'None', 'None'], 4: ['CRate', 'CDmg', 'None'], 6: ['ATK%', 'None', 'None'] },
     substats: {
       SPD: { Early: 'None', Mid: 'None', Late: 'None' },
       'HP%': { Early: 'None', Mid: 'None', Late: 'None' },
@@ -443,30 +423,14 @@ const DEFAULT_FORMULAS = {
       ACC: { Early: 'None', Mid: 'None', Late: 'None' },
       RES: { Early: 'None', Mid: 'None', Late: 'None' }
     },
-    mustHave: { Early: null, Mid: 'CRate', Late: 'CRate' },
-    slotRequirements: {
-      2: { Early: 'CRate', Mid: 'CRate', Late: 'CRate' },
-      4: { Early: 'ATK%', Mid: 'ATK%', Late: 'ATK%' },
-      6: { Early: 'CRate', Mid: 'CRate', Late: 'CRate' }
-    },
-    minStats: {
-      '1/3/5': { Early: 1, Mid: 2, Late: 2 },
-      'Slot 2': { Early: 1, Mid: 1, Late: 1 },
-      'Slot 4': { Early: 1, Mid: 1, Late: 1 },
-      'Slot 6': { Early: 1, Mid: 1, Late: 1 }
-    },
-    requireHR: {
-      'High Roll for Hero': { Early: false, Mid: false, Late: true },
-      'High Roll for Legend': { Early: false, Mid: false, Late: false }
-    }
+    mustHave: { Early: 'None', Mid: 'CRate', Late: 'CRate' },
+    slotRequirements: { 2: { Early: 'None', Mid: 'None', Late: 'None' }, 4: { Early: 'None', Mid: 'None', Late: 'None' }, 6: { Early: 'CRate', Mid: 'CRate', Late: 'CRate' } },
+    minStats: { '1/3/5': { Early: 1, Mid: 2, Late: 3 }, 'Slot 2': { Early: 1, Mid: 1, Late: 2 }, 'Slot 4': { Early: 1, Mid: 1, Late: 2 }, 'Slot 6': { Early: 1, Mid: 1, Late: 2 } },
+    requireHR: { 'High Roll for Hero': { Early: false, Mid: true, Late: true }, 'High Roll for Legend': { Early: false, Mid: false, Late: true } }
   },
   'Bomber': {
     enabled: true,
-    acceptedMains: {
-      2: ['SPD', 'ATK%', 'None'],
-      4: ['ATK%', 'None', 'None'],
-      6: ['ATK%', 'ACC', 'None']
-    },
+    acceptedMains: { 2: ['SPD', 'ATK%', 'None'], 4: ['ATK%', 'None', 'None'], 6: ['ATK%', 'ACC', 'None'] },
     substats: {
       SPD: { Early: 'Include', Mid: 'Include', Late: 'Include' },
       'HP%': { Early: 'None', Mid: 'None', Late: 'None' },
@@ -478,29 +442,13 @@ const DEFAULT_FORMULAS = {
       RES: { Early: 'None', Mid: 'None', Late: 'None' }
     },
     mustHave: { Early: 'ATK%', Mid: 'ATK%', Late: 'ATK%' },
-    slotRequirements: {
-      2: { Early: 'ATK%', Mid: 'ATK%', Late: 'ATK%' },
-      4: { Early: 'SPD', Mid: 'SPD', Late: 'SPD' },
-      6: { Early: 'ATK%', Mid: 'ATK%', Late: 'ATK%' }
-    },
-    minStats: {
-      '1/3/5': { Early: 1, Mid: 1, Late: 2 },
-      'Slot 2': { Early: 1, Mid: 1, Late: 1 },
-      'Slot 4': { Early: 1, Mid: 1, Late: 1 },
-      'Slot 6': { Early: 1, Mid: 1, Late: 1 }
-    },
-    requireHR: {
-      'High Roll for Hero': { Early: false, Mid: false, Late: false },
-      'High Roll for Legend': { Early: false, Mid: false, Late: false }
-    }
+    slotRequirements: { 2: { Early: 'None', Mid: 'ATK%', Late: 'None' }, 4: { Early: 'None', Mid: 'None', Late: 'None' }, 6: { Early: 'None', Mid: 'None', Late: 'None' } },
+    minStats: { '1/3/5': { Early: 1, Mid: 2, Late: 3 }, 'Slot 2': { Early: 1, Mid: 1, Late: 1 }, 'Slot 4': { Early: 1, Mid: 1, Late: 1 }, 'Slot 6': { Early: 1, Mid: 1, Late: 1 } },
+    requireHR: { 'High Roll for Hero': { Early: false, Mid: true, Late: true }, 'High Roll for Legend': { Early: false, Mid: false, Late: true } }
   },
-  'Fast Utility': {
+  'Fast CC': {
     enabled: true,
-    acceptedMains: {
-      2: ['SPD', 'HP%', 'DEF%'],
-      4: ['HP%', 'DEF%', 'None'],
-      6: ['HP%', 'DEF%', 'ACC']
-    },
+    acceptedMains: { 2: ['SPD', 'HP%', 'DEF%'], 4: ['HP%', 'DEF%', 'None'], 6: ['HP%', 'DEF%', 'ACC'] },
     substats: {
       SPD: { Early: 'Include', Mid: 'Include', Late: 'Include' },
       'HP%': { Early: 'Include', Mid: 'Include', Late: 'Include' },
@@ -509,32 +457,16 @@ const DEFAULT_FORMULAS = {
       CRate: { Early: 'None', Mid: 'None', Late: 'None' },
       CDmg: { Early: 'None', Mid: 'None', Late: 'None' },
       ACC: { Early: 'Include', Mid: 'Include', Late: 'Include' },
-      RES: { Early: 'Include', Mid: 'Include', Late: 'Include' }
+      RES: { Early: 'None', Mid: 'None', Late: 'None' }
     },
     mustHave: { Early: 'SPD', Mid: 'SPD', Late: 'SPD' },
-    slotRequirements: {
-      2: { Early: 'SPD', Mid: 'SPD', Late: 'SPD' },
-      4: { Early: 'HP%', Mid: 'HP%', Late: 'HP%' },
-      6: { Early: 'DEF%', Mid: 'DEF%', Late: 'DEF%' }
-    },
-    minStats: {
-      '1/3/5': { Early: 1, Mid: 2, Late: 2 },
-      'Slot 2': { Early: 1, Mid: 1, Late: 1 },
-      'Slot 4': { Early: 1, Mid: 1, Late: 1 },
-      'Slot 6': { Early: 1, Mid: 1, Late: 1 }
-    },
-    requireHR: {
-      'High Roll for Hero': { Early: false, Mid: false, Late: true },
-      'High Roll for Legend': { Early: false, Mid: false, Late: true }
-    }
+    slotRequirements: { 2: { Early: 'SPD', Mid: 'SPD', Late: 'SPD' }, 4: { Early: 'SPD', Mid: 'SPD', Late: 'SPD' }, 6: { Early: 'SPD', Mid: 'SPD', Late: 'SPD' } },
+    minStats: { '1/3/5': { Early: 2, Mid: 2, Late: 2 }, 'Slot 2': { Early: 1, Mid: 1, Late: 1 }, 'Slot 4': { Early: 1, Mid: 1, Late: 1 }, 'Slot 6': { Early: 1, Mid: 1, Late: 1 } },
+    requireHR: { 'High Roll for Hero': { Early: false, Mid: true, Late: true }, 'High Roll for Legend': { Early: false, Mid: false, Late: true } }
   },
-  'Heavy Resist': {
+  'Tank': {
     enabled: true,
-    acceptedMains: {
-      2: ['HP%', 'DEF%', 'None'],
-      4: ['HP%', 'DEF%', 'RES'],
-      6: ['HP%', 'DEF%', 'RES']
-    },
+    acceptedMains: { 2: ['HP%', 'DEF%', 'None'], 4: ['HP%', 'DEF%', 'None'], 6: ['HP%', 'DEF%', 'RES'] },
     substats: {
       SPD: { Early: 'None', Mid: 'None', Late: 'None' },
       'HP%': { Early: 'Include', Mid: 'Include', Late: 'Include' },
@@ -546,29 +478,13 @@ const DEFAULT_FORMULAS = {
       RES: { Early: 'Include', Mid: 'Include', Late: 'Include' }
     },
     mustHave: { Early: 'RES', Mid: 'RES', Late: 'RES' },
-    slotRequirements: {
-      2: { Early: 'RES', Mid: 'RES', Late: 'RES' },
-      4: { Early: 'RES', Mid: 'RES', Late: 'RES' },
-      6: { Early: 'RES', Mid: 'RES', Late: 'RES' }
-    },
-    minStats: {
-      '1/3/5': { Early: 1, Mid: 2, Late: 2 },
-      'Slot 2': { Early: 1, Mid: 1, Late: 1 },
-      'Slot 4': { Early: 1, Mid: 1, Late: 1 },
-      'Slot 6': { Early: 1, Mid: 1, Late: 1 }
-    },
-    requireHR: {
-      'High Roll for Hero': { Early: false, Mid: false, Late: true },
-      'High Roll for Legend': { Early: false, Mid: false, Late: true }
-    }
+    slotRequirements: { 2: { Early: 'None', Mid: 'None', Late: 'None' }, 4: { Early: 'HP%', Mid: 'HP%', Late: 'HP%' }, 6: { Early: 'RES', Mid: 'RES', Late: 'RES' } },
+    minStats: { '1/3/5': { Early: 2, Mid: 2, Late: 2 }, 'Slot 2': { Early: 1, Mid: 1, Late: 1 }, 'Slot 4': { Early: 1, Mid: 1, Late: 1 }, 'Slot 6': { Early: 1, Mid: 1, Late: 1 } },
+    requireHR: { 'High Roll for Hero': { Early: false, Mid: true, Late: true }, 'High Roll for Legend': { Early: false, Mid: false, Late: true } }
   },
   'Bruiser': {
     enabled: true,
-    acceptedMains: {
-      2: ['SPD', 'HP%', 'ATK%'],
-      4: ['HP%', 'ATK%', 'DEF%'],
-      6: ['DEF%', 'HP%', 'ATK%']
-    },
+    acceptedMains: { 2: ['SPD', 'HP%', 'ATK%'], 4: ['CRate', 'CDmg', 'HP%'], 6: ['DEF%', 'HP%', 'ATK%'] },
     substats: {
       SPD: { Early: 'Include', Mid: 'Include', Late: 'Include' },
       'HP%': { Early: 'Include', Mid: 'Include', Late: 'Include' },
@@ -580,23 +496,13 @@ const DEFAULT_FORMULAS = {
       RES: { Early: 'None', Mid: 'None', Late: 'None' }
     },
     mustHave: { Early: 'CRate', Mid: 'CRate', Late: 'CRate' },
-    slotRequirements: {
-      2: { Early: 'CRate', Mid: 'CRate', Late: 'CRate' },
-      4: { Early: 'ATK%', Mid: 'ATK%', Late: 'ATK%' },
-      6: { Early: 'DEF%', Mid: 'DEF%', Late: 'DEF%' }
-    },
-    minStats: {
-      '1/3/5': { Early: 2, Mid: 3, Late: 3 },
-      'Slot 2': { Early: 1, Mid: 1, Late: 1 },
-      'Slot 4': { Early: 1, Mid: 1, Late: 1 },
-      'Slot 6': { Early: 1, Mid: 1, Late: 1 }
-    },
-    requireHR: {
-      'High Roll for Hero': { Early: false, Mid: false, Late: true },
-      'High Roll for Legend': { Early: false, Mid: false, Late: true }
-    }
+    slotRequirements: { 2: { Early: 'None', Mid: 'None', Late: 'None' }, 4: { Early: 'None', Mid: 'None', Late: 'None' }, 6: { Early: 'HP%', Mid: 'HP%', Late: 'HP%' } },
+    minStats: { '1/3/5': { Early: 3, Mid: 3, Late: 3 }, 'Slot 2': { Early: 2, Mid: 2, Late: 2 }, 'Slot 4': { Early: 2, Mid: 2, Late: 2 }, 'Slot 6': { Early: 2, Mid: 2, Late: 2 } },
+    requireHR: { 'High Roll for Hero': { Early: false, Mid: true, Late: true }, 'High Roll for Legend': { Early: false, Mid: true, Late: true } }
   }
 };
+
+const DEFAULT_ROLE_PRIORITY = ['Fast CC', 'Classic DPS', 'Bomber', 'Tank', 'Bruiser', 'Slow DPS', 'Duo Roll', 'High Roll'];
 
 // ---- LEGACY ROLE DEFINITIONS (for backward compatibility) ----
 // Include/Exclude/None; mustHave per stage; acceptedMains per slot; minStats per slot
@@ -605,8 +511,8 @@ const DEFAULT_ROLES = {
     substats: { SPD:'Include', 'ATK%':'Include', CRate:'Include', CDmg:'Include',
                 'HP%':'None', 'DEF%':'None', ACC:'None', RES:'None' },
     mustHave: { Early: null, Mid: 'SPD', Late: 'SPD' },
-    acceptedMains: { 2:['SPD'], 4:['HP%','ATK%','DEF%'], 6:['ATK%','HP%','DEF%'] },
-    minStats: { Early:1, Mid:2, Late:2 },
+    acceptedMains: { 2:['SPD'], 4:['CRate','CDmg'], 6:['ATK%'] },
+    minStats: { Early:1, Mid:2, Late:3 },
     requireHR: { Early_Hero:false, Mid_Hero:true, Late_Hero:true, Early_Leg:false, Mid_Leg:false, Late_Leg:true },
   },
   'Slow DPS': {
@@ -735,13 +641,58 @@ function mergeGemMeta(savedGem) {
 
 function getSettings() {
   const saved = loadSettings();
+  const presetVersion = Number(saved?.presetVersion || 0);
+  const formulas = saved?.formulas
+    ? JSON.parse(JSON.stringify(saved.formulas))
+    : JSON.parse(JSON.stringify(DEFAULT_FORMULAS));
+  // Migration: keep legacy formula names aligned with canonical role names.
+  if (formulas['Fast Utility'] && !formulas['Fast CC']) {
+    formulas['Fast CC'] = formulas['Fast Utility'];
+  }
+  if (formulas['Heavy Resist'] && !formulas['Tank']) {
+    formulas['Tank'] = formulas['Heavy Resist'];
+  }
+  delete formulas['Fast Utility'];
+  delete formulas['Heavy Resist'];
+  // One-time migration: enforce CSV-aligned presets for the six core formula roles.
+  if (presetVersion < 2) {
+    ['Classic DPS', 'Slow DPS', 'Bomber', 'Fast CC', 'Tank', 'Bruiser'].forEach((name) => {
+      formulas[name] = JSON.parse(JSON.stringify(DEFAULT_FORMULAS[name]));
+    });
+  }
+  Object.values(formulas).forEach((formula) => {
+    if (formula && formula.enabled === undefined) formula.enabled = true;
+  });
+  const roles = saved?.roles ? JSON.parse(JSON.stringify(saved.roles)) : JSON.parse(JSON.stringify(DEFAULT_ROLES));
+  if (presetVersion < 2) {
+    ['Classic DPS', 'Slow DPS', 'Bomber', 'Fast CC', 'Tank', 'Bruiser'].forEach((name) => {
+      roles[name] = JSON.parse(JSON.stringify(DEFAULT_ROLES[name]));
+    });
+  }
+  const roleNames = Array.from(new Set([
+    ...Object.keys(formulas || {}),
+    ...Object.keys(roles || DEFAULT_ROLES),
+  ]));
+  const defaultConfiguredPriority = [
+    ...DEFAULT_ROLE_PRIORITY.filter((name) => roleNames.includes(name)),
+    ...roleNames.filter((name) => !DEFAULT_ROLE_PRIORITY.includes(name)),
+  ];
+  const storedPriority = (presetVersion < 3)
+    ? defaultConfiguredPriority
+    : (Array.isArray(saved?.rolePriority) ? saved.rolePriority : []);
+  const rolePriority = [
+    ...storedPriority.filter((name) => roleNames.includes(name)),
+    ...roleNames.filter((name) => !storedPriority.includes(name)),
+  ];
   return {
     thresholds:    saved?.thresholds    || JSON.parse(JSON.stringify(DEFAULT_THRESHOLDS)),
     hrThresholds:  saved?.hrThresholds  || JSON.parse(JSON.stringify(DEFAULT_HR_THRESHOLDS)),
     hrCoeff:       saved?.hrCoeff       ?? DEFAULT_HR_COEFF,
     duoThresholds: saved?.duoThresholds || JSON.parse(JSON.stringify(DEFAULT_DUO_THRESHOLDS)),
-    roles:         saved?.roles         || JSON.parse(JSON.stringify(DEFAULT_ROLES)),
-    formulas:      saved?.formulas      || JSON.parse(JSON.stringify(DEFAULT_FORMULAS)),
+    roles,
+    formulas,
+    rolePriority,
+    presetVersion: 3,
     reapp:         saved?.reapp         || JSON.parse(JSON.stringify(DEFAULT_REAPP)),
     gemMeta:       mergeGemMeta(saved?.gemMeta),
   };

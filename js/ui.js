@@ -254,9 +254,9 @@
         <option value="Duo Roll">Duo Roll</option>
         <option value="Classic DPS">Classic DPS</option>
         <option value="Slow DPS">Slow DPS</option>
-        <option value="Fast Utility">Fast Utility</option>
+        <option value="Fast CC">Fast CC</option>
         <option value="Bomber">Bomber</option>
-        <option value="Heavy Resist">Heavy Resist</option>
+        <option value="Tank">Tank</option>
         <option value="Bruiser">Bruiser</option>`;
     }
     const actionSearch = document.getElementById('action-search-box');
@@ -286,6 +286,27 @@
       filterGrade.innerHTML = `<option value="">${t.allGrades}</option>
         <option value="Legend">Legend</option>
         <option value="Hero">Hero</option>`;
+    }
+    const filterSet = document.getElementById('filter-set');
+    if (filterSet) {
+      const current = filterSet.value;
+      const sets = Object.values(SET_NAMES || {});
+      filterSet.innerHTML = `<option value="">All Sets</option>${sets.map(s => `<option value="${s}">${s}</option>`).join('')}`;
+      if (sets.includes(current)) filterSet.value = current;
+    }
+    const filterSlot = document.getElementById('filter-slot');
+    if (filterSlot) {
+      const current = filterSlot.value;
+      const slots = ['1', '2', '3', '4', '5', '6'];
+      filterSlot.innerHTML = `<option value="">All Slots</option>${slots.map(s => `<option value="${s}">${s}</option>`).join('')}`;
+      if (slots.includes(current)) filterSlot.value = current;
+    }
+    const filterMain = document.getElementById('filter-main');
+    if (filterMain) {
+      const current = filterMain.value;
+      const mains = Object.values(STAT_NAMES || {});
+      filterMain.innerHTML = `<option value="">All Mains</option>${mains.map(s => `<option value="${s}">${s}</option>`).join('')}`;
+      if (mains.includes(current)) filterMain.value = current;
     }
     
     // Update table count text
@@ -1123,11 +1144,17 @@
     const verdict = document.getElementById('filter-verdict')?.value || '';
     const role    = document.getElementById('filter-role')?.value    || '';
     const grade   = document.getElementById('filter-grade')?.value   || '';
+    const setName = document.getElementById('filter-set')?.value || '';
+    const slotVal = document.getElementById('filter-slot')?.value || '';
+    const mainVal = document.getElementById('filter-main')?.value || '';
 
     filteredRunes = runes.filter(r => {
       if (verdict && r.verdict !== verdict) return false;
       if (role    && r.role    !== role)    return false;
       if (grade   && r.gradeStr !== grade)  return false;
+      if (setName && r.setName !== setName) return false;
+      if (slotVal && String(r.slot) !== slotVal) return false;
+      if (mainVal && r.mainName !== mainVal) return false;
       if (search) {
         const haystack = [
           r.setName, r.mainName, r.gradeStr, r.role, r.verdict,
@@ -1308,7 +1335,8 @@
     return `<tr>
       <td>${grade}</td>
       <td>${r.setName}</td>
-      <td><span class="stat-chip">Lvl ${r.level}</span></td>
+      <td><span class="stat-chip">${r.level}</span></td>
+      <td><span class="stat-chip">${r.slot}</span></td>
       <td><span class="stat-chip ${statClass(r.mainName)}">${r.mainName}</span></td>
       <td>${innate ? `<span class="stat-chip">${innate}</span>` : ''}</td>
       <td>${subs[0] ? statChip(subs[0]) : ''}</td>
@@ -1318,7 +1346,6 @@
       <td class="${effCls}">${r.eff}%</td>
       <td><span class="role-tag ${rCls}">${r.role || ''}</span></td>
       <td><span class="verdict-tag ${(r.verdict||'').toLowerCase()}">${r.verdict || ''}</span></td>
-      <td>${r.slot}</td>
       <td class="target-col-cell">${target ? `<span class="stat-chip">${target}</span>` : ''}</td>
     </tr>`;
   }
@@ -1383,7 +1410,7 @@
   document.getElementById('btn-action-export-csv')?.addEventListener('click', exportActionCsv);
 
   // Table filters
-  ['search-box','filter-verdict','filter-role','filter-grade'].forEach(id => {
+  ['search-box','filter-verdict','filter-role','filter-grade','filter-set','filter-slot','filter-main'].forEach(id => {
     document.getElementById(id)?.addEventListener('input', () => applyFiltersAndSort(getVisibleRunes()));
     document.getElementById(id)?.addEventListener('change', () => applyFiltersAndSort(getVisibleRunes()));
   });
@@ -1411,8 +1438,8 @@
       // Formula header with enable toggle
       html += `<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px">`;
       html += `<div style="font-family:var(--font-head);font-size:1.1rem;font-weight:700;color:var(--text-hi)">${formulaName}</div>`;
-      html += `<label style="display:flex;align-items:center;gap:8px;font-size:0.9rem;color:var(--text)">
-        <input type="checkbox" data-formula="${formulaName}" data-field="enabled" ${formulaCfg.enabled ? 'checked' : ''} style="width:18px;height:18px">
+        html += `<label style="display:flex;align-items:center;gap:8px;font-size:0.9rem;color:var(--text)">
+          <input type="checkbox" data-formula="${formulaName}" data-field="enabled" ${formulaCfg.enabled !== false ? 'checked' : ''} style="width:18px;height:18px">
         Enable Formula
       </label>`;
       html += `</div>`;
@@ -1430,7 +1457,7 @@
           html += `<select data-formula="${formulaName}" data-field="acceptedMains" data-slot="${slot}" data-index="${i}" style="padding:4px 8px;font-size:0.8rem">`;
           const options = ['None', 'SPD', 'HP%', 'ATK%', 'DEF%', 'CRate', 'CDmg', 'ACC', 'RES'];
           for (const opt of options) {
-            html += `<option value="${opt}" ${mains[i] === opt ? 'selected' : ''}>${opt}</option>`;
+            html += `<option value="${opt}" ${mains[i] === opt ? 'selected' : ''}>${opt === 'None' ? '' : opt}</option>`;
           }
           html += `</select>`;
         }
@@ -1452,7 +1479,7 @@
           html += `<select data-formula="${formulaName}" data-field="substats" data-stat="${stat}" data-stage="${stage}" style="padding:4px 8px;font-size:0.8rem">`;
           const options = ['Include', 'None', 'Exclude'];
           for (const opt of options) {
-            html += `<option value="${opt}" ${value === opt ? 'selected' : ''}>${opt}</option>`;
+            html += `<option value="${opt}" ${value === opt ? 'selected' : ''}>${opt === 'None' ? '' : opt}</option>`;
           }
           html += `</select>`;
         }
@@ -1467,11 +1494,11 @@
       html += `<div style="font-weight:600;color:var(--text)">Required</div>`;
       
       for (const stage of ['Early', 'Mid', 'Late']) {
-        const value = formulaCfg.mustHave?.[stage] || '';
+        const value = formulaCfg.mustHave?.[stage] || 'None';
         html += `<select data-formula="${formulaName}" data-field="mustHave" data-stage="${stage}" style="padding:4px 8px;font-size:0.8rem">`;
-        const options = ['', 'None', 'SPD', 'HP%', 'ATK%', 'DEF%', 'CRate', 'CDmg', 'ACC', 'RES'];
+        const options = ['None', 'SPD', 'HP%', 'ATK%', 'DEF%', 'CRate', 'CDmg', 'ACC', 'RES'];
         for (const opt of options) {
-          html += `<option value="${opt}" ${value === opt ? 'selected' : ''}>${opt}</option>`;
+          html += `<option value="${opt}" ${value === opt ? 'selected' : ''}>${opt === 'None' ? '' : opt}</option>`;
         }
         html += `</select>`;
       }
@@ -1490,7 +1517,7 @@
           html += `<select data-formula="${formulaName}" data-field="slotRequirements" data-slot="${slot}" data-stage="${stage}" style="padding:4px 8px;font-size:0.8rem">`;
           const options = ['None', 'SPD', 'HP%', 'ATK%', 'DEF%', 'CRate', 'CDmg', 'ACC', 'RES'];
           for (const opt of options) {
-            html += `<option value="${opt}" ${value === opt ? 'selected' : ''}>${opt}</option>`;
+            html += `<option value="${opt}" ${value === opt ? 'selected' : ''}>${opt === 'None' ? '' : opt}</option>`;
           }
           html += `</select>`;
         }
@@ -1585,7 +1612,7 @@
       } else if (field === 'mustHave') {
         const stage = element.dataset.stage;
         if (!settings.formulas[formulaName].mustHave) settings.formulas[formulaName].mustHave = {};
-        settings.formulas[formulaName].mustHave[stage] = value === '' ? null : value;
+        settings.formulas[formulaName].mustHave[stage] = value || 'None';
       } else if (field === 'slotRequirements') {
         const slot = parseInt(element.dataset.slot);
         const stage = element.dataset.stage;
@@ -1620,7 +1647,7 @@
       } else if (field === 'mustHave') {
         const stage = element.dataset.stage;
         if (!settings.roles[formulaName].mustHave) settings.roles[formulaName].mustHave = {};
-        settings.roles[formulaName].mustHave[stage] = value === '' ? null : value;
+        settings.roles[formulaName].mustHave[stage] = value || 'None';
       } else if (field === 'minStats') {
         const slotType = element.dataset.slot;
         const stage = element.dataset.stage;
@@ -1685,35 +1712,44 @@
   function renderRoleSettings() {
     const navWrap = document.getElementById('role-nav-list');
     const contentWrap = document.getElementById('roles-settings-wrap');
-    const selector = document.getElementById('role-selector');
     
-    if (!navWrap || !contentWrap || !selector) return;
+    if (!navWrap || !contentWrap) return;
     
     // Use advanced formulas if available, otherwise fall back to legacy roles
     const formulas = window.SWRM.settings.formulas || {};
     const roles = window.SWRM.settings.roles || {};
-    
-    // Combine all roles/formulas
-    const allRoles = { ...formulas, ...roles };
+    // Formula config should win when role names overlap with legacy roles.
+    const allRoles = { ...roles, ...formulas };
+    const configuredNames = Object.keys(allRoles);
+    const storedPriority = Array.isArray(window.SWRM.settings.rolePriority)
+      ? window.SWRM.settings.rolePriority
+      : [];
+    const roleNames = [
+      ...storedPriority.filter(name => configuredNames.includes(name)),
+      ...configuredNames.filter(name => !storedPriority.includes(name)),
+    ];
+    window.SWRM.settings.rolePriority = roleNames.slice();
     let currentActiveRole = '';
     
     // Render navigation list
     let navHtml = '';
-    for (const [roleName, roleCfg] of Object.entries(allRoles)) {
+    for (let idx = 0; idx < roleNames.length; idx++) {
+      const roleName = roleNames[idx];
+      const roleCfg = allRoles[roleName];
       const isActive = currentActiveRole === '' || currentActiveRole === roleName;
       const isFormula = formulas[roleName] !== undefined;
       const displayName = roleName + (isFormula ? '' : ' (Legacy)');
-      
-      navHtml += `<div class="role-nav-item ${isActive ? 'active' : ''}" data-role="${roleName}">${displayName}</div>`;
+      navHtml += `<div class="role-nav-item ${isActive ? 'active' : ''}" data-role="${roleName}">
+        <span class="role-nav-main">
+          <span class="role-prio-group">
+          <button type="button" class="btn-ghost role-prio-btn" data-role-prio="${roleName}" data-dir="up" ${idx === 0 ? 'disabled' : ''}>↑</button>
+          <button type="button" class="btn-ghost role-prio-btn" data-role-prio="${roleName}" data-dir="down" ${idx === roleNames.length - 1 ? 'disabled' : ''}>↓</button>
+        </span>
+          <span>${displayName}</span>
+        </span>
+      </div>`;
     }
     navWrap.innerHTML = navHtml;
-    
-    // Update role selector dropdown
-    let selectorHtml = '<option value="">Choose a role...</option>';
-    for (const roleName of Object.keys(allRoles)) {
-      selectorHtml += `<option value="${roleName}">${roleName}</option>`;
-    }
-    selector.innerHTML = selectorHtml;
     
     // Render content for active role - UNIFIED INTERFACE FOR ALL ROLES
     function renderActiveRole(roleName) {
@@ -1732,7 +1768,7 @@
       
       if (isFormula) {
         html += `<label style="display:flex;align-items:center;gap:8px;font-size:0.9rem;color:var(--text)">
-          <input type="checkbox" data-formula="${roleName}" data-field="enabled" ${roleCfg.enabled ? 'checked' : ''} style="width:18px;height:18px">
+          <input type="checkbox" data-formula="${roleName}" data-field="enabled" ${roleCfg.enabled !== false ? 'checked' : ''} style="width:18px;height:18px">
           Enable Formula
         </label>`;
       } else {
@@ -1754,7 +1790,7 @@
           html += `<select ${dataAttr} style="padding:4px 8px;font-size:0.8rem">`;
           const options = ['None', 'SPD', 'HP%', 'ATK%', 'DEF%', 'CRate', 'CDmg', 'ACC', 'RES'];
           for (const opt of options) {
-            html += `<option value="${opt}" ${mains[i] === opt ? 'selected' : ''}>${opt}</option>`;
+            html += `<option value="${opt}" ${mains[i] === opt ? 'selected' : ''}>${opt === 'None' ? '' : opt}</option>`;
           }
           html += `</select>`;
         }
@@ -1776,7 +1812,7 @@
           html += `<select ${dataAttr} style="padding:4px 8px;font-size:0.8rem">`;
           const options = ['Include', 'None', 'Exclude'];
           for (const opt of options) {
-            html += `<option value="${opt}" ${value === opt ? 'selected' : ''}>${opt}</option>`;
+            html += `<option value="${opt}" ${value === opt ? 'selected' : ''}>${opt === 'None' ? '' : opt}</option>`;
           }
           html += `</select>`;
         }
@@ -1791,12 +1827,12 @@
       html += `<div style="font-weight:600;color:var(--text)">Required</div>`;
       
       for (const stage of ['Early', 'Mid', 'Late']) {
-        const value = (isFormula ? roleCfg.mustHave?.[stage] : roleCfg.mustHave?.[stage]) || '';
+        const value = (isFormula ? roleCfg.mustHave?.[stage] : roleCfg.mustHave?.[stage]) || 'None';
         const dataAttr = isFormula ? `data-formula="${roleName}" data-field="mustHave" data-stage="${stage}"` : `data-role="${roleName}" data-field="mustHave" data-stage="${stage}"`;
         html += `<select ${dataAttr} style="padding:4px 8px;font-size:0.8rem">`;
-        const options = ['', 'None', 'SPD', 'HP%', 'ATK%', 'DEF%', 'CRate', 'CDmg', 'ACC', 'RES'];
+        const options = ['None', 'SPD', 'HP%', 'ATK%', 'DEF%', 'CRate', 'CDmg', 'ACC', 'RES'];
         for (const opt of options) {
-          html += `<option value="${opt}" ${value === opt ? 'selected' : ''}>${opt}</option>`;
+          html += `<option value="${opt}" ${value === opt ? 'selected' : ''}>${opt === 'None' ? '' : opt}</option>`;
         }
         html += `</select>`;
       }
@@ -1816,7 +1852,7 @@
           html += `<select ${dataAttr} style="padding:4px 8px;font-size:0.8rem">`;
           const options = ['None', 'SPD', 'HP%', 'ATK%', 'DEF%', 'CRate', 'CDmg', 'ACC', 'RES'];
           for (const opt of options) {
-            html += `<option value="${opt}" ${value === opt ? 'selected' : ''}>${opt}</option>`;
+            html += `<option value="${opt}" ${value === opt ? 'selected' : ''}>${opt === 'None' ? '' : opt}</option>`;
           }
           html += `</select>`;
         }
@@ -1872,55 +1908,60 @@
           const roleName = btn.dataset.roleRemove;
           if (Object.keys(roles).length <= 1) return;
           delete window.SWRM.settings.roles[roleName];
+          window.SWRM.settings.rolePriority = (window.SWRM.settings.rolePriority || []).filter(name => name !== roleName);
+          saveSettings(window.SWRM.settings);
           renderRoleSettings();
+          refreshRoleFilterOptions();
+          if (processedRunes.length) reprocess();
         });
       });
     }
     
     // Set first role as active by default
-    const firstRole = Object.keys(allRoles)[0];
+    const firstRole = roleNames[0];
     if (firstRole) {
       renderActiveRole(firstRole);
     }
     
-    // Add navigation click handlers (only once)
-    if (!navWrap.dataset.handlersAdded) {
-      navWrap.querySelectorAll('.role-nav-item').forEach(item => {
-        item.addEventListener('click', () => {
-          const roleName = item.dataset.role;
-          
-          // Update active state
-          navWrap.querySelectorAll('.role-nav-item').forEach(navItem => {
-            navItem.classList.remove('active');
-          });
-          item.classList.add('active');
-          
-          // Update selector
-          selector.value = roleName;
-          
-          // Render content
-          renderActiveRole(roleName);
-        });
-      });
-      navWrap.dataset.handlersAdded = 'true';
-    }
-    
-    // Add selector change handler
-    selector.addEventListener('change', () => {
-      const roleName = selector.value;
-      if (roleName) {
+    // Add navigation click handlers
+    navWrap.querySelectorAll('.role-nav-item').forEach(item => {
+      item.addEventListener('click', (event) => {
+        if (event.target && event.target.closest('.role-prio-btn')) return;
+        const roleName = item.dataset.role;
+        
         // Update active state
         navWrap.querySelectorAll('.role-nav-item').forEach(navItem => {
           navItem.classList.remove('active');
-          if (navItem.dataset.role === roleName) {
-            navItem.classList.add('active');
-          }
         });
+        item.classList.add('active');
         
         // Render content
         renderActiveRole(roleName);
-      }
+      });
     });
+    navWrap.querySelectorAll('.role-prio-btn').forEach(btn => {
+      btn.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const roleName = btn.dataset.rolePrio;
+        const dir = btn.dataset.dir;
+        const order = Array.isArray(window.SWRM.settings.rolePriority)
+          ? window.SWRM.settings.rolePriority.slice()
+          : roleNames.slice();
+        const index = order.indexOf(roleName);
+        if (index < 0) return;
+        const target = dir === 'up' ? index - 1 : index + 1;
+        if (target < 0 || target >= order.length) return;
+        const tmp = order[target];
+        order[target] = order[index];
+        order[index] = tmp;
+        window.SWRM.settings.rolePriority = order;
+        saveSettings(window.SWRM.settings);
+        renderRoleSettings();
+        refreshRoleFilterOptions();
+        if (processedRunes.length) reprocess();
+      });
+    });
+    
   }
 
   function refreshRoleFilterOptions() {
@@ -1928,7 +1969,16 @@
     if (!roleSelect) return;
     const current = roleSelect.value;
     const formulas = Object.keys(window.SWRM.settings.formulas || {});
-    const roles = ['High Roll', 'Duo Roll', ...formulas, ...Object.keys(window.SWRM.settings.roles)];
+    const roleNames = Array.from(new Set([...formulas, ...Object.keys(window.SWRM.settings.roles || {})]));
+    const defaultPriority = ['Fast CC', 'Classic DPS', 'Bomber', 'Tank', 'Bruiser', 'Slow DPS'];
+    const storedPriority = Array.isArray(window.SWRM.settings.rolePriority)
+      ? window.SWRM.settings.rolePriority
+      : defaultPriority;
+    const orderedRoles = [
+      ...storedPriority.filter(name => roleNames.includes(name)),
+      ...roleNames.filter(name => !storedPriority.includes(name)),
+    ];
+    const roles = [...orderedRoles, 'Duo Roll', 'High Roll'];
     const t = TRANSLATIONS[currentLang];
     roleSelect.innerHTML = `<option value="">${t.allRoles}</option>${roles.map(r => `<option value="${r}">${r}</option>`).join('')}`;
     if (roles.includes(current)) roleSelect.value = current;
@@ -2027,9 +2077,14 @@
     // Add as formula (not legacy role)
     if (!window.SWRM.settings.formulas) window.SWRM.settings.formulas = {};
     window.SWRM.settings.formulas[name] = template;
+    if (!Array.isArray(window.SWRM.settings.rolePriority)) window.SWRM.settings.rolePriority = [];
+    if (!window.SWRM.settings.rolePriority.includes(name)) window.SWRM.settings.rolePriority.push(name);
+    saveSettings(window.SWRM.settings);
     
     document.getElementById('new-role-name').value = '';
     refreshRoleFilterOptions();
+    renderRoleSettings();
+    if (processedRunes.length) reprocess();
   });
 
   const reapp = window.SWRM.settings.reapp || {};

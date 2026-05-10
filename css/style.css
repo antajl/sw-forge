@@ -1264,6 +1264,10 @@ td {
   padding: 8px 12px; font-size: 0.82rem; color: var(--text);
   white-space: nowrap;
 }
+#rune-table th,
+#rune-table td {
+  text-align: center;
+}
 .target-col-cell { display: none; }
 table.show-target .target-col-cell { display: table-cell; }
 
@@ -1488,6 +1492,43 @@ table.show-target .target-col-cell { display: table-cell; }
   color: var(--text);
   transition: background 0.2s ease;
   border: 1px solid transparent;
+}
+.role-nav-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.role-prio-group {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.role-prio-btn.btn-ghost {
+  width: 18px;
+  min-width: 18px;
+  height: 14px;
+  padding: 0;
+  border-radius: 4px;
+  border: 1px solid var(--border2);
+  background: var(--bg2);
+  color: var(--text-hi);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+}
+.role-prio-btn.btn-ghost:hover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 18%, var(--bg2));
+  color: #fff;
+}
+.role-prio-btn.btn-ghost:disabled {
+  opacity: 0.35;
+  color: var(--text-dim);
+}
+.role-nav-item.active .role-prio-btn.btn-ghost {
+  border-color: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
 }
 
 .role-nav-item:hover {

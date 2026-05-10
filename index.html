@@ -231,15 +231,24 @@
               <option value="Duo Roll">Duo Roll</option>
               <option value="Classic DPS">Classic DPS</option>
               <option value="Slow DPS">Slow DPS</option>
-              <option value="Fast Utility">Fast Utility</option>
+              <option value="Fast CC">Fast CC</option>
               <option value="Bomber">Bomber</option>
-              <option value="Heavy Resist">Heavy Resist</option>
+              <option value="Tank">Tank</option>
               <option value="Bruiser">Bruiser</option>
             </select>
             <select id="filter-grade">
               <option value="">All Grades</option>
               <option value="Legend">Legend</option>
               <option value="Hero">Hero</option>
+            </select>
+            <select id="filter-set">
+              <option value="">All Sets</option>
+            </select>
+            <select id="filter-slot">
+              <option value="">All Slots</option>
+            </select>
+            <select id="filter-main">
+              <option value="">All Mains</option>
             </select>
             <span id="table-count" class="table-count">0 runes</span>
           </div>
@@ -250,6 +259,7 @@
                   <th data-sort="grade">Grade</th>
                   <th data-sort="set">Set</th>
                   <th data-sort="level">Lvl</th>
+                  <th data-sort="slot">Slot</th>
                   <th data-sort="main">Main</th>
                   <th>Innate</th>
                   <th data-sort="s1">Sub 1</th>
@@ -259,7 +269,6 @@
                   <th data-sort="eff">Eff%</th>
                   <th data-sort="role">Role</th>
                   <th data-sort="verdict">Verdict</th>
-                  <th data-sort="slot">Slot</th>
                   <th id="target-col-header" class="hidden">Target</th>
                 </tr>
               </thead>
@@ -300,6 +309,7 @@
                   <th data-action-sort="grade">Grade</th>
                   <th data-action-sort="set">Set</th>
                   <th data-action-sort="level">Lvl</th>
+                  <th data-action-sort="slot">Slot</th>
                   <th data-action-sort="main">Main</th>
                   <th>Innate</th>
                   <th data-action-sort="s1">Sub 1</th>
@@ -309,7 +319,6 @@
                   <th data-action-sort="eff">Eff%</th>
                   <th data-action-sort="role">Role</th>
                   <th data-action-sort="verdict">Verdict</th>
-                  <th data-action-sort="slot">Slot</th>
                   <th class="target-col-header-visible">Target</th>
                 </tr>
               </thead>
@@ -399,9 +408,6 @@
           <p class="settings-desc role-filters-desc">Configure role rules. You can add a custom role or remove existing roles (minimum one role must remain).</p>
           <div class="settings-row">
             <label>Select Role</label>
-            <select id="role-selector" style="margin-right:10px; padding:5px 10px;">
-              <option value="">Choose a role...</option>
-            </select>
             <input type="text" id="new-role-name" placeholder="e.g. Control SPD" style="margin-right:10px; padding:5px 10px;" />
             <button id="btn-add-role" class="btn-ghost">+ Add role</button>
           </div>

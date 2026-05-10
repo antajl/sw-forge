@@ -470,10 +470,10 @@
 
   // ---- MAIN ENGINE ----
   // Highest priority first: matches Google Sheet “Best Role” order, plus formula-only roles before Duo/High.
-  const ROLE_PRIORITY_CORE = ['Fast CC', 'Classic DPS', 'Bomber', 'Tank', 'Bruiser', 'Slow DPS', 'Fast Utility', 'Heavy Resist', 'Duo Roll', 'High Roll'];
+  const ROLE_PRIORITY_CORE = ['Fast CC', 'Classic DPS', 'Bomber', 'Tank', 'Bruiser', 'Slow DPS', 'Duo Roll', 'High Roll'];
 
   /** Roles that denote a settled build profile — Reapp is suppressed (same semantics as Sheets engine). */
-  const PRIMARY_BUILD_ROLES = ['Classic DPS', 'Slow DPS', 'Bomber', 'Bruiser', 'Fast Utility', 'Heavy Resist', 'Fast CC', 'Tank'];
+  const PRIMARY_BUILD_ROLES = ['Classic DPS', 'Slow DPS', 'Bomber', 'Bruiser', 'Fast CC', 'Tank'];
 
   function isPrimaryBuildRole(name) {
     return !!name && PRIMARY_BUILD_ROLES.indexOf(name) !== -1;
@@ -487,6 +487,19 @@
   }
 
   function buildRoleEvaluationOrder(settings) {
+    const configuredNames = Array.from(new Set([
+      ...Object.keys(settings.roles || {}),
+      ...Object.keys(settings.formulas || {}),
+    ]));
+    const storedPriority = Array.isArray(settings.rolePriority) ? settings.rolePriority : [];
+    const mergedPriority = [
+      ...storedPriority.filter(name => configuredNames.includes(name)),
+      ...configuredNames.filter(name => !storedPriority.includes(name)),
+    ];
+    if (mergedPriority.length) {
+      return mergedPriority.concat(['Duo Roll', 'High Roll']);
+    }
+
     const pivot = ROLE_PRIORITY_CORE.indexOf('Duo Roll');
     if (pivot < 0) return ROLE_PRIORITY_CORE.slice();
 

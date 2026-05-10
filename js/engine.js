@@ -15,6 +15,28 @@
   }
 
   /**
+   * Sheets-style "power level" 0–3: count substats at or above hrThresholds for this stage/grade,
+   * then cap — 0 subs → 0, 1 → 1, 2 → 2, 3+ → 3 (matches ARRAYFORMULA on Engine!AH).
+   */
+  function runePowerLevel0to3(rune, stage, settings) {
+    const key = modeKey(stage, rune.gradeStr);
+    const th = settings.hrThresholds || {};
+    let count = 0;
+    for (const s of rune.substats || []) {
+      const tvals = th[s.name];
+      if (!tvals) continue;
+      const threshold = tvals[key];
+      if (threshold == null) continue;
+      const val = (s.val || 0) + (s.grind || 0);
+      if (val >= threshold) count++;
+    }
+    if (count >= 3) return 3;
+    if (count >= 2) return 2;
+    if (count >= 1) return 1;
+    return 0;
+  }
+
+  /**
    * Build a stat lookup for a rune { statName: value }
    */
   function statMap(rune) {
@@ -533,6 +555,8 @@
 
   window.SWRM.processAll   = processAll;
   window.SWRM.processRune  = processRune;
+  window.SWRM.modeKey = modeKey;
+  window.SWRM.runePowerLevel0to3 = runePowerLevel0to3;
   window.SWRM.ROLE_PRIORITY = ROLE_PRIORITY_CORE;
   window.SWRM.pickBestRole = pickBestRole;
   window.SWRM.isPrimaryBuildRole = isPrimaryBuildRole;

@@ -19,35 +19,42 @@
   let currentLang = localStorage.getItem(APP_LANG_KEY) || localStorage.getItem('swrm-lang') || 'en';
   let currentTheme = localStorage.getItem('swrm-theme') || 'light';
 
-  // ===================== THEME =====================
-  function toggleTheme() {
-    const body = document.body;
-    const themeBtn = document.getElementById('theme-toggle');
-    
-    if (currentTheme === 'dark') {
-      body.classList.add('light-theme');
-      themeBtn.textContent = '☀️';
-      currentTheme = 'light';
+  // ===================== THEME (header sun / moon) =====================
+  function applyThemeDom() {
+    const sunBtn = document.getElementById('theme-sun');
+    const moonBtn = document.getElementById('theme-moon');
+    if (currentTheme === 'light') {
+      document.body.classList.add('light-theme');
+      sunBtn?.classList.add('is-active');
+      sunBtn?.setAttribute('aria-pressed', 'true');
+      moonBtn?.classList.remove('is-active');
+      moonBtn?.setAttribute('aria-pressed', 'false');
     } else {
-      body.classList.remove('light-theme');
-      themeBtn.textContent = '🌙';
-      currentTheme = 'dark';
+      document.body.classList.remove('light-theme');
+      moonBtn?.classList.add('is-active');
+      moonBtn?.setAttribute('aria-pressed', 'true');
+      sunBtn?.classList.remove('is-active');
+      sunBtn?.setAttribute('aria-pressed', 'false');
     }
-    
+  }
+
+  function setTheme(mode) {
+    currentTheme = mode === 'dark' ? 'dark' : 'light';
     localStorage.setItem('swrm-theme', currentTheme);
+    applyThemeDom();
   }
 
   function initTheme() {
-    const themeBtn = document.getElementById('theme-toggle');
-    const themeSel = document.getElementById('app-theme');
-    if (themeSel) themeSel.value = currentTheme === 'dark' ? 'dark' : 'light';
-    if (currentTheme === 'light') {
-      document.body.classList.add('light-theme');
-      if (themeBtn) themeBtn.textContent = '☀️';
-    } else {
-      document.body.classList.remove('light-theme');
-      if (themeBtn) themeBtn.textContent = '🌙';
-    }
+    applyThemeDom();
+  }
+
+  function updateHeaderThemeA11y(t) {
+    const group = document.getElementById('header-theme-group');
+    const sun = document.getElementById('theme-sun');
+    const moon = document.getElementById('theme-moon');
+    if (group) group.setAttribute('aria-label', t.themeGroupAria || t.theme || 'Theme');
+    if (sun) sun.setAttribute('title', t.themeLightTitle || 'Light theme');
+    if (moon) moon.setAttribute('title', t.themeDarkTitle || 'Dark theme');
   }
 
   function stageDisplayName(tr, stageKey) {
@@ -379,18 +386,8 @@
       }
     }
     
-    // Update theme label in app settings tab
-    const themeLabel = document.querySelector('#tab-app-settings .db-settings-header label:last-child');
-    if (themeLabel) {
-      const select = document.getElementById('app-theme');
-      if (select) {
-        const textNode = themeLabel.childNodes[0];
-        if (textNode) {
-          textNode.textContent = t.theme + ' ';
-        }
-      }
-    }
-    
+    updateHeaderThemeA11y(t);
+
     // Update database slots title and description in app settings tab
     const dbSlotsTitle = document.getElementById('db-slots-title');
     if (dbSlotsTitle) dbSlotsTitle.textContent = t.dbSlotsTitle;
@@ -425,7 +422,7 @@
 
   // Auto Game Stage button
   document.getElementById('btn-auto-stage').addEventListener('click', () => {
-    const metrics = analyzeGameStage(allRunes);
+    const metrics = analyzeGameStage(processedRunes);
     const recommendedStage = getRecommendedStage(parseFloat(metrics.score));
     const stageSelect = document.getElementById('stage-select');
     const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
@@ -757,43 +754,50 @@
     return processedRunes.filter(r => r.level >= globalMinLevel);
   }
 
-  // ===================== GAME STAGE ANALYSIS =====================
+  // ===================== GAME STAGE ANALYSIS (Sheets-aligned) =====================
+  /**
+   * Same weighting as the spreadsheet suggestion:
+   * - 40% × share of +9 runes with power level > 0 (Engine!AH / hrThresholds sub count → 1–3)
+   * - 30% × min(avg Keep eff / 130, 1)
+   * - 30% × share of Keep on Violent/Swift/Will
+   * Stage thresholds: score < 25 → Early, < 50 → Mid, else Late.
+   */
   function analyzeGameStage(runes) {
-    // Анализируем только руны +9 и выше
+    const settings = window.SWRM.settings;
+    const powerFn = window.SWRM.runePowerLevel0to3;
     const eligibleRunes = runes.filter(r => r.level >= 9);
     if (eligibleRunes.length === 0) {
       return {
-        highRollPercent: '0.0',
-        keepEff: '0.0',
+        powerSharePercent: '0.0',
+        keepAvgEff: '0.0',
         metaSetsPercent: '0.0',
         score: '0.0',
         eligibleCount: 0,
       };
     }
 
-    // 1. High Roll % (40% веса)
-    const highRollRunes = eligibleRunes.filter(r => r.role === 'High Roll');
-    const highRollPercent = (highRollRunes.length / eligibleRunes.length) * 100;
+    const total = eligibleRunes.length;
+    const withPower = powerFn
+      ? eligibleRunes.filter(r => powerFn(r, stage, settings) > 0)
+      : [];
+    const pctAny = withPower.length / total;
 
-    // 2. Эффективность Keep рун (30% веса)
     const keepRunes = eligibleRunes.filter(r => r.verdict === 'Keep');
-    const keepEff = keepRunes.length > 0 
-      ? (keepRunes.reduce((sum, r) => sum + r.eff, 0) / keepRunes.length) / 130 * 100
+    const avgKeepEff = keepRunes.length > 0
+      ? keepRunes.reduce((sum, r) => sum + r.eff, 0) / keepRunes.length
       : 0;
+    const normKeep = Math.min(avgKeepEff / 130, 1);
 
-    // 3. Мета-сеты (30% веса) - Violent, Swift, Will
     const metaSets = ['Violent', 'Swift', 'Will'];
-    const metaSetRunes = keepRunes.filter(r => metaSets.includes(r.setName));
-    const metaSetsPercent = keepRunes.length > 0 
-      ? (metaSetRunes.length / keepRunes.length) * 100
-      : 0;
+    const metaCount = keepRunes.filter(r => metaSets.includes(r.setName)).length;
+    const pctMeta = keepRunes.length > 0 ? metaCount / keepRunes.length : 0;
+    const metaSetsPercent = pctMeta * 100;
 
-    // Расчет итогового Score
-    const score = (highRollPercent * 0.4) + (keepEff * 0.3) + (metaSetsPercent * 0.3);
+    const score = pctAny * 40 + normKeep * 30 + pctMeta * 30;
 
     return {
-      highRollPercent: highRollPercent.toFixed(1),
-      keepEff: keepEff.toFixed(1),
+      powerSharePercent: (pctAny * 100).toFixed(1),
+      keepAvgEff: avgKeepEff.toFixed(1),
       metaSetsPercent: metaSetsPercent.toFixed(1),
       score: score.toFixed(1),
       eligibleCount: eligibleRunes.length,
@@ -801,8 +805,8 @@
   }
 
   function getRecommendedStage(score) {
-    if (score >= 70) return 'Late';
-    if (score >= 40) return 'Mid';
+    if (score >= 50) return 'Late';
+    if (score >= 25) return 'Mid';
     return 'Early';
   }
 
@@ -817,7 +821,8 @@
     const slotMain = {1:{},2:{},3:{},4:{},5:{},6:{}};
     const effBuckets = new Array(20).fill(0); // 5% buckets: 0-4, 5-9, ..., 95-99, 100+
 
-    const metrics = analyzeGameStage(runes);
+    // Stage suggestion always uses all runes at +9+ from the full export (ignores Dashboard Min Lvl).
+    const metrics = analyzeGameStage(processedRunes);
     const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const recStage = getRecommendedStage(parseFloat(metrics.score));
 
@@ -830,10 +835,10 @@
     const noEligLine = document.getElementById('stage-noeligible-line');
 
     if (metricHr) {
-      metricHr.textContent = metrics.eligibleCount ? `${metrics.highRollPercent}%` : '\u2014';
+      metricHr.textContent = metrics.eligibleCount ? `${metrics.powerSharePercent}%` : '\u2014';
     }
     if (metricKe) {
-      metricKe.textContent = metrics.eligibleCount ? String(metrics.keepEff) : '\u2014';
+      metricKe.textContent = metrics.eligibleCount ? `${metrics.keepAvgEff}%` : '\u2014';
     }
     if (metricMe) {
       metricMe.textContent = metrics.eligibleCount ? `${metrics.metaSetsPercent}%` : '\u2014';
@@ -841,22 +846,22 @@
 
     if (recDisp) {
       recDisp.textContent =
-        runes.length && metrics.eligibleCount ? stageDisplayName(tloc, recStage) : '\u2014';
+        processedRunes.length && metrics.eligibleCount ? stageDisplayName(tloc, recStage) : '\u2014';
     }
     if (scoreNum) {
       scoreNum.textContent =
-        runes.length && metrics.eligibleCount ? String(metrics.score) : '\u2014';
+        processedRunes.length && metrics.eligibleCount ? String(metrics.score) : '\u2014';
     }
 
     if (noEligLine) {
-      const showNoElig = runes.length > 0 && metrics.eligibleCount === 0;
+      const showNoElig = processedRunes.length > 0 && metrics.eligibleCount === 0;
       noEligLine.hidden = !showNoElig;
       if (showNoElig) noEligLine.textContent = tloc.stageAdvisorNoEligible || '';
     }
 
     if (mismatchLine) {
       const showMismatch =
-        runes.length > 0 &&
+        processedRunes.length > 0 &&
         metrics.eligibleCount > 0 &&
         stage !== recStage;
       mismatchLine.hidden = !showMismatch;
@@ -2110,12 +2115,6 @@
       uiShowUploadPrompt();
     }
 
-    // Initialize App Settings
-    const appThemeSelect = document.getElementById('app-theme');
-    if (appThemeSelect) {
-      appThemeSelect.value = currentTheme;
-    }
-    
     // Initialize Database slots
     renderDbSlots();
     renderActionList(getVisibleRunes());
@@ -2292,15 +2291,8 @@
     });
   }
 
-  const appThemeSelect = document.getElementById('app-theme');
-  if (appThemeSelect) {
-    appThemeSelect.value = currentTheme;
-    appThemeSelect.addEventListener('change', () => {
-      currentTheme = appThemeSelect.value;
-      localStorage.setItem('swrm-theme', currentTheme);
-      initTheme();
-    });
-  }
+  document.getElementById('theme-sun')?.addEventListener('click', () => setTheme('light'));
+  document.getElementById('theme-moon')?.addEventListener('click', () => setTheme('dark'));
 
   document.getElementById('db-slots-wrap')?.addEventListener('click', async (e) => {
     const btn = e.target.closest('[data-db-action]');

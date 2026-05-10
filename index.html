@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SW Rune Master</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" sizes="any" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;600;800&family=Manrope:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css" />
@@ -30,71 +31,19 @@
             <button type="button" class="tab" data-tab="app-settings">App Settings</button>
           </nav>
         </div>
-      </div>
-
-      <div class="header-row header-row--stage">
-        <div class="stage-advisor" id="stage-advisor">
-          <div class="stage-advisor-intro">
-            <p class="stage-advisor-title" id="lbl-stage-advisor-title">Account progression preset</p>
-            <p class="stage-advisor-lead" id="lbl-stage-advisor-lead">
-              Early / Mid / Late controls how strict rune rules are. Use the suggestion below or choose manually.
-            </p>
-          </div>
-
-          <div class="stage-advisor-actions">
-            <div class="stage-advisor-suggestion">
-              <span class="stage-advisor-suggestion-label" id="lbl-stage-suggested">Suggested preset</span>
-              <strong class="stage-advisor-suggestion-value" id="recommended-stage-display">—</strong>
-              <span class="stage-advisor-score-wrap">
-                (<span id="lbl-stage-score-label">Combined score</span>
-                <span class="stage-advisor-score-num" id="stage-score-num">—</span>)
-              </span>
-              <p class="stage-advisor-mismatch" id="stage-mismatch-line" hidden></p>
-              <p class="stage-advisor-noeligible" id="stage-noeligible-line" hidden></p>
-            </div>
-            <div class="stage-advisor-controls">
-              <label class="stage-advisor-preset-label" for="stage-select" id="lbl-stage-your-preset">Your preset</label>
-              <div class="stage-select-wrap">
-                <select id="stage-select">
-                  <option value="Early">Early</option>
-                  <option value="Mid" selected>Mid</option>
-                  <option value="Late">Late</option>
-                </select>
-              </div>
-              <button type="button" class="btn-auto-stage" id="btn-auto-stage">Apply suggestion</button>
-            </div>
-          </div>
-
-          <div class="stage-advisor-metrics-head">
-            <span id="lbl-stage-metrics-explainer">These three signals feed the suggestion (only runes +9 or higher):</span>
-          </div>
-          <div class="stage-advisor-metrics">
-            <article class="stage-metric-card">
-              <header class="stage-metric-card-head">
-                <span id="lbl-card-hr-name">High-roll share</span>
-                <span class="stage-metric-weight">40%</span>
-              </header>
-              <p class="stage-metric-val" id="metric-val-highroll">—</p>
-              <p class="stage-metric-desc" id="lbl-card-hr-desc"></p>
-            </article>
-            <article class="stage-metric-card">
-              <header class="stage-metric-card-head">
-                <span id="lbl-card-keep-name">Keep quality index</span>
-                <span class="stage-metric-weight">30%</span>
-              </header>
-              <p class="stage-metric-val" id="metric-val-keepeff">—</p>
-              <p class="stage-metric-desc" id="lbl-card-keep-desc"></p>
-            </article>
-            <article class="stage-metric-card">
-              <header class="stage-metric-card-head">
-                <span id="lbl-card-meta-name">Meta sets among Keep</span>
-                <span class="stage-metric-weight">30%</span>
-              </header>
-              <p class="stage-metric-val" id="metric-val-meta">—</p>
-              <p class="stage-metric-desc" id="lbl-card-meta-desc"></p>
-            </article>
-          </div>
-          <p class="stage-advisor-formula" id="lbl-stage-formula"></p>
+        <div class="header-theme-group" id="header-theme-group" role="group" aria-label="Color theme">
+          <button type="button" class="header-theme-btn is-active" id="theme-sun" aria-pressed="true" title="Light theme">
+            <svg class="header-theme-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <circle cx="12" cy="12" r="4" fill="currentColor" />
+              <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m12.02-12.02 1.41-1.41" />
+            </svg>
+          </button>
+          <button type="button" class="header-theme-btn" id="theme-moon" aria-pressed="false" title="Dark theme">
+            <svg class="header-theme-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path fill="currentColor" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+            </svg>
+          </button>
         </div>
       </div>
     </div>
@@ -107,10 +56,80 @@
     <section id="tab-dashboard" class="tab-content hidden">
       <div class="dashboard-grid">
 
+        <div class="dashboard-stage-wrap">
+          <div class="stage-advisor" id="stage-advisor">
+            <div class="stage-advisor-intro">
+              <p class="stage-advisor-title" id="lbl-stage-advisor-title">Account progression suggestion</p>
+              <p class="stage-advisor-lead" id="lbl-stage-advisor-lead">
+                Early / Mid / Late sets rule strictness. Suggestion uses all +9+ runes in your export (ignores Min Lvl below). You can override manually.
+              </p>
+            </div>
+
+            <div class="stage-advisor-actions">
+              <div class="stage-advisor-suggestion">
+                <span class="stage-advisor-suggestion-label" id="lbl-stage-suggested">Suggested stage</span>
+                <div class="stage-advisor-suggestion-line">
+                  <div class="stage-advisor-suggestion-result">
+                    <strong class="stage-advisor-suggestion-value" id="recommended-stage-display">—</strong>
+                    <span class="stage-advisor-score-wrap">
+                      (<span id="lbl-stage-score-label">Combined score</span>
+                      <span class="stage-advisor-score-num" id="stage-score-num">—</span>)
+                    </span>
+                  </div>
+                  <button type="button" class="btn-auto-stage" id="btn-auto-stage">Apply suggestion</button>
+                </div>
+                <p class="stage-advisor-mismatch" id="stage-mismatch-line" hidden></p>
+                <p class="stage-advisor-noeligible" id="stage-noeligible-line" hidden></p>
+              </div>
+              <div class="stage-advisor-controls">
+                <label class="stage-advisor-preset-label" for="stage-select" id="lbl-stage-your-preset">Your preset</label>
+                <div class="stage-select-wrap">
+                  <select id="stage-select">
+                    <option value="Early">Early</option>
+                    <option value="Mid" selected>Mid</option>
+                    <option value="Late">Late</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="stage-advisor-metrics-head">
+              <span id="lbl-stage-metrics-explainer">All +9+ runes (ignores Min Lvl). Combined into one score; weights on each card:</span>
+            </div>
+            <div class="stage-advisor-metrics">
+              <article class="stage-metric-card">
+                <header class="stage-metric-card-head">
+                  <span id="lbl-card-hr-name">Power share</span>
+                  <span class="stage-metric-weight">40%</span>
+                </header>
+                <p class="stage-metric-val" id="metric-val-highroll">—</p>
+                <p class="stage-metric-desc" id="lbl-card-hr-desc"></p>
+              </article>
+              <article class="stage-metric-card">
+                <header class="stage-metric-card-head">
+                  <span id="lbl-card-keep-name">Keep quality index</span>
+                  <span class="stage-metric-weight">30%</span>
+                </header>
+                <p class="stage-metric-val" id="metric-val-keepeff">—</p>
+                <p class="stage-metric-desc" id="lbl-card-keep-desc"></p>
+              </article>
+              <article class="stage-metric-card">
+                <header class="stage-metric-card-head">
+                  <span id="lbl-card-meta-name">Meta sets among Keep</span>
+                  <span class="stage-metric-weight">30%</span>
+                </header>
+                <p class="stage-metric-val" id="metric-val-meta">—</p>
+                <p class="stage-metric-desc" id="lbl-card-meta-desc"></p>
+              </article>
+            </div>
+            <p class="stage-advisor-formula" id="lbl-stage-formula"></p>
+          </div>
+        </div>
+
         <div class="dashboard-scope-bar">
           <div class="dashboard-scope-bar-text">
             <span class="dashboard-scope-title" id="dashboard-scope-title">Global filter</span>
-            <span class="dashboard-scope-hint" id="dashboard-scope-hint">Applies to the summary cards, charts below, Rune Table, and Action List.</span>
+            <span class="dashboard-scope-hint" id="dashboard-scope-hint">Applies to the summary cards, charts below, Rune Table, and Action List. Does not change the Account progression suggestion (it always uses all +9+ runes).</span>
           </div>
           <div class="dashboard-scope-control">
             <label class="level-filter dashboard-min-level" for="global-min-level">
@@ -408,8 +427,9 @@
           <p><strong>Data flow:</strong> Export JSON from SWEX and load it directly. SWOP CSV is not required.</p>
           <p><strong>Database slots:</strong> Your first SWEX file opens as Data 1. In App Settings you can store up to four exports, see wizard name/level from the JSON, and Swap the active profile.</p>
           <p><strong>Dashboard cards:</strong> Total, Keep, Sell, Grind, Gem, Finish, Upgrade and Reapp are recalculated for the selected stage.</p>
-          <p><strong>Account progression (under tabs):</strong> Early / Mid / Late controls rule strictness. The suggested preset is computed from three signals measured on runes +9+; use Apply suggestion or pick manually.</p>
-          <p><strong>Global Min Lvl:</strong> On the Dashboard, the scope bar filter applies to charts, Rune Table, and Action List.</p>
+          <p><strong>Account progression suggestion (Dashboard):</strong> Early / Mid / Late controls rule strictness. The suggestion uses all runes at +9+ in your export and ignores Min Lvl; use Apply suggestion or pick manually.</p>
+          <p><strong>How the score is computed:</strong> 40% × share of +9 runes with &quot;power&quot; &gt; 0 (substats meeting your High Roll thresholds, 1–3 scale like Sheets Engine!AH), 30% × min(average Keep efficiency / 130, 1), 30% × share of Keep on Violent/Swift/Will. Suggested stage: under 25 → Early, under 50 → Mid, else Late (same cutoffs as the spreadsheet). In-app efficiency may differ slightly from SWOP.</p>
+          <p><strong>Global Min Lvl:</strong> On the Dashboard, the scope bar filter applies to summary cards, charts, Rune Table, and Action List only—not to the progression suggestion block.</p>
           <p><strong>Role Distribution:</strong> Shows count and average efficiency per role. Custom roles appear automatically after saving rules.</p>
           <p><strong>Set Distribution:</strong> Bars show set count and average efficiency to identify high-value sets.</p>
           <p><strong>Slot Distribution:</strong> For each slot, you see count and top main stat patterns.</p>
@@ -447,12 +467,6 @@
               <select id="app-language">
                 <option value="en">English</option>
                 <option value="ru">Русский</option>
-              </select>
-            </label>
-            <label>Theme
-              <select id="app-theme">
-                <option value="light">Light</option>
-                <option value="dark">Dark</option>
               </select>
             </label>
           </div>

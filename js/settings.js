@@ -121,6 +121,9 @@ const TRANSLATIONS = {
     appSettings: 'App Settings',
     language: 'Language',
     theme: 'Theme',
+    themeGroupAria: 'Color theme',
+    themeLightTitle: 'Light theme',
+    themeDarkTitle: 'Dark theme',
     dbSlot: 'Database Slot',
     activeProfile: 'Active',
     current: 'Current',
@@ -144,11 +147,11 @@ const TRANSLATIONS = {
     mid: 'Mid',
     late: 'Late',
 
-    stageAdvisorTitle: 'Account progression preset',
+    stageAdvisorTitle: 'Account progression suggestion',
     stageAdvisorLead:
-      'Early / Mid / Late controls how strict rune rules are. Pick what fits your account, or use the calculated suggestion (based on runes +9 and higher).',
+      'Early / Mid / Late sets rule strictness. Suggestion uses all +9+ runes in your export (ignores Min Lvl below). You can override manually.',
 
-    stageSuggestedLabel: 'Suggested preset',
+    stageSuggestedLabel: 'Suggested stage',
     stageYourPresetLabel: 'Your preset',
     stageScoreLabel: 'Combined score',
     stageApplySuggestion: 'Apply suggestion',
@@ -157,26 +160,26 @@ const TRANSLATIONS = {
       'Suggestion needs runes at +9 or higher. Power up some runes or load another export.',
 
     stageMetricsExplainer:
-      'These three numbers are combined into one score (weights on each card):',
+      'All +9+ runes (ignores Min Lvl). Combined into one score; weights on each card:',
 
-    stageCardHrName: 'High-roll share',
+    stageCardHrName: 'Power share',
     stageCardHrDesc:
-      'Among +9 runes: percent that qualify as High Roll (strong substat peaks).',
+      'Among +9 runes: % with power level > 0. Power counts substats at or above High Roll thresholds (same table as Rune Rules), capped 1–3 like Sheets Engine!AH.',
 
-    stageCardKeepName: 'Keep quality index',
+    stageCardKeepName: 'Avg Keep efficiency',
     stageCardKeepDesc:
-      'Among Keep verdict runes: average efficiency vs a reference ceiling (~130%). Shown as an index 0–100.',
+      'Mean efficiency % for Keep verdicts (in-app formula; can differ slightly from SWOP). Scoring uses min(avg / 130, 1) × 30.',
 
     stageCardMetaName: 'Meta sets among Keep',
     stageCardMetaDesc:
       'Among Keep runes: percent on Violent, Swift, or Will.',
 
     stageFormulaExpl:
-      'Score = 40% × high-roll share + 30% × keep quality index + 30% × meta share. Map: below 40 → Early, below 70 → Mid, otherwise Late.',
+      'Score = 40% × power share + 30% × min(avg Keep eff / 130, 1) + 30% × meta share among Keep. Suggested stage: below 25 → Early, below 50 → Mid, otherwise Late (matches the spreadsheet).',
 
     dashboardScopeTitle: 'Global filter',
     dashboardScopeHint:
-      'Applies to the summary cards, charts below, Rune Table, and Action List.'
+      'Applies to the summary cards, charts below, Rune Table, and Action List. Does not change the Account progression suggestion (it always uses all +9+ runes).'
   },
   ru: {
     // Header
@@ -275,6 +278,9 @@ const TRANSLATIONS = {
     appSettings: 'Приложение',
     language: 'Язык',
     theme: 'Тема',
+    themeGroupAria: 'Тема оформления',
+    themeLightTitle: 'Светлая тема',
+    themeDarkTitle: 'Тёмная тема',
     dbSlot: 'Слот Базы Данных',
     activeProfile: 'Активен',
     current: 'Текущий',
@@ -298,11 +304,11 @@ const TRANSLATIONS = {
     mid: 'Средняя',
     late: 'Поздняя',
 
-    stageAdvisorTitle: 'Профиль прогресса аккаунта',
+    stageAdvisorTitle: 'Совет по прогрессу аккаунта',
     stageAdvisorLead:
-      'Ранняя / Средняя / Поздняя задаёт строгость правил для рун. Выберите вручную или используйте расчётный совет (по рунам от +9).',
+      'Стадия задаёт строгость правил. Совет — по всем рунам от +9 в экспорте (без учёта «Мин. ур.» ниже). Можно выбрать вручную.',
 
-    stageSuggestedLabel: 'Советуемый профиль',
+    stageSuggestedLabel: 'Советуемая стадия',
     stageYourPresetLabel: 'Ваш выбор',
     stageScoreLabel: 'Сводный балл',
     stageApplySuggestion: 'Применить совет',
@@ -311,26 +317,26 @@ const TRANSLATIONS = {
       'Для совета нужны руны от +9. Докачайте руны или загрузите другой экспорт.',
 
     stageMetricsExplainer:
-      'Три показателя объединяются в один балл (веса указаны на карточках):',
+      'Все руны от +9 (без «Мин. ур.»). Сводятся в балл; веса на карточках:',
 
-    stageCardHrName: 'Доля High Roll',
+    stageCardHrName: 'Доля «силы субов»',
     stageCardHrDesc:
-      'Среди рун +9: процент с ролью High Roll (очень сильные субстаты).',
+      'Среди рун +9: % с power > 0. Считаем субы не ниже порогов High Roll (как в правилах), число субов сводится к уровню 1–3, как Engine!AH в таблице.',
 
-    stageCardKeepName: 'Качество Keep',
+    stageCardKeepName: 'Средняя eff Keep',
     stageCardKeepDesc:
-      'Среди рун с вердиктом Keep: средняя эффективность относительно ориентира (~130%). Показатель 0–100.',
+      'Средняя эффективность % по вердикту Keep (формула приложения; может чуть отличаться от SWOP). В балл идёт min(средн./130, 1) × 30.',
 
     stageCardMetaName: 'Мета-сеты среди Keep',
     stageCardMetaDesc:
       'Среди Keep: доля рун на Violent, Swift или Will.',
 
     stageFormulaExpl:
-      'Балл = 40% × доля HR + 30% × индекс качества Keep + 30% × доля меты. До 40 → Ранняя, до 70 → Средняя, иначе Поздняя.',
+      'Балл = 40% × доля power + 30% × min(средн. Keep eff / 130, 1) + 30% × доля меты среди Keep. Стадия: до 25 → Ранняя, до 50 → Средняя, иначе Поздняя (как в таблице).',
 
     dashboardScopeTitle: 'Общий фильтр',
     dashboardScopeHint:
-      'Учитывается в карточках сводки, графиках ниже, таблице рун и списке действий.'
+      'Учитывается в карточках сводки, графиках ниже, таблице рун и списке действий. На блок «Совет по прогрессу» не влияет — там всегда все руны от +9.'
   }
 };
 

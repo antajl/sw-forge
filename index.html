@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SW Rune Master</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;600;800&family=Manrope:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css" />
 </head>
-<body>
+<body class="light-theme">
 
   <!-- HEADER -->
   <header class="site-header">
@@ -19,6 +19,7 @@
       <nav class="tabs">
         <button class="tab active" data-tab="dashboard">Dashboard</button>
         <button class="tab" data-tab="runetable">Rune Table</button>
+        <button class="tab" data-tab="actionlist">Action List</button>
         <button class="tab" data-tab="settings">Rune Rules</button>
         <button class="tab" data-tab="guide">Guide</button>
         <button class="tab" data-tab="changelog">Changelog</button>
@@ -33,13 +34,12 @@
           </select>
         </div>
         <div class="game-stage-metrics" id="game-stage-metrics">
-          <span class="stage-metric">Late stats: <strong id="highroll-percent">0%</strong></span>
-          <span class="stage-metric">Keep Eff: <strong id="keep-eff">0</strong></span>
-          <span class="stage-metric">Meta sets: <strong id="meta-sets-percent">0%</strong></span>
-          <button class="btn-auto-stage" id="btn-auto-stage">Auto</button>
+          <span class="stage-metric"><span id="lbl-stage-metric-highroll">High-roll rate:</span> <strong id="highroll-percent">0%</strong></span>
+          <span class="stage-metric"><span id="lbl-stage-metric-keepeff">Keep eff.:</span> <strong id="keep-eff">0</strong></span>
+          <span class="stage-metric"><span id="lbl-stage-metric-meta">Meta sets (Keep):</span> <strong id="meta-sets-percent">0%</strong></span>
+          <button type="button" class="btn-auto-stage" id="btn-auto-stage">Auto</button>
         </div>
-        <button class="upload-btn" id="btn-upload-json" title="Load JSON file">⬆ Load JSON</button>
-              </div>
+      </div>
     </div>
   </header>
 
@@ -189,12 +189,60 @@
       </div>
     </section>
 
+    <!-- ACTION LIST TAB -->
+    <section id="tab-actionlist" class="tab-content hidden">
+      <div class="table-layout">
+        <div class="table-main">
+          <p id="action-list-lead" class="action-list-lead settings-desc">
+            Shows only Upgrade, Finish, Gem, Grind, and Reapp — same filters as Sheets Action List (Min Lvl applies).
+          </p>
+          <div class="table-controls">
+            <input type="text" id="action-search-box" placeholder="Search…" />
+            <select id="action-filter-verdict">
+              <option value="">All actions</option>
+              <option value="Upgrade">Upgrade</option>
+              <option value="Finish">Finish</option>
+              <option value="Gem">Gem</option>
+              <option value="Grind">Grind</option>
+              <option value="Reapp">Reapp</option>
+            </select>
+            <button type="button" id="btn-action-export-csv" class="btn-ghost">Export CSV</button>
+            <span id="action-table-count" class="table-count">0 runes</span>
+          </div>
+          <div class="table-wrap">
+            <table id="action-table" class="show-target">
+              <thead>
+                <tr>
+                  <th data-action-sort="grade">Grade</th>
+                  <th data-action-sort="set">Set</th>
+                  <th data-action-sort="level">Lvl</th>
+                  <th data-action-sort="main">Main</th>
+                  <th>Innate</th>
+                  <th data-action-sort="s1">Sub 1</th>
+                  <th data-action-sort="s2">Sub 2</th>
+                  <th data-action-sort="s3">Sub 3</th>
+                  <th data-action-sort="s4">Sub 4</th>
+                  <th data-action-sort="eff">Eff%</th>
+                  <th data-action-sort="role">Role</th>
+                  <th data-action-sort="verdict">Verdict</th>
+                  <th data-action-sort="slot">Slot</th>
+                  <th class="target-col-header-visible">Target</th>
+                </tr>
+              </thead>
+              <tbody id="action-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+        <aside class="table-summary" id="action-summary"></aside>
+      </div>
+    </section>
+
     <!-- SETTINGS TAB -->
     <section id="tab-settings" class="tab-content hidden">
       <div class="settings-two-col">
         <div class="settings-col-left">
           <h3>High Roll Thresholds</h3>
-          <p class="settings-desc">A rune qualifies as High Roll if at least one substat meets or exceeds these values.</p>
+          <p class="settings-desc high-roll-desc">A rune qualifies as High Roll if at least one substat meets or exceeds these values.</p>
           <div id="hr-table-wrap"></div>
           <div class="settings-row">
             <label>Partner coefficient</label>
@@ -203,11 +251,39 @@
           </div>
 
           <h3>Duo Roll Thresholds</h3>
-          <p class="settings-desc">Synergy pairs. Both stats must reach their respective minimum values.</p>
+          <p class="settings-desc duo-desc">Synergy pairs. Both stats must reach their respective minimum values.</p>
           <div id="dr-table-wrap"></div>
 
-          <h3>Reapp Candidate Rules</h3>
-          <p class="settings-desc">If a rune has low efficiency and matches these filters, verdict can be Reapp.</p>
+          <h3 class="gem-meta-heading">Gem (Innate) — Meta sets</h3>
+          <p class="settings-desc gem-meta-desc">On listed sets, verdict Gem appears when innate is undesirable for this slot. Per-set overrides in JSON replace defaults for those slots.</p>
+          <div class="settings-row">
+            <label><input type="checkbox" id="gem-meta-enabled" checked /> <span id="gem-meta-toggle-label">Enable innate Gem hints</span></label>
+          </div>
+          <div class="settings-row">
+            <label><input type="checkbox" id="gem-meta-legend-only" /> <span id="gem-meta-legend-label">Only Legend runes</span></label>
+          </div>
+          <div class="settings-row">
+            <label>Meta sets (comma)</label>
+            <input type="text" id="gem-meta-sets" placeholder="Violent, Will, Swift" />
+          </div>
+          <div class="settings-row">
+            <label><input type="checkbox" id="gem-meta-universal-flats" checked /> <span id="gem-universal-flats-label">Treat flat innate (HP ATK DEF) as bad</span></label>
+          </div>
+          <div class="settings-row">
+            <label>Extra bad innate</label>
+            <textarea id="gem-meta-extra-slots" rows="4" spellcheck="false" placeholder="3:ACC,RES&#10;6:CRate"></textarea>
+            <span class="hint gem-extra-hint">One line per slot: Slot:STAT,STAT (e.g. 2:RES,ACC)</span>
+          </div>
+          <div class="settings-row">
+            <label>Per-set overrides (JSON)</label>
+            <textarea id="gem-meta-by-set-json" rows="3" spellcheck="false" placeholder="{ &quot;Violent&quot;: { &quot;2&quot;: [&quot;RES&quot;], &quot;6&quot;: [&quot;ACC&quot;] } }"></textarea>
+          </div>
+          <div class="settings-row">
+            <label><input type="checkbox" id="gem-meta-legacy-subs" /> <span id="gem-legacy-subs-label">Also use legacy “flat subs → grindable %” Gem</span></label>
+          </div>
+
+          <h3 class="reapp-heading">Reapp Candidate Rules</h3>
+          <p class="settings-desc reapp-rules-desc">If a rune has low efficiency and matches these filters, verdict can be Reapp.</p>
           <div class="settings-row">
             <label>Allowed sets (comma)</label>
             <input type="text" id="reapp-sets" placeholder="Violent, Will, Swift" />
@@ -235,8 +311,8 @@
         </div>
 
         <div class="settings-col-right">
-          <h3>Role Filters</h3>
-          <p class="settings-desc">Configure role rules. You can add a custom role or remove existing roles (minimum one role must remain).</p>
+          <h3 class="role-filters-heading">Role Filters</h3>
+          <p class="settings-desc role-filters-desc">Configure role rules. You can add a custom role or remove existing roles (minimum one role must remain).</p>
           <div class="settings-row">
             <label>Select Role</label>
             <select id="role-selector" style="margin-right:10px; padding:5px 10px;">
@@ -267,14 +343,15 @@
         <div class="panel-title">Guide</div>
         <div class="guide-list">
           <p><strong>Data flow:</strong> Export JSON from SWEX and load it directly. SWOP CSV is not required.</p>
-          <p><strong>Database slots:</strong> Open top-right Settings to store up to 4 JSON databases. Use Swap to switch active DB instantly.</p>
+          <p><strong>Database slots:</strong> Your first SWEX file opens as Data 1. In App Settings you can store up to four exports, see wizard name/level from the JSON, and Swap the active profile.</p>
           <p><strong>Dashboard cards:</strong> Total, Keep, Sell, Grind, Gem, Finish, Upgrade and Reapp are recalculated for the selected stage.</p>
           <p><strong>Global Min Lvl:</strong> Header filter applies to all dashboard charts and Rune Table at the same time.</p>
           <p><strong>Role Distribution:</strong> Shows count and average efficiency per role. Custom roles appear automatically after saving rules.</p>
           <p><strong>Set Distribution:</strong> Bars show set count and average efficiency to identify high-value sets.</p>
           <p><strong>Slot Distribution:</strong> For each slot, you see count and top main stat patterns.</p>
           <p><strong>Rune Table basics:</strong> Search, filter by verdict/role/grade, sort by columns, and inspect innate + substats.</p>
-          <p><strong>Target column:</strong> Appears for Grind/Gem views. Grind shows upgradable stat; Gem shows suggested replacement target.</p>
+          <p><strong>Action List:</strong> Only runes that need Upgrade, Finish, Gem, Grind, or Reapp; Target explains the next step. Export CSV for offline use.</p>
+          <p><strong>Target column:</strong> In Rune Table it appears when filtering Gem/Grind. In Action List it is always visible (grind goals, innate reroll, +9/+12/Reapp).</p>
           <p><strong>Rune Summary panel:</strong> Right side summary shows counts and average efficiency by verdict and role for filtered rows.</p>
           <p><strong>Rune Rules / Thresholds:</strong> Base thresholds, High Roll thresholds, Duo Roll thresholds and partner coefficient are edited in one place.</p>
           <p><strong>Role Filters:</strong> Add custom roles with +Add role, tune Include/Exclude rules, and remove roles (at least one role is kept).</p>
@@ -326,22 +403,23 @@
   </main>
 
   <!-- UPLOAD PROMPT OVERLAY (shown when no data) -->
-  <section id="upload-prompt" class="upload-prompt">
+  <section id="upload-prompt" class="upload-prompt hidden" role="dialog" aria-modal="true" aria-labelledby="upload-prompt-title">
     <div class="prompt-card">
-      <button class="close-upload" id="close-upload-prompt" title="Close">×</button>
-      <div class="prompt-icon">⬡</div>
-      <h2>Load your SWEX JSON</h2>
-      <p>Export your account data from <strong>Summoners War Exporter (SWEX)</strong> and load the JSON file here to analyze your rune collection.</p>
-      <div class="prompt-actions">
-        <label for="json-upload" class="upload-label">Choose JSON file</label>
-        <input type="file" id="json-upload" accept=".json,application/json" />
+      <button type="button" class="close-upload" id="close-upload-prompt" title="Close" aria-label="Close">×</button>
+      <div class="prompt-icon" aria-hidden="true">⬡</div>
+      <h2 id="upload-prompt-title">Load your SWEX JSON</h2>
+      <p id="upload-prompt-lead" class="prompt-lead">Export with Summoners War Exporter (SWEX), then select your .json file. Analysis runs entirely in this browser.</p>
+      <div class="prompt-primary">
+        <label id="upload-prompt-cta" for="json-upload" class="upload-btn-large">Choose JSON file</label>
+        <input type="file" id="json-upload" class="prompt-file-input" accept=".json,application/json" />
       </div>
-      <div class="prompt-actions" style="margin-top: 10px;">
-        <button class="btn-ghost" id="btn-clear-saved-runes" style="font-size: 0.85rem; padding: 8px 16px;">Clear Saved Runes</button>
-      </div>
-      <p class="prompt-hint">All processing happens in your browser — your data never leaves your device.</p>
+      <p id="upload-prompt-secondary" class="prompt-secondary">This becomes your active profile (Data 1). Add or switch accounts in App Settings → Database Slots.</p>
+      <button type="button" class="btn-ghost prompt-clear-btn" id="btn-clear-saved-runes">Clear all saved data</button>
+      <p id="upload-prompt-hint" class="prompt-hint">All processing happens in your browser — your data never leaves your device.</p>
     </div>
   </section>
+
+  <div id="swrm-toast-host" class="swrm-toast-host" aria-live="polite" aria-relevant="additions text"></div>
 
   <script src="js/settings.js"></script>
   <script src="js/parser.js"></script>

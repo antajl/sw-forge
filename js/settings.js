@@ -29,6 +29,7 @@ const TRANSLATIONS = {
     title: 'SW Rune Master',
     dashboard: 'Dashboard',
     runeTable: 'Rune Table',
+    actionList: 'Action List',
     runeRules: 'Rune Rules',
     guide: 'Guide',
     changelog: 'Changelog',
@@ -41,6 +42,14 @@ const TRANSLATIONS = {
     uploadDescription: 'Export your account data from <strong>Summoners War Exporter (SWEX)</strong> and load the JSON file here to analyze your rune collection.',
     chooseJsonFile: 'Choose JSON file',
     privacyNote: 'All processing happens in your browser — your data never leaves your device.',
+    uploadPromptLead: 'Export with Summoners War Exporter (SWEX), then select your .json file. Analysis runs entirely in this browser.',
+    uploadPromptSecondary: 'This becomes your active profile (Data 1). Add or switch accounts in App Settings → Database Slots.',
+    uploadClearAll: 'Clear all saved data',
+    lvAbbr: 'Lv.',
+    runesWord: 'runes',
+    runesHeroPlus: 'runes',
+    monsShort: 'monsters',
+    clipboardNotJson: 'Clipboard does not contain valid JSON.',
     
     // Dashboard cards
     totalRunes: 'Total Runes',
@@ -64,6 +73,17 @@ const TRANSLATIONS = {
     allRoles: 'All Roles',
     allGrades: 'All Grades',
     runes: 'runes',
+    actionsCount: 'actions',
+    actionsListedSummary: 'Listed actions',
+    actionListLead:
+      'Only Upgrade, Finish, Gem, Grind and Reapp. Min Lvl from Dashboard applies globally.',
+    actionSearchPlaceholder: 'Search by set, stat, role, verdict…',
+    allActions: 'All actions',
+    targetHeading: 'Target',
+    exportActionCsv: 'Export CSV',
+    actionTargetUpgrade: 'Power to ≥ +9 before judging',
+    actionTargetFinish: 'Power to +12',
+    actionTargetReapp: 'Reappraisal (roll subs)',
     
     // Settings
     thresholds: 'Thresholds',
@@ -76,6 +96,16 @@ const TRANSLATIONS = {
     configureRoleRules: 'Configure role rules. You can add a custom role or remove existing roles (minimum one role must remain).',
     newRole: 'New role',
     addRole: '+ Add role',
+    gemMetaRules: 'Gem (Innate) — Meta sets',
+    gemMetaRulesDesc: 'On listed sets, verdict Gem appears when innate is undesirable for this slot. Per-set overrides in JSON replace defaults for those slots.',
+    gemMetaToggle: 'Enable innate Gem hints',
+    gemMetaLegendOnly: 'Only Legend runes',
+    gemMetaSetsList: 'Meta sets (comma)',
+    gemUniversalFlats: 'Treat flat innate (HP ATK DEF) as bad',
+    gemExtrasLabel: 'Extra bad innate',
+    gemExtraBySlot: 'Extra bad innate by slot — one line per slot: Slot:STAT,STAT …',
+    gemPerSetJson: 'Per-set slot overrides (JSON)',
+    gemLegacySubs: 'Also use legacy “flat subs → grindable %” Gem',
     reappCandidateRules: 'Reapp Candidate Rules',
     reappDescription: 'If a rune has low efficiency and matches these filters, verdict can be Reapp.',
     allowedSets: 'Allowed sets (comma)',
@@ -92,6 +122,7 @@ const TRANSLATIONS = {
     language: 'Language',
     theme: 'Theme',
     dbSlot: 'Database Slot',
+    activeProfile: 'Active',
     current: 'Current',
     name: 'Name',
     uploaded: 'Uploaded',
@@ -101,20 +132,30 @@ const TRANSLATIONS = {
     delete: 'Delete',
     swap: 'Swap',
     slotEmpty: 'Selected slot is empty',
+    slotDeleteSwitchedTo: 'The current database was removed. Loaded Data {n} — {name}.',
+    slotDeleteAllCleared: 'All saved databases were removed. Please load a JSON export.',
+    slotDeleteNextLoadFailed: 'Could not load data from the next slot. Please load a JSON file.',
     parseError: 'Failed to parse slot JSON: ',
     dbSlotsTitle: 'Database Slots',
-    dbSlotsDesc: 'Store up to 4 different JSON databases and switch between them instantly.',
+    dbSlotsDesc: 'Up to four SWEX exports. Summary lines show wizard name, level, total rune count, and monsters when the JSON includes them.',
     
     // Stages
     early: 'Early',
     mid: 'Mid',
-    late: 'Late'
+    late: 'Late',
+
+    // Header stage helper (Auto stage metrics)
+    stageMetricHighRoll: 'High-roll rate:',
+    stageMetricKeepEff: 'Keep eff.:',
+    stageMetricMetaSets: 'Meta sets (Keep):',
+    autoStage: 'Auto'
   },
   ru: {
     // Header
     title: 'SW Rune Master',
     dashboard: 'Панель',
     runeTable: 'Таблица Рун',
+    actionList: 'Список действий',
     runeRules: 'Правила Рун',
     guide: 'Инструкция',
     changelog: 'Изменения',
@@ -127,6 +168,14 @@ const TRANSLATIONS = {
     uploadDescription: 'Экспортируйте данные аккаунта из <strong>Summoners War Exporter (SWEX)</strong> и загрузите JSON файл здесь для анализа вашей коллекции рун.',
     chooseJsonFile: 'Выбрать JSON файл',
     privacyNote: 'Все обработка происходит в вашем браузере — ваши данные никогда не покидают ваше устройство.',
+    uploadPromptLead: 'Экспортируйте аккаунт через Summoners War Exporter (SWEX) и выберите .json файл. Всё считается только в браузере.',
+    uploadPromptSecondary: 'Файл станет активным профилем (Data 1). Другие аккаунты — в Настройках приложения → Слоты баз данных.',
+    uploadClearAll: 'Удалить все сохранения',
+    lvAbbr: 'Ур.',
+    runesWord: 'рун',
+    runesHeroPlus: 'рун',
+    monsShort: 'монстров',
+    clipboardNotJson: 'В буфере нет корректного JSON.',
     
     // Dashboard cards
     totalRunes: 'Всего Рун',
@@ -150,6 +199,17 @@ const TRANSLATIONS = {
     allRoles: 'Все Роли',
     allGrades: 'Все Грейды',
     runes: 'рун',
+    actionsCount: 'действий',
+    actionsListedSummary: 'В списке',
+    actionListLead:
+      'Только Upgrade, Finish, Gem, Grind и Reapp. Общий Min Lvl с панели учитывается.',
+    actionSearchPlaceholder: 'Поиск по сету, стату, роли, вердикту…',
+    allActions: 'Все действия',
+    targetHeading: 'Цель',
+    exportActionCsv: 'Экспорт CSV',
+    actionTargetUpgrade: 'Докачать до ≥ +9',
+    actionTargetFinish: 'Докачать до +12',
+    actionTargetReapp: 'Реапп подстатов',
     
     // Settings
     thresholds: 'Пороги',
@@ -162,6 +222,16 @@ const TRANSLATIONS = {
     configureRoleRules: 'Настройте правила ролей. Вы можете добавить пользовательскую роль или удалить существующие (должна остаться минимум одна роль).',
     newRole: 'Новая роль',
     addRole: '+ Добавить роль',
+    gemMetaRules: 'Gem (врожд.) — мета-сеты',
+    gemMetaRulesDesc: 'На перечисленных сетах вердикт Gem, если врождённый стат «плохой» для слота. JSON ниже задаёт переопределения по сету и слоту.',
+    gemMetaToggle: 'Включить Gem по врождённому стату',
+    gemMetaLegendOnly: 'Только Legend',
+    gemMetaSetsList: 'Мета-сеты (через запятую)',
+    gemUniversalFlats: 'Считать плохим врождённый флет (HP ATK DEF)',
+    gemExtrasLabel: 'Доп. плохой innate',
+    gemExtraBySlot: 'Доп. плохие innate по слоту — строка на слот: Слот:СТАТ,СТАТ …',
+    gemPerSetJson: 'Переопределения по сетам (JSON)',
+    gemLegacySubs: 'Дополнительно старый Gem: флет в субстатах → % ',
     reappCandidateRules: 'Правила Кандидатов на Перестановку',
     reappDescription: 'Если у руны низкая эффективность и она соответствует этим фильтрам, вердикт может быть "Переставить".',
     allowedSets: 'Разрешенные сеты (через запятую)',
@@ -178,6 +248,7 @@ const TRANSLATIONS = {
     language: 'Язык',
     theme: 'Тема',
     dbSlot: 'Слот Базы Данных',
+    activeProfile: 'Активен',
     current: 'Текущий',
     name: 'Имя',
     uploaded: 'Загружен',
@@ -187,14 +258,22 @@ const TRANSLATIONS = {
     delete: 'Удалить',
     swap: 'Переключить',
     slotEmpty: 'Выбранный слот пуст',
+    slotDeleteSwitchedTo: 'Текущая база удалена. Загружен слот {n} — {name}.',
+    slotDeleteAllCleared: 'Все сохранённые базы удалены. Загрузите JSON экспорт.',
+    slotDeleteNextLoadFailed: 'Не удалось загрузить данные из следующего слота. Загрузите JSON файл.',
     parseError: 'Ошибка разбора JSON слота: ',
     dbSlotsTitle: 'Слоты Базы Данных',
-    dbSlotsDesc: 'Сохраняйте до 4 различных JSON баз данных и переключайтесь между ними мгновенно.',
+    dbSlotsDesc: 'До четырёх экспортов SWEX. В карточке — имя мага, уровень, общее число рун и монстров, если они есть в JSON.',
     
     // Stages
     early: 'Ранняя',
     mid: 'Средняя',
-    late: 'Поздняя'
+    late: 'Поздняя',
+
+    stageMetricHighRoll: 'Доля High Roll:',
+    stageMetricKeepEff: 'Ср. эфф. Keep:',
+    stageMetricMetaSets: 'Мета-сеты (Keep):',
+    autoStage: 'Авто'
   }
 };
 
@@ -510,6 +589,30 @@ const DEFAULT_REAPP = {
   }
 };
 
+// ---- GEM (innate Enchant Gem) — aligns with Sheets “Meta Sets + bad innate per slot”
+const DEFAULT_GEM_META = {
+  enabled: true,
+  /** Legend runes usually have innate; Hero Gem is rare — allow both by default */
+  legendOnlyInnate: false,
+  /** Value rune sets where rolling innate is worthwhile */
+  sets: ['Violent', 'Will', 'Swift', 'Despair', 'Vampire', 'Rage', 'Fatal', 'Nemesis', 'Revenge', 'Destroy', 'Blade'],
+  /**
+   * If no entry in bySet[set][slot], merge extras for this slot + universal flat innates.
+   * bySet overrides: Violent:{ 2:["RES","ACC"], 4:[...] }
+   */
+  useUniversalFlatBadInnate: true,
+  universalFlatInnates: ['HP', 'ATK', 'DEF'],
+  extraBadBySlot: {
+    /** Example: ACC often weak innate on spd slot — extend in UI */
+    2: [],
+    4: [],
+    6: [],
+  },
+  bySet: {},
+  /** Fallback: previous engine — flat subs + suggest % target (deprecated path) */
+  legacyFlatSubGem: false,
+};
+
 // ---- EFFICIENCY MAX VALUES (Legend 6★ for each stat) ----
 // Used to calculate efficiency %
 const EFF_MAX = {
@@ -542,6 +645,21 @@ function saveSettings(s) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch(e) {}
 }
 
+function mergeGemMeta(savedGem) {
+  const d = JSON.parse(JSON.stringify(DEFAULT_GEM_META));
+  if (!savedGem || typeof savedGem !== 'object') return d;
+  Object.assign(d, savedGem);
+  if (!Array.isArray(d.sets)) d.sets = DEFAULT_GEM_META.sets.slice();
+  if (!Array.isArray(d.universalFlatInnates)) d.universalFlatInnates = DEFAULT_GEM_META.universalFlatInnates.slice();
+  d.extraBadBySlot = Object.assign(
+    {},
+    DEFAULT_GEM_META.extraBadBySlot,
+    typeof savedGem.extraBadBySlot === 'object' && savedGem.extraBadBySlot ? savedGem.extraBadBySlot : {}
+  );
+  d.bySet = typeof savedGem.bySet === 'object' && savedGem.bySet ? JSON.parse(JSON.stringify(savedGem.bySet)) : {};
+  return d;
+}
+
 function getSettings() {
   const saved = loadSettings();
   return {
@@ -552,6 +670,7 @@ function getSettings() {
     roles:         saved?.roles         || JSON.parse(JSON.stringify(DEFAULT_ROLES)),
     formulas:      saved?.formulas      || JSON.parse(JSON.stringify(DEFAULT_FORMULAS)),
     reapp:         saved?.reapp         || JSON.parse(JSON.stringify(DEFAULT_REAPP)),
+    gemMeta:       mergeGemMeta(saved?.gemMeta),
   };
 }
 
@@ -570,6 +689,8 @@ window.SWRM.DEFAULT_HR_THRESHOLDS = DEFAULT_HR_THRESHOLDS;
 window.SWRM.DEFAULT_HR_COEFF = DEFAULT_HR_COEFF;
 window.SWRM.DEFAULT_DUO_THRESHOLDS = DEFAULT_DUO_THRESHOLDS;
 window.SWRM.DEFAULT_REAPP = DEFAULT_REAPP;
+window.SWRM.DEFAULT_GEM_META = DEFAULT_GEM_META;
+window.SWRM.mergeGemMeta = mergeGemMeta;
 window.SWRM.DEFAULT_FORMULAS = DEFAULT_FORMULAS;
 window.SWRM.saveSettings = saveSettings;
 window.SWRM.TRANSLATIONS = TRANSLATIONS;

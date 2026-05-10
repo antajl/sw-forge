@@ -259,8 +259,8 @@
     return { can: false };
   }
 
-  // ---- GEM POTENTIAL ----
-  function checkGem(rune, stage, settings) {
+  /** Legacy: flat sub → grindable stat (Enchant Gem replacement target on sub) */
+  function checkSubstatFlatGem(rune, stage, settings) {
     const key = modeKey(stage, rune.gradeStr);
     const th  = settings.thresholds;
     const GRINDABLE = new Set(['SPD', 'HP%', 'ATK%', 'DEF%', 'ACC', 'RES']);
@@ -273,14 +273,89 @@
       if (GRINDABLE.has(s.name)) continue;
       for (const target of GRINDABLE) {
         const score = statScores[target] || 0;
-        // Much higher threshold for gem consideration
         if (score < 15) continue;
         if (!bestCandidate || score > bestCandidate.score) {
-          bestCandidate = { can: true, from: s.name, to: target, score };
+          bestCandidate = { can: true, kind: 'sub-flat', from: s.name, to: target, score };
         }
       }
     }
     return bestCandidate || { can: false };
+  }
+
+  /** Slot keyed map: accepts numeric keys from JSON strings */
+  function slotArray(slotMap, slot) {
+    if (!slotMap || typeof slotMap !== 'object') return null;
+    if (Object.prototype.hasOwnProperty.call(slotMap, slot)) return slotMap[slot];
+    const sk = String(slot);
+    if (Object.prototype.hasOwnProperty.call(slotMap, sk)) return slotMap[sk];
+    return null;
+  }
+
+  function getBadInnateList(rune, gm) {
+    const setRules = gm.bySet && gm.bySet[rune.setName];
+    let explicit = setRules !== undefined && setRules !== null ? slotArray(setRules, rune.slot) : null;
+
+    if (explicit !== null && explicit !== undefined) {
+      if (!Array.isArray(explicit)) return [];
+      return explicit.filter(Boolean).map(function(s) { return String(s).trim(); }).filter(Boolean);
+    }
+
+    const extras = gm.extraBadBySlot && (slotArray(gm.extraBadBySlot, rune.slot) || []);
+    const arrEx = Array.isArray(extras) ? extras.map(function(x) { return String(x).trim(); }).filter(Boolean) : [];
+    const flats = gm.useUniversalFlatBadInnate !== false
+      ? (gm.universalFlatInnates || []).map(function(x) { return String(x).trim(); }).filter(Boolean)
+      : [];
+    return [...new Set([...arrEx, ...flats])];
+  }
+
+  /** Innate Enchant Gem (Sheets parity): meta set + “bad innate” for this slot / set-specific override */
+  function checkMetaInnateGem(rune, settings) {
+    const gm = settings.gemMeta;
+    const none = { can: false };
+    if (!gm || gm.enabled === false) return none;
+
+    const setsList = gm.sets || [];
+    if (!setsList.length || setsList.indexOf(rune.setName) === -1) return none;
+
+    if (gm.legendOnlyInnate === true) {
+      if (rune.gradeStr !== 'Legend') return none;
+    }
+
+    const innateName = rune.innate_name;
+    if (!innateName) return none;
+
+    const badList = getBadInnateList(rune, gm);
+    if (badList.indexOf(innateName) === -1) return none;
+
+    return {
+      can: true,
+      kind: 'innate-meta',
+      innate: innateName,
+      setName: rune.setName,
+      slot: rune.slot,
+    };
+  }
+
+  function evaluateGemRecommendation(rune, stage, settings) {
+    const metaHit = checkMetaInnateGem(rune, settings);
+    if (metaHit.can) return metaHit;
+
+    const gm = settings.gemMeta;
+    if (gm && gm.legacyFlatSubGem && hasBadFlat(rune, stage)) {
+      const leg = checkSubstatFlatGem(rune, stage, settings);
+      if (leg.can) return leg;
+    }
+    return { can: false };
+  }
+
+  function passesGemQualityGate(rune, stage, isHero, hasHighDuo) {
+    const effThreshold = stage === 'Late' ? 70 : (stage === 'Mid' ? 55 : 40);
+    if (rune.eff < effThreshold) return false;
+    if (isHero && !hasHighDuo) {
+      const heroEffThreshold = stage === 'Late' ? 82 : (stage === 'Mid' ? 67 : 52);
+      if (rune.eff < heroEffThreshold) return false;
+    }
+    return true;
   }
 
   function matchReappRule(rune, settings) {
@@ -329,34 +404,21 @@
       return 'Finish';
     }
     
-    // 3. Reapp: Legend with good set/main, bad subs (skipped if any other filter matched)
+    // 3. Reapp: Legend with good set/main, bad subs (skip for concrete build archetypes)
     if (hasRole && isLegend && matchReappRule(rune, settings)) {
-      // Only Reapp if no other role matched (but we have hasRole = true, so this needs refinement)
-      // For now, check if this is ONLY a Reapp candidate
-      if (roleResult === 'Classic DPS' || roleResult === 'Slow DPS' || roleResult === 'Bomber' || 
-          roleResult === 'Bruiser' || roleResult === 'Fast Utility' || roleResult === 'Heavy Resist') {
-        // Has other roles, don't Reapp
-      } else {
+      if (!isPrimaryBuildRole(roleResult)) {
         return 'Reapp';
       }
     }
     
-    // 4. Gem: good but has a flat stat to replace
-    if (hasRole && hasBadFlat(rune, stage)) {
-      const gem = checkGem(rune, stage, settings);
+    // 4. Gem: meta innate (Sheets) and/or legacy flat-sub path
+    if (hasRole) {
+      const gem = evaluateGemRecommendation(rune, stage, settings);
       if (gem.can) {
-        // Check if rune is strong enough for Gem
-        const effThreshold = stage === 'Late' ? 70 : (stage === 'Mid' ? 55 : 40);
-        if (rune.eff >= effThreshold) {
-          // Additional check for Hero without High Roll/Duo Roll
-          if (isHero && !hasHighDuo) {
-            const heroEffThreshold = stage === 'Late' ? 82 : (stage === 'Mid' ? 67 : 52);
-            if (rune.eff < heroEffThreshold) return 'Sell';
-          }
+        if (passesGemQualityGate(rune, stage, isHero, hasHighDuo)) {
           return 'Gem';
-        } else {
-          return 'Sell';
         }
+        return 'Sell';
       }
     }
     
@@ -385,8 +447,53 @@
   }
 
   // ---- MAIN ENGINE ----
-  // Role priority order (highest priority first, same as your Best Role formula)
-  const BASE_ROLE_PRIORITY = ['Fast CC', 'Classic DPS', 'Bomber', 'Tank', 'Bruiser', 'Slow DPS', 'Duo Roll', 'High Roll'];
+  // Highest priority first: matches Google Sheet “Best Role” order, plus formula-only roles before Duo/High.
+  const ROLE_PRIORITY_CORE = ['Fast CC', 'Classic DPS', 'Bomber', 'Tank', 'Bruiser', 'Slow DPS', 'Fast Utility', 'Heavy Resist', 'Duo Roll', 'High Roll'];
+
+  /** Roles that denote a settled build profile — Reapp is suppressed (same semantics as Sheets engine). */
+  const PRIMARY_BUILD_ROLES = ['Classic DPS', 'Slow DPS', 'Bomber', 'Bruiser', 'Fast Utility', 'Heavy Resist', 'Fast CC', 'Tank'];
+
+  function isPrimaryBuildRole(name) {
+    return !!name && PRIMARY_BUILD_ROLES.indexOf(name) !== -1;
+  }
+
+  function roleMatchActive(name, mergedResults, settings) {
+    if (!mergedResults[name]) return false;
+    const f = settings.formulas?.[name];
+    if (f && f.enabled === false) return false;
+    return true;
+  }
+
+  function buildRoleEvaluationOrder(settings) {
+    const pivot = ROLE_PRIORITY_CORE.indexOf('Duo Roll');
+    if (pivot < 0) return ROLE_PRIORITY_CORE.slice();
+
+    const head = ROLE_PRIORITY_CORE.slice(0, pivot);
+    const tail = ROLE_PRIORITY_CORE.slice(pivot);
+    const mid = [];
+    const seen = new Set(ROLE_PRIORITY_CORE);
+
+    for (const bucket of [Object.keys(settings.roles || {}), Object.keys(settings.formulas || {})]) {
+      for (const k of bucket) {
+        if (seen.has(k)) continue;
+        seen.add(k);
+        mid.push(k);
+      }
+    }
+
+    return head.concat(mid, tail);
+  }
+
+  /** Single source of truth for Best Role — used by UI and verdict logic */
+  function pickBestRole(mergedResults, settings) {
+    const order = buildRoleEvaluationOrder(settings);
+    for (let i = 0; i < order.length; i++) {
+      if (roleMatchActive(order[i], mergedResults, settings)) {
+        return order[i];
+      }
+    }
+    return '';
+  }
 
   function processRune(rune, stage, settings) {
     // Run all role checks
@@ -404,27 +511,17 @@
     // Run advanced formula checks
     const advancedResults = window.SWRM.processAdvancedFormulas?.(rune, stage, settings) || {};
     
-    // Merge results - advanced formulas take priority
+    // Merge results - advanced formulas take priority on overlapping keys (e.g. Classic DPS)
     const mergedResults = { ...results, ...advancedResults };
 
-    const dynamicPriority = [
-      ...BASE_ROLE_PRIORITY,
-      ...Object.keys(settings.roles || {}).filter(r => !BASE_ROLE_PRIORITY.includes(r)),
-      ...Object.keys(settings.formulas || {}).filter(f => !BASE_ROLE_PRIORITY.includes(f))
-    ];
-
-    // Best role by priority
-    let bestRole = '';
-    for (const role of dynamicPriority) {
-      if (mergedResults[role]) { bestRole = role; break; }
-    }
+    const bestRole = pickBestRole(mergedResults, settings);
 
     rune.role    = bestRole;
     rune.verdict = window.SWRM.getAdvancedVerdict?.(rune, stage, settings, mergedResults) || 
                    getVerdict(rune, stage, settings, bestRole);
     rune.badFlat = hasBadFlat(rune, stage);
     rune.grindInfo = checkGrind(rune, stage, settings);
-    rune.gemInfo = checkGem(rune, stage, settings);
+    rune.gemInfo = evaluateGemRecommendation(rune, stage, settings);
     rune.formulaResults = mergedResults; // Store all formula results for debugging
 
     return rune;
@@ -436,11 +533,18 @@
 
   window.SWRM.processAll   = processAll;
   window.SWRM.processRune  = processRune;
-  window.SWRM.ROLE_PRIORITY = BASE_ROLE_PRIORITY;
+  window.SWRM.ROLE_PRIORITY = ROLE_PRIORITY_CORE;
+  window.SWRM.pickBestRole = pickBestRole;
+  window.SWRM.isPrimaryBuildRole = isPrimaryBuildRole;
   
   // Export helper functions for advanced formulas
   window.SWRM.hasBadFlat = hasBadFlat;
   window.SWRM.checkGrind = checkGrind;
-  window.SWRM.checkGem = checkGem;
+  window.SWRM.checkSubstatFlatGem = checkSubstatFlatGem;
+  /** @deprecated use evaluateGemRecommendation — kept alias for callers */
+  window.SWRM.checkGem = checkSubstatFlatGem;
+  window.SWRM.checkMetaInnateGem = checkMetaInnateGem;
+  window.SWRM.evaluateGemRecommendation = evaluateGemRecommendation;
+  window.SWRM.passesGemQualityGate = passesGemQualityGate;
   window.SWRM.matchReappRule = matchReappRule;
 })();

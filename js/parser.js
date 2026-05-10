@@ -114,6 +114,25 @@
   }
 
   /**
+   * Count unique runes in a SWEX export (all grades), inventory + equipped.
+   */
+  function countAllSwexRunes(json) {
+    if (!json || typeof json !== 'object') return 0;
+    const ids = new Set();
+    const inv = json.runes || json.rune_list || [];
+    for (const r of inv) {
+      if (r && r.rune_id != null) ids.add(r.rune_id);
+    }
+    const units = json.unit_list || [];
+    for (const unit of units) {
+      for (const r of (unit.runes || [])) {
+        if (r && r.rune_id != null) ids.add(r.rune_id);
+      }
+    }
+    return ids.size;
+  }
+
+  /**
    * Main parse entry — accepts parsed JSON object from SWEX
    * SWEX file has { runes: [...], unit_list: [...], ... }
    * We collect inventory runes + equipped runes from unit_list
@@ -143,7 +162,44 @@
     return Array.from(runeMap.values());
   }
 
+  /**
+   * Read wizard / account hints from a SWEX-style JSON root (field names vary by exporter version).
+   * Safe to call on any object; returns null if nothing useful is found.
+   */
+  function extractSwexSummary(json) {
+    if (!json || typeof json !== 'object') return null;
+    try {
+      const wi = json.wizard_info || json.wizardInfo || json.wizard || {};
+      let wizardName =
+        wi.wizard_name ?? wi.wizardName ?? wi.name ??
+        json.wizard_name ?? json.wizardName ?? '';
+      let wizardLevel =
+        wi.wizard_level ?? wi.wizardLevel ?? json.wizard_level ?? json.wizardLevel;
+      let wizardId =
+        wi.wizard_id ?? wi.wizardId ?? json.wizard_id ?? json.wizardId;
+
+      wizardName = String(wizardName || '').trim() || null;
+      wizardLevel = wizardLevel != null && wizardLevel !== '' ? Number(wizardLevel) : null;
+      if (!Number.isFinite(wizardLevel)) wizardLevel = null;
+      wizardId = wizardId != null && wizardId !== '' ? String(wizardId) : null;
+
+      const monsterCount = Array.isArray(json.unit_list) ? json.unit_list.length : null;
+      let inventoryRuneCount = null;
+      if (Array.isArray(json.runes)) inventoryRuneCount = json.runes.length;
+      else if (Array.isArray(json.rune_list)) inventoryRuneCount = json.rune_list.length;
+
+      if (!wizardName && wizardLevel == null && !wizardId && monsterCount == null && inventoryRuneCount == null) {
+        return null;
+      }
+      return { wizardName, wizardLevel, wizardId, monsterCount, inventoryRuneCount };
+    } catch (e) {
+      return null;
+    }
+  }
+
   window.SWRM.parseRune  = parseRune;
   window.SWRM.parseSWEX  = parseSWEX;
   window.SWRM.calcEfficiency = calcEfficiency;
+  window.SWRM.extractSwexSummary = extractSwexSummary;
+  window.SWRM.countAllSwexRunes = countAllSwexRunes;
 })();

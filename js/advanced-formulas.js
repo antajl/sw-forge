@@ -203,39 +203,30 @@
     return results;
   }
 
-  // Get best formula match (mirrors Google Sheets priority)
+  // Prefer engine.pickBestRole (same order as Best Role column); fallback for standalone tests
   function getBestFormulaMatch(formulaResults, settings) {
-    const enabledFormulas = Object.entries(formulaResults)
+    if (typeof window.SWRM.pickBestRole === 'function') {
+      return window.SWRM.pickBestRole(formulaResults, settings);
+    }
+    const enabled = Object.entries(formulaResults || {})
       .filter(([name, matched]) => matched && isFormulaEnabled(name, settings))
       .map(([name]) => name);
-
-    // Priority order (can be customized)
-    const priority = [
-      'Classic DPS',
-      'Slow DPS', 
-      'Bomber',
-      'Fast Utility',
-      'Heavy Resist',
-      'Bruiser'
-    ];
-
-    for (const formula of priority) {
-      if (enabledFormulas.includes(formula)) {
-        return formula;
-      }
+    const priority = ['Classic DPS', 'Slow DPS', 'Bomber', 'Fast Utility', 'Heavy Resist', 'Bruiser'];
+    for (let i = 0; i < priority.length; i++) {
+      if (enabled.includes(priority[i])) return priority[i];
     }
-
-    return enabledFormulas[0] || '';
+    return enabled[0] || '';
   }
 
-  // Enhanced verdict calculation using advanced formulas
   function getAdvancedVerdict(rune, stage, settings, formulaResults) {
-    const bestFormula = getBestFormulaMatch(formulaResults, settings);
-    const hasFormula = bestFormula !== '';
+    const mergedResults = formulaResults || {};
+    const bestRole = window.SWRM.pickBestRole?.(mergedResults, settings)
+      ?? getBestFormulaMatch(mergedResults, settings);
+    const hasRole = bestRole !== '';
     
     const isHero = rune.gradeStr === 'Hero';
     const isLegend = rune.gradeStr === 'Legend';
-    const hasHighDuo = formulaResults['High Roll'] || formulaResults['Duo Roll'];
+    const hasHighDuo = mergedResults['High Roll'] || mergedResults['Duo Roll'];
     
     // Priority order: Upgrade → Finish → Reapp → (Gem if Flat) → (Keep, or Grind if Keep-worthy) → Sell
     
@@ -245,7 +236,7 @@
     }
     
     // 2. Finish: +9 with potential, take to +12
-    if (rune.level < 12 && hasFormula) {
+    if (rune.level < 12 && hasRole) {
       // Check efficiency thresholds for Hero without High Roll/Duo Roll
       if (isHero && !hasHighDuo) {
         const effThreshold = stage === 'Late' ? 85 : (stage === 'Mid' ? 85 : 65);
@@ -254,42 +245,29 @@
       return 'Finish';
     }
     
-    // 3. Reapp: Legend with good set/main, bad subs (skipped if any other formula matched)
-    if (hasFormula && isLegend) {
-      // Check if this is ONLY a Reapp candidate
-      if (bestFormula === 'Classic DPS' || bestFormula === 'Slow DPS' || 
-          bestFormula === 'Bomber' || bestFormula === 'Bruiser' || 
-          bestFormula === 'Fast Utility' || bestFormula === 'Heavy Resist') {
-        // Has other formulas, don't Reapp
-      } else {
-        // Check Reapp rules
-        if (window.SWRM.matchReappRule?.(rune, settings)) {
-          return 'Reapp';
-        }
+    // 3. Reapp: Legend with good set/main, bad subs (skip for settled build archetypes)
+    if (hasRole && isLegend && window.SWRM.matchReappRule?.(rune, settings)) {
+      const skipReapp = typeof window.SWRM.isPrimaryBuildRole === 'function'
+        ? window.SWRM.isPrimaryBuildRole(bestRole)
+        : ['Classic DPS', 'Slow DPS', 'Bomber', 'Bruiser', 'Fast Utility', 'Heavy Resist', 'Fast CC', 'Tank'].includes(bestRole);
+      if (!skipReapp) {
+        return 'Reapp';
       }
     }
     
-    // 4. Gem: good but has a flat stat to replace
-    if (hasFormula && window.SWRM.hasBadFlat?.(rune, stage)) {
-      const gem = window.SWRM.checkGem?.(rune, stage, settings);
-      if (gem?.can) {
-        // Check if rune is strong enough for Gem
-        const effThreshold = stage === 'Late' ? 70 : (stage === 'Mid' ? 55 : 40);
-        if (rune.eff >= effThreshold) {
-          // Additional check for Hero without High Roll/Duo Roll
-          if (isHero && !hasHighDuo) {
-            const heroEffThreshold = stage === 'Late' ? 82 : (stage === 'Mid' ? 67 : 52);
-            if (rune.eff < heroEffThreshold) return 'Sell';
-          }
+    // 4. Gem — meta innate (Sheets) and/or legacy sub-flat path
+    if (hasRole) {
+      const gem = window.SWRM.evaluateGemRecommendation?.(rune, stage, settings) || { can: false };
+      if (gem.can) {
+        if (window.SWRM.passesGemQualityGate?.(rune, stage, isHero, hasHighDuo)) {
           return 'Gem';
-        } else {
-          return 'Sell';
         }
+        return 'Sell';
       }
     }
     
     // 5. Check if rune qualifies for Keep at all
-    if (!hasFormula) {
+    if (!hasRole) {
       // No formula matching - check efficiency thresholds
       const effThreshold = stage === 'Late' ? 65 : (stage === 'Mid' ? 50 : 35);
       if (isHero && !hasHighDuo) {

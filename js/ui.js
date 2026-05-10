@@ -3,10 +3,12 @@
 // =============================================
 
 (function() {
-  const { parseSWEX, processAll, ROLE_PRIORITY, settings: cfg,
+  const APP_LANG_KEY = 'swrm_app_lang_v1';
+
+  const { parseSWEX, extractSwexSummary, countAllSwexRunes, processAll, ROLE_PRIORITY, settings: cfg,
           STAT_NAMES, SET_NAMES, GRADE_SHORT, saveSettings,
           DEFAULT_THRESHOLDS, DEFAULT_HR_THRESHOLDS, DEFAULT_HR_COEFF,
-          DEFAULT_DUO_THRESHOLDS, DEFAULT_ROLES, DEFAULT_REAPP, TRANSLATIONS } = window.SWRM;
+          DEFAULT_DUO_THRESHOLDS, DEFAULT_ROLES, DEFAULT_REAPP, DEFAULT_GEM_META, TRANSLATIONS } = window.SWRM;
 
   let allRunes = [];
   let processedRunes = [];
@@ -14,7 +16,7 @@
   let sortKey  = 'eff';
   let sortDir  = 'desc';
   let globalMinLevel = 0;
-  let currentLang = localStorage.getItem('swrm-lang') || 'en';
+  let currentLang = localStorage.getItem(APP_LANG_KEY) || localStorage.getItem('swrm-lang') || 'en';
   let currentTheme = localStorage.getItem('swrm-theme') || 'light';
 
   // ===================== THEME =====================
@@ -37,10 +39,13 @@
 
   function initTheme() {
     const themeBtn = document.getElementById('theme-toggle');
+    const themeSel = document.getElementById('app-theme');
+    if (themeSel) themeSel.value = currentTheme === 'dark' ? 'dark' : 'light';
     if (currentTheme === 'light') {
       document.body.classList.add('light-theme');
       if (themeBtn) themeBtn.textContent = '☀️';
     } else {
+      document.body.classList.remove('light-theme');
       if (themeBtn) themeBtn.textContent = '🌙';
     }
   }
@@ -48,15 +53,29 @@
   // ===================== LANGUAGE =====================
   function updateLanguage(lang) {
     currentLang = lang;
-    localStorage.setItem('swrm-lang', lang);
+    localStorage.setItem(APP_LANG_KEY, lang);
     const t = TRANSLATIONS[lang];
+
+    document.documentElement.lang = lang === 'ru' ? 'ru' : 'en';
+
+    const lblHr = document.getElementById('lbl-stage-metric-highroll');
+    if (lblHr) lblHr.textContent = t.stageMetricHighRoll || 'High-roll rate:';
+    const lblKe = document.getElementById('lbl-stage-metric-keepeff');
+    if (lblKe) lblKe.textContent = t.stageMetricKeepEff || 'Keep eff.:';
+    const lblMs = document.getElementById('lbl-stage-metric-meta');
+    if (lblMs) lblMs.textContent = t.stageMetricMetaSets || 'Meta sets (Keep):';
+    const btnAutoStage = document.getElementById('btn-auto-stage');
+    if (btnAutoStage) btnAutoStage.textContent = t.autoStage || 'Auto';
+
+    const appLangSelectEl = document.getElementById('app-language');
+    if (appLangSelectEl) appLangSelectEl.value = lang;
     
     // Update title
     document.title = t.title;
     const logoText = document.querySelector('.logo-text');
     if (logoText) logoText.innerHTML = `SW <strong>${t.title.substring(3)}</strong>`;
     
-    // Update tabs
+    // Update tabs - safely check if elements exist
     const dashboardTab = document.querySelector('[data-tab="dashboard"]');
     if (dashboardTab) dashboardTab.textContent = t.dashboard;
     const runeTableTab = document.querySelector('[data-tab="runetable"]');
@@ -67,7 +86,11 @@
     if (guideTab) guideTab.textContent = t.guide;
     const changelogTab = document.querySelector('[data-tab="changelog"]');
     if (changelogTab) changelogTab.textContent = t.changelog;
-    
+    const actionListTab = document.querySelector('[data-tab="actionlist"]');
+    if (actionListTab) actionListTab.textContent = t.actionList;
+    const appSettingsTab = document.querySelector('[data-tab="app-settings"]');
+    if (appSettingsTab) appSettingsTab.textContent = t.appSettings;
+
     // Update header elements
     const uploadLabel = document.querySelector('label[for="json-upload"] span');
     if (uploadLabel) uploadLabel.textContent = '⬆ ' + t.loadJson;
@@ -79,21 +102,36 @@
     const settingsBtn = document.getElementById('open-app-settings');
     if (settingsBtn) settingsBtn.textContent = t.settings;
     
-    // Update stage options
+    // Update stage options (keep selected game stage)
     const stageSelect = document.getElementById('stage-select');
-    stageSelect.innerHTML = `
+    if (stageSelect) {
+      const preserved =
+        (['Early', 'Mid', 'Late'].includes(stage) ? stage : null) ||
+        (['Early', 'Mid', 'Late'].includes(stageSelect.value) ? stageSelect.value : null) ||
+        'Mid';
+      stageSelect.innerHTML = `
       <option value="Early">${t.early}</option>
-      <option value="Mid" selected>${t.mid}</option>
-      <option value="Late">${t.late}</option>
-    `;
+      <option value="Mid">${t.mid}</option>
+      <option value="Late">${t.late}</option>`;
+      stageSelect.value = preserved;
+      stage = preserved;
+    }
     
     // Update upload prompt
     const uploadPrompt = document.getElementById('upload-prompt');
     if (uploadPrompt) {
-      uploadPrompt.querySelector('h2').textContent = t.loadYourSWEX;
-      uploadPrompt.querySelector('p').innerHTML = t.uploadDescription;
-      uploadPrompt.querySelector('.upload-btn-large').textContent = t.chooseJsonFile;
-      uploadPrompt.querySelector('.prompt-hint').textContent = t.privacyNote;
+      const titleEl = document.getElementById('upload-prompt-title');
+      if (titleEl) titleEl.textContent = t.loadYourSWEX;
+      const leadEl = document.getElementById('upload-prompt-lead');
+      if (leadEl) leadEl.textContent = t.uploadPromptLead || t.uploadDescription;
+      const secEl = document.getElementById('upload-prompt-secondary');
+      if (secEl) secEl.textContent = t.uploadPromptSecondary || '';
+      const ctaEl = document.getElementById('upload-prompt-cta');
+      if (ctaEl) ctaEl.textContent = t.chooseJsonFile;
+      const clearBtn = document.getElementById('btn-clear-saved-runes');
+      if (clearBtn) clearBtn.textContent = t.uploadClearAll || 'Clear all saved data';
+      const hintEl = document.getElementById('upload-prompt-hint');
+      if (hintEl) hintEl.textContent = t.privacyNote;
     }
     
     // Update dashboard cards
@@ -102,12 +140,9 @@
     // Update table elements
     updateTableLabels();
     refreshRoleFilterOptions();
-    
+
     // Update settings
     updateSettingsLabels();
-    
-    // Update app settings panel
-    updateAppSettingsLabels();
   }
 
   function updateDashboardLabels() {
@@ -179,7 +214,25 @@
         <option value="Heavy Resist">Heavy Resist</option>
         <option value="Bruiser">Bruiser</option>`;
     }
-    
+    const actionSearch = document.getElementById('action-search-box');
+    if (actionSearch) actionSearch.placeholder = t.actionSearchPlaceholder;
+    const btnExportAction = document.getElementById('btn-action-export-csv');
+    if (btnExportAction) btnExportAction.textContent = t.exportActionCsv;
+    const actionLead = document.getElementById('action-list-lead');
+    if (actionLead) actionLead.textContent = t.actionListLead;
+    const actionTargetTh = document.querySelector('#action-table thead .target-col-header-visible');
+    if (actionTargetTh) actionTargetTh.textContent = t.targetHeading;
+
+    const af = document.getElementById('action-filter-verdict');
+    if (af) {
+      af.innerHTML = `<option value="">${t.allActions}</option>
+        <option value="Upgrade">${t.upgrade}</option>
+        <option value="Finish">${t.finish}</option>
+        <option value="Gem">${t.gem}</option>
+        <option value="Grind">${t.grind}</option>
+        <option value="Reapp">${t.reapp}</option>`;
+    }
+
     const filterGrade = document.getElementById('filter-grade');
     if (filterGrade) {
       filterGrade.innerHTML = `<option value="">${t.allGrades}</option>
@@ -202,20 +255,49 @@
     const t = TRANSLATIONS[currentLang];
     const settingsTab = document.getElementById('tab-settings');
     if (!settingsTab) return;
-    
-    // Update headings in order: High Roll, Duo Roll, Role Filters, Reapp Rules
-    const h3s = settingsTab.querySelectorAll('h3');
-    if (h3s[0]) h3s[0].textContent = t.highRollThresholds;
-    if (h3s[1]) h3s[1].textContent = t.duoRollThresholds;
-    if (h3s[2]) h3s[2].textContent = t.roleFilters;
-    if (h3s[3]) h3s[3].textContent = t.reappCandidateRules;
-    
-    // Update descriptions in order
-    const descs = settingsTab.querySelectorAll('.settings-desc');
-    if (descs[0]) descs[0].textContent = 'A rune qualifies as High Roll if at least one substat meets or exceeds these values.';
-    if (descs[1]) descs[1].textContent = 'Synergy pairs. Both stats must reach their respective minimum values.';
-    if (descs[2]) descs[2].textContent = t.configureRoleRules;
-    if (descs[3]) descs[3].textContent = t.reappDescription;
+
+    const h3High = settingsTab.querySelector('.settings-col-left h3:first-of-type');
+    if (h3High) h3High.textContent = t.highRollThresholds;
+    const h3Duo = settingsTab.querySelectorAll('.settings-col-left h3')[1];
+    if (h3Duo) h3Duo.textContent = t.duoRollThresholds;
+    const gemH = settingsTab.querySelector('.gem-meta-heading');
+    if (gemH) gemH.textContent = t.gemMetaRules;
+    const reappH = settingsTab.querySelector('.reapp-heading');
+    if (reappH) reappH.textContent = t.reappCandidateRules;
+    const roleH = settingsTab.querySelector('.role-filters-heading');
+    if (roleH) roleH.textContent = t.roleFilters;
+
+    const dh = settingsTab.querySelector('.high-roll-desc');
+    if (dh) dh.textContent = 'A rune qualifies as High Roll if at least one substat meets or exceeds these values.';
+    const dd = settingsTab.querySelector('.duo-desc');
+    if (dd) dd.textContent = 'Synergy pairs. Both stats must reach their respective minimum values.';
+    const dg = settingsTab.querySelector('.gem-meta-desc');
+    if (dg) dg.textContent = t.gemMetaRulesDesc;
+    const dre = settingsTab.querySelector('.reapp-rules-desc');
+    if (dre) dre.textContent = t.reappDescription;
+    const drf = settingsTab.querySelector('.role-filters-desc');
+    if (drf) drf.textContent = t.configureRoleRules;
+
+    const gmtl = document.getElementById('gem-meta-toggle-label');
+    if (gmtl) gmtl.textContent = t.gemMetaToggle;
+    const gl = document.getElementById('gem-meta-legend-label');
+    if (gl) gl.textContent = t.gemMetaLegendOnly;
+    const gfs = document.getElementById('gem-universal-flats-label');
+    if (gfs) gfs.textContent = t.gemUniversalFlats;
+    const gleg = document.getElementById('gem-legacy-subs-label');
+    if (gleg) gleg.textContent = t.gemLegacySubs;
+    const xh = settingsTab.querySelector('.gem-extra-hint');
+    if (xh) xh.textContent = t.gemExtraBySlot;
+
+    const gemSetsInput = document.getElementById('gem-meta-sets');
+    const gemSetsLabel = gemSetsInput?.closest('.settings-row')?.querySelector('label');
+    if (gemSetsLabel && gemSetsLabel.childNodes[0]) gemSetsLabel.childNodes[0].textContent = t.gemMetaSetsList + ' ';
+    const gemJsonInput = document.getElementById('gem-meta-by-set-json');
+    const gemJsonLbl = gemJsonInput?.closest('.settings-row')?.querySelector('label');
+    if (gemJsonLbl && gemJsonLbl.childNodes[0]) gemJsonLbl.childNodes[0].textContent = t.gemPerSetJson + ' ';
+    const gemExTa = document.getElementById('gem-meta-extra-slots');
+    const gemExLbl = gemExTa?.closest('.settings-row')?.querySelector('label');
+    if (gemExLbl && gemExLbl.childNodes[0]) gemExLbl.childNodes[0].textContent = t.gemExtrasLabel + ' ';
     
     // Update partner coefficient label (only text node, keep input)
     const partnerRow = document.getElementById('hr-coeff')?.closest('.settings-row');
@@ -259,8 +341,8 @@
       }
     });
 
-// Update dashboard cards
-updateDashboardLabels();
+    // Update dashboard cards
+    updateDashboardLabels();
     // Update language label in app settings tab
     const langLabel = document.querySelector('#tab-app-settings .db-settings-header label:first-child');
     if (langLabel) {
@@ -306,6 +388,9 @@ updateDashboardLabels();
       if (btn.dataset.tab === 'app-settings') {
         renderDbSlots();
       }
+      if (btn.dataset.tab === 'actionlist') {
+        renderActionList(getVisibleRunes());
+      }
     });
   });
 
@@ -340,6 +425,7 @@ updateDashboardLabels();
       const visible = getVisibleRunes();
       renderDashboard(visible);
       renderTable(visible);
+      renderActionList(visible);
     }
   });
 
@@ -381,13 +467,9 @@ updateDashboardLabels();
           }
         }
         
-        // Save to first empty slot or active slot
         const slots = loadDbSlots();
-        const activeSlot = slots.find(s => s.active);
-        const firstEmpty = slots.find(s => !s.name);
-        const targetSlot = activeSlot || firstEmpty || slots[0];
-        targetSlot.name = file.name;
-        targetSlot.uploadedAt = new Date().toLocaleString();
+        const targetSlot = slots.find(s => s.id === 1) || slots[0];
+        applySlotSummaryFromJson(targetSlot, file.name, json);
         targetSlot.active = true;
         slots.forEach(s => { if (s.id !== targetSlot.id) s.active = false; });
         saveDbSlots(slots);
@@ -396,7 +478,6 @@ updateDashboardLabels();
         await saveSlotData(targetSlot.id, jsonText);
         
         document.getElementById('upload-prompt').classList.add('hidden');
-        document.getElementById('btn-upload-json').classList.add('hidden');
         document.getElementById('tab-dashboard').classList.remove('hidden');
         document.querySelectorAll('.tab').forEach(t => {
           t.classList.toggle('active', t.dataset.tab === 'dashboard');
@@ -408,64 +489,24 @@ updateDashboardLabels();
     reader.readAsText(file);
   });
 
-  // Close upload prompt overlay
+  // Close upload prompt overlay (load later via App Settings → slot Upload, or refresh to see prompt again)
   document.getElementById('close-upload-prompt')?.addEventListener('click', () => {
     document.getElementById('upload-prompt').classList.add('hidden');
-    document.getElementById('btn-upload-json').classList.remove('hidden');
   });
 
   // Clear saved runes button
   document.getElementById('btn-clear-saved-runes')?.addEventListener('click', async () => {
-    if (confirm('Are you sure you want to clear all saved runes? This will remove the currently loaded runes from browser storage.')) {
-      // Clear localStorage
-      localStorage.removeItem('loadedRunes');
-      localStorage.removeItem('loadedRunesName');
-      localStorage.removeItem('loadedRunesDate');
-      localStorage.removeItem('loadedRunesStorage');
-      localStorage.removeItem('loadedRunesSize');
-      
-      // Clear IndexedDB
-      try {
-        await deleteSlotData('current-runes');
-        console.log('Cleared runes from IndexedDB');
-      } catch (err) {
-        console.log('No IndexedDB data to clear:', err.message);
-      }
-      
-      // Reset application state
-      allRunes = [];
-      processedRunes = [];
-      
-      // Show upload prompt again
-      document.getElementById('upload-prompt').classList.remove('hidden');
-      document.getElementById('btn-upload-json').classList.remove('hidden');
-      document.getElementById('tab-dashboard').classList.add('hidden');
-      document.querySelectorAll('.tab').forEach(t => {
-        t.classList.toggle('active', t.dataset.tab === 'guide');
-      });
-      document.getElementById('tab-guide').classList.remove('hidden');
-      
-      // Clear dashboard
-      document.getElementById('sc-total').querySelector('.sc-value').textContent = '—';
-      document.getElementById('sc-keep').querySelector('.sc-value').textContent = '—';
-      document.getElementById('sc-sell').querySelector('.sc-value').textContent = '—';
-      document.getElementById('sc-grind').querySelector('.sc-value').textContent = '—';
-      document.getElementById('sc-finish').querySelector('.sc-value').textContent = '—';
-      document.getElementById('sc-reapp').querySelector('.sc-value').textContent = '—';
-      document.getElementById('sc-upgrade').querySelector('.sc-value').textContent = '—';
-      document.getElementById('sc-gem').querySelector('.sc-value').textContent = '—';
-      
-      // Clear rune table
-      document.getElementById('rune-table-body').innerHTML = '';
-      
-      console.log('Cleared saved runes from browser storage');
+    if (!confirm('Are you sure you want to clear all saved runes? This will remove the currently loaded runes from browser storage.')) return;
+    clearLocalStorageRuneBackup();
+    try {
+      await clearAllIndexedDbRunePayloads();
+    } catch (err) {
+      console.warn('IndexedDB clear:', err);
     }
-  });
-
-  // Re-open upload prompt from header button
-  document.getElementById('btn-upload-json')?.addEventListener('click', () => {
-    document.getElementById('upload-prompt').classList.remove('hidden');
-    document.getElementById('btn-upload-json').classList.add('hidden');
+    saveDbSlots(defaultEmptyDbSlotsMeta());
+    uiEmptyRuneApplicationState();
+    renderDbSlots();
+    console.log('Cleared saved runes from browser storage');
   });
 
   function reprocess() {
@@ -473,6 +514,216 @@ updateDashboardLabels();
     const visible = getVisibleRunes();
     renderDashboard(visible);
     renderTable(visible);
+    renderActionList(visible);
+  }
+
+  /** Parse stored SWEX JSON (string or object) and populate allRunes. */
+  function tryHydrateRunesFromJsonText(raw) {
+    if (raw == null) return false;
+    if (typeof raw === 'string' && raw.trim() === '') return false;
+    let obj;
+    try {
+      obj = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    } catch (e) {
+      console.error('Stored data is not valid JSON:', e);
+      return false;
+    }
+    if (!obj || typeof obj !== 'object') return false;
+    const runes = parseSWEX(obj);
+    if (!runes.length) return false;
+    allRunes = runes;
+    reprocess();
+    return true;
+  }
+
+  /**
+   * @param {object} [meta]
+   * @param {{ keepTab?: boolean }} [options] if keepTab, do not switch to Dashboard (e.g. user is in App Settings)
+   */
+  function uiAfterSuccessfulRuneRestore(meta, options = {}) {
+    const keepTab = options.keepTab === true;
+    document.getElementById('upload-prompt').classList.add('hidden');
+    if (!keepTab) {
+      document.getElementById('tab-dashboard').classList.remove('hidden');
+      document.querySelectorAll('.tab').forEach(t => {
+        t.classList.toggle('active', t.dataset.tab === 'dashboard');
+      });
+    }
+    if (meta && meta.name) {
+      console.log(`Auto-loaded runes from ${meta.name}${meta.id != null ? ` (Data ${meta.id})` : ''}`);
+    }
+  }
+
+  function uiShowUploadPrompt() {
+    document.getElementById('upload-prompt').classList.remove('hidden');
+  }
+
+  function clearLocalStorageRuneBackup() {
+    localStorage.removeItem('loadedRunes');
+    localStorage.removeItem('loadedRunesName');
+    localStorage.removeItem('loadedRunesDate');
+    localStorage.removeItem('loadedRunesStorage');
+    localStorage.removeItem('loadedRunesSize');
+  }
+
+  /**
+   * No runes in memory; reset charts/tables.
+   * Default: Guide tab + upload overlay. With keepTab: stay on current tab, no overlay (e.g. slot delete from Settings).
+   */
+  function uiEmptyRuneApplicationState(options = {}) {
+    const keepTab = options.keepTab === true;
+    allRunes = [];
+    processedRunes = [];
+    if (!keepTab) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+      document.getElementById('tab-guide').classList.remove('hidden');
+      document.querySelectorAll('.tab').forEach(t => {
+        t.classList.toggle('active', t.dataset.tab === 'guide');
+      });
+      document.getElementById('upload-prompt').classList.remove('hidden');
+    } else {
+      document.getElementById('upload-prompt').classList.add('hidden');
+    }
+    document.getElementById('sc-total').querySelector('.sc-value').textContent = '—';
+    document.getElementById('sc-keep').querySelector('.sc-value').textContent = '—';
+    document.getElementById('sc-sell').querySelector('.sc-value').textContent = '—';
+    document.getElementById('sc-grind').querySelector('.sc-value').textContent = '—';
+    document.getElementById('sc-finish').querySelector('.sc-value').textContent = '—';
+    document.getElementById('sc-reapp').querySelector('.sc-value').textContent = '—';
+    document.getElementById('sc-upgrade').querySelector('.sc-value').textContent = '—';
+    document.getElementById('sc-gem').querySelector('.sc-value').textContent = '—';
+    document.getElementById('rune-tbody').innerHTML = '';
+    renderDashboard([]);
+    renderTable([]);
+    renderActionList([]);
+  }
+
+  function normalizeDbSlot(raw) {
+    const id = Number(raw.id);
+    return {
+      id: Number.isFinite(id) ? id : 0,
+      name: raw.name != null ? String(raw.name) : '',
+      uploadedAt: raw.uploadedAt != null ? String(raw.uploadedAt) : '',
+      active: !!raw.active,
+      wizardName: raw.wizardName != null ? String(raw.wizardName) : '',
+      wizardLevel: raw.wizardLevel != null && raw.wizardLevel !== '' && Number.isFinite(Number(raw.wizardLevel))
+        ? Number(raw.wizardLevel) : null,
+      wizardId: raw.wizardId != null ? String(raw.wizardId) : '',
+      monsterCount: raw.monsterCount != null && Number.isFinite(Number(raw.monsterCount))
+        ? Number(raw.monsterCount) : null,
+      inventoryRuneCount: raw.inventoryRuneCount != null && Number.isFinite(Number(raw.inventoryRuneCount))
+        ? Number(raw.inventoryRuneCount) : null,
+      runeCount: (() => {
+        if (raw.runeCount != null && Number.isFinite(Number(raw.runeCount))) return Number(raw.runeCount);
+        if (raw.heroRuneCount != null && Number.isFinite(Number(raw.heroRuneCount))) return Number(raw.heroRuneCount);
+        return null;
+      })(),
+    };
+  }
+
+  function defaultEmptyDbSlotsMeta() {
+    return Array.from({ length: 4 }, (_, i) =>
+      normalizeDbSlot({ id: i + 1, name: '', uploadedAt: '', active: i === 0 }));
+  }
+
+  function applySlotSummaryFromJson(slot, displayName, jsonObj) {
+    slot.name = displayName;
+    slot.uploadedAt = new Date().toLocaleString();
+    const sum = extractSwexSummary(jsonObj);
+    if (sum) {
+      slot.wizardName = sum.wizardName || '';
+      slot.wizardLevel = sum.wizardLevel;
+      slot.wizardId = sum.wizardId || '';
+      slot.monsterCount = sum.monsterCount;
+      slot.inventoryRuneCount = sum.inventoryRuneCount;
+    } else {
+      slot.wizardName = '';
+      slot.wizardLevel = null;
+      slot.wizardId = '';
+      slot.monsterCount = null;
+      slot.inventoryRuneCount = null;
+    }
+    slot.runeCount = countAllSwexRunes(jsonObj);
+  }
+
+  function escapeHtml(s) {
+    if (s == null) return '';
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function formatSlotSummaryLine(slot, t) {
+    if (!slot.name) return '';
+    const parts = [];
+    if (slot.wizardName) parts.push(escapeHtml(slot.wizardName));
+    if (slot.wizardLevel != null) {
+      parts.push(`${escapeHtml(t.lvAbbr || 'Lv.')}${escapeHtml(slot.wizardLevel)}`);
+    }
+    if (slot.runeCount != null) {
+      parts.push(`${escapeHtml(String(slot.runeCount))}\u00A0${escapeHtml(t.runesWord || t.runesHeroPlus || 'runes')}`);
+    }
+    if (slot.monsterCount != null) {
+      parts.push(`${escapeHtml(String(slot.monsterCount))}\u00A0${escapeHtml(t.monsShort || 'mons')}`);
+    }
+    if (!parts.length && slot.wizardId) {
+      parts.push(`ID\u00A0${escapeHtml(slot.wizardId)}`);
+    }
+    if (!parts.length) return '';
+    return `<div class="db-slot-summary">${parts.join(' · ')}</div>`;
+  }
+
+  /**
+   * In-app toast (styled panel, bottom-right). Replaces browser alert for non-blocking notices.
+   * @param {string} message
+   * @param {{ type?: 'success'|'info'|'error', duration?: number }} [options] duration ms; 0 = no auto-dismiss
+   */
+  function showSwrmToast(message, options = {}) {
+    const type = options.type || 'info';
+    const duration = options.duration !== undefined ? options.duration : 5200;
+    const host = document.getElementById('swrm-toast-host');
+    if (!host || !message) return;
+
+    const icons = { success: '\u2713', info: '\u25C6', error: '\u0021' };
+    const el = document.createElement('div');
+    el.className = `swrm-toast swrm-toast--${type}`;
+    el.setAttribute('role', 'status');
+
+    const iconEl = document.createElement('span');
+    iconEl.className = 'swrm-toast-icon';
+    iconEl.textContent = icons[type] || icons.info;
+
+    const msgEl = document.createElement('span');
+    msgEl.className = 'swrm-toast-msg';
+    msgEl.textContent = message;
+
+    const closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.className = 'swrm-toast-close';
+    closeBtn.setAttribute('aria-label', 'Close');
+    closeBtn.textContent = '\u00D7';
+
+    el.append(iconEl, msgEl, closeBtn);
+    host.appendChild(el);
+
+    let hideTimer = null;
+    const dismiss = () => {
+      if (hideTimer) {
+        clearTimeout(hideTimer);
+        hideTimer = null;
+      }
+      el.classList.remove('swrm-toast--in');
+      el.classList.add('swrm-toast--out');
+      setTimeout(() => el.remove(), 320);
+    };
+
+    closeBtn.addEventListener('click', dismiss);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => el.classList.add('swrm-toast--in'));
+    });
+    if (duration > 0) hideTimer = setTimeout(dismiss, duration);
   }
 
   function getVisibleRunes() {
@@ -664,6 +915,63 @@ updateDashboardLabels();
   }
 
   let filteredRunes = [];
+  const ACTION_VERDICTS = new Set(['Upgrade', 'Finish', 'Gem', 'Grind', 'Reapp']);
+  let actionSortKey = 'eff';
+  let actionSortDir = 'desc';
+  let lastActionFiltered = [];
+
+  function sortRunesInPlace(arr, key, dir) {
+    arr.sort((a, b) => {
+      let av;
+      let bv;
+      switch (key) {
+        case 'slot':    av = a.slot;    bv = b.slot;    break;
+        case 'set':     av = a.setName; bv = b.setName; break;
+        case 'grade':   av = a.grade;   bv = b.grade;   break;
+        case 'level':   av = a.level;   bv = b.level;   break;
+        case 'main':    av = a.mainName;bv = b.mainName;break;
+        case 'eff':     av = a.eff;     bv = b.eff;     break;
+        case 'role':    av = a.role;    bv = b.role;    break;
+        case 'verdict': av = a.verdict; bv = b.verdict; break;
+        case 's1':      av = a.substats[0]?.name || ''; bv = b.substats[0]?.name || ''; break;
+        case 's2':      av = a.substats[1]?.name || ''; bv = b.substats[1]?.name || ''; break;
+        case 's3':      av = a.substats[2]?.name || ''; bv = b.substats[2]?.name || ''; break;
+        case 's4':      av = a.substats[3]?.name || ''; bv = b.substats[3]?.name || ''; break;
+        default:        av = a.eff;     bv = b.eff;
+      }
+      if (av < bv) return dir === 'asc' ? -1 : 1;
+      if (av > bv) return dir === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }
+
+  function runeTargetText(r) {
+    const tl = TRANSLATIONS[currentLang];
+    const v = r.verdict || '';
+    if (v === 'Grind') {
+      const g = r.grindInfo;
+      if (g && g.can && g.stat) {
+        if (typeof g.from === 'number' && typeof g.need === 'number') {
+          return `${g.stat} ${g.from}→${g.need}`;
+        }
+        return g.stat;
+      }
+      return '';
+    }
+    if (v === 'Gem') {
+      if (r.gemInfo?.kind === 'innate-meta') {
+        return `Innate ${r.gemInfo.innate || ''} → reroll`;
+      }
+      if (r.gemInfo?.from && r.gemInfo?.to) {
+        return `${r.gemInfo.from} → ${r.gemInfo.to}`;
+      }
+      return '';
+    }
+    if (v === 'Upgrade') return tl.actionTargetUpgrade;
+    if (v === 'Finish') return tl.actionTargetFinish;
+    if (v === 'Reapp') return tl.actionTargetReapp;
+    return '';
+  }
 
   function applyFiltersAndSort(runes) {
     const search  = (document.getElementById('search-box')?.value || '').toLowerCase();
@@ -685,24 +993,7 @@ updateDashboardLabels();
       return true;
     });
 
-    // Sort
-    filteredRunes.sort((a, b) => {
-      let av, bv;
-      switch(sortKey) {
-        case 'slot':    av = a.slot;    bv = b.slot;    break;
-        case 'set':     av = a.setName; bv = b.setName; break;
-        case 'grade':   av = a.grade;   bv = b.grade;   break;
-        case 'level':   av = a.level;   bv = b.level;   break;
-        case 'main':    av = a.mainName;bv = b.mainName;break;
-        case 'eff':     av = a.eff;     bv = b.eff;     break;
-        case 'role':    av = a.role;    bv = b.role;    break;
-        case 'verdict': av = a.verdict; bv = b.verdict; break;
-        default:        av = a.eff;     bv = b.eff;
-      }
-      if (av < bv) return sortDir === 'asc' ? -1 : 1;
-      if (av > bv) return sortDir === 'asc' ? 1 : -1;
-      return 0;
-    });
+    sortRunesInPlace(filteredRunes, sortKey, sortDir);
 
     const tbody = document.getElementById('rune-tbody');
     if (!tbody) return;
@@ -720,6 +1011,108 @@ updateDashboardLabels();
     document.getElementById('rune-table')?.classList.toggle('show-target', showTarget);
     tbody.innerHTML = rows.map(r => runeRow(r)).join('');
     renderRuneSummary(filteredRunes);
+    renderActionList(getVisibleRunes());
+  }
+
+  function renderActionSummary(rows) {
+    const box = document.getElementById('action-summary');
+    if (!box) return;
+    const t = TRANSLATIONS[currentLang];
+    const tally = {};
+    rows.forEach(r => {
+      tally[r.verdict] = tally[r.verdict] || { c: 0, e: 0 };
+      tally[r.verdict].c++;
+      tally[r.verdict].e += r.eff;
+    });
+    let html = `<div class="summary-title">${t.actionList}</div>`;
+    html += `<div class="summary-row"><span>${t.actionsListedSummary}</span><span>${rows.length}</span></div>`;
+    ['Upgrade', 'Finish', 'Gem', 'Grind', 'Reapp'].forEach(vKey => {
+      const item = tally[vKey];
+      if (!item) return;
+      const label =
+        vKey === 'Upgrade' ? t.upgrade :
+        vKey === 'Finish' ? t.finish :
+        vKey === 'Gem' ? t.gem :
+        vKey === 'Grind' ? t.grind :
+        t.reapp;
+      html += `<div class="summary-row"><span>${label}</span><span>${item.c} <span class="summary-eff">${(item.e / item.c).toFixed(1)}%</span></span></div>`;
+    });
+    box.innerHTML = html;
+  }
+
+  function exportActionCsv() {
+    const rows = lastActionFiltered;
+    if (!rows.length) return;
+    const headers = ['Grade', 'Set', 'Lvl', 'Slot', 'Main', 'Innate', 'Sub1', 'Sub2', 'Sub3', 'Sub4', 'Eff%', 'Role', 'Verdict', 'Target'];
+    function cellPart(s) {
+      const raw = String(s ?? '');
+      if (/[,"\n\r]/.test(raw)) return `"${raw.replace(/"/g, '""')}"`;
+      return raw;
+    }
+    function subcell(sub) {
+      if (!sub || !sub.name) return '';
+      return `${sub.name} ${sub.val}${sub.grind ? `+${sub.grind}` : ''}`;
+    }
+    const lines = [headers.map(cellPart).join(',')];
+    rows.forEach(r => {
+      const subs = r.substats || [];
+      const row = [
+        r.gradeStr,
+        r.setName,
+        r.level,
+        r.slot,
+        r.mainName,
+        r.innate_name ? `${r.innate_name} ${r.innate_val}` : '',
+        subcell(subs[0]),
+        subcell(subs[1]),
+        subcell(subs[2]),
+        subcell(subs[3]),
+        `${r.eff}%`,
+        r.role || '',
+        r.verdict || '',
+        runeTargetText(r),
+      ];
+      lines.push(row.map(cellPart).join(','));
+    });
+    const csv = `\uFEFF${lines.join('\r\n')}`;
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `sw-rune-master-action-list-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    URL.revokeObjectURL(a.href);
+    document.body.removeChild(a);
+  }
+
+  function renderActionList(runes) {
+    let list = runes.filter(r => ACTION_VERDICTS.has(r.verdict));
+
+    const search = (document.getElementById('action-search-box')?.value || '').toLowerCase();
+    const verdictF = document.getElementById('action-filter-verdict')?.value || '';
+    list = list.filter(r => {
+      if (verdictF && r.verdict !== verdictF) return false;
+      if (!search) return true;
+      const haystack = [
+        r.setName, r.mainName, r.gradeStr, r.role, r.verdict,
+        runeTargetText(r),
+        ...r.substats.map(s => `${s.name} ${s.val}`),
+      ].join(' ').toLowerCase();
+      return haystack.includes(search);
+    });
+
+    sortRunesInPlace(list, actionSortKey, actionSortDir);
+    lastActionFiltered = list;
+
+    const tbody = document.getElementById('action-tbody');
+    if (!tbody) return;
+    const t = TRANSLATIONS[currentLang];
+    const cnt = document.getElementById('action-table-count');
+    if (cnt) cnt.textContent = `${list.length} ${t.actionsCount}`;
+
+    const rows = list.slice(0, 500);
+    tbody.innerHTML = rows.map(r => runeRow(r)).join('');
+    renderActionSummary(list);
   }
 
   function statChip(s) {
@@ -753,11 +1146,7 @@ updateDashboardLabels();
     const rCls   = roleClass(r.role);
     const subs   = r.substats.slice(0, 4);
     const innate = r.innate_name ? `${r.innate_name} ${r.innate_val}` : '';
-    const target = r.verdict === 'Grind'
-      ? (r.grindInfo?.stat || '')
-      : r.verdict === 'Gem'
-        ? `${r.gemInfo?.from || ''} → ${r.gemInfo?.to || ''}`
-        : '';
+    const target = runeTargetText(r);
 
     return `<tr>
       <td>${grade}</td>
@@ -810,22 +1199,41 @@ updateDashboardLabels();
     box.innerHTML = html;
   }
 
-  // Table sorting
-  document.querySelectorAll('th[data-sort]').forEach(th => {
+  // Table sorting — main table
+  document.querySelectorAll('#rune-table thead th[data-sort]').forEach(th => {
     th.addEventListener('click', () => {
       const key = th.dataset.sort;
       if (sortKey === key) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
       else { sortKey = key; sortDir = 'desc'; }
-      document.querySelectorAll('th').forEach(t => t.classList.remove('sort-asc','sort-desc'));
+      document.querySelectorAll('#rune-table thead th[data-sort]').forEach(t => t.classList.remove('sort-asc', 'sort-desc'));
       th.classList.add(sortDir === 'asc' ? 'sort-asc' : 'sort-desc');
       applyFiltersAndSort(getVisibleRunes());
     });
   });
 
+  document.querySelectorAll('#action-table thead th[data-action-sort]').forEach(th => {
+    th.addEventListener('click', () => {
+      const key = th.dataset.actionSort;
+      if (!key) return;
+      if (actionSortKey === key) actionSortDir = actionSortDir === 'asc' ? 'desc' : 'asc';
+      else { actionSortKey = key; actionSortDir = 'desc'; }
+      document.querySelectorAll('#action-table thead th[data-action-sort]').forEach(t => t.classList.remove('sort-asc', 'sort-desc'));
+      th.classList.add(actionSortDir === 'asc' ? 'sort-asc' : 'sort-desc');
+      renderActionList(getVisibleRunes());
+    });
+  });
+
+  document.getElementById('btn-action-export-csv')?.addEventListener('click', exportActionCsv);
+
   // Table filters
   ['search-box','filter-verdict','filter-role','filter-grade'].forEach(id => {
     document.getElementById(id)?.addEventListener('input', () => applyFiltersAndSort(getVisibleRunes()));
     document.getElementById(id)?.addEventListener('change', () => applyFiltersAndSort(getVisibleRunes()));
+  });
+
+  ['action-search-box', 'action-filter-verdict'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', () => renderActionList(getVisibleRunes()));
+    document.getElementById(id)?.addEventListener('change', () => renderActionList(getVisibleRunes()));
   });
 
   // ===================== ADVANCED FORMULAS UI =====================
@@ -1071,6 +1479,46 @@ updateDashboardLabels();
   // ===================== SETTINGS UI =====================
   function parseList(v) {
     return (v || '').split(',').map(s => s.trim()).filter(Boolean);
+  }
+
+  function stringifyGemExtras(extraBadBySlot) {
+    const lines = [];
+    const m = extraBadBySlot || {};
+    for (let slot = 1; slot <= 6; slot++) {
+      const v = m[slot] ?? m[String(slot)];
+      if (Array.isArray(v) && v.length > 0) {
+        lines.push(`${slot}:${v.join(',')}`);
+      }
+    }
+    return lines.join('\n');
+  }
+
+  function parseGemExtrasFromText(text) {
+    const map = {};
+    (text || '').split(/\r?\n/).forEach(line => {
+      const ln = line.trim();
+      if (!ln) return;
+      const matched = ln.match(/^([1-6])\s*:\s*(.+)$/);
+      if (!matched) return;
+      const slotNum = parseInt(matched[1], 10);
+      map[slotNum] = parseList(matched[2]);
+    });
+    return map;
+  }
+
+  function hydrateGemMetaFields(gm) {
+    const g = gm || DEFAULT_GEM_META;
+    const el = id => document.getElementById(id);
+    if (!el('gem-meta-enabled')) return;
+    el('gem-meta-enabled').checked = g.enabled !== false;
+    el('gem-meta-legend-only').checked = g.legendOnlyInnate === true;
+    el('gem-meta-sets').value = (g.sets || []).join(', ');
+    el('gem-meta-universal-flats').checked = g.useUniversalFlatBadInnate !== false;
+    el('gem-meta-extra-slots').value = stringifyGemExtras(g.extraBadBySlot);
+    el('gem-meta-by-set-json').value = g.bySet && Object.keys(g.bySet).length
+      ? JSON.stringify(g.bySet, null, 2)
+      : '';
+    el('gem-meta-legacy-subs').checked = g.legacyFlatSubGem === true;
   }
 
   function renderRoleSettings() {
@@ -1431,6 +1879,8 @@ updateDashboardLabels();
   document.getElementById('reapp-main6').value = (reapp.mainBySlot?.[6] || []).join(', ');
   document.getElementById('reapp-max-eff').value = reapp.maxEff ?? 65;
 
+  hydrateGemMetaFields(window.SWRM.settings.gemMeta);
+
   // Save settings
   document.getElementById('btn-save-settings').addEventListener('click', () => {
     const s = window.SWRM.settings;
@@ -1470,6 +1920,31 @@ updateDashboardLabels();
       }
     };
 
+    let gemBySet = {};
+    const gemJsonRaw = (document.getElementById('gem-meta-by-set-json').value || '').trim();
+    if (gemJsonRaw) {
+      try {
+        const parsed = JSON.parse(gemJsonRaw);
+        if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+          throw new Error('Root must be an object');
+        }
+        gemBySet = parsed;
+      } catch (e) {
+        alert('Gem per-set JSON: invalid JSON — ' + (e && e.message ? e.message : e));
+        return;
+      }
+    }
+
+    s.gemMeta = window.SWRM.mergeGemMeta({
+      enabled: document.getElementById('gem-meta-enabled').checked,
+      legendOnlyInnate: document.getElementById('gem-meta-legend-only').checked,
+      sets: parseList(document.getElementById('gem-meta-sets').value),
+      useUniversalFlatBadInnate: document.getElementById('gem-meta-universal-flats').checked,
+      extraBadBySlot: parseGemExtrasFromText(document.getElementById('gem-meta-extra-slots').value),
+      bySet: gemBySet,
+      legacyFlatSubGem: document.getElementById('gem-meta-legacy-subs').checked,
+    });
+
     saveSettings(s);
     refreshRoleFilterOptions();
     if (processedRunes.length) reprocess();
@@ -1477,87 +1952,104 @@ updateDashboardLabels();
   });
 
   
-  // Language switcher
-  document.addEventListener('change', (e) => {
-    if (e.target && e.target.id === 'app-language') {
-      updateLanguage(e.target.value);
-    }
-  });
-
-  // App Settings - Theme switcher
-  document.addEventListener('change', (e) => {
-    if (e.target && e.target.id === 'app-theme') {
-      const newTheme = e.target.value;
-      document.body.classList.toggle('dark', newTheme === 'dark');
-      localStorage.setItem('theme', newTheme);
-    }
-  });
-
   // Initialize on page load
   document.addEventListener('DOMContentLoaded', async () => {
     initTheme();
     updateLanguage(currentLang);
     
-    // Check for saved runes in localStorage or IndexedDB
     const savedRunes = localStorage.getItem('loadedRunes');
-    const savedRunesName = localStorage.getItem('loadedRunesName');
-    const savedRunesDate = localStorage.getItem('loadedRunesDate');
-    const savedRunesStorage = localStorage.getItem('loadedRunesStorage');
-    
-    if (savedRunesName && savedRunesDate) {
-      try {
-        let json;
-        
-        if (savedRunesStorage === 'indexeddb') {
-          // Load from IndexedDB for large files
-          json = await loadSlotData('current-runes');
-          if (!json) {
-            console.log('No data found in IndexedDB, falling back to localStorage');
-            json = JSON.parse(savedRunes || '[]');
+
+    try {
+      const slots = loadDbSlots();
+      const hasSlotMeta = slots.some(s => s.name && s.name.trim() !== '');
+      const targetSlot =
+        slots.find(s => s.active && s.name && s.name.trim() !== '') ||
+        slots.find(s => s.name && s.name.trim() !== '');
+
+      console.log('=== INITIALIZATION DEBUG ===');
+      console.log('Slots from loadDbSlots():', slots);
+      console.log('hasSlotMeta:', hasSlotMeta, 'targetSlot:', targetSlot);
+
+      if (!Array.isArray(slots) || slots.length === 0) {
+        console.error('Invalid slots array:', slots);
+        uiShowUploadPrompt();
+      } else {
+        console.log('Slots metadata key present:', !!localStorage.getItem(DB_SLOTS_META_KEY));
+
+        let restored = false;
+
+        if (targetSlot) {
+          const jsonText = await loadSlotData(targetSlot.id);
+          if (tryHydrateRunesFromJsonText(jsonText)) {
+            uiAfterSuccessfulRuneRestore(targetSlot);
+            restored = true;
+          } else if (savedRunes && tryHydrateRunesFromJsonText(savedRunes)) {
+            console.log(`IndexedDB empty for Data ${targetSlot.id}; restored from localStorage backup`);
+            uiAfterSuccessfulRuneRestore(targetSlot);
+            restored = true;
           }
-        } else {
-          // Load from localStorage for small files
-          json = JSON.parse(savedRunes || '[]');
         }
-        
-        if (json && json.length > 0) {
-          allRunes = parseSWEX(json);
-          reprocess();
-          
-          // Update UI to show loaded runes
-          document.getElementById('upload-prompt').classList.add('hidden');
-          document.getElementById('btn-upload-json').classList.add('hidden');
-          document.getElementById('tab-dashboard').classList.remove('hidden');
-          document.querySelectorAll('.tab').forEach(t => {
-            t.classList.toggle('active', t.dataset.tab === 'dashboard');
-          });
-          
-          // Show notification about restored runes
-          const date = new Date(savedRunesDate);
-          const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
-          const storageType = savedRunesStorage === 'indexeddb' ? 'IndexedDB' : 'localStorage';
-          console.log(`Restored runes from ${savedRunesName} (${storageType}, loaded on ${dateStr})`);
+
+        if (!restored && savedRunes && tryHydrateRunesFromJsonText(savedRunes)) {
+          if (!hasSlotMeta) {
+            const migrated = loadDbSlots();
+            const name = localStorage.getItem('loadedRunesName') || 'Saved export';
+            const dateRaw = localStorage.getItem('loadedRunesDate') || '';
+            let parsedObj = null;
+            try {
+              parsedObj = JSON.parse(savedRunes);
+            } catch (e) { /* ignore */ }
+            migrated.forEach(s => {
+              if (s.id === 1) {
+                if (parsedObj) {
+                  applySlotSummaryFromJson(s, name, parsedObj);
+                } else {
+                  s.name = name;
+                  s.uploadedAt = dateRaw ? new Date(dateRaw).toLocaleString() : new Date().toLocaleString();
+                  s.wizardName = '';
+                  s.wizardLevel = null;
+                  s.wizardId = '';
+                  s.monsterCount = null;
+                  s.inventoryRuneCount = null;
+                  s.runeCount = allRunes.length;
+                }
+              }
+              s.active = s.id === 1;
+            });
+            saveDbSlots(migrated);
+            try {
+              await saveSlotData(1, savedRunes);
+            } catch (e) {
+              console.warn('Could not mirror JSON to IndexedDB slot 1:', e);
+            }
+          }
+          uiAfterSuccessfulRuneRestore({ name: localStorage.getItem('loadedRunesName') || 'Saved export', id: 1 });
+          restored = true;
         }
-      } catch (err) {
-        console.error('Failed to restore saved runes:', err);
-        // Clear corrupted data
-        localStorage.removeItem('loadedRunes');
-        localStorage.removeItem('loadedRunesName');
-        localStorage.removeItem('loadedRunesDate');
-        localStorage.removeItem('loadedRunesStorage');
-        localStorage.removeItem('loadedRunesSize');
+
+        if (!restored) {
+          if (hasSlotMeta && targetSlot) {
+            console.log(`Slot ${targetSlot.id} has metadata but no readable JSON; showing upload prompt`);
+          } else {
+            console.log('No saved runes found; showing upload prompt');
+          }
+          uiShowUploadPrompt();
+        }
       }
+    } catch (err) {
+      console.error('Error during restore:', err);
+      uiShowUploadPrompt();
     }
-    
+
     // Initialize App Settings
     const appThemeSelect = document.getElementById('app-theme');
     if (appThemeSelect) {
-      const currentTheme = localStorage.getItem('theme') || 'light';
       appThemeSelect.value = currentTheme;
     }
     
     // Initialize Database slots
     renderDbSlots();
+    renderActionList(getVisibleRunes());
   });
 
   // Reset settings
@@ -1569,6 +2061,7 @@ updateDashboardLabels();
       duoThresholds: JSON.parse(JSON.stringify(DEFAULT_DUO_THRESHOLDS)),
       roles:         JSON.parse(JSON.stringify(DEFAULT_ROLES)),
       reapp:         JSON.parse(JSON.stringify(DEFAULT_REAPP)),
+      gemMeta:       JSON.parse(JSON.stringify(DEFAULT_GEM_META)),
     };
     localStorage.removeItem('swrm_settings_v1');
     location.reload();
@@ -1577,7 +2070,6 @@ updateDashboardLabels();
   // ===================== APP SETTINGS =====================
   const DB_SLOTS_META_KEY = 'swrm_db_slots_meta_v1';
   const CHANGELOG_KEY = 'swrm_changelog_v1';
-  const APP_LANG_KEY = 'swrm_app_lang_v1';
 
   // IndexedDB setup for large JSON files
   const DB_NAME = 'SWRM';
@@ -1612,13 +2104,22 @@ updateDashboardLabels();
 
   async function loadSlotData(slotId) {
     if (!idb) await initIndexedDB();
-    return new Promise((resolve, reject) => {
+    const get = (key) => new Promise((resolve, reject) => {
       const tx = idb.transaction([STORE_NAME], 'readonly');
       const store = tx.objectStore(STORE_NAME);
-      const req = store.get(slotId);
+      const req = store.get(key);
       req.onsuccess = () => resolve(req.result?.jsonText || '');
       req.onerror = () => reject(req.error);
     });
+    let text = await get(slotId);
+    if (text) return text;
+    if (slotId === 'current-runes') return '';
+    if (typeof slotId === 'number' && !Number.isNaN(slotId)) {
+      text = await get(String(slotId));
+    } else if (typeof slotId === 'string' && /^\d+$/.test(slotId)) {
+      text = await get(Number(slotId));
+    }
+    return text || '';
   }
 
   async function deleteSlotData(slotId) {
@@ -1632,17 +2133,33 @@ updateDashboardLabels();
     });
   }
 
+  async function deleteSlotDataRobust(slotId) {
+    await deleteSlotData(slotId);
+    if (typeof slotId === 'number' && !Number.isNaN(slotId)) {
+      await deleteSlotData(String(slotId));
+    }
+  }
+
+  async function clearAllIndexedDbRunePayloads() {
+    for (const id of [1, 2, 3, 4, 'current-runes']) {
+      try {
+        await deleteSlotDataRobust(id);
+      } catch (e) {
+        console.warn('clearAllIndexedDbRunePayloads', id, e);
+      }
+    }
+  }
+
   function loadDbSlots() {
     try {
       const parsed = JSON.parse(localStorage.getItem(DB_SLOTS_META_KEY) || '[]');
-      if (Array.isArray(parsed) && parsed.length === 4) return parsed;
+      if (Array.isArray(parsed) && parsed.length === 4) return parsed.map(normalizeDbSlot);
     } catch(e) {}
-    return Array.from({ length: 4 }).map((_, i) => ({ id: i + 1, name: '', uploadedAt: '', active: i === 0 }));
+    return defaultEmptyDbSlotsMeta();
   }
 
   function saveDbSlots(slots) {
-    // Save only metadata (no jsonText) to localStorage
-    const meta = slots.map(s => ({ id: s.id, name: s.name, uploadedAt: s.uploadedAt, active: s.active }));
+    const meta = slots.map(s => normalizeDbSlot(s));
     localStorage.setItem(DB_SLOTS_META_KEY, JSON.stringify(meta));
   }
 
@@ -1657,17 +2174,26 @@ updateDashboardLabels();
     
     wrap.innerHTML = slots.map(slot => {
       const hasData = !!slot.name;
+      const summaryHtml = formatSlotSummaryLine(slot, t);
+      const activeClass = slot.active ? ' db-slot--active' : '';
+      const activePill = slot.active
+        ? `<span class="db-slot-active-pill" aria-label="${escapeHtml(t.activeProfile || t.current)}">${escapeHtml(t.activeProfile || t.current)}</span>`
+        : '';
       return `
-      <div class="db-slot" data-slot="${slot.id}">
-        <div class="db-slot-title">${t.dbSlot || 'Database Slot'} ${slot.id} ${slot.active ? `(${t.current || 'Current'})` : ''}</div>
-        <div class="db-slot-meta">${t.name || 'Name'}: ${slot.name || '—'}</div>
-        <div class="db-slot-meta">${t.uploaded || 'Uploaded'}: ${slot.uploadedAt || '—'}</div>
+      <div class="db-slot${activeClass}" data-slot="${slot.id}" ${slot.active ? 'data-active="true"' : ''}>
+        <div class="db-slot-header-row">
+          <div class="db-slot-title">${escapeHtml(t.dbSlot || 'Database Slot')} ${slot.id}</div>
+          ${activePill}
+        </div>
+        <div class="db-slot-meta">${escapeHtml(t.name || 'Name')}: ${escapeHtml(slot.name) || '—'}</div>
+        <div class="db-slot-meta">${escapeHtml(t.uploaded || 'Uploaded')}: ${escapeHtml(slot.uploadedAt) || '—'}</div>
+        ${summaryHtml}
         <div class="db-slot-actions">
-          <button class="btn-ghost" data-db-action="clipboard" data-slot="${slot.id}">${t.clipboard || 'Clipboard'}</button>
-          <button class="btn-ghost" data-db-action="upload" data-slot="${slot.id}">${t.upload || 'Upload'}</button>
-          <button class="btn-ghost" ${hasData ? '' : 'disabled'} data-db-action="download" data-slot="${slot.id}">${t.download || 'Download'}</button>
-          <button class="btn-ghost" ${hasData ? '' : 'disabled'} data-db-action="delete" data-slot="${slot.id}">${t.delete || 'Delete'}</button>
-          ${slot.active || !hasData ? '' : `<button class="btn-primary" data-db-action="swap" data-slot="${slot.id}">${t.swap || 'Swap'}</button>`}
+          <button type="button" class="btn-ghost" data-db-action="clipboard" data-slot="${slot.id}">${escapeHtml(t.clipboard || 'Clipboard')}</button>
+          <button type="button" class="btn-ghost" data-db-action="upload" data-slot="${slot.id}">${escapeHtml(t.upload || 'Upload')}</button>
+          <button type="button" class="btn-ghost" ${hasData ? '' : 'disabled'} data-db-action="download" data-slot="${slot.id}">${escapeHtml(t.download || 'Download')}</button>
+          <button type="button" class="btn-ghost" ${hasData ? '' : 'disabled'} data-db-action="delete" data-slot="${slot.id}">${escapeHtml(t.delete || 'Delete')}</button>
+          ${slot.active || !hasData ? '' : `<button type="button" class="btn-primary" data-db-action="swap" data-slot="${slot.id}">${escapeHtml(t.swap || 'Swap')}</button>`}
         </div>
       </div>`;
     }).join('');
@@ -1678,7 +2204,6 @@ updateDashboardLabels();
     allRunes = parseSWEX(json);
     reprocess();
     document.getElementById('upload-prompt').classList.add('hidden');
-    document.getElementById('btn-upload-json').classList.add('hidden');
   }
 
   function parseAndLoadJson(jsonText) {
@@ -1692,12 +2217,9 @@ updateDashboardLabels();
 
   const appLangSelect = document.getElementById('app-language');
   if (appLangSelect) {
-    const savedLang = localStorage.getItem(APP_LANG_KEY) || 'en';
-    appLangSelect.value = savedLang;
+    appLangSelect.value = currentLang;
     appLangSelect.addEventListener('change', () => {
-      localStorage.setItem(APP_LANG_KEY, appLangSelect.value);
-      currentLang = appLangSelect.value;
-      updateLanguage(currentLang);
+      updateLanguage(appLangSelect.value);
     });
   }
 
@@ -1730,9 +2252,15 @@ updateDashboardLabels();
       try {
         const text = await navigator.clipboard.readText();
         if (!text) return;
+        let jsonObj;
+        try {
+          jsonObj = JSON.parse(text);
+        } catch {
+          alert(t.clipboardNotJson || 'Clipboard does not contain valid JSON.');
+          return;
+        }
         await saveSlotData(slotId, text);
-        slot.uploadedAt = new Date().toLocaleString();
-        slot.name = slot.name || `Clipboard ${slotId}`;
+        applySlotSummaryFromJson(slot, `Clipboard ${slotId}`, jsonObj);
         saveDbSlots(slots);
         renderDbSlots();
       } catch(err) {
@@ -1760,10 +2288,11 @@ updateDashboardLabels();
         const reader = new FileReader();
         reader.onload = async event => {
           try {
-            console.log('File read successfully, length:', event.target.result.length);
-            await saveSlotData(slotId, event.target.result);
-            slot.name = file.name;
-            slot.uploadedAt = new Date().toLocaleString();
+            const text = event.target.result;
+            console.log('File read successfully, length:', text.length);
+            const jsonObj = JSON.parse(text);
+            await saveSlotData(slotId, text);
+            applySlotSummaryFromJson(slot, file.name, jsonObj);
             saveDbSlots(slots);
             renderDbSlots();
             console.log('Slot saved and rendered');
@@ -1799,12 +2328,56 @@ updateDashboardLabels();
     if (action === 'delete') {
       if (!confirm(`Delete slot ${slot.id}?`)) return;
       try {
-        await deleteSlotData(slotId);
-        slots[idx] = { id: slot.id, name: '', uploadedAt: '', active: slot.active };
+        const wasActive = slot.active;
+        await deleteSlotDataRobust(slotId);
+        slots[idx] = normalizeDbSlot({ id: slot.id, name: '', uploadedAt: '', active: false });
+
+        const namedSlots = slots.filter(s => s.name && s.name.trim() !== '');
+
+        if (namedSlots.length === 0) {
+          await clearAllIndexedDbRunePayloads();
+          clearLocalStorageRuneBackup();
+          saveDbSlots(defaultEmptyDbSlotsMeta());
+          uiEmptyRuneApplicationState({ keepTab: true });
+          showSwrmToast(t.slotDeleteAllCleared || 'All saved databases were removed.', { type: 'info' });
+          renderDbSlots();
+          return;
+        }
+
+        const needReselectActive =
+          wasActive || !slots.some(s => s.active && s.name && s.name.trim() !== '');
+
+        if (needReselectActive) {
+          let next = slots.find(s => s.active && s.name && s.name.trim() !== '');
+          if (!next) next = namedSlots[0];
+          slots.forEach(s => {
+            s.active = s.id === next.id;
+          });
+          saveDbSlots(slots);
+          clearLocalStorageRuneBackup();
+          const jsonText = await loadSlotData(next.id);
+          if (!jsonText || !tryHydrateRunesFromJsonText(jsonText)) {
+            await clearAllIndexedDbRunePayloads();
+            clearLocalStorageRuneBackup();
+            saveDbSlots(defaultEmptyDbSlotsMeta());
+            uiEmptyRuneApplicationState({ keepTab: true });
+            showSwrmToast(t.slotDeleteNextLoadFailed || 'Could not load the next database.', { type: 'error', duration: 7000 });
+            renderDbSlots();
+            return;
+          }
+          uiAfterSuccessfulRuneRestore(next, { keepTab: true });
+          const msg = (t.slotDeleteSwitchedTo || '')
+            .replace('{n}', String(next.id))
+            .replace('{name}', next.name || '');
+          if (msg) showSwrmToast(msg, { type: 'success' });
+        } else {
+          clearLocalStorageRuneBackup();
+        }
+
         saveDbSlots(slots);
         renderDbSlots();
-      } catch(err) {
-        alert('Failed to delete slot: ' + err.message);
+      } catch (err) {
+        showSwrmToast('Failed to delete slot: ' + err.message, { type: 'error', duration: 7000 });
       }
       return;
     }

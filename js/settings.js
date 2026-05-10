@@ -76,7 +76,7 @@ const TRANSLATIONS = {
     actionsCount: 'actions',
     actionsListedSummary: 'Listed actions',
     actionListLead:
-      'Only Upgrade, Finish, Gem, Grind and Reapp. Min Lvl from Dashboard applies globally.',
+      'Starts with Sell only; use the verdict filter for Keep, Upgrade, Finish, Gem, Grind, Reapp, or all. Default sort Eff% high first. Dashboard Min Lvl applies.',
     actionSearchPlaceholder: 'Search by set, stat, role, verdict…',
     allActions: 'All actions',
     targetHeading: 'Target',
@@ -149,7 +149,7 @@ const TRANSLATIONS = {
 
     stageAdvisorTitle: 'Account progression suggestion',
     stageAdvisorLead:
-      'Early / Mid / Late sets rule strictness. Suggestion uses all +9+ runes in your export (ignores Min Lvl below). You can override manually.',
+      'Early / Mid / Late sets rule strictness. Combined score uses Depth v2 over your full Hero+ export — SPD depth, +15 depth, and elite average uncapped eff. Unaffected by preset or Min Lvl below.',
 
     stageSuggestedLabel: 'Suggested stage',
     stageYourPresetLabel: 'Your preset',
@@ -157,29 +157,34 @@ const TRANSLATIONS = {
     stageApplySuggestion: 'Apply suggestion',
     stageMismatchHint: 'Your preset differs from the suggestion—you can still keep your choice.',
     stageAdvisorNoEligible:
-      'Suggestion needs runes at +9 or higher. Power up some runes or load another export.',
+      'Load a SWEX export to see progression depth and combined score.',
 
     stageMetricsExplainer:
-      'All +9+ runes (ignores Min Lvl). Entire combined score uses Mid preset only (power thresholds, Keep verdicts, meta share) — switching Early/Late does not change it. Weights:',
+      'Depth v2: full export, absolute depth metrics. Preset and Min Lvl do not change this. Weights:',
 
-    stageCardHrName: 'Power share',
+    stageCardHrName: 'Speed Depth',
+    stageCardHrWeight: '35%',
     stageCardHrDesc:
-      'Among +9 runes: % with power > 0. Uses Mid preset thresholds only (count subs ≥ High Roll table, cap 1–3 like Engine!AH).',
+      'Count of runes with substat SPD sum ≥ 18 (base + grind). Score term capped at 250 runes (see CFG in analyzeGameStage).',
 
-    stageCardKeepName: 'Avg Keep efficiency',
+    stageCardKeepName: 'Power Depth',
+    stageCardKeepWeight: '35%',
     stageCardKeepDesc:
-      'Mean uncapped SWOP-style % for Keep (same formula as the table, not limited to 100). Scoring: min(avg / 130, 1) × 30. Rune Table still shows capped 0–100%.',
+      'Count of 6★ runes at exactly +15. Score term capped at 600 runes (CFG).',
 
-    stageCardMetaName: 'Meta sets among Keep',
+    stageCardMetaName: 'Elite Quality',
+    stageCardMetaWeight: '30%',
     stageCardMetaDesc:
-      'Among Keep runes: percent on Violent, Swift, or Will.',
+      'Mean uncapped SWOP-style eff over top min(50, n) runes; if you have fewer than 50, n = all runes. Baseline 80, span 30 for full points (CFG).',
+
+    stageEliteValFormat: '{eff}% · n={n}',
 
     stageFormulaExpl:
-      'Score = 40% × power share + 30% × min(avg Keep eff / 130, 1) + 30% × meta among Keep. Suggested stage (stricter Early than Sheets): combined score below 43 → Early, below 52 → Mid, otherwise Late.',
+      'Depth v2: min(SPD-depth / 250, 1)×35 + min(+15 count / 600, 1)×35 + min(max(0, eliteAvg−80) / 30, 1)×30. Suggested stage: below 45 → Early, below 85 → Mid, otherwise Late. Tune all values in analyzeGameStage CFG.',
 
     dashboardScopeTitle: 'Global filter',
     dashboardScopeHint:
-      'Applies to the summary cards, charts below, Rune Table, and Action List. Does not change the Account progression suggestion (it always uses all +9+ runes).'
+      'Applies to the summary cards, charts below, Rune Table, and Action List. Does not change the progression suggestion (Depth v2 uses the full export).'
   },
   ru: {
     // Header
@@ -233,7 +238,7 @@ const TRANSLATIONS = {
     actionsCount: 'действий',
     actionsListedSummary: 'В списке',
     actionListLead:
-      'Только Upgrade, Finish, Gem, Grind и Reapp. Общий Min Lvl с панели учитывается.',
+      'По умолчанию только Sell; в фильтре — Keep, Upgrade, Finish, Gem, Grind, Reapp или все. Сортировка: Eff% по убыванию. Учитывается общий Min Lvl с панели.',
     actionSearchPlaceholder: 'Поиск по сету, стату, роли, вердикту…',
     allActions: 'Все действия',
     targetHeading: 'Цель',
@@ -306,7 +311,7 @@ const TRANSLATIONS = {
 
     stageAdvisorTitle: 'Совет по прогрессу аккаунта',
     stageAdvisorLead:
-      'Стадия задаёт строгость правил. Совет — по всем рунам от +9 в экспорте (без учёта «Мин. ур.» ниже). Можно выбрать вручную.',
+      'Стадия задаёт строгость правил. Сводный балл — Depth v2 по всему экспорту (Hero+): SPD-глубина, +15, элита по eff. Пресет и «Мин. ур.» на балл не влияют.',
 
     stageSuggestedLabel: 'Советуемая стадия',
     stageYourPresetLabel: 'Ваш выбор',
@@ -314,29 +319,34 @@ const TRANSLATIONS = {
     stageApplySuggestion: 'Применить совет',
     stageMismatchHint: 'Ваш выбор отличается от совета — так можно оставить.',
     stageAdvisorNoEligible:
-      'Для совета нужны руны от +9. Докачайте руны или загрузите другой экспорт.',
+      'Загрузите SWEX JSON, чтобы увидеть глубину и сводный балл.',
 
     stageMetricsExplainer:
-      'Все руны от +9 (без «Мин. ур.»). Весь сводный балл только в логике Mid (пороги power, вердикты Keep, мета) — смена Early/Late его не меняет. Веса:',
+      'Depth v2 по полному экспорту, без пресета/«Мин. ур.». Веса на карточках:',
 
-    stageCardHrName: 'Доля «силы субов»',
+    stageCardHrName: 'SPD-глубина',
+    stageCardHrWeight: '35%',
     stageCardHrDesc:
-      'Среди +9: % с power > 0. Только пороги Mid и таблица High Roll; уровень 1–3 как Engine!AH.',
+      'Число рун с суммой саб SPD ≥ 18 (база + камень). В балле до 250 (CFG в analyzeGameStage).',
 
-    stageCardKeepName: 'Средняя eff Keep',
+    stageCardKeepName: 'Глубина +15',
+    stageCardKeepWeight: '35%',
     stageCardKeepDesc:
-      'Средняя eff без потолка 100% (SWOP-стиль), только для совета. В балл: min(средн./130, 1) × 30. В таблице рун по-прежнему 0–100%.',
+      'Число 6★ рун на ровно +15. В балле до 600 (CFG).',
 
-    stageCardMetaName: 'Мета-сеты среди Keep',
+    stageCardMetaName: 'Элита по eff',
+    stageCardMetaWeight: '30%',
     stageCardMetaDesc:
-      'Среди Keep: доля рун на Violent, Swift или Will.',
+      'Средняя uncapped-eff по топ min(50, n); если рун < 50, берутся все. База 80%, диапазон 30 (CFG).',
+
+    stageEliteValFormat: '{eff}% · n={n}',
 
     stageFormulaExpl:
-      'Балл = 40% × доля power + 30% × min(средн. Keep eff / 130, 1) + 30% × мета среди Keep. Стадия (жёстче Early, чем в Sheets): балл ниже 43 → Ранняя, ниже 52 → Средняя, иначе Поздняя.',
+      'Depth v2 (CFG в analyzeGameStage): SPD / 250, +15 / 600, элита по eff. Стадии: до 45 → Ранняя, до 85 → Средняя, иначе Поздняя.',
 
     dashboardScopeTitle: 'Общий фильтр',
     dashboardScopeHint:
-      'Учитывается в карточках сводки, графиках ниже, таблице рун и списке действий. На блок «Совет по прогрессу» не влияет — там всегда все руны от +9.'
+      'Карточки сводки, графики, таблица, список действий. На совет не влияет — Depth v2 считает по всему экспорту.'
   }
 };
 

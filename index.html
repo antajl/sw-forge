@@ -61,7 +61,7 @@
             <div class="stage-advisor-intro">
               <p class="stage-advisor-title" id="lbl-stage-advisor-title">Account progression suggestion</p>
               <p class="stage-advisor-lead" id="lbl-stage-advisor-lead">
-                Early / Mid / Late sets rule strictness. Suggestion uses all +9+ runes in your export (ignores Min Lvl below). You can override manually.
+                Early / Mid / Late sets rule strictness. Combined score uses Depth v2 (SPD depth, +15 depth, elite top-eff average) over your full exported runes — unaffected by preset or Min Lvl. Override manually anytime.
               </p>
             </div>
 
@@ -94,29 +94,29 @@
             </div>
 
             <div class="stage-advisor-metrics-head">
-              <span id="lbl-stage-metrics-explainer">All +9+ runes (ignores Min Lvl). The whole score uses Mid rules only (power, Keep, meta) — your Early/Late preset does not change it. Weights on each card:</span>
+              <span id="lbl-stage-metrics-explainer">Depth v2 uses your full Hero+ export. Absolute counts and top-eff average — preset and Min Lvl do not affect this score. Weights:</span>
             </div>
             <div class="stage-advisor-metrics">
               <article class="stage-metric-card">
                 <header class="stage-metric-card-head">
-                  <span id="lbl-card-hr-name">Power share</span>
-                  <span class="stage-metric-weight">40%</span>
+                  <span id="lbl-card-hr-name">Speed Depth</span>
+                  <span class="stage-metric-weight" id="lbl-card-hr-weight">35%</span>
                 </header>
                 <p class="stage-metric-val" id="metric-val-highroll">—</p>
                 <p class="stage-metric-desc" id="lbl-card-hr-desc"></p>
               </article>
               <article class="stage-metric-card">
                 <header class="stage-metric-card-head">
-                  <span id="lbl-card-keep-name">Keep quality index</span>
-                  <span class="stage-metric-weight">30%</span>
+                  <span id="lbl-card-keep-name">Power Depth</span>
+                  <span class="stage-metric-weight" id="lbl-card-keep-weight">35%</span>
                 </header>
                 <p class="stage-metric-val" id="metric-val-keepeff">—</p>
                 <p class="stage-metric-desc" id="lbl-card-keep-desc"></p>
               </article>
               <article class="stage-metric-card">
                 <header class="stage-metric-card-head">
-                  <span id="lbl-card-meta-name">Meta sets among Keep</span>
-                  <span class="stage-metric-weight">30%</span>
+                  <span id="lbl-card-meta-name">Elite Quality</span>
+                  <span class="stage-metric-weight" id="lbl-card-meta-weight">30%</span>
                 </header>
                 <p class="stage-metric-val" id="metric-val-meta">—</p>
                 <p class="stage-metric-desc" id="lbl-card-meta-desc"></p>
@@ -129,7 +129,7 @@
         <div class="dashboard-scope-bar">
           <div class="dashboard-scope-bar-text">
             <span class="dashboard-scope-title" id="dashboard-scope-title">Global filter</span>
-            <span class="dashboard-scope-hint" id="dashboard-scope-hint">Applies to the summary cards, charts below, Rune Table, and Action List. Does not change the Account progression suggestion (it always uses all +9+ runes).</span>
+            <span class="dashboard-scope-hint" id="dashboard-scope-hint">Applies to the summary cards, charts below, Rune Table, and Action List. Does not change the progression suggestion (Depth v2 uses the full export).</span>
           </div>
           <div class="dashboard-scope-control">
             <label class="level-filter dashboard-min-level" for="global-min-level">
@@ -276,12 +276,14 @@
       <div class="table-layout">
         <div class="table-main">
           <p id="action-list-lead" class="action-list-lead settings-desc">
-            Shows only Upgrade, Finish, Gem, Grind, and Reapp — same filters as Sheets Action List (Min Lvl applies).
+            Starts with Sell only; change the verdict filter for Keep, Upgrade, Finish, Gem, Grind, Reapp, or all actions. Sorted by Eff% (high first). Dashboard Min Lvl applies.
           </p>
           <div class="table-controls">
             <input type="text" id="action-search-box" placeholder="Search…" />
             <select id="action-filter-verdict">
               <option value="">All actions</option>
+              <option value="Sell" selected>Sell</option>
+              <option value="Keep">Keep</option>
               <option value="Upgrade">Upgrade</option>
               <option value="Finish">Finish</option>
               <option value="Gem">Gem</option>
@@ -424,23 +426,69 @@
       <div class="panel">
         <div class="panel-title">Guide</div>
         <div class="guide-list">
-          <p><strong>Data flow:</strong> Export JSON from SWEX and load it directly. SWOP CSV is not required.</p>
-          <p><strong>Database slots:</strong> Your first SWEX file opens as Data 1. In App Settings you can store up to four exports, see wizard name/level from the JSON, and Swap the active profile.</p>
-          <p><strong>Dashboard cards:</strong> Total, Keep, Sell, Grind, Gem, Finish, Upgrade and Reapp are recalculated for the selected stage.</p>
-          <p><strong>Account progression suggestion (Dashboard):</strong> Early / Mid / Late controls rule strictness. The suggestion uses all runes at +9+ in your export and ignores Min Lvl; use Apply suggestion or pick manually.</p>
-          <p><strong>How the score is computed:</strong> All three terms use <strong>Mid</strong> rules only (thresholds for power, Mid Keep verdicts, meta among Keep). On-screen preset does not change Combined score. Formula: 40% / 30% / 30%. Suggested stage uses stricter boundaries than the original spreadsheet so &quot;Early&quot; means weak progression: combined score below <strong>43</strong> → Early, below <strong>52</strong> → Mid, else Late. SWEX has no efficiency field — uncapped SWOP-style % is used here; Rune Table eff stays capped 0–100%.</p>
-          <p><strong>Global Min Lvl:</strong> On the Dashboard, the scope bar filter applies to summary cards, charts, Rune Table, and Action List only—not to the progression suggestion block.</p>
-          <p><strong>Role Distribution:</strong> Shows count and average efficiency per role. Custom roles appear automatically after saving rules.</p>
-          <p><strong>Set Distribution:</strong> Bars show set count and average efficiency to identify high-value sets.</p>
-          <p><strong>Slot Distribution:</strong> For each slot, you see count and top main stat patterns.</p>
-          <p><strong>Rune Table basics:</strong> Search, filter by verdict/role/grade, sort by columns, and inspect innate + substats.</p>
-          <p><strong>Action List:</strong> Only runes that need Upgrade, Finish, Gem, Grind, or Reapp; Target explains the next step. Export CSV for offline use.</p>
-          <p><strong>Target column:</strong> In Rune Table it appears when filtering Gem/Grind. In Action List it is always visible (grind goals, innate reroll, +9/+12/Reapp).</p>
-          <p><strong>Rune Summary panel:</strong> Right side summary shows counts and average efficiency by verdict and role for filtered rows.</p>
-          <p><strong>Rune Rules / Thresholds:</strong> Base thresholds, High Roll thresholds, Duo Roll thresholds and partner coefficient are edited in one place.</p>
-          <p><strong>Role Filters:</strong> Add custom roles with +Add role, tune Include/Exclude rules, and remove roles (at least one role is kept).</p>
-          <p><strong>Reapp Rules:</strong> Configure allowed sets, innate stats, main stats by slot and max efficiency for Reapp verdict.</p>
-          <p><strong>Changelog:</strong> Keep project notes directly in-app using the Changelog tab.</p>
+          <section class="guide-section" aria-labelledby="guide-h-start">
+            <h3 id="guide-h-start">Getting started</h3>
+            <p><strong>Data flow:</strong> Export JSON from SWEX and load it directly. SWOP CSV is not required.</p>
+            <p><strong>Database slots:</strong> Your first SWEX file opens as Data 1. In App Settings you can store up to four exports, see wizard name/level from the JSON, and Swap the active profile.</p>
+          </section>
+
+          <section class="guide-section" aria-labelledby="guide-h-dash">
+            <h3 id="guide-h-dash">Dashboard</h3>
+            <p><strong>Summary cards:</strong> Total, Keep, Sell, Grind, Gem, Finish, Upgrade and Reapp are recalculated for the <strong>Early / Mid / Late</strong> preset you choose — not for the progression score block (see below).</p>
+            <p><strong>Global Min Lvl:</strong> The scope bar filter applies to these cards, the charts below, Rune Table, and Action List. It does <strong>not</strong> apply to the Account progression suggestion.</p>
+            <p><strong>Charts:</strong> <em>Role Distribution</em> — count and average efficiency per role (custom roles appear after you save rules). <em>Set Distribution</em> — set count and average efficiency. <em>Slot Distribution</em> — per-slot counts and common main stats.</p>
+          </section>
+
+          <section class="guide-section" aria-labelledby="guide-h-depth">
+            <h3 id="guide-h-depth">Account progression (Depth&nbsp;v2)</h3>
+            <p class="guide-lead">The block at the top of the Dashboard estimates how <strong>deep</strong> your <strong>rune inventory</strong> is — not your arena rank or monster box. It uses absolute counts and a quality ceiling so small accounts cannot look the same as long-term farms.</p>
+            <p><strong>Independent of presets:</strong> The <strong>Combined score</strong> and the three metric cards ignore your <strong>Early / Mid / Late</strong> preset and <strong>Global Min Lvl</strong>. They always use the full Hero+ rune list from the loaded SWEX. Changing the preset still changes verdicts everywhere else (summary cards, table, charts).</p>
+
+            <h4 class="guide-subhead">The three metrics</h4>
+            <ul>
+              <li><strong>Speed Depth (35%)</strong> — Runes whose <strong>substat SPD total</strong> (roll + grind) is at least <strong>18</strong>.</li>
+              <li><strong>Power Depth (35%)</strong> — <strong>6★</strong> runes at exactly <strong>+15</strong>.</li>
+              <li><strong>Elite Quality (30%)</strong> — Mean <strong>uncapped</strong> efficiency (SWOP-style; can exceed 100%) on the top <strong>50</strong> runes, or on <strong>all</strong> runes if you have fewer than 50.</li>
+            </ul>
+
+            <h4 class="guide-subhead">Combined score formula</h4>
+            <ul>
+              <li>Speed: <code>min(Speed Depth ÷ 250, 1) × 35</code> — full points at <strong>250+</strong> qualifying runes.</li>
+              <li>Power: <code>min(+15 count ÷ 600, 1) × 35</code> — full points at <strong>600+</strong> qualifying +15 six-stars.</li>
+              <li>Elite: <code>min(max(0, eliteAvg − 80) ÷ 30, 1) × 30</code> — full points from <strong>110%</strong> average upward (80 + 30).</li>
+            </ul>
+
+            <h4 class="guide-subhead">Suggested stage labels</h4>
+            <ul>
+              <li><strong>Early</strong> — score below <strong>45</strong></li>
+              <li><strong>Mid</strong> — 45 up to (but not including) <strong>85</strong></li>
+              <li><strong>Late</strong> — <strong>85</strong> or higher</li>
+            </ul>
+
+            <p><strong>Apply suggestion</strong> sets <strong>Your preset</strong> to the suggested stage and recalculates the app; you can override manually.</p>
+            <p><strong>Tuning:</strong> Edit the <code>CFG</code> object at the top of <code>analyzeGameStage()</code> in <code>js/ui.js</code> (caps, weights, elite baseline, stage cutoffs). Update this Guide text if you ship different defaults.</p>
+            <p><strong>Efficiency note:</strong> SWEX has no eff field — the app computes it. The Rune Table uses <strong>capped</strong> 0–100%; Depth&nbsp;v2 uses <strong>uncapped</strong> values for the elite term.</p>
+          </section>
+
+          <section class="guide-section" aria-labelledby="guide-h-table">
+            <h3 id="guide-h-table">Rune Table &amp; Action List</h3>
+            <p><strong>Rune Table:</strong> Search, filter by verdict/role/grade, sort columns, inspect innate and substats.</p>
+            <p><strong>Action List:</strong> Opens filtered to <strong>Sell</strong> (change the dropdown for Keep, upgrades, grind, etc., or all). Default sort Eff% descending. <strong>Target</strong> describes the next step when relevant. Export CSV for spreadsheets.</p>
+            <p><strong>Target column:</strong> Shown in Rune Table when filtering Gem/Grind; always visible in Action List (grind goals, innate reroll, +9/+12/Reapp hints).</p>
+            <p><strong>Rune Summary panel:</strong> Right-hand summary — counts and average efficiency by verdict and role for the rows you have filtered.</p>
+          </section>
+
+          <section class="guide-section" aria-labelledby="guide-h-rules">
+            <h3 id="guide-h-rules">Rune Rules tab</h3>
+            <p><strong>Thresholds:</strong> Base, High Roll, Duo Roll, and partner coefficient in one place.</p>
+            <p><strong>Role filters:</strong> Add roles with <strong>+ Add role</strong>, tune include/exclude rules; at least one role always remains.</p>
+            <p><strong>Reapp rules:</strong> Allowed sets, innate stats, mains by slot, max efficiency for Reapp verdict.</p>
+          </section>
+
+          <section class="guide-section" aria-labelledby="guide-h-other">
+            <h3 id="guide-h-other">Other</h3>
+            <p><strong>Changelog:</strong> In-app notes on the <strong>Changelog</strong> tab.</p>
+          </section>
         </div>
       </div>
     </section>

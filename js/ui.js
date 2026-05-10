@@ -4,6 +4,18 @@
 
 (function() {
   const APP_LANG_KEY = 'swrm_app_lang_v1';
+  const ACTION_VERDICT_FILTER_KEY = 'swrm_action_verdict_filter_v1';
+  const ACTION_FILTER_VALUES = ['', 'Sell', 'Keep', 'Upgrade', 'Finish', 'Gem', 'Grind', 'Reapp'];
+
+  /** All verdict types that may appear in the Action List pool (narrowed further by dropdown). */
+  const ACTION_POOL_VERDICTS = new Set(['Upgrade', 'Finish', 'Gem', 'Grind', 'Reapp', 'Sell', 'Keep']);
+
+  function applyStoredActionVerdictFilter() {
+    const af = document.getElementById('action-filter-verdict');
+    if (!af) return;
+    const saved = localStorage.getItem(ACTION_VERDICT_FILTER_KEY);
+    af.value = ACTION_FILTER_VALUES.includes(saved) ? saved : 'Sell';
+  }
 
   const { parseSWEX, extractSwexSummary, countAllSwexRunes, processAll, ROLE_PRIORITY, settings: cfg,
           STAT_NAMES, SET_NAMES, GRADE_SHORT, saveSettings,
@@ -12,18 +24,7 @@
 
   let allRunes = [];
   let processedRunes = [];
-  /** Full process at Mid only — progression suggestion (score, Keep/meta/power) does not depend on user's Early/Late preset. */
-  let processedRunesAdvisorMid = [];
   let stage    = 'Mid';
-
-  const STAGE_FOR_PROGRESSION_ADVISOR = 'Mid';
-
-  /**
-   * Combined score (0–100) cuts for progression suggestion — stricter Early than spreadsheet 25/50.
-   * Early: genuinely weak progression; Mid: developing; Late: strong.
-   */
-  const STAGE_ADVISOR_SCORE_MID_MIN = 43;
-  const STAGE_ADVISOR_SCORE_LATE_MIN = 52;
   let sortKey  = 'eff';
   let sortDir  = 'desc';
   let globalMinLevel = 0;
@@ -91,6 +92,9 @@
     setText('lbl-card-keep-desc', t.stageCardKeepDesc || '');
     setText('lbl-card-meta-name', t.stageCardMetaName || '');
     setText('lbl-card-meta-desc', t.stageCardMetaDesc || '');
+    setText('lbl-card-hr-weight', t.stageCardHrWeight || '');
+    setText('lbl-card-keep-weight', t.stageCardKeepWeight || '');
+    setText('lbl-card-meta-weight', t.stageCardMetaWeight || '');
     setText('lbl-stage-formula', t.stageFormulaExpl || '');
     const btnAuto = document.getElementById('btn-auto-stage');
     if (btnAuto) btnAuto.textContent = t.stageApplySuggestion || 'Apply suggestion';
@@ -267,11 +271,14 @@
     const af = document.getElementById('action-filter-verdict');
     if (af) {
       af.innerHTML = `<option value="">${t.allActions}</option>
+        <option value="Sell">${t.sell}</option>
+        <option value="Keep">${t.keep}</option>
         <option value="Upgrade">${t.upgrade}</option>
         <option value="Finish">${t.finish}</option>
         <option value="Gem">${t.gem}</option>
         <option value="Grind">${t.grind}</option>
         <option value="Reapp">${t.reapp}</option>`;
+      applyStoredActionVerdictFilter();
     }
 
     const filterGrade = document.getElementById('filter-grade');
@@ -433,12 +440,16 @@
 
   // Auto Game Stage button
   document.getElementById('btn-auto-stage').addEventListener('click', () => {
-    const metrics = analyzeGameStage(processedRunesAdvisorMid);
-    const recommendedStage = getRecommendedStage(parseFloat(metrics.score));
+    const metrics = analyzeGameStage(allRunes);
+    const recommendedStage = getRecommendedStage(
+      parseFloat(metrics.score),
+      metrics.stageMidMin,
+      metrics.stageLateMin
+    );
     const stageSelect = document.getElementById('stage-select');
     const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
 
-    if (!metrics.eligibleCount) {
+    if (!metrics.runeCount) {
       showSwrmToast(tloc.stageAdvisorNoEligible || 'Need +9 runes.', { type: 'info' });
       return;
     }
@@ -546,9 +557,6 @@
 
   function reprocess() {
     processedRunes = processAll(allRunes, stage, window.SWRM.settings);
-    processedRunesAdvisorMid = allRunes.length
-      ? processAll(allRunes, STAGE_FOR_PROGRESSION_ADVISOR, window.SWRM.settings)
-      : [];
     const visible = getVisibleRunes();
     renderDashboard(visible);
     renderTable(visible);
@@ -612,7 +620,6 @@
     const keepTab = options.keepTab === true;
     allRunes = [];
     processedRunes = [];
-    processedRunesAdvisorMid = [];
     if (!keepTab) {
       document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
       document.getElementById('tab-guide').classList.remove('hidden');
@@ -769,65 +776,100 @@
     return processedRunes.filter(r => r.level >= globalMinLevel);
   }
 
-  // ===================== GAME STAGE ANALYSIS (Sheets-aligned) =====================
+  // ===================== GAME STAGE ANALYSIS (Depth v2) =====================
   /**
-   * `runes` must be Mid-processed (processedRunesAdvisorMid): Keep/meta use Mid verdicts.
-   * Power share uses Mid High Roll thresholds only.
-   * Same weighting as the spreadsheet suggestion:
-   * - 40% × share of +9 runes with power level > 0 (Engine!AH / hrThresholds sub count → 1–3)
-   * - 30% × min(avg Keep eff / 130, 1) — Keep eff uses uncapped SWOP-style % (see parser)
-   * - 30% × share of Keep on Violent/Swift/Will
-   * Stage: score < MID_MIN → Early, else if < LATE_MIN → Mid, else Late.
+   * Absolute depth metrics over the full exported rune list (Hero+ as in SWEX parse).
+   * Does not use Mid processing or verdicts.
    */
   function analyzeGameStage(runes) {
-    const settings = window.SWRM.settings;
-    const powerFn = window.SWRM.runePowerLevel0to3;
+    // ----- Depth v2 tuning: edit all knobs here -----
+    const CFG = {
+      spdSubMin: 18,
+      spdDepthCap: 250,
+      spdDepthWeight: 35,
+      plus15DepthCap: 600,
+      plus15DepthWeight: 35,
+      eliteTopN: 50,
+      eliteEffBaseline: 80,
+      eliteEffSpan: 30,
+      eliteWeight: 30,
+      stageMidMin: 45,
+      stageLateMin: 85,
+    };
+
     const effUncapped = window.SWRM.calcEfficiencyUncapped;
-    const eligibleRunes = runes.filter(r => r.level >= 9);
-    if (eligibleRunes.length === 0) {
+
+    function runeSpdSubTotal(r) {
+      let s = 0;
+      for (const sub of r.substats || []) {
+        if (sub.name === 'SPD') s += (sub.val || 0) + (sub.grind || 0);
+      }
+      return s;
+    }
+
+    const list = Array.isArray(runes) ? runes : [];
+    if (list.length === 0) {
       return {
-        powerSharePercent: '0.0',
-        keepAvgEff: '0.0',
-        metaSetsPercent: '0.0',
+        spdDepthCount: 0,
+        plus15DepthCount: 0,
+        eliteAvgEff: '0.0',
+        eliteSampleSize: 0,
         score: '0.0',
-        eligibleCount: 0,
+        runeCount: 0,
+        stageMidMin: CFG.stageMidMin,
+        stageLateMin: CFG.stageLateMin,
       };
     }
 
-    const total = eligibleRunes.length;
-    const withPower = powerFn
-      ? eligibleRunes.filter(r => powerFn(r, STAGE_FOR_PROGRESSION_ADVISOR, settings) > 0)
-      : [];
-    const pctAny = withPower.length / total;
+    let spdDepthCount = 0;
+    let plus15DepthCount = 0;
+    for (const r of list) {
+      if (runeSpdSubTotal(r) >= CFG.spdSubMin) spdDepthCount++;
+      const stars = r.stars;
+      const starsNum = typeof stars === 'number' ? stars : parseInt(String(stars), 10);
+      if (starsNum === 6 && (r.level | 0) === 15) plus15DepthCount++;
+    }
 
-    const keepRunes = eligibleRunes.filter(r => r.verdict === 'Keep');
-    const avgKeepEff = keepRunes.length > 0
-      ? keepRunes.reduce((sum, r) => {
-          const v = effUncapped ? effUncapped(r) : r.eff;
-          return sum + v;
-        }, 0) / keepRunes.length
-      : 0;
-    const normKeep = Math.min(avgKeepEff / 130, 1);
+    const effScores = [];
+    for (const r of list) {
+      effScores.push(effUncapped ? effUncapped(r) : r.eff || 0);
+    }
+    effScores.sort((a, b) => b - a);
+    const eliteK = Math.min(CFG.eliteTopN, effScores.length);
+    let eliteAvgUncapped = 0;
+    if (eliteK > 0) {
+      let sumE = 0;
+      for (let i = 0; i < eliteK; i++) sumE += effScores[i];
+      eliteAvgUncapped = sumE / eliteK;
+    }
 
-    const metaSets = ['Violent', 'Swift', 'Will'];
-    const metaCount = keepRunes.filter(r => metaSets.includes(r.setName)).length;
-    const pctMeta = keepRunes.length > 0 ? metaCount / keepRunes.length : 0;
-    const metaSetsPercent = pctMeta * 100;
+    const spdNorm = Math.min(spdDepthCount / CFG.spdDepthCap, 1);
+    const plus15Norm = Math.min(plus15DepthCount / CFG.plus15DepthCap, 1);
+    const eliteEffExcess = Math.max(0, eliteAvgUncapped - CFG.eliteEffBaseline);
+    const eliteNorm = Math.min(eliteEffExcess / CFG.eliteEffSpan, 1);
 
-    const score = pctAny * 40 + normKeep * 30 + pctMeta * 30;
+    const spdPoints = spdNorm * CFG.spdDepthWeight;
+    const plus15Points = plus15Norm * CFG.plus15DepthWeight;
+    const elitePoints = eliteNorm * CFG.eliteWeight;
+
+    const scoreVal = spdPoints + plus15Points + elitePoints;
+    const scoreRounded = Math.round(scoreVal * 10) / 10;
 
     return {
-      powerSharePercent: (pctAny * 100).toFixed(1),
-      keepAvgEff: avgKeepEff.toFixed(1),
-      metaSetsPercent: metaSetsPercent.toFixed(1),
-      score: score.toFixed(1),
-      eligibleCount: eligibleRunes.length,
+      spdDepthCount,
+      plus15DepthCount,
+      eliteAvgEff: eliteAvgUncapped.toFixed(1),
+      eliteSampleSize: eliteK,
+      score: scoreRounded.toFixed(1),
+      runeCount: list.length,
+      stageMidMin: CFG.stageMidMin,
+      stageLateMin: CFG.stageLateMin,
     };
   }
 
-  function getRecommendedStage(score) {
-    if (score >= STAGE_ADVISOR_SCORE_LATE_MIN) return 'Late';
-    if (score >= STAGE_ADVISOR_SCORE_MID_MIN) return 'Mid';
+  function getRecommendedStage(score, midMin = 45, lateMin = 85) {
+    if (score >= lateMin) return 'Late';
+    if (score >= midMin) return 'Mid';
     return 'Early';
   }
 
@@ -842,10 +884,14 @@
     const slotMain = {1:{},2:{},3:{},4:{},5:{},6:{}};
     const effBuckets = new Array(20).fill(0); // 5% buckets: 0-4, 5-9, ..., 95-99, 100+
 
-    // Suggestion metrics: +9+ only, Min Lvl ignored; all three terms use Mid preset processing (not current stage).
-    const metrics = analyzeGameStage(processedRunesAdvisorMid);
+    // Depth v2 suggestion: full export rune list, absolute counts + top-N eff (not affected by preset / Min Lvl).
+    const metrics = analyzeGameStage(allRunes);
     const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-    const recStage = getRecommendedStage(parseFloat(metrics.score));
+    const recStage = getRecommendedStage(
+      parseFloat(metrics.score),
+      metrics.stageMidMin,
+      metrics.stageLateMin
+    );
 
     const metricHr = document.getElementById('metric-val-highroll');
     const metricKe = document.getElementById('metric-val-keepeff');
@@ -856,34 +902,39 @@
     const noEligLine = document.getElementById('stage-noeligible-line');
 
     if (metricHr) {
-      metricHr.textContent = metrics.eligibleCount ? `${metrics.powerSharePercent}%` : '\u2014';
+      metricHr.textContent = metrics.runeCount ? String(metrics.spdDepthCount) : '\u2014';
     }
     if (metricKe) {
-      metricKe.textContent = metrics.eligibleCount ? `${metrics.keepAvgEff}%` : '\u2014';
+      metricKe.textContent = metrics.runeCount ? String(metrics.plus15DepthCount) : '\u2014';
     }
     if (metricMe) {
-      metricMe.textContent = metrics.eligibleCount ? `${metrics.metaSetsPercent}%` : '\u2014';
+      if (metrics.runeCount) {
+        const tmpl = tloc.stageEliteValFormat || '{eff}% (n={n})';
+        metricMe.textContent = tmpl.replace('{eff}', metrics.eliteAvgEff).replace('{n}', String(metrics.eliteSampleSize));
+      } else {
+        metricMe.textContent = '\u2014';
+      }
     }
 
     if (recDisp) {
       recDisp.textContent =
-        processedRunes.length && metrics.eligibleCount ? stageDisplayName(tloc, recStage) : '\u2014';
+        allRunes.length && metrics.runeCount ? stageDisplayName(tloc, recStage) : '\u2014';
     }
     if (scoreNum) {
       scoreNum.textContent =
-        processedRunes.length && metrics.eligibleCount ? String(metrics.score) : '\u2014';
+        allRunes.length && metrics.runeCount ? String(metrics.score) : '\u2014';
     }
 
     if (noEligLine) {
-      const showNoElig = processedRunes.length > 0 && metrics.eligibleCount === 0;
+      const showNoElig = allRunes.length === 0 && processedRunes.length === 0;
       noEligLine.hidden = !showNoElig;
       if (showNoElig) noEligLine.textContent = tloc.stageAdvisorNoEligible || '';
     }
 
     if (mismatchLine) {
       const showMismatch =
-        processedRunes.length > 0 &&
-        metrics.eligibleCount > 0 &&
+        allRunes.length > 0 &&
+        metrics.runeCount > 0 &&
         stage !== recStage;
       mismatchLine.hidden = !showMismatch;
       mismatchLine.textContent = showMismatch ? (tloc.stageMismatchHint || '') : '';
@@ -1010,7 +1061,6 @@
   }
 
   let filteredRunes = [];
-  const ACTION_VERDICTS = new Set(['Upgrade', 'Finish', 'Gem', 'Grind', 'Reapp']);
   let actionSortKey = 'eff';
   let actionSortDir = 'desc';
   let lastActionFiltered = [];
@@ -1121,10 +1171,12 @@
     });
     let html = `<div class="summary-title">${t.actionList}</div>`;
     html += `<div class="summary-row"><span>${t.actionsListedSummary}</span><span>${rows.length}</span></div>`;
-    ['Upgrade', 'Finish', 'Gem', 'Grind', 'Reapp'].forEach(vKey => {
+    ['Sell', 'Keep', 'Upgrade', 'Finish', 'Gem', 'Grind', 'Reapp'].forEach(vKey => {
       const item = tally[vKey];
       if (!item) return;
       const label =
+        vKey === 'Sell' ? t.sell :
+        vKey === 'Keep' ? t.keep :
         vKey === 'Upgrade' ? t.upgrade :
         vKey === 'Finish' ? t.finish :
         vKey === 'Gem' ? t.gem :
@@ -1180,8 +1232,17 @@
     document.body.removeChild(a);
   }
 
+  function syncActionTableSortIndicators() {
+    document.querySelectorAll('#action-table thead th[data-action-sort]').forEach(el => {
+      el.classList.remove('sort-asc', 'sort-desc');
+      const k = el.dataset.actionSort;
+      if (k === actionSortKey)
+        el.classList.add(actionSortDir === 'asc' ? 'sort-asc' : 'sort-desc');
+    });
+  }
+
   function renderActionList(runes) {
-    let list = runes.filter(r => ACTION_VERDICTS.has(r.verdict));
+    let list = runes.filter(r => ACTION_POOL_VERDICTS.has(r.verdict));
 
     const search = (document.getElementById('action-search-box')?.value || '').toLowerCase();
     const verdictF = document.getElementById('action-filter-verdict')?.value || '';
@@ -1208,6 +1269,7 @@
     const rows = list.slice(0, 500);
     tbody.innerHTML = rows.map(r => runeRow(r)).join('');
     renderActionSummary(list);
+    syncActionTableSortIndicators();
   }
 
   function statChip(s) {
@@ -1328,7 +1390,11 @@
 
   ['action-search-box', 'action-filter-verdict'].forEach(id => {
     document.getElementById(id)?.addEventListener('input', () => renderActionList(getVisibleRunes()));
-    document.getElementById(id)?.addEventListener('change', () => renderActionList(getVisibleRunes()));
+    document.getElementById(id)?.addEventListener('change', () => {
+      if (id === 'action-filter-verdict')
+        localStorage.setItem(ACTION_VERDICT_FILTER_KEY, document.getElementById(id).value);
+      renderActionList(getVisibleRunes());
+    });
   });
 
   // ===================== ADVANCED FORMULAS UI =====================

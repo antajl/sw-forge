@@ -1152,10 +1152,90 @@ html[lang="ru"] .btn-auto-stage {
   box-shadow: 0 4px 12px rgba(255, 215, 0, 0.35);
 }
 
+.guide-section {
+  padding: 16px 18px 18px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.guide-section + .guide-section {
+  margin-top: 14px;
+}
+
+.light-theme .guide-section {
+  background: var(--surface);
+  border-color: var(--border2);
+}
+
+.guide-section:last-child {
+  margin-bottom: 0;
+}
+
+.guide-section h3 {
+  font-family: var(--font-head);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border2);
+}
+
+.guide-section .guide-subhead {
+  font-family: var(--font-head);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-hi);
+  margin: 16px 0 8px;
+}
+
+.guide-section .guide-subhead:first-of-type {
+  margin-top: 4px;
+}
+
+.guide-section p:last-child {
+  margin-bottom: 0;
+}
+
 .guide-list p {
   margin-bottom: 8px;
   color: var(--text);
   line-height: 1.5;
+}
+
+.guide-list .guide-lead {
+  margin-bottom: 10px;
+  color: var(--text-dim);
+  font-size: 0.92rem;
+}
+
+.guide-list ul {
+  margin: 0 0 12px;
+  padding-left: 1.35rem;
+  color: var(--text);
+  line-height: 1.55;
+}
+
+.guide-list li {
+  margin-bottom: 8px;
+}
+
+.guide-list li:last-child {
+  margin-bottom: 4px;
+}
+
+.guide-list code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
 }
 
 .table-wrap { overflow-x: auto; border-radius: var(--radius-lg); border: 1px solid var(--border); }

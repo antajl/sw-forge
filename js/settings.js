@@ -160,22 +160,22 @@ const TRANSLATIONS = {
       'Suggestion needs runes at +9 or higher. Power up some runes or load another export.',
 
     stageMetricsExplainer:
-      'All +9+ runes (ignores Min Lvl). Combined into one score; weights on each card:',
+      'All +9+ runes (ignores Min Lvl). Entire combined score uses Mid preset only (power thresholds, Keep verdicts, meta share) — switching Early/Late does not change it. Weights:',
 
     stageCardHrName: 'Power share',
     stageCardHrDesc:
-      'Among +9 runes: % with power level > 0. Power counts substats at or above High Roll thresholds (same table as Rune Rules), capped 1–3 like Sheets Engine!AH.',
+      'Among +9 runes: % with power > 0. Uses Mid preset thresholds only (count subs ≥ High Roll table, cap 1–3 like Engine!AH).',
 
     stageCardKeepName: 'Avg Keep efficiency',
     stageCardKeepDesc:
-      'Mean efficiency % for Keep verdicts (in-app formula; can differ slightly from SWOP). Scoring uses min(avg / 130, 1) × 30.',
+      'Mean uncapped SWOP-style % for Keep (same formula as the table, not limited to 100). Scoring: min(avg / 130, 1) × 30. Rune Table still shows capped 0–100%.',
 
     stageCardMetaName: 'Meta sets among Keep',
     stageCardMetaDesc:
       'Among Keep runes: percent on Violent, Swift, or Will.',
 
     stageFormulaExpl:
-      'Score = 40% × power share + 30% × min(avg Keep eff / 130, 1) + 30% × meta share among Keep. Suggested stage: below 25 → Early, below 50 → Mid, otherwise Late (matches the spreadsheet).',
+      'Score = 40% × power share + 30% × min(avg Keep eff / 130, 1) + 30% × meta among Keep. Suggested stage (stricter Early than Sheets): combined score below 43 → Early, below 52 → Mid, otherwise Late.',
 
     dashboardScopeTitle: 'Global filter',
     dashboardScopeHint:
@@ -317,22 +317,22 @@ const TRANSLATIONS = {
       'Для совета нужны руны от +9. Докачайте руны или загрузите другой экспорт.',
 
     stageMetricsExplainer:
-      'Все руны от +9 (без «Мин. ур.»). Сводятся в балл; веса на карточках:',
+      'Все руны от +9 (без «Мин. ур.»). Весь сводный балл только в логике Mid (пороги power, вердикты Keep, мета) — смена Early/Late его не меняет. Веса:',
 
     stageCardHrName: 'Доля «силы субов»',
     stageCardHrDesc:
-      'Среди рун +9: % с power > 0. Считаем субы не ниже порогов High Roll (как в правилах), число субов сводится к уровню 1–3, как Engine!AH в таблице.',
+      'Среди +9: % с power > 0. Только пороги Mid и таблица High Roll; уровень 1–3 как Engine!AH.',
 
     stageCardKeepName: 'Средняя eff Keep',
     stageCardKeepDesc:
-      'Средняя эффективность % по вердикту Keep (формула приложения; может чуть отличаться от SWOP). В балл идёт min(средн./130, 1) × 30.',
+      'Средняя eff без потолка 100% (SWOP-стиль), только для совета. В балл: min(средн./130, 1) × 30. В таблице рун по-прежнему 0–100%.',
 
     stageCardMetaName: 'Мета-сеты среди Keep',
     stageCardMetaDesc:
       'Среди Keep: доля рун на Violent, Swift или Will.',
 
     stageFormulaExpl:
-      'Балл = 40% × доля power + 30% × min(средн. Keep eff / 130, 1) + 30% × доля меты среди Keep. Стадия: до 25 → Ранняя, до 50 → Средняя, иначе Поздняя (как в таблице).',
+      'Балл = 40% × доля power + 30% × min(средн. Keep eff / 130, 1) + 30% × мета среди Keep. Стадия (жёстче Early, чем в Sheets): балл ниже 43 → Ранняя, ниже 52 → Средняя, иначе Поздняя.',
 
     dashboardScopeTitle: 'Общий фильтр',
     dashboardScopeHint:

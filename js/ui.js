@@ -12,7 +12,18 @@
 
   let allRunes = [];
   let processedRunes = [];
+  /** Full process at Mid only — progression suggestion (score, Keep/meta/power) does not depend on user's Early/Late preset. */
+  let processedRunesAdvisorMid = [];
   let stage    = 'Mid';
+
+  const STAGE_FOR_PROGRESSION_ADVISOR = 'Mid';
+
+  /**
+   * Combined score (0–100) cuts for progression suggestion — stricter Early than spreadsheet 25/50.
+   * Early: genuinely weak progression; Mid: developing; Late: strong.
+   */
+  const STAGE_ADVISOR_SCORE_MID_MIN = 43;
+  const STAGE_ADVISOR_SCORE_LATE_MIN = 52;
   let sortKey  = 'eff';
   let sortDir  = 'desc';
   let globalMinLevel = 0;
@@ -422,7 +433,7 @@
 
   // Auto Game Stage button
   document.getElementById('btn-auto-stage').addEventListener('click', () => {
-    const metrics = analyzeGameStage(processedRunes);
+    const metrics = analyzeGameStage(processedRunesAdvisorMid);
     const recommendedStage = getRecommendedStage(parseFloat(metrics.score));
     const stageSelect = document.getElementById('stage-select');
     const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
@@ -535,6 +546,9 @@
 
   function reprocess() {
     processedRunes = processAll(allRunes, stage, window.SWRM.settings);
+    processedRunesAdvisorMid = allRunes.length
+      ? processAll(allRunes, STAGE_FOR_PROGRESSION_ADVISOR, window.SWRM.settings)
+      : [];
     const visible = getVisibleRunes();
     renderDashboard(visible);
     renderTable(visible);
@@ -598,6 +612,7 @@
     const keepTab = options.keepTab === true;
     allRunes = [];
     processedRunes = [];
+    processedRunesAdvisorMid = [];
     if (!keepTab) {
       document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
       document.getElementById('tab-guide').classList.remove('hidden');
@@ -756,15 +771,18 @@
 
   // ===================== GAME STAGE ANALYSIS (Sheets-aligned) =====================
   /**
+   * `runes` must be Mid-processed (processedRunesAdvisorMid): Keep/meta use Mid verdicts.
+   * Power share uses Mid High Roll thresholds only.
    * Same weighting as the spreadsheet suggestion:
    * - 40% × share of +9 runes with power level > 0 (Engine!AH / hrThresholds sub count → 1–3)
-   * - 30% × min(avg Keep eff / 130, 1)
+   * - 30% × min(avg Keep eff / 130, 1) — Keep eff uses uncapped SWOP-style % (see parser)
    * - 30% × share of Keep on Violent/Swift/Will
-   * Stage thresholds: score < 25 → Early, < 50 → Mid, else Late.
+   * Stage: score < MID_MIN → Early, else if < LATE_MIN → Mid, else Late.
    */
   function analyzeGameStage(runes) {
     const settings = window.SWRM.settings;
     const powerFn = window.SWRM.runePowerLevel0to3;
+    const effUncapped = window.SWRM.calcEfficiencyUncapped;
     const eligibleRunes = runes.filter(r => r.level >= 9);
     if (eligibleRunes.length === 0) {
       return {
@@ -778,13 +796,16 @@
 
     const total = eligibleRunes.length;
     const withPower = powerFn
-      ? eligibleRunes.filter(r => powerFn(r, stage, settings) > 0)
+      ? eligibleRunes.filter(r => powerFn(r, STAGE_FOR_PROGRESSION_ADVISOR, settings) > 0)
       : [];
     const pctAny = withPower.length / total;
 
     const keepRunes = eligibleRunes.filter(r => r.verdict === 'Keep');
     const avgKeepEff = keepRunes.length > 0
-      ? keepRunes.reduce((sum, r) => sum + r.eff, 0) / keepRunes.length
+      ? keepRunes.reduce((sum, r) => {
+          const v = effUncapped ? effUncapped(r) : r.eff;
+          return sum + v;
+        }, 0) / keepRunes.length
       : 0;
     const normKeep = Math.min(avgKeepEff / 130, 1);
 
@@ -805,8 +826,8 @@
   }
 
   function getRecommendedStage(score) {
-    if (score >= 50) return 'Late';
-    if (score >= 25) return 'Mid';
+    if (score >= STAGE_ADVISOR_SCORE_LATE_MIN) return 'Late';
+    if (score >= STAGE_ADVISOR_SCORE_MID_MIN) return 'Mid';
     return 'Early';
   }
 
@@ -821,8 +842,8 @@
     const slotMain = {1:{},2:{},3:{},4:{},5:{},6:{}};
     const effBuckets = new Array(20).fill(0); // 5% buckets: 0-4, 5-9, ..., 95-99, 100+
 
-    // Stage suggestion always uses all runes at +9+ from the full export (ignores Dashboard Min Lvl).
-    const metrics = analyzeGameStage(processedRunes);
+    // Suggestion metrics: +9+ only, Min Lvl ignored; all three terms use Mid preset processing (not current stage).
+    const metrics = analyzeGameStage(processedRunesAdvisorMid);
     const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const recStage = getRecommendedStage(parseFloat(metrics.score));
 

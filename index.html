@@ -94,7 +94,7 @@
             </div>
 
             <div class="stage-advisor-metrics-head">
-              <span id="lbl-stage-metrics-explainer">All +9+ runes (ignores Min Lvl). Combined into one score; weights on each card:</span>
+              <span id="lbl-stage-metrics-explainer">All +9+ runes (ignores Min Lvl). The whole score uses Mid rules only (power, Keep, meta) — your Early/Late preset does not change it. Weights on each card:</span>
             </div>
             <div class="stage-advisor-metrics">
               <article class="stage-metric-card">
@@ -428,7 +428,7 @@
           <p><strong>Database slots:</strong> Your first SWEX file opens as Data 1. In App Settings you can store up to four exports, see wizard name/level from the JSON, and Swap the active profile.</p>
           <p><strong>Dashboard cards:</strong> Total, Keep, Sell, Grind, Gem, Finish, Upgrade and Reapp are recalculated for the selected stage.</p>
           <p><strong>Account progression suggestion (Dashboard):</strong> Early / Mid / Late controls rule strictness. The suggestion uses all runes at +9+ in your export and ignores Min Lvl; use Apply suggestion or pick manually.</p>
-          <p><strong>How the score is computed:</strong> 40% × share of +9 runes with &quot;power&quot; &gt; 0 (substats meeting your High Roll thresholds, 1–3 scale like Sheets Engine!AH), 30% × min(average Keep efficiency / 130, 1), 30% × share of Keep on Violent/Swift/Will. Suggested stage: under 25 → Early, under 50 → Mid, else Late (same cutoffs as the spreadsheet). In-app efficiency may differ slightly from SWOP.</p>
+          <p><strong>How the score is computed:</strong> All three terms use <strong>Mid</strong> rules only (thresholds for power, Mid Keep verdicts, meta among Keep). On-screen preset does not change Combined score. Formula: 40% / 30% / 30%. Suggested stage uses stricter boundaries than the original spreadsheet so &quot;Early&quot; means weak progression: combined score below <strong>43</strong> → Early, below <strong>52</strong> → Mid, else Late. SWEX has no efficiency field — uncapped SWOP-style % is used here; Rune Table eff stays capped 0–100%.</p>
           <p><strong>Global Min Lvl:</strong> On the Dashboard, the scope bar filter applies to summary cards, charts, Rune Table, and Action List only—not to the progression suggestion block.</p>
           <p><strong>Role Distribution:</strong> Shows count and average efficiency per role. Custom roles appear automatically after saving rules.</p>
           <p><strong>Set Distribution:</strong> Bars show set count and average efficiency to identify high-value sets.</p>

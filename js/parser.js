@@ -39,15 +39,16 @@
     12: 6,    // SPD
   };
 
-  function calcEfficiency(rune) {
+  /**
+   * Raw efficiency % from SWOP-style score (2.8 baseline), not capped.
+   * SWOP can show well above 100%; UI table still uses capped calcEfficiency for a 0–100 scale.
+   */
+  function calcEfficiencyUncapped(rune) {
     let score = 0;
-    // main stat contribution = 1.0 (always max for its type)
     score += 1.0;
-    // prefix/innate = 0.5 weight
     if (rune.innate_type && SUB_MAX[rune.innate_type]) {
       score += 0.5 * (rune.innate_val / (SUB_MAX[rune.innate_type] * 5));
     }
-    // substats
     for (const s of rune.substats) {
       const maxRoll = SUB_MAX[s.type];
       if (maxRoll) {
@@ -55,9 +56,11 @@
         score += (totalVal / (maxRoll * 5));
       }
     }
-    // max possible score = 1 (main) + 0.5 (innate) + 4 subs × 1.0 = 5.5
-    // but 4-sub Legend has max 2×(1+0.5+4) = express as % of 2.8 (SWOP formula)
-    return Math.min(100, Math.round((score / 2.8) * 100 * 10) / 10);
+    return Math.round((score / 2.8) * 100 * 10) / 10;
+  }
+
+  function calcEfficiency(rune) {
+    return Math.min(100, calcEfficiencyUncapped(rune));
   }
 
   /**
@@ -200,6 +203,7 @@
   window.SWRM.parseRune  = parseRune;
   window.SWRM.parseSWEX  = parseSWEX;
   window.SWRM.calcEfficiency = calcEfficiency;
+  window.SWRM.calcEfficiencyUncapped = calcEfficiencyUncapped;
   window.SWRM.extractSwexSummary = extractSwexSummary;
   window.SWRM.countAllSwexRunes = countAllSwexRunes;
 })();

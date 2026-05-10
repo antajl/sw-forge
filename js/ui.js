@@ -50,6 +50,34 @@
     }
   }
 
+  function stageDisplayName(tr, stageKey) {
+    if (!stageKey) return '\u2014';
+    const map = { Early: tr.early, Mid: tr.mid, Late: tr.late };
+    return map[stageKey] || stageKey;
+  }
+
+  function updateStageAdvisorLabels(t) {
+    const setText = (id, text) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = text;
+    };
+    setText('lbl-stage-advisor-title', t.stageAdvisorTitle || '');
+    setText('lbl-stage-advisor-lead', t.stageAdvisorLead || '');
+    setText('lbl-stage-suggested', t.stageSuggestedLabel || '');
+    setText('lbl-stage-your-preset', t.stageYourPresetLabel || '');
+    setText('lbl-stage-score-label', t.stageScoreLabel || '');
+    setText('lbl-stage-metrics-explainer', t.stageMetricsExplainer || '');
+    setText('lbl-card-hr-name', t.stageCardHrName || '');
+    setText('lbl-card-hr-desc', t.stageCardHrDesc || '');
+    setText('lbl-card-keep-name', t.stageCardKeepName || '');
+    setText('lbl-card-keep-desc', t.stageCardKeepDesc || '');
+    setText('lbl-card-meta-name', t.stageCardMetaName || '');
+    setText('lbl-card-meta-desc', t.stageCardMetaDesc || '');
+    setText('lbl-stage-formula', t.stageFormulaExpl || '');
+    const btnAuto = document.getElementById('btn-auto-stage');
+    if (btnAuto) btnAuto.textContent = t.stageApplySuggestion || 'Apply suggestion';
+  }
+
   // ===================== LANGUAGE =====================
   function updateLanguage(lang) {
     currentLang = lang;
@@ -58,14 +86,7 @@
 
     document.documentElement.lang = lang === 'ru' ? 'ru' : 'en';
 
-    const lblHr = document.getElementById('lbl-stage-metric-highroll');
-    if (lblHr) lblHr.textContent = t.stageMetricHighRoll || 'High-roll rate:';
-    const lblKe = document.getElementById('lbl-stage-metric-keepeff');
-    if (lblKe) lblKe.textContent = t.stageMetricKeepEff || 'Keep eff.:';
-    const lblMs = document.getElementById('lbl-stage-metric-meta');
-    if (lblMs) lblMs.textContent = t.stageMetricMetaSets || 'Meta sets (Keep):';
-    const btnAutoStage = document.getElementById('btn-auto-stage');
-    if (btnAutoStage) btnAutoStage.textContent = t.autoStage || 'Auto';
+    updateStageAdvisorLabels(t);
 
     const appLangSelectEl = document.getElementById('app-language');
     if (appLangSelectEl) appLangSelectEl.value = lang;
@@ -94,14 +115,16 @@
     // Update header elements
     const uploadLabel = document.querySelector('label[for="json-upload"] span');
     if (uploadLabel) uploadLabel.textContent = '⬆ ' + t.loadJson;
-    const levelLabel = document.querySelector('.dashboard-controls label.level-filter');
-    if (levelLabel) {
-      const textNode = levelLabel.childNodes[0];
-      if (textNode) textNode.textContent = t.minLvl;
-    }
     const settingsBtn = document.getElementById('open-app-settings');
     if (settingsBtn) settingsBtn.textContent = t.settings;
-    
+
+    const scopeTitle = document.getElementById('dashboard-scope-title');
+    if (scopeTitle) scopeTitle.textContent = t.dashboardScopeTitle || '';
+    const scopeHint = document.getElementById('dashboard-scope-hint');
+    if (scopeHint) scopeHint.textContent = t.dashboardScopeHint || '';
+    const minLvlLbl = document.getElementById('dashboard-minlvl-label');
+    if (minLvlLbl) minLvlLbl.textContent = t.minLvl || '';
+
     // Update stage options (keep selected game stage)
     const stageSelect = document.getElementById('stage-select');
     if (stageSelect) {
@@ -404,19 +427,23 @@
   document.getElementById('btn-auto-stage').addEventListener('click', () => {
     const metrics = analyzeGameStage(allRunes);
     const recommendedStage = getRecommendedStage(parseFloat(metrics.score));
-    
-    // Обновляем select и переменную stage
     const stageSelect = document.getElementById('stage-select');
+    const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+
+    if (!metrics.eligibleCount) {
+      showSwrmToast(tloc.stageAdvisorNoEligible || 'Need +9 runes.', { type: 'info' });
+      return;
+    }
+
     stageSelect.value = recommendedStage;
     stage = recommendedStage;
-    
-    // Пересчитываем руны с новой стадией
     if (allRunes.length) reprocess();
-    
-    // Показываем уведомление
-    const score = parseFloat(metrics.score);
-    const message = `Auto-selected: ${recommendedStage} (Score: ${metrics.score})`;
-    console.log(message);
+
+    const name = stageDisplayName(tloc, recommendedStage);
+    showSwrmToast(
+      `${tloc.stageSuggestedLabel || 'Suggested'}: ${name} (${tloc.stageScoreLabel || 'Score'} ${metrics.score})`,
+      { type: 'success', duration: 4200 }
+    );
   });
 
   document.getElementById('global-min-level')?.addEventListener('change', e => {
@@ -736,10 +763,11 @@
     const eligibleRunes = runes.filter(r => r.level >= 9);
     if (eligibleRunes.length === 0) {
       return {
-        highRollPercent: 0,
-        keepEff: 0,
-        metaSetsPercent: 0,
-        score: 0
+        highRollPercent: '0.0',
+        keepEff: '0.0',
+        metaSetsPercent: '0.0',
+        score: '0.0',
+        eligibleCount: 0,
       };
     }
 
@@ -767,7 +795,8 @@
       highRollPercent: highRollPercent.toFixed(1),
       keepEff: keepEff.toFixed(1),
       metaSetsPercent: metaSetsPercent.toFixed(1),
-      score: score.toFixed(1)
+      score: score.toFixed(1),
+      eligibleCount: eligibleRunes.length,
     };
   }
 
@@ -788,11 +817,51 @@
     const slotMain = {1:{},2:{},3:{},4:{},5:{},6:{}};
     const effBuckets = new Array(20).fill(0); // 5% buckets: 0-4, 5-9, ..., 95-99, 100+
 
-    // Обновляем метрики Game Stage
     const metrics = analyzeGameStage(runes);
-    document.getElementById('highroll-percent').textContent = metrics.highRollPercent + '%';
-    document.getElementById('keep-eff').textContent = metrics.keepEff;
-    document.getElementById('meta-sets-percent').textContent = metrics.metaSetsPercent + '%';
+    const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const recStage = getRecommendedStage(parseFloat(metrics.score));
+
+    const metricHr = document.getElementById('metric-val-highroll');
+    const metricKe = document.getElementById('metric-val-keepeff');
+    const metricMe = document.getElementById('metric-val-meta');
+    const recDisp = document.getElementById('recommended-stage-display');
+    const scoreNum = document.getElementById('stage-score-num');
+    const mismatchLine = document.getElementById('stage-mismatch-line');
+    const noEligLine = document.getElementById('stage-noeligible-line');
+
+    if (metricHr) {
+      metricHr.textContent = metrics.eligibleCount ? `${metrics.highRollPercent}%` : '\u2014';
+    }
+    if (metricKe) {
+      metricKe.textContent = metrics.eligibleCount ? String(metrics.keepEff) : '\u2014';
+    }
+    if (metricMe) {
+      metricMe.textContent = metrics.eligibleCount ? `${metrics.metaSetsPercent}%` : '\u2014';
+    }
+
+    if (recDisp) {
+      recDisp.textContent =
+        runes.length && metrics.eligibleCount ? stageDisplayName(tloc, recStage) : '\u2014';
+    }
+    if (scoreNum) {
+      scoreNum.textContent =
+        runes.length && metrics.eligibleCount ? String(metrics.score) : '\u2014';
+    }
+
+    if (noEligLine) {
+      const showNoElig = runes.length > 0 && metrics.eligibleCount === 0;
+      noEligLine.hidden = !showNoElig;
+      if (showNoElig) noEligLine.textContent = tloc.stageAdvisorNoEligible || '';
+    }
+
+    if (mismatchLine) {
+      const showMismatch =
+        runes.length > 0 &&
+        metrics.eligibleCount > 0 &&
+        stage !== recStage;
+      mismatchLine.hidden = !showMismatch;
+      mismatchLine.textContent = showMismatch ? (tloc.stageMismatchHint || '') : '';
+    }
 
     for (const r of runes) {
       counts[r.verdict] = (counts[r.verdict] || 0) + 1;

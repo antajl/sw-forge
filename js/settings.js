@@ -144,21 +144,49 @@ const TRANSLATIONS = {
     mid: 'Mid',
     late: 'Late',
 
-    // Header stage helper (Auto stage metrics)
-    stageMetricHighRoll: 'High-roll rate:',
-    stageMetricKeepEff: 'Keep eff.:',
-    stageMetricMetaSets: 'Meta sets (Keep):',
-    autoStage: 'Auto'
+    stageAdvisorTitle: 'Account progression preset',
+    stageAdvisorLead:
+      'Early / Mid / Late controls how strict rune rules are. Pick what fits your account, or use the calculated suggestion (based on runes +9 and higher).',
+
+    stageSuggestedLabel: 'Suggested preset',
+    stageYourPresetLabel: 'Your preset',
+    stageScoreLabel: 'Combined score',
+    stageApplySuggestion: 'Apply suggestion',
+    stageMismatchHint: 'Your preset differs from the suggestion—you can still keep your choice.',
+    stageAdvisorNoEligible:
+      'Suggestion needs runes at +9 or higher. Power up some runes or load another export.',
+
+    stageMetricsExplainer:
+      'These three numbers are combined into one score (weights on each card):',
+
+    stageCardHrName: 'High-roll share',
+    stageCardHrDesc:
+      'Among +9 runes: percent that qualify as High Roll (strong substat peaks).',
+
+    stageCardKeepName: 'Keep quality index',
+    stageCardKeepDesc:
+      'Among Keep verdict runes: average efficiency vs a reference ceiling (~130%). Shown as an index 0–100.',
+
+    stageCardMetaName: 'Meta sets among Keep',
+    stageCardMetaDesc:
+      'Among Keep runes: percent on Violent, Swift, or Will.',
+
+    stageFormulaExpl:
+      'Score = 40% × high-roll share + 30% × keep quality index + 30% × meta share. Map: below 40 → Early, below 70 → Mid, otherwise Late.',
+
+    dashboardScopeTitle: 'Global filter',
+    dashboardScopeHint:
+      'Applies to the summary cards, charts below, Rune Table, and Action List.'
   },
   ru: {
     // Header
     title: 'SW Rune Master',
     dashboard: 'Панель',
-    runeTable: 'Таблица Рун',
-    actionList: 'Список действий',
-    runeRules: 'Правила Рун',
-    guide: 'Инструкция',
-    changelog: 'Изменения',
+    runeTable: 'Руны',
+    actionList: 'Действия',
+    runeRules: 'Правила',
+    guide: 'Гайд',
+    changelog: 'Лог',
     loadJson: 'Загрузить JSON',
     minLvl: 'Мин Ур',
     settings: 'Настройки',
@@ -188,10 +216,10 @@ const TRANSLATIONS = {
     gem: 'Камень',
     
     // Charts
-    roleDistribution: 'Распределение Ролей',
-    setDistribution: 'Распределение Сетов',
-    slotDistribution: 'Распределение Слотов',
-    efficiencyDistribution: 'Распределение Эффективности',
+    roleDistribution: 'Роли',
+    setDistribution: 'Сеты',
+    slotDistribution: 'Слоты',
+    efficiencyDistribution: 'Эффективность',
     
     // Table
     searchPlaceholder: 'Поиск по сету, стату, роли...',
@@ -244,7 +272,7 @@ const TRANSLATIONS = {
     resetDefaults: 'Сбросить по умолчанию',
     
     // App settings
-    appSettings: 'Настройки Приложения',
+    appSettings: 'Приложение',
     language: 'Язык',
     theme: 'Тема',
     dbSlot: 'Слот Базы Данных',
@@ -270,10 +298,39 @@ const TRANSLATIONS = {
     mid: 'Средняя',
     late: 'Поздняя',
 
-    stageMetricHighRoll: 'Доля High Roll:',
-    stageMetricKeepEff: 'Ср. эфф. Keep:',
-    stageMetricMetaSets: 'Мета-сеты (Keep):',
-    autoStage: 'Авто'
+    stageAdvisorTitle: 'Профиль прогресса аккаунта',
+    stageAdvisorLead:
+      'Ранняя / Средняя / Поздняя задаёт строгость правил для рун. Выберите вручную или используйте расчётный совет (по рунам от +9).',
+
+    stageSuggestedLabel: 'Советуемый профиль',
+    stageYourPresetLabel: 'Ваш выбор',
+    stageScoreLabel: 'Сводный балл',
+    stageApplySuggestion: 'Применить совет',
+    stageMismatchHint: 'Ваш выбор отличается от совета — так можно оставить.',
+    stageAdvisorNoEligible:
+      'Для совета нужны руны от +9. Докачайте руны или загрузите другой экспорт.',
+
+    stageMetricsExplainer:
+      'Три показателя объединяются в один балл (веса указаны на карточках):',
+
+    stageCardHrName: 'Доля High Roll',
+    stageCardHrDesc:
+      'Среди рун +9: процент с ролью High Roll (очень сильные субстаты).',
+
+    stageCardKeepName: 'Качество Keep',
+    stageCardKeepDesc:
+      'Среди рун с вердиктом Keep: средняя эффективность относительно ориентира (~130%). Показатель 0–100.',
+
+    stageCardMetaName: 'Мета-сеты среди Keep',
+    stageCardMetaDesc:
+      'Среди Keep: доля рун на Violent, Swift или Will.',
+
+    stageFormulaExpl:
+      'Балл = 40% × доля HR + 30% × индекс качества Keep + 30% × доля меты. До 40 → Ранняя, до 70 → Средняя, иначе Поздняя.',
+
+    dashboardScopeTitle: 'Общий фильтр',
+    dashboardScopeHint:
+      'Учитывается в карточках сводки, графиках ниже, таблице рун и списке действий.'
   }
 };
 

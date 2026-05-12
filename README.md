@@ -1,34 +1,133 @@
 # SW Rune Master
 
-A client-side rune analyzer for Summoners War, powered by your SWEX JSON export.
+A **browser-only** rune analyzer for **Summoners War**. Load your **[SWEX](https://github.com/Xzandro/sw-exporter/releases/latest)** JSON export and get **verdicts**, **role fits**, **dashboard stats**, and tunable **rules** — no server upload, no SWOP/CSV step for the main workflow.
 
-🔗 **Live site:** https://antajl.github.io/sw-rune-master/
+The project grew out of a **[community-driven Google Sheet](#google-sheet-alternative)** with the same pipeline mindset (pre-checks → scouting → archetypes → grind/gem/reapp). **This web app is now the primary surface**; the sheet remains a supported alternative if you prefer spreadsheets.
+
+**Live site:** https://antajl.github.io/sw-rune-master/
+
+---
+
+## Why use the web app vs. a spreadsheet
+
+| | Web app | Classic sheet workflow |
+|---|---------|------------------------|
+| Data in | **SWEX JSON** directly | SWEX → SWOP → **CSV** import |
+| Runtime | Your browser (no account DB) | Google Sheets formulas |
+| UX | Dashboard, table, rules panels, guide | Tabs & cells |
+| Profiles | Up to **4** saved exports (slots) | Copy / duplicate files |
 
 ---
 
 ## Features
 
-- **Load SWEX JSON** — drag & drop your export file, all processing happens in the browser
-- **Dashboard** — role distribution, set/slot breakdown, efficiency histogram, verdict summary
-- **Rune Table** — sortable, filterable table with stat chips, roles and verdicts
-- **Settings** — Constants-driven thresholds, Duo Roll lines, God Roll line, and per-role filters (substats, must-haves, min stats)
+### Data & privacy
 
-## How to use
+- **SWEX JSON** — drag & drop or file picker; parsing and scoring run **entirely on your device**.
+- **Database slots** — store up to **four** exports in **App Settings** and swap the active profile.
+- **Clear saved data** — removes stored runes/settings for this origin when you need a clean slate.
 
-1. Export your account with [SWEX](https://github.com/Xzandro/sw-exporter/releases/latest)
-2. Open the site and click **Load JSON**
-3. Select your stage (Early / Mid / Late)
-4. Review your runes on the Dashboard and Rune Table
+### Dashboard
 
-## Role system
+- **Verdict mix** and summary cards — click through to the **Rune Table** with matching filters.
+- **Charts** — role / set / slot distributions, efficiency histogram (with median).
+- **Global filters** — min level & min grade apply to verdict cards, charts, histogram, and table (not to the progression block).
+- **Copy summary** — text snapshot of filters, verdicts, charts, and efficiency stats.
+- **Account progression (Depth v2)** — combined score from **Speed Depth**, **Power Depth**, and **Elite Quality**; suggested **Early / Mid / Late** stage with optional **Apply suggestion**.
 
-| Role | Key stats |
-|---|---|
-| Bruiser | SPD + HP% + ATK% + DEF% + CRate |
-| Fast CC | SPD + HP%/DEF%/ACC |
-| Tank | HP% + DEF% + RES |
-| Bomber | ATK% + ACC |
-| Classic DPS | SPD + ATK% + CRate + CDmg |
-| Slow DPS | ATK% + CRate + CDmg (no SPD) |
-| Duo Roll | Synergy pairs (SPD+X, CRate+CDmg, etc.) |
-| High Roll | One exceptional stat (God line from Constants) |
+### Rune Table
+
+- Search, header filters (verdict, role, grade, set, slot, main stat), column sort.
+- Optional **Eff over 100%** column (same formula, uncapped — aligns with elite / god-tier comparisons).
+- **Dense rows** toggle; **CSV export**; **Target** hints for Gem/Grind when relevant.
+- Large matches may **paginate** the grid for speed — **Load all** pulls the full filtered list when needed.
+- **Shareable URL** — `#runetable?…` query preserves filters/sort/search on this browser.
+
+### Rune Rules
+
+- **Engine** — eight-stat constants; read-only **God / Duo / stage High Roll** previews.
+- **Verdict** — separate cards for **Gem**, **Grind**, **Reapp** (apply with **Save & Recalculate**).
+- **Roles** — six archetype formulas; edits save and reprocess continuously.
+- Last-opened **subtab** is remembered for the session.
+
+### Guide & Changelog
+
+- **Guide** — onboarding sections (getting started, dashboard, depth, table, rules, tips); EN/RU body where applicable.
+- **Changelog** — release notes ship with the build (see also version in the footer).
+
+### Interface
+
+- Light / dark theme; **English / Русский** for translated UI strings (**App Settings**).
+
+---
+
+## Role archetypes
+
+Thresholds tighten as **account depth** increases (same design goal as the original sheet). The six archetypes:
+
+| Role | Idea |
+|------|------|
+| **Classic DPS** | SPD + ATK% + CRate + CDmg — standard speedy attackers |
+| **Slow DPS** | ATK% + CRate + CDmg — nukers that don’t compete for first turn |
+| **Bomber** | ATK% + SPD + ACC — bomb-style attackers |
+| **Fast CC** | SPD + ACC (+ bulk where relevant) — fast controllers |
+| **Tank** | HP% + DEF% + RES — effective bulk |
+| **Bruiser** | Mix of survivability and crit-based damage |
+
+On top of roles, **God Roll**, **Duo Roll**, **Reapp**, and **Grind** layers implement rescue paths and optimization — see the in-app **Guide** for details.
+
+---
+
+## Quick start
+
+1. Export your account with **SWEX** (JSON).
+2. Open the **[live site](https://antajl.github.io/sw-rune-master/)** and choose **Load JSON**.
+3. Set **Early / Mid / Late** if you want to override the suggestion from Depth v2.
+4. Use **Dashboard** for overview, **Rune Table** for row-level review, **Rune Rules** to tune logic.
+
+### Run locally
+
+Static files only — open `index.html` in a browser or serve the repo root:
+
+```bash
+# Python 3
+python -m http.server 8080
+# then open http://localhost:8080
+```
+
+---
+
+## Google Sheet alternative
+
+If you prefer the original spreadsheet workflow (SWOP **CSV** → sheet):
+
+**[Open the Google Sheet](https://docs.google.com/spreadsheets/d/1Xq6GlFzHS-_8f_4kHGPmOWq7OZfdcG_ESo7pInKHXrQ/edit?usp=drivesdk)**
+
+1. **File → Make a copy**
+2. SWEX → SWOP → Runes → **Export as CSV**
+3. In your copy: **Raw Data** → **File → Import → Upload**  
+   - Replace current sheet · Separator **Custom** `;` · Convert text to numbers **Yes**
+
+Verdicts appear in **Column S** after import. Changelog lives on a dedicated sheet inside the file.
+
+---
+
+## Pipeline (conceptual)
+
+Each rune passes through staged checks — **upgrade gate** → **bad flats** → **reapp / meta scouting** → **God & Duo signals** → **role archetypes** → **grind/gem** optimization — ending in **one verdict**. The web app surfaces this as Dashboard + Table + Rules instead of hidden formulas.
+
+---
+
+## Contributing & feedback
+
+Early public builds benefit from **real exports** and honest feedback (wrong verdicts, UI issues, performance). Issues and PRs welcome.
+
+If you maintain a **super late-game** box and want to help validate **preset bundles** for regression tests, reach out via Issues.
+
+---
+
+## Disclaimer
+
+**Summoners War™** is a trademark of **Com2uS Corp.** This project is **not** affiliated with or endorsed by Com2uS.
+
+Third-party tools (**SWEX**, **SWOP**) are subject to their authors and game terms of use — use at your own discretion.

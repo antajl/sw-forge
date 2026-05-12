@@ -931,6 +931,24 @@ html.swrm-runetable-active .footer-shell {
 .light-theme .upload-prompt {
   background: rgba(250, 249, 246, 0.94);
 }
+.upload-prompt.is-dragover {
+  background: color-mix(in srgb, var(--accent) 14%, rgba(10, 12, 16, 0.92));
+}
+.light-theme .upload-prompt.is-dragover {
+  background: color-mix(in srgb, var(--accent) 12%, rgba(250, 249, 246, 0.94));
+}
+.upload-prompt.is-dragover .prompt-card {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--accent) 38%, transparent),
+    0 0 48px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+.prompt-drag-hint {
+  margin: -8px 0 22px;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--text-dim);
+}
 .prompt-card {
   background: var(--bg2); border: 1px solid var(--border);
   border-radius: var(--radius-lg); padding: 44px 48px 40px;

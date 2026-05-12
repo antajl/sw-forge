@@ -28,7 +28,7 @@ const GRADE_NAMES = { 1:'Common', 2:'Magic', 3:'Rare', 4:'Hero', 5:'Legend' };
 const GRADE_SHORT = { 3:'Rare', 4:'Hero', 5:'Legend' };
 
 /** Shown in footer, changelog, and Copy summary — bump when shipping a user-visible build. */
-const APP_VERSION = '1.2.7';
+const APP_VERSION = '1.2.8';
 
 // ==== TRANSLATIONS ====
 const TRANSLATIONS = {
@@ -80,6 +80,8 @@ const TRANSLATIONS = {
     chooseJsonFile: 'Choose JSON file',
     privacyNote: 'All processing happens in your browser — your data never leaves your device.',
     uploadPromptLead: 'Export with Summoners War Exporter (SWEX), then select your .json file. Analysis runs entirely in this browser.',
+    uploadPromptDragHint: 'Or drag and drop your .json file anywhere on this screen.',
+    uploadDropMultipleHint: 'Multiple files dropped — loading the first one only.',
     uploadPromptSecondary: 'This becomes your active profile (Data 1). Add or switch accounts in App Settings → Database Slots.',
     uploadClearAll: 'Clear all saved data',
     lvAbbr: 'Lv.',
@@ -358,6 +360,8 @@ const TRANSLATIONS = {
     chooseJsonFile: 'Выбрать JSON файл',
     privacyNote: 'Все обработка происходит в вашем браузере — ваши данные никогда не покидают ваше устройство.',
     uploadPromptLead: 'Экспортируйте аккаунт через Summoners War Exporter (SWEX) и выберите .json файл. Всё считается только в браузере.',
+    uploadPromptDragHint: 'Или перетащите .json файл в любое место этого экрана.',
+    uploadDropMultipleHint: 'Несколько файлов — загружается только первый.',
     uploadPromptSecondary: 'Файл станет активным профилем (Data 1). Другие аккаунты — в Настройках приложения → Слоты баз данных.',
     uploadClearAll: 'Удалить все сохранения',
     lvAbbr: 'Ур.',
@@ -1259,6 +1263,7 @@ const STATIC_CHANGELOG = [
     date: '2026-05-12',
     items: {
       en: [
+        '**v1.2.8** — Upload overlay: drag-and-drop SWEX .json onto the full-screen prompt (plus hint text); same load path as the file picker.',
         '**v1.2.7** — Guide tab: six named subtabs (Getting started, Dashboard, Account depth, Rune Table, Rune Rules, Tips & FAQ), fuller everyday copy in EN/RU, session memory for the active subsection.',
         '**v1.2.6** — Removed misleading SET_NAMES entry “Immemorial” (99): not an equippable rune set in-game; rare SWEX `set_id` 99 labels as Set99.',
         '**v1.2.5** — Set Distribution: sort sets by count (descending); scrollbar hidden while scrolling still works.',
@@ -1289,6 +1294,7 @@ const STATIC_CHANGELOG = [
         'Debug: each parsed rune keeps `_raw` from SWEX for troubleshooting.',
       ],
       ru: [
+        '**v1.2.8** — Окно загрузки: перетаскивание SWEX .json на полноэкранный оверлей (подсказка в тексте); тот же путь загрузки, что и у кнопки выбора файла.',
         '**v1.2.7** — Вкладка Гайд: шесть подразделов по названию (начало, панель, глубина, таблица, правила, советы), расширенный текст EN/RU, запоминание активного подраздела на сессию.',
         '**v1.2.6** — Убрано имя «Immemorial» для set_id 99: это не полноценный сет рун в игре; при редком значении 99 в SWEX показывается Set99.',
         '**v1.2.5** — Распределение по сетам: сортировка по числу рун по убыванию; полоса прокрутки скрыта, прокрутка колесом/тачем сохранена.',

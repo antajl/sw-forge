@@ -424,6 +424,8 @@
       if (titleEl) titleEl.textContent = t.loadYourSWEX;
       const leadEl = document.getElementById('upload-prompt-lead');
       if (leadEl) leadEl.textContent = t.uploadPromptLead || t.uploadDescription;
+      const dragHintEl = document.getElementById('upload-prompt-drag-hint');
+      if (dragHintEl) dragHintEl.textContent = t.uploadPromptDragHint || '';
       const secEl = document.getElementById('upload-prompt-secondary');
       if (secEl) secEl.textContent = t.uploadPromptSecondary || '';
       const ctaEl = document.getElementById('upload-prompt-cta');
@@ -861,61 +863,7 @@
   });
 
   // ===================== FILE UPLOAD =====================
-  document.getElementById('json-upload').addEventListener('change', async e => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async ev => {
-      try {
-        const jsonText = ev.target.result;
-        const json = JSON.parse(jsonText);
-        allRunes = parseSWEX(json);
-        reprocess();
-        
-        // Check file size and save to appropriate storage
-        const fileSizeKB = Math.round(jsonText.length / 1024);
-        const maxLocalStorageSize = 4 * 1024; // 4MB limit for localStorage
-        
-        if (fileSizeKB <= maxLocalStorageSize) {
-          // Use localStorage for small files
-          localStorage.setItem('loadedRunes', jsonText);
-          localStorage.setItem('loadedRunesName', file.name);
-          localStorage.setItem('loadedRunesDate', new Date().toISOString());
-          localStorage.setItem('loadedRunesSize', fileSizeKB.toString());
-          console.log(`Saved ${file.name} (${fileSizeKB}KB) to localStorage`);
-        } else {
-          // Use IndexedDB for large files
-          try {
-            await saveSlotData('current-runes', jsonText);
-            localStorage.setItem('loadedRunesName', file.name);
-            localStorage.setItem('loadedRunesDate', new Date().toISOString());
-            localStorage.setItem('loadedRunesSize', fileSizeKB.toString());
-            localStorage.setItem('loadedRunesStorage', 'indexeddb');
-            console.log(`Saved ${file.name} (${fileSizeKB}KB) to IndexedDB`);
-          } catch (err) {
-            alert(`Failed to save large file (${fileSizeKB}KB): ${err.message}`);
-            return;
-          }
-        }
-        
-        const slots = loadDbSlots();
-        const targetSlot = slots.find(s => s.id === 1) || slots[0];
-        applySlotSummaryFromJson(targetSlot, file.name, json);
-        targetSlot.active = true;
-        slots.forEach(s => { if (s.id !== targetSlot.id) s.active = false; });
-        saveDbSlots(slots);
-        
-        // Save actual JSON to IndexedDB
-        await saveSlotData(targetSlot.id, jsonText);
-        
-        document.getElementById('upload-prompt').classList.add('hidden');
-        showMainTab('dashboard', { writeHash: true });
-      } catch(err) {
-        alert('Failed to parse JSON: ' + err.message);
-      }
-    };
-    reader.readAsText(file);
-  });
+  // Initial SWEX load (file picker + drag-and-drop on #upload-prompt): see loadSwexJsonFromFile below.
 
   // Close upload prompt overlay (load later via App Settings → slot Upload, or refresh to see prompt again)
   document.getElementById('close-upload-prompt')?.addEventListener('click', () => {
@@ -944,6 +892,120 @@
     renderDashboard(visible);
     renderTable(visible);
   }
+
+  function readFileAsText(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(reader.error || new Error('Read failed'));
+      reader.readAsText(file);
+    });
+  }
+
+  /** First-time SWEX JSON from disk → Data 1 (same pipeline as #json-upload). */
+  async function loadSwexJsonFromFile(file) {
+    if (!file) return;
+    let jsonText;
+    try {
+      jsonText = await readFileAsText(file);
+    } catch (err) {
+      alert(`Could not read file: ${err && err.message ? err.message : String(err)}`);
+      return;
+    }
+    try {
+      const json = JSON.parse(jsonText);
+      allRunes = parseSWEX(json);
+      reprocess();
+
+      const fileSizeKB = Math.round(jsonText.length / 1024);
+      const maxLocalStorageSize = 4 * 1024;
+
+      if (fileSizeKB <= maxLocalStorageSize) {
+        localStorage.setItem('loadedRunes', jsonText);
+        localStorage.setItem('loadedRunesName', file.name);
+        localStorage.setItem('loadedRunesDate', new Date().toISOString());
+        localStorage.setItem('loadedRunesSize', fileSizeKB.toString());
+        console.log(`Saved ${file.name} (${fileSizeKB}KB) to localStorage`);
+      } else {
+        try {
+          await saveSlotData('current-runes', jsonText);
+          localStorage.setItem('loadedRunesName', file.name);
+          localStorage.setItem('loadedRunesDate', new Date().toISOString());
+          localStorage.setItem('loadedRunesSize', fileSizeKB.toString());
+          localStorage.setItem('loadedRunesStorage', 'indexeddb');
+          console.log(`Saved ${file.name} (${fileSizeKB}KB) to IndexedDB`);
+        } catch (err) {
+          alert(`Failed to save large file (${fileSizeKB}KB): ${err.message}`);
+          return;
+        }
+      }
+
+      const slots = loadDbSlots();
+      const targetSlot = slots.find(s => s.id === 1) || slots[0];
+      applySlotSummaryFromJson(targetSlot, file.name, json);
+      targetSlot.active = true;
+      slots.forEach((s) => {
+        if (s.id !== targetSlot.id) s.active = false;
+      });
+      saveDbSlots(slots);
+
+      await saveSlotData(targetSlot.id, jsonText);
+
+      document.getElementById('upload-prompt').classList.add('hidden');
+      showMainTab('dashboard', { writeHash: true });
+    } catch (err) {
+      alert('Failed to parse JSON: ' + err.message);
+    }
+  }
+
+  function initUploadPromptDragDrop() {
+    const overlay = document.getElementById('upload-prompt');
+    if (!overlay || overlay.dataset.swrmDragInit === '1') return;
+    overlay.dataset.swrmDragInit = '1';
+
+    overlay.addEventListener('dragenter', (e) => {
+      if (overlay.classList.contains('hidden')) return;
+      e.preventDefault();
+      overlay.classList.add('is-dragover');
+    });
+
+    overlay.addEventListener('dragover', (e) => {
+      if (overlay.classList.contains('hidden')) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+    });
+
+    overlay.addEventListener('dragleave', (e) => {
+      const rt = e.relatedTarget;
+      if (rt && overlay.contains(rt)) return;
+      overlay.classList.remove('is-dragover');
+    });
+
+    overlay.addEventListener('drop', async (e) => {
+      e.preventDefault();
+      overlay.classList.remove('is-dragover');
+      if (overlay.classList.contains('hidden')) return;
+      const files = e.dataTransfer && e.dataTransfer.files;
+      if (!files || files.length === 0) return;
+      const file = files[0];
+      if (files.length > 1) {
+        const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+        showSwrmToast(tloc.uploadDropMultipleHint || 'Using the first file only.', {
+          type: 'info',
+          duration: 4200,
+        });
+      }
+      await loadSwexJsonFromFile(file);
+    });
+  }
+
+  document.getElementById('json-upload').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    await loadSwexJsonFromFile(file);
+    e.target.value = '';
+  });
+  initUploadPromptDragDrop();
 
   /** Parse stored SWEX JSON (string or object) and populate allRunes. */
   function tryHydrateRunesFromJsonText(raw) {

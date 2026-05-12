@@ -30,19 +30,29 @@
             <button type="button" class="tab" data-tab="app-settings">App Settings</button>
           </nav>
         </div>
-        <div class="header-theme-group" id="header-theme-group" role="group" aria-label="Color theme">
-          <button type="button" class="header-theme-btn is-active" id="theme-sun" aria-pressed="true" title="Light theme">
-            <svg class="header-theme-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-              <circle cx="12" cy="12" r="4" fill="currentColor" />
-              <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m12.02-12.02 1.41-1.41" />
-            </svg>
-          </button>
-          <button type="button" class="header-theme-btn" id="theme-moon" aria-pressed="false" title="Dark theme">
-            <svg class="header-theme-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-              <path fill="currentColor" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
-            </svg>
-          </button>
+        <div class="header-corner-cluster">
+          <div class="header-donate-group">
+            <a href="https://app.lava.top/antajl?tabId=donate" class="header-theme-btn header-theme-btn--wide" id="header-donate-link" target="_blank" rel="noopener noreferrer">
+              <svg class="header-theme-icon header-donate-heart" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path fill="currentColor" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+              </svg>
+              <span id="lbl-header-donate">Donate</span>
+            </a>
+          </div>
+          <div class="header-theme-group" id="header-theme-group" role="group" aria-label="Color theme">
+            <button type="button" class="header-theme-btn is-active" id="theme-sun" aria-pressed="true" title="Light theme">
+              <svg class="header-theme-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <circle cx="12" cy="12" r="4" fill="currentColor" />
+                <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                  d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m12.02-12.02 1.41-1.41" />
+              </svg>
+            </button>
+            <button type="button" class="header-theme-btn" id="theme-moon" aria-pressed="false" title="Dark theme">
+              <svg class="header-theme-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path fill="currentColor" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -55,32 +65,16 @@
     <section id="tab-dashboard" class="tab-content hidden">
       <div class="dashboard-grid">
 
-        <div class="dashboard-stage-wrap">
-          <div class="stage-advisor" id="stage-advisor">
-            <div class="stage-advisor-intro">
+        <div class="dashboard-stage-wrap dashboard-hero">
+          <div class="stage-advisor is-compact" id="stage-advisor">
+            <div class="stage-advisor-bar">
               <p class="stage-advisor-title" id="lbl-stage-advisor-title">Account progression suggestion</p>
-              <p class="stage-advisor-lead" id="lbl-stage-advisor-lead">
-                Early, Mid, and Late change how strict the rules are. The combined score estimates account depth from your full rune export (Rare and above): fast runes, upgraded runes, and quality on your best pieces. It ignores the preset below and the dashboard minimum level filter.
-              </p>
-            </div>
-
-            <div class="stage-advisor-actions">
-              <div class="stage-advisor-suggestion">
+              <div class="stage-advisor-bar-suggest">
                 <span class="stage-advisor-suggestion-label" id="lbl-stage-suggested">Suggested stage</span>
-                <div class="stage-advisor-suggestion-line">
-                  <div class="stage-advisor-suggestion-result">
-                    <strong class="stage-advisor-suggestion-value" id="recommended-stage-display">—</strong>
-                    <span class="stage-advisor-score-wrap">
-                      (<span id="lbl-stage-score-label">Combined score</span>
-                      <span class="stage-advisor-score-num" id="stage-score-num">—</span>)
-                    </span>
-                  </div>
-                  <button type="button" class="btn-auto-stage" id="btn-auto-stage">Apply suggestion</button>
-                </div>
-                <p class="stage-advisor-mismatch" id="stage-mismatch-line" hidden></p>
-                <p class="stage-advisor-noeligible" id="stage-noeligible-line" hidden></p>
+                <strong class="stage-advisor-suggestion-value" id="recommended-stage-display">—</strong>
               </div>
-              <div class="stage-advisor-controls">
+              <button type="button" class="btn-auto-stage" id="btn-auto-stage">Apply suggestion</button>
+              <div class="stage-advisor-controls stage-advisor-controls--bar">
                 <label class="stage-advisor-preset-label" for="stage-select" id="lbl-stage-your-preset">Your preset</label>
                 <div class="stage-select-wrap">
                   <select id="stage-select">
@@ -90,94 +84,142 @@
                   </select>
                 </div>
               </div>
+              <button type="button" class="btn-stage-compact" id="btn-stage-compact" aria-expanded="false" title="More"></button>
             </div>
 
-            <div class="stage-advisor-metrics-head">
-              <span id="lbl-stage-metrics-explainer">These three numbers always use your full export — not the preset or Min level below. Card weights:</span>
+            <div class="stage-advisor-expanded">
+              <p class="stage-advisor-lead" id="lbl-stage-advisor-lead">
+                Early, Mid, and Late change how strict the rules are. The combined score estimates account depth from your full rune export (Rare and above): fast runes, upgraded runes, and quality on your best pieces. It ignores the preset below and the dashboard minimum level filter.
+              </p>
+              <div class="stage-advisor-score-block">
+                <span id="lbl-stage-score-label">Combined score</span>
+                <span class="stage-advisor-score-num" id="stage-score-num">—</span>
+              </div>
+              <p class="stage-advisor-mismatch" id="stage-mismatch-line" hidden></p>
+              <p class="stage-advisor-noeligible" id="stage-noeligible-line" hidden></p>
+
+              <div class="stage-advisor-metrics-head">
+                <span id="lbl-stage-metrics-explainer">These three numbers always use your full export — not the preset or Min level below. Card weights:</span>
+              </div>
+              <div class="stage-advisor-metrics">
+                <article class="stage-metric-card">
+                  <header class="stage-metric-card-head">
+                    <span id="lbl-card-hr-name">Speed Depth</span>
+                    <span class="stage-metric-weight" id="lbl-card-hr-weight">35%</span>
+                  </header>
+                  <p class="stage-metric-val" id="metric-val-highroll">—</p>
+                  <p class="stage-metric-contrib" id="metric-contrib-spd" hidden></p>
+                  <p class="stage-metric-desc" id="lbl-card-hr-desc"></p>
+                </article>
+                <article class="stage-metric-card">
+                  <header class="stage-metric-card-head">
+                    <span id="lbl-card-keep-name">Power Depth</span>
+                    <span class="stage-metric-weight" id="lbl-card-keep-weight">35%</span>
+                  </header>
+                  <p class="stage-metric-val" id="metric-val-keepeff">—</p>
+                  <p class="stage-metric-contrib" id="metric-contrib-plus15" hidden></p>
+                  <p class="stage-metric-desc" id="lbl-card-keep-desc"></p>
+                </article>
+                <article class="stage-metric-card">
+                  <header class="stage-metric-card-head">
+                    <span id="lbl-card-meta-name">Elite Quality</span>
+                    <span class="stage-metric-weight" id="lbl-card-meta-weight">30%</span>
+                  </header>
+                  <p class="stage-metric-val" id="metric-val-meta">—</p>
+                  <p class="stage-metric-contrib" id="metric-contrib-elite" hidden></p>
+                  <p class="stage-metric-desc" id="lbl-card-meta-desc"></p>
+                </article>
+              </div>
+              <p class="stage-advisor-formula" id="lbl-stage-formula" hidden></p>
             </div>
-            <div class="stage-advisor-metrics">
-              <article class="stage-metric-card">
-                <header class="stage-metric-card-head">
-                  <span id="lbl-card-hr-name">Speed Depth</span>
-                  <span class="stage-metric-weight" id="lbl-card-hr-weight">35%</span>
-                </header>
-                <p class="stage-metric-val" id="metric-val-highroll">—</p>
-                <p class="stage-metric-desc" id="lbl-card-hr-desc"></p>
-              </article>
-              <article class="stage-metric-card">
-                <header class="stage-metric-card-head">
-                  <span id="lbl-card-keep-name">Power Depth</span>
-                  <span class="stage-metric-weight" id="lbl-card-keep-weight">35%</span>
-                </header>
-                <p class="stage-metric-val" id="metric-val-keepeff">—</p>
-                <p class="stage-metric-desc" id="lbl-card-keep-desc"></p>
-              </article>
-              <article class="stage-metric-card">
-                <header class="stage-metric-card-head">
-                  <span id="lbl-card-meta-name">Elite Quality</span>
-                  <span class="stage-metric-weight" id="lbl-card-meta-weight">30%</span>
-                </header>
-                <p class="stage-metric-val" id="metric-val-meta">—</p>
-                <p class="stage-metric-desc" id="lbl-card-meta-desc"></p>
-              </article>
-            </div>
-            <p class="stage-advisor-formula" id="lbl-stage-formula" hidden></p>
           </div>
         </div>
 
-        <div class="dashboard-scope-bar">
-          <div class="dashboard-scope-bar-text">
-            <span class="dashboard-scope-title" id="dashboard-scope-title">Global filter</span>
-            <span class="dashboard-scope-hint" id="dashboard-scope-hint">Applies to the summary cards, charts below, and Rune Table. The suggested stage above is calculated from the full export separately.</span>
+        <div class="dashboard-scope-row">
+          <div class="dashboard-scope-bar">
+            <div class="dashboard-scope-bar-text">
+              <span class="dashboard-scope-title" id="dashboard-scope-title">Global filter</span>
+              <span class="dashboard-scope-hint" id="dashboard-scope-hint">Applies to the summary cards, charts below, and Rune Table. The suggested stage above is calculated from the full export separately.</span>
+            </div>
+            <div class="dashboard-scope-controls">
+              <label class="level-filter dashboard-min-level" for="global-min-level">
+                <span id="dashboard-minlvl-label">Min Level</span>
+                <select id="global-min-level">
+                  <option value="0">+0</option>
+                  <option value="3">+3</option>
+                  <option value="6">+6</option>
+                  <option value="9">+9</option>
+                  <option value="12">+12</option>
+                  <option value="15">+15</option>
+                </select>
+              </label>
+              <label class="level-filter dashboard-min-grade" for="global-min-grade">
+                <span id="dashboard-mingrade-label">Min grade</span>
+                <select id="global-min-grade">
+                  <option value="3">Rare+</option>
+                  <option value="4">Hero+</option>
+                  <option value="5">Legend</option>
+                </select>
+              </label>
+            </div>
           </div>
-          <div class="dashboard-scope-control">
-            <label class="level-filter dashboard-min-level" for="global-min-level">
-              <span id="dashboard-minlvl-label">Min Level</span>
-              <select id="global-min-level">
-                <option value="0">+0</option>
-                <option value="3">+3</option>
-                <option value="6">+6</option>
-                <option value="9">+9</option>
-                <option value="12">+12</option>
-                <option value="15">+15</option>
-              </select>
-            </label>
+          <div class="dashboard-export-aside">
+            <button type="button" class="btn-dashboard-export-standalone" id="btn-dashboard-export-summary">Copy summary</button>
           </div>
         </div>
 
-        <!-- Summary cards -->
-        <div class="summary-strip">
-          <div class="stat-card" id="sc-total">
+        <div class="dashboard-verdict-panel">
+          <div class="panel-title" id="lbl-verdict-mix-title">Verdict mix</div>
+          <div id="verdict-stack" class="dashboard-verdict-stack" role="img" aria-hidden="true"></div>
+          <p class="dashboard-verdict-stack-hint" id="lbl-verdict-stack-hint"></p>
+        </div>
+
+        <div class="dashboard-summary-area">
+          <div class="stat-card stat-card-total stat-card--clickable" id="sc-total" tabindex="0" role="button" data-dash-filter="all">
             <div class="sc-label">Total Runes</div>
             <div class="sc-value">—</div>
+            <div class="sc-pct" id="sc-total-pct"></div>
           </div>
-          <div class="stat-card keep" id="sc-keep">
-            <div class="sc-label">Keep</div>
-            <div class="sc-value">—</div>
+          <h4 class="summary-group-title" id="lbl-dash-group-keepers">Stash &amp; power</h4>
+          <div class="summary-cards-row summary-cards-row--keepers">
+            <div class="stat-card keep stat-card--clickable" id="sc-keep" tabindex="0" role="button" data-dash-filter="verdict" data-dash-verdict="Keep">
+              <div class="sc-label">Keep</div>
+              <div class="sc-value">—</div>
+              <div class="sc-pct"></div>
+            </div>
+            <div class="stat-card finish stat-card--clickable" id="sc-finish" tabindex="0" role="button" data-dash-filter="verdict" data-dash-verdict="Finish">
+              <div class="sc-label">Finish</div>
+              <div class="sc-value">—</div>
+              <div class="sc-pct"></div>
+            </div>
+            <div class="stat-card upgrade stat-card--clickable" id="sc-upgrade" tabindex="0" role="button" data-dash-filter="verdict" data-dash-verdict="Upgrade">
+              <div class="sc-label">Upgrade</div>
+              <div class="sc-value">—</div>
+              <div class="sc-pct"></div>
+            </div>
+            <div class="stat-card gem stat-card--clickable" id="sc-gem" tabindex="0" role="button" data-dash-filter="verdict" data-dash-verdict="Gem">
+              <div class="sc-label">Gem</div>
+              <div class="sc-value">—</div>
+              <div class="sc-pct"></div>
+            </div>
           </div>
-          <div class="stat-card sell" id="sc-sell">
-            <div class="sc-label">Sell</div>
-            <div class="sc-value">—</div>
-          </div>
-          <div class="stat-card grind" id="sc-grind">
-            <div class="sc-label">Grind</div>
-            <div class="sc-value">—</div>
-          </div>
-          <div class="stat-card finish" id="sc-finish">
-            <div class="sc-label">Finish</div>
-            <div class="sc-value">—</div>
-          </div>
-          <div class="stat-card reapp" id="sc-reapp">
-            <div class="sc-label">Reapp</div>
-            <div class="sc-value">—</div>
-          </div>
-          <div class="stat-card finish" id="sc-upgrade">
-            <div class="sc-label">Upgrade</div>
-            <div class="sc-value">—</div>
-          </div>
-          <div class="stat-card grind" id="sc-gem">
-            <div class="sc-label">Gem</div>
-            <div class="sc-value">—</div>
+          <h4 class="summary-group-title" id="lbl-dash-group-queue">Needs attention</h4>
+          <div class="summary-cards-row summary-cards-row--queue">
+            <div class="stat-card sell stat-card--clickable" id="sc-sell" tabindex="0" role="button" data-dash-filter="verdict" data-dash-verdict="Sell">
+              <div class="sc-label">Sell</div>
+              <div class="sc-value">—</div>
+              <div class="sc-pct"></div>
+            </div>
+            <div class="stat-card grind stat-card--clickable" id="sc-grind" tabindex="0" role="button" data-dash-filter="verdict" data-dash-verdict="Grind">
+              <div class="sc-label">Grind</div>
+              <div class="sc-value">—</div>
+              <div class="sc-pct"></div>
+            </div>
+            <div class="stat-card reapp stat-card--clickable" id="sc-reapp" tabindex="0" role="button" data-dash-filter="verdict" data-dash-verdict="Reapp">
+              <div class="sc-label">Reapp</div>
+              <div class="sc-value">—</div>
+              <div class="sc-pct"></div>
+            </div>
           </div>
         </div>
 
@@ -202,7 +244,11 @@
         <!-- Efficiency histogram -->
         <div class="panel panel-wide" id="panel-eff">
           <div class="panel-title">Efficiency Distribution</div>
-          <div id="eff-chart" class="eff-chart"></div>
+          <p class="eff-median-caption" id="eff-median-caption" hidden></p>
+          <div class="eff-histo-host">
+            <div class="eff-median-line" id="eff-median-line" hidden></div>
+            <div id="eff-chart" class="eff-chart"></div>
+          </div>
         </div>
 
       </div>
@@ -400,6 +446,23 @@
               <div class="rules-card__head">
                 <span class="rules-card__step" aria-hidden="true">2</span>
                 <div class="rules-card__head-text">
+                  <h3 id="rules-h-grind" class="rules-card__title">Grind Rules</h3>
+                  <p class="rules-card__desc">Grind target is always the Late Game High Roll line for the rune’s grade (same <code>hrThresholds</code> as role anchors). Only SPD, HP%, DEF%, ATK% are considered.</p>
+                </div>
+              </div>
+              <div class="rules-card__body rules-card__body--fields">
+                <div class="settings-row">
+                  <label>Grind gap multiplier</label>
+                  <input type="number" id="grind-gap" min="0" max="3" step="0.1" />
+                  <span class="hint">Lower = stricter (fewer Grinds). Condition: threshold − value ≤ gain × gap. Try 0.3–0.5.</span>
+                </div>
+              </div>
+            </section>
+
+            <section class="rules-card" aria-labelledby="rules-h-reapp">
+              <div class="rules-card__head">
+                <span class="rules-card__step" aria-hidden="true">3</span>
+                <div class="rules-card__head-text">
                   <h3 id="rules-h-reapp" class="reapp-heading rules-card__title">Reapp Candidate Rules</h3>
                   <p class="reapp-rules-desc rules-card__desc"></p>
                 </div>
@@ -476,14 +539,18 @@
           <section class="guide-section" aria-labelledby="guide-h-start">
             <h3 id="guide-h-start">Getting started</h3>
             <p><strong>Data flow:</strong> Export JSON from SWEX and load it directly. SWOP CSV is not required.</p>
+            <p><strong>Stat IDs:</strong> The exporter uses numeric stat identifiers (for example SPD is 8, CRate is 9). The app maps them to names everywhere — mains, substats, filters, and role logic.</p>
+            <p><strong>Efficiency in the file:</strong> If the JSON includes an <code>efficiency</code> value per rune, the Rune Table and summaries use it; otherwise efficiency is computed in the browser.</p>
             <p><strong>Database slots:</strong> Your first SWEX file opens as Data 1. In App Settings you can store up to four exports, see wizard name/level from the JSON, and Swap the active profile.</p>
           </section>
 
           <section class="guide-section" aria-labelledby="guide-h-dash">
             <h3 id="guide-h-dash">Dashboard</h3>
-            <p><strong>Summary cards:</strong> Total, Keep, Sell, Grind, Gem, Finish, Upgrade and Reapp are recalculated for the <strong>Early / Mid / Late</strong> preset you choose — not for the progression score block (see below).</p>
-            <p><strong>Global Min Lvl:</strong> The scope bar filter applies to these cards, the charts below, and Rune Table. It does <strong>not</strong> apply to the Account progression suggestion.</p>
-            <p><strong>Charts:</strong> <em>Role Distribution</em> — count and average efficiency per role (custom roles appear after you save rules). <em>Set Distribution</em> — set count and average efficiency. <em>Slot Distribution</em> — per-slot counts and common main stats.</p>
+            <p><strong>Account progression:</strong> Combined score and the three depth metrics always use your <strong>full export</strong>. Under each metric you’ll see its <strong>point contribution</strong> toward the 100-point scale (e.g. +12 / 35 pts). By default the block is <strong>collapsed</strong> to one line (title, suggested stage, Apply, preset); use the chevron to expand for explanations and depth cards.</p>
+            <p><strong>Global filters:</strong> <strong>Min level</strong> and <strong>Min grade</strong> apply to verdict cards, all charts, the efficiency histogram (including the median line), and Rune Table — not to the progression block above.</p>
+            <p><strong>Verdict mix &amp; cards:</strong> The stacked bar and the number tiles show the same counts; percentages are share of the current filtered total. Click a segment, a card, or a role row to jump to <strong>Rune Table</strong> with matching filters. If the dashboard min grade is <strong>Legend only</strong>, the table’s grade filter is preset to Legend; for Rare+ / Hero+ the table opens without a grade filter (the grid uses an exact grade pick, not a floor).</p>
+            <p><strong>Copy summary:</strong> Separate control to the right of the Global filter card. Copies a text snapshot: preset, suggested stage, depth metrics, filters, verdict counts, <strong>role / set / slot charts</strong>, efficiency median and histogram buckets.</p>
+            <p><strong>Charts:</strong> <em>Role Distribution</em> — count and average efficiency per role (custom roles appear after you save rules). <em>Set Distribution</em> — top sets by count. <em>Slot Distribution</em> — hover a row for the full main-stat breakdown. <em>Efficiency Distribution</em> — bucketed eff with median marker.</p>
           </section>
 
           <section class="guide-section" aria-labelledby="guide-h-depth">
@@ -519,29 +586,69 @@
           <section class="guide-section" aria-labelledby="guide-h-table">
             <h3 id="guide-h-table">Rune Table</h3>
             <p><strong>Rune Table:</strong> Search, header filters for verdict, role, grade, set, slot, and main stat; sort columns; inspect innate and substats. Default sort Eff% descending. Use <strong>Export CSV</strong> for spreadsheets.</p>
-            <p><strong>Target column:</strong> Shown when the verdict filter is Gem or Grind — grind goals, innate reroll, +9/+12/Reapp hints where relevant.</p>
+            <p><strong>Eff% column:</strong> Prefers the exporter’s efficiency when present; otherwise shows the app’s calculated value (capped 0–100% in the grid; Depth&nbsp;v2 still uses uncapped math for its own score).</p>
+            <p><strong>Target column:</strong> Shown when the verdict filter is Gem or Grind — for Grind, numeric goals (rounded up); for Gem, innate <em>Replace from → to</em> style hints plus other notes where relevant.</p>
             <p><strong>Rune Summary panel:</strong> Right-hand summary — counts and average efficiency by verdict and role for the rows you have filtered.</p>
+            <p><strong>Debug:</strong> Parsed runes keep <code>_raw</code> from SWEX for troubleshooting in devtools.</p>
           </section>
 
           <section class="guide-section" aria-labelledby="guide-h-rules">
             <h3 id="guide-h-rules">Rune Rules tab</h3>
-            <p><strong>Sections:</strong> <strong>Engine</strong> — Constants (8 stats) and read-only HR/Duo threshold previews. <strong>Verdict rules</strong> — Gem (innate meta) and Reapp filters. <strong>Roles</strong> — formulas and role filters (full width). The last-opened section is remembered for this browser session.</p>
-            <p><strong>Save:</strong> Use <strong>Save &amp; Recalculate</strong> at the bottom so Dashboard and Rune Table pick up changes.</p>
+            <p><strong>Sections:</strong> <strong>Engine</strong> — Constants (eight stats) and read-only God / Duo / stage-line previews. <strong>Verdict</strong> — three separate cards for <strong>Gem</strong>, <strong>Grind</strong>, and <strong>Reapp</strong>. <strong>Roles</strong> — archetype formulas and filters (full width). The last-opened section is remembered for this browser session.</p>
+
+            <h4 class="guide-subhead">Engine vs roles vs verdicts</h4>
+            <p><strong>Roles</strong> decide whether a rune matches an archetype (using formulas). <strong>Engine constants</strong> define God, Duo, Early/Mid/Late High Roll lines used for anchors and quality checks. <strong>Verdict cards</strong> layer Gem / Grind / Reapp on top of that pipeline.</p>
+            <p><strong>Base substats for matching:</strong> Role assignment, Duo/High checks, and verdict thresholds use <em>base</em> rolled values (before gem or grind). Enchant and grind flags on each sub row are still used by the Gem and Grind rules themselves.</p>
+
+            <h4 class="guide-subhead">Formulas: Min Stats vs Require High Roll</h4>
+            <p><strong>Min Stats</strong> counts how many <em>Include</em> substats are present on the rune; stats listed as must-have are excluded from that count. <strong>Require High Roll</strong> (anchor) is a separate requirement — turning it on does not change the Min Stats number.</p>
+
+            <h4 class="guide-subhead">Grind verdict</h4>
+            <p>Grind targets SPD / HP% / DEF% / ATK% only, comparing the rune to the <strong>Late × grade High Roll</strong> line from Engine (God is not a Grind target). The rune must be ungrinded and not enchanted on the target line; the <strong>gap</strong> multiplier tightens how far below the line is still acceptable (default <strong>0.5</strong> after preset migration v9 if you previously had the older default).</p>
+
+            <h4 class="guide-subhead">Verdict safety</h4>
+            <p>A failing Gem quality gate does not force <strong>Sell</strong> if the rune already earned a role. Runes with <strong>no role</strong> and <strong>no Duo/High</strong> signal cannot end as Keep, Finish, Gem, or Grind — only Sell, Reapp, or Upgrade remain possible there.</p>
+
+            <p><strong>Save:</strong> Edits in the <strong>Roles</strong> formula grids persist and reprocess runes as soon as you change a control. <strong>Engine</strong> constants and <strong>Verdict</strong> inputs (Gem / Grind gap / Reapp) are applied when you click <strong>Save &amp; Recalculate</strong> at the bottom — use that after changing those sections so Dashboard and Rune Table stay in sync.</p>
           </section>
 
           <section class="guide-section" aria-labelledby="guide-h-other">
             <h3 id="guide-h-other">Other</h3>
-            <p><strong>Changelog:</strong> Release notes bundled with the app (not editable in the UI). Updates when you load a newer build.</p>
+            <p><strong>Changelog:</strong> Bundled release notes (not editable in the UI, not stored in browser storage). The tab has two sections — <strong>Releases</strong> for shipped highlights and <strong>Roadmap</strong> for planned work — like the subtabs on Rune Rules. New builds include a <strong>version line</strong> at the top of the latest release entry.</p>
+            <p><strong>Footer:</strong> Trademark / affiliation line and <strong>build version</strong> in a compact strip. <strong>Donate</strong> (own pill next to the theme toggles, same button style) opens Lava.top in a new tab.</p>
           </section>
         </div>
       </div>
     </section>
 
     <section id="tab-changelog" class="tab-content hidden">
-      <div class="panel">
-        <div class="panel-title" id="lbl-changelog-title">Changelog</div>
-        <p class="settings-desc changelog-lead" id="lbl-changelog-lead"></p>
-        <div id="changelog-list" class="changelog-releases"></div>
+      <div class="rules-tab-shell">
+        <header class="rules-page-header">
+          <h2 class="rules-page-title" id="lbl-changelog-page-title">Changelog</h2>
+          <p class="rules-page-lead" id="lbl-changelog-page-lead"></p>
+        </header>
+
+        <nav class="rules-subtabs" id="changelog-subtabs" role="tablist">
+          <button type="button" role="tab" class="rules-subtab is-active" id="changelog-subtab-shipped"
+            data-changelog-subtab="shipped" aria-selected="true" aria-controls="changelog-panel-shipped" tabindex="0">
+            <span class="rules-subtab__label" id="lbl-changelog-subtab-shipped">Releases</span>
+          </button>
+          <button type="button" role="tab" class="rules-subtab" id="changelog-subtab-roadmap"
+            data-changelog-subtab="roadmap" aria-selected="false" aria-controls="changelog-panel-roadmap" tabindex="-1">
+            <span class="rules-subtab__label" id="lbl-changelog-subtab-roadmap">Roadmap</span>
+          </button>
+        </nav>
+
+        <div id="changelog-panel-shipped" role="tabpanel" aria-labelledby="changelog-subtab-shipped"
+          class="rules-subpanel is-active" data-changelog-subtab="shipped">
+          <p class="settings-desc changelog-lead" id="lbl-changelog-shipped-lead"></p>
+          <div id="changelog-list" class="changelog-releases"></div>
+        </div>
+        <div id="changelog-panel-roadmap" role="tabpanel" aria-labelledby="changelog-subtab-roadmap"
+          class="rules-subpanel" data-changelog-subtab="roadmap">
+          <p class="settings-desc changelog-lead" id="lbl-changelog-roadmap-lead"></p>
+          <div id="changelog-roadmap-list" class="changelog-releases"></div>
+        </div>
       </div>
     </section>
 
@@ -568,6 +675,11 @@
     </section>
 
   </main>
+
+  <footer class="site-footer">
+    <p class="footer-disclaimer" id="lbl-footer-disclaimer">Summoners War™ is a trademark of Com2uS Corp. This site is not affiliated with or endorsed by Com2uS Corp.</p>
+    <p class="footer-version"><span id="lbl-footer-version">Build</span> <span id="footer-app-version">—</span></p>
+  </footer>
 
   <!-- UPLOAD PROMPT OVERLAY (shown when no data) -->
   <section id="upload-prompt" class="upload-prompt hidden" role="dialog" aria-modal="true" aria-labelledby="upload-prompt-title">

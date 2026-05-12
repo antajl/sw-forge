@@ -80,6 +80,13 @@
     rune.role = bestRole;
     rune.verdict = window.SWRM.getAdvancedVerdict?.(rune, stage, settings, mergedResults) ||
       S.getBaseVerdict(rune, stage, settings, bestRole, mergedResults);
+    // Safety invariant: without any matched role (including Duo/High), rune cannot remain Keep/Finish/Gem/Grind.
+    // Allowed outcomes in this state are Sell, Reapp (for eligible legends), or Upgrade (<+9).
+    if (!bestRole && !mergedResults['Duo Roll'] && !mergedResults['High Roll'] && !mergedResults['God Roll']) {
+      if (!['Sell', 'Reapp', 'Upgrade'].includes(rune.verdict)) {
+        rune.verdict = 'Sell';
+      }
+    }
     rune.badFlat = S.hasBadFlat(rune, stage);
     rune.grindInfo = S.checkGrind(rune, stage, settings);
     rune.gemInfo = S.evaluateGemRecommendation(rune, stage, settings);

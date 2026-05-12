@@ -11,14 +11,17 @@
   function hasBadFlat(rune, stage) {
     const flatIds = [1, 3, 5];
     const flatThresholds = { 1: 200, 3: 20, 5: 20 };
+    const subs = (rune.substats || []).filter(qSub);
+
+    // Spreadsheet parity: if any sub is enchanted, rune is treated as Clean for bad-flat gate.
+    if (subs.some((s) => s.enchanted === true)) return false;
 
     let cleanFlatCount = 0;
-    for (const s of rune.substats) {
-      if (!qSub(s)) continue;
+    for (const s of subs) {
       if (flatIds.includes(s.type)) {
         const threshold = flatThresholds[s.type];
-        // Base-only: ignore grind/gem.
-        if ((s.val || 0) <= threshold) {
+        // Bad flat row only when it's a low flat and has no gem / no grind.
+        if ((s.val || 0) <= threshold && (s.gem || 0) === 0 && (s.grind || 0) === 0) {
           cleanFlatCount++;
         }
       }
@@ -34,16 +37,25 @@
     const th = (settings.hrThresholds && Object.keys(settings.hrThresholds).length)
       ? settings.hrThresholds
       : settings.thresholds;
-    const GRIND_GAIN = { SPD: 2, 'HP%': 3, 'DEF%': 3, 'ATK%': 3, CRate: 2, CDmg: 2, ACC: 3, RES: 3 };
+    // Spreadsheet parity: grind recommendation checks only these stats.
+    const GRIND_GAIN = { SPD: 5, 'HP%': 10, 'DEF%': 10, 'ATK%': 10 };
+    const ALLOWED_STATS = new Set(Object.keys(GRIND_GAIN));
+    const gap = Number.isFinite(Number(settings?.grind?.gap)) ? Number(settings.grind.gap) : 1;
 
     for (const s of rune.substats) {
       if (!qSub(s)) continue;
-      const threshold = th[s.name]?.[key];
+      if (!ALLOWED_STATS.has(s.name)) continue;
+      // Must be not grinded and not enchanted.
+      if ((s.grind || 0) !== 0) continue;
+      if (s.enchanted === true || (s.gem || 0) !== 0) continue;
+      const thresholdRaw = th[s.name]?.[key];
+      const threshold = Number.isFinite(Number(thresholdRaw)) ? Math.ceil(Number(thresholdRaw)) : null;
       if (!threshold) continue;
       // Base-only current value; simulate grind gain from there.
       const currentVal = (s.val || 0);
       const gain = GRIND_GAIN[s.name] || 0;
-      if (currentVal < threshold && currentVal + gain >= threshold) {
+      const distance = threshold - currentVal;
+      if (currentVal < threshold && currentVal + gain >= threshold && distance <= gain * gap) {
         return { can: true, stat: s.name, from: currentVal, to: currentVal + gain, need: threshold };
       }
     }

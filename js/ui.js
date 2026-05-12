@@ -8,7 +8,7 @@
   const { parseSWEX, extractSwexSummary, countAllSwexRunes, processAll,
           STAT_NAMES, SET_NAMES, GRADE_SHORT, saveSettings,
           DEFAULT_STAT_CONSTANTS, DEFAULT_THRESHOLDS, DEFAULT_FORMULAS,
-          DEFAULT_ROLES, DEFAULT_REAPP, DEFAULT_GEM_META, TRANSLATIONS } = window.SWRM;
+          DEFAULT_ROLES, DEFAULT_REAPP, DEFAULT_GRIND, DEFAULT_GEM_META, TRANSLATIONS } = window.SWRM;
 
   let allRunes = [];
   let processedRunes = [];
@@ -20,6 +20,13 @@
   let runeTableShowAll = false;
   let runeTableMoreObserver = null;
   let globalMinLevel = 0;
+  let globalMinGrade = 3;
+  try {
+    const _mg = parseInt(localStorage.getItem('swrm_dashboard_min_grade_v1'), 10);
+    if (_mg >= 3 && _mg <= 5) globalMinGrade = _mg;
+  } catch (e) { /* ignore */ }
+  /** User explicitly expanded the progression panel (`1` = expanded; default collapsed). */
+  const STAGE_PROGRESSION_EXPANDED_KEY = 'swrm_stage_progression_expanded_v1';
   let currentLang = localStorage.getItem(APP_LANG_KEY) || localStorage.getItem('swrm-lang') || 'en';
   let currentTheme = localStorage.getItem('swrm-theme') || 'light';
 
@@ -131,6 +138,37 @@
     setRulesSubtab(saved);
   }
 
+  const CHANGELOG_SUBTAB_KEY = 'swrm_changelog_subtab_v1';
+  let changelogSubtabsBound = false;
+
+  function setChangelogSubtab(subtabId) {
+    const nav = document.getElementById('changelog-subtabs');
+    if (!nav) return;
+    const v = subtabId === 'roadmap' ? 'roadmap' : 'shipped';
+    nav.querySelectorAll('.rules-subtab').forEach((btn) => {
+      const active = btn.dataset.changelogSubtab === v;
+      btn.classList.toggle('is-active', active);
+      btn.setAttribute('aria-selected', active ? 'true' : 'false');
+      btn.tabIndex = active ? 0 : -1;
+    });
+    document.querySelectorAll('#tab-changelog .rules-subpanel').forEach((panel) => {
+      panel.classList.toggle('is-active', panel.dataset.changelogSubtab === v);
+    });
+    try { sessionStorage.setItem(CHANGELOG_SUBTAB_KEY, v); } catch (e) { /* ignore */ }
+  }
+
+  function initChangelogSubtabs() {
+    const nav = document.getElementById('changelog-subtabs');
+    if (!nav || changelogSubtabsBound) return;
+    changelogSubtabsBound = true;
+    nav.querySelectorAll('.rules-subtab').forEach((btn) => {
+      btn.addEventListener('click', () => setChangelogSubtab(btn.dataset.changelogSubtab));
+    });
+    let saved = 'shipped';
+    try { saved = sessionStorage.getItem(CHANGELOG_SUBTAB_KEY) || 'shipped'; } catch (e) { /* ignore */ }
+    setChangelogSubtab(saved);
+  }
+
   /** Main nav tab ids — kept in URL as `#settings` etc. so refresh restores the same view. */
   const MAIN_TAB_IDS = ['dashboard', 'runetable', 'settings', 'guide', 'changelog', 'app-settings'];
 
@@ -157,6 +195,10 @@
     if (id === 'settings') {
       const rulesRoot = document.getElementById('tab-settings');
       if (rulesRoot) rulesRoot.scrollTop = 0;
+    }
+    if (id === 'changelog') {
+      const chRoot = document.getElementById('tab-changelog');
+      if (chRoot) chRoot.scrollTop = 0;
     }
     if (id === 'app-settings') {
       renderDbSlots();
@@ -202,12 +244,37 @@
     if (guideTab) guideTab.textContent = t.guide;
     const changelogTab = document.querySelector('[data-tab="changelog"]');
     if (changelogTab) changelogTab.textContent = t.changelog;
-    const changelogTitle = document.getElementById('lbl-changelog-title');
-    if (changelogTitle) changelogTitle.textContent = t.changelog;
-    const changelogLead = document.getElementById('lbl-changelog-lead');
-    if (changelogLead) changelogLead.textContent = t.changelogLead || '';
+    const changelogPageTitle = document.getElementById('lbl-changelog-page-title');
+    if (changelogPageTitle) changelogPageTitle.textContent = t.changelog;
+    const changelogPageLead = document.getElementById('lbl-changelog-page-lead');
+    if (changelogPageLead) changelogPageLead.textContent = t.changelogPageLead || '';
+    const shippedLead = document.getElementById('lbl-changelog-shipped-lead');
+    if (shippedLead) shippedLead.textContent = t.changelogShippedLead || '';
+    const roadmapLead = document.getElementById('lbl-changelog-roadmap-lead');
+    if (roadmapLead) roadmapLead.textContent = t.changelogRoadmapLead || '';
+    const subShipped = document.getElementById('lbl-changelog-subtab-shipped');
+    if (subShipped) subShipped.textContent = t.changelogSubtabShipped || 'Releases';
+    const subRoadmap = document.getElementById('lbl-changelog-subtab-roadmap');
+    if (subRoadmap) subRoadmap.textContent = t.changelogSubtabRoadmap || 'Roadmap';
+    const chNav = document.getElementById('changelog-subtabs');
+    if (chNav) chNav.setAttribute('aria-label', t.changelogSubtabsAria || 'Changelog');
     const appSettingsTab = document.querySelector('[data-tab="app-settings"]');
     if (appSettingsTab) appSettingsTab.textContent = t.appSettings;
+
+    const donateLbl = document.getElementById('lbl-header-donate');
+    if (donateLbl) donateLbl.textContent = t.donateShort || 'Donate';
+    const donateLink = document.getElementById('header-donate-link');
+    if (donateLink) {
+      donateLink.setAttribute('title', t.donateTitle || '');
+      donateLink.setAttribute('aria-label', t.donateAria || t.donateShort || 'Donate');
+    }
+
+    const footDisc = document.getElementById('lbl-footer-disclaimer');
+    if (footDisc) footDisc.textContent = t.footerDisclaimer || '';
+    const footVerLbl = document.getElementById('lbl-footer-version');
+    if (footVerLbl) footVerLbl.textContent = t.footerVersionLabel || 'Build';
+    const footVer = document.getElementById('footer-app-version');
+    if (footVer) footVer.textContent = (window.SWRM && window.SWRM.APP_VERSION) || '—';
 
     // Update header elements
     const uploadLabel = document.querySelector('label[for="json-upload"] span');
@@ -267,6 +334,7 @@
       applyFiltersAndSort(getVisibleRunes(), { preserveTableExpansion: runeTableShowAll });
     }
     renderChangelog();
+    renderRoadmap();
   }
 
   function updateDashboardLabels() {
@@ -305,6 +373,22 @@
         if (title) title.textContent = text;
       }
     });
+
+    const lblMix = document.getElementById('lbl-verdict-mix-title');
+    if (lblMix) lblMix.textContent = t.dashboardVerdictMixTitle || '';
+    const vhint = document.getElementById('lbl-verdict-stack-hint');
+    if (vhint) vhint.textContent = t.dashboardVerdictStackHint || '';
+    const gk = document.getElementById('lbl-dash-group-keepers');
+    if (gk) gk.textContent = t.dashboardGroupKeepers || '';
+    const gq = document.getElementById('lbl-dash-group-queue');
+    if (gq) gq.textContent = t.dashboardGroupQueue || '';
+    const exp = document.getElementById('btn-dashboard-export-summary');
+    if (exp) exp.textContent = t.dashboardExportSummary || 'Copy summary';
+    const mgLbl = document.getElementById('dashboard-mingrade-label');
+    if (mgLbl) mgLbl.textContent = t.dashboardMinGradeLabel || 'Min grade';
+
+    syncDashboardGradeSelect();
+    applyStageAdvisorCollapsed(!readStageProgressionExpanded());
   }
 
   function updateTableLabels() {
@@ -565,6 +649,95 @@
       const visible = getVisibleRunes();
       renderDashboard(visible);
       renderTable(visible);
+    }
+  });
+
+  document.getElementById('global-min-grade')?.addEventListener('change', (e) => {
+    globalMinGrade = parseInt(e.target.value || '3', 10) || 3;
+    if (globalMinGrade < 3) globalMinGrade = 3;
+    if (globalMinGrade > 5) globalMinGrade = 5;
+    try { localStorage.setItem('swrm_dashboard_min_grade_v1', String(globalMinGrade)); } catch (err) { /* ignore */ }
+    if (processedRunes.length) {
+      const visible = getVisibleRunes();
+      renderDashboard(visible);
+      renderTable(visible);
+    }
+  });
+
+  document.getElementById('btn-stage-compact')?.addEventListener('click', () => {
+    const root = document.getElementById('stage-advisor');
+    if (!root) return;
+    const wasCollapsed = root.classList.contains('is-compact');
+    const nextCollapsed = !wasCollapsed;
+    applyStageAdvisorCollapsed(nextCollapsed);
+    try {
+      localStorage.setItem(STAGE_PROGRESSION_EXPANDED_KEY, nextCollapsed ? '' : '1');
+    } catch (err) { /* ignore */ }
+  });
+
+  document.getElementById('btn-dashboard-export-summary')?.addEventListener('click', async () => {
+    const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const ok = await copyTextToClipboard(getDashboardExportText());
+    showSwrmToast(
+      ok ? (tloc.dashboardExportDone || 'Copied') : (tloc.dashboardExportFail || 'Failed'),
+      { type: ok ? 'success' : 'error', duration: 3200 }
+    );
+  });
+
+  function dashboardNavigateFromClick(e) {
+    const seg = e.target.closest('.dashboard-verdict-seg[data-dash-verdict]');
+    if (seg) {
+      navigateToRuneTableWithFilters({
+        verdict: seg.getAttribute('data-dash-verdict') || '',
+        role: '',
+        gradeStr: gradeStrFromMinGrade(globalMinGrade),
+        clearSearch: true,
+      });
+      return;
+    }
+    const card = e.target.closest('.stat-card--clickable[data-dash-filter]');
+    if (card) {
+      const f = card.getAttribute('data-dash-filter');
+      if (f === 'all') {
+        navigateToRuneTableWithFilters({
+          verdict: '',
+          role: '',
+          gradeStr: gradeStrFromMinGrade(globalMinGrade),
+          clearSearch: true,
+        });
+      } else if (f === 'verdict') {
+        navigateToRuneTableWithFilters({
+          verdict: card.getAttribute('data-dash-verdict') || '',
+          role: '',
+          gradeStr: gradeStrFromMinGrade(globalMinGrade),
+          clearSearch: true,
+        });
+      }
+      return;
+    }
+    const row = e.target.closest('.chart-row--clickable[data-dash-role]');
+    if (row) {
+      navigateToRuneTableWithFilters({
+        verdict: '',
+        role: row.getAttribute('data-dash-role') || '',
+        gradeStr: gradeStrFromMinGrade(globalMinGrade),
+        clearSearch: true,
+      });
+    }
+  }
+
+  document.getElementById('tab-dashboard')?.addEventListener('click', dashboardNavigateFromClick);
+
+  document.getElementById('tab-dashboard')?.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const t = e.target;
+    if (!t || !t.closest || !t.closest('#tab-dashboard')) return;
+    if (t.closest('.dashboard-verdict-seg')) return;
+    const row = t.closest('.chart-row--clickable[data-dash-role]');
+    const card = t.closest('.stat-card--clickable[data-dash-filter]');
+    if (row || card) {
+      e.preventDefault();
+      (row || card).click();
     }
   });
 
@@ -860,7 +1033,117 @@
   }
 
   function getVisibleRunes() {
-    return processedRunes.filter(r => r.level >= globalMinLevel);
+    return processedRunes.filter((r) => {
+      if (r.level < globalMinLevel) return false;
+      const g = typeof r.grade === 'number' ? r.grade : 0;
+      return g >= globalMinGrade;
+    });
+  }
+
+  function escapeHtml(s) {
+    return String(s ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  /** Bar track + fill only (counts live in chartRowStatsHtml). */
+  function chartBarTrackHtml(pctStr, fillClass) {
+    return `<div class="chart-bar-wrap">
+            <div class="chart-bar-fill ${fillClass}" style="width:${pctStr}%"></div>
+          </div>`;
+  }
+
+  /** Right column: muted labeled lines (n / avg) so counts do not compete with the bar. */
+  function chartRowStatsHtml(cnt, avgDisplay, tloc) {
+    const lc = escapeHtml((tloc && tloc.dashboardChartLblCount) || 'n');
+    const la = escapeHtml((tloc && tloc.dashboardChartLblAvg) || 'avg');
+    const countLine = `<div class="chart-stat-line chart-stat-line--count">
+      <span class="chart-stat-lbl">${lc}</span>
+      <span class="chart-stat-val">${cnt}</span>
+    </div>`;
+    if (avgDisplay === undefined) {
+      return `<div class="chart-row-stats chart-row-stats--solo">${countLine}</div>`;
+    }
+    const avgInner = avgDisplay === '-' ? '\u2014' : `${escapeHtml(String(avgDisplay))}%`;
+    const avgLine = `<div class="chart-stat-line chart-stat-line--avg">
+      <span class="chart-stat-lbl">${la}</span>
+      <span class="chart-stat-val">${avgInner}</span>
+    </div>`;
+    return `<div class="chart-row-stats">${countLine}${avgLine}</div>`;
+  }
+
+  function medianSorted(sorted) {
+    const n = sorted.length;
+    if (!n) return null;
+    const mid = Math.floor(n / 2);
+    if (n % 2) return sorted[mid];
+    return (sorted[mid - 1] + sorted[mid]) / 2;
+  }
+
+  async function copyTextToClipboard(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch (e) {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        const ok = document.execCommand('copy');
+        ta.remove();
+        return ok;
+      } catch (e2) {
+        return false;
+      }
+    }
+  }
+
+  function navigateToRuneTableWithFilters(partial) {
+    const fv = document.getElementById('filter-verdict');
+    const fr = document.getElementById('filter-role');
+    const fg = document.getElementById('filter-grade');
+    if (partial.clearSearch) {
+      const sb = document.getElementById('search-box');
+      if (sb) sb.value = '';
+    }
+    if (fv && Object.prototype.hasOwnProperty.call(partial, 'verdict')) {
+      fv.value = partial.verdict || '';
+    }
+    if (fr && Object.prototype.hasOwnProperty.call(partial, 'role')) {
+      fr.value = partial.role || '';
+    }
+    if (fg && Object.prototype.hasOwnProperty.call(partial, 'gradeStr')) {
+      fg.value = partial.gradeStr || '';
+    }
+    showMainTab('runetable', { writeHash: true });
+    const visible = getVisibleRunes();
+    renderTable(visible);
+  }
+
+  /** Table grade filter is exact match only — align when dashboard is Legend-only. */
+  function gradeStrFromMinGrade(g) {
+    return g >= 5 ? 'Legend' : '';
+  }
+
+  /** @param {boolean} collapsed — true = one-line bar only */
+  function applyStageAdvisorCollapsed(collapsed) {
+    const root = document.getElementById('stage-advisor');
+    const btn = document.getElementById('btn-stage-compact');
+    if (!root || !btn) return;
+    root.classList.toggle('is-compact', collapsed);
+    btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    btn.title = collapsed ? (t.stageCompactExpand || '') : (t.stageCompactCollapse || '');
+  }
+
+  function readStageProgressionExpanded() {
+    try { return localStorage.getItem(STAGE_PROGRESSION_EXPANDED_KEY) === '1'; } catch (e) { return false; }
   }
 
   // ===================== GAME STAGE ANALYSIS (Depth v2) =====================
@@ -905,6 +1188,12 @@
         runeCount: 0,
         stageMidMin: CFG.stageMidMin,
         stageLateMin: CFG.stageLateMin,
+        spdPoints: '0.0',
+        plus15Points: '0.0',
+        elitePoints: '0.0',
+        spdCap: CFG.spdDepthWeight,
+        plus15Cap: CFG.plus15DepthWeight,
+        eliteCap: CFG.eliteWeight,
       };
     }
 
@@ -951,6 +1240,12 @@
       runeCount: list.length,
       stageMidMin: CFG.stageMidMin,
       stageLateMin: CFG.stageLateMin,
+      spdPoints: (Math.round(spdPoints * 10) / 10).toFixed(1),
+      plus15Points: (Math.round(plus15Points * 10) / 10).toFixed(1),
+      elitePoints: (Math.round(elitePoints * 10) / 10).toFixed(1),
+      spdCap: CFG.spdDepthWeight,
+      plus15Cap: CFG.plus15DepthWeight,
+      eliteCap: CFG.eliteWeight,
     };
   }
 
@@ -960,17 +1255,176 @@
     return 'Early';
   }
 
+  const DASH_VERDICT_SEG_ORDER = ['Keep', 'Finish', 'Upgrade', 'Gem', 'Grind', 'Reapp', 'Sell'];
+  const DASH_VERDICT_SEG_CSS = {
+    Keep: 'var(--keep)',
+    Finish: 'var(--finish)',
+    Upgrade: 'var(--gold)',
+    Gem: 'var(--gem)',
+    Grind: 'var(--grind)',
+    Reapp: 'var(--reapp)',
+    Sell: 'var(--sell)',
+  };
+
+  /** Sort verdict keys by count (desc), then stable tie-break using DASH_VERDICT_SEG_ORDER. */
+  function sortVerdictKeysByCount(counts) {
+    return [...DASH_VERDICT_SEG_ORDER].sort((a, b) => {
+      const ca = counts[a] || 0;
+      const cb = counts[b] || 0;
+      if (cb !== ca) return cb - ca;
+      return DASH_VERDICT_SEG_ORDER.indexOf(a) - DASH_VERDICT_SEG_ORDER.indexOf(b);
+    });
+  }
+
+  function setStatCard(id, count, total, hidePct) {
+    const wrap = document.getElementById(id);
+    if (!wrap) return;
+    const v = wrap.querySelector('.sc-value');
+    const p = wrap.querySelector('.sc-pct');
+    if (v) v.textContent = String(count);
+    if (p) {
+      if (hidePct || !total) p.textContent = '';
+      else p.textContent = `${Math.round((count / total) * 1000) / 10}%`;
+    }
+  }
+
+  function syncDashboardGradeSelect() {
+    const sel = document.getElementById('global-min-grade');
+    if (!sel) return;
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    sel.innerHTML =
+      `<option value="3">${escapeHtml(t.dashboardMinGradeRare || 'Rare+')}</option>` +
+      `<option value="4">${escapeHtml(t.dashboardMinGradeHero || 'Hero+')}</option>` +
+      `<option value="5">${escapeHtml(t.dashboardMinGradeLegend || 'Legend')}</option>`;
+    const pick = Math.min(5, Math.max(3, globalMinGrade));
+    sel.value = String(pick);
+    globalMinGrade = pick;
+  }
+
+  function aggregateDashboardRunes(runes) {
+    const counts = { Keep: 0, Sell: 0, Grind: 0, Finish: 0, Reapp: 0, Upgrade: 0, Gem: 0 };
+    const roleCounts = {};
+    const roleEff = {};
+    const setCounts = {};
+    const setEff = {};
+    const slotCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
+    const slotMain = { 1: {}, 2: {}, 3: {}, 4: {}, 5: {}, 6: {} };
+    const effBuckets = new Array(20).fill(0);
+    const effVals = [];
+    for (let i = 0; i < runes.length; i++) {
+      const r = runes[i];
+      counts[r.verdict] = (counts[r.verdict] || 0) + 1;
+      if (r.role) {
+        roleCounts[r.role] = (roleCounts[r.role] || 0) + 1;
+        roleEff[r.role] = roleEff[r.role] || [];
+        roleEff[r.role].push(r.eff);
+      }
+      setCounts[r.setName] = (setCounts[r.setName] || 0) + 1;
+      setEff[r.setName] = setEff[r.setName] || [];
+      setEff[r.setName].push(r.eff);
+      slotCounts[r.slot] = (slotCounts[r.slot] || 0) + 1;
+      slotMain[r.slot][r.mainName] = (slotMain[r.slot][r.mainName] || 0) + 1;
+      const eff = Number.isFinite(r.eff) ? r.eff : 0;
+      effVals.push(eff);
+      effBuckets[Math.min(19, Math.floor(eff / 5))]++;
+    }
+    effVals.sort((a, b) => a - b);
+    return {
+      counts,
+      roleCounts,
+      roleEff,
+      setCounts,
+      setEff,
+      slotCounts,
+      slotMain,
+      effBuckets,
+      medianEff: medianSorted(effVals),
+    };
+  }
+
+  function getDashboardExportText() {
+    const vis = getVisibleRunes();
+    const agg = aggregateDashboardRunes(vis);
+    const metrics = analyzeGameStage(allRunes);
+    const recStage = getRecommendedStage(
+      parseFloat(metrics.score),
+      metrics.stageMidMin,
+      metrics.stageLateMin
+    );
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const lines = [];
+    lines.push(String(t.title || 'SW Rune Master'));
+    lines.push(`${t.stageYourPresetLabel || 'Preset'}: ${stage}`);
+    lines.push(
+      `${t.stageSuggestedLabel || 'Suggested'}: ${stageDisplayName(t, recStage)} · ${t.stageScoreLabel || 'Score'} ${metrics.score} ` +
+        `(+${metrics.spdPoints}/${metrics.spdCap} +${metrics.plus15Points}/${metrics.plus15Cap} +${metrics.elitePoints}/${metrics.eliteCap})`
+    );
+    lines.push(
+      `${t.stageCardHrName || 'SPD depth'}: ${metrics.spdDepthCount}, ${t.stageCardKeepName || '+15'}: ${metrics.plus15DepthCount}, ${t.stageCardMetaName || 'Elite'}: ${metrics.eliteAvgEff}% (n=${metrics.eliteSampleSize})`
+    );
+    lines.push(`${t.dashboardScopeTitle || 'Filter'}: ${t.minLvl || 'Min Lvl'} +${globalMinLevel}, ${t.dashboardMinGradeLabel || 'Grade'} ≥ ${globalMinGrade}`);
+    lines.push(`${t.totalRunes || 'Total'} (${t.dashboardScopeTitle || 'view'}): ${vis.length}`);
+
+    lines.push('');
+    lines.push(t.dashboardVerdictMixTitle || 'Verdict mix');
+    sortVerdictKeysByCount(agg.counts).forEach((k) => {
+      lines.push(`  ${k}: ${agg.counts[k] || 0}`);
+    });
+
+    lines.push('');
+    lines.push(t.roleDistribution || 'Role Distribution');
+    const sortedRoles = Object.keys(agg.roleCounts).sort((a, b) => (agg.roleCounts[b] || 0) - (agg.roleCounts[a] || 0));
+    sortedRoles.forEach((role) => {
+      const cnt = agg.roleCounts[role] || 0;
+      const avg = agg.roleEff[role]
+        ? (agg.roleEff[role].reduce((a, b) => a + b, 0) / agg.roleEff[role].length).toFixed(1)
+        : '-';
+      lines.push(`  ${role}: ${cnt} · avg ${avg}%`);
+    });
+
+    lines.push('');
+    lines.push((t.setDistribution || 'Set Distribution') + ' (top 10)');
+    Object.entries(agg.setCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .forEach(([name, cnt]) => {
+        const avg = (agg.setEff[name].reduce((a, b) => a + b, 0) / agg.setEff[name].length).toFixed(1);
+        lines.push(`  ${name}: ${cnt} · avg ${avg}%`);
+      });
+
+    lines.push('');
+    lines.push(t.slotDistribution || 'Slot Distribution');
+    for (let s = 1; s <= 6; s++) {
+      const cnt = agg.slotCounts[s] || 0;
+      const mains = Object.entries(agg.slotMain[s])
+        .sort((a, b) => b[1] - a[1])
+        .map(([stat, c]) => `${stat} ${c}`)
+        .join(', ');
+      lines.push(`  Slot ${s}: ${cnt}${mains ? ` (${mains})` : ''}`);
+    }
+
+    lines.push('');
+    lines.push(t.efficiencyDistribution || 'Efficiency Distribution');
+    if (agg.medianEff != null && vis.length) {
+      lines.push(`  ${(t.effMedianCaption || '').replace('{pct}', agg.medianEff.toFixed(1))}`);
+    }
+    lines.push(`  ${t.dashboardExportEffBuckets || 'Histogram (5% buckets):'}`);
+    let anyBucket = false;
+    for (let i = 0; i < 20; i++) {
+      if (!agg.effBuckets[i]) continue;
+      anyBucket = true;
+      lines.push(`    ${i * 5}-${i * 5 + 4}%: ${agg.effBuckets[i]}`);
+    }
+    if (!anyBucket) lines.push(`    —`);
+
+    lines.push('');
+    lines.push(`${t.footerVersionLabel || 'Build'}: ${(window.SWRM && window.SWRM.APP_VERSION) || ''}`);
+
+    return lines.join('\n');
+  }
+
   // ===================== DASHBOARD =====================
   function renderDashboard(runes) {
-    const counts = { Keep:0, Sell:0, Grind:0, Finish:0, Reapp:0, Upgrade:0, Gem:0 };
-    const roleCounts = {};
-    const roleEff    = {};
-    const setCounts  = {};
-    const setEff     = {};
-    const slotCounts = {1:0,2:0,3:0,4:0,5:0,6:0};
-    const slotMain = {1:{},2:{},3:{},4:{},5:{},6:{}};
-    const effBuckets = new Array(20).fill(0); // 5% buckets: 0-4, 5-9, ..., 95-99, 100+
-
     // Account progression: full export rune list, absolute counts + top-N eff (not affected by preset / Min Lvl).
     const metrics = analyzeGameStage(allRunes);
     const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
@@ -1027,78 +1481,115 @@
       mismatchLine.textContent = showMismatch ? (tloc.stageMismatchHint || '') : '';
     }
 
-    for (const r of runes) {
-      counts[r.verdict] = (counts[r.verdict] || 0) + 1;
-
-      if (r.role) {
-        roleCounts[r.role] = (roleCounts[r.role] || 0) + 1;
-        roleEff[r.role] = (roleEff[r.role] || []);
-        roleEff[r.role].push(r.eff);
+    const tplContrib = tloc.stageMetricContribTpl || '+{pts} / {cap} pts';
+    const showContrib = metrics.runeCount > 0;
+    [
+      ['metric-contrib-spd', 'spdPoints', 'spdCap'],
+      ['metric-contrib-plus15', 'plus15Points', 'plus15Cap'],
+      ['metric-contrib-elite', 'elitePoints', 'eliteCap'],
+    ].forEach(([elId, pk, ck]) => {
+      const el = document.getElementById(elId);
+      if (!el) return;
+      if (showContrib) {
+        el.textContent = tplContrib.replace('{pts}', String(metrics[pk])).replace('{cap}', String(metrics[ck]));
+        el.hidden = false;
+      } else {
+        el.textContent = '';
+        el.hidden = true;
       }
+    });
 
-      setCounts[r.setName] = (setCounts[r.setName] || 0) + 1;
-      setEff[r.setName] = setEff[r.setName] || [];
-      setEff[r.setName].push(r.eff);
-      slotCounts[r.slot]   = (slotCounts[r.slot]   || 0) + 1;
-      slotMain[r.slot][r.mainName] = (slotMain[r.slot][r.mainName] || 0) + 1;
+    const agg = aggregateDashboardRunes(runes);
+    const {
+      counts,
+      roleCounts,
+      roleEff,
+      setCounts,
+      setEff,
+      slotCounts,
+      slotMain,
+      effBuckets,
+      medianEff,
+    } = agg;
 
-      const bucket = Math.min(19, Math.floor(r.eff / 5));
-      effBuckets[bucket]++;
+    const total = runes.length;
+    setStatCard('sc-total', total, total, true);
+    setStatCard('sc-keep', counts.Keep || 0, total, false);
+    setStatCard('sc-sell', counts.Sell || 0, total, false);
+    setStatCard('sc-grind', counts.Grind || 0, total, false);
+    setStatCard('sc-finish', counts.Finish || 0, total, false);
+    setStatCard('sc-reapp', counts.Reapp || 0, total, false);
+    setStatCard('sc-upgrade', counts.Upgrade || 0, total, false);
+    setStatCard('sc-gem', counts.Gem || 0, total, false);
+
+    const vs = document.getElementById('verdict-stack');
+    if (vs) {
+      vs.innerHTML = '';
+      let sumV = 0;
+      DASH_VERDICT_SEG_ORDER.forEach((v) => { sumV += counts[v] || 0; });
+      if (!sumV) {
+        vs.setAttribute('aria-label', tloc.dashboardVerdictMixTitle || 'Verdict mix');
+      } else {
+        const parts = [];
+        DASH_VERDICT_SEG_ORDER.forEach((v) => {
+          const c = counts[v] || 0;
+          if (c > 0) parts.push({ v, c, raw: (c / sumV) * 100 });
+        });
+        parts.sort((a, b) => {
+          if (b.c !== a.c) return b.c - a.c;
+          return DASH_VERDICT_SEG_ORDER.indexOf(a.v) - DASH_VERDICT_SEG_ORDER.indexOf(b.v);
+        });
+        const wsum = parts.reduce((a, p) => a + Math.max(p.raw, 0.2), 0);
+        const ariaBits = [];
+        parts.forEach((p) => {
+          const flexPct = wsum ? (Math.max(p.raw, 0.2) / wsum) * 100 : 0;
+          const seg = document.createElement('button');
+          seg.type = 'button';
+          seg.className = 'dashboard-verdict-seg';
+          seg.style.flex = `0 0 ${flexPct}%`;
+          seg.style.background = DASH_VERDICT_SEG_CSS[p.v] || '#888';
+          seg.title = `${p.v}: ${p.c}`;
+          seg.setAttribute('data-dash-verdict', p.v);
+          vs.appendChild(seg);
+          ariaBits.push(`${p.v} ${p.c}`);
+        });
+        vs.setAttribute('aria-label', ariaBits.join(', '));
+      }
     }
 
-    // Summary cards
-    const total = runes.length;
-    setText('sc-total', total, '.sc-value');
-    setText('sc-keep',  counts.Keep  || 0, '.sc-value');
-    setText('sc-sell',  counts.Sell  || 0, '.sc-value');
-    setText('sc-grind', counts.Grind || 0, '.sc-value');
-    setText('sc-finish',counts.Finish|| 0, '.sc-value');
-    setText('sc-reapp', counts.Reapp || 0, '.sc-value');
-    setText('sc-upgrade', counts.Upgrade || 0, '.sc-value');
-    setText('sc-gem', counts.Gem || 0, '.sc-value');
-
-    // Role chart
     const roleEl = document.getElementById('role-chart');
     roleEl.innerHTML = '';
     const sortedRoles = Object.keys(roleCounts).sort((a, b) => (roleCounts[b] || 0) - (roleCounts[a] || 0));
-    const maxCount = Math.max(...sortedRoles.map(r => roleCounts[r] || 0), 1);
+    const maxCount = Math.max(...sortedRoles.map(rr => roleCounts[rr] || 0), 1);
     for (const role of sortedRoles) {
       const cnt = roleCounts[role] || 0;
-      const avg = roleEff[role] ? (roleEff[role].reduce((a,b)=>a+b,0)/roleEff[role].length).toFixed(1) : '-';
+      const avg = roleEff[role] ? (roleEff[role].reduce((a, b) => a + b, 0) / roleEff[role].length).toFixed(1) : '-';
       const pct = ((cnt / maxCount) * 100).toFixed(1);
+      const er = escapeHtml(role);
       roleEl.innerHTML += `
-        <div class="chart-row">
-          <div class="chart-label">${role}</div>
-          <div class="chart-bar-wrap">
-            <div class="chart-bar" style="width:${pct}%">
-              <span class="chart-bar-val">${cnt}</span>
-            </div>
-          </div>
-          <div class="chart-avg">${avg}%</div>
+        <div class="chart-row chart-row--clickable" role="button" tabindex="0" data-dash-role="${er}">
+          <div class="chart-label">${er}</div>
+          ${chartBarTrackHtml(pct, 'chart-bar--roles')}
+          ${chartRowStatsHtml(cnt, avg, tloc)}
         </div>`;
     }
 
-    // Set chart (top 10)
     const setEl = document.getElementById('set-chart');
     setEl.innerHTML = '';
-    const topSets = Object.entries(setCounts).sort((a,b)=>b[1]-a[1]).slice(0,10);
-    const maxSet  = topSets[0]?.[1] || 1;
+    const topSets = Object.entries(setCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+    const maxSet = topSets[0]?.[1] || 1;
     for (const [name, cnt] of topSets) {
       const pct = ((cnt / maxSet) * 100).toFixed(1);
-      const avg = (setEff[name].reduce((a,b)=>a+b,0) / setEff[name].length).toFixed(1);
+      const avg = (setEff[name].reduce((a, b) => a + b, 0) / setEff[name].length).toFixed(1);
+      const en = escapeHtml(name);
       setEl.innerHTML += `
         <div class="chart-row">
-          <div class="chart-label">${name}</div>
-          <div class="chart-bar-wrap">
-            <div class="chart-bar" style="width:${pct}%; background: linear-gradient(90deg,#2dd4c4,#4e9eff)">
-              <span class="chart-bar-val">${cnt}</span>
-            </div>
-          </div>
-          <div class="chart-avg">${avg}%</div>
+          <div class="chart-label">${en}</div>
+          ${chartBarTrackHtml(pct, 'chart-bar--sets')}
+          ${chartRowStatsHtml(cnt, avg, tloc)}
         </div>`;
     }
 
-    // Slot chart
     const slotEl = document.getElementById('slot-chart');
     slotEl.innerHTML = '';
     const maxSlot = Math.max(...Object.values(slotCounts), 1);
@@ -1106,33 +1597,51 @@
       const cnt = slotCounts[s] || 0;
       const pct = ((cnt / maxSlot) * 100).toFixed(1);
       const topMain = Object.entries(slotMain[s])
-        .sort((a,b) => b[1] - a[1])
+        .sort((a, b) => b[1] - a[1])
         .slice(0, 2)
         .map(([stat, c]) => `${stat} ${c}`)
         .join(' | ');
+      const fullTip = Object.entries(slotMain[s])
+        .sort((a, b) => b[1] - a[1])
+        .map(([stat, c]) => `${stat}: ${c}`)
+        .join(' · ');
+      const tip = escapeHtml(fullTip || `Slot ${s}`);
       slotEl.innerHTML += `
-        <div class="chart-row">
-          <div class="chart-label">Slot ${s}<br><small>${topMain || '—'}</small></div>
-          <div class="chart-bar-wrap">
-            <div class="chart-bar" style="width:${pct}%; background: linear-gradient(90deg,#b06aff,#7b5fff)">
-              <span class="chart-bar-val">${cnt}</span>
-            </div>
-          </div>
+        <div class="chart-row" title="${tip}">
+          <div class="chart-label">Slot ${s}<br><small class="chart-slot-preview">${escapeHtml(topMain || '—')}</small></div>
+          ${chartBarTrackHtml(pct, 'chart-bar--slots')}
+          ${chartRowStatsHtml(cnt, undefined, tloc)}
         </div>`;
     }
 
-    // Efficiency histogram
     const effEl = document.getElementById('eff-chart');
     effEl.innerHTML = '';
     const maxBucket = Math.max(...effBuckets, 1);
+    const medEff = medianEff;
+    const medLine = document.getElementById('eff-median-line');
+    const medCap = document.getElementById('eff-median-caption');
+    if (medEff != null && runes.length) {
+      const pos = Math.min(100, Math.max(0, medEff));
+      if (medLine) {
+        medLine.style.left = `calc(${pos}% - 1px)`;
+        medLine.hidden = false;
+      }
+      if (medCap) {
+        medCap.textContent = (tloc.effMedianCaption || '').replace('{pct}', medEff.toFixed(1));
+        medCap.hidden = false;
+      }
+    } else {
+      if (medLine) medLine.hidden = true;
+      if (medCap) medCap.hidden = true;
+    }
     for (let i = 0; i < 20; i++) {
       const h = Math.max(4, (effBuckets[i] / maxBucket) * 72);
-      const label = `${i*5}-${i*5+4}`;
+      const label = `${i * 5}-${i * 5 + 4}`;
       const cls = i >= 18 ? 'great' : i >= 14 ? 'good' : '';
       effEl.innerHTML += `
         <div class="eff-bar-wrap" title="${label}%: ${effBuckets[i]} runes">
           <div class="eff-bar ${cls}" style="height:${h}px"></div>
-          <div class="eff-label">${i*5}</div>
+          <div class="eff-label">${i * 5}</div>
         </div>`;
     }
   }
@@ -1181,7 +1690,13 @@
       const g = r.grindInfo;
       if (g && g.can && g.stat) {
         if (typeof g.from === 'number' && typeof g.need === 'number') {
-          return `${g.stat} ${g.from}→${g.need}`;
+          const from = Math.ceil(g.from);
+          const need = Math.ceil(g.need);
+          const maxTo = typeof g.to === 'number' ? Math.ceil(g.to) : null;
+          if (maxTo != null) {
+            return `${g.stat} ${from}→${need} (max ${maxTo})`;
+          }
+          return `${g.stat} ${from}→${need}`;
         }
         return g.stat;
       }
@@ -1192,7 +1707,7 @@
         return `Innate ${r.gemInfo.innate || ''} → reroll`;
       }
       if (r.gemInfo?.from && r.gemInfo?.to) {
-        return `${r.gemInfo.from} → ${r.gemInfo.to}`;
+        return `Replace ${r.gemInfo.from} → ${r.gemInfo.to}`;
       }
       return '';
     }
@@ -2317,12 +2832,14 @@
   });
 
   const reapp = window.SWRM.settings.reapp || {};
+  const grind = window.SWRM.settings.grind || window.SWRM.DEFAULT_GRIND || { gap: 1 };
   document.getElementById('reapp-sets').value = (reapp.sets || []).join(', ');
   document.getElementById('reapp-innate').value = (reapp.innateStats || []).join(', ');
   document.getElementById('reapp-main2').value = (reapp.mainBySlot?.[2] || []).join(', ');
   document.getElementById('reapp-main4').value = (reapp.mainBySlot?.[4] || []).join(', ');
   document.getElementById('reapp-main6').value = (reapp.mainBySlot?.[6] || []).join(', ');
   document.getElementById('reapp-max-eff').value = reapp.maxEff ?? 65;
+  document.getElementById('grind-gap').value = Number.isFinite(Number(grind.gap)) ? Number(grind.gap) : 1;
 
   hydrateGemMetaFields(window.SWRM.settings.gemMeta);
 
@@ -2360,6 +2877,11 @@
         4: parseList(document.getElementById('reapp-main4').value),
         6: parseList(document.getElementById('reapp-main6').value),
       }
+    };
+    s.grind = {
+      gap: Number.isFinite(Number(document.getElementById('grind-gap').value))
+        ? Math.max(0, Number(document.getElementById('grind-gap').value))
+        : 1,
     };
 
     let gemBySet = {};
@@ -2426,6 +2948,7 @@
     initTheme();
     updateLanguage(currentLang);
     initRulesSubtabs();
+    initChangelogSubtabs();
     showMainTab(mainTabIdFromHash() || 'dashboard');
 
     const savedRunes = localStorage.getItem('loadedRunes');
@@ -2526,8 +3049,9 @@
       formulas: JSON.parse(JSON.stringify(DEFAULT_FORMULAS)),
       rolePriority: [],
       reapp: JSON.parse(JSON.stringify(DEFAULT_REAPP)),
+      grind: JSON.parse(JSON.stringify(DEFAULT_GRIND)),
       gemMeta: JSON.parse(JSON.stringify(DEFAULT_GEM_META)),
-      presetVersion: 7,
+      presetVersion: 9,
     };
     window.SWRM.applyDerivedThresholdFields(window.SWRM.settings);
     localStorage.removeItem('swrm_settings_v1');
@@ -2858,6 +3382,14 @@
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;');
   }
+  function changelogItemsForLang(rel, lang) {
+    const pack = (rel.items && rel.items[lang]) || rel.items?.en;
+    if (!pack) return [];
+    if (Array.isArray(pack)) return pack;
+    if (Array.isArray(pack.shipped)) return pack.shipped;
+    return [];
+  }
+
   function renderChangelog() {
     const list = document.getElementById('changelog-list');
     if (!list) return;
@@ -2870,10 +3402,25 @@
     }
     const lang = currentLang === 'ru' ? 'ru' : 'en';
     list.innerHTML = releases.map((rel) => {
-      const items = (rel.items && rel.items[lang]) || rel.items?.en || [];
-      const lis = items.map((tx) => `<li>${escapeChangelogText(tx)}</li>`).join('');
-      return `<article class="changelog-release"><h3 class="changelog-release-date">${escapeChangelogText(rel.date)}</h3><ul class="changelog-bullets">${lis}</ul></article>`;
+      const items = changelogItemsForLang(rel, lang);
+      const ul = items.length
+        ? `<ul class="changelog-bullets">${items.map((tx) => `<li>${escapeChangelogText(tx)}</li>`).join('')}</ul>`
+        : `<p class="settings-desc">${escapeChangelogText(t.changelogEmpty || '')}</p>`;
+      return `<article class="changelog-release"><h3 class="changelog-release-date">${escapeChangelogText(rel.date)}</h3>${ul}</article>`;
     }).join('');
+  }
+
+  function renderRoadmap() {
+    const list = document.getElementById('changelog-roadmap-list');
+    if (!list) return;
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const lang = currentLang === 'ru' ? 'ru' : 'en';
+    const items = (window.SWRM && window.SWRM.STATIC_ROADMAP && window.SWRM.STATIC_ROADMAP[lang]) || [];
+    if (!items.length) {
+      list.innerHTML = `<p class="settings-desc">${escapeChangelogText(t.changelogRoadmapEmpty || '')}</p>`;
+      return;
+    }
+    list.innerHTML = `<article class="changelog-release changelog-release--roadmap"><ul class="changelog-bullets">${items.map((tx) => `<li>${escapeChangelogText(tx)}</li>`).join('')}</ul></article>`;
   }
 
 })();

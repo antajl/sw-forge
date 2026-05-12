@@ -46,11 +46,11 @@
     4:  8,    // ATK%
     5:  100,  // DEF flat
     6:  8,    // DEF%
-    8:  6,    // CRate
-    9:  7,    // CDmg
-    10: 8,    // RES
-    11: 8,    // ACC
-    12: 6,    // SPD
+    8:  6,    // SPD
+    9:  6,    // CRate
+    10: 7,    // CDmg
+    11: 8,    // RES
+    12: 8,    // ACC
   };
 
   /**
@@ -96,24 +96,37 @@
     const innType = raw.prefix_eff ? raw.prefix_eff[0] : 0;
     const innVal  = raw.prefix_eff ? raw.prefix_eff[1] : 0;
 
-    // Substats: [type, val, extra, grind]
-    const substats = (raw.sec_eff || []).map(s => ({
-      type:  s[0],
-      name:  statName(s[0]),
-      // All calculations use base-only (no gem, no grind).
-      val:   s[1] || 0,
-      gem:   s[2] || 0,
-      grind: s[3] || 0,
-      flat:  isFlat(s[0]),
-      /** Qualifying sub rows for roles (`innate` if exporter duplicates prefix into sec_eff — excluded from statMap) */
-      source: 'sub',
-    }));
+    // Substats: SWEX usually [type, val, extra, grind]; some exports may use object form.
+    const substats = (raw.sec_eff || []).map((s) => {
+      const isObj = s && typeof s === 'object' && !Array.isArray(s);
+      const type = isObj ? Number(s.type ?? s.stat_type ?? s.statType ?? 0) : Number(s[0] || 0);
+      const val = isObj ? Number(s.value ?? s.val ?? 0) : Number(s[1] || 0);
+      const gem = isObj ? Number(s.extra ?? s.enchant ?? s.enchant_value ?? s.enchantValue ?? 0) : Number(s[2] || 0);
+      const grind = isObj ? Number(s.gvalue ?? s.grind ?? s.grind_value ?? s.grindValue ?? 0) : Number(s[3] || 0);
+      const enchanted = isObj
+        ? !!(s.enchanted === true || s.is_enchanted === true || s.isEnchanted === true)
+        : gem > 0; // Best-effort fallback for array payloads.
+      return {
+        type,
+        name:  statName(type),
+        // All calculations use base-only (no gem, no grind).
+        val:   Number.isFinite(val) ? val : 0,
+        gem:   Number.isFinite(gem) ? gem : 0,
+        grind: Number.isFinite(grind) ? grind : 0,
+        enchanted,
+        flat:  isFlat(type),
+        /** Qualifying sub rows for roles (`innate` if exporter duplicates prefix into sec_eff — excluded from statMap) */
+        source: 'sub',
+      };
+    });
 
     let swexEffRaw = raw.efficiency;
     if (swexEffRaw == null && raw.eff != null) swexEffRaw = raw.eff;
     const swexEffNum = Number(swexEffRaw);
 
     const rune = {
+      // Keep a reference to the original payload for debugging weird cases (e.g. impossible mains per slot).
+      _raw: raw,
       id:         raw.rune_id,
       slot,
       grade,

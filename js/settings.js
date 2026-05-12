@@ -5,8 +5,10 @@
 const STAT_NAMES = {
   1:  'HP',     2:  'HP%',    3:  'ATK',
   4:  'ATK%',   5:  'DEF',    6:  'DEF%',
-  8:  'CRate',  9:  'CDmg',   10: 'RES',
-  11: 'ACC',    12: 'SPD'
+  // SWEX stat IDs (used by pri_eff/sec_eff/prefix_eff):
+  // 8=SPD, 9=CRate, 10=CDmg, 11=RES, 12=ACC
+  8:  'SPD',    9:  'CRate',  10: 'CDmg',
+  11: 'RES',    12: 'ACC'
 };
 
 const SET_NAMES = {
@@ -24,18 +26,33 @@ const GRADE_NAMES = { 1:'Common', 2:'Magic', 3:'Rare', 4:'Hero', 5:'Legend' };
 /** Short labels used in UI / filters (SWEX rank → string) */
 const GRADE_SHORT = { 3:'Rare', 4:'Hero', 5:'Legend' };
 
+/** Shown in footer, changelog, and Copy summary — bump when shipping a user-visible build. */
+const APP_VERSION = '1.1.3';
+
 // ==== TRANSLATIONS ====
 const TRANSLATIONS = {
   en: {
     // Header
     title: 'SW Rune Master',
+    donateShort: 'Donate',
+    donateTitle: 'Support the project — opens Lava.top payment page',
+    donateAria: 'Donate — support the project (external page)',
+    footerDisclaimer:
+      'Summoners War™ is a trademark of Com2uS Corp. This site is not affiliated with or endorsed by Com2uS Corp.',
+    footerVersionLabel: 'Build',
     dashboard: 'Dashboard',
     runeTable: 'Rune Table',
     runeRules: 'Rune Rules',
     guide: 'Guide',
     changelog: 'Changelog',
-    changelogLead:
-      'These notes ship with the app. They are not personal scratch space and are not stored in browser storage — only a new build changes what you see here.',
+    changelogPageLead:
+      'Bundled with the app (not stored in your browser). Switch between release highlights and the roadmap.',
+    changelogSubtabShipped: 'Releases',
+    changelogSubtabRoadmap: 'Roadmap',
+    changelogShippedLead: 'Major themes only — routine fixes are not listed.',
+    changelogRoadmapLead: 'Discussed next steps; may not appear in the current build.',
+    changelogRoadmapEmpty: 'No roadmap items in this build.',
+    changelogSubtabsAria: 'Changelog sections',
     changelogEmpty: 'No release notes in this build yet.',
     loadJson: 'Load JSON',
     minLvl: 'Min Lvl',
@@ -233,18 +250,49 @@ const TRANSLATIONS = {
 
     dashboardScopeTitle: 'Global filter',
     dashboardScopeHint:
-      'Applies to the summary cards, charts below, and Rune Table. The suggested stage above is calculated from the full export separately.'
+      'Applies to verdict cards, charts, and Rune Table (min rune level and minimum grade). Account progression above always uses the full export.',
+    dashboardMinGradeLabel: 'Min grade',
+    dashboardMinGradeRare: 'Rare+',
+    dashboardMinGradeHero: 'Hero+',
+    dashboardMinGradeLegend: 'Legend only',
+    dashboardExportSummary: 'Copy summary',
+    dashboardExportDone: 'Dashboard summary copied.',
+    dashboardExportFail: 'Could not copy summary.',
+    dashboardVerdictMixTitle: 'Verdict mix',
+    dashboardVerdictStackHint: 'Click a segment to open the Rune Table with that verdict.',
+    dashboardChartLblCount: 'n',
+    dashboardChartLblAvg: 'avg',
+    dashboardGroupKeepers: 'Stash & power',
+    dashboardGroupQueue: 'Needs attention',
+    dashboardOpenTableHint: 'Opens Rune Table',
+    stageCompactExpand: 'Show full progression details',
+    stageCompactCollapse: 'Compact progression view',
+    stageMetricContribTpl: '+{pts} / {cap} pts',
+    effMedianCaption: 'Median efficiency (filtered): {pct}%',
+    dashboardExportEffBuckets: 'Histogram (5% buckets):',
   },
   ru: {
     // Header
     title: 'SW Rune Master',
+    donateShort: 'Донат',
+    donateTitle: 'Поддержать проект — откроется страница оплаты Lava.top',
+    donateAria: 'Донат — поддержать проект (внешняя страница)',
+    footerDisclaimer:
+      'Summoners War™ — торговая марка Com2uS Corp. Этот сайт не аффилирован с Com2uS Corp. и не одобрен ею.',
+    footerVersionLabel: 'Сборка',
     dashboard: 'Панель',
     runeTable: 'Руны',
     runeRules: 'Правила',
     guide: 'Гайд',
     changelog: 'Лог',
-    changelogLead:
-      'Эти записи идут вместе со сборкой приложения. Это не личный блокнот и не хранится в браузере — меняется только при обновлении версии.',
+    changelogPageLead:
+      'Идёт вместе со сборкой (не в localStorage). Переключайте вкладки: релизы и дорожная карта.',
+    changelogSubtabShipped: 'Релизы',
+    changelogSubtabRoadmap: 'Планы',
+    changelogShippedLead: 'Только крупные темы — мелкие правки не перечисляются.',
+    changelogRoadmapLead: 'Обсуждаемые шаги вперёд; в текущей сборке может не быть.',
+    changelogRoadmapEmpty: 'В этой сборке список планов пуст.',
+    changelogSubtabsAria: 'Разделы журнала',
     changelogEmpty: 'В этой сборке пока нет записей журнала.',
     loadJson: 'Загрузить JSON',
     minLvl: 'Мин Ур',
@@ -443,7 +491,26 @@ const TRANSLATIONS = {
 
     dashboardScopeTitle: 'Общий фильтр',
     dashboardScopeHint:
-      'Карточки сводки, графики и таблица рун. Совет по стадии выше считается отдельно по полному экспорту.'
+      'Влияет на карточки вердиктов, графики и таблицу (мин. уровень и мин. грейд). Прогресс аккаунта выше — всегда по полному экспорту.',
+    dashboardMinGradeLabel: 'Мин. грейд',
+    dashboardMinGradeRare: 'Rare+',
+    dashboardMinGradeHero: 'Hero+',
+    dashboardMinGradeLegend: 'Только Legend',
+    dashboardExportSummary: 'Копировать сводку',
+    dashboardExportDone: 'Сводка скопирована.',
+    dashboardExportFail: 'Не удалось скопировать.',
+    dashboardVerdictMixTitle: 'Вердикты',
+    dashboardVerdictStackHint: 'Клик по сегменту откроет таблицу с этим вердиктом.',
+    dashboardChartLblCount: 'n',
+    dashboardChartLblAvg: 'ср.',
+    dashboardGroupKeepers: 'Запас и качество',
+    dashboardGroupQueue: 'Требуют внимания',
+    dashboardOpenTableHint: 'Открыть таблицу',
+    stageCompactExpand: 'Показать детали прогресса',
+    stageCompactCollapse: 'Компактный вид прогресса',
+    stageMetricContribTpl: '+{pts} / {cap} балл.',
+    effMedianCaption: 'Медиана eff (с фильтром): {pct}%',
+    dashboardExportEffBuckets: 'Гистограмма (корзины по 5%):',
   }
 };
 
@@ -908,6 +975,13 @@ const DEFAULT_REAPP = {
   }
 };
 
+// Grind recommendation: always targets Late×grade High Roll line (same hrThresholds as role anchors).
+// gap: allowed distance multiplier (threshold - current <= gain * gap)
+const DEFAULT_GRIND = {
+  /** Stricter default: only subs within (gain × gap) of Late HR count. 0.5 ≈ half a grind window. */
+  gap: 0.5,
+};
+
 // ---- GEM (innate Enchant Gem) — aligns with Sheets “Meta Sets + bad innate per slot”
 const DEFAULT_GEM_META = {
   enabled: true,
@@ -1067,6 +1141,12 @@ function getSettings() {
   let reapp = saved?.reapp && typeof saved.reapp === 'object'
     ? JSON.parse(JSON.stringify(saved.reapp))
     : JSON.parse(JSON.stringify(DEFAULT_REAPP));
+  let grindGap = Number.isFinite(Number(saved?.grind?.gap)) ? Number(saved.grind.gap) : DEFAULT_GRIND.gap;
+  // v9: tighten Grind — old default gap was 1.0 (too many runes). Migrate bare 1.0 to new default.
+  if (presetVersion < 9 && (!saved?.grind || !Number.isFinite(Number(saved.grind.gap)) || Math.abs(Number(saved.grind.gap) - 1) < 1e-9)) {
+    grindGap = DEFAULT_GRIND.gap;
+  }
+  const grind = { gap: grindGap };
   if (presetVersion < 5) {
     gemMeta.sets = DEFAULT_GEM_META.sets.slice();
     gemMeta.legendOnlyInnate = DEFAULT_GEM_META.legendOnlyInnate;
@@ -1091,8 +1171,9 @@ function getSettings() {
     roles,
     formulas,
     rolePriority,
-    presetVersion: 7,
+    presetVersion: 9,
     reapp,
+    grind,
     gemMeta,
   };
 }
@@ -1108,12 +1189,54 @@ function applyDerivedThresholdFields(settings) {
 }
 
 /**
- * Maintainer-only release notes (edit here when you ship a meaningful change).
- * Shipped with the bundle — not writable from the UI and not stored in localStorage.
+ * Maintainer-only release notes. Shipped with the bundle — not editable in the UI.
+ * Roadmap bullets: STATIC_ROADMAP (Changelog tab → Plans).
+ *
+ * Each `items[locale]` is a string[] (legacy `{ shipped: [] }` is still read).
+ *
+ * Note: entries are newest-first. Calendar labels below use 2026-05-09 … 2026-05-12
+ * so the journal does not show dates after “today” when the bundle is dated May 12.
  */
 const STATIC_CHANGELOG = [
   {
-    date: '2026-05-14',
+    date: '2026-05-12',
+    items: {
+      en: [
+        '**v1.1.3** — Dashboard chart stats column: small “n” / “avg” labels, softer monospace numbers, vertical stack and a light divider so counts are not a bold block beside gold percentages.',
+        '**v1.1.2** — Dashboard role/set/slot bars use solid theme colors (accent / finish / grind); counts sit beside the bar so the number color is always the normal UI text color.',
+        '**v1.1.1** — Verdict mix ordered by count (largest segment left); role/set/slot bar gradients use the same verdict/theme tokens as the rest of the dashboard; donate heart tint; Copy summary button stretches to the Global filter card height.',
+        '**v1.1.0** — Site footer (Com2uS disclaimer + build version), subtle Donate link in header (Lava.top), Copy summary on the same row as global filters, dashboard chart counts padded and readable on short or empty fills.',
+        'SWEX stat IDs fixed (e.g. 8 = SPD, 9 = CRate) so main/sub labels, filters, and roles match the game exporter.',
+        'Engine uses base sub rolls only for roles, anchors, Duo/High checks, and verdict thresholds; each sub row still stores gem/grind/enchant flags for Gem and Grind rules.',
+        'Formula Min Stats counts how many Include substats are present (must-have excluded from the count); Require High Roll (anchor) stays a separate checkbox.',
+        'Verdict: failing Gem quality gate no longer downgrades to Sell when the rune already has a role; runes with no role and no Duo/High cannot end as Keep/Finish/Gem/Grind.',
+        'Grind recommends only SPD / HP% / DEF% / ATK% toward the Late×grade High Roll line from Engine constants; one-grind gains +5 SPD / +10% stats; row must be ungrinded and not enchanted; gap multiplier narrows how far below the line you can be (default 0.5 after preset v9 migration from the old 1.0 default).',
+        'Rune Rules → Verdict: separate cards for Gem, Grind, and Reapp (apply with Save & Recalculate). Role formula grids under Roles still auto-save and reprocess on each change.',
+        'Bad flat detection: any enchanted sub makes the rune “clean” for that check; low flat count matches spreadsheet-style rules.',
+        'Rune Table Target column: Grind shows ceil values; Gem shows Replace from → to.',
+        'Eff% uses the exporter’s efficiency field when the JSON includes it.',
+        'Debug: each parsed rune keeps `_raw` from SWEX for troubleshooting.',
+      ],
+      ru: [
+        '**v1.1.3** — Колонка статистики у графиков: подписи n / ср., приглушённые цифры, две строки и разделитель — без «кучи» жирных чисел рядом с процентами.',
+        '**v1.1.2** — Полосы ролей/сетов/слотов на дашборде — сплошные цвета темы (accent / finish / grind); числа рядом с полосой, цвет как у обычного текста интерфейса.',
+        '**v1.1.1** — Verdict mix по убыванию числа рун (крупнейший сегмент слева); градиенты ролей/сетов/слотов из тех же токенов, что вердикты и тема; красное сердце у доната; кнопка Copy summary по высоте карточки Global filter.',
+        '**v1.1.0** — Футер (дисклеймер Com2uS + версия сборки), аккуратная ссылка «Донат» в шапке (Lava.top), Copy summary в одной строке с фильтрами, подписи на графиках с отступом и читаемые при короткой заливке.',
+        'Исправлены ID статов SWEX (например 8 = SPD, 9 = CRate) — корректные мейны/сабы, фильтры и роли.',
+        'Движок считает роли, якоря и вердикты по базовому значению сабов (без гема/гринда); в строке саба по-прежнему хранятся флаги для правил Gem/Grind.',
+        'Min Stats в формулах — только подсчёт Include-сабов (must-have в счёт не входит); галочка Require High Roll (якорь) отдельно.',
+        'Вердикт: провал quality gate для Gem не уводит в Sell, если у руны уже есть роль; без роли и без Duo/High нельзя получить Keep/Finish/Gem/Grind.',
+        'Grind только для SPD / HP% / DEF% / ATK% к линии Late×грейд High Roll из констант Engine; прибавка одного гринда +5 SPD / +10% к статам; строка без гринда и без зачарования; множитель gap сужает окно (дефолт 0.5 после миграции v9 со старого 1.0).',
+        'Правила рун → Вердикт: отдельные блоки Gem, Grind, Reapp (применяются через «Сохранить и пересчитать»). Сетка формул в Roles по-прежнему сохраняется и пересчитывает руны при каждом изменении.',
+        'Плоские сабы: любой зачарованный саб делает руну «чистой» для этой проверки.',
+        'Колонка Target: Grind с округлением вверх; Gem — Replace из → в.',
+        'Eff% из поля efficiency в JSON, если оно есть.',
+        'Отладка: у распарсенной руны есть `_raw` из SWEX.',
+      ],
+    },
+  },
+  {
+    date: '2026-05-11',
     items: {
       en: [
         'DEFAULT_FORMULAS replaced to match the current spreadsheet exactly (all 6 archetypes incl. acceptedMains, mustHave, slotRequirements, minStats, requireHR). Preset migration v7 reapplies the six archetype formulas once for existing saves. Canonical export: default-formulas.json in the repo root.',
@@ -1124,7 +1247,7 @@ const STATIC_CHANGELOG = [
     },
   },
   {
-    date: '2026-05-13',
+    date: '2026-05-10',
     items: {
       en: [
         'Role engine: Classic DPS uses only the advanced formula path (legacy checkClassicDPS removed). Legacy checkRole is skipped for any role that has a formula entry so formulas are the single source of truth for the six archetypes.',
@@ -1143,7 +1266,7 @@ const STATIC_CHANGELOG = [
     },
   },
   {
-    date: '2026-05-12',
+    date: '2026-05-09',
     items: {
       en: [
         'Dashboard — Account progression: clearer copy for players; removed duplicate combined score next to the preset, the long formula footer, and internal jargon; clarified how the global filter relates to the suggestion.',
@@ -1161,7 +1284,22 @@ const STATIC_CHANGELOG = [
   },
 ];
 
+/** Roadmap (Changelog tab → Plans) — discussed work not necessarily shipped yet. */
+const STATIC_ROADMAP = {
+  en: [
+    'Optional “God potential” hint in the UI (informational only, not a Grind verdict).',
+    'Optional stricter Grind rules (e.g. minimum efficiency or count of HR-quality lines).',
+    'Further spreadsheet parity if counts drift after constant tweaks.',
+  ],
+  ru: [
+    'Опциональная подсказка «God potential» в интерфейсе (только информация, не вердикт Grind).',
+    'Опционально ужесточить Grind (например порог eff или число линий уровня HR).',
+    'Дальнейшая подгонка под таблицу при расхождении после правок констант.',
+  ],
+};
+
 window.SWRM = window.SWRM || {};
+window.SWRM.APP_VERSION = APP_VERSION;
 window.SWRM.settings = getSettings();
 window.SWRM.applyDerivedThresholdFields = applyDerivedThresholdFields;
 window.SWRM.STAT_NAMES = STAT_NAMES;
@@ -1185,9 +1323,11 @@ window.SWRM.GOD_STAT_ORDER = GOD_STAT_ORDER;
 window.SWRM.mergeGodConstants = mergeGodConstants;
 window.SWRM.getGodThreshold = getGodThreshold;
 window.SWRM.DEFAULT_REAPP = DEFAULT_REAPP;
+window.SWRM.DEFAULT_GRIND = DEFAULT_GRIND;
 window.SWRM.DEFAULT_GEM_META = DEFAULT_GEM_META;
 window.SWRM.mergeGemMeta = mergeGemMeta;
 window.SWRM.DEFAULT_FORMULAS = DEFAULT_FORMULAS;
 window.SWRM.saveSettings = saveSettings;
 window.SWRM.TRANSLATIONS = TRANSLATIONS;
 window.SWRM.STATIC_CHANGELOG = STATIC_CHANGELOG;
+window.SWRM.STATIC_ROADMAP = STATIC_ROADMAP;

@@ -2,9 +2,9 @@
   "Classic DPS": {
     "enabled": true,
     "acceptedMains": {
-      "2": ["SPD", "ATK%", "None"],
+      "2": ["SPD", "None", "None"],
       "4": ["CRate", "CDmg", "None"],
-      "6": ["ATK%", "HP%", "DEF%"]
+      "6": ["ATK%", "None", "None"]
     },
     "substats": {
       "SPD": { "Early": "Include", "Mid": "Include", "Late": "Include" },
@@ -16,17 +16,17 @@
       "ACC": { "Early": "None", "Mid": "None", "Late": "None" },
       "RES": { "Early": "None", "Mid": "None", "Late": "None" }
     },
-    "mustHave": { "Early": "None", "Mid": "None", "Late": "None" },
+    "mustHave": { "Early": "SPD", "Mid": "SPD", "Late": "SPD" },
     "slotRequirements": {
       "2": { "Early": "None", "Mid": "None", "Late": "None" },
-      "4": { "Early": "None", "Mid": "None", "Late": "None" },
-      "6": { "Early": "None", "Mid": "None", "Late": "None" }
+      "4": { "Early": "SPD", "Mid": "SPD", "Late": "SPD" },
+      "6": { "Early": "CRate", "Mid": "CRate", "Late": "CRate" }
     },
     "minStats": {
-      "1/3/5": { "Early": 2, "Mid": 2, "Late": 2 },
-      "Slot 2": { "Early": 2, "Mid": 2, "Late": 2 },
-      "Slot 4": { "Early": 2, "Mid": 2, "Late": 2 },
-      "Slot 6": { "Early": 2, "Mid": 2, "Late": 2 }
+      "1/3/5": { "Early": 1, "Mid": 2, "Late": 3 },
+      "Slot 2": { "Early": 1, "Mid": 1, "Late": 2 },
+      "Slot 4": { "Early": 1, "Mid": 1, "Late": 2 },
+      "Slot 6": { "Early": 1, "Mid": 1, "Late": 2 }
     },
     "requireHR": {
       "High Roll for Hero": { "Early": false, "Mid": true, "Late": true },
@@ -53,7 +53,7 @@
       "6": { "Early": "CRate", "Mid": "CRate", "Late": "CRate" }
     },
     "minStats": {
-      "1/3/5": { "Early": 1, "Mid": 2, "Late": 3 },
+      "1/3/5": { "Early": 1, "Mid": 2, "Late": 2 },
       "Slot 2": { "Early": 1, "Mid": 1, "Late": 2 },
       "Slot 4": { "Early": 1, "Mid": 1, "Late": 2 },
       "Slot 6": { "Early": 1, "Mid": 1, "Late": 2 }
@@ -96,9 +96,9 @@
   "Fast CC": {
     "enabled": true,
     "acceptedMains": {
-      "2": ["SPD", "None", "None"],
-      "4": ["CRate", "CDmg", "ATK%", "HP%", "DEF%"],
-      "6": ["ACC", "ATK%", "HP%", "DEF%"]
+      "2": ["SPD", "HP%", "DEF%"],
+      "4": ["HP%", "DEF%", "None"],
+      "6": ["HP%", "DEF%", "ACC"]
     },
     "substats": {
       "SPD": { "Early": "Include", "Mid": "Include", "Late": "Include" },
@@ -112,15 +112,15 @@
     },
     "mustHave": { "Early": "SPD", "Mid": "SPD", "Late": "SPD" },
     "slotRequirements": {
-      "2": { "Early": "None", "Mid": "None", "Late": "None" },
-      "4": { "Early": "None", "Mid": "None", "Late": "None" },
-      "6": { "Early": "None", "Mid": "None", "Late": "None" }
+      "2": { "Early": "SPD", "Mid": "SPD", "Late": "SPD" },
+      "4": { "Early": "SPD", "Mid": "SPD", "Late": "SPD" },
+      "6": { "Early": "SPD", "Mid": "SPD", "Late": "SPD" }
     },
     "minStats": {
       "1/3/5": { "Early": 2, "Mid": 2, "Late": 2 },
-      "Slot 2": { "Early": 2, "Mid": 2, "Late": 2 },
-      "Slot 4": { "Early": 2, "Mid": 2, "Late": 2 },
-      "Slot 6": { "Early": 2, "Mid": 2, "Late": 2 }
+      "Slot 2": { "Early": 1, "Mid": 1, "Late": 2 },
+      "Slot 4": { "Early": 1, "Mid": 1, "Late": 2 },
+      "Slot 6": { "Early": 1, "Mid": 1, "Late": 2 }
     },
     "requireHR": {
       "High Roll for Hero": { "Early": false, "Mid": true, "Late": true },
@@ -129,7 +129,7 @@
   },
   "Tank": {
     "enabled": true,
-    "acceptedMains": { "2": ["SPD", "HP%", "DEF%"], "4": ["HP%", "DEF%", "None"], "6": ["HP%", "DEF%", "RES"] },
+    "acceptedMains": { "2": ["HP%", "DEF%", "None"], "4": ["HP%", "DEF%", "None"], "6": ["HP%", "DEF%", "RES"] },
     "substats": {
       "SPD": { "Early": "Include", "Mid": "Include", "Late": "Include" },
       "HP%": { "Early": "Include", "Mid": "Include", "Late": "Include" },
@@ -159,11 +159,7 @@
   },
   "Bruiser": {
     "enabled": true,
-    "acceptedMains": {
-      "2": ["SPD", "HP%", "None"],
-      "4": ["CRate", "CDmg", "HP%", "DEF%", "ATK%"],
-      "6": ["HP%", "DEF%", "ATK%", "None"]
-    },
+    "acceptedMains": { "2": ["SPD", "HP%", "ATK%"], "4": ["CRate", "CDmg", "HP%"], "6": ["DEF%", "HP%", "ATK%"] },
     "substats": {
       "SPD": { "Early": "Include", "Mid": "Include", "Late": "Include" },
       "HP%": { "Early": "Include", "Mid": "Include", "Late": "Include" },
@@ -174,14 +170,14 @@
       "ACC": { "Early": "None", "Mid": "None", "Late": "None" },
       "RES": { "Early": "None", "Mid": "None", "Late": "None" }
     },
-    "mustHave": { "Early": "None", "Mid": "None", "Late": "None" },
+    "mustHave": { "Early": "CRate", "Mid": "CRate", "Late": "CRate" },
     "slotRequirements": {
       "2": { "Early": "None", "Mid": "None", "Late": "None" },
       "4": { "Early": "None", "Mid": "None", "Late": "None" },
-      "6": { "Early": "None", "Mid": "None", "Late": "None" }
+      "6": { "Early": "HP%", "Mid": "HP%", "Late": "HP%" }
     },
     "minStats": {
-      "1/3/5": { "Early": 2, "Mid": 2, "Late": 3 },
+      "1/3/5": { "Early": 3, "Mid": 3, "Late": 3 },
       "Slot 2": { "Early": 2, "Mid": 2, "Late": 3 },
       "Slot 4": { "Early": 2, "Mid": 2, "Late": 3 },
       "Slot 6": { "Early": 2, "Mid": 2, "Late": 3 }

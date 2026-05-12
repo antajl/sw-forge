@@ -66,8 +66,8 @@
     for (const s of rune.substats) {
       const maxRoll = SUB_MAX[s.type];
       if (maxRoll) {
-        const totalVal = s.val + (s.grind || 0);
-        score += (totalVal / (maxRoll * 5));
+        // Efficiency should ignore gem/grind: base roll only.
+        score += ((s.val || 0) / (maxRoll * 5));
       }
     }
     return Math.round((score / 2.8) * 100 * 10) / 10;
@@ -100,7 +100,9 @@
     const substats = (raw.sec_eff || []).map(s => ({
       type:  s[0],
       name:  statName(s[0]),
-      val:   s[1] + (s[2] || 0),   // base + enchant
+      // All calculations use base-only (no gem, no grind).
+      val:   s[1] || 0,
+      gem:   s[2] || 0,
       grind: s[3] || 0,
       flat:  isFlat(s[0]),
       /** Qualifying sub rows for roles (`innate` if exporter duplicates prefix into sec_eff — excluded from statMap) */
@@ -136,7 +138,8 @@
       verdict:    '',
     };
 
-    rune.eff = calcEfficiency(rune);
+    // Prefer the efficiency provided by the export (SWEX/SWOP). Fallback to local calc.
+    rune.eff = Number.isFinite(rune.swexEfficiency) ? rune.swexEfficiency : calcEfficiency(rune);
     return rune;
   }
 

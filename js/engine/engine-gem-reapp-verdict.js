@@ -17,7 +17,8 @@
       if (!qSub(s)) continue;
       if (flatIds.includes(s.type)) {
         const threshold = flatThresholds[s.type];
-        if (s.val <= threshold && s.grind === 0) {
+        // Base-only: ignore grind/gem.
+        if ((s.val || 0) <= threshold) {
           cleanFlatCount++;
         }
       }
@@ -39,7 +40,8 @@
       if (!qSub(s)) continue;
       const threshold = th[s.name]?.[key];
       if (!threshold) continue;
-      const currentVal = s.val + s.grind;
+      // Base-only current value; simulate grind gain from there.
+      const currentVal = (s.val || 0);
       const gain = GRIND_GAIN[s.name] || 0;
       if (currentVal < threshold && currentVal + gain >= threshold) {
         return { can: true, stat: s.name, from: currentVal, to: currentVal + gain, need: threshold };
@@ -221,7 +223,8 @@
         if (passesGemQualityGate(rune, stage, isHero, hasHighDuo, settings)) {
           return 'Gem';
         }
-        return finalizeGodSellOverride('Sell', mergedResults, rune, stage, settings);
+        // If a rune has a role (including Duo/God), do not Sell because of gem gating.
+        // Just skip Gem recommendation and continue to Grind/Keep.
       }
     }
 

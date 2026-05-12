@@ -22,7 +22,8 @@
       if (typeof window.SWRM.isQualifyingSubstatRow === 'function') {
         if (!window.SWRM.isQualifyingSubstatRow(s)) continue;
       } else if (s.source === 'innate') continue;
-      m[s.name] = (m[s.name] || 0) + s.val + s.grind;
+      // Base-only: ignore gem/grind.
+      m[s.name] = (m[s.name] || 0) + (s.val || 0);
     }
     return m;
   }
@@ -90,8 +91,8 @@
   }
 
   /**
-   * Min stats: count how many Include substats (other than must-have) are present on the rune
-   * at or above the High Roll threshold for this stage × grade — not the length of the Include list.
+   * Min stats: count how many Include substats (other than must-have) are present on the rune.
+   * This is independent from Anchor Requirements; anchors are handled separately in checkAnchorRequirements().
    */
   function checkMinStats(rune, formula, stage, includedStats, mustHaveStat, settings, sm) {
     let slotKey;
@@ -102,8 +103,6 @@
     }
 
     const minRequired = formula.minStats?.[slotKey]?.[stage] || 1;
-    const thresholds = settings?.hrThresholds || {};
-    const hrKey = modeKey(stage, rune.gradeStr);
 
     let count = 0;
     for (let i = 0; i < includedStats.length; i++) {
@@ -111,12 +110,7 @@
       if (stat === mustHaveStat) continue;
       const val = sm[stat] || 0;
       if (val <= 0) continue;
-      const th = thresholds[stat]?.[hrKey];
-      if (th != null && Number(th) > 0) {
-        if (val >= th) count++;
-      } else {
-        count++;
-      }
+      count++;
     }
     return count >= minRequired;
   }
@@ -287,7 +281,8 @@
         if (window.SWRM.passesGemQualityGate?.(rune, stage, isHero, hasHighDuo, settings)) {
           return 'Gem';
         }
-        return godSell('Sell');
+        // If a rune has a role (or Duo/God), it should not be Sold because of gem gating.
+        // Just skip Gem recommendation and continue to Grind/Keep.
       }
     }
     

@@ -734,11 +734,7 @@ function mergeGodConstants(saved) {
 const DEFAULT_FORMULAS = {
   'Classic DPS': {
     enabled: true,
-    acceptedMains: {
-      2: ['SPD', 'ATK%', 'None'],
-      4: ['CRate', 'CDmg', 'None'],
-      6: ['ATK%', 'HP%', 'DEF%'],
-    },
+    acceptedMains: { 2: ['SPD', 'None', 'None'], 4: ['CRate', 'CDmg', 'None'], 6: ['ATK%', 'None', 'None'] },
     substats: {
       SPD: { Early: 'Include', Mid: 'Include', Late: 'Include' },
       'HP%': { Early: 'None', Mid: 'None', Late: 'None' },
@@ -749,18 +745,9 @@ const DEFAULT_FORMULAS = {
       ACC: { Early: 'None', Mid: 'None', Late: 'None' },
       RES: { Early: 'None', Mid: 'None', Late: 'None' },
     },
-    mustHave: { Early: 'None', Mid: 'None', Late: 'None' },
-    slotRequirements: {
-      2: { Early: 'None', Mid: 'None', Late: 'None' },
-      4: { Early: 'None', Mid: 'None', Late: 'None' },
-      6: { Early: 'None', Mid: 'None', Late: 'None' },
-    },
-    minStats: {
-      '1/3/5': { Early: 2, Mid: 2, Late: 2 },
-      'Slot 2': { Early: 2, Mid: 2, Late: 2 },
-      'Slot 4': { Early: 2, Mid: 2, Late: 2 },
-      'Slot 6': { Early: 2, Mid: 2, Late: 2 },
-    },
+    mustHave: { Early: 'SPD', Mid: 'SPD', Late: 'SPD' },
+    slotRequirements: { 2: { Early: 'None', Mid: 'None', Late: 'None' }, 4: { Early: 'SPD', Mid: 'SPD', Late: 'SPD' }, 6: { Early: 'CRate', Mid: 'CRate', Late: 'CRate' } },
+    minStats: { '1/3/5': { Early: 1, Mid: 2, Late: 3 }, 'Slot 2': { Early: 1, Mid: 1, Late: 2 }, 'Slot 4': { Early: 1, Mid: 1, Late: 2 }, 'Slot 6': { Early: 1, Mid: 1, Late: 2 } },
     requireHR: { 'High Roll for Hero': { Early: false, Mid: true, Late: true }, 'High Roll for Legend': { Early: false, Mid: false, Late: true } },
   },
   'Slow DPS': {
@@ -778,7 +765,7 @@ const DEFAULT_FORMULAS = {
     },
     mustHave: { Early: 'CRate', Mid: 'CRate', Late: 'CRate' },
     slotRequirements: { 2: { Early: 'None', Mid: 'None', Late: 'None' }, 4: { Early: 'None', Mid: 'None', Late: 'None' }, 6: { Early: 'CRate', Mid: 'CRate', Late: 'CRate' } },
-    minStats: { '1/3/5': { Early: 1, Mid: 2, Late: 3 }, 'Slot 2': { Early: 1, Mid: 1, Late: 2 }, 'Slot 4': { Early: 1, Mid: 1, Late: 2 }, 'Slot 6': { Early: 1, Mid: 1, Late: 2 } },
+    minStats: { '1/3/5': { Early: 1, Mid: 2, Late: 2 }, 'Slot 2': { Early: 1, Mid: 1, Late: 2 }, 'Slot 4': { Early: 1, Mid: 1, Late: 2 }, 'Slot 6': { Early: 1, Mid: 1, Late: 2 } },
     requireHR: { 'High Roll for Hero': { Early: false, Mid: true, Late: true }, 'High Roll for Legend': { Early: false, Mid: false, Late: true } }
   },
   'Bomber': {
@@ -801,11 +788,7 @@ const DEFAULT_FORMULAS = {
   },
   'Fast CC': {
     enabled: true,
-    acceptedMains: {
-      2: ['SPD', 'None', 'None'],
-      4: ['CRate', 'CDmg', 'ATK%', 'HP%', 'DEF%'],
-      6: ['ACC', 'ATK%', 'HP%', 'DEF%'],
-    },
+    acceptedMains: { 2: ['SPD', 'HP%', 'DEF%'], 4: ['HP%', 'DEF%', 'None'], 6: ['HP%', 'DEF%', 'ACC'] },
     substats: {
       SPD: { Early: 'Include', Mid: 'Include', Late: 'Include' },
       'HP%': { Early: 'Include', Mid: 'Include', Late: 'Include' },
@@ -817,22 +800,13 @@ const DEFAULT_FORMULAS = {
       RES: { Early: 'None', Mid: 'None', Late: 'None' },
     },
     mustHave: { Early: 'SPD', Mid: 'SPD', Late: 'SPD' },
-    slotRequirements: {
-      2: { Early: 'None', Mid: 'None', Late: 'None' },
-      4: { Early: 'None', Mid: 'None', Late: 'None' },
-      6: { Early: 'None', Mid: 'None', Late: 'None' },
-    },
-    minStats: {
-      '1/3/5': { Early: 2, Mid: 2, Late: 2 },
-      'Slot 2': { Early: 2, Mid: 2, Late: 2 },
-      'Slot 4': { Early: 2, Mid: 2, Late: 2 },
-      'Slot 6': { Early: 2, Mid: 2, Late: 2 },
-    },
+    slotRequirements: { 2: { Early: 'SPD', Mid: 'SPD', Late: 'SPD' }, 4: { Early: 'SPD', Mid: 'SPD', Late: 'SPD' }, 6: { Early: 'SPD', Mid: 'SPD', Late: 'SPD' } },
+    minStats: { '1/3/5': { Early: 2, Mid: 2, Late: 2 }, 'Slot 2': { Early: 1, Mid: 1, Late: 2 }, 'Slot 4': { Early: 1, Mid: 1, Late: 2 }, 'Slot 6': { Early: 1, Mid: 1, Late: 2 } },
     requireHR: { 'High Roll for Hero': { Early: false, Mid: true, Late: true }, 'High Roll for Legend': { Early: false, Mid: false, Late: true } },
   },
   'Tank': {
     enabled: true,
-    acceptedMains: { 2: ['SPD', 'HP%', 'DEF%'], 4: ['HP%', 'DEF%', 'None'], 6: ['HP%', 'DEF%', 'RES'] },
+    acceptedMains: { 2: ['HP%', 'DEF%', 'None'], 4: ['HP%', 'DEF%', 'None'], 6: ['HP%', 'DEF%', 'RES'] },
     substats: {
       SPD: { Early: 'Include', Mid: 'Include', Late: 'Include' },
       'HP%': { Early: 'Include', Mid: 'Include', Late: 'Include' },
@@ -850,11 +824,7 @@ const DEFAULT_FORMULAS = {
   },
   'Bruiser': {
     enabled: true,
-    acceptedMains: {
-      2: ['SPD', 'HP%', 'None'],
-      4: ['CRate', 'CDmg', 'HP%', 'DEF%', 'ATK%'],
-      6: ['HP%', 'DEF%', 'ATK%', 'None'],
-    },
+    acceptedMains: { 2: ['SPD', 'HP%', 'ATK%'], 4: ['CRate', 'CDmg', 'HP%'], 6: ['DEF%', 'HP%', 'ATK%'] },
     substats: {
       SPD: { Early: 'Include', Mid: 'Include', Late: 'Include' },
       'HP%': { Early: 'Include', Mid: 'Include', Late: 'Include' },
@@ -865,18 +835,9 @@ const DEFAULT_FORMULAS = {
       ACC: { Early: 'None', Mid: 'None', Late: 'None' },
       RES: { Early: 'None', Mid: 'None', Late: 'None' },
     },
-    mustHave: { Early: 'None', Mid: 'None', Late: 'None' },
-    slotRequirements: {
-      2: { Early: 'None', Mid: 'None', Late: 'None' },
-      4: { Early: 'None', Mid: 'None', Late: 'None' },
-      6: { Early: 'None', Mid: 'None', Late: 'None' },
-    },
-    minStats: {
-      '1/3/5': { Early: 2, Mid: 2, Late: 3 },
-      'Slot 2': { Early: 2, Mid: 2, Late: 3 },
-      'Slot 4': { Early: 2, Mid: 2, Late: 3 },
-      'Slot 6': { Early: 2, Mid: 2, Late: 3 },
-    },
+    mustHave: { Early: 'CRate', Mid: 'CRate', Late: 'CRate' },
+    slotRequirements: { 2: { Early: 'None', Mid: 'None', Late: 'None' }, 4: { Early: 'None', Mid: 'None', Late: 'None' }, 6: { Early: 'HP%', Mid: 'HP%', Late: 'HP%' } },
+    minStats: { '1/3/5': { Early: 3, Mid: 3, Late: 3 }, 'Slot 2': { Early: 2, Mid: 2, Late: 3 }, 'Slot 4': { Early: 2, Mid: 2, Late: 3 }, 'Slot 6': { Early: 2, Mid: 2, Late: 3 } },
     requireHR: { 'High Roll for Hero': { Early: false, Mid: true, Late: true }, 'High Roll for Legend': { Early: false, Mid: true, Late: true } },
   },
 };
@@ -1112,8 +1073,8 @@ function getSettings() {
     gemMeta.qualityGate = JSON.parse(JSON.stringify(DEFAULT_GEM_META.qualityGate));
     reapp.sets = DEFAULT_REAPP.sets.slice();
   }
-  // Spreadsheet-aligned six archetypes (Fast CC / Classic DPS / Bruiser mains, minStats, slotReq).
-  if (presetVersion < 6) {
+  // Spreadsheet-aligned six archetypes (reapply once when defaults change).
+  if (presetVersion < 7) {
     ['Classic DPS', 'Slow DPS', 'Bomber', 'Fast CC', 'Tank', 'Bruiser'].forEach((name) => {
       if (DEFAULT_FORMULAS[name]) {
         formulas[name] = JSON.parse(JSON.stringify(DEFAULT_FORMULAS[name]));
@@ -1130,7 +1091,7 @@ function getSettings() {
     roles,
     formulas,
     rolePriority,
-    presetVersion: 6,
+    presetVersion: 7,
     reapp,
     gemMeta,
   };
@@ -1155,10 +1116,10 @@ const STATIC_CHANGELOG = [
     date: '2026-05-14',
     items: {
       en: [
-        'DEFAULT_FORMULAS aligned with Mid-game spreadsheet for Fast CC, Classic DPS, and Bruiser (acceptedMains, Include substats, mustHave, slotRequirements cleared where mains cover SPD, minStats 2/2 for Mid slots). Preset migration v6 reapplies the six archetype formulas once for saves already on v5. Canonical export: default-formulas.json in the repo root.',
+        'DEFAULT_FORMULAS replaced to match the current spreadsheet exactly (all 6 archetypes incl. acceptedMains, mustHave, slotRequirements, minStats, requireHR). Preset migration v7 reapplies the six archetype formulas once for existing saves. Canonical export: default-formulas.json in the repo root.',
       ],
       ru: [
-        'DEFAULT_FORMULAS приведены к Mid-таблице для Fast CC, Classic DPS и Bruiser (acceptedMains, Include, mustHave, slotRequirements). Миграция пресета v6 один раз обновляет шесть архетипов для сохранений на v5. Экспорт: default-formulas.json в корне репозитория.',
+        'DEFAULT_FORMULAS заменены в точном соответствии с текущей таблицей (все 6 архетипов: acceptedMains, mustHave, slotRequirements, minStats, requireHR). Миграция пресета v7 один раз обновляет шесть архетипов для существующих сохранений. Экспорт: default-formulas.json в корне репозитория.',
       ],
     },
   },

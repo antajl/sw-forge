@@ -24,7 +24,8 @@
     const m = {};
     for (const s of rune.substats) {
       if (!isQualifyingSubstatRow(s)) continue;
-      m[s.name] = (m[s.name] || 0) + s.val + s.grind;
+      // Base-only: ignore gem/grind for all calculations.
+      m[s.name] = (m[s.name] || 0) + (s.val || 0);
     }
     return m;
   }
@@ -42,7 +43,7 @@
       if (!tvals) continue;
       const threshold = tvals[key];
       if (threshold == null) continue;
-      const val = (s.val || 0) + (s.grind || 0);
+      const val = (s.val || 0);
       if (val >= threshold) count++;
     }
     if (count >= 3) return 3;

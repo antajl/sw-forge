@@ -889,7 +889,7 @@
     function runeSpdSubTotal(r) {
       let s = 0;
       for (const sub of r.substats || []) {
-        if (sub.name === 'SPD') s += (sub.val || 0) + (sub.grind || 0);
+        if (sub.name === 'SPD') s += (sub.val || 0);
       }
       return s;
     }
@@ -1319,7 +1319,8 @@
     }
     function subcell(sub) {
       if (!sub || !sub.name) return '';
-      return `${sub.name} ${sub.val}${sub.grind ? `+${sub.grind}` : ''}`;
+      // Export base-only values; gem/grind are not part of calculation view.
+      return `${sub.name} ${sub.val}`;
     }
     const lines = [headers.map(cellPart).join(',')];
     rows.forEach(r => {
@@ -1357,7 +1358,8 @@
     if (!s || !s.name) return '';
     const cls = statClass(s.name);
     const flat = s.flat ? ' flat' : '';
-    return `<span class="stat-chip ${cls}${flat}">${s.name} ${s.val}${s.grind ? `+${s.grind}` : ''}</span>`;
+    // Base-only in the main rune table. Gem/grind are shown only via Target details.
+    return `<span class="stat-chip ${cls}${flat}">${s.name} ${s.val}</span>`;
   }
 
   function statClass(name) {
@@ -1782,6 +1784,16 @@
         if (!settings.roles[formulaName].requireHR[anchorType]) settings.roles[formulaName].requireHR[anchorType] = {};
         settings.roles[formulaName].requireHR[anchorType][stage] = value;
       }
+    }
+
+    // Apply immediately: persist + recompute results so toggles feel responsive.
+    try {
+      saveSettings(window.SWRM.settings);
+    } catch (err) {
+      console.warn('Failed to persist settings after formula change:', err);
+    }
+    if (processedRunes && processedRunes.length) {
+      reprocess();
     }
   }
 
@@ -2515,7 +2527,7 @@
       rolePriority: [],
       reapp: JSON.parse(JSON.stringify(DEFAULT_REAPP)),
       gemMeta: JSON.parse(JSON.stringify(DEFAULT_GEM_META)),
-      presetVersion: 6,
+      presetVersion: 7,
     };
     window.SWRM.applyDerivedThresholdFields(window.SWRM.settings);
     localStorage.removeItem('swrm_settings_v1');

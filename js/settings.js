@@ -19,7 +19,8 @@ const SET_NAMES = {
   15: 'Will',     16: 'Shield',   17: 'Revenge',
   18: 'Destroy',  19: 'Fight',    20: 'Determination',
   21: 'Enhance',  22: 'Accuracy', 23: 'Tolerance',
-  24: 'Seal',     25: 'Intangible', 99: 'Immemorial',
+  24: 'Seal',     25: 'Intangible',
+  /* 99 is not a playable 4‑piece rune set name in SW; SWEX may still emit it — show as Set99 via parser fallback. */
 };
 
 const GRADE_NAMES = { 1:'Common', 2:'Magic', 3:'Rare', 4:'Hero', 5:'Legend' };
@@ -27,7 +28,7 @@ const GRADE_NAMES = { 1:'Common', 2:'Magic', 3:'Rare', 4:'Hero', 5:'Legend' };
 const GRADE_SHORT = { 3:'Rare', 4:'Hero', 5:'Legend' };
 
 /** Shown in footer, changelog, and Copy summary — bump when shipping a user-visible build. */
-const APP_VERSION = '1.1.5';
+const APP_VERSION = '1.2.7';
 
 // ==== TRANSLATIONS ====
 const TRANSLATIONS = {
@@ -54,6 +55,21 @@ const TRANSLATIONS = {
     changelogRoadmapEmpty: 'No roadmap items in this build.',
     changelogSubtabsAria: 'Changelog sections',
     changelogEmpty: 'No release notes in this build yet.',
+    guidePageLead:
+      'Plain-language notes for everyday use. Subsections mirror the main tabs; the last one you opened stays selected for this browser session.',
+    guideSubtabsAria: 'Guide sections',
+    guideSubtabStart: 'Getting started',
+    guideSubtabStartHint: 'SWEX, privacy, slots',
+    guideSubtabDashboard: 'Dashboard',
+    guideSubtabDashboardHint: 'Filters, charts, copy summary',
+    guideSubtabProgression: 'Account depth',
+    guideSubtabProgressionHint: 'Score math & stages',
+    guideSubtabTable: 'Rune Table',
+    guideSubtabTableHint: 'Search, filters, URL state',
+    guideSubtabRules: 'Rune Rules',
+    guideSubtabRulesHint: 'Engine, verdicts, roles',
+    guideSubtabTips: 'Tips & FAQ',
+    guideSubtabTipsHint: 'Theme, keyboard, changelog',
     loadJson: 'Load JSON',
     minLvl: 'Min Lvl',
     settings: 'Settings',
@@ -97,13 +113,36 @@ const TRANSLATIONS = {
     runeTableCountCapped: '{shown} / {total} {runes} in table',
     tableResetFilters: 'Reset filters',
     tableShownDetailEmpty: 'No runes match the current filters.',
-    tableShownDetailCapped: 'Showing {shown} of {total} matching runes (load more below).',
+    tableShownDetailCapped: 'Showing {shown} of {total} matching runes — use Load all above for the full list.',
     tableShownDetailAll: 'Showing all {total} matching runes.',
     toggleTargetCol: 'Show Target',
+    tableSummaryTitle: 'Rune summary',
+    tableSummaryRolesTitle: 'Roles',
+    tableSummaryTotal: 'Total',
+    tableAvgEffSuffix: 'avg',
+    tableToggleUncappedEff: 'Eff over 100%',
+    tableToggleUncappedEffTitle:
+      'Normally Eff% is capped at 100 (or taken from the JSON file). Turn this on to show the same formula as SWOP/SWOP-style sheets but without cutting at 100 — values above 100 mean “stronger than the formula’s reference build”, similar to how the Dashboard depth elite calc uses uncapped scores. When enabled, the table ignores exporter-only efficiency and uses our calculation.',
+    tableToggleCompact: 'Dense rows',
+    tableToggleCompactTitle: 'Tighter padding and chips on wide viewports (about 1200px+)',
+    tableEffHeaderCapped: 'Eff%',
+    tableEffHeaderUncapped: 'Eff (full)',
+    tableEffHeaderCappedTitle: 'Efficiency up to 100%, or the efficiency field from your export if the file has one.',
+    tableEffHeaderUncappedTitle:
+      'Same internal formula as the capped column, but not limited at 100%. Useful to compare very strong runes and to align with account-depth math.',
+    tableTooltipGrind: 'Grind',
+    tableTooltipGem: 'Gem',
+    tableToolbarSearchLabel: 'Search runes',
+    tableToolbarSectionActions: 'Actions',
+    tableToolbarSectionDisplay: 'Display',
+    runeTableMoreHintInline:
+      '{shown} / {total} in table · load all for full list (large exports may lag)',
     runeTableMoreHint:
-      'Only the first {shown} rows are loaded for speed. Scroll to this area — then you can load all {total} matching runes (very large lists may feel slower).',
+      'For speed, only the first {shown} rows are in the grid. Load all {total} matching runes when you need the full list (very large tables may feel slower).',
     runeTableShowAllButton: 'Load all {total} in table',
     targetHeading: 'Target',
+    targetGemReplaceVerb: 'Replace',
+    targetGemReplaceOr: ' or ',
     exportTableCsv: 'Export CSV',
     actionTargetUpgrade: 'Power to ≥ +9 before judging',
     actionTargetFinish: 'Power to +12',
@@ -168,16 +207,12 @@ const TRANSLATIONS = {
     configureRoleRules: 'Configure role rules. You can add a custom role or remove existing roles (minimum one role must remain).',
     newRole: 'New role',
     addRole: '+ Add role',
-    gemMetaRules: 'Gem (Innate) — Meta sets',
-    gemMetaRulesDesc: 'On listed sets, verdict Gem appears when innate is undesirable for this slot. Per-set overrides in JSON replace defaults for those slots.',
-    gemMetaToggle: 'Enable innate Gem hints',
-    gemMetaLegendOnly: 'Only Legend runes',
-    gemMetaSetsList: 'Meta sets (comma)',
-    gemUniversalFlats: 'Treat flat innate (HP ATK DEF) as bad',
-    gemExtrasLabel: 'Extra bad innate',
-    gemExtraBySlot: 'Extra bad innate by slot — one line per slot: Slot:STAT,STAT …',
-    gemPerSetJson: 'Per-set slot overrides (JSON)',
-    gemLegacySubs: 'Also use legacy “flat subs → grindable %” Gem',
+    gemMetaRules: 'Gem — bad flat subs',
+    gemMetaRulesDesc:
+      'Enchant Gem rerolls substats only (prefix / innate cannot be gemmed). Verdict Gem uses the spreadsheet-style bad-flat sub pattern (clean low flats, no enchantment on subs) plus a plausible grindable % target. Turning this off disables Gem hints.',
+    gemBadFlatGem: 'Enable Gem recommendations',
+    gemBadFlatHint:
+      'Two or more low flat subs early / one in late stage; enchanted subs make the rune “clean”; see engine bad-flat thresholds.',
     reappCandidateRules: 'Reapp Candidate Rules',
     reappDescription: 'If a rune has low efficiency and matches these filters, verdict can be Reapp.',
     allowedSets: 'Allowed sets (comma)',
@@ -249,7 +284,7 @@ const TRANSLATIONS = {
     stageCardMetaDesc:
       'Average efficiency on your best runes (up to 50). Baseline 80%, span 30 percentage points for the full 30-point term.',
 
-    stageEliteValFormat: '{eff}% · n={n}',
+    stageEliteValFormat: '{eff}% ({n})',
 
     stageFormulaExpl: '',
 
@@ -265,7 +300,6 @@ const TRANSLATIONS = {
     dashboardExportFail: 'Could not copy summary.',
     dashboardVerdictMixTitle: 'Verdict mix',
     dashboardVerdictStackHint: 'Click a segment to open the Rune Table with that verdict.',
-    dashboardChartLblCount: 'n',
     dashboardChartLblAvg: 'avg',
     dashboardGroupKeepers: 'Stash & power',
     dashboardGroupQueue: 'Needs attention',
@@ -299,6 +333,21 @@ const TRANSLATIONS = {
     changelogRoadmapEmpty: 'В этой сборке список планов пуст.',
     changelogSubtabsAria: 'Разделы журнала',
     changelogEmpty: 'В этой сборке пока нет записей журнала.',
+    guidePageLead:
+      'Коротко для обычного пользователя: подразделы совпадают с основными вкладками; последний открытый запоминается до закрытия браузера.',
+    guideSubtabsAria: 'Разделы гайда',
+    guideSubtabStart: 'С чего начать',
+    guideSubtabStartHint: 'SWEX, приватность, слоты',
+    guideSubtabDashboard: 'Панель',
+    guideSubtabDashboardHint: 'Фильтры, графики, сводка',
+    guideSubtabProgression: 'Глубина аккаунта',
+    guideSubtabProgressionHint: 'Формулы и стадии',
+    guideSubtabTable: 'Таблица рун',
+    guideSubtabTableHint: 'Поиск, фильтры, ссылка',
+    guideSubtabRules: 'Правила рун',
+    guideSubtabRulesHint: 'Движок, вердикты, роли',
+    guideSubtabTips: 'Советы и FAQ',
+    guideSubtabTipsHint: 'Тема, клавиши, журнал',
     loadJson: 'Загрузить JSON',
     minLvl: 'Мин Ур',
     settings: 'Настройки',
@@ -342,13 +391,36 @@ const TRANSLATIONS = {
     runeTableCountCapped: '{shown} / {total} {runes} в таблице',
     tableResetFilters: 'Сбросить фильтры',
     tableShownDetailEmpty: 'Нет рун по текущим фильтрам.',
-    tableShownDetailCapped: 'Показано {shown} из {total} подходящих рун (догрузка ниже).',
+    tableShownDetailCapped: 'Показано {shown} из {total} подходящих рун — полный список: «Загрузить все» выше.',
     tableShownDetailAll: 'Показаны все {total} подходящих рун.',
     toggleTargetCol: 'Колонка Target',
+    tableSummaryTitle: 'Сводка рун',
+    tableSummaryRolesTitle: 'Роли',
+    tableSummaryTotal: 'Всего',
+    tableAvgEffSuffix: 'средн.',
+    tableToggleUncappedEff: 'Eff выше 100%',
+    tableToggleUncappedEffTitle:
+      'Обычно Eff% ограничен 100 (или берётся из JSON экспорта). Включите, чтобы показать тот же расчёт, что и в таблицах SWOP, но без обрезки на 100 — значения выше 100 означают «сильнее эталонной сборки». В этом режиме игнорируется только поле efficiency из файла, берётся наш расчёт.',
+    tableToggleCompact: 'Плотнее строки',
+    tableToggleCompactTitle: 'Меньше отступов и чипов на широком экране (от ~1200px)',
+    tableEffHeaderCapped: 'Eff%',
+    tableEffHeaderUncapped: 'Eff (полн.)',
+    tableEffHeaderCappedTitle: 'Eff до 100% или значение efficiency из экспорта, если оно есть.',
+    tableEffHeaderUncappedTitle:
+      'Та же формула, что и в обычной колонке, но без ограничения 100%. Удобно сравнивать очень сильные руны и сверяться с расчётом глубины аккаунта.',
+    tableTooltipGrind: 'Grind',
+    tableTooltipGem: 'Gem',
+    tableToolbarSearchLabel: 'Поиск по рунам',
+    tableToolbarSectionActions: 'Действия',
+    tableToolbarSectionDisplay: 'Отображение',
+    runeTableMoreHintInline:
+      '{shown} / {total} в таблице · загрузите все для полного списка (тяжело на больших выборках)',
     runeTableMoreHint:
-      'Для скорости сначала загружены только первые {shown} строк. Прокрутите сюда вниз — затем можно загрузить все {total} подходящих рун (очень большой список может тормозить).',
+      'Для скорости в таблице только первые {shown} строк. Загрузите все {total} подходящих рун, когда нужен полный список (очень большие таблицы могут тормозить).',
     runeTableShowAllButton: 'Загрузить все {total} в таблице',
     targetHeading: 'Цель',
+    targetGemReplaceVerb: 'Заменить',
+    targetGemReplaceOr: ' или ',
     exportTableCsv: 'Экспорт CSV',
     actionTargetUpgrade: 'Докачать до ≥ +9',
     actionTargetFinish: 'Докачать до +12',
@@ -414,16 +486,12 @@ const TRANSLATIONS = {
     configureRoleRules: 'Настройте правила ролей. Вы можете добавить пользовательскую роль или удалить существующие (должна остаться минимум одна роль).',
     newRole: 'Новая роль',
     addRole: '+ Добавить роль',
-    gemMetaRules: 'Gem (врожд.) — мета-сеты',
-    gemMetaRulesDesc: 'На перечисленных сетах вердикт Gem, если врождённый стат «плохой» для слота. JSON ниже задаёт переопределения по сету и слоту.',
-    gemMetaToggle: 'Включить Gem по врождённому стату',
-    gemMetaLegendOnly: 'Только Legend',
-    gemMetaSetsList: 'Мета-сеты (через запятую)',
-    gemUniversalFlats: 'Считать плохим врождённый флет (HP ATK DEF)',
-    gemExtrasLabel: 'Доп. плохой innate',
-    gemExtraBySlot: 'Доп. плохие innate по слоту — строка на слот: Слот:СТАТ,СТАТ …',
-    gemPerSetJson: 'Переопределения по сетам (JSON)',
-    gemLegacySubs: 'Дополнительно старый Gem: флет в субстатах → % ',
+    gemMetaRules: 'Gem — плоские субстаты',
+    gemMetaRulesDesc:
+      'Камень зачарования меняет только субстаты (prefix / innate в игре нельзя геммить). Вердикт Gem использует паттерн «плоские сабы» как в таблице (несколько чистых низких флетов без зачара сабов и цель в «гриндимый» %). Выключите, чтобы скрыть подсказки Gem.',
+    gemBadFlatGem: 'Включить рекомендации Gem',
+    gemBadFlatHint:
+      'Два или более низких флета раньше / один позже; любой зачарованный саб делает руну «чистой»; пороги — в коде проверки bad flat.',
     reappCandidateRules: 'Правила Кандидатов на Перестановку',
     reappDescription: 'Если у руны низкая эффективность и она соответствует этим фильтрам, вердикт может быть "Переставить".',
     allowedSets: 'Разрешенные сеты (через запятую)',
@@ -495,7 +563,7 @@ const TRANSLATIONS = {
     stageCardMetaDesc:
       'Средняя эффективность по лучшим рунам (до 50). База 80%, диапазон 30 п.п. для полных 30 баллов.',
 
-    stageEliteValFormat: '{eff}% · n={n}',
+    stageEliteValFormat: '{eff}% ({n})',
 
     stageFormulaExpl: '',
 
@@ -511,7 +579,6 @@ const TRANSLATIONS = {
     dashboardExportFail: 'Не удалось скопировать.',
     dashboardVerdictMixTitle: 'Вердикты',
     dashboardVerdictStackHint: 'Клик по сегменту откроет таблицу с этим вердиктом.',
-    dashboardChartLblCount: 'n',
     dashboardChartLblAvg: 'ср.',
     dashboardGroupKeepers: 'Запас и качество',
     dashboardGroupQueue: 'Требуют внимания',
@@ -992,34 +1059,16 @@ const DEFAULT_GRIND = {
   gap: 0.5,
 };
 
-// ---- GEM (innate Enchant Gem) — aligns with Sheets “Meta Sets + bad innate per slot”
+// ---- GEM — Enchant Gem is sub-only (bad-flat pattern → grindable % target).
 const DEFAULT_GEM_META = {
-  enabled: true,
-  /** Spreadsheet Gem logic targets Legend runes primarily */
-  legendOnlyInnate: true,
-  /** Core meta sets where innate reroll is high value (matches spreadsheet list) */
-  sets: ['Violent', 'Will', 'Swift', 'Despair', 'Vampire', 'Rage', 'Intangible'],
-  /** Min calcEff (and Hero branch) before Gem verdict — tune to match spreadsheet */
+  /** Substat bad-flat Gem path — only Gem engine this build supports */
+  legacyFlatSubGem: true,
+  /** Min exporter/calc Eff (Hero branch uses heroMin when not Duo/God Roll) — tune to match spreadsheets */
   qualityGate: {
     early: { min: 40, heroMin: 52 },
     mid: { min: 55, heroMin: 67 },
     late: { min: 70, heroMin: 82 },
   },
-  /**
-   * If no entry in bySet[set][slot], merge extras for this slot + universal flat innates.
-   * bySet overrides: Violent:{ 2:["RES","ACC"], 4:[...] }
-   */
-  useUniversalFlatBadInnate: true,
-  universalFlatInnates: ['HP', 'ATK', 'DEF'],
-  extraBadBySlot: {
-    /** Example: ACC often weak innate on spd slot — extend in UI */
-    2: [],
-    4: [],
-    6: [],
-  },
-  bySet: {},
-  /** Fallback: previous engine — flat subs + suggest % target (deprecated path) */
-  legacyFlatSubGem: false,
 };
 
 // ---- EFFICIENCY MAX VALUES (Legend 6★ for each stat) ----
@@ -1057,22 +1106,18 @@ function saveSettings(s) {
 function mergeGemMeta(savedGem) {
   const d = JSON.parse(JSON.stringify(DEFAULT_GEM_META));
   if (!savedGem || typeof savedGem !== 'object') return d;
-  Object.assign(d, savedGem);
-  if (!Array.isArray(d.sets)) d.sets = DEFAULT_GEM_META.sets.slice();
-  if (!Array.isArray(d.universalFlatInnates)) d.universalFlatInnates = DEFAULT_GEM_META.universalFlatInnates.slice();
-  d.extraBadBySlot = Object.assign(
-    {},
-    DEFAULT_GEM_META.extraBadBySlot,
-    typeof savedGem.extraBadBySlot === 'object' && savedGem.extraBadBySlot ? savedGem.extraBadBySlot : {}
-  );
-  d.bySet = typeof savedGem.bySet === 'object' && savedGem.bySet ? JSON.parse(JSON.stringify(savedGem.bySet)) : {};
-  if (!d.qualityGate || typeof d.qualityGate !== 'object') {
+
+  if (typeof savedGem.legacyFlatSubGem === 'boolean') {
+    d.legacyFlatSubGem = savedGem.legacyFlatSubGem;
+  }
+  const qSaved = savedGem.qualityGate;
+  if (!qSaved || typeof qSaved !== 'object') {
     d.qualityGate = JSON.parse(JSON.stringify(DEFAULT_GEM_META.qualityGate));
   } else {
     d.qualityGate = {
-      early: Object.assign({}, DEFAULT_GEM_META.qualityGate.early, savedGem.qualityGate.early || {}),
-      mid: Object.assign({}, DEFAULT_GEM_META.qualityGate.mid, savedGem.qualityGate.mid || {}),
-      late: Object.assign({}, DEFAULT_GEM_META.qualityGate.late, savedGem.qualityGate.late || {}),
+      early: Object.assign({}, DEFAULT_GEM_META.qualityGate.early, qSaved.early || {}),
+      mid: Object.assign({}, DEFAULT_GEM_META.qualityGate.mid, qSaved.mid || {}),
+      late: Object.assign({}, DEFAULT_GEM_META.qualityGate.late, qSaved.late || {}),
     };
   }
   return d;
@@ -1158,10 +1203,12 @@ function getSettings() {
   }
   const grind = { gap: grindGap };
   if (presetVersion < 5) {
-    gemMeta.sets = DEFAULT_GEM_META.sets.slice();
-    gemMeta.legendOnlyInnate = DEFAULT_GEM_META.legendOnlyInnate;
     gemMeta.qualityGate = JSON.parse(JSON.stringify(DEFAULT_GEM_META.qualityGate));
     reapp.sets = DEFAULT_REAPP.sets.slice();
+  }
+  // One-time: innate-Gem UI removed — enable the substats-only path for browsers that saved legacyFlatSubGem: false next to innate defaults.
+  if (presetVersion < 10) {
+    gemMeta.legacyFlatSubGem = true;
   }
   // Spreadsheet-aligned six archetypes (reapply once when defaults change).
   if (presetVersion < 7) {
@@ -1181,7 +1228,7 @@ function getSettings() {
     roles,
     formulas,
     rolePriority,
-    presetVersion: 9,
+    presetVersion: 10,
     reapp,
     grind,
     gemMeta,
@@ -1212,6 +1259,18 @@ const STATIC_CHANGELOG = [
     date: '2026-05-12',
     items: {
       en: [
+        '**v1.2.7** — Guide tab: six named subtabs (Getting started, Dashboard, Account depth, Rune Table, Rune Rules, Tips & FAQ), fuller everyday copy in EN/RU, session memory for the active subsection.',
+        '**v1.2.6** — Removed misleading SET_NAMES entry “Immemorial” (99): not an equippable rune set in-game; rare SWEX `set_id` 99 labels as Set99.',
+        '**v1.2.5** — Set Distribution: sort sets by count (descending); scrollbar hidden while scrolling still works.',
+        '**v1.2.4** — Dashboard charts: counts without the “n” label; Set Distribution lists every game set with a scroll area; Copy summary matches.',
+        '**v1.2.3** — Full-bleed footer bar (like header); compact load-all hint beside the button with full details in tooltip.',
+        '**v1.2.2** — Rune Table toolbar: search and “load all rows” at the top; actions vs display grouped; removed scroll-to-reveal load UI (no resize hitch).',
+        '**v1.2.1** — Gem Target text lists only offending flat subs (e.g. “Replace HP” or “Replace HP or DEF”), without naming the grindable destination stat.',
+        '**v1.2.0** — Gem: innate / prefix reroll hints removed per game rules (Enchant Gem affects substats only). Verdict Gem now relies on the bad-flat sub path only (same toggle in Rune Rules). Preset migration v10 enables this path once for saved settings.',
+        '**v1.1.9** — Clearer labels for “eff over 100%”; dense table rows default on (stored as explicit off when disabled).',
+        '**v1.1.8** — Rune Table: sidebar translations + panel typography; optional uncapped Eff% (calc, matches Depth); dense rows toggle on wide viewports; Grind/Gem Target cells show engine fields in tooltip; summary averages follow the Eff mode.',
+        '**v1.1.7** — Rune Table: empty Role or Verdict leaves the cell blank (no chip shell).',
+        '**v1.1.6** — Rune Table: richer chip tints for Grade / Role / Verdict (same chip style as v1.1.5).',
         '**v1.1.5** — Rune Table: Set and Eff% use the same chip style as stats; Grade / Role / Verdict toned down to soft tints and borders so they match the numeric columns without loud gradients.',
         '**v1.1.4** — Rune Table: numeric columns right-aligned (tabular nums); filter chips on headers when active; zebra rows; sticky header in the scroll area; reset-filters control; debounced search with highlight; `/` focuses search, arrows/PageUp/PageDown scroll the table; URL state in `#runetable?…` (shareable); CSV exports Target only when that column is visible; always-visible “shown of total” line.',
         '**v1.1.3** — Dashboard chart stats column: small “n” / “avg” labels, softer monospace numbers, vertical stack and a light divider so counts are not a bold block beside gold percentages.',
@@ -1225,11 +1284,23 @@ const STATIC_CHANGELOG = [
         'Grind recommends only SPD / HP% / DEF% / ATK% toward the Late×grade High Roll line from Engine constants; one-grind gains +5 SPD / +10% stats; row must be ungrinded and not enchanted; gap multiplier narrows how far below the line you can be (default 0.5 after preset v9 migration from the old 1.0 default).',
         'Rune Rules → Verdict: separate cards for Gem, Grind, and Reapp (apply with Save & Recalculate). Role formula grids under Roles still auto-save and reprocess on each change.',
         'Bad flat detection: any enchanted sub makes the rune “clean” for that check; low flat count matches spreadsheet-style rules.',
-        'Rune Table Target column: Grind shows ceil values; Gem shows Replace from → to.',
+        'Rune Table Target column: Grind shows ceil values; Gem lists offending flat subs to replace.',
         'Eff% uses the exporter’s efficiency field when the JSON includes it.',
         'Debug: each parsed rune keeps `_raw` from SWEX for troubleshooting.',
       ],
       ru: [
+        '**v1.2.7** — Вкладка Гайд: шесть подразделов по названию (начало, панель, глубина, таблица, правила, советы), расширенный текст EN/RU, запоминание активного подраздела на сессию.',
+        '**v1.2.6** — Убрано имя «Immemorial» для set_id 99: это не полноценный сет рун в игре; при редком значении 99 в SWEX показывается Set99.',
+        '**v1.2.5** — Распределение по сетам: сортировка по числу рун по убыванию; полоса прокрутки скрыта, прокрутка колесом/тачем сохранена.',
+        '**v1.2.4** — Дашборд: у счётчиков на графиках без буквы «n»; распределение по сетам — все сеты игры со скроллом; экспорт сводки совпадает.',
+        '**v1.2.3** — Футер на всю ширину окна (как шапка); короткая подсказка у кнопки загрузки всех рун, полный текст — в подсказке при наведении.',
+        '**v1.2.2** — Таблица рун: тулбар сверху — поиск и загрузка всех строк; блоки «Действия» и «Отображение»; убрана догрузка по скроллу (меньше лагов при ресайзе).',
+        '**v1.2.1** — Текст Gem в Target только по плоским сабам («Заменить HP», «Заменить HP или DEF» и т.д.), без указания конкретного % цели.',
+        '**v1.2.0** — Gem: убраны подсказки по innate/prefix по правилам игры (камень зачарования — только сабы). Вердикт Gem только через bad-flat для субстатов; переключатель в Rune Rules. Миграция пресета v10 один раз включает этот путь в сохранённых настройках.',
+        '**v1.1.9** — Понятнее подписи «Eff выше 100%»; плотные строки по умолчанию включены (явное «выкл» в хранилище).',
+        '**v1.1.8** — Таблица рун: перевод сайдбара и типографика; опция Eff% без потолка (расчёт, как у Depth); плотные строки на широком экране; подсказка по grindInfo/gemInfo у Target; средние в сводке по выбранному режиму Eff.',
+        '**v1.1.7** — Таблица рун: пустые Role / Verdict — пустая ячейка без чипа.',
+        '**v1.1.6** — Таблица рун: более насыщенные тинты у Grade / Role / Verdict, тот же стиль чипов.',
         '**v1.1.5** — Таблица рун: Set и Eff% в тех же чипах, что статы; Grade / Role / Verdict приглушены (лёгкий тинт и рамка), без ярких градиентов, ближе к колонкам с цифрами.',
         '**v1.1.4** — Таблица рун: выравнивание чисел вправо; подсветка активных фильтров в шапке; чередование строк; липкая шапка в зоне прокрутки; кнопка сброса фильтров; поиск с задержкой и подсветкой; `/` — фокус поиска, стрелки/PageUp/PageDown — прокрутка таблицы; состояние в `#runetable?…`; CSV с Target только если колонка видна; строка «показано из» всегда под счётчиком.',
         '**v1.1.3** — Колонка статистики у графиков: подписи n / ср., приглушённые цифры, две строки и разделитель — без «кучи» жирных чисел рядом с процентами.',
@@ -1243,7 +1314,7 @@ const STATIC_CHANGELOG = [
         'Grind только для SPD / HP% / DEF% / ATK% к линии Late×грейд High Roll из констант Engine; прибавка одного гринда +5 SPD / +10% к статам; строка без гринда и без зачарования; множитель gap сужает окно (дефолт 0.5 после миграции v9 со старого 1.0).',
         'Правила рун → Вердикт: отдельные блоки Gem, Grind, Reapp (применяются через «Сохранить и пересчитать»). Сетка формул в Roles по-прежнему сохраняется и пересчитывает руны при каждом изменении.',
         'Плоские сабы: любой зачарованный саб делает руну «чистой» для этой проверки.',
-        'Колонка Target: Grind с округлением вверх; Gem — Replace из → в.',
+        'Колонка Target: Grind с округлением вверх; Gem — какие плоские сабы заменять.',
         'Eff% из поля efficiency в JSON, если оно есть.',
         'Отладка: у распарсенной руны есть `_raw` из SWEX.',
       ],

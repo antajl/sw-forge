@@ -25,7 +25,6 @@
   /** Lowercase search string for highlighting table cells (full query, not debounced). */
   let tableSearchHighlight = '';
   let searchDebounceTimer = null;
-  let runeTableMoreObserver = null;
   let globalMinLevel = 0;
   let globalMinGrade = 3;
   try {
@@ -176,6 +175,59 @@
     setChangelogSubtab(saved);
   }
 
+  const GUIDE_SUBTAB_KEY = 'swrm_guide_subtab_v1';
+  let guideSubtabsBound = false;
+
+  function normalizeGuideSubtabId(id) {
+    if (
+      id === 'start' ||
+      id === 'dashboard' ||
+      id === 'progression' ||
+      id === 'table' ||
+      id === 'rules' ||
+      id === 'tips'
+    ) {
+      return id;
+    }
+    return 'start';
+  }
+
+  function setGuideSubtab(subtabId) {
+    const nav = document.getElementById('guide-subtabs');
+    if (!nav) return;
+    const v = normalizeGuideSubtabId(subtabId);
+    nav.querySelectorAll('.rules-subtab').forEach((btn) => {
+      const active = btn.dataset.guideSubtab === v;
+      btn.classList.toggle('is-active', active);
+      btn.setAttribute('aria-selected', active ? 'true' : 'false');
+      btn.tabIndex = active ? 0 : -1;
+    });
+    document.querySelectorAll('#tab-guide .rules-subpanel[data-guide-subtab]').forEach((panel) => {
+      panel.classList.toggle('is-active', panel.dataset.guideSubtab === v);
+    });
+    try {
+      sessionStorage.setItem(GUIDE_SUBTAB_KEY, v);
+    } catch (e) {
+      /* ignore */
+    }
+  }
+
+  function initGuideSubtabs() {
+    const nav = document.getElementById('guide-subtabs');
+    if (!nav || guideSubtabsBound) return;
+    guideSubtabsBound = true;
+    nav.querySelectorAll('.rules-subtab').forEach((btn) => {
+      btn.addEventListener('click', () => setGuideSubtab(btn.dataset.guideSubtab));
+    });
+    let saved = 'start';
+    try {
+      saved = sessionStorage.getItem(GUIDE_SUBTAB_KEY) || 'start';
+    } catch (e) {
+      /* ignore */
+    }
+    setGuideSubtab(saved);
+  }
+
   /** Main nav tab ids — kept in URL as `#settings` etc. so refresh restores the same view. */
   const MAIN_TAB_IDS = ['dashboard', 'runetable', 'settings', 'guide', 'changelog', 'app-settings'];
 
@@ -207,6 +259,7 @@
     document.querySelectorAll('.tab-content').forEach((el) => {
       el.classList.toggle('hidden', el.id !== `tab-${id}`);
     });
+    document.documentElement.classList.toggle('swrm-runetable-active', id === 'runetable');
     if (id === 'settings') {
       const rulesRoot = document.getElementById('tab-settings');
       if (rulesRoot) rulesRoot.scrollTop = 0;
@@ -214,6 +267,10 @@
     if (id === 'changelog') {
       const chRoot = document.getElementById('tab-changelog');
       if (chRoot) chRoot.scrollTop = 0;
+    }
+    if (id === 'guide') {
+      const guideRoot = document.getElementById('tab-guide');
+      if (guideRoot) guideRoot.scrollTop = 0;
     }
     if (id === 'app-settings') {
       renderDbSlots();
@@ -270,6 +327,36 @@
     if (guideTab) guideTab.textContent = t.guide;
     const changelogTab = document.querySelector('[data-tab="changelog"]');
     if (changelogTab) changelogTab.textContent = t.changelog;
+    const guidePageTitle = document.getElementById('lbl-guide-page-title');
+    if (guidePageTitle) guidePageTitle.textContent = t.guide;
+    const guidePageLead = document.getElementById('lbl-guide-page-lead');
+    if (guidePageLead) guidePageLead.textContent = t.guidePageLead || '';
+    const subGuideStart = document.getElementById('lbl-guide-subtab-start');
+    if (subGuideStart) subGuideStart.textContent = t.guideSubtabStart || '';
+    const subGuideStartHint = document.getElementById('lbl-guide-subtab-start-hint');
+    if (subGuideStartHint) subGuideStartHint.textContent = t.guideSubtabStartHint || '';
+    const subGuideDash = document.getElementById('lbl-guide-subtab-dashboard');
+    if (subGuideDash) subGuideDash.textContent = t.guideSubtabDashboard || '';
+    const subGuideDashHint = document.getElementById('lbl-guide-subtab-dashboard-hint');
+    if (subGuideDashHint) subGuideDashHint.textContent = t.guideSubtabDashboardHint || '';
+    const subGuideProg = document.getElementById('lbl-guide-subtab-progression');
+    if (subGuideProg) subGuideProg.textContent = t.guideSubtabProgression || '';
+    const subGuideProgHint = document.getElementById('lbl-guide-subtab-progression-hint');
+    if (subGuideProgHint) subGuideProgHint.textContent = t.guideSubtabProgressionHint || '';
+    const subGuideTable = document.getElementById('lbl-guide-subtab-table');
+    if (subGuideTable) subGuideTable.textContent = t.guideSubtabTable || '';
+    const subGuideTableHint = document.getElementById('lbl-guide-subtab-table-hint');
+    if (subGuideTableHint) subGuideTableHint.textContent = t.guideSubtabTableHint || '';
+    const subGuideRules = document.getElementById('lbl-guide-subtab-rules');
+    if (subGuideRules) subGuideRules.textContent = t.guideSubtabRules || '';
+    const subGuideRulesHint = document.getElementById('lbl-guide-subtab-rules-hint');
+    if (subGuideRulesHint) subGuideRulesHint.textContent = t.guideSubtabRulesHint || '';
+    const subGuideTips = document.getElementById('lbl-guide-subtab-tips');
+    if (subGuideTips) subGuideTips.textContent = t.guideSubtabTips || '';
+    const subGuideTipsHint = document.getElementById('lbl-guide-subtab-tips-hint');
+    if (subGuideTipsHint) subGuideTipsHint.textContent = t.guideSubtabTipsHint || '';
+    const guideNav = document.getElementById('guide-subtabs');
+    if (guideNav) guideNav.setAttribute('aria-label', t.guideSubtabsAria || 'Guide');
     const changelogPageTitle = document.getElementById('lbl-changelog-page-title');
     if (changelogPageTitle) changelogPageTitle.textContent = t.changelog;
     const changelogPageLead = document.getElementById('lbl-changelog-page-lead');
@@ -423,6 +510,12 @@
     // Update search and filters
     const searchBox = document.getElementById('search-box');
     if (searchBox) searchBox.placeholder = t.searchPlaceholder;
+    const lblSearch = document.getElementById('lbl-search-box');
+    if (lblSearch) lblSearch.textContent = t.tableToolbarSearchLabel || 'Search';
+    const lblActions = document.getElementById('lbl-table-toolbar-actions');
+    if (lblActions) lblActions.textContent = t.tableToolbarSectionActions || 'Actions';
+    const lblDisplay = document.getElementById('lbl-table-toolbar-display');
+    if (lblDisplay) lblDisplay.textContent = t.tableToolbarSectionDisplay || 'Display';
     
     const filterVerdict = document.getElementById('filter-verdict');
     if (filterVerdict) {
@@ -445,6 +538,16 @@
     if (btnResetTbl) btnResetTbl.textContent = t.tableResetFilters || 'Reset filters';
     const lblTgt = document.getElementById('lbl-toggle-target');
     if (lblTgt) lblTgt.textContent = t.toggleTargetCol || 'Show Target';
+    const lblUnc = document.getElementById('lbl-toggle-uncapped-eff');
+    if (lblUnc) lblUnc.textContent = t.tableToggleUncappedEff || '';
+    const wrapUnc = document.getElementById('lbl-wrap-uncapped-eff');
+    if (wrapUnc) wrapUnc.title = t.tableToggleUncappedEffTitle || '';
+    const lblCp = document.getElementById('lbl-toggle-table-compact');
+    if (lblCp) lblCp.textContent = t.tableToggleCompact || '';
+    const wrapCp = document.getElementById('lbl-wrap-table-compact');
+    if (wrapCp) wrapCp.title = t.tableToggleCompactTitle || '';
+    const thTgt = document.getElementById('target-col-header');
+    if (thTgt) thTgt.textContent = t.targetHeading || 'Target';
 
     const filterGrade = document.getElementById('filter-grade');
     if (filterGrade) {
@@ -460,6 +563,8 @@
       filterSet.innerHTML = `<option value="">All Sets</option>${sets.map(s => `<option value="${s}">${s}</option>`).join('')}`;
       if (sets.includes(current)) filterSet.value = current;
     }
+    updateRuneTableEffHeaderUi();
+
     const filterSlot = document.getElementById('filter-slot');
     if (filterSlot) {
       const current = filterSlot.value;
@@ -534,32 +639,16 @@
     if (duoPv) duoPv.textContent = t.enginePreviewDuo || '';
     const dg = settingsTab.querySelector('.gem-meta-desc');
     if (dg) dg.textContent = t.gemMetaRulesDesc;
+    const gh = document.getElementById('gem-bad-flat-hint');
+    if (gh) gh.textContent = t.gemBadFlatHint || '';
     const dre = settingsTab.querySelector('.reapp-rules-desc');
     if (dre) dre.textContent = t.reappDescription;
     const drf = settingsTab.querySelector('.role-filters-desc');
     if (drf) drf.textContent = t.configureRoleRules;
 
-    const gmtl = document.getElementById('gem-meta-toggle-label');
-    if (gmtl) gmtl.textContent = t.gemMetaToggle;
-    const gl = document.getElementById('gem-meta-legend-label');
-    if (gl) gl.textContent = t.gemMetaLegendOnly;
-    const gfs = document.getElementById('gem-universal-flats-label');
-    if (gfs) gfs.textContent = t.gemUniversalFlats;
-    const gleg = document.getElementById('gem-legacy-subs-label');
-    if (gleg) gleg.textContent = t.gemLegacySubs;
-    const xh = settingsTab.querySelector('.gem-extra-hint');
-    if (xh) xh.textContent = t.gemExtraBySlot;
+    const gb = document.getElementById('gem-bad-flat-label');
+    if (gb) gb.textContent = t.gemBadFlatGem || '';
 
-    const gemSetsInput = document.getElementById('gem-meta-sets');
-    const gemSetsLabel = gemSetsInput?.closest('.settings-row')?.querySelector('label');
-    if (gemSetsLabel && gemSetsLabel.childNodes[0]) gemSetsLabel.childNodes[0].textContent = t.gemMetaSetsList + ' ';
-    const gemJsonInput = document.getElementById('gem-meta-by-set-json');
-    const gemJsonLbl = gemJsonInput?.closest('.settings-row')?.querySelector('label');
-    if (gemJsonLbl && gemJsonLbl.childNodes[0]) gemJsonLbl.childNodes[0].textContent = t.gemPerSetJson + ' ';
-    const gemExTa = document.getElementById('gem-meta-extra-slots');
-    const gemExLbl = gemExTa?.closest('.settings-row')?.querySelector('label');
-    if (gemExLbl && gemExLbl.childNodes[0]) gemExLbl.childNodes[0].textContent = t.gemExtrasLabel + ' ';
-    
     // Update new role label (only text node, keep input)
     const newRoleRow = document.getElementById('new-role-name')?.closest('.settings-row');
     if (newRoleRow) {
@@ -1085,12 +1174,10 @@
           </div>`;
   }
 
-  /** Right column: muted labeled lines (n / avg) so counts do not compete with the bar. */
+  /** Right column: count value + labeled avg line (no prefix letter before count). */
   function chartRowStatsHtml(cnt, avgDisplay, tloc) {
-    const lc = escapeHtml((tloc && tloc.dashboardChartLblCount) || 'n');
     const la = escapeHtml((tloc && tloc.dashboardChartLblAvg) || 'avg');
     const countLine = `<div class="chart-stat-line chart-stat-line--count">
-      <span class="chart-stat-lbl">${lc}</span>
       <span class="chart-stat-val">${cnt}</span>
     </div>`;
     if (avgDisplay === undefined) {
@@ -1331,6 +1418,23 @@
     globalMinGrade = pick;
   }
 
+  /** Full game roster + unknown exporter sets; ordered by count high→low (ties A→Z). */
+  function getDashboardSetDisplayOrder(setCounts) {
+    const raw = Object.values((window.SWRM && window.SWRM.SET_NAMES) || {});
+    const uniqKnown = [...new Set(raw)];
+    const knownSet = new Set(uniqKnown);
+    const extras = Object.keys(setCounts || {}).filter((x) => x && !knownSet.has(x));
+    const all = uniqKnown.concat(extras);
+    const sc = setCounts || {};
+    all.sort((a, b) => {
+      const ca = sc[a] || 0;
+      const cb = sc[b] || 0;
+      if (cb !== ca) return cb - ca;
+      return String(a).localeCompare(String(b));
+    });
+    return all;
+  }
+
   function aggregateDashboardRunes(runes) {
     const counts = { Keep: 0, Sell: 0, Grind: 0, Finish: 0, Reapp: 0, Upgrade: 0, Gem: 0 };
     const roleCounts = {};
@@ -1390,7 +1494,7 @@
         `(+${metrics.spdPoints}/${metrics.spdCap} +${metrics.plus15Points}/${metrics.plus15Cap} +${metrics.elitePoints}/${metrics.eliteCap})`
     );
     lines.push(
-      `${t.stageCardHrName || 'SPD depth'}: ${metrics.spdDepthCount}, ${t.stageCardKeepName || '+15'}: ${metrics.plus15DepthCount}, ${t.stageCardMetaName || 'Elite'}: ${metrics.eliteAvgEff}% (n=${metrics.eliteSampleSize})`
+      `${t.stageCardHrName || 'SPD depth'}: ${metrics.spdDepthCount}, ${t.stageCardKeepName || '+15'}: ${metrics.plus15DepthCount}, ${t.stageCardMetaName || 'Elite'}: ${metrics.eliteAvgEff}% (${metrics.eliteSampleSize})`
     );
     lines.push(`${t.dashboardScopeTitle || 'Filter'}: ${t.minLvl || 'Min Lvl'} +${globalMinLevel}, ${t.dashboardMinGradeLabel || 'Grade'} ≥ ${globalMinGrade}`);
     lines.push(`${t.totalRunes || 'Total'} (${t.dashboardScopeTitle || 'view'}): ${vis.length}`);
@@ -1413,14 +1517,15 @@
     });
 
     lines.push('');
-    lines.push((t.setDistribution || 'Set Distribution') + ' (top 10)');
-    Object.entries(agg.setCounts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 10)
-      .forEach(([name, cnt]) => {
-        const avg = (agg.setEff[name].reduce((a, b) => a + b, 0) / agg.setEff[name].length).toFixed(1);
-        lines.push(`  ${name}: ${cnt} · avg ${avg}%`);
-      });
+    lines.push(t.setDistribution || 'Set Distribution');
+    getDashboardSetDisplayOrder(agg.setCounts).forEach((name) => {
+      const cnt = agg.setCounts[name] || 0;
+      const se = agg.setEff[name];
+      const avg = se && se.length
+        ? (se.reduce((a, b) => a + b, 0) / se.length).toFixed(1)
+        : '-';
+      lines.push(`  ${name}: ${cnt} · avg ${avg}%`);
+    });
 
     lines.push('');
     lines.push(t.slotDistribution || 'Slot Distribution');
@@ -1606,11 +1711,15 @@
 
     const setEl = document.getElementById('set-chart');
     setEl.innerHTML = '';
-    const topSets = Object.entries(setCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);
-    const maxSet = topSets[0]?.[1] || 1;
-    for (const [name, cnt] of topSets) {
+    const setOrder = getDashboardSetDisplayOrder(setCounts);
+    const maxSet = Math.max(...setOrder.map((nm) => setCounts[nm] || 0), 1);
+    for (const name of setOrder) {
+      const cnt = setCounts[name] || 0;
+      const effList = setEff[name];
+      const avg = effList && effList.length
+        ? (effList.reduce((a, b) => a + b, 0) / effList.length).toFixed(1)
+        : '-';
       const pct = ((cnt / maxSet) * 100).toFixed(1);
-      const avg = (setEff[name].reduce((a, b) => a + b, 0) / setEff[name].length).toFixed(1);
       const en = escapeHtml(name);
       setEl.innerHTML += `
         <div class="chart-row">
@@ -1688,6 +1797,45 @@
 
   let filteredRunes = [];
 
+  function getRuneNumericEff(r) {
+    if (!r) return 0;
+    if (document.getElementById('toggle-table-uncapped-eff')?.checked && window.SWRM.calcEfficiencyUncapped) {
+      const v = window.SWRM.calcEfficiencyUncapped(r);
+      return Number.isFinite(v) ? v : 0;
+    }
+    return Number.isFinite(r.eff) ? r.eff : 0;
+  }
+
+  function syncRuneTableCompactLayout() {
+    const wrap = document.getElementById('rune-table-scroll');
+    const on = !!document.getElementById('toggle-table-compact')?.checked;
+    wrap?.classList.toggle('rune-table-scroll--compact', on);
+  }
+
+  function updateRuneTableEffHeaderUi() {
+    const lbl = document.getElementById('lbl-th-eff');
+    if (!lbl) return;
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const unc = !!document.getElementById('toggle-table-uncapped-eff')?.checked;
+    lbl.textContent = unc ? (t.tableEffHeaderUncapped || 'Eff%') : (t.tableEffHeaderCapped || 'Eff%');
+    lbl.setAttribute(
+      'title',
+      unc ? (t.tableEffHeaderUncappedTitle || '') : (t.tableEffHeaderCappedTitle || '')
+    );
+  }
+
+  function initRuneTablePrefsFromStorage() {
+    try {
+      const ue = document.getElementById('toggle-table-uncapped-eff');
+      if (ue) ue.checked = localStorage.getItem('swrm_table_uncapped_eff_v1') === '1';
+      const cp = document.getElementById('toggle-table-compact');
+      /* Default ON; explicit '0' turns off (legacy '' treated as default on). */
+      if (cp) cp.checked = localStorage.getItem('swrm_table_compact_v1') !== '0';
+    } catch (e) { /* ignore */ }
+    syncRuneTableCompactLayout();
+    updateRuneTableEffHeaderUi();
+  }
+
   function sortRunesInPlace(arr, key, dir) {
     arr.sort((a, b) => {
       let av;
@@ -1698,7 +1846,7 @@
         case 'grade':   av = a.grade;   bv = b.grade;   break;
         case 'level':   av = a.level;   bv = b.level;   break;
         case 'main':    av = a.mainName;bv = b.mainName;break;
-        case 'eff':     av = a.eff;     bv = b.eff;     break;
+        case 'eff':     av = getRuneNumericEff(a); bv = getRuneNumericEff(b); break;
         case 'role':    av = a.role;    bv = b.role;    break;
         case 'verdict': av = a.verdict; bv = b.verdict; break;
         case 's1':      av = a.substats[0]?.name || ''; bv = b.substats[0]?.name || ''; break;
@@ -1733,11 +1881,13 @@
       return '';
     }
     if (v === 'Gem') {
-      if (r.gemInfo?.kind === 'innate-meta') {
-        return `Innate ${r.gemInfo.innate || ''} → reroll`;
-      }
-      if (r.gemInfo?.from && r.gemInfo?.to) {
-        return `Replace ${r.gemInfo.from} → ${r.gemInfo.to}`;
+      const subs = Array.isArray(r.gemInfo?.badFlatSubs)
+        ? r.gemInfo.badFlatSubs.filter(Boolean)
+        : [];
+      if (subs.length > 0) {
+        const verb = tl.targetGemReplaceVerb || 'Replace';
+        const sep = tl.targetGemReplaceOr || ' or ';
+        return `${verb} ${subs.join(sep)}`;
       }
       return '';
     }
@@ -1747,49 +1897,56 @@
     return '';
   }
 
-  function disconnectRuneTableMoreObserver() {
-    if (runeTableMoreObserver) {
-      runeTableMoreObserver.disconnect();
-      runeTableMoreObserver = null;
+  /** Raw grindInfo / gemInfo fields for native tooltip on Target cell (Grind/Gem). */
+  function runeEngineDetailTooltip(r) {
+    const tl = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const parts = [];
+    const v = r.verdict || '';
+    if (v === 'Grind' && r.grindInfo && typeof r.grindInfo === 'object') {
+      parts.push(tl.tableTooltipGrind || 'Grind');
+      Object.keys(r.grindInfo).sort().forEach((k) => {
+        const val = r.grindInfo[k];
+        if (val === undefined || val === null || val === '') return;
+        parts.push(`${k}=${val}`);
+      });
+    } else if (v === 'Gem' && r.gemInfo && typeof r.gemInfo === 'object') {
+      parts.push(tl.tableTooltipGem || 'Gem');
+      Object.keys(r.gemInfo).sort().forEach((k) => {
+        const val = r.gemInfo[k];
+        if (val === undefined || val === null || val === '') return;
+        parts.push(`${k}=${val}`);
+      });
     }
+    return parts.join(' · ');
   }
 
   function setupRuneTableMoreUi(total, rendered) {
-    const zone = document.getElementById('rune-table-more-zone');
-    const bar = document.getElementById('rune-table-show-all-bar');
-    const sentinel = document.getElementById('rune-table-sentinel');
+    const strip = document.getElementById('rune-table-load-strip');
     const hint = document.getElementById('lbl-rune-table-more-hint');
     const btn = document.getElementById('btn-rune-table-show-all');
-    if (!zone || !bar || !sentinel) return;
-
-    disconnectRuneTableMoreObserver();
-    bar.classList.add('hidden');
+    if (!strip) return;
 
     if (runeTableShowAll || total <= RUNE_TABLE_PAGE || rendered >= total) {
-      zone.classList.add('hidden');
+      strip.classList.add('hidden');
+      strip.setAttribute('aria-hidden', 'true');
       return;
     }
 
-    zone.classList.remove('hidden');
+    strip.classList.remove('hidden');
+    strip.removeAttribute('aria-hidden');
     const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const detailHint = (tloc.runeTableMoreHint || '')
+      .replace(/\{shown\}/g, String(rendered))
+      .replace(/\{total\}/g, String(total));
     if (hint) {
-      hint.textContent = (tloc.runeTableMoreHint || '')
+      hint.textContent = (tloc.runeTableMoreHintInline || '')
         .replace(/\{shown\}/g, String(rendered))
         .replace(/\{total\}/g, String(total));
     }
     if (btn) {
       btn.textContent = (tloc.runeTableShowAllButton || '').replace(/\{total\}/g, String(total));
+      btn.title = detailHint;
     }
-
-    runeTableMoreObserver = new IntersectionObserver((entries) => {
-      for (let i = 0; i < entries.length; i++) {
-        if (!entries[i].isIntersecting) continue;
-        bar.classList.remove('hidden');
-        disconnectRuneTableMoreObserver();
-        return;
-      }
-    }, { root: null, rootMargin: '100px 0px 160px 0px', threshold: 0 });
-    runeTableMoreObserver.observe(sentinel);
   }
 
   function buildRuneTableQuerySuffix() {
@@ -1812,6 +1969,8 @@
     if (sortDir !== 'desc') p.set('dir', sortDir);
     if (document.getElementById('toggle-target-col')?.checked) p.set('target', '1');
     if (runeTableShowAll) p.set('all', '1');
+    if (document.getElementById('toggle-table-uncapped-eff')?.checked) p.set('ueff', '1');
+    if (document.getElementById('toggle-table-compact')?.checked) p.set('cpt', '1');
     const s = p.toString();
     return s ? `?${s}` : '';
   }
@@ -1851,11 +2010,25 @@
       }
       if (params.has('all')) runeTableShowAll = params.get('all') === '1';
       else runeTableShowAll = false;
+      if (params.has('ueff')) {
+        const on = params.get('ueff') === '1';
+        const ue = document.getElementById('toggle-table-uncapped-eff');
+        if (ue) ue.checked = on;
+        try { localStorage.setItem('swrm_table_uncapped_eff_v1', on ? '1' : ''); } catch (e2) { /* ignore */ }
+      }
+      if (params.has('cpt')) {
+        const on = params.get('cpt') === '1';
+        const cp = document.getElementById('toggle-table-compact');
+        if (cp) cp.checked = on;
+        try { localStorage.setItem('swrm_table_compact_v1', on ? '1' : '0'); } catch (e2) { /* ignore */ }
+      }
       const manualTarget = document.getElementById('toggle-target-col')?.checked;
       document.getElementById('target-col-header')?.classList.toggle('hidden', !manualTarget);
       document.getElementById('rune-table')?.classList.toggle('show-target', !!manualTarget);
     } finally {
       runeTableApplyingHash = false;
+      syncRuneTableCompactLayout();
+      updateRuneTableEffHeaderUi();
     }
   }
 
@@ -2045,7 +2218,7 @@
         subcell(subs[1]),
         subcell(subs[2]),
         subcell(subs[3]),
-        `${r.eff}%`,
+        `${getRuneNumericEff(r).toFixed(1)}%`,
         r.role || '',
         r.verdict || '',
       ];
@@ -2093,8 +2266,11 @@
     const gradeLabel = { Legend: 'Legend', Hero: 'Hero', Rare: 'Rare' }[gradeKey] || String(r.gradeStr);
     const grade = `<span class="grade-tag ${gradeClass}">${highlightSearchInPlain(gradeLabel, tableSearchHighlight)}</span>`;
 
-    const effTier = r.eff >= 90 ? 'stat-chip--eff-hi' : r.eff >= 75 ? 'stat-chip--eff-mid' : 'stat-chip--eff-lo';
-    const rCls   = roleClass(r.role);
+    const effNum = getRuneNumericEff(r);
+    const effTier =
+      effNum >= 90 ? 'stat-chip--eff-hi' : effNum >= 75 ? 'stat-chip--eff-mid' : 'stat-chip--eff-lo';
+    const effShown = `${(Math.round(effNum * 10) / 10).toFixed(1)}%`;
+    const rCls = roleClass(r.role);
     const subs   = r.substats.slice(0, 4);
     const innate = r.innate_name ? `${r.innate_name} ${r.innate_val}` : '';
     const innateHtml = innate
@@ -2104,7 +2280,17 @@
     const targetHtml = target
       ? `<span class="stat-chip">${highlightSearchInPlain(target, tableSearchHighlight)}</span>`
       : '';
+    const targetTipRaw = runeEngineDetailTooltip(r);
+    const targetTipAttr = targetTipRaw ? ` title="${escapeAttr(targetTipRaw)}"` : '';
     const mainInner = highlightSearchInPlain(r.mainName, tableSearchHighlight);
+    const roleText = (r.role || '').trim();
+    const roleHtml = roleText
+      ? `<span class="role-tag ${rCls}">${highlightSearchInPlain(roleText, tableSearchHighlight)}</span>`
+      : '';
+    const verdictText = (r.verdict || '').trim();
+    const verdictHtml = verdictText
+      ? `<span class="verdict-tag ${verdictText.toLowerCase()}">${highlightSearchInPlain(verdictText, tableSearchHighlight)}</span>`
+      : '';
 
     return `<tr>
       <td>${grade}</td>
@@ -2117,10 +2303,10 @@
       <td>${subs[1] ? statChip(subs[1]) : ''}</td>
       <td>${subs[2] ? statChip(subs[2]) : ''}</td>
       <td>${subs[3] ? statChip(subs[3]) : ''}</td>
-      <td class="td-num"><span class="stat-chip stat-chip--eff ${effTier}">${highlightSearchInPlain(`${r.eff}%`, tableSearchHighlight)}</span></td>
-      <td><span class="role-tag ${rCls}">${highlightSearchInPlain(r.role || '', tableSearchHighlight)}</span></td>
-      <td><span class="verdict-tag ${(r.verdict||'').toLowerCase()}">${highlightSearchInPlain(r.verdict || '', tableSearchHighlight)}</span></td>
-      <td class="target-col-cell">${targetHtml}</td>
+      <td class="td-num"><span class="stat-chip stat-chip--eff ${effTier}">${highlightSearchInPlain(effShown, tableSearchHighlight)}</span></td>
+      <td>${roleHtml}</td>
+      <td>${verdictHtml}</td>
+      <td class="target-col-cell"${targetTipAttr}>${targetHtml}</td>
     </tr>`;
   }
 
@@ -2128,32 +2314,49 @@
     const box = document.getElementById('rune-summary');
     if (!box) return;
 
+    const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const byVerdict = {};
     const byRole = {};
     for (const r of runes) {
+      const ef = getRuneNumericEff(r);
       byVerdict[r.verdict] = byVerdict[r.verdict] || { c: 0, e: 0 };
       byVerdict[r.verdict].c++;
-      byVerdict[r.verdict].e += r.eff;
+      byVerdict[r.verdict].e += ef;
       if (r.role) {
         byRole[r.role] = byRole[r.role] || { c: 0, e: 0 };
         byRole[r.role].c++;
-        byRole[r.role].e += r.eff;
+        byRole[r.role].e += ef;
       }
     }
 
-    let html = `<div class="summary-title">Rune Summary</div>`;
-    html += `<div class="summary-row"><span>Total</span><span>${runes.length}</span></div>`;
-    ['Keep','Grind','Gem','Finish','Upgrade','Reapp','Sell'].forEach(v => {
+    const verdictLabel = (k) =>
+      ({
+        Keep: tloc.keep,
+        Sell: tloc.sell,
+        Grind: tloc.grind,
+        Gem: tloc.gem,
+        Finish: tloc.finish,
+        Upgrade: tloc.upgrade,
+        Reapp: tloc.reapp,
+      }[k] || k);
+    const avgBit = escapeHtml((tloc.tableAvgEffSuffix || 'avg'));
+
+    let html = `<div class="summary-title">${escapeHtml(tloc.tableSummaryTitle || '')}</div>`;
+    html += `<div class="summary-row"><span>${escapeHtml(tloc.tableSummaryTotal || '')}</span><span>${runes.length}</span></div>`;
+    ['Keep', 'Grind', 'Gem', 'Finish', 'Upgrade', 'Reapp', 'Sell'].forEach((v) => {
       const item = byVerdict[v];
       if (!item) return;
-      html += `<div class="summary-row"><span>${v}</span><span>${item.c} <span class="summary-eff">${(item.e / item.c).toFixed(1)}%</span></span></div>`;
+      const avg = (item.e / item.c).toFixed(1);
+      html += `<div class="summary-row"><span>${escapeHtml(verdictLabel(v))}</span><span>${item.c} <span class="summary-eff">${avg}% ${avgBit}</span></span></div>`;
     });
-    html += `<div class="summary-title" style="margin-top:10px">Roles</div>`;
-    Object.keys(byRole).sort((a, b) => byRole[b].c - byRole[a].c).forEach(role => {
-      const item = byRole[role];
-      if (!item) return;
-      html += `<div class="summary-row"><span>${role}</span><span>${item.c} <span class="summary-eff">${(item.e / item.c).toFixed(1)}%</span></span></div>`;
-    });
+    html += `<div class="summary-title summary-title--sub">${escapeHtml(tloc.tableSummaryRolesTitle || '')}</div>`;
+    Object.keys(byRole)
+      .sort((a, b) => byRole[b].c - byRole[a].c)
+      .forEach((role) => {
+        const item = byRole[role];
+        if (!item) return;
+        html += `<div class="summary-row"><span>${escapeHtml(role)}</span><span>${item.c} <span class="summary-eff">${(item.e / item.c).toFixed(1)}% ${avgBit}</span></span></div>`;
+      });
     box.innerHTML = html;
   }
 
@@ -2250,6 +2453,23 @@
   // Toggle Target column visibility
   document.getElementById('toggle-target-col')?.addEventListener('change', () => {
     applyFiltersAndSort(getVisibleRunes(), { preserveTableExpansion: true });
+  });
+
+  document.getElementById('toggle-table-uncapped-eff')?.addEventListener('change', (e) => {
+    try {
+      localStorage.setItem('swrm_table_uncapped_eff_v1', e.target.checked ? '1' : '');
+    } catch (err) { /* ignore */ }
+    updateRuneTableEffHeaderUi();
+    replaceRuneTableLocationFromState();
+    applyFiltersAndSort(getVisibleRunes(), { preserveTableExpansion: true });
+  });
+
+  document.getElementById('toggle-table-compact')?.addEventListener('change', (e) => {
+    try {
+      localStorage.setItem('swrm_table_compact_v1', e.target.checked ? '1' : '0');
+    } catch (err) { /* ignore */ }
+    syncRuneTableCompactLayout();
+    replaceRuneTableLocationFromState();
   });
 
   document.getElementById('btn-table-reset-filters')?.addEventListener('click', () => {
@@ -2560,44 +2780,11 @@
     return (v || '').split(',').map(s => s.trim()).filter(Boolean);
   }
 
-  function stringifyGemExtras(extraBadBySlot) {
-    const lines = [];
-    const m = extraBadBySlot || {};
-    for (let slot = 1; slot <= 6; slot++) {
-      const v = m[slot] ?? m[String(slot)];
-      if (Array.isArray(v) && v.length > 0) {
-        lines.push(`${slot}:${v.join(',')}`);
-      }
-    }
-    return lines.join('\n');
-  }
-
-  function parseGemExtrasFromText(text) {
-    const map = {};
-    (text || '').split(/\r?\n/).forEach(line => {
-      const ln = line.trim();
-      if (!ln) return;
-      const matched = ln.match(/^([1-6])\s*:\s*(.+)$/);
-      if (!matched) return;
-      const slotNum = parseInt(matched[1], 10);
-      map[slotNum] = parseList(matched[2]);
-    });
-    return map;
-  }
-
   function hydrateGemMetaFields(gm) {
     const g = gm || DEFAULT_GEM_META;
     const el = id => document.getElementById(id);
-    if (!el('gem-meta-enabled')) return;
-    el('gem-meta-enabled').checked = g.enabled !== false;
-    el('gem-meta-legend-only').checked = g.legendOnlyInnate === true;
-    el('gem-meta-sets').value = (g.sets || []).join(', ');
-    el('gem-meta-universal-flats').checked = g.useUniversalFlatBadInnate !== false;
-    el('gem-meta-extra-slots').value = stringifyGemExtras(g.extraBadBySlot);
-    el('gem-meta-by-set-json').value = g.bySet && Object.keys(g.bySet).length
-      ? JSON.stringify(g.bySet, null, 2)
-      : '';
-    el('gem-meta-legacy-subs').checked = g.legacyFlatSubGem === true;
+    if (!el('gem-bad-flat-enabled')) return;
+    el('gem-bad-flat-enabled').checked = g.legacyFlatSubGem !== false;
   }
 
   function renderRoleSettings() {
@@ -3127,29 +3314,9 @@
         : 1,
     };
 
-    let gemBySet = {};
-    const gemJsonRaw = (document.getElementById('gem-meta-by-set-json').value || '').trim();
-    if (gemJsonRaw) {
-      try {
-        const parsed = JSON.parse(gemJsonRaw);
-        if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
-          throw new Error('Root must be an object');
-        }
-        gemBySet = parsed;
-      } catch (e) {
-        alert('Gem per-set JSON: invalid JSON — ' + (e && e.message ? e.message : e));
-        return;
-      }
-    }
-
     s.gemMeta = window.SWRM.mergeGemMeta({
-      enabled: document.getElementById('gem-meta-enabled').checked,
-      legendOnlyInnate: document.getElementById('gem-meta-legend-only').checked,
-      sets: parseList(document.getElementById('gem-meta-sets').value),
-      useUniversalFlatBadInnate: document.getElementById('gem-meta-universal-flats').checked,
-      extraBadBySlot: parseGemExtrasFromText(document.getElementById('gem-meta-extra-slots').value),
-      bySet: gemBySet,
-      legacyFlatSubGem: document.getElementById('gem-meta-legacy-subs').checked,
+      ...window.SWRM.settings.gemMeta,
+      legacyFlatSubGem: document.getElementById('gem-bad-flat-enabled').checked,
     });
 
     s.statConstants = collectStatConstantsFromForm();
@@ -3190,8 +3357,10 @@
   document.addEventListener('DOMContentLoaded', async () => {
     initTheme();
     updateLanguage(currentLang);
+    initRuneTablePrefsFromStorage();
     initRulesSubtabs();
     initChangelogSubtabs();
+    initGuideSubtabs();
     showMainTab(mainTabIdFromHash() || 'dashboard');
 
     const savedRunes = localStorage.getItem('loadedRunes');
@@ -3294,7 +3463,7 @@
       reapp: JSON.parse(JSON.stringify(DEFAULT_REAPP)),
       grind: JSON.parse(JSON.stringify(DEFAULT_GRIND)),
       gemMeta: JSON.parse(JSON.stringify(DEFAULT_GEM_META)),
-      presetVersion: 9,
+      presetVersion: 10,
     };
     window.SWRM.applyDerivedThresholdFields(window.SWRM.settings);
     localStorage.removeItem('swrm_settings_v1');

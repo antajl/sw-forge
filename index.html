@@ -238,7 +238,9 @@
         <!-- Set distribution -->
         <div class="panel" id="panel-sets">
           <div class="panel-title">Set Distribution</div>
-          <div id="set-chart" class="set-chart"></div>
+          <div id="set-chart-scroll" class="chart-scroll chart-scroll--sets">
+            <div id="set-chart" class="set-chart"></div>
+          </div>
         </div>
 
         <!-- Slot distribution -->
@@ -264,17 +266,50 @@
     <section id="tab-runetable" class="tab-content hidden">
       <div class="table-layout">
         <div class="table-main">
-          <div class="table-controls">
-            <input type="text" id="search-box" placeholder="Search by set, stat, role..." autocomplete="off" />
-            <button type="button" id="btn-table-reset-filters" class="btn-ghost">Reset filters</button>
-            <label class="toggle-target">
-              <input type="checkbox" id="toggle-target-col" />
-              <span id="lbl-toggle-target">Show Target</span>
-            </label>
-            <button type="button" id="btn-export-csv" class="btn-ghost">Export CSV</button>
-            <div class="table-count-block">
-              <span id="table-count" class="table-count">0 runes</span>
-              <span id="table-count-detail" class="table-count-detail" aria-live="polite"></span>
+          <div class="table-toolbar" aria-label="Rune table tools">
+            <div class="table-toolbar__card">
+              <div class="table-toolbar__row table-toolbar__row--search">
+                <div class="table-toolbar__search">
+                  <label class="visually-hidden" for="search-box" id="lbl-search-box">Search</label>
+                  <input type="text" id="search-box" class="table-toolbar__input" placeholder="Search by set, stat, role..." autocomplete="off" />
+                </div>
+                <div id="rune-table-load-strip" class="table-toolbar__load hidden" aria-live="polite">
+                  <div class="table-toolbar__load-inner">
+                    <button type="button" id="btn-rune-table-show-all" class="btn-primary btn-toolbar-primary"></button>
+                    <p class="table-toolbar__load-hint" id="lbl-rune-table-more-hint"></p>
+                  </div>
+                </div>
+              </div>
+              <div class="table-toolbar__row table-toolbar__row--controls">
+                <div class="table-toolbar__group table-toolbar__group--actions">
+                  <span class="table-toolbar__group-label" id="lbl-table-toolbar-actions">Actions</span>
+                  <div class="table-toolbar__buttons">
+                    <button type="button" id="btn-table-reset-filters" class="btn-ghost btn-toolbar">Reset filters</button>
+                    <button type="button" id="btn-export-csv" class="btn-ghost btn-toolbar">Export CSV</button>
+                  </div>
+                </div>
+                <div class="table-toolbar__group table-toolbar__group--display">
+                  <span class="table-toolbar__group-label" id="lbl-table-toolbar-display">Display</span>
+                  <div class="table-toolbar__toggles">
+                    <label class="toggle-target">
+                      <input type="checkbox" id="toggle-target-col" />
+                      <span id="lbl-toggle-target">Show Target</span>
+                    </label>
+                    <label class="toggle-target" id="lbl-wrap-uncapped-eff">
+                      <input type="checkbox" id="toggle-table-uncapped-eff" />
+                      <span id="lbl-toggle-uncapped-eff"></span>
+                    </label>
+                    <label class="toggle-target" id="lbl-wrap-table-compact">
+                      <input type="checkbox" id="toggle-table-compact" />
+                      <span id="lbl-toggle-table-compact"></span>
+                    </label>
+                  </div>
+                </div>
+                <div class="table-toolbar__count table-count-block">
+                  <span id="table-count" class="table-count">0 runes</span>
+                  <span id="table-count-detail" class="table-count-detail" aria-live="polite"></span>
+                </div>
+              </div>
             </div>
           </div>
           <div class="table-wrap" id="rune-table-scroll" tabindex="0" role="region" aria-label="Rune table">
@@ -311,7 +346,7 @@
                   <th data-sort="s2">Sub 2</th>
                   <th data-sort="s3">Sub 3</th>
                   <th data-sort="s4">Sub 4</th>
-                  <th data-sort="eff" class="th-num">Eff%</th>
+                  <th data-sort="eff" class="th-num"><span id="lbl-th-eff">Eff%</span></th>
                   <th data-sort="role" class="th-has-filter">
                     <span class="th-text" data-filter="role">Role</span>
                     <select id="filter-role" class="th-filter">
@@ -329,13 +364,6 @@
               </thead>
               <tbody id="rune-tbody"></tbody>
             </table>
-          </div>
-          <div id="rune-table-more-zone" class="rune-table-more-zone hidden" aria-live="polite">
-            <div id="rune-table-sentinel" class="rune-table-sentinel" aria-hidden="true"></div>
-            <div id="rune-table-show-all-bar" class="rune-table-show-all-bar hidden">
-              <p class="rune-table-more-hint" id="lbl-rune-table-more-hint"></p>
-              <button type="button" id="btn-rune-table-show-all" class="btn-primary"></button>
-            </div>
           </div>
         </div>
         <aside class="table-summary" id="rune-summary"></aside>
@@ -419,36 +447,15 @@
               <div class="rules-card__head">
                 <span class="rules-card__step" aria-hidden="true">1</span>
                 <div class="rules-card__head-text">
-                  <h3 id="rules-h-gem" class="gem-meta-heading rules-card__title">Gem (Innate) — Meta sets</h3>
+                  <h3 id="rules-h-gem" class="gem-meta-heading rules-card__title">Gem — bad flat subs</h3>
                   <p class="gem-meta-desc rules-card__desc"></p>
                 </div>
               </div>
               <div class="rules-card__body rules-card__body--fields">
                 <div class="settings-row">
-                  <label><input type="checkbox" id="gem-meta-enabled" checked /> <span id="gem-meta-toggle-label">Enable innate Gem hints</span></label>
+                  <label><input type="checkbox" id="gem-bad-flat-enabled" checked /> <span id="gem-bad-flat-label">Enable Gem recommendations</span></label>
                 </div>
-                <div class="settings-row">
-                  <label><input type="checkbox" id="gem-meta-legend-only" /> <span id="gem-meta-legend-label">Only Legend runes</span></label>
-                </div>
-                <div class="settings-row">
-                  <label>Meta sets (comma)</label>
-                  <input type="text" id="gem-meta-sets" placeholder="Violent, Will, Swift" />
-                </div>
-                <div class="settings-row">
-                  <label><input type="checkbox" id="gem-meta-universal-flats" checked /> <span id="gem-universal-flats-label">Treat flat innate (HP ATK DEF) as bad</span></label>
-                </div>
-                <div class="settings-row">
-                  <label>Extra bad innate</label>
-                  <textarea id="gem-meta-extra-slots" rows="4" spellcheck="false" placeholder="3:ACC,RES&#10;6:CRate"></textarea>
-                  <span class="hint gem-extra-hint">One line per slot: Slot:STAT,STAT (e.g. 2:RES,ACC)</span>
-                </div>
-                <div class="settings-row">
-                  <label>Per-set overrides (JSON)</label>
-                  <textarea id="gem-meta-by-set-json" rows="3" spellcheck="false" placeholder="{ &quot;Violent&quot;: { &quot;2&quot;: [&quot;RES&quot;], &quot;6&quot;: [&quot;ACC&quot;] } }"></textarea>
-                </div>
-                <div class="settings-row">
-                  <label><input type="checkbox" id="gem-meta-legacy-subs" /> <span id="gem-legacy-subs-label">Also use legacy “flat subs → grindable %” Gem</span></label>
-                </div>
+                <p class="hint gem-bad-flat-hint" id="gem-bad-flat-hint"></p>
               </div>
             </section>
 
@@ -543,90 +550,245 @@
     </section>
 
     <section id="tab-guide" class="tab-content hidden">
-      <div class="panel">
-        <div class="panel-title">Guide</div>
-        <div class="guide-list">
-          <section class="guide-section" aria-labelledby="guide-h-start">
-            <h3 id="guide-h-start">Getting started</h3>
-            <p><strong>Data flow:</strong> Export JSON from SWEX and load it directly. SWOP CSV is not required.</p>
-            <p><strong>Stat IDs:</strong> The exporter uses numeric stat identifiers (for example SPD is 8, CRate is 9). The app maps them to names everywhere — mains, substats, filters, and role logic.</p>
-            <p><strong>Efficiency in the file:</strong> If the JSON includes an <code>efficiency</code> value per rune, the Rune Table and summaries use it; otherwise efficiency is computed in the browser.</p>
-            <p><strong>Database slots:</strong> Your first SWEX file opens as Data 1. In App Settings you can store up to four exports, see wizard name/level from the JSON, and Swap the active profile.</p>
-          </section>
+      <div class="rules-tab-shell">
+        <header class="rules-page-header">
+          <h2 class="rules-page-title" id="lbl-guide-page-title">Guide</h2>
+          <p class="rules-page-lead" id="lbl-guide-page-lead"></p>
+        </header>
 
-          <section class="guide-section" aria-labelledby="guide-h-dash">
-            <h3 id="guide-h-dash">Dashboard</h3>
-            <p><strong>Account progression:</strong> Combined score and the three depth metrics always use your <strong>full export</strong>. Under each metric you’ll see its <strong>point contribution</strong> toward the 100-point scale (e.g. +12 / 35 pts). By default the block is <strong>collapsed</strong> to one line (title, suggested stage, Apply, preset); use the chevron to expand for explanations and depth cards.</p>
-            <p><strong>Global filters:</strong> <strong>Min level</strong> and <strong>Min grade</strong> apply to verdict cards, all charts, the efficiency histogram (including the median line), and Rune Table — not to the progression block above.</p>
-            <p><strong>Verdict mix &amp; cards:</strong> The stacked bar and the number tiles show the same counts; percentages are share of the current filtered total. Click a segment, a card, or a role row to jump to <strong>Rune Table</strong> with matching filters. If the dashboard min grade is <strong>Legend only</strong>, the table’s grade filter is preset to Legend; for Rare+ / Hero+ the table opens without a grade filter (the grid uses an exact grade pick, not a floor).</p>
-            <p><strong>Copy summary:</strong> Separate control to the right of the Global filter card. Copies a text snapshot: preset, suggested stage, depth metrics, filters, verdict counts, <strong>role / set / slot charts</strong>, efficiency median and histogram buckets.</p>
-            <p><strong>Charts:</strong> <em>Role Distribution</em> — count and average efficiency per role (custom roles appear after you save rules). <em>Set Distribution</em> — top sets by count. <em>Slot Distribution</em> — hover a row for the full main-stat breakdown. <em>Efficiency Distribution</em> — bucketed eff with median marker.</p>
-          </section>
+        <nav class="rules-subtabs" id="guide-subtabs" role="tablist" aria-labelledby="lbl-guide-page-title">
+          <button type="button" role="tab" class="rules-subtab is-active" id="guide-subtab-start"
+            data-guide-subtab="start" aria-selected="true" aria-controls="guide-panel-start" tabindex="0">
+            <span class="rules-subtab__label" id="lbl-guide-subtab-start"></span>
+            <span class="rules-subtab__hint" id="lbl-guide-subtab-start-hint"></span>
+          </button>
+          <button type="button" role="tab" class="rules-subtab" id="guide-subtab-dashboard"
+            data-guide-subtab="dashboard" aria-selected="false" aria-controls="guide-panel-dashboard" tabindex="-1">
+            <span class="rules-subtab__label" id="lbl-guide-subtab-dashboard"></span>
+            <span class="rules-subtab__hint" id="lbl-guide-subtab-dashboard-hint"></span>
+          </button>
+          <button type="button" role="tab" class="rules-subtab" id="guide-subtab-progression"
+            data-guide-subtab="progression" aria-selected="false" aria-controls="guide-panel-progression" tabindex="-1">
+            <span class="rules-subtab__label" id="lbl-guide-subtab-progression"></span>
+            <span class="rules-subtab__hint" id="lbl-guide-subtab-progression-hint"></span>
+          </button>
+          <button type="button" role="tab" class="rules-subtab" id="guide-subtab-table"
+            data-guide-subtab="table" aria-selected="false" aria-controls="guide-panel-table" tabindex="-1">
+            <span class="rules-subtab__label" id="lbl-guide-subtab-table"></span>
+            <span class="rules-subtab__hint" id="lbl-guide-subtab-table-hint"></span>
+          </button>
+          <button type="button" role="tab" class="rules-subtab" id="guide-subtab-rules"
+            data-guide-subtab="rules" aria-selected="false" aria-controls="guide-panel-rules" tabindex="-1">
+            <span class="rules-subtab__label" id="lbl-guide-subtab-rules"></span>
+            <span class="rules-subtab__hint" id="lbl-guide-subtab-rules-hint"></span>
+          </button>
+          <button type="button" role="tab" class="rules-subtab" id="guide-subtab-tips"
+            data-guide-subtab="tips" aria-selected="false" aria-controls="guide-panel-tips" tabindex="-1">
+            <span class="rules-subtab__label" id="lbl-guide-subtab-tips"></span>
+            <span class="rules-subtab__hint" id="lbl-guide-subtab-tips-hint"></span>
+          </button>
+        </nav>
 
-          <section class="guide-section" aria-labelledby="guide-h-depth">
-            <h3 id="guide-h-depth">Account progression (Depth&nbsp;v2)</h3>
-            <p class="guide-lead">The block at the top of the Dashboard estimates how <strong>deep</strong> your <strong>rune inventory</strong> is — not your arena rank or monster box. It uses absolute counts and a quality ceiling so small accounts cannot look the same as long-term farms.</p>
-            <p><strong>Independent of presets:</strong> The <strong>Combined score</strong> and the three metric cards ignore your <strong>Early / Mid / Late</strong> preset and <strong>Global Min Lvl</strong>. They always use the full Rare+ rune list from the loaded SWEX (rank ≥3). Changing the preset still changes verdicts everywhere else (summary cards, table, charts).</p>
+        <div id="guide-panel-start" role="tabpanel" aria-labelledby="guide-subtab-start"
+          class="rules-subpanel is-active" data-guide-subtab="start">
+          <div class="guide-lang guide-lang--en guide-list">
+            <section class="guide-section" aria-labelledby="guide-h-start-en">
+              <h3 id="guide-h-start-en">Getting started</h3>
+              <p><strong>What you need:</strong> A JSON export from <strong>Summoners War Exporter (SWEX)</strong>. You do <em>not</em> need a SWOP CSV — load the SWEX file directly.</p>
+              <p><strong>Privacy:</strong> The file is parsed in <strong>your browser</strong>. Nothing is uploaded to a server; your rune data stays on your device.</p>
+              <p><strong>Stat IDs:</strong> SWEX uses numeric stat codes (for example SPD = 8, CRate = 9). Everywhere in the app — mains, substats, filters, roles — those IDs are shown as readable stat names.</p>
+              <p><strong>Efficiency:</strong> If the JSON has an <code>efficiency</code> field per rune, the Rune Table and summaries prefer it. If not, efficiency is calculated here.</p>
+              <p><strong>Profiles (slots):</strong> Your first successful load becomes <strong>Data 1</strong>. Open <strong>App Settings → Database Slots</strong> to add more exports (up to four), see the wizard name/level from each file, and <strong>Swap</strong> which profile is active. The dashboard and table always reflect the active slot.</p>
+              <p><strong>Clearing data:</strong> Use <strong>Clear all saved data</strong> on the upload card if you want to wipe stored runes and related browser storage for this site (careful — that removes saved profiles too).</p>
+            </section>
+          </div>
+          <div class="guide-lang guide-lang--ru guide-list">
+            <section class="guide-section" aria-labelledby="guide-h-start-ru">
+              <h3 id="guide-h-start-ru">С чего начать</h3>
+              <p><strong>Что нужно:</strong> JSON-экспорт из <strong>Summoners War Exporter (SWEX)</strong>. Файл SWOP CSV <em>не</em> обязателен — загрузите SWEX напрямую.</p>
+              <p><strong>Приватность:</strong> Файл разбирается <strong>в браузере</strong>. На сервер ничего не отправляется — данные рун остаются на устройстве.</p>
+              <p><strong>ID статов:</strong> В SWEX стату кодируются числами (например SPD = 8, CRate = 9). Везде в приложении они показываются нормальными названиями.</p>
+              <p><strong>Efficiency:</strong> Если в JSON есть поле <code>efficiency</code> у руны, таблица и сводки его используют. Иначе эффективность считается здесь.</p>
+              <p><strong>Профили (слоты):</strong> Первый успешный импорт — <strong>Data 1</strong>. В <strong>Настройках приложения → Слоты баз данных</strong> можно добавить до четырёх экспортов, увидеть ник/уровень волшебника и <strong>переключить</strong> активный профиль. Панель и таблица всегда показывают активный слот.</p>
+              <p><strong>Очистка:</strong> Кнопка <strong>Удалить все сохранения</strong> на карточке загрузки сбрасывает сохранённые руны и связанное хранилище сайта (осторожно — слетят и профили).</p>
+            </section>
+          </div>
+        </div>
 
-            <h4 class="guide-subhead">The three metrics</h4>
-            <ul>
-              <li><strong>Speed Depth (35%)</strong> — Runes whose <strong>substat SPD total</strong> (roll + grind) is at least <strong>18</strong>.</li>
-              <li><strong>Power Depth (35%)</strong> — <strong>6★</strong> runes at exactly <strong>+15</strong>.</li>
-              <li><strong>Elite Quality (30%)</strong> — Mean <strong>uncapped</strong> efficiency (can exceed 100%) on the top <strong>50</strong> runes, or on <strong>all</strong> runes if you have fewer than 50.</li>
-            </ul>
+        <div id="guide-panel-dashboard" role="tabpanel" aria-labelledby="guide-subtab-dashboard"
+          class="rules-subpanel" data-guide-subtab="dashboard">
+          <div class="guide-lang guide-lang--en guide-list">
+            <section class="guide-section" aria-labelledby="guide-h-dash-en">
+              <h3 id="guide-h-dash-en">Dashboard</h3>
+              <p><strong>Account progression</strong> (the block at the top) scores how <strong>deep your rune inventory</strong> is. The <strong>combined score</strong> and the three metric lines always use your <strong>full active export</strong> (Rare+ only, rank ≥ 3). Under each metric you’ll see its <strong>point share</strong> toward the 100-point bar (for example +12 / 35 pts). By default that block is <strong>collapsed</strong>; open the chevron for the long explanation and cards. <strong>Apply suggestion</strong> aligns <strong>Your preset</strong> (Early / Mid / Late) with the suggested stage — you can still change the preset manually.</p>
+              <p><strong>Global filters</strong> (<strong>Min level</strong>, <strong>Min grade</strong>) apply to verdict cards, all charts, the efficiency chart (including the median), and the Rune Table. They do <strong>not</strong> apply to account progression above — that block ignores min level and preset for its math.</p>
+              <p><strong>Verdict mix &amp; cards:</strong> The stacked bar and the number tiles match; percentages are shares of the <em>filtered</em> total. Click a segment, tile, or role row to open the Rune Table with the same verdict/role filters. If the dashboard min grade is <strong>Legend only</strong>, the table opens with grade = Legend; for Rare+ / Hero+ the table does not force a grade filter (the grid picks an exact grade, not a “floor”).</p>
+              <p><strong>Copy summary:</strong> Next to the global filter card — copies a text snapshot: preset, suggested stage, depth metrics, filters, verdict counts, role / set / slot chart numbers, efficiency median and histogram buckets.</p>
+              <p><strong>Charts:</strong> <em>Role Distribution</em> — counts and average efficiency per role (custom roles show up after you save rules). <em>Set Distribution</em> — every in-game set, sorted by count (high to low); scroll inside the panel; the scrollbar track is hidden but wheel and touch scrolling work. <em>Slot Distribution</em> — hover a slot row for the full main-stat mix. <em>Efficiency Distribution</em> — 5% buckets with a median marker.</p>
+            </section>
+          </div>
+          <div class="guide-lang guide-lang--ru guide-list">
+            <section class="guide-section" aria-labelledby="guide-h-dash-ru">
+              <h3 id="guide-h-dash-ru">Панель (Dashboard)</h3>
+              <p><strong>Прогресс аккаунта</strong> (верхний блок) оценивает <strong>глубину коллекции рун</strong>. <strong>Сводный балл</strong> и три метрики всегда берут <strong>весь активный экспорт</strong> (только Rare+, ранг ≥ 3). Под каждой метрикой — <strong>вклад в 100 баллов</strong> (например +12 / 35). Блок по умолчанию <strong>свёрнут</strong>; раскройте стрелку за подробностями. <strong>Применить совет</strong> выставляет <strong>Ваш пресет</strong> (Early / Mid / Late) по предложенной стадии — вручную пресет можно сменить.</p>
+              <p><strong>Глобальные фильтры</strong> (<strong>Мин ур</strong>, <strong>Мин грейд</strong>) действуют на карточки вердиктов, все графики, гистограмму eff (и медиану), и таблицу рун. На блок прогресса выше они <strong>не</strong> влияют — там своя математика без мин. уровня и без привязки к пресету.</p>
+              <p><strong>Verdict mix и плитки:</strong> Столбиковая диаграмма и цифры совпадают; проценты — от <em>отфильтрованного</em> количества. Клик по сегменту, плитке или строке роли открывает таблицу с теми же фильтрами. При <strong>только Legend</strong> на панели в таблице сразу выбран Legend; для Rare+ / Hero+ фильтр грейда в таблице не навязан (в сетке — точный грейд, не «от и выше»).</p>
+              <p><strong>Копировать сводку:</strong> Рядом с карточкой фильтров — текст: пресет, совет по стадии, метрики глубины, фильтры, вердикты, роли / сеты / слоты, медиана eff и корзины гистограммы.</p>
+              <p><strong>Графики:</strong> <em>Роли</em> — число рун и средняя eff по роли. <em>Сеты</em> — все игровые сеты по убыванию числа рун; прокрутка внутри панели. <em>Слоты</em> — наведите на строку за полным разбором мейнов. <em>Эффективность</em> — корзины по 5% и медиана.</p>
+            </section>
+          </div>
+        </div>
 
-            <h4 class="guide-subhead">Combined score formula</h4>
-            <ul>
-              <li>Speed: <code>min(Speed Depth ÷ 250, 1) × 35</code> — full points at <strong>250+</strong> qualifying runes.</li>
-              <li>Power: <code>min(+15 count ÷ 600, 1) × 35</code> — full points at <strong>600+</strong> qualifying +15 six-stars.</li>
-              <li>Elite: <code>min(max(0, eliteAvg − 80) ÷ 30, 1) × 30</code> — full points from <strong>110%</strong> average upward (80 + 30).</li>
-            </ul>
+        <div id="guide-panel-progression" role="tabpanel" aria-labelledby="guide-subtab-progression"
+          class="rules-subpanel" data-guide-subtab="progression">
+          <div class="guide-lang guide-lang--en guide-list">
+            <section class="guide-section" aria-labelledby="guide-h-depth-en">
+              <h3 id="guide-h-depth-en">Account progression (depth)</h3>
+              <p class="guide-lead">This estimates how strong your <strong>rune box</strong> is in absolute terms — not arena rank or monsters. Big accounts need real volume <em>and</em> quality to max the bar; tiny exports cannot fake a late-game score.</p>
+              <p><strong>Independent of preset &amp; min level:</strong> Combined score and the three cards ignore <strong>Early / Mid / Late</strong> and the dashboard <strong>Min Lvl</strong>. Changing the preset still updates verdicts everywhere else (cards, charts, table).</p>
+              <h4 class="guide-subhead">The three metrics</h4>
+              <ul>
+                <li><strong>Speed Depth (35%)</strong> — Runes where total sub <strong>SPD</strong> (roll + grind) is at least <strong>18</strong>.</li>
+                <li><strong>Power Depth (35%)</strong> — <strong>6★</strong> runes at exactly <strong>+15</strong>.</li>
+                <li><strong>Elite Quality (30%)</strong> — Mean <strong>uncapped</strong> efficiency on your top <strong>50</strong> runes by that score (or all runes if you have fewer than 50). Values above 100% are expected for very strong pieces.</li>
+              </ul>
+              <h4 class="guide-subhead">How they combine</h4>
+              <ul>
+                <li>Speed: <code>min(Speed Depth ÷ 250, 1) × 35</code> — full 35 points at <strong>250+</strong> qualifying runes.</li>
+                <li>Power: <code>min(+15 six-star count ÷ 600, 1) × 35</code> — full points at <strong>600+</strong> such runes.</li>
+                <li>Elite: <code>min(max(0, eliteAvg − 80) ÷ 30, 1) × 30</code> — full points from <strong>110%</strong> average upward (80 + 30).</li>
+              </ul>
+              <h4 class="guide-subhead">Suggested stage from score</h4>
+              <ul>
+                <li><strong>Early</strong> — below <strong>45</strong></li>
+                <li><strong>Mid</strong> — from <strong>45</strong> up to (but not including) <strong>85</strong></li>
+                <li><strong>Late</strong> — <strong>85</strong> or more</li>
+              </ul>
+              <p><strong>Efficiency columns:</strong> By default the Rune Table shows Eff% capped at <strong>100</strong> (or the JSON value). Turn on <strong>Eff over 100%</strong> to line up with the uncapped math used inside Elite Quality — numbers above 100 mean “stronger than the formula’s 100% reference build”, not a game bug.</p>
+            </section>
+          </div>
+          <div class="guide-lang guide-lang--ru guide-list">
+            <section class="guide-section" aria-labelledby="guide-h-depth-ru">
+              <h3 id="guide-h-depth-ru">Прогресс аккаунта (глубина)</h3>
+              <p class="guide-lead">Оценка силы <strong>коробки рун</strong> в абсолютных числах — не арена и не монстры. Чтобы заполнить шкалу, нужен и объём, и качество; маленький экспорт не «прикинется» эндгеймом.</p>
+              <p><strong>Без привязки к пресету и мин. уровню:</strong> Сводный балл и три карточки не смотрят на <strong>Early / Mid / Late</strong> и на <strong>Мин Ур</strong> панели. Смена пресета по-прежнему меняет вердикты везде ниже (карточки, графики, таблица).</p>
+              <h4 class="guide-subhead">Три метрики</h4>
+              <ul>
+                <li><strong>Speed Depth (35%)</strong> — Руны, где суммарный саб <strong>SPD</strong> (кат + гринд) ≥ <strong>18</strong>.</li>
+                <li><strong>Power Depth (35%)</strong> — <strong>6★</strong> руны ровно <strong>+15</strong>.</li>
+                <li><strong>Elite Quality (30%)</strong> — Средняя <strong>без потолка</strong> eff по топ-<strong>50</strong> рун (или по всем, если меньше 50). Значения выше 100% — норма для очень сильных рун.</li>
+              </ul>
+              <h4 class="guide-subhead">Как складывается балл</h4>
+              <ul>
+                <li>Скорость: <code>min(Speed Depth ÷ 250, 1) × 35</code> — полные 35 при <strong>250+</strong> подходящих рун.</li>
+                <li>Сила: <code>min(число +15 шестизвёздочных ÷ 600, 1) × 35</code> — полный вклад при <strong>600+</strong> таких рун.</li>
+                <li>Элита: <code>min(max(0, eliteAvg − 80) ÷ 30, 1) × 30</code> — полные 30 от средней <strong>110%</strong> и выше (80 + 30).</li>
+              </ul>
+              <h4 class="guide-subhead">Стадия по баллу</h4>
+              <ul>
+                <li><strong>Early</strong> — ниже <strong>45</strong></li>
+                <li><strong>Mid</strong> — от <strong>45</strong> до <strong>85</strong> не включая</li>
+                <li><strong>Late</strong> — <strong>85</strong> и выше</li>
+              </ul>
+              <p><strong>Колонки Eff:</strong> По умолчанию в таблице Eff% обрезан на <strong>100</strong> (или значение из JSON). Включите <strong>Eff выше 100%</strong>, чтобы совпадать с расчётом для Elite Quality — значения &gt; 100 значат «сильнее референсной 100%» в формуле, а не ошибку.</p>
+            </section>
+          </div>
+        </div>
 
-            <h4 class="guide-subhead">Suggested stage labels</h4>
-            <ul>
-              <li><strong>Early</strong> — score below <strong>45</strong></li>
-              <li><strong>Mid</strong> — 45 up to (but not including) <strong>85</strong></li>
-              <li><strong>Late</strong> — <strong>85</strong> or higher</li>
-            </ul>
+        <div id="guide-panel-table" role="tabpanel" aria-labelledby="guide-subtab-table"
+          class="rules-subpanel" data-guide-subtab="table">
+          <div class="guide-lang guide-lang--en guide-list">
+            <section class="guide-section" aria-labelledby="guide-h-table-en">
+              <h3 id="guide-h-table-en">Rune Table</h3>
+              <p><strong>Toolbar:</strong> Search, <strong>Actions</strong> (reset filters, export CSV), and <strong>Display</strong> toggles. If many runes match, the grid loads the <strong>first 500</strong> rows for responsiveness — use <strong>Load all … in table</strong> when you need the complete filtered list (very large exports can feel slower).</p>
+              <p><strong>Filters &amp; sort:</strong> Header row filters for verdict, role, grade, set, slot, main stat; click column headers to sort. Default sort is Eff% descending. Innate line and full substats show in each row.</p>
+              <p><strong>Eff% vs Eff (full):</strong> With the default mode the column prefers SWEX <code>efficiency</code> when present; otherwise the app calculation, shown up to 100% in the grid. The optional uncapped column uses the same formula without the 100 cap — useful to compare god-tier runes and to read the same scale as Elite Quality.</p>
+              <p><strong>Dense rows:</strong> Tighter padding on wide screens (on by default). Turn off if you prefer more air.</p>
+              <p><strong>Target column:</strong> Appears when the verdict filter is Gem or Grind. <strong>Grind</strong> — numeric goals (rounded up). <strong>Gem</strong> — which flat substats should be replaced (for example “Replace HP” or “Replace HP or DEF”), without naming the enchant destination stat. Hover for raw <code>grindInfo</code> / <code>gemInfo</code> when present.</p>
+              <p><strong>Rune Summary:</strong> Side panel — totals and average efficiency by verdict and role for whatever passes the current filters.</p>
+              <p><strong>Shareable URL:</strong> When you change filters / sort / search on this tab, the address bar can include <code>#runetable?…</code> query params — copy the link to reopen the same view later on this device/browser.</p>
+              <p><strong>Debug:</strong> Each parsed rune keeps <code>_raw</code> from SWEX for inspection in devtools.</p>
+            </section>
+          </div>
+          <div class="guide-lang guide-lang--ru guide-list">
+            <section class="guide-section" aria-labelledby="guide-h-table-ru">
+              <h3 id="guide-h-table-ru">Таблица рун</h3>
+              <p><strong>Панель инструментов:</strong> Поиск, <strong>Действия</strong> (сброс фильтров, CSV), переключатели <strong>Отображение</strong>. При большом числе совпадений в сетке сначала <strong>первые 500</strong> строк — нажмите <strong>Загрузить все …</strong> для полного списка (очень большие выгрузки могут тормозить).</p>
+              <p><strong>Фильтры и сортировка:</strong> Строка под заголовками — вердикт, роль, грейд, сет, слот, мейн; клик по заголовку колонки меняет сортировку. По умолчанию — Eff% по убыванию. В строке видны innate и все сабы.</p>
+              <p><strong>Eff% и режим без потолка:</strong> В обычном режиме колонка берёт <code>efficiency</code> из SWEX при наличии, иначе свой расчёт с отображением до 100%. Опциональная колонка без потолка — та же формула, для сравнения топовых рун и совпадения с Elite Quality.</p>
+              <p><strong>Плотные строки:</strong> Уже отступы на широких экранах (по умолчанию вкл.). Отключите, если нужно просторнее.</p>
+              <p><strong>Колонка Target:</strong> Для фильтров Gem или Grind. <strong>Grind</strong> — числовые цели (округление вверх). <strong>Gem</strong> — какие плоские сабы заменить, без указания целевого % стата. Подсказка при наведении — сырые <code>grindInfo</code> / <code>gemInfo</code>.</p>
+              <p><strong>Сводка по рунам:</strong> Боковая панель — число рун и средняя eff по вердикту и роли для текущих фильтров.</p>
+              <p><strong>Ссылка с состоянием:</strong> При смене фильтров / сортировки / поиска в адресе может появиться <code>#runetable?…</code> — можно скопировать и открыть тот же вид позже в этом браузере.</p>
+              <p><strong>Отладка:</strong> У каждой руны есть <code>_raw</code> из SWEX для просмотра в консоли.</p>
+            </section>
+          </div>
+        </div>
 
-            <p><strong>Apply suggestion</strong> sets <strong>Your preset</strong> to the suggested stage and recalculates the app; you can override manually.</p>
-            <p><strong>Efficiency note:</strong> SWEX has no eff field — the app computes it. The Rune Table uses <strong>capped</strong> 0–100%; Depth&nbsp;v2 uses <strong>uncapped</strong> values for the elite term.</p>
-          </section>
+        <div id="guide-panel-rules" role="tabpanel" aria-labelledby="guide-subtab-rules"
+          class="rules-subpanel" data-guide-subtab="rules">
+          <div class="guide-lang guide-lang--en guide-list">
+            <section class="guide-section" aria-labelledby="guide-h-rules-en">
+              <h3 id="guide-h-rules-en">Rune Rules tab</h3>
+              <p><strong>Sections:</strong> Three subtabs — <strong>Engine</strong> (constants for eight substats plus read-only God / Duo / stage-line previews), <strong>Verdict</strong> (Gem, Grind, Reapp cards), and <strong>Roles</strong> (archetype formulas full width). The last-opened subtab is remembered for this browser session.</p>
+              <p><strong>Roles vs Engine vs verdicts:</strong> <strong>Roles</strong> decide whether a rune matches an archetype. <strong>Engine</strong> supplies God, Duo, and Early/Mid/Late “High Roll” numbers for anchors and checks. <strong>Verdict</strong> layers Sell / Keep / Gem / Grind / etc. on top.</p>
+              <p><strong>Base substats:</strong> Role assignment, Duo / High-roll checks, and verdict thresholds compare <em>base rolled values</em> before enchant or grind. Row-level enchant/grind flags still matter for Gem and Grind-specific logic.</p>
+              <h4 class="guide-subhead">Formulas — Min Stats vs Require High Roll</h4>
+              <p><strong>Min Stats</strong> counts how many <em>Include</em> substats actually appear on the rune; entries marked must-have do not increase that count. <strong>Require High Roll</strong> is separate — enabling it does not change the Min Stats number.</p>
+              <h4 class="guide-subhead">Grind verdict</h4>
+              <p>Only SPD / HP% / DEF% / ATK% lines are grind candidates versus the <strong>Late × grade High Roll</strong> line from Engine (God is never the grind reference). The row must still be ungrinded and not enchanted on that stat; the <strong>gap</strong> multiplier tightens how far below the line is acceptable (default <strong>0.5</strong> after preset migration v9 replaced older saves that used <strong>1.0</strong>).</p>
+              <h4 class="guide-subhead">Safety rails</h4>
+              <p>Failing a Gem quality gate does not downgrade to <strong>Sell</strong> when the rune already earned a role. Runes with <strong>no role</strong> and <strong>no Duo / High</strong> signal cannot finish as Keep, Finish, Gem, or Grind — only Sell, Reapp, or Upgrade remain.</p>
+              <p><strong>Saving:</strong> Changes under <strong>Roles</strong> save continuously and re-run the pipeline immediately. After editing <strong>Engine</strong> constants or <strong>Verdict</strong> inputs, press <strong>Save &amp; Recalculate</strong> at the bottom so Dashboard + Rune Table match.</p>
+            </section>
+          </div>
+          <div class="guide-lang guide-lang--ru guide-list">
+            <section class="guide-section" aria-labelledby="guide-h-rules-ru">
+              <h3 id="guide-h-rules-ru">Вкладка «Правила рун»</h3>
+              <p><strong>Разделы:</strong> Три подвкладки — <strong>Движок</strong> (константы для восьми сабов и превью God / Duo / стадий), <strong>Вердикт</strong> (Gem, Grind, Reapp), <strong>Роли</strong> (формулы архетипов на всю ширину). Последняя открытая подвкладка запоминается на сессию.</p>
+              <p><strong>Роли, движок, вердикты:</strong> <strong>Роли</strong> — подходит ли руна архетипу. <strong>Движок</strong> — числа God, Duo, High Roll по стадиям для якорей и проверок. <strong>Вердикт</strong> — слой Sell / Keep / Gem / Grind и т.д.</p>
+              <p><strong>Базовые сабы:</strong> Назначение роли, Duo/HR и пороги вердиктов смотрят на <em>базовые</em> значения без гема/гринда. Флаги зачарования/гринда по строкам саба всё равно участвуют в правилах Gem/Grind.</p>
+              <h4 class="guide-subhead">Формулы — Min Stats и Require High Roll</h4>
+              <p><strong>Min Stats</strong> считает, сколько Include-сабов реально есть на руне; must-have в этот счёт не входит. <strong>Require High Roll</strong> — отдельное требование, его включение не меняет число Min Stats.</p>
+              <h4 class="guide-subhead">Вердикт Grind</h4>
+              <p>Кандидаты — только SPD / HP% / DEF% / ATK% относительно линии <strong>Late × грейд High Roll</strong> из движка (God не опорная линия для гринда). Строка без гринда и без зачарования по целевому стату; множитель <strong>gap</strong> сужает допустимое отставание от линии (по умолчанию <strong>0.5</strong> после миграции v9 вместо старого <strong>1.0</strong>).</p>
+              <h4 class="guide-subhead">Защита от странных вердиктов</h4>
+              <p>Провал quality gate для Gem не превращает руну в <strong>Sell</strong>, если роль уже есть. Без роли и без сигнала Duo/High нельзя получить Keep, Finish, Gem или Grind — остаются Sell, Reapp, Upgrade.</p>
+              <p><strong>Сохранение:</strong> Правки в <strong>Ролях</strong> сохраняются и пересчитывают руны сразу. После изменений в <strong>Движке</strong> или <strong>Вердикте</strong> нажмите <strong>Сохранить и пересчитать</strong> внизу, чтобы панель и таблица совпали.</p>
+            </section>
+          </div>
+        </div>
 
-          <section class="guide-section" aria-labelledby="guide-h-table">
-            <h3 id="guide-h-table">Rune Table</h3>
-            <p><strong>Rune Table:</strong> Search, header filters for verdict, role, grade, set, slot, and main stat; sort columns; inspect innate and substats. Default sort Eff% descending. Use <strong>Export CSV</strong> for spreadsheets.</p>
-            <p><strong>Eff% column:</strong> Prefers the exporter’s efficiency when present; otherwise shows the app’s calculated value (capped 0–100% in the grid; Depth&nbsp;v2 still uses uncapped math for its own score).</p>
-            <p><strong>Target column:</strong> Shown when the verdict filter is Gem or Grind — for Grind, numeric goals (rounded up); for Gem, innate <em>Replace from → to</em> style hints plus other notes where relevant.</p>
-            <p><strong>Rune Summary panel:</strong> Right-hand summary — counts and average efficiency by verdict and role for the rows you have filtered.</p>
-            <p><strong>Debug:</strong> Parsed runes keep <code>_raw</code> from SWEX for troubleshooting in devtools.</p>
-          </section>
-
-          <section class="guide-section" aria-labelledby="guide-h-rules">
-            <h3 id="guide-h-rules">Rune Rules tab</h3>
-            <p><strong>Sections:</strong> <strong>Engine</strong> — Constants (eight stats) and read-only God / Duo / stage-line previews. <strong>Verdict</strong> — three separate cards for <strong>Gem</strong>, <strong>Grind</strong>, and <strong>Reapp</strong>. <strong>Roles</strong> — archetype formulas and filters (full width). The last-opened section is remembered for this browser session.</p>
-
-            <h4 class="guide-subhead">Engine vs roles vs verdicts</h4>
-            <p><strong>Roles</strong> decide whether a rune matches an archetype (using formulas). <strong>Engine constants</strong> define God, Duo, Early/Mid/Late High Roll lines used for anchors and quality checks. <strong>Verdict cards</strong> layer Gem / Grind / Reapp on top of that pipeline.</p>
-            <p><strong>Base substats for matching:</strong> Role assignment, Duo/High checks, and verdict thresholds use <em>base</em> rolled values (before gem or grind). Enchant and grind flags on each sub row are still used by the Gem and Grind rules themselves.</p>
-
-            <h4 class="guide-subhead">Formulas: Min Stats vs Require High Roll</h4>
-            <p><strong>Min Stats</strong> counts how many <em>Include</em> substats are present on the rune; stats listed as must-have are excluded from that count. <strong>Require High Roll</strong> (anchor) is a separate requirement — turning it on does not change the Min Stats number.</p>
-
-            <h4 class="guide-subhead">Grind verdict</h4>
-            <p>Grind targets SPD / HP% / DEF% / ATK% only, comparing the rune to the <strong>Late × grade High Roll</strong> line from Engine (God is not a Grind target). The rune must be ungrinded and not enchanted on the target line; the <strong>gap</strong> multiplier tightens how far below the line is still acceptable (default <strong>0.5</strong> after preset migration v9 if you previously had the older default).</p>
-
-            <h4 class="guide-subhead">Verdict safety</h4>
-            <p>A failing Gem quality gate does not force <strong>Sell</strong> if the rune already earned a role. Runes with <strong>no role</strong> and <strong>no Duo/High</strong> signal cannot end as Keep, Finish, Gem, or Grind — only Sell, Reapp, or Upgrade remain possible there.</p>
-
-            <p><strong>Save:</strong> Edits in the <strong>Roles</strong> formula grids persist and reprocess runes as soon as you change a control. <strong>Engine</strong> constants and <strong>Verdict</strong> inputs (Gem / Grind gap / Reapp) are applied when you click <strong>Save &amp; Recalculate</strong> at the bottom — use that after changing those sections so Dashboard and Rune Table stay in sync.</p>
-          </section>
-
-          <section class="guide-section" aria-labelledby="guide-h-other">
-            <h3 id="guide-h-other">Other</h3>
-            <p><strong>Changelog:</strong> Bundled release notes (not editable in the UI, not stored in browser storage). The tab has two sections — <strong>Releases</strong> for shipped highlights and <strong>Roadmap</strong> for planned work — like the subtabs on Rune Rules. New builds include a <strong>version line</strong> at the top of the latest release entry.</p>
-            <p><strong>Footer:</strong> Trademark / affiliation line and <strong>build version</strong> in a compact strip. <strong>Donate</strong> (own pill next to the theme toggles, same button style) opens Lava.top in a new tab.</p>
-          </section>
+        <div id="guide-panel-tips" role="tabpanel" aria-labelledby="guide-subtab-tips"
+          class="rules-subpanel" data-guide-subtab="tips">
+          <div class="guide-lang guide-lang--en guide-list">
+            <section class="guide-section" aria-labelledby="guide-h-tips-en">
+              <h3 id="guide-h-tips-en">Tips, FAQ &amp; misc</h3>
+              <p><strong>Where language lives:</strong> Open the <strong>App Settings</strong> tab and use the <strong>Language</strong> dropdown (English / Russian).</p>
+              <p><strong>Theme:</strong> Light / dark toggle sits beside the donate control in the header.</p>
+              <p><strong>What persists:</strong> Loaded runes per slot, customized rules, table preferences (dense rows, uncapped Eff, etc.), and theme/language usually live in <strong>localStorage</strong> for this origin. Clearing site data removes them.</p>
+              <p><strong>No cloud sync:</strong> There is no account system — backups are whatever you export from SWEX or copy yourself.</p>
+              <p><strong>SWEX quirks:</strong> Rare exports expose <code>set_id</code> <strong>99</strong>; that is not a normal playable rune set name in-game, so the UI may label it Set99.</p>
+              <p><strong>Keyboard:</strong> On the Rune Table tab, press <strong>/</strong> to focus search; arrow keys / Page Up / Page Down scroll the grid when focus is inside it.</p>
+              <p><strong>Versions:</strong> Open the <strong>Changelog</strong> tab for bundled release notes (same build string as the footer).</p>
+              <p><strong>Footer:</strong> Trademark disclaimer plus the exact <strong>build</strong> version. The heart <strong>Donate</strong> button opens Lava.top in a new tab.</p>
+              <p><strong>Something looks wrong after an update?</strong> Try a hard refresh. If rules feel out of sync, open Rune Rules and hit <strong>Save &amp; Recalculate</strong> once.</p>
+            </section>
+          </div>
+          <div class="guide-lang guide-lang--ru guide-list">
+            <section class="guide-section" aria-labelledby="guide-h-tips-ru">
+              <h3 id="guide-h-tips-ru">Советы, вопросы и прочее</h3>
+              <p><strong>Язык:</strong> Вкладка <strong>Приложение</strong> — список <strong>Язык</strong> (English / Русский).</p>
+              <p><strong>Тема:</strong> Светлая / тёмная — переключатель рядом с донатом в шапке.</p>
+              <p><strong>Что сохраняется:</strong> Руны по слотам, кастомные правила, настройки таблицы и обычно тема/язык лежат в <strong>localStorage</strong> этого сайта. Очистка данных сайта всё сбросит.</p>
+              <p><strong>Без облака:</strong> Аккаунта нет — «бэкап» это ваш SWEX JSON и то, что сами сохраните.</p>
+              <p><strong>Особенности SWEX:</strong> Редкий <code>set_id</code> <strong>99</strong> не соответствует обычному игровому сету — в интерфейсе может отображаться Set99.</p>
+              <p><strong>Клавиатура:</strong> На вкладке таблицы <strong>/</strong> фокусирует поиск; стрелки и Page Up/Down листают сетку, когда фокус внутри неё.</p>
+              <p><strong>Версии:</strong> Вкладка <strong>Лог</strong> (Changelog) — зафиксированные заметки релиза (та же сборка, что в футере).</p>
+              <p><strong>Футер:</strong> Дисклеймер и номер <strong>сборки</strong>. Кнопка <strong>Донат</strong> открывает Lava.top в новой вкладке.</p>
+              <p><strong>После обновления что-то «поехало»?</strong> Попробуйте жёсткое обновление страницы. Если вердикты кажутся не теми — зайдите в Правила рун и один раз нажмите <strong>Сохранить и пересчитать</strong>.</p>
+            </section>
+          </div>
         </div>
       </div>
     </section>
@@ -687,8 +849,10 @@
   </main>
 
   <footer class="site-footer">
-    <p class="footer-disclaimer" id="lbl-footer-disclaimer">Summoners War™ is a trademark of Com2uS Corp. This site is not affiliated with or endorsed by Com2uS Corp.</p>
-    <p class="footer-version"><span id="lbl-footer-version">Build</span> <span id="footer-app-version">—</span></p>
+    <div class="footer-shell">
+      <p class="footer-disclaimer" id="lbl-footer-disclaimer">Summoners War™ is a trademark of Com2uS Corp. This site is not affiliated with or endorsed by Com2uS Corp.</p>
+      <p class="footer-version"><span id="lbl-footer-version">Build</span> <span id="footer-app-version">—</span></p>
+    </div>
   </footer>
 
   <!-- UPLOAD PROMPT OVERLAY (shown when no data) -->

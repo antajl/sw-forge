@@ -858,10 +858,24 @@ main {
   flex: 1 0 auto;
 }
 
+/*
+ * Wide canvas on Rune Table only. Class is toggled from JS — avoids `:has()` + `100vw`
+ * coupling (both can hitch the browser badly on resize: style invalidation + scrollbar feedback).
+ */
+html.swrm-runetable-active main {
+  max-width: 1760px;
+}
+
 .site-footer {
   flex-shrink: 0;
-  max-width: 1440px;
   width: 100%;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg2) 92%, var(--bg));
+}
+.footer-shell {
+  max-width: 1440px;
   margin: 0 auto;
   padding: 5px 20px 7px;
   display: flex;
@@ -869,11 +883,12 @@ main {
   align-items: center;
   justify-content: space-between;
   gap: 4px 16px;
-  border-top: 1px solid var(--border);
-  background: color-mix(in srgb, var(--bg2) 92%, var(--bg));
   font-size: 0.62rem;
   color: var(--text-dim);
   line-height: 1.25;
+}
+html.swrm-runetable-active .footer-shell {
+  max-width: 1760px;
 }
 .footer-disclaimer {
   flex: 1 1 200px;
@@ -889,6 +904,18 @@ main {
 }
 
 .hidden { display: none !important; }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 
 /* ===================== UPLOAD PROMPT ===================== */
 .upload-prompt {
@@ -1245,6 +1272,20 @@ html[lang="ru"] .btn-dashboard-export-standalone {
 
 /* Role chart bars */
 .role-chart, .set-chart, .slot-chart { display: flex; flex-direction: column; gap: 8px; }
+
+.chart-scroll--sets {
+  max-height: 21rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.chart-scroll--sets::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
 .chart-row { display: flex; align-items: center; gap: 12px; }
 .chart-label {
   font-size: 0.8rem; color: var(--text-dim); white-space: nowrap;
@@ -1305,6 +1346,9 @@ html[lang="ru"] .btn-dashboard-export-standalone {
   justify-content: flex-end;
   gap: 7px;
   line-height: 1.15;
+}
+.chart-stat-line--count {
+  gap: 0;
 }
 .chart-stat-lbl {
   font-family: var(--font-head);
@@ -1381,16 +1425,145 @@ html[lang="ru"] .btn-dashboard-export-standalone {
 .eff-label { font-size: 0.6rem; color: var(--text-dim); }
 
 /* ===================== RUNE TABLE ===================== */
-.table-controls {
-  display: flex; gap: 10px; align-items: center; margin-bottom: 14px;
+.table-toolbar {
+  margin-bottom: 14px;
+}
+.table-toolbar__card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.table-toolbar__row--search {
+  display: flex;
   flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px 16px;
+}
+.table-toolbar__search {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+.table-toolbar__input {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  padding: 9px 14px;
+  border-radius: var(--radius);
+  font-family: var(--font-ui);
+  font-size: 0.95rem;
+  outline: none;
+}
+.table-toolbar__input:focus {
+  border-color: var(--accent);
+}
+.table-toolbar__load {
+  flex: 0 1 auto;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  max-width: 100%;
+}
+.table-toolbar__load.hidden {
+  display: none !important;
+}
+.table-toolbar__load-inner {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  max-width: min(640px, 100%);
+}
+.btn-toolbar-primary {
+  flex-shrink: 0;
+  align-self: center;
+  padding: 9px 16px;
+  font-size: 0.82rem;
+  white-space: normal;
+  text-align: center;
+  max-width: 13rem;
+}
+.table-toolbar__load-hint {
+  margin: 0;
+  flex: 1 1 120px;
+  min-width: 0;
+  max-width: min(22rem, 42vw);
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (max-width: 640px) {
+  .table-toolbar__load-hint {
+    max-width: 100%;
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+}
+.table-toolbar__row--controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px 24px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+}
+.table-toolbar__group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.table-toolbar__group-label {
+  font-family: var(--font-head);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.table-toolbar__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.btn-toolbar {
+  padding: 8px 14px;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+.table-toolbar__toggles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 18px;
+}
+.table-toolbar__count.table-count-block {
+  margin-left: auto;
+}
+@media (max-width: 720px) {
+  .table-toolbar__count.table-count-block {
+    margin-left: 0;
+    width: 100%;
+    align-items: flex-start;
+    text-align: left;
+  }
 }
 .table-count-block {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 2px;
-  margin-left: auto;
   text-align: right;
 }
 .table-count-detail {
@@ -1407,13 +1580,6 @@ html[lang="ru"] .btn-dashboard-export-standalone {
   border-radius: 2px;
   padding: 0 1px;
 }
-.table-controls input[type=text] {
-  background: var(--surface); border: 1px solid var(--border2);
-  color: var(--text); padding: 6px 12px; border-radius: var(--radius);
-  font-family: var(--font-ui); font-size: 0.95rem; outline: none;
-  min-width: 200px;
-}
-
 .toggle-target {
   display: inline-flex;
   align-items: center;
@@ -1431,37 +1597,59 @@ html[lang="ru"] .btn-dashboard-export-standalone {
   height: 16px;
   cursor: pointer;
 }
-.table-controls input[type=text]:focus { border-color: var(--accent); }
 .table-count { font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-dim); }
 
-.table-layout { display: grid; grid-template-columns: 1fr 300px; gap: 14px; }
+.table-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 15rem);
+  column-gap: 30px;
+  row-gap: 14px;
+  align-items: start;
+}
 .table-summary {
   background: var(--bg2);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 14px;
+  padding: 16px 18px 18px;
   align-self: start;
+  justify-self: end;
+  width: 100%;
+  max-width: 15rem;
+  min-width: 0;
   position: sticky;
   top: 148px;
 }
-.summary-title {
+.table-summary .summary-title {
   font-family: var(--font-head);
-  letter-spacing: 0.08em;
+  font-weight: 700;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-dim);
-  font-size: 0.78rem;
-  margin-bottom: 10px;
+  font-size: 0.8rem;
+  margin: 0 0 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
 }
-.summary-row {
+.table-summary .summary-title--sub {
+  margin-top: 18px;
+}
+.table-summary .summary-row {
   display: flex;
   justify-content: space-between;
-  gap: 8px;
+  align-items: baseline;
+  gap: 10px;
   padding: 6px 0;
   border-bottom: 1px solid var(--border);
   font-size: 0.88rem;
+  color: var(--text);
 }
-.summary-row:last-child { border-bottom: none; }
-.summary-eff { color: var(--gold); font-family: var(--font-mono); }
+.table-summary .summary-row:last-child { border-bottom: none; }
+.table-summary .summary-eff {
+  color: color-mix(in srgb, var(--gold) 88%, var(--text-dim));
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
 
 .level-filter {
   display: inline-flex;
@@ -1569,6 +1757,14 @@ html[lang="ru"] .btn-auto-stage {
   box-shadow: 0 4px 12px rgba(255, 215, 0, 0.35);
 }
 
+/* Guide tab: show EN or RU copy based on html[lang] */
+html:not([lang='ru']) #tab-guide .guide-lang--ru {
+  display: none !important;
+}
+html[lang='ru'] #tab-guide .guide-lang--en {
+  display: none !important;
+}
+
 .guide-section {
   padding: 16px 18px 18px;
   background: var(--bg3);
@@ -1657,7 +1853,7 @@ html[lang="ru"] .btn-auto-stage {
 
 .table-wrap {
   overflow: auto;
-  max-height: min(72vh, 880px);
+  max-height: min(82vh, 980px);
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
 }
@@ -1666,29 +1862,30 @@ html[lang="ru"] .btn-auto-stage {
   outline-offset: 2px;
 }
 
-.rune-table-more-zone {
-  margin-top: 12px;
-}
-.rune-table-sentinel {
-  height: 3px;
-  margin: 0;
-  pointer-events: none;
-}
-.rune-table-show-all-bar {
-  padding: 14px 16px;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
-  background: var(--bg3);
-  text-align: center;
-}
-.rune-table-more-hint {
-  margin: 0 0 12px;
-  font-size: 0.86rem;
-  line-height: 1.45;
-  color: var(--text-dim);
-  max-width: 52rem;
-  margin-left: auto;
-  margin-right: auto;
+/* Optional dense rows: only noticeably smaller on wide viewports */
+@media (min-width: 1200px) {
+  #rune-table-scroll.rune-table-scroll--compact #rune-table thead th {
+    padding: 6px 8px;
+    font-size: 0.7rem;
+  }
+  #rune-table-scroll.rune-table-scroll--compact #rune-table tbody td {
+    padding: 5px 8px;
+    font-size: 0.78rem;
+  }
+  #rune-table-scroll.rune-table-scroll--compact #rune-table .stat-chip {
+    padding: 1px 5px;
+    font-size: 0.7rem;
+    gap: 2px;
+  }
+  #rune-table-scroll.rune-table-scroll--compact #rune-table .stat-chip.stat-chip--set {
+    font-size: 0.68rem;
+  }
+  #rune-table-scroll.rune-table-scroll--compact #rune-table .grade-tag,
+  #rune-table-scroll.rune-table-scroll--compact #rune-table .role-tag,
+  #rune-table-scroll.rune-table-scroll--compact #rune-table .verdict-tag {
+    font-size: 0.66rem;
+    padding: 1px 5px;
+  }
 }
 
 table { width: 100%; border-collapse: collapse; }
@@ -1919,38 +2116,38 @@ table.show-target .target-col-cell { display: table-cell; }
   color: var(--text-hi);
 }
 .grade-tag.legend {
-  background: color-mix(in srgb, var(--surface) 78%, var(--gold));
-  border-color: color-mix(in srgb, var(--border2) 50%, var(--gold));
+  background: color-mix(in srgb, var(--surface) 54%, var(--gold));
+  border-color: color-mix(in srgb, var(--border2) 22%, var(--gold));
 }
 .grade-tag.hero {
-  background: color-mix(in srgb, var(--surface) 82%, var(--purple));
-  border-color: color-mix(in srgb, var(--border2) 50%, var(--purple));
+  background: color-mix(in srgb, var(--surface) 56%, var(--purple));
+  border-color: color-mix(in srgb, var(--border2) 22%, var(--purple));
 }
 .grade-tag.rare {
-  background: color-mix(in srgb, var(--surface) 82%, var(--accent));
-  border-color: color-mix(in srgb, var(--border2) 50%, var(--accent));
+  background: color-mix(in srgb, var(--surface) 56%, var(--accent));
+  border-color: color-mix(in srgb, var(--border2) 22%, var(--accent));
 }
 .grade-tag.grade-tag--other {
-  background: color-mix(in srgb, var(--surface) 94%, var(--text-dim));
+  background: color-mix(in srgb, var(--surface) 88%, var(--text-dim));
   color: var(--text);
 }
 
-.role-tag.highroll   { background: color-mix(in srgb, var(--surface) 80%, var(--gold)); border-color: color-mix(in srgb, var(--border2) 48%, var(--gold)); }
-.role-tag.bruiser    { background: color-mix(in srgb, var(--surface) 85%, var(--sell)); border-color: color-mix(in srgb, var(--border2) 48%, var(--sell)); }
-.role-tag.fastcc     { background: color-mix(in srgb, var(--surface) 85%, var(--teal)); border-color: color-mix(in srgb, var(--border2) 48%, var(--teal)); }
-.role-tag.tank       { background: color-mix(in srgb, var(--surface) 85%, var(--purple)); border-color: color-mix(in srgb, var(--border2) 48%, var(--purple)); }
-.role-tag.bomber     { background: color-mix(in srgb, var(--surface) 85%, var(--orange)); border-color: color-mix(in srgb, var(--border2) 48%, var(--orange)); }
-.role-tag.classicdps { background: color-mix(in srgb, var(--surface) 78%, var(--accent)); border-color: color-mix(in srgb, var(--border2) 45%, var(--accent)); }
-.role-tag.slowdps    { background: color-mix(in srgb, var(--surface) 80%, var(--accent2)); border-color: color-mix(in srgb, var(--border2) 45%, var(--accent2)); }
-.role-tag.duoroll    { background: color-mix(in srgb, var(--surface) 80%, var(--gold)); border-color: color-mix(in srgb, var(--border2) 48%, var(--gold)); }
+.role-tag.highroll   { background: color-mix(in srgb, var(--surface) 56%, var(--gold)); border-color: color-mix(in srgb, var(--border2) 25%, var(--gold)); }
+.role-tag.bruiser    { background: color-mix(in srgb, var(--surface) 58%, var(--sell)); border-color: color-mix(in srgb, var(--border2) 28%, var(--sell)); }
+.role-tag.fastcc     { background: color-mix(in srgb, var(--surface) 58%, var(--teal)); border-color: color-mix(in srgb, var(--border2) 26%, var(--teal)); }
+.role-tag.tank       { background: color-mix(in srgb, var(--surface) 58%, var(--purple)); border-color: color-mix(in srgb, var(--border2) 24%, var(--purple)); }
+.role-tag.bomber     { background: color-mix(in srgb, var(--surface) 58%, var(--orange)); border-color: color-mix(in srgb, var(--border2) 26%, var(--orange)); }
+.role-tag.classicdps { background: color-mix(in srgb, var(--surface) 52%, var(--accent)); border-color: color-mix(in srgb, var(--border2) 22%, var(--accent)); color: var(--text-hi); }
+.role-tag.slowdps    { background: color-mix(in srgb, var(--surface) 54%, var(--accent2)); border-color: color-mix(in srgb, var(--border2) 22%, var(--accent2)); color: var(--text-hi); }
+.role-tag.duoroll    { background: color-mix(in srgb, var(--surface) 56%, var(--gold)); border-color: color-mix(in srgb, var(--border2) 25%, var(--gold)); }
 
-.verdict-tag.keep    { background: color-mix(in srgb, var(--surface) 82%, var(--keep)); border-color: color-mix(in srgb, var(--border2) 45%, var(--keep)); }
-.verdict-tag.sell    { background: color-mix(in srgb, var(--surface) 82%, var(--sell)); border-color: color-mix(in srgb, var(--border2) 45%, var(--sell)); }
-.verdict-tag.grind   { background: color-mix(in srgb, var(--surface) 82%, var(--grind)); border-color: color-mix(in srgb, var(--border2) 45%, var(--grind)); }
-.verdict-tag.finish  { background: color-mix(in srgb, var(--surface) 82%, var(--finish)); border-color: color-mix(in srgb, var(--border2) 45%, var(--finish)); }
-.verdict-tag.reapp   { background: color-mix(in srgb, var(--surface) 82%, var(--reapp)); border-color: color-mix(in srgb, var(--border2) 45%, var(--reapp)); }
-.verdict-tag.upgrade { background: color-mix(in srgb, var(--surface) 82%, var(--upgrade)); border-color: color-mix(in srgb, var(--border2) 45%, var(--upgrade)); }
-.verdict-tag.gem     { background: color-mix(in srgb, var(--surface) 82%, var(--gem)); border-color: color-mix(in srgb, var(--border2) 45%, var(--gem)); }
+.verdict-tag.keep    { background: color-mix(in srgb, var(--surface) 56%, var(--keep)); border-color: color-mix(in srgb, var(--border2) 26%, var(--keep)); }
+.verdict-tag.sell    { background: color-mix(in srgb, var(--surface) 56%, var(--sell)); border-color: color-mix(in srgb, var(--border2) 28%, var(--sell)); }
+.verdict-tag.grind   { background: color-mix(in srgb, var(--surface) 56%, var(--grind)); border-color: color-mix(in srgb, var(--border2) 26%, var(--grind)); }
+.verdict-tag.finish  { background: color-mix(in srgb, var(--surface) 56%, var(--finish)); border-color: color-mix(in srgb, var(--border2) 26%, var(--finish)); }
+.verdict-tag.reapp   { background: color-mix(in srgb, var(--surface) 54%, var(--reapp)); border-color: color-mix(in srgb, var(--border2) 24%, var(--reapp)); }
+.verdict-tag.upgrade { background: color-mix(in srgb, var(--surface) 56%, var(--upgrade)); border-color: color-mix(in srgb, var(--border2) 26%, var(--upgrade)); }
+.verdict-tag.gem     { background: color-mix(in srgb, var(--surface) 56%, var(--gem)); border-color: color-mix(in srgb, var(--border2) 24%, var(--gem)); }
 
 .settings-content-scroll {
   max-width: 900px;
@@ -2378,8 +2575,17 @@ table.show-target .target-col-cell { display: table-cell; }
   .dashboard-summary-area .summary-cards-row--keepers { grid-template-columns: repeat(2, 1fr); }
   .dashboard-grid { grid-template-columns: 1fr 1fr; }
   .panel-wide { grid-column: span 2; }
-  .table-layout { grid-template-columns: 1fr; }
-  .table-summary { position: static; }
+  .table-layout,
+  .table-layout.table-layout--has-load-slot {
+    grid-template-columns: 1fr;
+  }
+  .table-summary {
+    justify-self: stretch;
+    width: 100%;
+    max-width: none;
+    position: static;
+    top: auto;
+  }
   .db-slots-wrap { grid-template-columns: 1fr; }
 }
 @media (max-width: 600px) {

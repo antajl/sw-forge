@@ -274,7 +274,7 @@
       }
     }
     
-    // 4. Gem — meta innate (Sheets) and/or legacy sub-flat path
+    // 4. Gem — bad-flat subs → grindable % (Enchant Gem is sub-only)
     if (hasRole) {
       const gem = window.SWRM.evaluateGemRecommendation?.(rune, stage, settings) || { can: false };
       if (gem.can) {

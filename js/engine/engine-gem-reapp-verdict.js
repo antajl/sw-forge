@@ -8,25 +8,27 @@
   const modeKey = S.modeKey;
   const qSub = (s) => (typeof S.isQualifyingSubstatRow === 'function' ? S.isQualifyingSubstatRow(s) : s.source !== 'innate');
 
-  function hasBadFlat(rune, stage) {
-    const flatIds = [1, 3, 5];
-    const flatThresholds = { 1: 200, 3: 20, 5: 20 };
+  const FLAT_SUB_TYPE_IDS = [1, 3, 5];
+  const FLAT_SUB_THRESHOLDS = { 1: 200, 3: 20, 5: 20 };
+
+  /** Row order: low flat HP/DEF/ATK with no grind/gem; empty if any enchanted sub (spreadsheet “clean” gate). */
+  function listBadFlatSubNames(rune) {
     const subs = (rune.substats || []).filter(qSub);
+    if (subs.some((s) => s.enchanted === true)) return [];
 
-    // Spreadsheet parity: if any sub is enchanted, rune is treated as Clean for bad-flat gate.
-    if (subs.some((s) => s.enchanted === true)) return false;
-
-    let cleanFlatCount = 0;
+    const names = [];
     for (const s of subs) {
-      if (flatIds.includes(s.type)) {
-        const threshold = flatThresholds[s.type];
-        // Bad flat row only when it's a low flat and has no gem / no grind.
-        if ((s.val || 0) <= threshold && (s.gem || 0) === 0 && (s.grind || 0) === 0) {
-          cleanFlatCount++;
-        }
+      if (!FLAT_SUB_TYPE_IDS.includes(s.type)) continue;
+      const threshold = FLAT_SUB_THRESHOLDS[s.type];
+      if ((s.val || 0) <= threshold && (s.gem || 0) === 0 && (s.grind || 0) === 0) {
+        if (s.name) names.push(s.name);
       }
     }
+    return names;
+  }
 
+  function hasBadFlat(rune, stage) {
+    const cleanFlatCount = listBadFlatSubNames(rune).length;
     const requiredFlats = stage === 'Late' ? 1 : 2;
     return cleanFlatCount >= requiredFlats;
   }
@@ -86,68 +88,20 @@
     return bestCandidate || { can: false };
   }
 
-  function slotArray(slotMap, slot) {
-    if (!slotMap || typeof slotMap !== 'object') return null;
-    if (Object.prototype.hasOwnProperty.call(slotMap, slot)) return slotMap[slot];
-    const sk = String(slot);
-    if (Object.prototype.hasOwnProperty.call(slotMap, sk)) return slotMap[sk];
-    return null;
-  }
-
-  function getBadInnateList(rune, gm) {
-    const setRules = gm.bySet && gm.bySet[rune.setName];
-    let explicit = setRules !== undefined && setRules !== null ? slotArray(setRules, rune.slot) : null;
-
-    if (explicit !== null && explicit !== undefined) {
-      if (!Array.isArray(explicit)) return [];
-      return explicit.filter(Boolean).map(function(s) { return String(s).trim(); }).filter(Boolean);
-    }
-
-    const extras = gm.extraBadBySlot && (slotArray(gm.extraBadBySlot, rune.slot) || []);
-    const arrEx = Array.isArray(extras) ? extras.map(function(x) { return String(x).trim(); }).filter(Boolean) : [];
-    const flats = gm.useUniversalFlatBadInnate !== false
-      ? (gm.universalFlatInnates || []).map(function(x) { return String(x).trim(); }).filter(Boolean)
-      : [];
-    return [...new Set([...arrEx, ...flats])];
-  }
-
-  function checkMetaInnateGem(rune, settings) {
+  /** Enchant Gem targets substats only (innate prefix is not gemmable in-game). */
+  function evaluateGemRecommendation(rune, stage, settings) {
     const gm = settings.gemMeta;
-    const none = { can: false };
-    if (!gm || gm.enabled === false) return none;
-
-    const setsList = gm.sets || [];
-    if (!setsList.length || setsList.indexOf(rune.setName) === -1) return none;
-
-    if (gm.legendOnlyInnate === true) {
-      if (rune.gradeStr !== 'Legend') return none;
-    }
-
-    const innateName = rune.innate_name;
-    if (!innateName) return none;
-
-    const badList = getBadInnateList(rune, gm);
-    if (badList.indexOf(innateName) === -1) return none;
-
+    if (!gm || !gm.legacyFlatSubGem) return { can: false };
+    if (!hasBadFlat(rune, stage)) return { can: false };
+    const leg = checkSubstatFlatGem(rune, stage, settings);
+    if (!leg.can) return { can: false };
     return {
       can: true,
-      kind: 'innate-meta',
-      innate: innateName,
-      setName: rune.setName,
-      slot: rune.slot,
+      kind: leg.kind,
+      score: leg.score,
+      /** UI Target: flat substats triggering the gate (omit suggested grindable target on purpose). */
+      badFlatSubs: listBadFlatSubNames(rune),
     };
-  }
-
-  function evaluateGemRecommendation(rune, stage, settings) {
-    const metaHit = checkMetaInnateGem(rune, settings);
-    if (metaHit.can) return metaHit;
-
-    const gm = settings.gemMeta;
-    if (gm && gm.legacyFlatSubGem && hasBadFlat(rune, stage)) {
-      const leg = checkSubstatFlatGem(rune, stage, settings);
-      if (leg.can) return leg;
-    }
-    return { can: false };
   }
 
   function passesGemQualityGate(rune, stage, isHero, hasHighDuo, settings) {
@@ -261,10 +215,10 @@
   }
 
   S.hasBadFlat = hasBadFlat;
+  S.listBadFlatSubNames = listBadFlatSubNames;
   S.checkGrind = checkGrind;
   S.checkSubstatFlatGem = checkSubstatFlatGem;
   S.checkGem = checkSubstatFlatGem;
-  S.checkMetaInnateGem = checkMetaInnateGem;
   S.evaluateGemRecommendation = evaluateGemRecommendation;
   S.passesGemQualityGate = passesGemQualityGate;
   S.matchReappRule = matchReappRule;

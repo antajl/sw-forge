@@ -24,7 +24,6 @@
           <nav class="tabs">
             <button type="button" class="tab active" data-tab="dashboard">Dashboard</button>
             <button type="button" class="tab" data-tab="runetable">Rune Table</button>
-            <button type="button" class="tab" data-tab="actionlist">Action List</button>
             <button type="button" class="tab" data-tab="settings">Rune Rules</button>
             <button type="button" class="tab" data-tab="guide">Guide</button>
             <button type="button" class="tab" data-tab="changelog">Changelog</button>
@@ -89,12 +88,13 @@
                     <option value="Mid" selected>Mid</option>
                     <option value="Late">Late</option>
                   </select>
+                  <p class="stage-preset-score-hint" id="stage-preset-score-hint" hidden></p>
                 </div>
               </div>
             </div>
 
             <div class="stage-advisor-metrics-head">
-              <span id="lbl-stage-metrics-explainer">Depth v2 uses your full Hero+ export. Absolute counts and top-eff average — preset and Min Lvl do not affect this score. Weights:</span>
+              <span id="lbl-stage-metrics-explainer">Depth v2 uses your full Rare+ export (SWEX rank ≥3). Absolute counts and top-eff average — preset and Min Lvl do not affect this score. Weights:</span>
             </div>
             <div class="stage-advisor-metrics">
               <article class="stage-metric-card">
@@ -129,7 +129,7 @@
         <div class="dashboard-scope-bar">
           <div class="dashboard-scope-bar-text">
             <span class="dashboard-scope-title" id="dashboard-scope-title">Global filter</span>
-            <span class="dashboard-scope-hint" id="dashboard-scope-hint">Applies to the summary cards, charts below, Rune Table, and Action List. Does not change the progression suggestion (Depth v2 uses the full export).</span>
+            <span class="dashboard-scope-hint" id="dashboard-scope-hint">Applies to the summary cards, charts below, and Rune Table. Does not change the progression suggestion (Depth v2 uses the full export).</span>
           </div>
           <div class="dashboard-scope-control">
             <label class="level-filter dashboard-min-level" for="global-min-level">
@@ -215,60 +215,60 @@
         <div class="table-main">
           <div class="table-controls">
             <input type="text" id="search-box" placeholder="Search by set, stat, role..." />
-            <select id="filter-verdict">
-              <option value="">All Verdicts</option>
-              <option value="Keep">Keep</option>
-              <option value="Sell">Sell</option>
-              <option value="Grind">Grind</option>
-              <option value="Gem">Gem</option>
-              <option value="Finish">Finish</option>
-              <option value="Upgrade">Upgrade</option>
-              <option value="Reapp">Reapp</option>
-            </select>
-            <select id="filter-role">
-              <option value="">All Roles</option>
-              <option value="High Roll">High Roll</option>
-              <option value="Duo Roll">Duo Roll</option>
-              <option value="Classic DPS">Classic DPS</option>
-              <option value="Slow DPS">Slow DPS</option>
-              <option value="Fast CC">Fast CC</option>
-              <option value="Bomber">Bomber</option>
-              <option value="Tank">Tank</option>
-              <option value="Bruiser">Bruiser</option>
-            </select>
-            <select id="filter-grade">
-              <option value="">All Grades</option>
-              <option value="Legend">Legend</option>
-              <option value="Hero">Hero</option>
-            </select>
-            <select id="filter-set">
-              <option value="">All Sets</option>
-            </select>
-            <select id="filter-slot">
-              <option value="">All Slots</option>
-            </select>
-            <select id="filter-main">
-              <option value="">All Mains</option>
-            </select>
+            <label class="toggle-target">
+              <input type="checkbox" id="toggle-target-col" />
+              <span>Show Target</span>
+            </label>
+            <button type="button" id="btn-export-csv" class="btn-ghost">Export CSV</button>
             <span id="table-count" class="table-count">0 runes</span>
           </div>
           <div class="table-wrap">
             <table id="rune-table">
               <thead>
                 <tr>
-                  <th data-sort="grade">Grade</th>
-                  <th data-sort="set">Set</th>
+                  <th data-sort="grade" class="th-has-filter">
+                    <span class="th-text" data-filter="grade">Grade</span>
+                    <select id="filter-grade" class="th-filter">
+                      <option value="">All</option>
+                    </select>
+                  </th>
+                  <th data-sort="set" class="th-has-filter">
+                    <span class="th-text" data-filter="set">Set</span>
+                    <select id="filter-set" class="th-filter">
+                      <option value="">All</option>
+                    </select>
+                  </th>
                   <th data-sort="level">Lvl</th>
-                  <th data-sort="slot">Slot</th>
-                  <th data-sort="main">Main</th>
+                  <th data-sort="slot" class="th-has-filter">
+                    <span class="th-text" data-filter="slot">Slot</span>
+                    <select id="filter-slot" class="th-filter">
+                      <option value="">All</option>
+                    </select>
+                  </th>
+                  <th data-sort="main" class="th-has-filter">
+                    <span class="th-text" data-filter="main">Main</span>
+                    <select id="filter-main" class="th-filter">
+                      <option value="">All</option>
+                    </select>
+                  </th>
                   <th>Innate</th>
                   <th data-sort="s1">Sub 1</th>
                   <th data-sort="s2">Sub 2</th>
                   <th data-sort="s3">Sub 3</th>
                   <th data-sort="s4">Sub 4</th>
                   <th data-sort="eff">Eff%</th>
-                  <th data-sort="role">Role</th>
-                  <th data-sort="verdict">Verdict</th>
+                  <th data-sort="role" class="th-has-filter">
+                    <span class="th-text" data-filter="role">Role</span>
+                    <select id="filter-role" class="th-filter">
+                      <option value="">All</option>
+                    </select>
+                  </th>
+                  <th data-sort="verdict" class="th-has-filter">
+                    <span class="th-text" data-filter="verdict">Verdict</span>
+                    <select id="filter-verdict" class="th-filter">
+                      <option value="">All</option>
+                    </select>
+                  </th>
                   <th id="target-col-header" class="hidden">Target</th>
                 </tr>
               </thead>
@@ -280,72 +280,30 @@
       </div>
     </section>
 
-    <!-- ACTION LIST TAB -->
-    <section id="tab-actionlist" class="tab-content hidden">
-      <div class="table-layout">
-        <div class="table-main">
-          <p id="action-list-lead" class="action-list-lead settings-desc">
-            Starts with Sell only; change the verdict filter for Keep, Upgrade, Finish, Gem, Grind, Reapp, or all actions. Sorted by Eff% (high first). Dashboard Min Lvl applies.
-          </p>
-          <div class="table-controls">
-            <input type="text" id="action-search-box" placeholder="Search…" />
-            <select id="action-filter-verdict">
-              <option value="">All actions</option>
-              <option value="Sell" selected>Sell</option>
-              <option value="Keep">Keep</option>
-              <option value="Upgrade">Upgrade</option>
-              <option value="Finish">Finish</option>
-              <option value="Gem">Gem</option>
-              <option value="Grind">Grind</option>
-              <option value="Reapp">Reapp</option>
-            </select>
-            <button type="button" id="btn-action-export-csv" class="btn-ghost">Export CSV</button>
-            <span id="action-table-count" class="table-count">0 runes</span>
-          </div>
-          <div class="table-wrap">
-            <table id="action-table" class="show-target">
-              <thead>
-                <tr>
-                  <th data-action-sort="grade">Grade</th>
-                  <th data-action-sort="set">Set</th>
-                  <th data-action-sort="level">Lvl</th>
-                  <th data-action-sort="slot">Slot</th>
-                  <th data-action-sort="main">Main</th>
-                  <th>Innate</th>
-                  <th data-action-sort="s1">Sub 1</th>
-                  <th data-action-sort="s2">Sub 2</th>
-                  <th data-action-sort="s3">Sub 3</th>
-                  <th data-action-sort="s4">Sub 4</th>
-                  <th data-action-sort="eff">Eff%</th>
-                  <th data-action-sort="role">Role</th>
-                  <th data-action-sort="verdict">Verdict</th>
-                  <th class="target-col-header-visible">Target</th>
-                </tr>
-              </thead>
-              <tbody id="action-tbody"></tbody>
-            </table>
-          </div>
-        </div>
-        <aside class="table-summary" id="action-summary"></aside>
-      </div>
-    </section>
-
     <!-- SETTINGS TAB -->
     <section id="tab-settings" class="tab-content hidden">
       <div class="settings-two-col">
         <div class="settings-col-left">
-          <h3>High Roll Thresholds</h3>
-          <p class="settings-desc high-roll-desc">A rune qualifies as High Roll if at least one substat meets or exceeds these values.</p>
-          <div id="hr-table-wrap"></div>
+          <h3 class="constants-sheet-heading">Constants (8 stats)</h3>
+          <p class="settings-desc constants-sheet-desc">Sheets-style Constants row per stat. HR (C:J) and Duo (K:R) are computed from these values.</p>
+          <div id="stat-constants-wrap"></div>
+          <div class="settings-row constants-reset-row">
+            <button type="button" class="btn-ghost" id="btn-reset-stat-constants">Reset Constants to defaults</button>
+            <span class="hint" id="lbl-reset-constants-hint"></span>
+          </div>
+
+          <p class="settings-desc hr-preview-desc" id="lbl-hr-preview"></p>
+          <div id="hr-preview-wrap"></div>
+
           <div class="settings-row">
             <label>Partner coefficient</label>
             <input type="number" id="hr-coeff" step="0.05" min="0.5" max="1" value="0.7" />
             <span class="hint">e.g. 0.70 = 70% of threshold</span>
           </div>
 
-          <h3>Duo Roll Thresholds</h3>
-          <p class="settings-desc duo-desc">Synergy pairs. Both stats must reach their respective minimum values.</p>
-          <div id="dr-table-wrap"></div>
+          <h3 class="duo-thresholds-heading">Duo Roll (computed)</h3>
+          <p class="settings-desc duo-preview-desc" id="lbl-duo-preview"></p>
+          <div id="duo-preview-wrap"></div>
 
           <h3 class="gem-meta-heading">Gem (Innate) — Meta sets</h3>
           <p class="settings-desc gem-meta-desc">On listed sets, verdict Gem appears when innate is undesirable for this slot. Per-set overrides in JSON replace defaults for those slots.</p>
@@ -441,14 +399,14 @@
           <section class="guide-section" aria-labelledby="guide-h-dash">
             <h3 id="guide-h-dash">Dashboard</h3>
             <p><strong>Summary cards:</strong> Total, Keep, Sell, Grind, Gem, Finish, Upgrade and Reapp are recalculated for the <strong>Early / Mid / Late</strong> preset you choose — not for the progression score block (see below).</p>
-            <p><strong>Global Min Lvl:</strong> The scope bar filter applies to these cards, the charts below, Rune Table, and Action List. It does <strong>not</strong> apply to the Account progression suggestion.</p>
+            <p><strong>Global Min Lvl:</strong> The scope bar filter applies to these cards, the charts below, and Rune Table. It does <strong>not</strong> apply to the Account progression suggestion.</p>
             <p><strong>Charts:</strong> <em>Role Distribution</em> — count and average efficiency per role (custom roles appear after you save rules). <em>Set Distribution</em> — set count and average efficiency. <em>Slot Distribution</em> — per-slot counts and common main stats.</p>
           </section>
 
           <section class="guide-section" aria-labelledby="guide-h-depth">
             <h3 id="guide-h-depth">Account progression (Depth&nbsp;v2)</h3>
             <p class="guide-lead">The block at the top of the Dashboard estimates how <strong>deep</strong> your <strong>rune inventory</strong> is — not your arena rank or monster box. It uses absolute counts and a quality ceiling so small accounts cannot look the same as long-term farms.</p>
-            <p><strong>Independent of presets:</strong> The <strong>Combined score</strong> and the three metric cards ignore your <strong>Early / Mid / Late</strong> preset and <strong>Global Min Lvl</strong>. They always use the full Hero+ rune list from the loaded SWEX. Changing the preset still changes verdicts everywhere else (summary cards, table, charts).</p>
+            <p><strong>Independent of presets:</strong> The <strong>Combined score</strong> and the three metric cards ignore your <strong>Early / Mid / Late</strong> preset and <strong>Global Min Lvl</strong>. They always use the full Rare+ rune list from the loaded SWEX (rank ≥3). Changing the preset still changes verdicts everywhere else (summary cards, table, charts).</p>
 
             <h4 class="guide-subhead">The three metrics</h4>
             <ul>
@@ -477,10 +435,9 @@
           </section>
 
           <section class="guide-section" aria-labelledby="guide-h-table">
-            <h3 id="guide-h-table">Rune Table &amp; Action List</h3>
-            <p><strong>Rune Table:</strong> Search, filter by verdict/role/grade, sort columns, inspect innate and substats.</p>
-            <p><strong>Action List:</strong> Opens filtered to <strong>Sell</strong> (change the dropdown for Keep, upgrades, grind, etc., or all). Default sort Eff% descending. <strong>Target</strong> describes the next step when relevant. Export CSV for spreadsheets.</p>
-            <p><strong>Target column:</strong> Shown in Rune Table when filtering Gem/Grind; always visible in Action List (grind goals, innate reroll, +9/+12/Reapp hints).</p>
+            <h3 id="guide-h-table">Rune Table</h3>
+            <p><strong>Rune Table:</strong> Search, header filters for verdict, role, grade, set, slot, and main stat; sort columns; inspect innate and substats. Default sort Eff% descending. Use <strong>Export CSV</strong> for spreadsheets.</p>
+            <p><strong>Target column:</strong> Shown when the verdict filter is Gem or Grind — grind goals, innate reroll, +9/+12/Reapp hints where relevant.</p>
             <p><strong>Rune Summary panel:</strong> Right-hand summary — counts and average efficiency by verdict and role for the rows you have filtered.</p>
           </section>
 
@@ -555,7 +512,10 @@
 
   <script src="js/settings.js"></script>
   <script src="js/parser.js"></script>
-  <script src="js/engine.js"></script>
+  <script src="js/engine/engine-core.js"></script>
+  <script src="js/engine/engine-legacy-roles.js"></script>
+  <script src="js/engine/engine-gem-reapp-verdict.js"></script>
+  <script src="js/engine/engine-process.js"></script>
   <script src="js/advanced-formulas.js"></script>
   <script src="js/ui.js"></script>
 </body>

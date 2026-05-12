@@ -18,7 +18,7 @@ A client-side rune analyzer for Summoners War, powered by your SWEX JSON export.
 1. Export your account with [SWEX](https://github.com/Xzandro/sw-exporter/releases/latest)
 2. Open the site and click **Load JSON**
 3. Select your stage (Early / Mid / Late)
-4. Review your runes and action list
+4. Review your runes on the Dashboard and Rune Table
 
 ## Role system
 

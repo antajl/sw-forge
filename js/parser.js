@@ -3,7 +3,21 @@
 // =============================================
 
 (function() {
-  const { STAT_NAMES, SET_NAMES, GRADE_SHORT } = window.SWRM;
+  const { STAT_NAMES, SET_NAMES, GRADE_SHORT, GRADE_NAMES } = window.SWRM;
+
+  /**
+   * SWEX / Com2US rarity: normally 1–5 (Common…Legend). Some payloads (often unit_list runes)
+   * send 11–15 (same values + 10). Anything else is returned as-is for debugging.
+   */
+  function normalizeGradeRank(rank) {
+    const n = Number(rank);
+    if (!Number.isFinite(n) || n <= 0) return 0;
+    if (n >= 1 && n <= 5) return n;
+    if (n >= 11 && n <= 15) return n - 10;
+    const mod = n % 10;
+    if (n >= 10 && mod >= 1 && mod <= 5) return mod;
+    return n;
+  }
 
   /**
    * Stat type ID → short name
@@ -67,7 +81,8 @@
    * Parse a single rune object from SWEX JSON
    */
   function parseRune(raw) {
-    const grade = raw.rank;           // 4=Hero, 5=Legend
+    const gradeRaw = raw.rank;
+    const grade = normalizeGradeRank(gradeRaw);
     const slot  = raw.slot_no;        // 1–6
     const setId = raw.set_id;
     const level = raw.upgrade_curr || 0;
@@ -88,13 +103,17 @@
       val:   s[1] + (s[2] || 0),   // base + enchant
       grind: s[3] || 0,
       flat:  isFlat(s[0]),
+      /** Qualifying sub rows for roles (`innate` if exporter duplicates prefix into sec_eff — excluded from statMap) */
+      source: 'sub',
     }));
 
     const rune = {
       id:         raw.rune_id,
       slot,
       grade,
-      gradeStr:   GRADE_SHORT[grade] || `r${grade}`,
+      gradeStr: (grade >= 1 && grade <= 5)
+        ? (GRADE_SHORT[grade] || GRADE_NAMES[grade] || `r${gradeRaw}`)
+        : `r${gradeRaw}`,
       stars,
       level,
       setId,
@@ -147,7 +166,7 @@
     const inv = json.runes || json.rune_list || [];
     for (const r of inv) {
       const rune = parseRune(r);
-      if (rune.grade >= 4) runeMap.set(rune.id, rune); // Hero+ only
+      if (rune.grade >= 3 && rune.grade <= 5) runeMap.set(rune.id, rune); // Rare–Legend only
     }
 
     // 2. Equipped runes (inside unit_list)
@@ -158,7 +177,7 @@
         const rune = parseRune(r);
         rune.equipped_to = unit.unit_id;
         rune.equipped_name = unit.unit_master_id; // monster master id
-        if (rune.grade >= 4) runeMap.set(rune.id, rune);
+        if (rune.grade >= 3 && rune.grade <= 5) runeMap.set(rune.id, rune);
       }
     }
 

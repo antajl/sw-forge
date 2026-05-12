@@ -4,23 +4,12 @@
 
 (function() {
   const APP_LANG_KEY = 'swrm_app_lang_v1';
-  const ACTION_VERDICT_FILTER_KEY = 'swrm_action_verdict_filter_v1';
-  const ACTION_FILTER_VALUES = ['', 'Sell', 'Keep', 'Upgrade', 'Finish', 'Gem', 'Grind', 'Reapp'];
 
-  /** All verdict types that may appear in the Action List pool (narrowed further by dropdown). */
-  const ACTION_POOL_VERDICTS = new Set(['Upgrade', 'Finish', 'Gem', 'Grind', 'Reapp', 'Sell', 'Keep']);
-
-  function applyStoredActionVerdictFilter() {
-    const af = document.getElementById('action-filter-verdict');
-    if (!af) return;
-    const saved = localStorage.getItem(ACTION_VERDICT_FILTER_KEY);
-    af.value = ACTION_FILTER_VALUES.includes(saved) ? saved : 'Sell';
-  }
-
-  const { parseSWEX, extractSwexSummary, countAllSwexRunes, processAll, ROLE_PRIORITY, settings: cfg,
+  const { parseSWEX, extractSwexSummary, countAllSwexRunes, processAll,
           STAT_NAMES, SET_NAMES, GRADE_SHORT, saveSettings,
-          DEFAULT_THRESHOLDS, DEFAULT_HR_THRESHOLDS, DEFAULT_HR_COEFF,
-          DEFAULT_DUO_THRESHOLDS, DEFAULT_ROLES, DEFAULT_REAPP, DEFAULT_GEM_META, TRANSLATIONS } = window.SWRM;
+          DEFAULT_HR_COEFF,
+          DEFAULT_STAT_CONSTANTS, DEFAULT_THRESHOLDS, DEFAULT_FORMULAS,
+          DEFAULT_ROLES, DEFAULT_REAPP, DEFAULT_GEM_META, TRANSLATIONS } = window.SWRM;
 
   let allRunes = [];
   let processedRunes = [];
@@ -129,8 +118,6 @@
     if (guideTab) guideTab.textContent = t.guide;
     const changelogTab = document.querySelector('[data-tab="changelog"]');
     if (changelogTab) changelogTab.textContent = t.changelog;
-    const actionListTab = document.querySelector('[data-tab="actionlist"]');
-    if (actionListTab) actionListTab.textContent = t.actionList;
     const appSettingsTab = document.querySelector('[data-tab="app-settings"]');
     if (appSettingsTab) appSettingsTab.textContent = t.appSettings;
 
@@ -246,46 +233,19 @@
         <option value="Upgrade">${t.upgrade}</option>
         <option value="Reapp">${t.reapp}</option>`;
     }
-    
-    const filterRole = document.getElementById('filter-role');
-    if (filterRole) {
-      filterRole.innerHTML = `<option value="">${t.allRoles}</option>
-        <option value="High Roll">High Roll</option>
-        <option value="Duo Roll">Duo Roll</option>
-        <option value="Classic DPS">Classic DPS</option>
-        <option value="Slow DPS">Slow DPS</option>
-        <option value="Fast CC">Fast CC</option>
-        <option value="Bomber">Bomber</option>
-        <option value="Tank">Tank</option>
-        <option value="Bruiser">Bruiser</option>`;
-    }
-    const actionSearch = document.getElementById('action-search-box');
-    if (actionSearch) actionSearch.placeholder = t.actionSearchPlaceholder;
-    const btnExportAction = document.getElementById('btn-action-export-csv');
-    if (btnExportAction) btnExportAction.textContent = t.exportActionCsv;
-    const actionLead = document.getElementById('action-list-lead');
-    if (actionLead) actionLead.textContent = t.actionListLead;
-    const actionTargetTh = document.querySelector('#action-table thead .target-col-header-visible');
-    if (actionTargetTh) actionTargetTh.textContent = t.targetHeading;
 
-    const af = document.getElementById('action-filter-verdict');
-    if (af) {
-      af.innerHTML = `<option value="">${t.allActions}</option>
-        <option value="Sell">${t.sell}</option>
-        <option value="Keep">${t.keep}</option>
-        <option value="Upgrade">${t.upgrade}</option>
-        <option value="Finish">${t.finish}</option>
-        <option value="Gem">${t.gem}</option>
-        <option value="Grind">${t.grind}</option>
-        <option value="Reapp">${t.reapp}</option>`;
-      applyStoredActionVerdictFilter();
-    }
+    // filter-role is updated by refreshRoleFilterOptions to include custom roles
+    refreshRoleFilterOptions();
+
+    const btnExport = document.getElementById('btn-export-csv');
+    if (btnExport) btnExport.textContent = t.exportTableCsv || 'Export CSV';
 
     const filterGrade = document.getElementById('filter-grade');
     if (filterGrade) {
       filterGrade.innerHTML = `<option value="">${t.allGrades}</option>
         <option value="Legend">Legend</option>
-        <option value="Hero">Hero</option>`;
+        <option value="Hero">Hero</option>
+        <option value="Rare">Rare</option>`;
     }
     const filterSet = document.getElementById('filter-set');
     if (filterSet) {
@@ -325,10 +285,10 @@
     const settingsTab = document.getElementById('tab-settings');
     if (!settingsTab) return;
 
-    const h3High = settingsTab.querySelector('.settings-col-left h3:first-of-type');
-    if (h3High) h3High.textContent = t.highRollThresholds;
-    const h3Duo = settingsTab.querySelectorAll('.settings-col-left h3')[1];
-    if (h3Duo) h3Duo.textContent = t.duoRollThresholds;
+    const h3Const = settingsTab.querySelector('.constants-sheet-heading');
+    if (h3Const) h3Const.textContent = t.constantsSheetTitle || '';
+    const h3Duo = settingsTab.querySelector('.duo-thresholds-heading');
+    if (h3Duo) h3Duo.textContent = t.enginePreviewDuo || t.duoRollThresholds;
     const gemH = settingsTab.querySelector('.gem-meta-heading');
     if (gemH) gemH.textContent = t.gemMetaRules;
     const reappH = settingsTab.querySelector('.reapp-heading');
@@ -336,10 +296,12 @@
     const roleH = settingsTab.querySelector('.role-filters-heading');
     if (roleH) roleH.textContent = t.roleFilters;
 
-    const dh = settingsTab.querySelector('.high-roll-desc');
-    if (dh) dh.textContent = 'A rune qualifies as High Roll if at least one substat meets or exceeds these values.';
-    const dd = settingsTab.querySelector('.duo-desc');
-    if (dd) dd.textContent = 'Synergy pairs. Both stats must reach their respective minimum values.';
+    const dConst = settingsTab.querySelector('.constants-sheet-desc');
+    if (dConst) dConst.textContent = t.constantsSheetDesc || '';
+    const hrPv = document.getElementById('lbl-hr-preview');
+    if (hrPv) hrPv.textContent = t.enginePreviewHr || '';
+    const duoPv = document.getElementById('lbl-duo-preview');
+    if (duoPv) duoPv.textContent = t.enginePreviewDuo || '';
     const dg = settingsTab.querySelector('.gem-meta-desc');
     if (dg) dg.textContent = t.gemMetaRulesDesc;
     const dre = settingsTab.querySelector('.reapp-rules-desc');
@@ -389,6 +351,11 @@
     }
     const addBtn = document.getElementById('btn-add-role');
     if (addBtn) addBtn.textContent = t.addRole;
+
+    const resetConstBtn = document.getElementById('btn-reset-stat-constants');
+    if (resetConstBtn) resetConstBtn.textContent = t.resetConstantsButton || '';
+    const resetConstHint = document.getElementById('lbl-reset-constants-hint');
+    if (resetConstHint) resetConstHint.textContent = t.resetConstantsHint || '';
     
     // Update reapp labels (only text nodes, keep inputs)
     const reappInputs = [
@@ -433,6 +400,11 @@
     
     const dbSlotsDesc = document.getElementById('db-slots-desc');
     if (dbSlotsDesc) dbSlotsDesc.textContent = t.dbSlotsDesc;
+
+    if (document.getElementById('stat-constants-wrap')) {
+      buildStatConstantsTable();
+      refreshEnginePreviews();
+    }
   }
 
   // ===================== TABS =====================
@@ -446,9 +418,6 @@
       // Render db slots when app settings tab is opened
       if (btn.dataset.tab === 'app-settings') {
         renderDbSlots();
-      }
-      if (btn.dataset.tab === 'actionlist') {
-        renderActionList(getVisibleRunes());
       }
     });
   });
@@ -492,7 +461,6 @@
       const visible = getVisibleRunes();
       renderDashboard(visible);
       renderTable(visible);
-      renderActionList(visible);
     }
   });
 
@@ -581,7 +549,6 @@
     const visible = getVisibleRunes();
     renderDashboard(visible);
     renderTable(visible);
-    renderActionList(visible);
   }
 
   /** Parse stored SWEX JSON (string or object) and populate allRunes. */
@@ -662,7 +629,6 @@
     document.getElementById('rune-tbody').innerHTML = '';
     renderDashboard([]);
     renderTable([]);
-    renderActionList([]);
   }
 
   function normalizeDbSlot(raw) {
@@ -799,7 +765,7 @@
 
   // ===================== GAME STAGE ANALYSIS (Depth v2) =====================
   /**
-   * Absolute depth metrics over the full exported rune list (Hero+ as in SWEX parse).
+   * Absolute depth metrics over the full exported rune list (Rare+ as in SWEX parse, rank ≥3).
    * Does not use Mid processing or verdicts.
    */
   function analyzeGameStage(runes) {
@@ -961,6 +927,18 @@
       mismatchLine.textContent = showMismatch ? (tloc.stageMismatchHint || '') : '';
     }
 
+    const presetScoreHint = document.getElementById('stage-preset-score-hint');
+    if (presetScoreHint) {
+      if (allRunes.length && metrics.runeCount) {
+        const scoreLbl = tloc.stageScoreLabel || 'Combined score';
+        presetScoreHint.textContent = `${scoreLbl}: ${metrics.score} (Depth v2)`;
+        presetScoreHint.hidden = false;
+      } else {
+        presetScoreHint.textContent = '';
+        presetScoreHint.hidden = true;
+      }
+    }
+
     for (const r of runes) {
       counts[r.verdict] = (counts[r.verdict] || 0) + 1;
 
@@ -1082,9 +1060,6 @@
   }
 
   let filteredRunes = [];
-  let actionSortKey = 'eff';
-  let actionSortDir = 'desc';
-  let lastActionFiltered = [];
 
   function sortRunesInPlace(arr, key, dir) {
     arr.sort((a, b) => {
@@ -1180,42 +1155,14 @@
     const verdictFilter = document.getElementById('filter-verdict')?.value || '';
     const showTarget = verdictFilter === 'Grind' || verdictFilter === 'Gem';
     document.getElementById('target-col-header')?.classList.toggle('hidden', !showTarget);
+    document.getElementById('target-filter-cell')?.classList.toggle('hidden', !showTarget);
     document.getElementById('rune-table')?.classList.toggle('show-target', showTarget);
     tbody.innerHTML = rows.map(r => runeRow(r)).join('');
     renderRuneSummary(filteredRunes);
-    renderActionList(getVisibleRunes());
   }
 
-  function renderActionSummary(rows) {
-    const box = document.getElementById('action-summary');
-    if (!box) return;
-    const t = TRANSLATIONS[currentLang];
-    const tally = {};
-    rows.forEach(r => {
-      tally[r.verdict] = tally[r.verdict] || { c: 0, e: 0 };
-      tally[r.verdict].c++;
-      tally[r.verdict].e += r.eff;
-    });
-    let html = `<div class="summary-title">${t.actionList}</div>`;
-    html += `<div class="summary-row"><span>${t.actionsListedSummary}</span><span>${rows.length}</span></div>`;
-    ['Sell', 'Keep', 'Upgrade', 'Finish', 'Gem', 'Grind', 'Reapp'].forEach(vKey => {
-      const item = tally[vKey];
-      if (!item) return;
-      const label =
-        vKey === 'Sell' ? t.sell :
-        vKey === 'Keep' ? t.keep :
-        vKey === 'Upgrade' ? t.upgrade :
-        vKey === 'Finish' ? t.finish :
-        vKey === 'Gem' ? t.gem :
-        vKey === 'Grind' ? t.grind :
-        t.reapp;
-      html += `<div class="summary-row"><span>${label}</span><span>${item.c} <span class="summary-eff">${(item.e / item.c).toFixed(1)}%</span></span></div>`;
-    });
-    box.innerHTML = html;
-  }
-
-  function exportActionCsv() {
-    const rows = lastActionFiltered;
+  function exportCsv() {
+    const rows = filteredRunes;
     if (!rows.length) return;
     const headers = ['Grade', 'Set', 'Lvl', 'Slot', 'Main', 'Innate', 'Sub1', 'Sub2', 'Sub3', 'Sub4', 'Eff%', 'Role', 'Verdict', 'Target'];
     function cellPart(s) {
@@ -1252,51 +1199,11 @@
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `sw-rune-master-action-list-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `sw-rune-master-${new Date().toISOString().slice(0, 10)}.csv`;
     document.body.appendChild(a);
     a.click();
     URL.revokeObjectURL(a.href);
     document.body.removeChild(a);
-  }
-
-  function syncActionTableSortIndicators() {
-    document.querySelectorAll('#action-table thead th[data-action-sort]').forEach(el => {
-      el.classList.remove('sort-asc', 'sort-desc');
-      const k = el.dataset.actionSort;
-      if (k === actionSortKey)
-        el.classList.add(actionSortDir === 'asc' ? 'sort-asc' : 'sort-desc');
-    });
-  }
-
-  function renderActionList(runes) {
-    let list = runes.filter(r => ACTION_POOL_VERDICTS.has(r.verdict));
-
-    const search = (document.getElementById('action-search-box')?.value || '').toLowerCase();
-    const verdictF = document.getElementById('action-filter-verdict')?.value || '';
-    list = list.filter(r => {
-      if (verdictF && r.verdict !== verdictF) return false;
-      if (!search) return true;
-      const haystack = [
-        r.setName, r.mainName, r.gradeStr, r.role, r.verdict,
-        runeTargetText(r),
-        ...r.substats.map(s => `${s.name} ${s.val}`),
-      ].join(' ').toLowerCase();
-      return haystack.includes(search);
-    });
-
-    sortRunesInPlace(list, actionSortKey, actionSortDir);
-    lastActionFiltered = list;
-
-    const tbody = document.getElementById('action-tbody');
-    if (!tbody) return;
-    const t = TRANSLATIONS[currentLang];
-    const cnt = document.getElementById('action-table-count');
-    if (cnt) cnt.textContent = `${list.length} ${t.actionsCount}`;
-
-    const rows = list.slice(0, 500);
-    tbody.innerHTML = rows.map(r => runeRow(r)).join('');
-    renderActionSummary(list);
-    syncActionTableSortIndicators();
   }
 
   function statChip(s) {
@@ -1322,9 +1229,13 @@
   }
 
   function runeRow(r) {
-    const grade = r.gradeStr === 'Legend'
-      ? '<span class="grade-tag legend">Legend</span>'
-      : '<span class="grade-tag hero">Hero</span>';
+    const gradeTags = {
+      Legend: '<span class="grade-tag legend">Legend</span>',
+      Hero: '<span class="grade-tag hero">Hero</span>',
+      Rare: '<span class="grade-tag rare">Rare</span>',
+    };
+    const grade = gradeTags[r.gradeStr]
+      || `<span class="grade-tag grade-tag--other">${escapeHtml(String(r.gradeStr))}</span>`;
 
     const effCls = r.eff >= 90 ? 'eff-hi' : r.eff >= 75 ? 'eff-mid' : 'eff-lo';
     const rCls   = roleClass(r.role);
@@ -1383,9 +1294,11 @@
     box.innerHTML = html;
   }
 
-  // Table sorting — main table
+  // Table sorting — main table (skip filter columns; those have th-text/th-filter)
   document.querySelectorAll('#rune-table thead th[data-sort]').forEach(th => {
-    th.addEventListener('click', () => {
+    th.addEventListener('click', (e) => {
+      // Ignore clicks on filter text/select
+      if (e.target.closest('.th-text') || e.target.closest('.th-filter')) return;
       const key = th.dataset.sort;
       if (sortKey === key) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
       else { sortKey = key; sortDir = 'desc'; }
@@ -1395,33 +1308,89 @@
     });
   });
 
-  document.querySelectorAll('#action-table thead th[data-action-sort]').forEach(th => {
-    th.addEventListener('click', () => {
-      const key = th.dataset.actionSort;
-      if (!key) return;
-      if (actionSortKey === key) actionSortDir = actionSortDir === 'asc' ? 'desc' : 'asc';
-      else { actionSortKey = key; actionSortDir = 'desc'; }
-      document.querySelectorAll('#action-table thead th[data-action-sort]').forEach(t => t.classList.remove('sort-asc', 'sort-desc'));
-      th.classList.add(actionSortDir === 'asc' ? 'sort-asc' : 'sort-desc');
-      renderActionList(getVisibleRunes());
+  function closeAllRuneTableHeaderFilters() {
+    document.querySelectorAll('#rune-table thead .th-filter').forEach(s => {
+      s.style.display = 'none';
+    });
+    document.querySelectorAll('#rune-table thead .th-text').forEach(t => {
+      t.classList.remove('th-text--filter-active');
+      t.style.removeProperty('display');
+    });
+  }
+
+  // Inline filter toggles inside table headers — hover to reveal, click to open
+  document.querySelectorAll('#rune-table thead th .th-text').forEach(textEl => {
+    textEl.addEventListener('mouseenter', (e) => {
+      e.stopPropagation();
+      const select = textEl.parentElement.querySelector('.th-filter');
+      if (!select) return;
+      closeAllRuneTableHeaderFilters();
+      select.style.display = 'inline-block';
+      textEl.classList.add('th-text--filter-active');
     });
   });
 
-  document.getElementById('btn-action-export-csv')?.addEventListener('click', exportActionCsv);
+  // Hide select when cursor leaves the header cell (unless select is focused/open)
+  document.querySelectorAll('#rune-table thead th.th-has-filter').forEach(th => {
+    const select = th.querySelector('.th-filter');
+    const text = th.querySelector('.th-text');
+    if (!select || !text) return;
+
+    th.addEventListener('mouseleave', () => {
+      setTimeout(() => {
+        if (document.activeElement !== select) {
+          select.style.display = 'none';
+          text.classList.remove('th-text--filter-active');
+          text.style.removeProperty('display');
+        }
+      }, 200);
+    });
+  });
+
+  document.querySelectorAll('#rune-table thead th .th-filter').forEach(select => {
+    // Prevent sort when clicking inside the select
+    select.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+
+    select.addEventListener('change', () => {
+      select.style.display = 'none';
+      const text = select.parentElement.querySelector('.th-text');
+      if (text) {
+        text.classList.remove('th-text--filter-active');
+        text.style.removeProperty('display');
+      }
+      applyFiltersAndSort(getVisibleRunes());
+    });
+
+    select.addEventListener('blur', () => {
+      // Small delay so change fires first
+      setTimeout(() => {
+        select.style.display = 'none';
+        const text = select.parentElement.querySelector('.th-text');
+        if (text) {
+          text.classList.remove('th-text--filter-active');
+          text.style.removeProperty('display');
+        }
+      }, 150);
+    });
+  });
+
+  // Export CSV from Rune Table
+  document.getElementById('btn-export-csv')?.addEventListener('click', exportCsv);
+
+  // Toggle Target column visibility
+  document.getElementById('toggle-target-col')?.addEventListener('change', (e) => {
+    const show = e.target.checked;
+    document.getElementById('target-col-header')?.classList.toggle('hidden', !show);
+    document.getElementById('target-filter-cell')?.classList.toggle('hidden', !show);
+    document.getElementById('rune-table')?.classList.toggle('show-target', show);
+  });
 
   // Table filters
   ['search-box','filter-verdict','filter-role','filter-grade','filter-set','filter-slot','filter-main'].forEach(id => {
     document.getElementById(id)?.addEventListener('input', () => applyFiltersAndSort(getVisibleRunes()));
     document.getElementById(id)?.addEventListener('change', () => applyFiltersAndSort(getVisibleRunes()));
-  });
-
-  ['action-search-box', 'action-filter-verdict'].forEach(id => {
-    document.getElementById(id)?.addEventListener('input', () => renderActionList(getVisibleRunes()));
-    document.getElementById(id)?.addEventListener('change', () => {
-      if (id === 'action-filter-verdict')
-        localStorage.setItem(ACTION_VERDICT_FILTER_KEY, document.getElementById(id).value);
-      renderActionList(getVisibleRunes());
-    });
   });
 
   // ===================== ADVANCED FORMULAS UI =====================
@@ -1980,56 +1949,115 @@
     ];
     const roles = [...orderedRoles, 'Duo Roll', 'High Roll'];
     const t = TRANSLATIONS[currentLang];
-    roleSelect.innerHTML = `<option value="">${t.allRoles}</option>${roles.map(r => `<option value="${r}">${r}</option>`).join('')}`;
+    roleSelect.innerHTML = `<option value="">${t.allRoles || 'All Roles'}</option>${roles.map(r => `<option value="${r}">${r}</option>`).join('')}`;
     if (roles.includes(current)) roleSelect.value = current;
   }
 
-  function buildThresholdTable(containerId, thresholds, settingsKey) {
-    const stages = ['Early','Mid','Late'];
-    const grades = ['Leg','Hero'];
-    const cols   = stages.flatMap(s => grades.map(g => `${s}_${g}`));
-    const colLabels = stages.flatMap(s => grades.map(g => `${s} ${g === 'Leg' ? 'Legend' : 'Hero'}`));
-
-    let html = `<table class="s-table"><thead><tr><th>Stat</th>`;
-    colLabels.forEach(c => { html += `<th>${c}</th>`; });
-    html += `</tr></thead><tbody>`;
-
-    for (const [stat, vals] of Object.entries(thresholds)) {
-      html += `<tr><td>${stat}</td>`;
-      cols.forEach(col => {
-        html += `<td><input type="number" data-settings="${settingsKey}" data-stat="${stat}" data-col="${col}" value="${vals[col] ?? ''}" min="0" max="100"></td>`;
-      });
-      html += `</tr>`;
+  function collectStatConstantsFromForm() {
+    const wrap = document.getElementById('stat-constants-wrap');
+    if (!wrap || !wrap.querySelector('.sc-inp')) {
+      return window.SWRM.mergeStatConstants(window.SWRM.settings.statConstants || null);
     }
-    html += `</tbody></table>`;
-    document.getElementById(containerId).innerHTML = html;
+    const order = window.SWRM.GOD_STAT_ORDER || [];
+    const raw = {};
+    for (let i = 0; i < order.length; i++) {
+      const stat = order[i];
+      raw[stat] = {};
+      const fields = ['base', 'godMod', 'duoMod', 'earlyScale', 'lateScale', 'gradeMod'];
+      for (let fi = 0; fi < fields.length; fi++) {
+        const f = fields[fi];
+        const el = document.querySelector(`#stat-constants-wrap [data-sc-stat="${stat}"][data-sc-field="${f}"]`);
+        if (!el) continue;
+        const v = parseFloat(el.value);
+        if (Number.isFinite(v)) raw[stat][f] = v;
+      }
+    }
+    return window.SWRM.mergeStatConstants(raw);
   }
 
-  buildThresholdTable('hr-table-wrap', window.SWRM.settings.hrThresholds, 'hrThresholds');
+  function renderReadonlyMatrix(containerId, rowLabelKey, dataObj, colKeys, colLabels) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    let html = `<table class="s-table s-table--preview" role="region" aria-readonly="true" aria-label="Engine threshold preview (read-only)"><thead><tr><th>${rowLabelKey}</th>`;
+    for (let i = 0; i < colLabels.length; i++) html += `<th>${colLabels[i]}</th>`;
+    html += '</tr></thead><tbody>';
+    for (const [rowKey, vals] of Object.entries(dataObj)) {
+      html += `<tr><td>${String(rowKey).replace(/_/g, ' ')}</td>`;
+      for (let ci = 0; ci < colKeys.length; ci++) {
+        const c = colKeys[ci];
+        const v = vals && vals[c];
+        html += `<td>${v != null && v !== '' ? v : '—'}</td>`;
+      }
+      html += '</tr>';
+    }
+    html += '</tbody></table>';
+    el.innerHTML = html;
+  }
+
+  function refreshEnginePreviews() {
+    const sc = document.getElementById('stat-constants-wrap')
+      ? collectStatConstantsFromForm()
+      : (window.SWRM.settings.statConstants || window.SWRM.DEFAULT_STAT_CONSTANTS);
+    const hr = window.SWRM.computeHrThresholds(sc);
+    const duo = window.SWRM.computeDuoThresholds(sc, hr);
+    const stages = ['Early', 'Mid', 'Late'];
+    const grades = ['Leg', 'Hero'];
+    const colKeys = stages.flatMap(s => grades.map(g => `${s}_${g}`));
+    const colLabels = stages.flatMap(s => grades.map(g => `${s} ${g === 'Leg' ? 'Legend' : 'Hero'}`));
+    renderReadonlyMatrix('hr-preview-wrap', 'Stat', hr, colKeys, colLabels);
+    renderReadonlyMatrix('duo-preview-wrap', 'Pair', duo, colKeys, colLabels);
+  }
+
+  function buildStatConstantsTable() {
+    const wrap = document.getElementById('stat-constants-wrap');
+    if (!wrap) return;
+    const sc = window.SWRM.settings.statConstants || window.SWRM.DEFAULT_STAT_CONSTANTS;
+    const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const cB = tloc.godColBase || 'Base';
+    const cG = tloc.godColMod || 'God Mod';
+    const cD = tloc.constColDuoMod || 'Duo Mod';
+    const cE = tloc.constColEarly || 'Early ×';
+    const cL = tloc.constColLate || 'Late ×';
+    const cGm = tloc.constColGrade || 'Grade mod';
+    const cRes = tloc.godColResult || '= God';
+    let html = `<table class="s-table stat-constants-table"><thead><tr><th>Stat</th><th>${cB}</th><th>${cG}</th><th>${cD}</th><th>${cE}</th><th>${cL}</th><th>${cGm}</th><th>${cRes}</th></tr></thead><tbody>`;
+    const order = window.SWRM.GOD_STAT_ORDER || [];
+    for (let i = 0; i < order.length; i++) {
+      const stat = order[i];
+      const row = sc[stat] || {};
+      const gval = window.SWRM.getGodThreshold(stat, { statConstants: sc });
+      const fields = ['base', 'godMod', 'duoMod', 'earlyScale', 'lateScale', 'gradeMod'];
+      html += `<tr><td>${stat}</td>`;
+      for (let fi = 0; fi < fields.length; fi++) {
+        const f = fields[fi];
+        const val = row[f];
+        const step = (f === 'godMod' || f === 'duoMod' || f === 'gradeMod') ? '0.001' : '0.01';
+        html += `<td><input type="number" class="sc-inp" data-sc-stat="${stat}" data-sc-field="${f}" value="${val != null ? val : ''}" step="${step}" /></td>`;
+      }
+      html += `<td><span class="god-th-result">${gval != null && gval > 0 ? gval.toFixed(2) : '—'}</span></td></tr>`;
+    }
+    html += '</tbody></table>';
+    wrap.innerHTML = html;
+    wrap.querySelectorAll('.sc-inp').forEach(inp => {
+      inp.addEventListener('input', () => {
+        const tr = inp.closest('tr');
+        if (!tr) return;
+        const st = tr.querySelector('[data-sc-field="base"]');
+        const gm = tr.querySelector('[data-sc-field="godMod"]');
+        const span = tr.querySelector('.god-th-result');
+        const b = parseFloat(st && st.value);
+        const m = parseFloat(gm && gm.value);
+        const tval = (Number.isFinite(b) && b > 0) ? b * (1 + (Number.isFinite(m) ? m : 0)) : NaN;
+        if (span) span.textContent = Number.isFinite(tval) && tval > 0 ? tval.toFixed(2) : '—';
+        refreshEnginePreviews();
+      });
+    });
+  }
+
+  buildStatConstantsTable();
+  refreshEnginePreviews();
 
   document.getElementById('hr-coeff').value = window.SWRM.settings.hrCoeff;
-
-  // Duo Roll table
-  (function() {
-    const dr = window.SWRM.settings.duoThresholds;
-    const stages = ['Early','Mid','Late'];
-    const grades = ['Leg','Hero'];
-    const cols = stages.flatMap(s => grades.map(g => `${s}_${g}`));
-    const colLabels = stages.flatMap(s => grades.map(g => `${s} ${g === 'Leg' ? 'Legend' : 'Hero'}`));
-
-    let html = `<table class="s-table"><thead><tr><th>Pair</th>`;
-    colLabels.forEach(c => { html += `<th>${c}</th>`; });
-    html += `</tr></thead><tbody>`;
-    for (const [key, vals] of Object.entries(dr)) {
-      html += `<tr><td>${key.replace(/_/g,' ')}</td>`;
-      cols.forEach(col => {
-        html += `<td><input type="number" data-settings="duoThresholds" data-stat="${key}" data-col="${col}" value="${vals[col] ?? ''}" min="0" max="100"></td>`;
-      });
-      html += `</tr>`;
-    }
-    html += `</tbody></table>`;
-    document.getElementById('dr-table-wrap').innerHTML = html;
-  })();
 
   refreshRoleFilterOptions();
   renderRoleSettings();
@@ -2101,9 +2129,6 @@
   document.getElementById('btn-save-settings').addEventListener('click', () => {
     const s = window.SWRM.settings;
 
-    // HR coeff
-    s.hrCoeff = parseFloat(document.getElementById('hr-coeff').value) || 0.7;
-
     // Role substats
     document.querySelectorAll('select[data-role]').forEach(sel => {
       const role  = sel.dataset.role;
@@ -2161,10 +2186,36 @@
       legacyFlatSubGem: document.getElementById('gem-meta-legacy-subs').checked,
     });
 
-    saveSettings(s);
+    s.hrCoeff = parseFloat(document.getElementById('hr-coeff').value) || 0.7;
+    s.statConstants = collectStatConstantsFromForm();
+    window.SWRM.applyDerivedThresholdFields(s);
+
+    const persist = JSON.parse(JSON.stringify(s));
+    delete persist.hrThresholds;
+    delete persist.duoThresholds;
+    delete persist.godConstants;
+    saveSettings(persist);
+
     refreshRoleFilterOptions();
     if (processedRunes.length) reprocess();
     alert('Settings saved & recalculated!');
+  });
+
+  document.getElementById('btn-reset-stat-constants')?.addEventListener('click', () => {
+    const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    if (!confirm(tloc.resetConstantsConfirm || 'Replace Constants with defaults?')) return;
+    const s = window.SWRM.settings;
+    s.statConstants = JSON.parse(JSON.stringify(window.SWRM.DEFAULT_STAT_CONSTANTS));
+    window.SWRM.applyDerivedThresholdFields(s);
+    const persist = JSON.parse(JSON.stringify(s));
+    delete persist.hrThresholds;
+    delete persist.duoThresholds;
+    delete persist.godConstants;
+    saveSettings(persist);
+    buildStatConstantsTable();
+    refreshEnginePreviews();
+    if (processedRunes.length) reprocess();
+    showSwrmToast(tloc.resetConstantsDone || 'Constants reset.', { type: 'success', duration: 3800 });
   });
 
   
@@ -2259,20 +2310,23 @@
 
     // Initialize Database slots
     renderDbSlots();
-    renderActionList(getVisibleRunes());
   });
 
   // Reset settings
   document.getElementById('btn-reset-settings').addEventListener('click', () => {
     if (!confirm('Reset all settings to defaults?')) return;
     window.SWRM.settings = {
-      hrThresholds:  JSON.parse(JSON.stringify(DEFAULT_HR_THRESHOLDS)),
-      hrCoeff:       DEFAULT_HR_COEFF,
-      duoThresholds: JSON.parse(JSON.stringify(DEFAULT_DUO_THRESHOLDS)),
-      roles:         JSON.parse(JSON.stringify(DEFAULT_ROLES)),
-      reapp:         JSON.parse(JSON.stringify(DEFAULT_REAPP)),
-      gemMeta:       JSON.parse(JSON.stringify(DEFAULT_GEM_META)),
+      thresholds: JSON.parse(JSON.stringify(DEFAULT_THRESHOLDS)),
+      statConstants: JSON.parse(JSON.stringify(DEFAULT_STAT_CONSTANTS)),
+      hrCoeff: DEFAULT_HR_COEFF,
+      roles: JSON.parse(JSON.stringify(DEFAULT_ROLES)),
+      formulas: JSON.parse(JSON.stringify(DEFAULT_FORMULAS)),
+      rolePriority: [],
+      reapp: JSON.parse(JSON.stringify(DEFAULT_REAPP)),
+      gemMeta: JSON.parse(JSON.stringify(DEFAULT_GEM_META)),
+      presetVersion: 4,
     };
+    window.SWRM.applyDerivedThresholdFields(window.SWRM.settings);
     localStorage.removeItem('swrm_settings_v1');
     location.reload();
   });

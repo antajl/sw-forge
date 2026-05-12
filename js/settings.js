@@ -20,7 +20,8 @@ const SET_NAMES = {
 };
 
 const GRADE_NAMES = { 1:'Common', 2:'Magic', 3:'Rare', 4:'Hero', 5:'Legend' };
-const GRADE_SHORT = { 4:'Hero', 5:'Legend' };
+/** Short labels used in UI / filters (SWEX rank → string) */
+const GRADE_SHORT = { 3:'Rare', 4:'Hero', 5:'Legend' };
 
 // ==== TRANSLATIONS ====
 const TRANSLATIONS = {
@@ -29,7 +30,6 @@ const TRANSLATIONS = {
     title: 'SW Rune Master',
     dashboard: 'Dashboard',
     runeTable: 'Rune Table',
-    actionList: 'Action List',
     runeRules: 'Rune Rules',
     guide: 'Guide',
     changelog: 'Changelog',
@@ -73,14 +73,8 @@ const TRANSLATIONS = {
     allRoles: 'All Roles',
     allGrades: 'All Grades',
     runes: 'runes',
-    actionsCount: 'actions',
-    actionsListedSummary: 'Listed actions',
-    actionListLead:
-      'Starts with Sell only; use the verdict filter for Keep, Upgrade, Finish, Gem, Grind, Reapp, or all. Default sort Eff% high first. Dashboard Min Lvl applies.',
-    actionSearchPlaceholder: 'Search by set, stat, role, verdict…',
-    allActions: 'All actions',
     targetHeading: 'Target',
-    exportActionCsv: 'Export CSV',
+    exportTableCsv: 'Export CSV',
     actionTargetUpgrade: 'Power to ≥ +9 before judging',
     actionTargetFinish: 'Power to +12',
     actionTargetReapp: 'Reappraisal (roll subs)',
@@ -91,6 +85,28 @@ const TRANSLATIONS = {
     reappRules: 'Reapp Rules',
     generalThresholds: 'General Thresholds',
     highRollThresholds: 'High Roll Thresholds',
+    highRollGridDesc:
+      'Stage + grade grid: used for grind checks, rune power level (0–3), and formula anchors «High Roll for Hero/Legend». Does not set the God Roll line.',
+    godRollConstants: 'God Roll constants',
+    godRollConstantsDesc:
+      'Per stat: God threshold = Base × (1 + God Mod). Same at every stage (matches Sheets Constants). The «High Roll» role in the engine uses this line only.',
+    constantsSheetTitle: 'Constants (8 stats)',
+    constantsSheetDesc:
+      'Sheets-style Constants row per stat: Base, God Mod, Duo Mod, Early ×, Late ×, Grade mod. The «= God line» column shows Base×(1+God Mod). Stage+grade HR (C:J) and Duo (K:R) previews are computed from these — not stored separately.',
+    enginePreviewHr: 'Engine HR preview (C:J)',
+    enginePreviewDuo: 'Engine Duo preview (K:R)',
+    godColBase: 'Base',
+    godColMod: 'God Mod',
+    godColResult: '= God line',
+    constColDuoMod: 'Duo Mod',
+    constColEarly: 'Early ×',
+    constColLate: 'Late ×',
+    constColGrade: 'Grade mod',
+    resetConstantsButton: 'Reset Constants to defaults',
+    resetConstantsHint: 'Reloads the built-in Constants table only. Roles, formulas, and other settings stay unchanged.',
+    resetConstantsConfirm:
+      'Replace the Constants (8 stats) grid with built-in defaults? Roles and formulas will not be changed.',
+    resetConstantsDone: 'Constants reset to defaults.',
     duoRollThresholds: 'Duo Roll Thresholds',
     partnerCoeff: 'Partner coefficient',
     configureRoleRules: 'Configure role rules. You can add a custom role or remove existing roles (minimum one role must remain).',
@@ -149,7 +165,7 @@ const TRANSLATIONS = {
 
     stageAdvisorTitle: 'Account progression suggestion',
     stageAdvisorLead:
-      'Early / Mid / Late sets rule strictness. Combined score uses Depth v2 over your full Hero+ export — SPD depth, +15 depth, and elite average uncapped eff. Unaffected by preset or Min Lvl below.',
+      'Early / Mid / Late sets rule strictness. Combined score uses Depth v2 over your full Rare+ export (SWEX rank ≥3) — SPD depth, +15 depth, and elite average uncapped eff. Unaffected by preset or Min Lvl below.',
 
     stageSuggestedLabel: 'Suggested stage',
     stageYourPresetLabel: 'Your preset',
@@ -184,14 +200,13 @@ const TRANSLATIONS = {
 
     dashboardScopeTitle: 'Global filter',
     dashboardScopeHint:
-      'Applies to the summary cards, charts below, Rune Table, and Action List. Does not change the progression suggestion (Depth v2 uses the full export).'
+      'Applies to the summary cards, charts below, and Rune Table. Does not change the progression suggestion (Depth v2 uses the full export).'
   },
   ru: {
     // Header
     title: 'SW Rune Master',
     dashboard: 'Панель',
     runeTable: 'Руны',
-    actionList: 'Действия',
     runeRules: 'Правила',
     guide: 'Гайд',
     changelog: 'Лог',
@@ -235,14 +250,8 @@ const TRANSLATIONS = {
     allRoles: 'Все Роли',
     allGrades: 'Все Грейды',
     runes: 'рун',
-    actionsCount: 'действий',
-    actionsListedSummary: 'В списке',
-    actionListLead:
-      'По умолчанию только Sell; в фильтре — Keep, Upgrade, Finish, Gem, Grind, Reapp или все. Сортировка: Eff% по убыванию. Учитывается общий Min Lvl с панели.',
-    actionSearchPlaceholder: 'Поиск по сету, стату, роли, вердикту…',
-    allActions: 'Все действия',
     targetHeading: 'Цель',
-    exportActionCsv: 'Экспорт CSV',
+    exportTableCsv: 'Экспорт CSV',
     actionTargetUpgrade: 'Докачать до ≥ +9',
     actionTargetFinish: 'Докачать до +12',
     actionTargetReapp: 'Реапп подстатов',
@@ -253,6 +262,29 @@ const TRANSLATIONS = {
     reappRules: 'Правила Перестановки',
     generalThresholds: 'Общие Пороги',
     highRollThresholds: 'Пороги Высоких Показателей',
+    highRollGridDesc:
+      'Сетка стадия + грейд: для гринда, уровня силы руны (0–3) и якорей формул «High Roll for Hero/Legend». Не задаёт линию God Roll.',
+    godRollConstants: 'Константы God Roll',
+    godRollConstantsDesc:
+      'По стату: порог God = Base × (1 + God Mod). Одинаков при любой стадии (как Constants в Sheets). Роль «High Roll» в движке использует только эту линию.',
+    constantsSheetTitle: 'Constants (8 статов)',
+    constantsSheetDesc:
+      'Строка Constants как в Sheets: Base, God Mod, Duo Mod, Early×, Late×, Grade mod. Колонка «= God line» — Base×(1+God Mod). Сетки HR (C:J) и Duo (K:R) считаются из них и не хранятся отдельно.',
+    enginePreviewHr: 'Превью HR (C:J)',
+    enginePreviewDuo: 'Превью Duo (K:R)',
+    godColBase: 'Base',
+    godColMod: 'God Mod',
+    godColResult: '= линия God',
+    constColDuoMod: 'Duo Mod',
+    constColEarly: 'Early ×',
+    constColLate: 'Late ×',
+    constColGrade: 'Grade mod',
+    resetConstantsButton: 'Сбросить Constants к умолчанию',
+    resetConstantsHint:
+      'Подставляет встроенную таблицу Constants. Роли, формулы и остальные настройки не трогаются.',
+    resetConstantsConfirm:
+      'Заменить таблицу Constants (8 статов) на значения по умолчанию? Роли и формулы не изменятся.',
+    resetConstantsDone: 'Constants сброшены к умолчанию.',
     duoRollThresholds: 'Пороги Парных Показателей',
     partnerCoeff: 'Коэффициент партнера',
     configureRoleRules: 'Настройте правила ролей. Вы можете добавить пользовательскую роль или удалить существующие (должна остаться минимум одна роль).',
@@ -311,7 +343,7 @@ const TRANSLATIONS = {
 
     stageAdvisorTitle: 'Совет по прогрессу аккаунта',
     stageAdvisorLead:
-      'Стадия задаёт строгость правил. Сводный балл — Depth v2 по всему экспорту (Hero+): SPD-глубина, +15, элита по eff. Пресет и «Мин. ур.» на балл не влияют.',
+      'Стадия задаёт строгость правил. Сводный балл — Depth v2 по всему экспорту (Rare+, ранг ≥3 в SWEX): SPD-глубина, +15, элита по eff. Пресет и «Мин. ур.» на балл не влияют.',
 
     stageSuggestedLabel: 'Советуемая стадия',
     stageYourPresetLabel: 'Ваш выбор',
@@ -346,7 +378,7 @@ const TRANSLATIONS = {
 
     dashboardScopeTitle: 'Общий фильтр',
     dashboardScopeHint:
-      'Карточки сводки, графики, таблица, список действий. На совет не влияет — Depth v2 считает по всему экспорту.'
+      'Карточки сводки, графики и таблица рун. На совет не влияет — Depth v2 считает по всему экспорту.'
   }
 };
 
@@ -369,11 +401,10 @@ const DEFAULT_THRESHOLDS = {
   RES:   { Early_Leg:18, Early_Hero:14, Mid_Leg:22, Mid_Hero:18, Late_Leg:27, Late_Hero:23 },
 };
 
-// Теперь High Roll всегда равен обычным порогам
+// Legacy flat grids (used only to seed defaults / migration into statConstants).
 const DEFAULT_HR_THRESHOLDS = DEFAULT_THRESHOLDS;
 const DEFAULT_HR_COEFF = 0.70; // partner soft threshold
 
-// Duo Roll pairs
 const DEFAULT_DUO_THRESHOLDS = {
   SPD_min:       { Early_Leg:10, Early_Hero:8,  Mid_Leg:13, Mid_Hero:12, Late_Leg:15, Late_Hero:12 },
   SPD_partner:   { Early_Leg:12, Early_Hero:11, Mid_Leg:18, Mid_Hero:14, Late_Leg:18, Late_Hero:16 },
@@ -388,6 +419,249 @@ const DEFAULT_DUO_THRESHOLDS = {
   HP_for_RES:    { Early_Leg:14, Early_Hero:11, Mid_Leg:16, Mid_Hero:14, Late_Leg:20, Late_Hero:14 },
   RES_for_HP:    { Early_Leg:14, Early_Hero:11, Mid_Leg:16, Mid_Hero:14, Late_Leg:20, Late_Hero:14 },
 };
+
+/** Stats aligned with Sheets Constants table (8 substats). */
+const GOD_STAT_ORDER = ['SPD', 'HP%', 'DEF%', 'ATK%', 'CRate', 'CDmg', 'ACC', 'RES'];
+const HR_COL_KEYS = ['Early_Leg', 'Early_Hero', 'Mid_Leg', 'Mid_Hero', 'Late_Leg', 'Late_Hero'];
+
+function roundThresh(x) {
+  if (!Number.isFinite(x)) return 0;
+  return Math.round(x * 100) / 100;
+}
+
+/**
+ * Stage+grade HR cell from Constants (Sheets Engine C:J):
+ * Mid_Hero = Base; Mid_Leg = Base×(1−Grade_Mod); Early_Hero = Base×Early_Scale; Late_Hero = Base×Late_Scale;
+ * Early/Legend and Late/Legend = Hero cell × (1−Grade_Mod).
+ */
+function stageHrValue(statRow, colKey) {
+  const base = Number(statRow.base);
+  if (!Number.isFinite(base) || base <= 0) return 0;
+  const earlyScale = Number.isFinite(Number(statRow.earlyScale)) ? Number(statRow.earlyScale) : 1;
+  const lateScale = Number.isFinite(Number(statRow.lateScale)) ? Number(statRow.lateScale) : 1;
+  const gradeMod = Number.isFinite(Number(statRow.gradeMod)) ? Number(statRow.gradeMod) : 0;
+  const leg = colKey.indexOf('_Leg') !== -1;
+  const heroFactor = leg ? (1 - gradeMod) : 1;
+  if (colKey.startsWith('Early')) return base * earlyScale * heroFactor;
+  if (colKey.startsWith('Mid')) return (leg ? base * (1 - gradeMod) : base);
+  if (colKey.startsWith('Late')) return base * lateScale * heroFactor;
+  return base;
+}
+
+/**
+ * Defaults aligned with master Constants sheet (base + God/Duo mods + stage/grade scales).
+ * HR/Duo threshold grids are derived — do not duplicate numbers here and in DEFAULT_THRESHOLDS manually.
+ */
+const EXPLICIT_DEFAULT_STAT_CONSTANTS = {
+  SPD:    { base: 16, godMod: 0.30, duoMod: 0.20, earlyScale: 0.80, lateScale: 1.30, gradeMod: 0.05 },
+  'HP%':  { base: 20, godMod: 0.40, duoMod: 0.25, earlyScale: 0.80, lateScale: 1.20, gradeMod: 0.08 },
+  'DEF%': { base: 20, godMod: 0.40, duoMod: 0.25, earlyScale: 0.80, lateScale: 1.20, gradeMod: 0.08 },
+  'ATK%': { base: 17, godMod: 0.40, duoMod: 0.25, earlyScale: 0.80, lateScale: 1.20, gradeMod: 0.08 },
+  CRate:  { base: 13, godMod: 0.35, duoMod: 0.30, earlyScale: 0.80, lateScale: 1.15, gradeMod: 0.05 },
+  CDmg:   { base: 16, godMod: 0.40, duoMod: 0.30, earlyScale: 0.80, lateScale: 1.20, gradeMod: 0.08 },
+  ACC:    { base: 18, godMod: 0.30, duoMod: 0.30, earlyScale: 0.80, lateScale: 1.15, gradeMod: 0.10 },
+  RES:    { base: 18, godMod: 0.30, duoMod: 0.30, earlyScale: 0.80, lateScale: 1.15, gradeMod: 0.10 },
+};
+
+function defaultStatConstants() {
+  const out = {};
+  for (const stat of GOD_STAT_ORDER) {
+    const row = EXPLICIT_DEFAULT_STAT_CONSTANTS[stat];
+    out[stat] = {
+      base: row.base,
+      godMod: row.godMod,
+      duoMod: row.duoMod,
+      earlyScale: row.earlyScale,
+      lateScale: row.lateScale,
+      gradeMod: row.gradeMod,
+    };
+  }
+  return out;
+}
+
+function inferDuoModFromLegacy(stat, hrRow, duo, colKey) {
+  const hr = Number(hrRow[colKey]);
+  if (!Number.isFinite(hr) || hr <= 0) return 0;
+  const d = (pairRow) => {
+    const v = Number(pairRow && pairRow[colKey]);
+    if (!Number.isFinite(v) || v <= 0) return null;
+    return 1 - v / hr;
+  };
+  const vals = [];
+  if (stat === 'SPD') {
+    const x = d(duo.SPD_min);
+    if (x != null) vals.push(x);
+  }
+  if (stat === 'HP%') {
+    [d(duo.HP_for_DEF), d(duo.HP_for_RES)].forEach(x => { if (x != null) vals.push(x); });
+  }
+  if (stat === 'DEF%') {
+    [d(duo.DEF_for_HP), d(duo.DEF_for_RES)].forEach(x => { if (x != null) vals.push(x); });
+  }
+  if (stat === 'ATK%') {
+    const x = d(duo.ATK_for_CRate);
+    if (x != null) vals.push(x);
+  }
+  if (stat === 'CRate') {
+    [d(duo.CRate_for_CDmg), d(duo.CRate_for_ATK)].forEach(x => { if (x != null) vals.push(x); });
+  }
+  if (stat === 'CDmg') {
+    const x = d(duo.CDmg_for_CRate);
+    if (x != null) vals.push(x);
+  }
+  if (stat === 'RES') {
+    [d(duo.RES_for_DEF), d(duo.RES_for_HP)].forEach(x => { if (x != null) vals.push(x); });
+  }
+  if (!vals.length) return 0;
+  let s = 0;
+  for (let i = 0; i < vals.length; i++) s += vals[i];
+  const avg = s / vals.length;
+  return Number.isFinite(avg) ? Math.round(avg * 10000) / 10000 : 0;
+}
+
+function mergeStatConstants(saved) {
+  const d = JSON.parse(JSON.stringify(defaultStatConstants()));
+  if (!saved || typeof saved !== 'object' || Array.isArray(saved)) return d;
+  for (const stat of GOD_STAT_ORDER) {
+    const src = saved[stat];
+    if (!src || typeof src !== 'object') continue;
+    const keys = ['base', 'godMod', 'duoMod', 'earlyScale', 'lateScale', 'gradeMod'];
+    for (let k = 0; k < keys.length; k++) {
+      const key = keys[k];
+      if (src[key] == null) continue;
+      const n = Number(src[key]);
+      if (Number.isFinite(n)) d[stat][key] = n;
+    }
+  }
+  return d;
+}
+
+/** Migrate legacy godConstants { base, godMod } into statConstants row. */
+function applyGodConstantsToStatConstants(sc, god) {
+  if (!god || typeof god !== 'object') return;
+  for (const stat of GOD_STAT_ORDER) {
+    const g = god[stat];
+    if (!g || typeof g !== 'object') continue;
+    if (g.base != null && Number.isFinite(Number(g.base))) sc[stat].base = Number(g.base);
+    if (g.godMod != null && Number.isFinite(Number(g.godMod))) sc[stat].godMod = Number(g.godMod);
+  }
+}
+
+function inferStatConstantsFromLegacyHrDuo(hr, duo, god) {
+  const sc = {};
+  for (const stat of GOD_STAT_ORDER) {
+    const row = hr[stat] || {};
+    const base = Number(row.Mid_Hero) || 0;
+    const eh = Number(row.Early_Hero);
+    const lh = Number(row.Late_Hero);
+    const ml = Number(row.Mid_Leg);
+    const earlyScale = base > 0 && Number.isFinite(eh) ? eh / base : 1;
+    const lateScale = base > 0 && Number.isFinite(lh) ? lh / base : 1;
+    const gradeMod = base > 0 && Number.isFinite(ml) ? 1 - ml / base : 0;
+    sc[stat] = {
+      base,
+      godMod: 0.12,
+      duoMod: duo ? inferDuoModFromLegacy(stat, row, duo, 'Mid_Hero') : 0,
+      earlyScale,
+      lateScale,
+      gradeMod,
+    };
+  }
+  applyGodConstantsToStatConstants(sc, god);
+  return mergeStatConstants(sc);
+}
+
+function computeHrThresholds(statConstants) {
+  const out = {};
+  for (const stat of GOD_STAT_ORDER) {
+    const row = statConstants[stat];
+    out[stat] = {};
+    for (let i = 0; i < HR_COL_KEYS.length; i++) {
+      const col = HR_COL_KEYS[i];
+      out[stat][col] = roundThresh(stageHrValue(row, col));
+    }
+  }
+  return out;
+}
+
+/** Duo line = stage HR for that stat × (1 − Duo_Mod). */
+function duoLineForStat(stat, colKey, hrTable, statConstants) {
+  const hr = Number(hrTable[stat]?.[colKey]);
+  if (!Number.isFinite(hr) || hr <= 0) return 0;
+  const dm = Number(statConstants[stat]?.duoMod);
+  const d = Number.isFinite(dm) ? dm : 0;
+  return roundThresh(hr * (1 - d));
+}
+
+function computeDuoThresholds(statConstants, hrTable) {
+  const d = {};
+  const cols = HR_COL_KEYS;
+  const keys = [
+    'SPD_min',
+    'SPD_partner_HP',
+    'SPD_partner_DEF',
+    'SPD_partner_ATK',
+    'SPD_partner_CRate',
+    'CRate_for_CDmg', 'CDmg_for_CRate', 'CRate_for_ATK', 'ATK_for_CRate',
+    'HP_for_DEF', 'DEF_for_HP', 'DEF_for_RES', 'RES_for_DEF', 'HP_for_RES', 'RES_for_HP',
+  ];
+  for (let ki = 0; ki < keys.length; ki++) {
+    d[keys[ki]] = {};
+    for (let ci = 0; ci < cols.length; ci++) {
+      const col = cols[ci];
+      d[keys[ki]][col] = 0;
+    }
+  }
+  for (let ci = 0; ci < cols.length; ci++) {
+    const col = cols[ci];
+    d.SPD_min[col] = duoLineForStat('SPD', col, hrTable, statConstants);
+    d.SPD_partner_HP[col] = duoLineForStat('HP%', col, hrTable, statConstants);
+    d.SPD_partner_DEF[col] = duoLineForStat('DEF%', col, hrTable, statConstants);
+    d.SPD_partner_ATK[col] = duoLineForStat('ATK%', col, hrTable, statConstants);
+    d.SPD_partner_CRate[col] = duoLineForStat('CRate', col, hrTable, statConstants);
+    d.CRate_for_CDmg[col] = duoLineForStat('CRate', col, hrTable, statConstants);
+    d.CDmg_for_CRate[col] = duoLineForStat('CDmg', col, hrTable, statConstants);
+    d.CRate_for_ATK[col] = duoLineForStat('CRate', col, hrTable, statConstants);
+    d.ATK_for_CRate[col] = duoLineForStat('ATK%', col, hrTable, statConstants);
+    d.HP_for_DEF[col] = duoLineForStat('HP%', col, hrTable, statConstants);
+    d.DEF_for_HP[col] = duoLineForStat('DEF%', col, hrTable, statConstants);
+    d.DEF_for_RES[col] = duoLineForStat('DEF%', col, hrTable, statConstants);
+    d.RES_for_DEF[col] = duoLineForStat('RES', col, hrTable, statConstants);
+    d.HP_for_RES[col] = duoLineForStat('HP%', col, hrTable, statConstants);
+    d.RES_for_HP[col] = duoLineForStat('RES', col, hrTable, statConstants);
+  }
+  return d;
+}
+
+/** God threshold: Base × (1 + God_Mod) from statConstants (stage-independent). */
+function getGodThreshold(stat, settings) {
+  const row = settings?.statConstants?.[stat];
+  if (!row || row.base == null) return null;
+  const base = Number(row.base);
+  if (!Number.isFinite(base) || base <= 0) return null;
+  const mod = Number.isFinite(Number(row.godMod)) ? Number(row.godMod) : 0;
+  return base * (1 + mod);
+}
+
+/** godConstants mirror for legacy readers — derived from statConstants. */
+function godConstantsFromStatConstants(statConstants) {
+  const o = {};
+  for (const stat of GOD_STAT_ORDER) {
+    const r = statConstants[stat];
+    o[stat] = { base: r.base, godMod: r.godMod };
+  }
+  return o;
+}
+
+const DEFAULT_STAT_CONSTANTS = defaultStatConstants();
+const DEFAULT_GOD_CONSTANTS = godConstantsFromStatConstants(DEFAULT_STAT_CONSTANTS);
+
+function mergeGodConstants(saved) {
+  if (!saved || typeof saved !== 'object') return godConstantsFromStatConstants(DEFAULT_STAT_CONSTANTS);
+  const sc = JSON.parse(JSON.stringify(DEFAULT_STAT_CONSTANTS));
+  applyGodConstantsToStatConstants(sc, saved);
+  return godConstantsFromStatConstants(sc);
+}
 
 // ---- ADVANCED FORMULA SYSTEM ----
 // New structure for multiple formulas with comprehensive settings
@@ -684,22 +958,59 @@ function getSettings() {
     ...storedPriority.filter((name) => roleNames.includes(name)),
     ...roleNames.filter((name) => !storedPriority.includes(name)),
   ];
+
+  let statConstants;
+  if (saved?.statConstants && typeof saved.statConstants === 'object') {
+    statConstants = mergeStatConstants(saved.statConstants);
+    if (saved.godConstants && typeof saved.godConstants === 'object') {
+      applyGodConstantsToStatConstants(statConstants, saved.godConstants);
+    }
+  } else if (saved?.hrThresholds && typeof saved.hrThresholds === 'object') {
+    const duoLegacy = saved.duoThresholds && typeof saved.duoThresholds === 'object'
+      ? saved.duoThresholds
+      : DEFAULT_DUO_THRESHOLDS;
+    statConstants = inferStatConstantsFromLegacyHrDuo(
+      saved.hrThresholds,
+      duoLegacy,
+      saved.godConstants
+    );
+  } else {
+    statConstants = mergeStatConstants(null);
+  }
+
+  const hrThresholds = computeHrThresholds(statConstants);
+  const duoThresholds = computeDuoThresholds(statConstants, hrThresholds);
+  const godConstants = godConstantsFromStatConstants(statConstants);
+
   return {
     thresholds:    saved?.thresholds    || JSON.parse(JSON.stringify(DEFAULT_THRESHOLDS)),
-    hrThresholds:  saved?.hrThresholds  || JSON.parse(JSON.stringify(DEFAULT_HR_THRESHOLDS)),
+    statConstants,
+    hrThresholds,
+    duoThresholds,
+    godConstants,
     hrCoeff:       saved?.hrCoeff       ?? DEFAULT_HR_COEFF,
-    duoThresholds: saved?.duoThresholds || JSON.parse(JSON.stringify(DEFAULT_DUO_THRESHOLDS)),
     roles,
     formulas,
     rolePriority,
-    presetVersion: 3,
+    presetVersion: 4,
     reapp:         saved?.reapp         || JSON.parse(JSON.stringify(DEFAULT_REAPP)),
     gemMeta:       mergeGemMeta(saved?.gemMeta),
   };
 }
 
+function applyDerivedThresholdFields(settings) {
+  if (!settings || !settings.statConstants) return settings;
+  const hr = computeHrThresholds(settings.statConstants);
+  const duo = computeDuoThresholds(settings.statConstants, hr);
+  settings.hrThresholds = hr;
+  settings.duoThresholds = duo;
+  settings.godConstants = godConstantsFromStatConstants(settings.statConstants);
+  return settings;
+}
+
 window.SWRM = window.SWRM || {};
 window.SWRM.settings = getSettings();
+window.SWRM.applyDerivedThresholdFields = applyDerivedThresholdFields;
 window.SWRM.STAT_NAMES = STAT_NAMES;
 window.SWRM.SET_NAMES  = SET_NAMES;
 window.SWRM.GRADE_NAMES = GRADE_NAMES;
@@ -712,6 +1023,15 @@ window.SWRM.DEFAULT_THRESHOLDS = DEFAULT_THRESHOLDS;
 window.SWRM.DEFAULT_HR_THRESHOLDS = DEFAULT_HR_THRESHOLDS;
 window.SWRM.DEFAULT_HR_COEFF = DEFAULT_HR_COEFF;
 window.SWRM.DEFAULT_DUO_THRESHOLDS = DEFAULT_DUO_THRESHOLDS;
+window.SWRM.DEFAULT_STAT_CONSTANTS = DEFAULT_STAT_CONSTANTS;
+window.SWRM.EXPLICIT_DEFAULT_STAT_CONSTANTS = EXPLICIT_DEFAULT_STAT_CONSTANTS;
+window.SWRM.computeHrThresholds = computeHrThresholds;
+window.SWRM.computeDuoThresholds = computeDuoThresholds;
+window.SWRM.mergeStatConstants = mergeStatConstants;
+window.SWRM.DEFAULT_GOD_CONSTANTS = DEFAULT_GOD_CONSTANTS;
+window.SWRM.GOD_STAT_ORDER = GOD_STAT_ORDER;
+window.SWRM.mergeGodConstants = mergeGodConstants;
+window.SWRM.getGodThreshold = getGodThreshold;
 window.SWRM.DEFAULT_REAPP = DEFAULT_REAPP;
 window.SWRM.DEFAULT_GEM_META = DEFAULT_GEM_META;
 window.SWRM.mergeGemMeta = mergeGemMeta;

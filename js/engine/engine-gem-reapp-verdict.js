@@ -1,0 +1,253 @@
+// =============================================
+// engine-gem-reapp-verdict.js — flats, grind, gem meta, reapp, base verdict
+// Depends on: engine-core.js, engine-legacy-roles.js
+// =============================================
+
+(function() {
+  const S = window.SWRM;
+  const modeKey = S.modeKey;
+  const qSub = (s) => (typeof S.isQualifyingSubstatRow === 'function' ? S.isQualifyingSubstatRow(s) : s.source !== 'innate');
+
+  function hasBadFlat(rune, stage) {
+    const flatIds = [1, 3, 5];
+    const flatThresholds = { 1: 200, 3: 20, 5: 20 };
+
+    let cleanFlatCount = 0;
+    for (const s of rune.substats) {
+      if (!qSub(s)) continue;
+      if (flatIds.includes(s.type)) {
+        const threshold = flatThresholds[s.type];
+        if (s.val <= threshold && s.grind === 0) {
+          cleanFlatCount++;
+        }
+      }
+    }
+
+    const requiredFlats = stage === 'Late' ? 1 : 2;
+    return cleanFlatCount >= requiredFlats;
+  }
+
+  /** Target row is always Late×grade (Sheets grind line), never the account preset stage */
+  function checkGrind(rune, stage, settings) {
+    const key = modeKey('Late', rune.gradeStr);
+    const th = (settings.hrThresholds && Object.keys(settings.hrThresholds).length)
+      ? settings.hrThresholds
+      : settings.thresholds;
+    const GRIND_GAIN = { SPD: 2, 'HP%': 3, 'DEF%': 3, 'ATK%': 3, CRate: 2, CDmg: 2, ACC: 3, RES: 3 };
+
+    for (const s of rune.substats) {
+      if (!qSub(s)) continue;
+      const threshold = th[s.name]?.[key];
+      if (!threshold) continue;
+      const currentVal = s.val + s.grind;
+      const gain = GRIND_GAIN[s.name] || 0;
+      if (currentVal < threshold && currentVal + gain >= threshold) {
+        return { can: true, stat: s.name, from: currentVal, to: currentVal + gain, need: threshold };
+      }
+    }
+    return { can: false };
+  }
+
+  function checkSubstatFlatGem(rune, stage, settings) {
+    const useHr = settings.hrThresholds && Object.keys(settings.hrThresholds).length;
+    const key = modeKey('Late', rune.gradeStr);
+    const th = useHr ? settings.hrThresholds : settings.thresholds;
+    const GRINDABLE = new Set(['SPD', 'HP%', 'ATK%', 'DEF%', 'ACC', 'RES']);
+    const statScores = Object.fromEntries(
+      Object.entries(th).map(([stat, vals]) => [stat, vals[key] || 0])
+    );
+
+    let bestCandidate = null;
+    for (const s of rune.substats) {
+      if (!qSub(s)) continue;
+      if (GRINDABLE.has(s.name)) continue;
+      for (const target of GRINDABLE) {
+        const score = statScores[target] || 0;
+        if (score < 15) continue;
+        if (!bestCandidate || score > bestCandidate.score) {
+          bestCandidate = { can: true, kind: 'sub-flat', from: s.name, to: target, score };
+        }
+      }
+    }
+    return bestCandidate || { can: false };
+  }
+
+  function slotArray(slotMap, slot) {
+    if (!slotMap || typeof slotMap !== 'object') return null;
+    if (Object.prototype.hasOwnProperty.call(slotMap, slot)) return slotMap[slot];
+    const sk = String(slot);
+    if (Object.prototype.hasOwnProperty.call(slotMap, sk)) return slotMap[sk];
+    return null;
+  }
+
+  function getBadInnateList(rune, gm) {
+    const setRules = gm.bySet && gm.bySet[rune.setName];
+    let explicit = setRules !== undefined && setRules !== null ? slotArray(setRules, rune.slot) : null;
+
+    if (explicit !== null && explicit !== undefined) {
+      if (!Array.isArray(explicit)) return [];
+      return explicit.filter(Boolean).map(function(s) { return String(s).trim(); }).filter(Boolean);
+    }
+
+    const extras = gm.extraBadBySlot && (slotArray(gm.extraBadBySlot, rune.slot) || []);
+    const arrEx = Array.isArray(extras) ? extras.map(function(x) { return String(x).trim(); }).filter(Boolean) : [];
+    const flats = gm.useUniversalFlatBadInnate !== false
+      ? (gm.universalFlatInnates || []).map(function(x) { return String(x).trim(); }).filter(Boolean)
+      : [];
+    return [...new Set([...arrEx, ...flats])];
+  }
+
+  function checkMetaInnateGem(rune, settings) {
+    const gm = settings.gemMeta;
+    const none = { can: false };
+    if (!gm || gm.enabled === false) return none;
+
+    const setsList = gm.sets || [];
+    if (!setsList.length || setsList.indexOf(rune.setName) === -1) return none;
+
+    if (gm.legendOnlyInnate === true) {
+      if (rune.gradeStr !== 'Legend') return none;
+    }
+
+    const innateName = rune.innate_name;
+    if (!innateName) return none;
+
+    const badList = getBadInnateList(rune, gm);
+    if (badList.indexOf(innateName) === -1) return none;
+
+    return {
+      can: true,
+      kind: 'innate-meta',
+      innate: innateName,
+      setName: rune.setName,
+      slot: rune.slot,
+    };
+  }
+
+  function evaluateGemRecommendation(rune, stage, settings) {
+    const metaHit = checkMetaInnateGem(rune, settings);
+    if (metaHit.can) return metaHit;
+
+    const gm = settings.gemMeta;
+    if (gm && gm.legacyFlatSubGem && hasBadFlat(rune, stage)) {
+      const leg = checkSubstatFlatGem(rune, stage, settings);
+      if (leg.can) return leg;
+    }
+    return { can: false };
+  }
+
+  function passesGemQualityGate(rune, stage, isHero, hasHighDuo) {
+    const effThreshold = stage === 'Late' ? 70 : (stage === 'Mid' ? 55 : 40);
+    if (rune.eff < effThreshold) return false;
+    if (isHero && !hasHighDuo) {
+      const heroEffThreshold = stage === 'Late' ? 82 : (stage === 'Mid' ? 67 : 52);
+      if (rune.eff < heroEffThreshold) return false;
+    }
+    return true;
+  }
+
+  function matchReappRule(rune, settings) {
+    if (rune.gradeStr !== 'Legend') return false;
+
+    const rc = settings.reapp || {};
+    if (rune.eff > (rc.maxEff ?? 65)) return false;
+
+    if (rc.sets?.length && !rc.sets.includes(rune.setName)) return false;
+
+    if (rune.innate_name && ['ATK', 'DEF', 'HP'].includes(rune.innate_name)) return false;
+
+    if ([2, 4, 6].includes(rune.slot)) {
+      const allowed = rc.mainBySlot?.[rune.slot] || [];
+      if (allowed.length && !allowed.includes(rune.mainName)) return false;
+    }
+
+    return true;
+  }
+
+  const PRIMARY_BUILD_ROLES = ['Classic DPS', 'Slow DPS', 'Bomber', 'Bruiser', 'Fast CC', 'Tank'];
+
+  function isPrimaryBuildRole(name) {
+    return !!name && PRIMARY_BUILD_ROLES.indexOf(name) !== -1;
+  }
+
+  /**
+   * God-line safety net: Sell forbidden when High Roll matched.
+   * Prefer Grind when one stone reaches Late HR line; else Keep (never Sell).
+   * Role key is `High Roll` (alias `God Roll` optional).
+   */
+  function finalizeGodSellOverride(verdict, mergedResults, rune, stage, settings) {
+    if (verdict !== 'Sell') return verdict;
+    if (!mergedResults || (!mergedResults['High Roll'] && !mergedResults['God Roll'])) return verdict;
+    if (rune && settings) {
+      const grind = checkGrind(rune, stage, settings);
+      if (grind && grind.can) return 'Grind';
+    }
+    return 'Keep';
+  }
+
+  function getVerdict(rune, stage, settings, roleResult, mergedResults) {
+    const hasRole = roleResult !== '';
+    const isHero = rune.gradeStr === 'Hero';
+    const isLegend = rune.gradeStr === 'Legend';
+    const hasHighDuo = roleResult === 'High Roll' || roleResult === 'Duo Roll';
+
+    if (rune.level < 9) {
+      return 'Upgrade';
+    }
+
+    if (rune.level < 12 && hasRole) {
+      if (isHero && !hasHighDuo) {
+        const effThreshold = stage === 'Late' ? 85 : (stage === 'Mid' ? 85 : 65);
+        if (rune.eff < effThreshold) return finalizeGodSellOverride('Sell', mergedResults, rune, stage, settings);
+      }
+      return 'Finish';
+    }
+
+    if (hasRole && isLegend && matchReappRule(rune, settings)) {
+      if (!isPrimaryBuildRole(roleResult)) {
+        return 'Reapp';
+      }
+    }
+
+    if (hasRole) {
+      const gem = evaluateGemRecommendation(rune, stage, settings);
+      if (gem.can) {
+        if (passesGemQualityGate(rune, stage, isHero, hasHighDuo)) {
+          return 'Gem';
+        }
+        return finalizeGodSellOverride('Sell', mergedResults, rune, stage, settings);
+      }
+    }
+
+    if (!hasRole) {
+      const effThreshold = stage === 'Late' ? 65 : (stage === 'Mid' ? 50 : 35);
+      if (isHero && !hasHighDuo) {
+        const heroEffThreshold = stage === 'Late' ? 80 : (stage === 'Mid' ? 65 : 50);
+        if (rune.eff < heroEffThreshold) return finalizeGodSellOverride('Sell', mergedResults, rune, stage, settings);
+      } else if (rune.eff < effThreshold) {
+        return finalizeGodSellOverride('Sell', mergedResults, rune, stage, settings);
+      } else {
+        return finalizeGodSellOverride('Sell', mergedResults, rune, stage, settings);
+      }
+    }
+
+    const grind = checkGrind(rune, stage, settings);
+    if (grind.can) {
+      return 'Grind';
+    }
+
+    return 'Keep';
+  }
+
+  S.hasBadFlat = hasBadFlat;
+  S.checkGrind = checkGrind;
+  S.checkSubstatFlatGem = checkSubstatFlatGem;
+  S.checkGem = checkSubstatFlatGem;
+  S.checkMetaInnateGem = checkMetaInnateGem;
+  S.evaluateGemRecommendation = evaluateGemRecommendation;
+  S.passesGemQualityGate = passesGemQualityGate;
+  S.matchReappRule = matchReappRule;
+  S.isPrimaryBuildRole = isPrimaryBuildRole;
+  S.finalizeGodSellOverride = finalizeGodSellOverride;
+  S.getBaseVerdict = getVerdict;
+})();

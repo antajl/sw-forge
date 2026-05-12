@@ -12,10 +12,16 @@
     return `${stage}_${g}`;
   }
 
-  // Build a stat lookup for a rune { statName: value }
+  // Build a stat lookup for a rune { statName: value } — shared engine map (subs only; innate excluded)
   function statMap(rune) {
+    if (typeof window.SWRM.statMap === 'function') {
+      return window.SWRM.statMap(rune);
+    }
     const m = {};
     for (const s of rune.substats) {
+      if (typeof window.SWRM.isQualifyingSubstatRow === 'function') {
+        if (!window.SWRM.isQualifyingSubstatRow(s)) continue;
+      } else if (s.source === 'innate') continue;
       m[s.name] = (m[s.name] || 0) + s.val + s.grind;
     }
     return m;
@@ -78,7 +84,7 @@
   function checkSlotRequirements(rune, formula, stage, sm) {
     const slotReq = formula.slotRequirements?.[rune.slot]?.[stage];
     if (slotReq && slotReq !== 'None') {
-      return (sm[slotReq] || 0) > 0;
+      return (sm[slotReq] || 0) > 0 || rune.mainName === slotReq;
     }
     return true;
   }
@@ -100,11 +106,11 @@
     return effectiveStats.length >= minRequired;
   }
 
-  // Check must-have requirement
+  // Check must-have requirement (subs only in sm; main stat satisfies — innate does not)
   function checkMustHave(rune, formula, stage, sm) {
     const mustHave = formula.mustHave?.[stage];
     if (mustHave && mustHave !== 'None') {
-      return (sm[mustHave] || 0) > 0;
+      return (sm[mustHave] || 0) > 0 || rune.mainName === mustHave;
     }
     return true;
   }
@@ -220,13 +226,17 @@
 
   function getAdvancedVerdict(rune, stage, settings, formulaResults) {
     const mergedResults = formulaResults || {};
+    const godSell = function(v) {
+      return window.SWRM.finalizeGodSellOverride?.(v, mergedResults, rune, stage, settings) ?? v;
+    };
     const bestRole = window.SWRM.pickBestRole?.(mergedResults, settings)
       ?? getBestFormulaMatch(mergedResults, settings);
     const hasRole = bestRole !== '';
     
     const isHero = rune.gradeStr === 'Hero';
     const isLegend = rune.gradeStr === 'Legend';
-    const hasHighDuo = mergedResults['High Roll'] || mergedResults['Duo Roll'];
+    /** Hero Finish/Gem gates: only when Best Role is God/Duo (UI: High Roll / Duo Roll), not merely a match in merged flags */
+    const hasHighDuo = bestRole === 'High Roll' || bestRole === 'Duo Roll';
     
     // Priority order: Upgrade → Finish → Reapp → (Gem if Flat) → (Keep, or Grind if Keep-worthy) → Sell
     
@@ -240,7 +250,7 @@
       // Check efficiency thresholds for Hero without High Roll/Duo Roll
       if (isHero && !hasHighDuo) {
         const effThreshold = stage === 'Late' ? 85 : (stage === 'Mid' ? 85 : 65);
-        if (rune.eff < effThreshold) return 'Sell';
+        if (rune.eff < effThreshold) return godSell('Sell');
       }
       return 'Finish';
     }
@@ -262,7 +272,7 @@
         if (window.SWRM.passesGemQualityGate?.(rune, stage, isHero, hasHighDuo)) {
           return 'Gem';
         }
-        return 'Sell';
+        return godSell('Sell');
       }
     }
     
@@ -272,11 +282,11 @@
       const effThreshold = stage === 'Late' ? 65 : (stage === 'Mid' ? 50 : 35);
       if (isHero && !hasHighDuo) {
         const heroEffThreshold = stage === 'Late' ? 80 : (stage === 'Mid' ? 65 : 50);
-        if (rune.eff < heroEffThreshold) return 'Sell';
+        if (rune.eff < heroEffThreshold) return godSell('Sell');
       } else if (rune.eff < effThreshold) {
-        return 'Sell';
+        return godSell('Sell');
       } else {
-        return 'Sell'; // No formula but meets efficiency - still Sell per logic
+        return godSell('Sell'); // No formula but meets efficiency - still Sell per logic
       }
     }
     

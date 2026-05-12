@@ -11,7 +11,7 @@ A client-side rune analyzer for Summoners War, powered by your SWEX JSON export.
 - **Load SWEX JSON** — drag & drop your export file, all processing happens in the browser
 - **Dashboard** — role distribution, set/slot breakdown, efficiency histogram, verdict summary
 - **Rune Table** — sortable, filterable table with stat chips, roles and verdicts
-- **Settings** — fully configurable thresholds, High Roll partner coefficient, Duo Roll pairs, and per-role filters (substats, must-haves, min stats)
+- **Settings** — Constants-driven thresholds, Duo Roll lines, God Roll line, and per-role filters (substats, must-haves, min stats)
 
 ## How to use
 
@@ -31,4 +31,4 @@ A client-side rune analyzer for Summoners War, powered by your SWEX JSON export.
 | Classic DPS | SPD + ATK% + CRate + CDmg |
 | Slow DPS | ATK% + CRate + CDmg (no SPD) |
 | Duo Roll | Synergy pairs (SPD+X, CRate+CDmg, etc.) |
-| High Roll | One exceptional stat + partner |
+| High Roll | One exceptional stat (God line from Constants) |

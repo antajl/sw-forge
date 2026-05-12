@@ -64,13 +64,10 @@
 
     results['High Roll'] = S.checkHighRoll(rune, stage, settings);
     results['Duo Roll'] = S.checkDuoRoll(rune, stage, settings);
-    const classicFormulaEnabled = settings.formulas?.['Classic DPS'] && settings.formulas['Classic DPS'].enabled !== false;
-    if (!classicFormulaEnabled) {
-      results['Classic DPS'] = S.checkClassicDPS(rune, stage, settings);
-    }
 
-    for (const role of Object.keys(settings.roles)) {
-      if (role === 'Classic DPS') continue;
+    const formulaKeys = new Set(Object.keys(settings.formulas || {}));
+    for (const role of Object.keys(settings.roles || {})) {
+      if (formulaKeys.has(role)) continue;
       results[role] = S.checkRole(rune, role, stage, settings);
     }
 
@@ -95,8 +92,23 @@
     return runes.map(r => processRune(r, stage, settings));
   }
 
+  /** Console / validation: aggregate verdicts and best-role counts for a processed list. */
+  function summarizeVerdictsAndRoles(runes) {
+    const verdicts = {};
+    const roles = {};
+    for (let i = 0; i < runes.length; i++) {
+      const r = runes[i];
+      const v = r.verdict || '—';
+      verdicts[v] = (verdicts[v] || 0) + 1;
+      const ro = r.role || '—';
+      roles[ro] = (roles[ro] || 0) + 1;
+    }
+    return { verdicts, roles };
+  }
+
   S.processAll = processAll;
   S.processRune = processRune;
   S.ROLE_PRIORITY = ROLE_PRIORITY_CORE;
   S.pickBestRole = pickBestRole;
+  S.summarizeVerdictsAndRoles = summarizeVerdictsAndRoles;
 })();

@@ -16,7 +16,8 @@ const SET_NAMES = {
   11: 'Vampire',  13: 'Violent',  14: 'Nemesis',
   15: 'Will',     16: 'Shield',   17: 'Revenge',
   18: 'Destroy',  19: 'Fight',    20: 'Determination',
-  21: 'Enhance',  22: 'Accuracy', 23: 'Tolerance'
+  21: 'Enhance',  22: 'Accuracy', 23: 'Tolerance',
+  24: 'Seal',     25: 'Intangible', 99: 'Immemorial',
 };
 
 const GRADE_NAMES = { 1:'Common', 2:'Magic', 3:'Rare', 4:'Hero', 5:'Legend' };
@@ -33,6 +34,9 @@ const TRANSLATIONS = {
     runeRules: 'Rune Rules',
     guide: 'Guide',
     changelog: 'Changelog',
+    changelogLead:
+      'These notes ship with the app. They are not personal scratch space and are not stored in browser storage — only a new build changes what you see here.',
+    changelogEmpty: 'No release notes in this build yet.',
     loadJson: 'Load JSON',
     minLvl: 'Min Lvl',
     settings: 'Settings',
@@ -73,6 +77,10 @@ const TRANSLATIONS = {
     allRoles: 'All Roles',
     allGrades: 'All Grades',
     runes: 'runes',
+    runeTableCountCapped: '{shown} / {total} {runes} in table',
+    runeTableMoreHint:
+      'Only the first {shown} rows are loaded for speed. Scroll to this area — then you can load all {total} matching runes (very large lists may feel slower).',
+    runeTableShowAllButton: 'Load all {total} in table',
     targetHeading: 'Target',
     exportTableCsv: 'Export CSV',
     actionTargetUpgrade: 'Power to ≥ +9 before judging',
@@ -86,29 +94,55 @@ const TRANSLATIONS = {
     generalThresholds: 'General Thresholds',
     highRollThresholds: 'High Roll Thresholds',
     highRollGridDesc:
-      'Stage + grade grid: used for grind checks, rune power level (0–3), and formula anchors «High Roll for Hero/Legend». Does not set the God Roll line.',
+      'Stage and grade affect grind targets, rune power (0–3), and formula anchors «High Roll for Hero/Legend». They do not set the God Roll line.',
     godRollConstants: 'God Roll constants',
     godRollConstantsDesc:
-      'Per stat: God threshold = Base × (1 + God Mod). Same at every stage (matches Sheets Constants). The «High Roll» role in the engine uses this line only.',
+      'Per stat: God threshold = Base plus the God +% column (same at every stage). The «High Roll» role in the engine uses that God line only.',
+    rulesPageTitle: 'Rune Rules',
+    rulesPageLead:
+      'Constants define the numeric thresholds; roles map runes to archetypes. Save at the bottom to refresh verdicts on the Dashboard and Rune Table.',
+    rulesSectionPreviewsTitle: 'Threshold previews',
+    rulesSectionPreviewsDesc:
+      'Read-only tables: values are computed from Constants above (stage × grade for High Roll lines; Duo lines use the same base scales and each stat’s Duo mod).',
+    rulesSubtabsAria: 'Rune Rules sections',
+    rulesSubtabEngine: 'Engine',
+    rulesSubtabEngineDesc: 'Constants and HR/Duo previews',
+    rulesSubtabVerdict: 'Verdict rules',
+    rulesSubtabVerdictDesc: 'Gem and Reapp tuning',
+    rulesSubtabRoles: 'Roles',
+    rulesSubtabRolesDesc: 'Formulas and role filters',
+    rulesSectionRolesAside: 'Roles & formulas',
+    rolesNavTitle: 'Roles',
     constantsSheetTitle: 'Constants (8 stats)',
     constantsSheetDesc:
-      'Sheets-style Constants row per stat: Base, God Mod, Duo Mod, Early ×, Late ×, Grade mod. The «= God line» column shows Base×(1+God Mod). Stage+grade HR (C:J) and Duo (K:R) previews are computed from these — not stored separately.',
-    enginePreviewHr: 'Engine HR preview (C:J)',
-    enginePreviewDuo: 'Engine Duo preview (K:R)',
+      'Base is the Mid / Hero anchor for that substat (rolled value including grind). Change it when a whole row feels too strict or too soft. The next columns are entered as percents (30 means 30%, not 0.30): God +% adds on top of Base for the God-only line (30 → Base×1.30). Duo −% lowers Duo pair thresholds below the High Roll value (20 → Duo line = 80% of HR). Early % and Late % scale those stages versus Base (80 → 80% of Base). Legend −% at Mid lowers Legend Mid versus Hero Mid for HR (5 → Legend Mid = 95% of Base). The right column shows the computed God threshold. Previews update as you type; use Save to refresh verdicts.',
+    enginePreviewHr: 'High Roll thresholds (by stage & grade)',
+    enginePreviewDuo: 'Duo Roll thresholds (by stage & grade)',
+    constantsColStat: 'Stat',
+    constantsColHintBase:
+      'Mid-game Hero anchor for this substat (roll + grind). Other columns scale from here.',
+    constantsColHintGod:
+      'God line = Base × (1 + this%/100). Used only for God roll detection.',
+    constantsColHintDuo:
+      'Duo line = High Roll × (1 − this%/100). Higher % = stricter Duo pairs.',
+    constantsColHintEarly:
+      'Early HR hero lines use Base × this%/100 (Legend uses grade rules too).',
+    constantsColHintLate: 'Late HR hero lines use Base × this%/100.',
+    constantsColHintGrade:
+      'At Mid, Legend HR uses Base × (1 − this%/100); Hero Mid stays exactly Base.',
     godColBase: 'Base',
-    godColMod: 'God Mod',
-    godColResult: '= God line',
-    constColDuoMod: 'Duo Mod',
-    constColEarly: 'Early ×',
-    constColLate: 'Late ×',
-    constColGrade: 'Grade mod',
+    godColMod: 'God +%',
+    godColResult: 'God line',
+    constColDuoMod: 'Duo −%',
+    constColEarly: 'Early %',
+    constColLate: 'Late %',
+    constColGrade: 'Leg @Mid −%',
     resetConstantsButton: 'Reset Constants to defaults',
     resetConstantsHint: 'Reloads the built-in Constants table only. Roles, formulas, and other settings stay unchanged.',
     resetConstantsConfirm:
       'Replace the Constants (8 stats) grid with built-in defaults? Roles and formulas will not be changed.',
     resetConstantsDone: 'Constants reset to defaults.',
     duoRollThresholds: 'Duo Roll Thresholds',
-    partnerCoeff: 'Partner coefficient',
     configureRoleRules: 'Configure role rules. You can add a custom role or remove existing roles (minimum one role must remain).',
     newRole: 'New role',
     addRole: '+ Add role',
@@ -165,7 +199,7 @@ const TRANSLATIONS = {
 
     stageAdvisorTitle: 'Account progression suggestion',
     stageAdvisorLead:
-      'Early / Mid / Late sets rule strictness. Combined score uses Depth v2 over your full Rare+ export (SWEX rank ≥3) — SPD depth, +15 depth, and elite average uncapped eff. Unaffected by preset or Min Lvl below.',
+      'Early, Mid, and Late change how strict the rules are. The combined score estimates account depth from your full rune export (Rare and above): fast runes, upgraded runes, and quality on your best pieces. It ignores the preset below and the dashboard minimum level filter.',
 
     stageSuggestedLabel: 'Suggested stage',
     stageYourPresetLabel: 'Your preset',
@@ -176,31 +210,30 @@ const TRANSLATIONS = {
       'Load a SWEX export to see progression depth and combined score.',
 
     stageMetricsExplainer:
-      'Depth v2: full export, absolute depth metrics. Preset and Min Lvl do not change this. Weights:',
+      'These three numbers always use your full export — not the preset or Min level below. Card weights:',
 
     stageCardHrName: 'Speed Depth',
     stageCardHrWeight: '35%',
     stageCardHrDesc:
-      'Count of runes with substat SPD sum ≥ 18 (base + grind). Score term capped at 250 runes (see CFG in analyzeGameStage).',
+      'How many runes have sub SPD total ≥ 18 (roll + grind). This term contributes up to 35 points once you reach 250 such runes.',
 
     stageCardKeepName: 'Power Depth',
     stageCardKeepWeight: '35%',
     stageCardKeepDesc:
-      'Count of 6★ runes at exactly +15. Score term capped at 600 runes (CFG).',
+      'How many 6★ runes are at exactly +15. This term contributes up to 35 points once you reach 600.',
 
     stageCardMetaName: 'Elite Quality',
     stageCardMetaWeight: '30%',
     stageCardMetaDesc:
-      'Mean uncapped SWOP-style eff over top min(50, n) runes; if you have fewer than 50, n = all runes. Baseline 80, span 30 for full points (CFG).',
+      'Average efficiency on your best runes (up to 50). Baseline 80%, span 30 percentage points for the full 30-point term.',
 
     stageEliteValFormat: '{eff}% · n={n}',
 
-    stageFormulaExpl:
-      'Depth v2: min(SPD-depth / 250, 1)×35 + min(+15 count / 600, 1)×35 + min(max(0, eliteAvg−80) / 30, 1)×30. Suggested stage: below 45 → Early, below 85 → Mid, otherwise Late. Tune all values in analyzeGameStage CFG.',
+    stageFormulaExpl: '',
 
     dashboardScopeTitle: 'Global filter',
     dashboardScopeHint:
-      'Applies to the summary cards, charts below, and Rune Table. Does not change the progression suggestion (Depth v2 uses the full export).'
+      'Applies to the summary cards, charts below, and Rune Table. The suggested stage above is calculated from the full export separately.'
   },
   ru: {
     // Header
@@ -210,6 +243,9 @@ const TRANSLATIONS = {
     runeRules: 'Правила',
     guide: 'Гайд',
     changelog: 'Лог',
+    changelogLead:
+      'Эти записи идут вместе со сборкой приложения. Это не личный блокнот и не хранится в браузере — меняется только при обновлении версии.',
+    changelogEmpty: 'В этой сборке пока нет записей журнала.',
     loadJson: 'Загрузить JSON',
     minLvl: 'Мин Ур',
     settings: 'Настройки',
@@ -250,6 +286,10 @@ const TRANSLATIONS = {
     allRoles: 'Все Роли',
     allGrades: 'Все Грейды',
     runes: 'рун',
+    runeTableCountCapped: '{shown} / {total} {runes} в таблице',
+    runeTableMoreHint:
+      'Для скорости сначала загружены только первые {shown} строк. Прокрутите сюда вниз — затем можно загрузить все {total} подходящих рун (очень большой список может тормозить).',
+    runeTableShowAllButton: 'Загрузить все {total} в таблице',
     targetHeading: 'Цель',
     exportTableCsv: 'Экспорт CSV',
     actionTargetUpgrade: 'Докачать до ≥ +9',
@@ -263,22 +303,49 @@ const TRANSLATIONS = {
     generalThresholds: 'Общие Пороги',
     highRollThresholds: 'Пороги Высоких Показателей',
     highRollGridDesc:
-      'Сетка стадия + грейд: для гринда, уровня силы руны (0–3) и якорей формул «High Roll for Hero/Legend». Не задаёт линию God Roll.',
+      'Стадия и грейд влияют на гринд, уровень силы руны (0–3) и якоря «High Roll for Hero/Legend». Линию God Roll они не задают.',
     godRollConstants: 'Константы God Roll',
     godRollConstantsDesc:
-      'По стату: порог God = Base × (1 + God Mod). Одинаков при любой стадии (как Constants в Sheets). Роль «High Roll» в движке использует только эту линию.',
+      'По стату: порог God = Base плюс колонка God +% (одинаков при любой стадии). Роль «High Roll» в движке использует только эту линию God.',
+    rulesPageTitle: 'Правила рун',
+    rulesPageLead:
+      'Constants задают числовые пороги; роли относят руны к архетипам. Сохраните внизу — пересчитаются вердикты на дашборде и в таблице.',
+    rulesSectionPreviewsTitle: 'Превью порогов',
+    rulesSectionPreviewsDesc:
+      'Только чтение: числа считаются из Constants выше (стадия × грейд для линий High Roll; Duo — те же масштабы и Duo mod по каждому стату).',
+    rulesSubtabsAria: 'Разделы правил рун',
+    rulesSubtabEngine: 'Движок',
+    rulesSubtabEngineDesc: 'Constants и превью HR/Duo',
+    rulesSubtabVerdict: 'Вердикты',
+    rulesSubtabVerdictDesc: 'Gem и Reapp',
+    rulesSubtabRoles: 'Роли',
+    rulesSubtabRolesDesc: 'Формулы и фильтры ролей',
+    rulesSectionRolesAside: 'Роли и формулы',
+    rolesNavTitle: 'Роли',
     constantsSheetTitle: 'Constants (8 статов)',
     constantsSheetDesc:
-      'Строка Constants как в Sheets: Base, God Mod, Duo Mod, Early×, Late×, Grade mod. Колонка «= God line» — Base×(1+God Mod). Сетки HR (C:J) и Duo (K:R) считаются из них и не хранятся отдельно.',
-    enginePreviewHr: 'Превью HR (C:J)',
-    enginePreviewDuo: 'Превью Duo (K:R)',
+      'Base — якорь Mid / Hero для этого сабстата (ролл + камень). Меняйте, если вся строка кажется слишком жёсткой или слишком мягкой. Следующие колонки вводятся в процентах (30 значит 30%, не 0,30): God +% добавляется к Base для отдельной линии God (30 → Base×1,30). Duo −% опускает пороги пар относительно High Roll (20 → линия Duo = 80% от HR). Early % и Late % масштабируют эти стадии от Base (80 → 80% от Base). Leg @Mid −% в Mid опускает Legend относительно Hero для HR (5 → Legend Mid = 95% от Base). Справа — вычисленный порог God. Превью обновляются при вводе; вердикты — после Сохранить.',
+    enginePreviewHr: 'Пороги High Roll (стадия × грейд)',
+    enginePreviewDuo: 'Пороги Duo Roll (стадия × грейд)',
+    constantsColStat: 'Стат',
+    constantsColHintBase:
+      'Якорь Mid / Hero для сабстата (ролл + камень). Остальные колонки масштабируют от него.',
+    constantsColHintGod:
+      'Линия God = Base × (1 + этот%/100). Только для детекта God roll.',
+    constantsColHintDuo:
+      'Линия Duo = High Roll × (1 − этот%/100). Больше % — строже пары.',
+    constantsColHintEarly:
+      'Early HR по герою: Base × этот%/100 (у Legend ещё правила грейда).',
+    constantsColHintLate: 'Late HR по герою: Base × этот%/100.',
+    constantsColHintGrade:
+      'В Mid Legend HR = Base × (1 − этот%/100); Hero Mid ровно Base.',
     godColBase: 'Base',
-    godColMod: 'God Mod',
-    godColResult: '= линия God',
-    constColDuoMod: 'Duo Mod',
-    constColEarly: 'Early ×',
-    constColLate: 'Late ×',
-    constColGrade: 'Grade mod',
+    godColMod: 'God +%',
+    godColResult: 'Линия God',
+    constColDuoMod: 'Duo −%',
+    constColEarly: 'Early %',
+    constColLate: 'Late %',
+    constColGrade: 'Leg @Mid −%',
     resetConstantsButton: 'Сбросить Constants к умолчанию',
     resetConstantsHint:
       'Подставляет встроенную таблицу Constants. Роли, формулы и остальные настройки не трогаются.',
@@ -286,7 +353,6 @@ const TRANSLATIONS = {
       'Заменить таблицу Constants (8 статов) на значения по умолчанию? Роли и формулы не изменятся.',
     resetConstantsDone: 'Constants сброшены к умолчанию.',
     duoRollThresholds: 'Пороги Парных Показателей',
-    partnerCoeff: 'Коэффициент партнера',
     configureRoleRules: 'Настройте правила ролей. Вы можете добавить пользовательскую роль или удалить существующие (должна остаться минимум одна роль).',
     newRole: 'Новая роль',
     addRole: '+ Добавить роль',
@@ -343,7 +409,7 @@ const TRANSLATIONS = {
 
     stageAdvisorTitle: 'Совет по прогрессу аккаунта',
     stageAdvisorLead:
-      'Стадия задаёт строгость правил. Сводный балл — Depth v2 по всему экспорту (Rare+, ранг ≥3 в SWEX): SPD-глубина, +15, элита по eff. Пресет и «Мин. ур.» на балл не влияют.',
+      'Стадия задаёт строгость правил. Сводный балл оценивает глубину аккаунта по всему экспорту рун (Rare и выше): быстрые руны, прокачка до +15 и качество лучших. Пресет ниже и общий «Мин. ур.» на этот балл не влияют.',
 
     stageSuggestedLabel: 'Советуемая стадия',
     stageYourPresetLabel: 'Ваш выбор',
@@ -354,31 +420,30 @@ const TRANSLATIONS = {
       'Загрузите SWEX JSON, чтобы увидеть глубину и сводный балл.',
 
     stageMetricsExplainer:
-      'Depth v2 по полному экспорту, без пресета/«Мин. ур.». Веса на карточках:',
+      'Три числа всегда по полному экспорту — не по пресету и не по «Мин. ур.» ниже. Веса на карточках:',
 
     stageCardHrName: 'SPD-глубина',
     stageCardHrWeight: '35%',
     stageCardHrDesc:
-      'Число рун с суммой саб SPD ≥ 18 (база + камень). В балле до 250 (CFG в analyzeGameStage).',
+      'Сколько рун, у которых сумма саб SPD ≥ 18 (ролл + камень). До 35 баллов, полный вклад при 250+ таких рунах.',
 
     stageCardKeepName: 'Глубина +15',
     stageCardKeepWeight: '35%',
     stageCardKeepDesc:
-      'Число 6★ рун на ровно +15. В балле до 600 (CFG).',
+      'Сколько 6★ рун на ровно +15. До 35 баллов, полный вклад при 600+.',
 
     stageCardMetaName: 'Элита по eff',
     stageCardMetaWeight: '30%',
     stageCardMetaDesc:
-      'Средняя uncapped-eff по топ min(50, n); если рун < 50, берутся все. База 80%, диапазон 30 (CFG).',
+      'Средняя эффективность по лучшим рунам (до 50). База 80%, диапазон 30 п.п. для полных 30 баллов.',
 
     stageEliteValFormat: '{eff}% · n={n}',
 
-    stageFormulaExpl:
-      'Depth v2 (CFG в analyzeGameStage): SPD / 250, +15 / 600, элита по eff. Стадии: до 45 → Ранняя, до 85 → Средняя, иначе Поздняя.',
+    stageFormulaExpl: '',
 
     dashboardScopeTitle: 'Общий фильтр',
     dashboardScopeHint:
-      'Карточки сводки, графики и таблица рун. На совет не влияет — Depth v2 считает по всему экспорту.'
+      'Карточки сводки, графики и таблица рун. Совет по стадии выше считается отдельно по полному экспорту.'
   }
 };
 
@@ -403,7 +468,6 @@ const DEFAULT_THRESHOLDS = {
 
 // Legacy flat grids (used only to seed defaults / migration into statConstants).
 const DEFAULT_HR_THRESHOLDS = DEFAULT_THRESHOLDS;
-const DEFAULT_HR_COEFF = 0.70; // partner soft threshold
 
 const DEFAULT_DUO_THRESHOLDS = {
   SPD_min:       { Early_Leg:10, Early_Hero:8,  Mid_Leg:13, Mid_Hero:12, Late_Leg:15, Late_Hero:12 },
@@ -420,7 +484,7 @@ const DEFAULT_DUO_THRESHOLDS = {
   RES_for_HP:    { Early_Leg:14, Early_Hero:11, Mid_Leg:16, Mid_Hero:14, Late_Leg:20, Late_Hero:14 },
 };
 
-/** Stats aligned with Sheets Constants table (8 substats). */
+/** Stat order for the Constants table (8 substats). */
 const GOD_STAT_ORDER = ['SPD', 'HP%', 'DEF%', 'ATK%', 'CRate', 'CDmg', 'ACC', 'RES'];
 const HR_COL_KEYS = ['Early_Leg', 'Early_Hero', 'Mid_Leg', 'Mid_Hero', 'Late_Leg', 'Late_Hero'];
 
@@ -430,7 +494,7 @@ function roundThresh(x) {
 }
 
 /**
- * Stage+grade HR cell from Constants (Sheets Engine C:J):
+ * Stage+grade High Roll threshold cell from Constants:
  * Mid_Hero = Base; Mid_Leg = Base×(1−Grade_Mod); Early_Hero = Base×Early_Scale; Late_Hero = Base×Late_Scale;
  * Early/Legend and Late/Legend = Hero cell × (1−Grade_Mod).
  */
@@ -664,11 +728,17 @@ function mergeGodConstants(saved) {
 }
 
 // ---- ADVANCED FORMULA SYSTEM ----
-// New structure for multiple formulas with comprehensive settings
+// Canonical role rules for the six archetypes (Classic DPS, Slow DPS, Bomber, Fast CC, Tank, Bruiser).
+// Keep in sync with the project spreadsheet: acceptedMains, substats Include/Exclude, mustHave,
+// slotRequirements, minStats per slot tier, requireHR. Legacy DEFAULT_ROLES mirrors rough parity for migration only.
 const DEFAULT_FORMULAS = {
   'Classic DPS': {
     enabled: true,
-    acceptedMains: { 2: ['SPD', 'None', 'None'], 4: ['CRate', 'CDmg', 'None'], 6: ['ATK%', 'None', 'None'] },
+    acceptedMains: {
+      2: ['SPD', 'ATK%', 'None'],
+      4: ['CRate', 'CDmg', 'None'],
+      6: ['ATK%', 'HP%', 'DEF%'],
+    },
     substats: {
       SPD: { Early: 'Include', Mid: 'Include', Late: 'Include' },
       'HP%': { Early: 'None', Mid: 'None', Late: 'None' },
@@ -677,12 +747,21 @@ const DEFAULT_FORMULAS = {
       CRate: { Early: 'Include', Mid: 'Include', Late: 'Include' },
       CDmg: { Early: 'Include', Mid: 'Include', Late: 'Include' },
       ACC: { Early: 'None', Mid: 'None', Late: 'None' },
-      RES: { Early: 'None', Mid: 'None', Late: 'None' }
+      RES: { Early: 'None', Mid: 'None', Late: 'None' },
     },
-    mustHave: { Early: 'None', Mid: 'SPD', Late: 'SPD' },
-    slotRequirements: { 2: { Early: 'CRate', Mid: 'CRate', Late: 'CRate' }, 4: { Early: 'SPD', Mid: 'SPD', Late: 'SPD' }, 6: { Early: 'CRate', Mid: 'CRate', Late: 'CRate' } },
-    minStats: { '1/3/5': { Early: 1, Mid: 2, Late: 3 }, 'Slot 2': { Early: 1, Mid: 1, Late: 1 }, 'Slot 4': { Early: 1, Mid: 1, Late: 1 }, 'Slot 6': { Early: 1, Mid: 1, Late: 1 } },
-    requireHR: { 'High Roll for Hero': { Early: false, Mid: true, Late: true }, 'High Roll for Legend': { Early: false, Mid: false, Late: true } }
+    mustHave: { Early: 'None', Mid: 'None', Late: 'None' },
+    slotRequirements: {
+      2: { Early: 'None', Mid: 'None', Late: 'None' },
+      4: { Early: 'None', Mid: 'None', Late: 'None' },
+      6: { Early: 'None', Mid: 'None', Late: 'None' },
+    },
+    minStats: {
+      '1/3/5': { Early: 2, Mid: 2, Late: 2 },
+      'Slot 2': { Early: 2, Mid: 2, Late: 2 },
+      'Slot 4': { Early: 2, Mid: 2, Late: 2 },
+      'Slot 6': { Early: 2, Mid: 2, Late: 2 },
+    },
+    requireHR: { 'High Roll for Hero': { Early: false, Mid: true, Late: true }, 'High Roll for Legend': { Early: false, Mid: false, Late: true } },
   },
   'Slow DPS': {
     enabled: true,
@@ -697,7 +776,7 @@ const DEFAULT_FORMULAS = {
       ACC: { Early: 'None', Mid: 'None', Late: 'None' },
       RES: { Early: 'None', Mid: 'None', Late: 'None' }
     },
-    mustHave: { Early: 'None', Mid: 'CRate', Late: 'CRate' },
+    mustHave: { Early: 'CRate', Mid: 'CRate', Late: 'CRate' },
     slotRequirements: { 2: { Early: 'None', Mid: 'None', Late: 'None' }, 4: { Early: 'None', Mid: 'None', Late: 'None' }, 6: { Early: 'CRate', Mid: 'CRate', Late: 'CRate' } },
     minStats: { '1/3/5': { Early: 1, Mid: 2, Late: 3 }, 'Slot 2': { Early: 1, Mid: 1, Late: 2 }, 'Slot 4': { Early: 1, Mid: 1, Late: 2 }, 'Slot 6': { Early: 1, Mid: 1, Late: 2 } },
     requireHR: { 'High Roll for Hero': { Early: false, Mid: true, Late: true }, 'High Roll for Legend': { Early: false, Mid: false, Late: true } }
@@ -716,13 +795,17 @@ const DEFAULT_FORMULAS = {
       RES: { Early: 'None', Mid: 'None', Late: 'None' }
     },
     mustHave: { Early: 'ATK%', Mid: 'ATK%', Late: 'ATK%' },
-    slotRequirements: { 2: { Early: 'None', Mid: 'ATK%', Late: 'None' }, 4: { Early: 'None', Mid: 'None', Late: 'None' }, 6: { Early: 'None', Mid: 'None', Late: 'None' } },
-    minStats: { '1/3/5': { Early: 1, Mid: 2, Late: 3 }, 'Slot 2': { Early: 1, Mid: 1, Late: 1 }, 'Slot 4': { Early: 1, Mid: 1, Late: 1 }, 'Slot 6': { Early: 1, Mid: 1, Late: 1 } },
+    slotRequirements: { 2: { Early: 'None', Mid: 'None', Late: 'None' }, 4: { Early: 'None', Mid: 'None', Late: 'None' }, 6: { Early: 'None', Mid: 'None', Late: 'None' } },
+    minStats: { '1/3/5': { Early: 1, Mid: 2, Late: 2 }, 'Slot 2': { Early: 1, Mid: 1, Late: 1 }, 'Slot 4': { Early: 1, Mid: 1, Late: 1 }, 'Slot 6': { Early: 1, Mid: 1, Late: 1 } },
     requireHR: { 'High Roll for Hero': { Early: false, Mid: true, Late: true }, 'High Roll for Legend': { Early: false, Mid: false, Late: true } }
   },
   'Fast CC': {
     enabled: true,
-    acceptedMains: { 2: ['SPD', 'HP%', 'DEF%'], 4: ['HP%', 'DEF%', 'None'], 6: ['HP%', 'DEF%', 'ACC'] },
+    acceptedMains: {
+      2: ['SPD', 'None', 'None'],
+      4: ['CRate', 'CDmg', 'ATK%', 'HP%', 'DEF%'],
+      6: ['ACC', 'ATK%', 'HP%', 'DEF%'],
+    },
     substats: {
       SPD: { Early: 'Include', Mid: 'Include', Late: 'Include' },
       'HP%': { Early: 'Include', Mid: 'Include', Late: 'Include' },
@@ -731,18 +814,27 @@ const DEFAULT_FORMULAS = {
       CRate: { Early: 'None', Mid: 'None', Late: 'None' },
       CDmg: { Early: 'None', Mid: 'None', Late: 'None' },
       ACC: { Early: 'Include', Mid: 'Include', Late: 'Include' },
-      RES: { Early: 'None', Mid: 'None', Late: 'None' }
+      RES: { Early: 'None', Mid: 'None', Late: 'None' },
     },
     mustHave: { Early: 'SPD', Mid: 'SPD', Late: 'SPD' },
-    slotRequirements: { 2: { Early: 'SPD', Mid: 'SPD', Late: 'SPD' }, 4: { Early: 'SPD', Mid: 'SPD', Late: 'SPD' }, 6: { Early: 'SPD', Mid: 'SPD', Late: 'SPD' } },
-    minStats: { '1/3/5': { Early: 2, Mid: 2, Late: 2 }, 'Slot 2': { Early: 1, Mid: 1, Late: 1 }, 'Slot 4': { Early: 1, Mid: 1, Late: 1 }, 'Slot 6': { Early: 1, Mid: 1, Late: 1 } },
-    requireHR: { 'High Roll for Hero': { Early: false, Mid: true, Late: true }, 'High Roll for Legend': { Early: false, Mid: false, Late: true } }
+    slotRequirements: {
+      2: { Early: 'None', Mid: 'None', Late: 'None' },
+      4: { Early: 'None', Mid: 'None', Late: 'None' },
+      6: { Early: 'None', Mid: 'None', Late: 'None' },
+    },
+    minStats: {
+      '1/3/5': { Early: 2, Mid: 2, Late: 2 },
+      'Slot 2': { Early: 2, Mid: 2, Late: 2 },
+      'Slot 4': { Early: 2, Mid: 2, Late: 2 },
+      'Slot 6': { Early: 2, Mid: 2, Late: 2 },
+    },
+    requireHR: { 'High Roll for Hero': { Early: false, Mid: true, Late: true }, 'High Roll for Legend': { Early: false, Mid: false, Late: true } },
   },
   'Tank': {
     enabled: true,
-    acceptedMains: { 2: ['HP%', 'DEF%', 'None'], 4: ['HP%', 'DEF%', 'None'], 6: ['HP%', 'DEF%', 'RES'] },
+    acceptedMains: { 2: ['SPD', 'HP%', 'DEF%'], 4: ['HP%', 'DEF%', 'None'], 6: ['HP%', 'DEF%', 'RES'] },
     substats: {
-      SPD: { Early: 'None', Mid: 'None', Late: 'None' },
+      SPD: { Early: 'Include', Mid: 'Include', Late: 'Include' },
       'HP%': { Early: 'Include', Mid: 'Include', Late: 'Include' },
       'ATK%': { Early: 'None', Mid: 'None', Late: 'None' },
       'DEF%': { Early: 'Include', Mid: 'Include', Late: 'Include' },
@@ -758,7 +850,11 @@ const DEFAULT_FORMULAS = {
   },
   'Bruiser': {
     enabled: true,
-    acceptedMains: { 2: ['SPD', 'HP%', 'ATK%'], 4: ['CRate', 'CDmg', 'HP%'], 6: ['DEF%', 'HP%', 'ATK%'] },
+    acceptedMains: {
+      2: ['SPD', 'HP%', 'None'],
+      4: ['CRate', 'CDmg', 'HP%', 'DEF%', 'ATK%'],
+      6: ['HP%', 'DEF%', 'ATK%', 'None'],
+    },
     substats: {
       SPD: { Early: 'Include', Mid: 'Include', Late: 'Include' },
       'HP%': { Early: 'Include', Mid: 'Include', Late: 'Include' },
@@ -767,13 +863,22 @@ const DEFAULT_FORMULAS = {
       CRate: { Early: 'Include', Mid: 'Include', Late: 'Include' },
       CDmg: { Early: 'Include', Mid: 'Include', Late: 'Include' },
       ACC: { Early: 'None', Mid: 'None', Late: 'None' },
-      RES: { Early: 'None', Mid: 'None', Late: 'None' }
+      RES: { Early: 'None', Mid: 'None', Late: 'None' },
     },
-    mustHave: { Early: 'CRate', Mid: 'CRate', Late: 'CRate' },
-    slotRequirements: { 2: { Early: 'None', Mid: 'None', Late: 'None' }, 4: { Early: 'None', Mid: 'None', Late: 'None' }, 6: { Early: 'HP%', Mid: 'HP%', Late: 'HP%' } },
-    minStats: { '1/3/5': { Early: 3, Mid: 3, Late: 3 }, 'Slot 2': { Early: 2, Mid: 2, Late: 2 }, 'Slot 4': { Early: 2, Mid: 2, Late: 2 }, 'Slot 6': { Early: 2, Mid: 2, Late: 2 } },
-    requireHR: { 'High Roll for Hero': { Early: false, Mid: true, Late: true }, 'High Roll for Legend': { Early: false, Mid: true, Late: true } }
-  }
+    mustHave: { Early: 'None', Mid: 'None', Late: 'None' },
+    slotRequirements: {
+      2: { Early: 'None', Mid: 'None', Late: 'None' },
+      4: { Early: 'None', Mid: 'None', Late: 'None' },
+      6: { Early: 'None', Mid: 'None', Late: 'None' },
+    },
+    minStats: {
+      '1/3/5': { Early: 2, Mid: 2, Late: 3 },
+      'Slot 2': { Early: 2, Mid: 2, Late: 3 },
+      'Slot 4': { Early: 2, Mid: 2, Late: 3 },
+      'Slot 6': { Early: 2, Mid: 2, Late: 3 },
+    },
+    requireHR: { 'High Roll for Hero': { Early: false, Mid: true, Late: true }, 'High Roll for Legend': { Early: false, Mid: true, Late: true } },
+  },
 };
 
 const DEFAULT_ROLE_PRIORITY = ['Fast CC', 'Classic DPS', 'Bomber', 'Tank', 'Bruiser', 'Slow DPS', 'Duo Roll', 'High Roll'];
@@ -784,7 +889,7 @@ const DEFAULT_ROLES = {
   'Classic DPS': {
     substats: { SPD:'Include', 'ATK%':'Include', CRate:'Include', CDmg:'Include',
                 'HP%':'None', 'DEF%':'None', ACC:'None', RES:'None' },
-    mustHave: { Early: null, Mid: 'SPD', Late: 'SPD' },
+    mustHave: { Early: 'SPD', Mid: 'SPD', Late: 'SPD' },
     acceptedMains: { 2:['SPD'], 4:['CRate','CDmg'], 6:['ATK%'] },
     minStats: { Early:1, Mid:2, Late:3 },
     requireHR: { Early_Hero:false, Mid_Hero:true, Late_Hero:true, Early_Leg:false, Mid_Leg:false, Late_Leg:true },
@@ -792,7 +897,7 @@ const DEFAULT_ROLES = {
   'Slow DPS': {
     substats: { 'ATK%':'Include', CRate:'Include', CDmg:'Include',
                 SPD:'None', 'HP%':'None', 'DEF%':'None', ACC:'None', RES:'None' },
-    mustHave: { Early: null, Mid: 'CRate', Late: 'CRate' },
+    mustHave: { Early: 'CRate', Mid: 'CRate', Late: 'CRate' },
     acceptedMains: { 2:['ATK%'], 4:['HP%','ATK%','DEF%'], 6:['ATK%','HP%','DEF%'] },
     minStats: { Early:1, Mid:2, Late:2 },
     requireHR: { Early_Hero:false, Mid_Hero:false, Late_Hero:true, Early_Leg:false, Mid_Leg:false, Late_Leg:false },
@@ -814,10 +919,10 @@ const DEFAULT_ROLES = {
     requireHR: { Early_Hero:false, Mid_Hero:false, Late_Hero:true, Early_Leg:false, Mid_Leg:false, Late_Leg:true },
   },
   'Tank': {
-    substats: { 'HP%':'Include', 'DEF%':'Include', RES:'Include',
-                SPD:'None', 'ATK%':'None', CRate:'None', CDmg:'None', ACC:'None' },
+    substats: { 'HP%':'Include', 'DEF%':'Include', RES:'Include', SPD:'Include',
+                'ATK%':'None', CRate:'None', CDmg:'None', ACC:'None' },
     mustHave: { Early: 'RES', Mid: 'RES', Late: 'RES' },
-    acceptedMains: { 2:['HP%','DEF%'], 4:['HP%','DEF%'], 6:['HP%','DEF%','RES'] },
+    acceptedMains: { 2:['SPD','HP%','DEF%'], 4:['HP%','DEF%'], 6:['HP%','DEF%','RES'] },
     minStats: { Early:1, Mid:2, Late:2 },
     requireHR: { Early_Hero:false, Mid_Hero:false, Late_Hero:true, Early_Leg:false, Mid_Leg:false, Late_Leg:true },
   },
@@ -833,7 +938,7 @@ const DEFAULT_ROLES = {
 
 const DEFAULT_REAPP = {
   maxEff: 75,
-  sets: ['Violent', 'Will', 'Swift', 'Despair', 'Fatal', 'Rage', 'Nemesis', 'Revenge', 'Destroy', 'Vampire', 'Blade'],
+  sets: ['Violent', 'Will', 'Swift', 'Despair', 'Vampire', 'Rage', 'Intangible'],
   innateStats: ['SPD', 'HP%', 'ATK%', 'DEF%'],
   mainBySlot: {
     2: ['SPD'],
@@ -845,10 +950,16 @@ const DEFAULT_REAPP = {
 // ---- GEM (innate Enchant Gem) — aligns with Sheets “Meta Sets + bad innate per slot”
 const DEFAULT_GEM_META = {
   enabled: true,
-  /** Legend runes usually have innate; Hero Gem is rare — allow both by default */
-  legendOnlyInnate: false,
-  /** Value rune sets where rolling innate is worthwhile */
-  sets: ['Violent', 'Will', 'Swift', 'Despair', 'Vampire', 'Rage', 'Fatal', 'Nemesis', 'Revenge', 'Destroy', 'Blade'],
+  /** Spreadsheet Gem logic targets Legend runes primarily */
+  legendOnlyInnate: true,
+  /** Core meta sets where innate reroll is high value (matches spreadsheet list) */
+  sets: ['Violent', 'Will', 'Swift', 'Despair', 'Vampire', 'Rage', 'Intangible'],
+  /** Min calcEff (and Hero branch) before Gem verdict — tune to match spreadsheet */
+  qualityGate: {
+    early: { min: 40, heroMin: 52 },
+    mid: { min: 55, heroMin: 67 },
+    late: { min: 70, heroMin: 82 },
+  },
   /**
    * If no entry in bySet[set][slot], merge extras for this slot + universal flat innates.
    * bySet overrides: Violent:{ 2:["RES","ACC"], 4:[...] }
@@ -910,6 +1021,15 @@ function mergeGemMeta(savedGem) {
     typeof savedGem.extraBadBySlot === 'object' && savedGem.extraBadBySlot ? savedGem.extraBadBySlot : {}
   );
   d.bySet = typeof savedGem.bySet === 'object' && savedGem.bySet ? JSON.parse(JSON.stringify(savedGem.bySet)) : {};
+  if (!d.qualityGate || typeof d.qualityGate !== 'object') {
+    d.qualityGate = JSON.parse(JSON.stringify(DEFAULT_GEM_META.qualityGate));
+  } else {
+    d.qualityGate = {
+      early: Object.assign({}, DEFAULT_GEM_META.qualityGate.early, savedGem.qualityGate.early || {}),
+      mid: Object.assign({}, DEFAULT_GEM_META.qualityGate.mid, savedGem.qualityGate.mid || {}),
+      late: Object.assign({}, DEFAULT_GEM_META.qualityGate.late, savedGem.qualityGate.late || {}),
+    };
+  }
   return d;
 }
 
@@ -982,19 +1102,37 @@ function getSettings() {
   const duoThresholds = computeDuoThresholds(statConstants, hrThresholds);
   const godConstants = godConstantsFromStatConstants(statConstants);
 
+  let gemMeta = mergeGemMeta(saved?.gemMeta);
+  let reapp = saved?.reapp && typeof saved.reapp === 'object'
+    ? JSON.parse(JSON.stringify(saved.reapp))
+    : JSON.parse(JSON.stringify(DEFAULT_REAPP));
+  if (presetVersion < 5) {
+    gemMeta.sets = DEFAULT_GEM_META.sets.slice();
+    gemMeta.legendOnlyInnate = DEFAULT_GEM_META.legendOnlyInnate;
+    gemMeta.qualityGate = JSON.parse(JSON.stringify(DEFAULT_GEM_META.qualityGate));
+    reapp.sets = DEFAULT_REAPP.sets.slice();
+  }
+  // Spreadsheet-aligned six archetypes (Fast CC / Classic DPS / Bruiser mains, minStats, slotReq).
+  if (presetVersion < 6) {
+    ['Classic DPS', 'Slow DPS', 'Bomber', 'Fast CC', 'Tank', 'Bruiser'].forEach((name) => {
+      if (DEFAULT_FORMULAS[name]) {
+        formulas[name] = JSON.parse(JSON.stringify(DEFAULT_FORMULAS[name]));
+      }
+    });
+  }
+
   return {
     thresholds:    saved?.thresholds    || JSON.parse(JSON.stringify(DEFAULT_THRESHOLDS)),
     statConstants,
     hrThresholds,
     duoThresholds,
     godConstants,
-    hrCoeff:       saved?.hrCoeff       ?? DEFAULT_HR_COEFF,
     roles,
     formulas,
     rolePriority,
-    presetVersion: 4,
-    reapp:         saved?.reapp         || JSON.parse(JSON.stringify(DEFAULT_REAPP)),
-    gemMeta:       mergeGemMeta(saved?.gemMeta),
+    presetVersion: 6,
+    reapp,
+    gemMeta,
   };
 }
 
@@ -1007,6 +1145,60 @@ function applyDerivedThresholdFields(settings) {
   settings.godConstants = godConstantsFromStatConstants(settings.statConstants);
   return settings;
 }
+
+/**
+ * Maintainer-only release notes (edit here when you ship a meaningful change).
+ * Shipped with the bundle — not writable from the UI and not stored in localStorage.
+ */
+const STATIC_CHANGELOG = [
+  {
+    date: '2026-05-14',
+    items: {
+      en: [
+        'DEFAULT_FORMULAS aligned with Mid-game spreadsheet for Fast CC, Classic DPS, and Bruiser (acceptedMains, Include substats, mustHave, slotRequirements cleared where mains cover SPD, minStats 2/2 for Mid slots). Preset migration v6 reapplies the six archetype formulas once for saves already on v5. Canonical export: default-formulas.json in the repo root.',
+      ],
+      ru: [
+        'DEFAULT_FORMULAS приведены к Mid-таблице для Fast CC, Classic DPS и Bruiser (acceptedMains, Include, mustHave, slotRequirements). Миграция пресета v6 один раз обновляет шесть архетипов для сохранений на v5. Экспорт: default-formulas.json в корне репозитория.',
+      ],
+    },
+  },
+  {
+    date: '2026-05-13',
+    items: {
+      en: [
+        'Role engine: Classic DPS uses only the advanced formula path (legacy checkClassicDPS removed). Legacy checkRole is skipped for any role that has a formula entry so formulas are the single source of truth for the six archetypes.',
+        'Formula min-stats: counts Include substats (other than must-have) that are present at or above the Mid/Late HR threshold for the rune’s stage × grade — fixes roles that were too permissive when minStats compared config list length.',
+        'Gem defaults: Only Legend, seven meta sets (incl. Intangible), configurable qualityGate eff floors; Reapp allowed-set list aligned to the same seven. Preset migration v5 applies these defaults once for existing saves.',
+        'SWEX set names: added Seal (24), Intangible (25), Immemorial (99) to match exporter mapping.',
+        'Diagnostics: rune objects include swexEfficiency when the JSON provides it; use window.SWRM.logEfficiencyDiagSample(runes) in the console to compare with calc eff. After reprocessing, window.SWRM.summarizeVerdictsAndRoles(runes) prints verdict and role counts.',
+      ],
+      ru: [
+        'Роли: Classic DPS только через advanced formula (legacy checkClassicDPS удалён). checkRole не вызывается для ролей, у которых есть запись в formulas — единый источник правды для шести архетипов.',
+        'Min-stats в формулах: считаются Include-сабы (кроме must-have), реально присутствующие не ниже порога HR для стадии×грейда — исправляет излишне широкий матч.',
+        'Gem по умолчанию: только Legend, семь мета-сетов (в т.ч. Intangible), настраиваемые пороги qualityGate; список сетов Reapp совпадает. Миграция пресета v5 один раз подтянет значения в старых сохранениях.',
+        'Имена сетов SWEX: добавлены Seal (24), Intangible (25), Immemorial (99).',
+        'Диагностика: поле swexEfficiency из JSON при наличии; logEfficiencyDiagSample(runes) в консоли; summarizeVerdictsAndRoles(runes) — сводка вердиктов и ролей после пересчёта.',
+      ],
+    },
+  },
+  {
+    date: '2026-05-12',
+    items: {
+      en: [
+        'Dashboard — Account progression: clearer copy for players; removed duplicate combined score next to the preset, the long formula footer, and internal jargon; clarified how the global filter relates to the suggestion.',
+        'Removed the unused partner coefficient (hrCoeff) from the UI and from saved settings.',
+        'Rune Rules → Engine → Constants: modifier columns use intuitive percents (e.g. 30 instead of 0.30), clearer headers, tooltips, and a longer explanation of what Base is and how the percent columns affect God, Duo, and stage lines.',
+        'Changelog tab now shows these fixed release notes only — no per-browser scratch entries that disappear when storage is cleared.',
+      ],
+      ru: [
+        'Дашборд — прогресс аккаунта: проще текст для игроков; убран дубль сводного балла у пресета, длинный блок с формулой и внутренняя терминология; яснее описан общий фильтр и совет по стадии.',
+        'Удалён неиспользуемый коэффициент партнёра (hrCoeff) из интерфейса и из сохраняемых настроек.',
+        'Правила рун → Движок → Constants: модификаторы вводятся как проценты (например 30 вместо 0,30), обновлены заголовки и подсказки, расширено объяснение Base и процентных колонок для God, Duo и стадий.',
+        'Вкладка Changelog показывает только такие зафиксированные записи из сборки — больше нет локальных заметок в браузере, которые пропадают при очистке хранилища.',
+      ],
+    },
+  },
+];
 
 window.SWRM = window.SWRM || {};
 window.SWRM.settings = getSettings();
@@ -1021,7 +1213,6 @@ window.SWRM.EFF_MAIN_MAX = EFF_MAIN_MAX;
 window.SWRM.DEFAULT_ROLES = DEFAULT_ROLES;
 window.SWRM.DEFAULT_THRESHOLDS = DEFAULT_THRESHOLDS;
 window.SWRM.DEFAULT_HR_THRESHOLDS = DEFAULT_HR_THRESHOLDS;
-window.SWRM.DEFAULT_HR_COEFF = DEFAULT_HR_COEFF;
 window.SWRM.DEFAULT_DUO_THRESHOLDS = DEFAULT_DUO_THRESHOLDS;
 window.SWRM.DEFAULT_STAT_CONSTANTS = DEFAULT_STAT_CONSTANTS;
 window.SWRM.EXPLICIT_DEFAULT_STAT_CONSTANTS = EXPLICIT_DEFAULT_STAT_CONSTANTS;
@@ -1038,3 +1229,4 @@ window.SWRM.mergeGemMeta = mergeGemMeta;
 window.SWRM.DEFAULT_FORMULAS = DEFAULT_FORMULAS;
 window.SWRM.saveSettings = saveSettings;
 window.SWRM.TRANSLATIONS = TRANSLATIONS;
+window.SWRM.STATIC_CHANGELOG = STATIC_CHANGELOG;

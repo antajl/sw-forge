@@ -60,7 +60,7 @@
             <div class="stage-advisor-intro">
               <p class="stage-advisor-title" id="lbl-stage-advisor-title">Account progression suggestion</p>
               <p class="stage-advisor-lead" id="lbl-stage-advisor-lead">
-                Early / Mid / Late sets rule strictness. Combined score uses Depth v2 (SPD depth, +15 depth, elite top-eff average) over your full exported runes — unaffected by preset or Min Lvl. Override manually anytime.
+                Early, Mid, and Late change how strict the rules are. The combined score estimates account depth from your full rune export (Rare and above): fast runes, upgraded runes, and quality on your best pieces. It ignores the preset below and the dashboard minimum level filter.
               </p>
             </div>
 
@@ -88,13 +88,12 @@
                     <option value="Mid" selected>Mid</option>
                     <option value="Late">Late</option>
                   </select>
-                  <p class="stage-preset-score-hint" id="stage-preset-score-hint" hidden></p>
                 </div>
               </div>
             </div>
 
             <div class="stage-advisor-metrics-head">
-              <span id="lbl-stage-metrics-explainer">Depth v2 uses your full Rare+ export (SWEX rank ≥3). Absolute counts and top-eff average — preset and Min Lvl do not affect this score. Weights:</span>
+              <span id="lbl-stage-metrics-explainer">These three numbers always use your full export — not the preset or Min level below. Card weights:</span>
             </div>
             <div class="stage-advisor-metrics">
               <article class="stage-metric-card">
@@ -122,14 +121,14 @@
                 <p class="stage-metric-desc" id="lbl-card-meta-desc"></p>
               </article>
             </div>
-            <p class="stage-advisor-formula" id="lbl-stage-formula"></p>
+            <p class="stage-advisor-formula" id="lbl-stage-formula" hidden></p>
           </div>
         </div>
 
         <div class="dashboard-scope-bar">
           <div class="dashboard-scope-bar-text">
             <span class="dashboard-scope-title" id="dashboard-scope-title">Global filter</span>
-            <span class="dashboard-scope-hint" id="dashboard-scope-hint">Applies to the summary cards, charts below, and Rune Table. Does not change the progression suggestion (Depth v2 uses the full export).</span>
+            <span class="dashboard-scope-hint" id="dashboard-scope-hint">Applies to the summary cards, charts below, and Rune Table. The suggested stage above is calculated from the full export separately.</span>
           </div>
           <div class="dashboard-scope-control">
             <label class="level-filter dashboard-min-level" for="global-min-level">
@@ -275,114 +274,198 @@
               <tbody id="rune-tbody"></tbody>
             </table>
           </div>
+          <div id="rune-table-more-zone" class="rune-table-more-zone hidden" aria-live="polite">
+            <div id="rune-table-sentinel" class="rune-table-sentinel" aria-hidden="true"></div>
+            <div id="rune-table-show-all-bar" class="rune-table-show-all-bar hidden">
+              <p class="rune-table-more-hint" id="lbl-rune-table-more-hint"></p>
+              <button type="button" id="btn-rune-table-show-all" class="btn-primary"></button>
+            </div>
+          </div>
         </div>
         <aside class="table-summary" id="rune-summary"></aside>
       </div>
     </section>
 
-    <!-- SETTINGS TAB -->
+    <!-- SETTINGS TAB (Rune Rules) -->
     <section id="tab-settings" class="tab-content hidden">
-      <div class="settings-two-col">
-        <div class="settings-col-left">
-          <h3 class="constants-sheet-heading">Constants (8 stats)</h3>
-          <p class="settings-desc constants-sheet-desc">Sheets-style Constants row per stat. HR (C:J) and Duo (K:R) are computed from these values.</p>
-          <div id="stat-constants-wrap"></div>
-          <div class="settings-row constants-reset-row">
-            <button type="button" class="btn-ghost" id="btn-reset-stat-constants">Reset Constants to defaults</button>
-            <span class="hint" id="lbl-reset-constants-hint"></span>
-          </div>
+      <div class="rules-tab-shell">
+        <header class="rules-page-header">
+          <h2 class="rules-page-title" id="lbl-rules-page-title">Rune Rules</h2>
+          <p class="rules-page-lead" id="lbl-rules-page-lead"></p>
+        </header>
 
-          <p class="settings-desc hr-preview-desc" id="lbl-hr-preview"></p>
-          <div id="hr-preview-wrap"></div>
+        <nav class="rules-subtabs" id="rules-subtabs" role="tablist" aria-label="Rune Rules sections">
+          <button type="button" role="tab" class="rules-subtab is-active" id="rules-subtab-engine"
+            data-rules-subtab="engine" aria-selected="true" aria-controls="rules-panel-engine" tabindex="0">
+            <span class="rules-subtab__label" id="lbl-rules-subtab-engine">Engine</span>
+            <span class="rules-subtab__hint" id="lbl-rules-subtab-engine-hint"></span>
+          </button>
+          <button type="button" role="tab" class="rules-subtab" id="rules-subtab-verdict"
+            data-rules-subtab="verdict" aria-selected="false" aria-controls="rules-panel-verdict" tabindex="-1">
+            <span class="rules-subtab__label" id="lbl-rules-subtab-verdict">Verdict rules</span>
+            <span class="rules-subtab__hint" id="lbl-rules-subtab-verdict-hint"></span>
+          </button>
+          <button type="button" role="tab" class="rules-subtab" id="rules-subtab-roles"
+            data-rules-subtab="roles" aria-selected="false" aria-controls="rules-panel-roles" tabindex="-1">
+            <span class="rules-subtab__label" id="lbl-rules-subtab-roles">Roles</span>
+            <span class="rules-subtab__hint" id="lbl-rules-subtab-roles-hint"></span>
+          </button>
+        </nav>
 
-          <div class="settings-row">
-            <label>Partner coefficient</label>
-            <input type="number" id="hr-coeff" step="0.05" min="0.5" max="1" value="0.7" />
-            <span class="hint">e.g. 0.70 = 70% of threshold</span>
-          </div>
+        <div id="rules-panel-engine" role="tabpanel" aria-labelledby="rules-subtab-engine"
+          class="rules-subpanel is-active" data-rules-subtab="engine">
+          <div class="rules-col-stack rules-col-stack--full">
 
-          <h3 class="duo-thresholds-heading">Duo Roll (computed)</h3>
-          <p class="settings-desc duo-preview-desc" id="lbl-duo-preview"></p>
-          <div id="duo-preview-wrap"></div>
+            <section class="rules-card" aria-labelledby="rules-h-constants">
+              <div class="rules-card__head">
+                <span class="rules-card__step" aria-hidden="true">1</span>
+                <div class="rules-card__head-text">
+                  <h3 id="rules-h-constants" class="constants-sheet-heading rules-card__title">Constants (8 stats)</h3>
+                  <p class="constants-sheet-desc rules-card__desc"></p>
+                </div>
+              </div>
+              <div class="rules-card__body">
+                <div id="stat-constants-wrap"></div>
+                <div class="settings-row constants-reset-row rules-card__row-flush">
+                  <button type="button" class="btn-ghost" id="btn-reset-stat-constants">Reset Constants to defaults</button>
+                  <span class="hint" id="lbl-reset-constants-hint"></span>
+                </div>
+              </div>
+            </section>
 
-          <h3 class="gem-meta-heading">Gem (Innate) — Meta sets</h3>
-          <p class="settings-desc gem-meta-desc">On listed sets, verdict Gem appears when innate is undesirable for this slot. Per-set overrides in JSON replace defaults for those slots.</p>
-          <div class="settings-row">
-            <label><input type="checkbox" id="gem-meta-enabled" checked /> <span id="gem-meta-toggle-label">Enable innate Gem hints</span></label>
-          </div>
-          <div class="settings-row">
-            <label><input type="checkbox" id="gem-meta-legend-only" /> <span id="gem-meta-legend-label">Only Legend runes</span></label>
-          </div>
-          <div class="settings-row">
-            <label>Meta sets (comma)</label>
-            <input type="text" id="gem-meta-sets" placeholder="Violent, Will, Swift" />
-          </div>
-          <div class="settings-row">
-            <label><input type="checkbox" id="gem-meta-universal-flats" checked /> <span id="gem-universal-flats-label">Treat flat innate (HP ATK DEF) as bad</span></label>
-          </div>
-          <div class="settings-row">
-            <label>Extra bad innate</label>
-            <textarea id="gem-meta-extra-slots" rows="4" spellcheck="false" placeholder="3:ACC,RES&#10;6:CRate"></textarea>
-            <span class="hint gem-extra-hint">One line per slot: Slot:STAT,STAT (e.g. 2:RES,ACC)</span>
-          </div>
-          <div class="settings-row">
-            <label>Per-set overrides (JSON)</label>
-            <textarea id="gem-meta-by-set-json" rows="3" spellcheck="false" placeholder="{ &quot;Violent&quot;: { &quot;2&quot;: [&quot;RES&quot;], &quot;6&quot;: [&quot;ACC&quot;] } }"></textarea>
-          </div>
-          <div class="settings-row">
-            <label><input type="checkbox" id="gem-meta-legacy-subs" /> <span id="gem-legacy-subs-label">Also use legacy “flat subs → grindable %” Gem</span></label>
-          </div>
-
-          <h3 class="reapp-heading">Reapp Candidate Rules</h3>
-          <p class="settings-desc reapp-rules-desc">If a rune has low efficiency and matches these filters, verdict can be Reapp.</p>
-          <div class="settings-row">
-            <label>Allowed sets (comma)</label>
-            <input type="text" id="reapp-sets" placeholder="Violent, Will, Swift" />
-          </div>
-          <div class="settings-row">
-            <label>Innate stats (comma)</label>
-            <input type="text" id="reapp-innate" placeholder="SPD, HP%, ACC" />
-          </div>
-          <div class="settings-row">
-            <label>Slot 2 mains (comma)</label>
-            <input type="text" id="reapp-main2" placeholder="SPD, HP%, ATK%, DEF%" />
-          </div>
-          <div class="settings-row">
-            <label>Slot 4 mains (comma)</label>
-            <input type="text" id="reapp-main4" placeholder="HP%, ATK%, DEF%, CRate, CDmg" />
-          </div>
-          <div class="settings-row">
-            <label>Slot 6 mains (comma)</label>
-            <input type="text" id="reapp-main6" placeholder="HP%, ATK%, DEF%, ACC, RES" />
-          </div>
-          <div class="settings-row">
-            <label>Max efficiency for Reapp</label>
-            <input type="number" id="reapp-max-eff" min="0" max="100" step="0.5" />
+            <section class="rules-card rules-card--engine" aria-labelledby="lbl-rules-section-previews-title">
+              <div class="rules-card__head">
+                <span class="rules-card__step" aria-hidden="true">2</span>
+                <div class="rules-card__head-text">
+                  <h3 id="lbl-rules-section-previews-title" class="rules-card__title">Threshold previews</h3>
+                  <p id="lbl-rules-section-previews-desc" class="rules-card__desc"></p>
+                </div>
+              </div>
+              <div class="rules-card__body rules-card__body--previews">
+                <div class="rules-preview-cluster">
+                  <p class="settings-desc hr-preview-desc" id="lbl-hr-preview"></p>
+                  <div class="rules-table-scroll"><div id="hr-preview-wrap"></div></div>
+                </div>
+                <div class="rules-preview-cluster">
+                  <p class="settings-desc duo-preview-desc" id="lbl-duo-preview"></p>
+                  <div class="rules-table-scroll"><div id="duo-preview-wrap"></div></div>
+                </div>
+              </div>
+            </section>
           </div>
         </div>
 
-        <div class="settings-col-right">
-          <h3 class="role-filters-heading">Role Filters</h3>
-          <p class="settings-desc role-filters-desc">Configure role rules. You can add a custom role or remove existing roles (minimum one role must remain).</p>
-          <div class="settings-row">
-            <label>Select Role</label>
-            <input type="text" id="new-role-name" placeholder="e.g. Control SPD" style="margin-right:10px; padding:5px 10px;" />
-            <button id="btn-add-role" class="btn-ghost">+ Add role</button>
-          </div>
-          <div class="role-layout">
-            <div class="role-nav">
-              <div class="role-nav-header">Roles</div>
-              <div id="role-nav-list"></div>
-            </div>
-            <div class="role-content">
-              <div id="roles-settings-wrap"></div>
-            </div>
+        <div id="rules-panel-verdict" role="tabpanel" aria-labelledby="rules-subtab-verdict"
+          class="rules-subpanel" data-rules-subtab="verdict">
+          <div class="rules-col-stack rules-col-stack--full">
+
+            <section class="rules-card" aria-labelledby="rules-h-gem">
+              <div class="rules-card__head">
+                <span class="rules-card__step" aria-hidden="true">1</span>
+                <div class="rules-card__head-text">
+                  <h3 id="rules-h-gem" class="gem-meta-heading rules-card__title">Gem (Innate) — Meta sets</h3>
+                  <p class="gem-meta-desc rules-card__desc"></p>
+                </div>
+              </div>
+              <div class="rules-card__body rules-card__body--fields">
+                <div class="settings-row">
+                  <label><input type="checkbox" id="gem-meta-enabled" checked /> <span id="gem-meta-toggle-label">Enable innate Gem hints</span></label>
+                </div>
+                <div class="settings-row">
+                  <label><input type="checkbox" id="gem-meta-legend-only" /> <span id="gem-meta-legend-label">Only Legend runes</span></label>
+                </div>
+                <div class="settings-row">
+                  <label>Meta sets (comma)</label>
+                  <input type="text" id="gem-meta-sets" placeholder="Violent, Will, Swift" />
+                </div>
+                <div class="settings-row">
+                  <label><input type="checkbox" id="gem-meta-universal-flats" checked /> <span id="gem-universal-flats-label">Treat flat innate (HP ATK DEF) as bad</span></label>
+                </div>
+                <div class="settings-row">
+                  <label>Extra bad innate</label>
+                  <textarea id="gem-meta-extra-slots" rows="4" spellcheck="false" placeholder="3:ACC,RES&#10;6:CRate"></textarea>
+                  <span class="hint gem-extra-hint">One line per slot: Slot:STAT,STAT (e.g. 2:RES,ACC)</span>
+                </div>
+                <div class="settings-row">
+                  <label>Per-set overrides (JSON)</label>
+                  <textarea id="gem-meta-by-set-json" rows="3" spellcheck="false" placeholder="{ &quot;Violent&quot;: { &quot;2&quot;: [&quot;RES&quot;], &quot;6&quot;: [&quot;ACC&quot;] } }"></textarea>
+                </div>
+                <div class="settings-row">
+                  <label><input type="checkbox" id="gem-meta-legacy-subs" /> <span id="gem-legacy-subs-label">Also use legacy “flat subs → grindable %” Gem</span></label>
+                </div>
+              </div>
+            </section>
+
+            <section class="rules-card" aria-labelledby="rules-h-reapp">
+              <div class="rules-card__head">
+                <span class="rules-card__step" aria-hidden="true">2</span>
+                <div class="rules-card__head-text">
+                  <h3 id="rules-h-reapp" class="reapp-heading rules-card__title">Reapp Candidate Rules</h3>
+                  <p class="reapp-rules-desc rules-card__desc"></p>
+                </div>
+              </div>
+              <div class="rules-card__body rules-card__body--fields">
+                <div class="settings-row">
+                  <label>Allowed sets (comma)</label>
+                  <input type="text" id="reapp-sets" placeholder="Violent, Will, Swift" />
+                </div>
+                <div class="settings-row">
+                  <label>Innate stats (comma)</label>
+                  <input type="text" id="reapp-innate" placeholder="SPD, HP%, ACC" />
+                </div>
+                <div class="settings-row">
+                  <label>Slot 2 mains (comma)</label>
+                  <input type="text" id="reapp-main2" placeholder="SPD, HP%, ATK%, DEF%" />
+                </div>
+                <div class="settings-row">
+                  <label>Slot 4 mains (comma)</label>
+                  <input type="text" id="reapp-main4" placeholder="HP%, ATK%, DEF%, CRate, CDmg" />
+                </div>
+                <div class="settings-row">
+                  <label>Slot 6 mains (comma)</label>
+                  <input type="text" id="reapp-main6" placeholder="HP%, ATK%, DEF%, ACC, RES" />
+                </div>
+                <div class="settings-row">
+                  <label>Max efficiency for Reapp</label>
+                  <input type="number" id="reapp-max-eff" min="0" max="100" step="0.5" />
+                </div>
+              </div>
+            </section>
           </div>
         </div>
-      </div>
-      <div class="settings-actions">
-        <button id="btn-save-settings" class="btn-primary">Save & Recalculate</button>
-        <button id="btn-reset-settings" class="btn-ghost">Reset to Defaults</button>
+
+        <div id="rules-panel-roles" role="tabpanel" aria-labelledby="rules-subtab-roles"
+          class="rules-subpanel rules-subpanel--roles" data-rules-subtab="roles">
+          <section class="rules-card" aria-labelledby="rules-h-roles">
+            <div class="rules-card__head">
+              <div class="rules-card__head-text rules-card__head-text--solo">
+                <h3 id="rules-h-roles" class="role-filters-heading rules-card__title">Roles &amp; formulas</h3>
+                <p class="role-filters-desc rules-card__desc"></p>
+              </div>
+            </div>
+            <div class="rules-card__body rules-card__body--roles">
+              <div class="settings-row rules-card__add-role">
+                <label for="new-role-name">New role</label>
+                <input type="text" id="new-role-name" placeholder="e.g. Control SPD" />
+                <button type="button" id="btn-add-role" class="btn-ghost">+ Add role</button>
+              </div>
+              <div class="role-layout">
+                <div class="role-nav">
+                  <div class="role-nav-header" id="lbl-role-nav-header">Roles</div>
+                  <div id="role-nav-list"></div>
+                </div>
+                <div class="role-content">
+                  <div id="roles-settings-wrap"></div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <footer class="rules-tab-footer settings-actions">
+          <button type="button" id="btn-save-settings" class="btn-primary">Save & Recalculate</button>
+          <button type="button" id="btn-reset-settings" class="btn-ghost">Reset to Defaults</button>
+        </footer>
       </div>
     </section>
 
@@ -412,7 +495,7 @@
             <ul>
               <li><strong>Speed Depth (35%)</strong> — Runes whose <strong>substat SPD total</strong> (roll + grind) is at least <strong>18</strong>.</li>
               <li><strong>Power Depth (35%)</strong> — <strong>6★</strong> runes at exactly <strong>+15</strong>.</li>
-              <li><strong>Elite Quality (30%)</strong> — Mean <strong>uncapped</strong> efficiency (SWOP-style; can exceed 100%) on the top <strong>50</strong> runes, or on <strong>all</strong> runes if you have fewer than 50.</li>
+              <li><strong>Elite Quality (30%)</strong> — Mean <strong>uncapped</strong> efficiency (can exceed 100%) on the top <strong>50</strong> runes, or on <strong>all</strong> runes if you have fewer than 50.</li>
             </ul>
 
             <h4 class="guide-subhead">Combined score formula</h4>
@@ -430,7 +513,6 @@
             </ul>
 
             <p><strong>Apply suggestion</strong> sets <strong>Your preset</strong> to the suggested stage and recalculates the app; you can override manually.</p>
-            <p><strong>Tuning:</strong> Edit the <code>CFG</code> object at the top of <code>analyzeGameStage()</code> in <code>js/ui.js</code> (caps, weights, elite baseline, stage cutoffs). Update this Guide text if you ship different defaults.</p>
             <p><strong>Efficiency note:</strong> SWEX has no eff field — the app computes it. The Rune Table uses <strong>capped</strong> 0–100%; Depth&nbsp;v2 uses <strong>uncapped</strong> values for the elite term.</p>
           </section>
 
@@ -443,14 +525,13 @@
 
           <section class="guide-section" aria-labelledby="guide-h-rules">
             <h3 id="guide-h-rules">Rune Rules tab</h3>
-            <p><strong>Thresholds:</strong> Base, High Roll, Duo Roll, and partner coefficient in one place.</p>
-            <p><strong>Role filters:</strong> Add roles with <strong>+ Add role</strong>, tune include/exclude rules; at least one role always remains.</p>
-            <p><strong>Reapp rules:</strong> Allowed sets, innate stats, mains by slot, max efficiency for Reapp verdict.</p>
+            <p><strong>Sections:</strong> <strong>Engine</strong> — Constants (8 stats) and read-only HR/Duo threshold previews. <strong>Verdict rules</strong> — Gem (innate meta) and Reapp filters. <strong>Roles</strong> — formulas and role filters (full width). The last-opened section is remembered for this browser session.</p>
+            <p><strong>Save:</strong> Use <strong>Save &amp; Recalculate</strong> at the bottom so Dashboard and Rune Table pick up changes.</p>
           </section>
 
           <section class="guide-section" aria-labelledby="guide-h-other">
             <h3 id="guide-h-other">Other</h3>
-            <p><strong>Changelog:</strong> In-app notes on the <strong>Changelog</strong> tab.</p>
+            <p><strong>Changelog:</strong> Release notes bundled with the app (not editable in the UI). Updates when you load a newer build.</p>
           </section>
         </div>
       </div>
@@ -458,12 +539,9 @@
 
     <section id="tab-changelog" class="tab-content hidden">
       <div class="panel">
-        <div class="panel-title">Changelog</div>
-        <div class="settings-row">
-          <input type="text" id="changelog-input" placeholder="Write what changed..." />
-          <button id="btn-add-changelog" class="btn-primary">Add</button>
-        </div>
-        <div id="changelog-list" class="guide-list"></div>
+        <div class="panel-title" id="lbl-changelog-title">Changelog</div>
+        <p class="settings-desc changelog-lead" id="lbl-changelog-lead"></p>
+        <div id="changelog-list" class="changelog-releases"></div>
       </div>
     </section>
 

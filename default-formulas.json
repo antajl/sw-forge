@@ -1,0 +1,194 @@
+{
+  "Classic DPS": {
+    "enabled": true,
+    "acceptedMains": {
+      "2": ["SPD", "ATK%", "None"],
+      "4": ["CRate", "CDmg", "None"],
+      "6": ["ATK%", "HP%", "DEF%"]
+    },
+    "substats": {
+      "SPD": { "Early": "Include", "Mid": "Include", "Late": "Include" },
+      "HP%": { "Early": "None", "Mid": "None", "Late": "None" },
+      "ATK%": { "Early": "Include", "Mid": "Include", "Late": "Include" },
+      "DEF%": { "Early": "None", "Mid": "None", "Late": "None" },
+      "CRate": { "Early": "Include", "Mid": "Include", "Late": "Include" },
+      "CDmg": { "Early": "Include", "Mid": "Include", "Late": "Include" },
+      "ACC": { "Early": "None", "Mid": "None", "Late": "None" },
+      "RES": { "Early": "None", "Mid": "None", "Late": "None" }
+    },
+    "mustHave": { "Early": "None", "Mid": "None", "Late": "None" },
+    "slotRequirements": {
+      "2": { "Early": "None", "Mid": "None", "Late": "None" },
+      "4": { "Early": "None", "Mid": "None", "Late": "None" },
+      "6": { "Early": "None", "Mid": "None", "Late": "None" }
+    },
+    "minStats": {
+      "1/3/5": { "Early": 2, "Mid": 2, "Late": 2 },
+      "Slot 2": { "Early": 2, "Mid": 2, "Late": 2 },
+      "Slot 4": { "Early": 2, "Mid": 2, "Late": 2 },
+      "Slot 6": { "Early": 2, "Mid": 2, "Late": 2 }
+    },
+    "requireHR": {
+      "High Roll for Hero": { "Early": false, "Mid": true, "Late": true },
+      "High Roll for Legend": { "Early": false, "Mid": false, "Late": true }
+    }
+  },
+  "Slow DPS": {
+    "enabled": true,
+    "acceptedMains": { "2": ["ATK%", "None", "None"], "4": ["CRate", "CDmg", "None"], "6": ["ATK%", "None", "None"] },
+    "substats": {
+      "SPD": { "Early": "None", "Mid": "None", "Late": "None" },
+      "HP%": { "Early": "None", "Mid": "None", "Late": "None" },
+      "ATK%": { "Early": "Include", "Mid": "Include", "Late": "Include" },
+      "DEF%": { "Early": "None", "Mid": "None", "Late": "None" },
+      "CRate": { "Early": "Include", "Mid": "Include", "Late": "Include" },
+      "CDmg": { "Early": "Include", "Mid": "Include", "Late": "Include" },
+      "ACC": { "Early": "None", "Mid": "None", "Late": "None" },
+      "RES": { "Early": "None", "Mid": "None", "Late": "None" }
+    },
+    "mustHave": { "Early": "CRate", "Mid": "CRate", "Late": "CRate" },
+    "slotRequirements": {
+      "2": { "Early": "None", "Mid": "None", "Late": "None" },
+      "4": { "Early": "None", "Mid": "None", "Late": "None" },
+      "6": { "Early": "CRate", "Mid": "CRate", "Late": "CRate" }
+    },
+    "minStats": {
+      "1/3/5": { "Early": 1, "Mid": 2, "Late": 3 },
+      "Slot 2": { "Early": 1, "Mid": 1, "Late": 2 },
+      "Slot 4": { "Early": 1, "Mid": 1, "Late": 2 },
+      "Slot 6": { "Early": 1, "Mid": 1, "Late": 2 }
+    },
+    "requireHR": {
+      "High Roll for Hero": { "Early": false, "Mid": true, "Late": true },
+      "High Roll for Legend": { "Early": false, "Mid": false, "Late": true }
+    }
+  },
+  "Bomber": {
+    "enabled": true,
+    "acceptedMains": { "2": ["SPD", "ATK%", "None"], "4": ["ATK%", "None", "None"], "6": ["ATK%", "ACC", "None"] },
+    "substats": {
+      "SPD": { "Early": "Include", "Mid": "Include", "Late": "Include" },
+      "HP%": { "Early": "None", "Mid": "None", "Late": "None" },
+      "ATK%": { "Early": "Include", "Mid": "Include", "Late": "Include" },
+      "DEF%": { "Early": "None", "Mid": "None", "Late": "None" },
+      "CRate": { "Early": "None", "Mid": "None", "Late": "None" },
+      "CDmg": { "Early": "None", "Mid": "None", "Late": "None" },
+      "ACC": { "Early": "Include", "Mid": "Include", "Late": "Include" },
+      "RES": { "Early": "None", "Mid": "None", "Late": "None" }
+    },
+    "mustHave": { "Early": "ATK%", "Mid": "ATK%", "Late": "ATK%" },
+    "slotRequirements": {
+      "2": { "Early": "None", "Mid": "None", "Late": "None" },
+      "4": { "Early": "None", "Mid": "None", "Late": "None" },
+      "6": { "Early": "None", "Mid": "None", "Late": "None" }
+    },
+    "minStats": {
+      "1/3/5": { "Early": 1, "Mid": 2, "Late": 2 },
+      "Slot 2": { "Early": 1, "Mid": 1, "Late": 1 },
+      "Slot 4": { "Early": 1, "Mid": 1, "Late": 1 },
+      "Slot 6": { "Early": 1, "Mid": 1, "Late": 1 }
+    },
+    "requireHR": {
+      "High Roll for Hero": { "Early": false, "Mid": true, "Late": true },
+      "High Roll for Legend": { "Early": false, "Mid": false, "Late": true }
+    }
+  },
+  "Fast CC": {
+    "enabled": true,
+    "acceptedMains": {
+      "2": ["SPD", "None", "None"],
+      "4": ["CRate", "CDmg", "ATK%", "HP%", "DEF%"],
+      "6": ["ACC", "ATK%", "HP%", "DEF%"]
+    },
+    "substats": {
+      "SPD": { "Early": "Include", "Mid": "Include", "Late": "Include" },
+      "HP%": { "Early": "Include", "Mid": "Include", "Late": "Include" },
+      "ATK%": { "Early": "None", "Mid": "None", "Late": "None" },
+      "DEF%": { "Early": "Include", "Mid": "Include", "Late": "Include" },
+      "CRate": { "Early": "None", "Mid": "None", "Late": "None" },
+      "CDmg": { "Early": "None", "Mid": "None", "Late": "None" },
+      "ACC": { "Early": "Include", "Mid": "Include", "Late": "Include" },
+      "RES": { "Early": "None", "Mid": "None", "Late": "None" }
+    },
+    "mustHave": { "Early": "SPD", "Mid": "SPD", "Late": "SPD" },
+    "slotRequirements": {
+      "2": { "Early": "None", "Mid": "None", "Late": "None" },
+      "4": { "Early": "None", "Mid": "None", "Late": "None" },
+      "6": { "Early": "None", "Mid": "None", "Late": "None" }
+    },
+    "minStats": {
+      "1/3/5": { "Early": 2, "Mid": 2, "Late": 2 },
+      "Slot 2": { "Early": 2, "Mid": 2, "Late": 2 },
+      "Slot 4": { "Early": 2, "Mid": 2, "Late": 2 },
+      "Slot 6": { "Early": 2, "Mid": 2, "Late": 2 }
+    },
+    "requireHR": {
+      "High Roll for Hero": { "Early": false, "Mid": true, "Late": true },
+      "High Roll for Legend": { "Early": false, "Mid": false, "Late": true }
+    }
+  },
+  "Tank": {
+    "enabled": true,
+    "acceptedMains": { "2": ["SPD", "HP%", "DEF%"], "4": ["HP%", "DEF%", "None"], "6": ["HP%", "DEF%", "RES"] },
+    "substats": {
+      "SPD": { "Early": "Include", "Mid": "Include", "Late": "Include" },
+      "HP%": { "Early": "Include", "Mid": "Include", "Late": "Include" },
+      "ATK%": { "Early": "None", "Mid": "None", "Late": "None" },
+      "DEF%": { "Early": "Include", "Mid": "Include", "Late": "Include" },
+      "CRate": { "Early": "None", "Mid": "None", "Late": "None" },
+      "CDmg": { "Early": "None", "Mid": "None", "Late": "None" },
+      "ACC": { "Early": "None", "Mid": "None", "Late": "None" },
+      "RES": { "Early": "Include", "Mid": "Include", "Late": "Include" }
+    },
+    "mustHave": { "Early": "RES", "Mid": "RES", "Late": "RES" },
+    "slotRequirements": {
+      "2": { "Early": "None", "Mid": "None", "Late": "None" },
+      "4": { "Early": "HP%", "Mid": "HP%", "Late": "HP%" },
+      "6": { "Early": "RES", "Mid": "RES", "Late": "RES" }
+    },
+    "minStats": {
+      "1/3/5": { "Early": 2, "Mid": 2, "Late": 2 },
+      "Slot 2": { "Early": 1, "Mid": 1, "Late": 1 },
+      "Slot 4": { "Early": 1, "Mid": 1, "Late": 1 },
+      "Slot 6": { "Early": 1, "Mid": 1, "Late": 1 }
+    },
+    "requireHR": {
+      "High Roll for Hero": { "Early": false, "Mid": true, "Late": true },
+      "High Roll for Legend": { "Early": false, "Mid": false, "Late": true }
+    }
+  },
+  "Bruiser": {
+    "enabled": true,
+    "acceptedMains": {
+      "2": ["SPD", "HP%", "None"],
+      "4": ["CRate", "CDmg", "HP%", "DEF%", "ATK%"],
+      "6": ["HP%", "DEF%", "ATK%", "None"]
+    },
+    "substats": {
+      "SPD": { "Early": "Include", "Mid": "Include", "Late": "Include" },
+      "HP%": { "Early": "Include", "Mid": "Include", "Late": "Include" },
+      "ATK%": { "Early": "Include", "Mid": "Include", "Late": "Include" },
+      "DEF%": { "Early": "Include", "Mid": "Include", "Late": "Include" },
+      "CRate": { "Early": "Include", "Mid": "Include", "Late": "Include" },
+      "CDmg": { "Early": "Include", "Mid": "Include", "Late": "Include" },
+      "ACC": { "Early": "None", "Mid": "None", "Late": "None" },
+      "RES": { "Early": "None", "Mid": "None", "Late": "None" }
+    },
+    "mustHave": { "Early": "None", "Mid": "None", "Late": "None" },
+    "slotRequirements": {
+      "2": { "Early": "None", "Mid": "None", "Late": "None" },
+      "4": { "Early": "None", "Mid": "None", "Late": "None" },
+      "6": { "Early": "None", "Mid": "None", "Late": "None" }
+    },
+    "minStats": {
+      "1/3/5": { "Early": 2, "Mid": 2, "Late": 3 },
+      "Slot 2": { "Early": 2, "Mid": 2, "Late": 3 },
+      "Slot 4": { "Early": 2, "Mid": 2, "Late": 3 },
+      "Slot 6": { "Early": 2, "Mid": 2, "Late": 3 }
+    },
+    "requireHR": {
+      "High Roll for Hero": { "Early": false, "Mid": true, "Late": true },
+      "High Roll for Legend": { "Early": false, "Mid": true, "Late": true }
+    }
+  }
+}

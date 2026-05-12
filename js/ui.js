@@ -7,7 +7,6 @@
 
   const { parseSWEX, extractSwexSummary, countAllSwexRunes, processAll,
           STAT_NAMES, SET_NAMES, GRADE_SHORT, saveSettings,
-          DEFAULT_HR_COEFF,
           DEFAULT_STAT_CONSTANTS, DEFAULT_THRESHOLDS, DEFAULT_FORMULAS,
           DEFAULT_ROLES, DEFAULT_REAPP, DEFAULT_GEM_META, TRANSLATIONS } = window.SWRM;
 
@@ -16,6 +15,10 @@
   let stage    = 'Mid';
   let sortKey  = 'eff';
   let sortDir  = 'desc';
+  /** First paint of Rune Table: this many rows; user can load the rest explicitly. */
+  const RUNE_TABLE_PAGE = 500;
+  let runeTableShowAll = false;
+  let runeTableMoreObserver = null;
   let globalMinLevel = 0;
   let currentLang = localStorage.getItem(APP_LANG_KEY) || localStorage.getItem('swrm-lang') || 'en';
   let currentTheme = localStorage.getItem('swrm-theme') || 'light';
@@ -75,6 +78,12 @@
     setText('lbl-stage-your-preset', t.stageYourPresetLabel || '');
     setText('lbl-stage-score-label', t.stageScoreLabel || '');
     setText('lbl-stage-metrics-explainer', t.stageMetricsExplainer || '');
+    const formulaEl = document.getElementById('lbl-stage-formula');
+    if (formulaEl) {
+      const ft = (t.stageFormulaExpl || '').trim();
+      formulaEl.textContent = ft;
+      formulaEl.hidden = !ft;
+    }
     setText('lbl-card-hr-name', t.stageCardHrName || '');
     setText('lbl-card-hr-desc', t.stageCardHrDesc || '');
     setText('lbl-card-keep-name', t.stageCardKeepName || '');
@@ -84,9 +93,84 @@
     setText('lbl-card-hr-weight', t.stageCardHrWeight || '');
     setText('lbl-card-keep-weight', t.stageCardKeepWeight || '');
     setText('lbl-card-meta-weight', t.stageCardMetaWeight || '');
-    setText('lbl-stage-formula', t.stageFormulaExpl || '');
     const btnAuto = document.getElementById('btn-auto-stage');
     if (btnAuto) btnAuto.textContent = t.stageApplySuggestion || 'Apply suggestion';
+  }
+
+  const RULES_SUBTAB_KEY = 'swrm_rules_subtab_v1';
+  let rulesSubtabsBound = false;
+
+  function normalizeRulesSubtabId(id) {
+    if (id === 'verdict' || id === 'roles' || id === 'engine') return id;
+    return 'engine';
+  }
+
+  function setRulesSubtab(id) {
+    const v = normalizeRulesSubtabId(id);
+    try { sessionStorage.setItem(RULES_SUBTAB_KEY, v); } catch (e) { /* ignore */ }
+    document.querySelectorAll('#tab-settings .rules-subtab').forEach((btn) => {
+      const on = btn.dataset.rulesSubtab === v;
+      btn.classList.toggle('is-active', on);
+      btn.setAttribute('aria-selected', on ? 'true' : 'false');
+      btn.tabIndex = on ? 0 : -1;
+    });
+    document.querySelectorAll('#tab-settings .rules-subpanel').forEach((panel) => {
+      panel.classList.toggle('is-active', panel.dataset.rulesSubtab === v);
+    });
+  }
+
+  function initRulesSubtabs() {
+    const nav = document.getElementById('rules-subtabs');
+    if (!nav || rulesSubtabsBound) return;
+    rulesSubtabsBound = true;
+    nav.querySelectorAll('.rules-subtab').forEach((btn) => {
+      btn.addEventListener('click', () => setRulesSubtab(btn.dataset.rulesSubtab));
+    });
+    let saved = 'engine';
+    try { saved = sessionStorage.getItem(RULES_SUBTAB_KEY) || 'engine'; } catch (e) { /* ignore */ }
+    setRulesSubtab(saved);
+  }
+
+  /** Main nav tab ids — kept in URL as `#settings` etc. so refresh restores the same view. */
+  const MAIN_TAB_IDS = ['dashboard', 'runetable', 'settings', 'guide', 'changelog', 'app-settings'];
+
+  function mainTabIdFromHash() {
+    let h = (window.location.hash || '').replace(/^#/, '').trim();
+    if (!h) return null;
+    if (h.startsWith('tab-')) h = h.slice(4);
+    return MAIN_TAB_IDS.includes(h) ? h : null;
+  }
+
+  /**
+   * @param {string} tabId
+   * @param {{ writeHash?: boolean }} [options] pass writeHash: true when user (or app) chose a tab and URL should update
+   */
+  function showMainTab(tabId, options) {
+    const writeHash = options && options.writeHash === true;
+    const id = MAIN_TAB_IDS.includes(tabId) ? tabId : 'dashboard';
+    document.querySelectorAll('.tab').forEach((t) => {
+      t.classList.toggle('active', t.dataset.tab === id);
+    });
+    document.querySelectorAll('.tab-content').forEach((el) => {
+      el.classList.toggle('hidden', el.id !== `tab-${id}`);
+    });
+    if (id === 'settings') {
+      const rulesRoot = document.getElementById('tab-settings');
+      if (rulesRoot) rulesRoot.scrollTop = 0;
+    }
+    if (id === 'app-settings') {
+      renderDbSlots();
+    }
+    if (writeHash) {
+      try {
+        const base = window.location.pathname + window.location.search;
+        if (id === 'dashboard') {
+          history.replaceState(null, '', base);
+        } else {
+          history.replaceState(null, '', `${base}#${id}`);
+        }
+      } catch (e) { /* ignore */ }
+    }
   }
 
   // ===================== LANGUAGE =====================
@@ -118,6 +202,10 @@
     if (guideTab) guideTab.textContent = t.guide;
     const changelogTab = document.querySelector('[data-tab="changelog"]');
     if (changelogTab) changelogTab.textContent = t.changelog;
+    const changelogTitle = document.getElementById('lbl-changelog-title');
+    if (changelogTitle) changelogTitle.textContent = t.changelog;
+    const changelogLead = document.getElementById('lbl-changelog-lead');
+    if (changelogLead) changelogLead.textContent = t.changelogLead || '';
     const appSettingsTab = document.querySelector('[data-tab="app-settings"]');
     if (appSettingsTab) appSettingsTab.textContent = t.appSettings;
 
@@ -175,6 +263,10 @@
 
     // Update settings
     updateSettingsLabels();
+    if (processedRunes.length) {
+      applyFiltersAndSort(getVisibleRunes(), { preserveTableExpansion: runeTableShowAll });
+    }
+    renderChangelog();
   }
 
   function updateDashboardLabels() {
@@ -285,16 +377,40 @@
     const settingsTab = document.getElementById('tab-settings');
     if (!settingsTab) return;
 
+    const rulesPageTitle = document.getElementById('lbl-rules-page-title');
+    if (rulesPageTitle) rulesPageTitle.textContent = t.rulesPageTitle || 'Rune Rules';
+    const rulesPageLead = document.getElementById('lbl-rules-page-lead');
+    if (rulesPageLead) rulesPageLead.textContent = t.rulesPageLead || '';
+
+    const lblPrevTitle = document.getElementById('lbl-rules-section-previews-title');
+    if (lblPrevTitle) lblPrevTitle.textContent = t.rulesSectionPreviewsTitle || '';
+    const lblPrevDesc = document.getElementById('lbl-rules-section-previews-desc');
+    if (lblPrevDesc) lblPrevDesc.textContent = t.rulesSectionPreviewsDesc || '';
+
+    const roleNavHdr = document.getElementById('lbl-role-nav-header');
+    if (roleNavHdr) roleNavHdr.textContent = t.rolesNavTitle || 'Roles';
+
+    const subNav = document.getElementById('rules-subtabs');
+    if (subNav) subNav.setAttribute('aria-label', t.rulesSubtabsAria || 'Rune Rules sections');
+    const setSubLbl = (id, text) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = text || '';
+    };
+    setSubLbl('lbl-rules-subtab-engine', t.rulesSubtabEngine);
+    setSubLbl('lbl-rules-subtab-engine-hint', t.rulesSubtabEngineDesc);
+    setSubLbl('lbl-rules-subtab-verdict', t.rulesSubtabVerdict);
+    setSubLbl('lbl-rules-subtab-verdict-hint', t.rulesSubtabVerdictDesc);
+    setSubLbl('lbl-rules-subtab-roles', t.rulesSubtabRoles);
+    setSubLbl('lbl-rules-subtab-roles-hint', t.rulesSubtabRolesDesc);
+
     const h3Const = settingsTab.querySelector('.constants-sheet-heading');
     if (h3Const) h3Const.textContent = t.constantsSheetTitle || '';
-    const h3Duo = settingsTab.querySelector('.duo-thresholds-heading');
-    if (h3Duo) h3Duo.textContent = t.enginePreviewDuo || t.duoRollThresholds;
     const gemH = settingsTab.querySelector('.gem-meta-heading');
     if (gemH) gemH.textContent = t.gemMetaRules;
     const reappH = settingsTab.querySelector('.reapp-heading');
     if (reappH) reappH.textContent = t.reappCandidateRules;
     const roleH = settingsTab.querySelector('.role-filters-heading');
-    if (roleH) roleH.textContent = t.roleFilters;
+    if (roleH) roleH.textContent = t.rulesSectionRolesAside || t.roleFilters;
 
     const dConst = settingsTab.querySelector('.constants-sheet-desc');
     if (dConst) dConst.textContent = t.constantsSheetDesc || '';
@@ -329,16 +445,6 @@
     const gemExTa = document.getElementById('gem-meta-extra-slots');
     const gemExLbl = gemExTa?.closest('.settings-row')?.querySelector('label');
     if (gemExLbl && gemExLbl.childNodes[0]) gemExLbl.childNodes[0].textContent = t.gemExtrasLabel + ' ';
-    
-    // Update partner coefficient label (only text node, keep input)
-    const partnerRow = document.getElementById('hr-coeff')?.closest('.settings-row');
-    if (partnerRow) {
-      const partnerLabel = partnerRow.querySelector('label');
-      if (partnerLabel) {
-        const textNode = partnerLabel.childNodes[0];
-        if (textNode) textNode.textContent = t.partnerCoeff + ' ';
-      }
-    }
     
     // Update new role label (only text node, keep input)
     const newRoleRow = document.getElementById('new-role-name')?.closest('.settings-row');
@@ -408,18 +514,16 @@
   }
 
   // ===================== TABS =====================
-  document.querySelectorAll('.tab').forEach(btn => {
+  document.querySelectorAll('.tab').forEach((btn) => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
-      btn.classList.add('active');
-      document.getElementById(`tab-${btn.dataset.tab}`).classList.remove('hidden');
-      
-      // Render db slots when app settings tab is opened
-      if (btn.dataset.tab === 'app-settings') {
-        renderDbSlots();
-      }
+      showMainTab(btn.dataset.tab, { writeHash: true });
     });
+  });
+
+  window.addEventListener('hashchange', () => {
+    const id = mainTabIdFromHash();
+    if (id) showMainTab(id);
+    else showMainTab('dashboard');
   });
 
   // ===================== STAGE =====================
@@ -513,10 +617,7 @@
         await saveSlotData(targetSlot.id, jsonText);
         
         document.getElementById('upload-prompt').classList.add('hidden');
-        document.getElementById('tab-dashboard').classList.remove('hidden');
-        document.querySelectorAll('.tab').forEach(t => {
-          t.classList.toggle('active', t.dataset.tab === 'dashboard');
-        });
+        showMainTab('dashboard', { writeHash: true });
       } catch(err) {
         alert('Failed to parse JSON: ' + err.message);
       }
@@ -546,6 +647,7 @@
 
   function reprocess() {
     processedRunes = processAll(allRunes, stage, window.SWRM.settings);
+    window.SWRM.debugLastProcessedRunes = processedRunes;
     const visible = getVisibleRunes();
     renderDashboard(visible);
     renderTable(visible);
@@ -578,10 +680,12 @@
     const keepTab = options.keepTab === true;
     document.getElementById('upload-prompt').classList.add('hidden');
     if (!keepTab) {
-      document.getElementById('tab-dashboard').classList.remove('hidden');
-      document.querySelectorAll('.tab').forEach(t => {
-        t.classList.toggle('active', t.dataset.tab === 'dashboard');
-      });
+      const fromHash = mainTabIdFromHash();
+      if (fromHash) {
+        showMainTab(fromHash);
+      } else {
+        showMainTab('dashboard', { writeHash: true });
+      }
     }
     if (meta && meta.name) {
       console.log(`Auto-loaded runes from ${meta.name}${meta.id != null ? ` (Data ${meta.id})` : ''}`);
@@ -609,11 +713,7 @@
     allRunes = [];
     processedRunes = [];
     if (!keepTab) {
-      document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
-      document.getElementById('tab-guide').classList.remove('hidden');
-      document.querySelectorAll('.tab').forEach(t => {
-        t.classList.toggle('active', t.dataset.tab === 'guide');
-      });
+      showMainTab('guide', { writeHash: true });
       document.getElementById('upload-prompt').classList.remove('hidden');
     } else {
       document.getElementById('upload-prompt').classList.add('hidden');
@@ -871,7 +971,7 @@
     const slotMain = {1:{},2:{},3:{},4:{},5:{},6:{}};
     const effBuckets = new Array(20).fill(0); // 5% buckets: 0-4, 5-9, ..., 95-99, 100+
 
-    // Depth v2 suggestion: full export rune list, absolute counts + top-N eff (not affected by preset / Min Lvl).
+    // Account progression: full export rune list, absolute counts + top-N eff (not affected by preset / Min Lvl).
     const metrics = analyzeGameStage(allRunes);
     const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const recStage = getRecommendedStage(
@@ -925,18 +1025,6 @@
         stage !== recStage;
       mismatchLine.hidden = !showMismatch;
       mismatchLine.textContent = showMismatch ? (tloc.stageMismatchHint || '') : '';
-    }
-
-    const presetScoreHint = document.getElementById('stage-preset-score-hint');
-    if (presetScoreHint) {
-      if (allRunes.length && metrics.runeCount) {
-        const scoreLbl = tloc.stageScoreLabel || 'Combined score';
-        presetScoreHint.textContent = `${scoreLbl}: ${metrics.score} (Depth v2)`;
-        presetScoreHint.hidden = false;
-      } else {
-        presetScoreHint.textContent = '';
-        presetScoreHint.hidden = true;
-      }
     }
 
     for (const r of runes) {
@@ -1114,7 +1202,55 @@
     return '';
   }
 
-  function applyFiltersAndSort(runes) {
+  function disconnectRuneTableMoreObserver() {
+    if (runeTableMoreObserver) {
+      runeTableMoreObserver.disconnect();
+      runeTableMoreObserver = null;
+    }
+  }
+
+  function setupRuneTableMoreUi(total, rendered) {
+    const zone = document.getElementById('rune-table-more-zone');
+    const bar = document.getElementById('rune-table-show-all-bar');
+    const sentinel = document.getElementById('rune-table-sentinel');
+    const hint = document.getElementById('lbl-rune-table-more-hint');
+    const btn = document.getElementById('btn-rune-table-show-all');
+    if (!zone || !bar || !sentinel) return;
+
+    disconnectRuneTableMoreObserver();
+    bar.classList.add('hidden');
+
+    if (runeTableShowAll || total <= RUNE_TABLE_PAGE || rendered >= total) {
+      zone.classList.add('hidden');
+      return;
+    }
+
+    zone.classList.remove('hidden');
+    const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    if (hint) {
+      hint.textContent = (tloc.runeTableMoreHint || '')
+        .replace(/\{shown\}/g, String(rendered))
+        .replace(/\{total\}/g, String(total));
+    }
+    if (btn) {
+      btn.textContent = (tloc.runeTableShowAllButton || '').replace(/\{total\}/g, String(total));
+    }
+
+    runeTableMoreObserver = new IntersectionObserver((entries) => {
+      for (let i = 0; i < entries.length; i++) {
+        if (!entries[i].isIntersecting) continue;
+        bar.classList.remove('hidden');
+        disconnectRuneTableMoreObserver();
+        return;
+      }
+    }, { root: null, rootMargin: '100px 0px 160px 0px', threshold: 0 });
+    runeTableMoreObserver.observe(sentinel);
+  }
+
+  function applyFiltersAndSort(runes, opts) {
+    if (!opts || !opts.preserveTableExpansion) {
+      runeTableShowAll = false;
+    }
     const search  = (document.getElementById('search-box')?.value || '').toLowerCase();
     const verdict = document.getElementById('filter-verdict')?.value || '';
     const role    = document.getElementById('filter-role')?.value    || '';
@@ -1144,14 +1280,24 @@
 
     const tbody = document.getElementById('rune-tbody');
     if (!tbody) return;
+    const total = filteredRunes.length;
+    const cap = runeTableShowAll ? total : Math.min(RUNE_TABLE_PAGE, total);
+    const rows = filteredRunes.slice(0, cap);
+
     const countEl = document.getElementById('table-count');
     if (countEl) {
       const t = TRANSLATIONS[currentLang];
-      countEl.textContent = `${filteredRunes.length} ${t.runes}`;
+      if (!runeTableShowAll && total > RUNE_TABLE_PAGE) {
+        const tmpl = t.runeTableCountCapped || '{shown} / {total} {runes}';
+        countEl.textContent = tmpl
+          .replace(/\{shown\}/g, String(cap))
+          .replace(/\{total\}/g, String(total))
+          .replace(/\{runes\}/g, t.runes);
+      } else {
+        countEl.textContent = `${total} ${t.runes}`;
+      }
     }
 
-    // Render up to 500 rows (virtual scroll TODO)
-    const rows = filteredRunes.slice(0, 500);
     const verdictFilter = document.getElementById('filter-verdict')?.value || '';
     const showTarget = verdictFilter === 'Grind' || verdictFilter === 'Gem';
     document.getElementById('target-col-header')?.classList.toggle('hidden', !showTarget);
@@ -1159,6 +1305,7 @@
     document.getElementById('rune-table')?.classList.toggle('show-target', showTarget);
     tbody.innerHTML = rows.map(r => runeRow(r)).join('');
     renderRuneSummary(filteredRunes);
+    setupRuneTableMoreUi(total, rows.length);
   }
 
   function exportCsv() {
@@ -1378,6 +1525,11 @@
 
   // Export CSV from Rune Table
   document.getElementById('btn-export-csv')?.addEventListener('click', exportCsv);
+
+  document.getElementById('btn-rune-table-show-all')?.addEventListener('click', () => {
+    runeTableShowAll = true;
+    applyFiltersAndSort(getVisibleRunes(), { preserveTableExpansion: true });
+  });
 
   // Toggle Target column visibility
   document.getElementById('toggle-target-col')?.addEventListener('change', (e) => {
@@ -1969,7 +2121,9 @@
         const el = document.querySelector(`#stat-constants-wrap [data-sc-stat="${stat}"][data-sc-field="${f}"]`);
         if (!el) continue;
         const v = parseFloat(el.value);
-        if (Number.isFinite(v)) raw[stat][f] = v;
+        if (!Number.isFinite(v)) continue;
+        const unit = el.getAttribute('data-sc-unit');
+        raw[stat][f] = unit === 'percent' ? v / 100 : v;
       }
     }
     return window.SWRM.mergeStatConstants(raw);
@@ -2008,20 +2162,63 @@
     renderReadonlyMatrix('duo-preview-wrap', 'Pair', duo, colKeys, colLabels);
   }
 
+  function statConstantDecimalToPercentInput(d) {
+    if (d == null || !Number.isFinite(Number(d))) return '';
+    const p = Number(d) * 100;
+    return String(Math.round(p * 100) / 100);
+  }
+
+  function escapeAttr(s) {
+    return String(s ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/</g, '&lt;');
+  }
+
+  function wireStatConstantsTableInputs(wrap) {
+    const updateGodResultForTr = (tr) => {
+      const st = tr.querySelector('[data-sc-field="base"]');
+      const gm = tr.querySelector('[data-sc-field="godMod"]');
+      const span = tr.querySelector('.god-th-result');
+      const b = parseFloat(st && st.value);
+      const mRaw = parseFloat(gm && gm.value);
+      const m = Number.isFinite(mRaw) ? mRaw / 100 : 0;
+      const tval = (Number.isFinite(b) && b > 0) ? b * (1 + m) : NaN;
+      if (span) span.textContent = Number.isFinite(tval) && tval > 0 ? tval.toFixed(2) : '—';
+    };
+    wrap.querySelectorAll('.sc-inp').forEach((inp) => {
+      inp.addEventListener('input', () => {
+        const tr = inp.closest('tr');
+        if (tr) updateGodResultForTr(tr);
+        refreshEnginePreviews();
+      });
+    });
+  }
+
   function buildStatConstantsTable() {
     const wrap = document.getElementById('stat-constants-wrap');
     if (!wrap) return;
     const sc = window.SWRM.settings.statConstants || window.SWRM.DEFAULT_STAT_CONSTANTS;
     const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const cStat = tloc.constantsColStat || 'Stat';
     const cB = tloc.godColBase || 'Base';
-    const cG = tloc.godColMod || 'God Mod';
-    const cD = tloc.constColDuoMod || 'Duo Mod';
-    const cE = tloc.constColEarly || 'Early ×';
-    const cL = tloc.constColLate || 'Late ×';
-    const cGm = tloc.constColGrade || 'Grade mod';
-    const cRes = tloc.godColResult || '= God';
-    let html = `<table class="s-table stat-constants-table"><thead><tr><th>Stat</th><th>${cB}</th><th>${cG}</th><th>${cD}</th><th>${cE}</th><th>${cL}</th><th>${cGm}</th><th>${cRes}</th></tr></thead><tbody>`;
+    const cG = tloc.godColMod || 'God +%';
+    const cD = tloc.constColDuoMod || 'Duo −%';
+    const cE = tloc.constColEarly || 'Early %';
+    const cL = tloc.constColLate || 'Late %';
+    const cGm = tloc.constColGrade || 'Leg @Mid −%';
+    const cRes = tloc.godColResult || 'God line';
+    const hB = escapeAttr(tloc.constantsColHintBase || '');
+    const hG = escapeAttr(tloc.constantsColHintGod || '');
+    const hD = escapeAttr(tloc.constantsColHintDuo || '');
+    const hE = escapeAttr(tloc.constantsColHintEarly || '');
+    const hL = escapeAttr(tloc.constantsColHintLate || '');
+    const hGm = escapeAttr(tloc.constantsColHintGrade || '');
+    let html = `<table class="s-table stat-constants-table"><thead><tr><th>${cStat}</th>`;
+    html += `<th title="${hB}">${cB}</th><th title="${hG}">${cG}</th><th title="${hD}">${cD}</th>`;
+    html += `<th title="${hE}">${cE}</th><th title="${hL}">${cL}</th><th title="${hGm}">${cGm}</th><th>${cRes}</th></tr></thead><tbody>`;
     const order = window.SWRM.GOD_STAT_ORDER || [];
+    const percentFields = new Set(['godMod', 'duoMod', 'earlyScale', 'lateScale', 'gradeMod']);
     for (let i = 0; i < order.length; i++) {
       const stat = order[i];
       const row = sc[stat] || {};
@@ -2031,33 +2228,25 @@
       for (let fi = 0; fi < fields.length; fi++) {
         const f = fields[fi];
         const val = row[f];
-        const step = (f === 'godMod' || f === 'duoMod' || f === 'gradeMod') ? '0.001' : '0.01';
-        html += `<td><input type="number" class="sc-inp" data-sc-stat="${stat}" data-sc-field="${f}" value="${val != null ? val : ''}" step="${step}" /></td>`;
+        const isPct = percentFields.has(f);
+        const displayVal = isPct ? statConstantDecimalToPercentInput(val) : (val != null && val !== '' ? String(val) : '');
+        const step = isPct ? '0.1' : '0.01';
+        const unit = isPct ? 'percent' : 'raw';
+        const tdCls = isPct ? ' sc-td--pct' : '';
+        const suffix = isPct ? '<span class="sc-inp-suffix" aria-hidden="true">%</span>' : '';
+        html += `<td class="sc-td${tdCls}"><span class="sc-inp-suffix-wrap">`;
+        html += `<input type="number" class="sc-inp" data-sc-stat="${stat}" data-sc-field="${f}" data-sc-unit="${unit}" value="${displayVal}" step="${step}" />`;
+        html += `${suffix}</span></td>`;
       }
       html += `<td><span class="god-th-result">${gval != null && gval > 0 ? gval.toFixed(2) : '—'}</span></td></tr>`;
     }
     html += '</tbody></table>';
     wrap.innerHTML = html;
-    wrap.querySelectorAll('.sc-inp').forEach(inp => {
-      inp.addEventListener('input', () => {
-        const tr = inp.closest('tr');
-        if (!tr) return;
-        const st = tr.querySelector('[data-sc-field="base"]');
-        const gm = tr.querySelector('[data-sc-field="godMod"]');
-        const span = tr.querySelector('.god-th-result');
-        const b = parseFloat(st && st.value);
-        const m = parseFloat(gm && gm.value);
-        const tval = (Number.isFinite(b) && b > 0) ? b * (1 + (Number.isFinite(m) ? m : 0)) : NaN;
-        if (span) span.textContent = Number.isFinite(tval) && tval > 0 ? tval.toFixed(2) : '—';
-        refreshEnginePreviews();
-      });
-    });
+    wireStatConstantsTableInputs(wrap);
   }
 
   buildStatConstantsTable();
   refreshEnginePreviews();
-
-  document.getElementById('hr-coeff').value = window.SWRM.settings.hrCoeff;
 
   refreshRoleFilterOptions();
   renderRoleSettings();
@@ -2186,7 +2375,6 @@
       legacyFlatSubGem: document.getElementById('gem-meta-legacy-subs').checked,
     });
 
-    s.hrCoeff = parseFloat(document.getElementById('hr-coeff').value) || 0.7;
     s.statConstants = collectStatConstantsFromForm();
     window.SWRM.applyDerivedThresholdFields(s);
 
@@ -2194,6 +2382,7 @@
     delete persist.hrThresholds;
     delete persist.duoThresholds;
     delete persist.godConstants;
+    delete persist.hrCoeff;
     saveSettings(persist);
 
     refreshRoleFilterOptions();
@@ -2211,6 +2400,7 @@
     delete persist.hrThresholds;
     delete persist.duoThresholds;
     delete persist.godConstants;
+    delete persist.hrCoeff;
     saveSettings(persist);
     buildStatConstantsTable();
     refreshEnginePreviews();
@@ -2223,7 +2413,9 @@
   document.addEventListener('DOMContentLoaded', async () => {
     initTheme();
     updateLanguage(currentLang);
-    
+    initRulesSubtabs();
+    showMainTab(mainTabIdFromHash() || 'dashboard');
+
     const savedRunes = localStorage.getItem('loadedRunes');
 
     try {
@@ -2318,13 +2510,12 @@
     window.SWRM.settings = {
       thresholds: JSON.parse(JSON.stringify(DEFAULT_THRESHOLDS)),
       statConstants: JSON.parse(JSON.stringify(DEFAULT_STAT_CONSTANTS)),
-      hrCoeff: DEFAULT_HR_COEFF,
       roles: JSON.parse(JSON.stringify(DEFAULT_ROLES)),
       formulas: JSON.parse(JSON.stringify(DEFAULT_FORMULAS)),
       rolePriority: [],
       reapp: JSON.parse(JSON.stringify(DEFAULT_REAPP)),
       gemMeta: JSON.parse(JSON.stringify(DEFAULT_GEM_META)),
-      presetVersion: 4,
+      presetVersion: 6,
     };
     window.SWRM.applyDerivedThresholdFields(window.SWRM.settings);
     localStorage.removeItem('swrm_settings_v1');
@@ -2333,7 +2524,6 @@
 
   // ===================== APP SETTINGS =====================
   const DB_SLOTS_META_KEY = 'swrm_db_slots_meta_v1';
-  const CHANGELOG_KEY = 'swrm_changelog_v1';
 
   // IndexedDB setup for large JSON files
   const DB_NAME = 'SWRM';
@@ -2472,11 +2662,7 @@
 
   function parseAndLoadJson(jsonText) {
     processJsonData(jsonText);
-    document.getElementById('tab-dashboard').classList.remove('hidden');
-    // activate dashboard tab
-    document.querySelectorAll('.tab').forEach(t => {
-      t.classList.toggle('active', t.dataset.tab === 'dashboard');
-    });
+    showMainTab('dashboard', { writeHash: true });
   }
 
   const appLangSelect = document.getElementById('app-language');
@@ -2653,35 +2839,29 @@
     }
   });
 
-  // ===================== CHANGELOG =====================
-  function loadChangelog() {
-    try {
-      const parsed = JSON.parse(localStorage.getItem(CHANGELOG_KEY) || '[]');
-      if (Array.isArray(parsed)) return parsed;
-    } catch(e) {}
-    return [];
-  }
-  function saveChangelog(items) {
-    localStorage.setItem(CHANGELOG_KEY, JSON.stringify(items));
+  // ===================== CHANGELOG (STATIC, ship-time only) =====================
+  function escapeChangelogText(s) {
+    return String(s ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
   }
   function renderChangelog() {
     const list = document.getElementById('changelog-list');
     if (!list) return;
-    const items = loadChangelog();
-    list.innerHTML = items.length
-      ? items.map(it => `<p><strong>${it.date}</strong> — ${it.text}</p>`).join('')
-      : '<p>No changelog entries yet.</p>';
+    try { localStorage.removeItem('swrm_changelog_v1'); } catch (e) { /* ignore */ }
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const releases = (window.SWRM && window.SWRM.STATIC_CHANGELOG) || [];
+    if (!releases.length) {
+      list.innerHTML = `<p class="settings-desc">${escapeChangelogText(t.changelogEmpty || '')}</p>`;
+      return;
+    }
+    const lang = currentLang === 'ru' ? 'ru' : 'en';
+    list.innerHTML = releases.map((rel) => {
+      const items = (rel.items && rel.items[lang]) || rel.items?.en || [];
+      const lis = items.map((tx) => `<li>${escapeChangelogText(tx)}</li>`).join('');
+      return `<article class="changelog-release"><h3 class="changelog-release-date">${escapeChangelogText(rel.date)}</h3><ul class="changelog-bullets">${lis}</ul></article>`;
+    }).join('');
   }
-  document.getElementById('btn-add-changelog')?.addEventListener('click', () => {
-    const input = document.getElementById('changelog-input');
-    const text = (input?.value || '').trim();
-    if (!text) return;
-    const items = loadChangelog();
-    items.unshift({ date: new Date().toLocaleString(), text });
-    saveChangelog(items);
-    input.value = '';
-    renderChangelog();
-  });
-  renderChangelog();
 
 })();

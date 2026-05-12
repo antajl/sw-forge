@@ -107,6 +107,10 @@
       source: 'sub',
     }));
 
+    let swexEffRaw = raw.efficiency;
+    if (swexEffRaw == null && raw.eff != null) swexEffRaw = raw.eff;
+    const swexEffNum = Number(swexEffRaw);
+
     const rune = {
       id:         raw.rune_id,
       slot,
@@ -125,6 +129,7 @@
       innate_name: innType ? statName(innType) : null,
       innate_val:  innVal  || 0,
       substats,
+      swexEfficiency: Number.isFinite(swexEffNum) ? Math.round(swexEffNum * 10) / 10 : null,
       // filled by engine:
       eff:        0,
       role:       '',
@@ -219,6 +224,18 @@
     }
   }
 
+  function logEfficiencyDiagSample(runes, limit) {
+    const n = limit != null && limit > 0 ? limit : 40;
+    const rows = (runes || []).slice(0, n).map((r) => {
+      const sx = r.swexEfficiency;
+      const delta = sx != null && Number.isFinite(sx) ? Math.round((r.eff - sx) * 10) / 10 : null;
+      return { id: r.id, calcEff: r.eff, swexEff: sx, delta };
+    });
+    if (typeof console !== 'undefined' && console.table) console.table(rows);
+    return rows;
+  }
+
+  window.SWRM.logEfficiencyDiagSample = logEfficiencyDiagSample;
   window.SWRM.parseRune  = parseRune;
   window.SWRM.parseSWEX  = parseSWEX;
   window.SWRM.calcEfficiency = calcEfficiency;

@@ -89,8 +89,11 @@
     return true;
   }
 
-  // Check minimum stats requirement (excluding must-have)
-  function checkMinStats(rune, formula, stage, includedStats, mustHaveStat) {
+  /**
+   * Min stats: count how many Include substats (other than must-have) are present on the rune
+   * at or above the High Roll threshold for this stage × grade — not the length of the Include list.
+   */
+  function checkMinStats(rune, formula, stage, includedStats, mustHaveStat, settings, sm) {
     let slotKey;
     if ([1, 3, 5].includes(rune.slot)) {
       slotKey = '1/3/5';
@@ -99,11 +102,23 @@
     }
 
     const minRequired = formula.minStats?.[slotKey]?.[stage] || 1;
-    
-    // Count included stats excluding must-have
-    const effectiveStats = includedStats.filter(stat => stat !== mustHaveStat);
-    
-    return effectiveStats.length >= minRequired;
+    const thresholds = settings?.hrThresholds || {};
+    const hrKey = modeKey(stage, rune.gradeStr);
+
+    let count = 0;
+    for (let i = 0; i < includedStats.length; i++) {
+      const stat = includedStats[i];
+      if (stat === mustHaveStat) continue;
+      const val = sm[stat] || 0;
+      if (val <= 0) continue;
+      const th = thresholds[stat]?.[hrKey];
+      if (th != null && Number(th) > 0) {
+        if (val >= th) count++;
+      } else {
+        count++;
+      }
+    }
+    return count >= minRequired;
   }
 
   // Check must-have requirement (subs only in sm; main stat satisfies — innate does not)
@@ -184,7 +199,7 @@
     }
 
     // Check minimum stats (excluding must-have)
-    if (!checkMinStats(rune, formula, stage, substatResult.includedStats, mustHaveStat)) {
+    if (!checkMinStats(rune, formula, stage, substatResult.includedStats, mustHaveStat, settings, substatResult.statMap)) {
       return false;
     }
 
@@ -269,7 +284,7 @@
     if (hasRole) {
       const gem = window.SWRM.evaluateGemRecommendation?.(rune, stage, settings) || { can: false };
       if (gem.can) {
-        if (window.SWRM.passesGemQualityGate?.(rune, stage, isHero, hasHighDuo)) {
+        if (window.SWRM.passesGemQualityGate?.(rune, stage, isHero, hasHighDuo, settings)) {
           return 'Gem';
         }
         return godSell('Sell');

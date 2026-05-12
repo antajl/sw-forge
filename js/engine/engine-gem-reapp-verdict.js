@@ -136,12 +136,18 @@
     return { can: false };
   }
 
-  function passesGemQualityGate(rune, stage, isHero, hasHighDuo) {
-    const effThreshold = stage === 'Late' ? 70 : (stage === 'Mid' ? 55 : 40);
-    if (rune.eff < effThreshold) return false;
+  function passesGemQualityGate(rune, stage, isHero, hasHighDuo, settings) {
+    const gm = settings?.gemMeta || {};
+    const q = gm.qualityGate || {};
+    const early = q.early || { min: 40, heroMin: 52 };
+    const mid = q.mid || { min: 55, heroMin: 67 };
+    const late = q.late || { min: 70, heroMin: 82 };
+    const cfg = stage === 'Late' ? late : (stage === 'Mid' ? mid : early);
+    const minEff = cfg.min != null ? cfg.min : 55;
+    if (rune.eff < minEff) return false;
     if (isHero && !hasHighDuo) {
-      const heroEffThreshold = stage === 'Late' ? 82 : (stage === 'Mid' ? 67 : 52);
-      if (rune.eff < heroEffThreshold) return false;
+      const heroMin = cfg.heroMin != null ? cfg.heroMin : 67;
+      if (rune.eff < heroMin) return false;
     }
     return true;
   }
@@ -212,7 +218,7 @@
     if (hasRole) {
       const gem = evaluateGemRecommendation(rune, stage, settings);
       if (gem.can) {
-        if (passesGemQualityGate(rune, stage, isHero, hasHighDuo)) {
+        if (passesGemQualityGate(rune, stage, isHero, hasHighDuo, settings)) {
           return 'Gem';
         }
         return finalizeGodSellOverride('Sell', mergedResults, rune, stage, settings);

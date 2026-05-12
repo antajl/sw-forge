@@ -28,7 +28,7 @@ const GRADE_NAMES = { 1:'Common', 2:'Magic', 3:'Rare', 4:'Hero', 5:'Legend' };
 const GRADE_SHORT = { 3:'Rare', 4:'Hero', 5:'Legend' };
 
 /** Shown in footer, changelog, and Copy summary — bump when shipping a user-visible build. */
-const APP_VERSION = '1.2.8';
+const APP_VERSION = '1.2.9';
 
 // ==== TRANSLATIONS ====
 const TRANSLATIONS = {
@@ -1250,79 +1250,47 @@ function applyDerivedThresholdFields(settings) {
 }
 
 /**
- * Maintainer-only release notes. Shipped with the bundle — not editable in the UI.
- * Roadmap bullets: STATIC_ROADMAP (Changelog tab → Plans).
- *
+ * Release notes bundled with the app (Changelog tab → Releases). Roadmap: STATIC_ROADMAP.
  * Each `items[locale]` is a string[] (legacy `{ shipped: [] }` is still read).
- *
- * Note: entries are newest-first. Calendar labels below use 2026-05-09 … 2026-05-12
- * so the journal does not show dates after “today” when the bundle is dated May 12.
+ * Entries are newest-first by date. Plain text — the UI escapes HTML (no markdown).
  */
 const STATIC_CHANGELOG = [
   {
     date: '2026-05-12',
     items: {
       en: [
-        '**v1.2.8** — Upload overlay: drag-and-drop SWEX .json onto the full-screen prompt (plus hint text); same load path as the file picker.',
-        '**v1.2.7** — Guide tab: six named subtabs (Getting started, Dashboard, Account depth, Rune Table, Rune Rules, Tips & FAQ), fuller everyday copy in EN/RU, session memory for the active subsection.',
-        '**v1.2.6** — Removed misleading SET_NAMES entry “Immemorial” (99): not an equippable rune set in-game; rare SWEX `set_id` 99 labels as Set99.',
-        '**v1.2.5** — Set Distribution: sort sets by count (descending); scrollbar hidden while scrolling still works.',
-        '**v1.2.4** — Dashboard charts: counts without the “n” label; Set Distribution lists every game set with a scroll area; Copy summary matches.',
-        '**v1.2.3** — Full-bleed footer bar (like header); compact load-all hint beside the button with full details in tooltip.',
-        '**v1.2.2** — Rune Table toolbar: search and “load all rows” at the top; actions vs display grouped; removed scroll-to-reveal load UI (no resize hitch).',
-        '**v1.2.1** — Gem Target text lists only offending flat subs (e.g. “Replace HP” or “Replace HP or DEF”), without naming the grindable destination stat.',
-        '**v1.2.0** — Gem: innate / prefix reroll hints removed per game rules (Enchant Gem affects substats only). Verdict Gem now relies on the bad-flat sub path only (same toggle in Rune Rules). Preset migration v10 enables this path once for saved settings.',
-        '**v1.1.9** — Clearer labels for “eff over 100%”; dense table rows default on (stored as explicit off when disabled).',
-        '**v1.1.8** — Rune Table: sidebar translations + panel typography; optional uncapped Eff% (calc, matches Depth); dense rows toggle on wide viewports; Grind/Gem Target cells show engine fields in tooltip; summary averages follow the Eff mode.',
-        '**v1.1.7** — Rune Table: empty Role or Verdict leaves the cell blank (no chip shell).',
-        '**v1.1.6** — Rune Table: richer chip tints for Grade / Role / Verdict (same chip style as v1.1.5).',
-        '**v1.1.5** — Rune Table: Set and Eff% use the same chip style as stats; Grade / Role / Verdict toned down to soft tints and borders so they match the numeric columns without loud gradients.',
-        '**v1.1.4** — Rune Table: numeric columns right-aligned (tabular nums); filter chips on headers when active; zebra rows; sticky header in the scroll area; reset-filters control; debounced search with highlight; `/` focuses search, arrows/PageUp/PageDown scroll the table; URL state in `#runetable?…` (shareable); CSV exports Target only when that column is visible; always-visible “shown of total” line.',
-        '**v1.1.3** — Dashboard chart stats column: small “n” / “avg” labels, softer monospace numbers, vertical stack and a light divider so counts are not a bold block beside gold percentages.',
-        '**v1.1.2** — Dashboard role/set/slot bars use solid theme colors (accent / finish / grind); counts sit beside the bar so the number color is always the normal UI text color.',
-        '**v1.1.1** — Verdict mix ordered by count (largest segment left); role/set/slot bar gradients use the same verdict/theme tokens as the rest of the dashboard; donate heart tint; Copy summary button stretches to the Global filter card height.',
-        '**v1.1.0** — Site footer (Com2uS disclaimer + build version), subtle Donate link in header (Lava.top), Copy summary on the same row as global filters, dashboard chart counts padded and readable on short or empty fills.',
-        'SWEX stat IDs fixed (e.g. 8 = SPD, 9 = CRate) so main/sub labels, filters, and roles match the game exporter.',
-        'Engine uses base sub rolls only for roles, anchors, Duo/High checks, and verdict thresholds; each sub row still stores gem/grind/enchant flags for Gem and Grind rules.',
-        'Formula Min Stats counts how many Include substats are present (must-have excluded from the count); Require High Roll (anchor) stays a separate checkbox.',
-        'Verdict: failing Gem quality gate no longer downgrades to Sell when the rune already has a role; runes with no role and no Duo/High cannot end as Keep/Finish/Gem/Grind.',
-        'Grind recommends only SPD / HP% / DEF% / ATK% toward the Late×grade High Roll line from Engine constants; one-grind gains +5 SPD / +10% stats; row must be ungrinded and not enchanted; gap multiplier narrows how far below the line you can be (default 0.5 after preset v9 migration from the old 1.0 default).',
-        'Rune Rules → Verdict: separate cards for Gem, Grind, and Reapp (apply with Save & Recalculate). Role formula grids under Roles still auto-save and reprocess on each change.',
-        'Bad flat detection: any enchanted sub makes the rune “clean” for that check; low flat count matches spreadsheet-style rules.',
-        'Rune Table Target column: Grind shows ceil values; Gem lists offending flat subs to replace.',
-        'Eff% uses the exporter’s efficiency field when the JSON includes it.',
-        'Debug: each parsed rune keeps `_raw` from SWEX for troubleshooting.',
+        'v1.2.9 — Changelog: entries trimmed and unified for reading; release dates unchanged.',
+        'v1.2.8 — First-load screen: drag and drop your SWEX .json onto the overlay (same as choosing a file); short hint under the title.',
+        'v1.2.7 — Guide split into sections (getting started, dashboard, depth, table, rules, tips); fuller EN/RU copy; remembers the last section for this session.',
+        'v1.2.6 — Rare exporter set_id 99 is labeled Set99 (not a normal playable set name in-game).',
+        'v1.2.5 — Set Distribution: sets sorted by rune count (high to low).',
+        'v1.2.4 — Dashboard charts and Copy summary aligned; every in-game set listed with scroll where needed.',
+        'v1.2.3 — Footer spans full width; compact “load all rows” hint with full explanation on hover.',
+        'v1.2.2 — Rune Table: toolbar at the top (search, load all matching rows, Actions vs Display); smoother behavior on large exports.',
+        'v1.2.1 — Gem Target lists flat subs to replace only (no fake grind destination stats).',
+        'v1.2.0 — Gem verdict follows in-game enchant rules (substats path); saved settings are migrated once if needed.',
+        'v1.1.9 — Clearer “Eff over 100%” labeling; dense table rows on by default.',
+        'v1.1.4–v1.1.8 — Rune Table: translations and typography; optional uncapped Eff%; chip styling; empty Role/Verdict cells stay blank; sidebar summary follows Eff mode; tooltips on Target where useful.',
+        'v1.1.0–v1.1.4 — Rune Table: filters, sticky header, zebra rows, debounced search and highlight, shareable #runetable links, CSV export, reset filters, “shown of total” line.',
+        'v1.1.0–v1.1.3 — Dashboard: verdict mix order, chart layout and colors, footer with disclaimer and build, donate link, Copy summary beside global filters.',
+        'Core — SWEX stat IDs match the exporter; roles and verdict thresholds use base rolled subs (gem/grind flags still drive Gem and Grind); Min Stats vs Require High Roll as in Guide; Gem vs Sell safety rails; Grind toward Late×grade HR with configurable gap; Gem / Grind / Reapp on separate Verdict cards (Save & Recalculate); bad-flat handling; Eff uses exporter efficiency when present.',
       ],
       ru: [
-        '**v1.2.8** — Окно загрузки: перетаскивание SWEX .json на полноэкранный оверлей (подсказка в тексте); тот же путь загрузки, что и у кнопки выбора файла.',
-        '**v1.2.7** — Вкладка Гайд: шесть подразделов по названию (начало, панель, глубина, таблица, правила, советы), расширенный текст EN/RU, запоминание активного подраздела на сессию.',
-        '**v1.2.6** — Убрано имя «Immemorial» для set_id 99: это не полноценный сет рун в игре; при редком значении 99 в SWEX показывается Set99.',
-        '**v1.2.5** — Распределение по сетам: сортировка по числу рун по убыванию; полоса прокрутки скрыта, прокрутка колесом/тачем сохранена.',
-        '**v1.2.4** — Дашборд: у счётчиков на графиках без буквы «n»; распределение по сетам — все сеты игры со скроллом; экспорт сводки совпадает.',
-        '**v1.2.3** — Футер на всю ширину окна (как шапка); короткая подсказка у кнопки загрузки всех рун, полный текст — в подсказке при наведении.',
-        '**v1.2.2** — Таблица рун: тулбар сверху — поиск и загрузка всех строк; блоки «Действия» и «Отображение»; убрана догрузка по скроллу (меньше лагов при ресайзе).',
-        '**v1.2.1** — Текст Gem в Target только по плоским сабам («Заменить HP», «Заменить HP или DEF» и т.д.), без указания конкретного % цели.',
-        '**v1.2.0** — Gem: убраны подсказки по innate/prefix по правилам игры (камень зачарования — только сабы). Вердикт Gem только через bad-flat для субстатов; переключатель в Rune Rules. Миграция пресета v10 один раз включает этот путь в сохранённых настройках.',
-        '**v1.1.9** — Понятнее подписи «Eff выше 100%»; плотные строки по умолчанию включены (явное «выкл» в хранилище).',
-        '**v1.1.8** — Таблица рун: перевод сайдбара и типографика; опция Eff% без потолка (расчёт, как у Depth); плотные строки на широком экране; подсказка по grindInfo/gemInfo у Target; средние в сводке по выбранному режиму Eff.',
-        '**v1.1.7** — Таблица рун: пустые Role / Verdict — пустая ячейка без чипа.',
-        '**v1.1.6** — Таблица рун: более насыщенные тинты у Grade / Role / Verdict, тот же стиль чипов.',
-        '**v1.1.5** — Таблица рун: Set и Eff% в тех же чипах, что статы; Grade / Role / Verdict приглушены (лёгкий тинт и рамка), без ярких градиентов, ближе к колонкам с цифрами.',
-        '**v1.1.4** — Таблица рун: выравнивание чисел вправо; подсветка активных фильтров в шапке; чередование строк; липкая шапка в зоне прокрутки; кнопка сброса фильтров; поиск с задержкой и подсветкой; `/` — фокус поиска, стрелки/PageUp/PageDown — прокрутка таблицы; состояние в `#runetable?…`; CSV с Target только если колонка видна; строка «показано из» всегда под счётчиком.',
-        '**v1.1.3** — Колонка статистики у графиков: подписи n / ср., приглушённые цифры, две строки и разделитель — без «кучи» жирных чисел рядом с процентами.',
-        '**v1.1.2** — Полосы ролей/сетов/слотов на дашборде — сплошные цвета темы (accent / finish / grind); числа рядом с полосой, цвет как у обычного текста интерфейса.',
-        '**v1.1.1** — Verdict mix по убыванию числа рун (крупнейший сегмент слева); градиенты ролей/сетов/слотов из тех же токенов, что вердикты и тема; красное сердце у доната; кнопка Copy summary по высоте карточки Global filter.',
-        '**v1.1.0** — Футер (дисклеймер Com2uS + версия сборки), аккуратная ссылка «Донат» в шапке (Lava.top), Copy summary в одной строке с фильтрами, подписи на графиках с отступом и читаемые при короткой заливке.',
-        'Исправлены ID статов SWEX (например 8 = SPD, 9 = CRate) — корректные мейны/сабы, фильтры и роли.',
-        'Движок считает роли, якоря и вердикты по базовому значению сабов (без гема/гринда); в строке саба по-прежнему хранятся флаги для правил Gem/Grind.',
-        'Min Stats в формулах — только подсчёт Include-сабов (must-have в счёт не входит); галочка Require High Roll (якорь) отдельно.',
-        'Вердикт: провал quality gate для Gem не уводит в Sell, если у руны уже есть роль; без роли и без Duo/High нельзя получить Keep/Finish/Gem/Grind.',
-        'Grind только для SPD / HP% / DEF% / ATK% к линии Late×грейд High Roll из констант Engine; прибавка одного гринда +5 SPD / +10% к статам; строка без гринда и без зачарования; множитель gap сужает окно (дефолт 0.5 после миграции v9 со старого 1.0).',
-        'Правила рун → Вердикт: отдельные блоки Gem, Grind, Reapp (применяются через «Сохранить и пересчитать»). Сетка формул в Roles по-прежнему сохраняется и пересчитывает руны при каждом изменении.',
-        'Плоские сабы: любой зачарованный саб делает руну «чистой» для этой проверки.',
-        'Колонка Target: Grind с округлением вверх; Gem — какие плоские сабы заменять.',
-        'Eff% из поля efficiency в JSON, если оно есть.',
-        'Отладка: у распарсенной руны есть `_raw` из SWEX.',
+        'v1.2.9 — Журнал изменений: тексты сокращены и приведены к одному виду; даты релизов те же.',
+        'v1.2.8 — Первый экран загрузки: перетащите SWEX .json на оверлей (то же, что выбор файла); короткая подсказка под текстом.',
+        'v1.2.7 — Гайд разбит на разделы (старт, панель, глубина, таблица, правила, советы); больше текста EN/RU; последний открытый раздел на сессию.',
+        'v1.2.6 — Редкий set_id 99 в экспорте показывается как Set99 (не обычное имя сета в игре).',
+        'v1.2.5 — Распределение по сетам: сортировка по числу рун по убыванию.',
+        'v1.2.4 — Дашборд и экспорт сводки согласованы; все игровые сеты в списке со скроллом.',
+        'v1.2.3 — Футер на всю ширину; короткая подсказка у «загрузить все строки», полный текст в подсказке.',
+        'v1.2.2 — Таблица рун: тулбар сверху (поиск, загрузка всех строк, блоки Действия / Отображение); стабильнее на больших выгрузках.',
+        'v1.2.1 — Gem Target: только какие плоские сабы заменить (без выдуманных целей гринда).',
+        'v1.2.0 — Вердикт Gem по правилам зачарования сабов; при необходимости разовая миграция сохранённых настроек.',
+        'v1.1.9 — Понятнее подписи «Eff выше 100%»; плотные строки таблицы по умолчанию.',
+        'v1.1.4–v1.1.8 — Таблица рун: переводы и типографика; Eff без потолка; стиль чипов; пустые Role/Verdict без оболочки; сводка согласована с режимом Eff; подсказки у Target.',
+        'v1.1.0–v1.1.4 — Таблица рун: фильтры, липкая шапка, зебра, поиск с подсветкой, ссылка #runetable, CSV, сброс фильтров, строка «показано из».',
+        'v1.1.0–v1.1.3 — Дашборд: порядок вердиктов, графики, футер и сборка, донат, Copy summary рядом с фильтрами.',
+        'База — ID статов SWEX как в экспорте; роли и пороги вердиктов по базовым сабам (флаги для Gem/Grind); Min Stats и Require High Roll как в Гайде; защита Gem/Sell; Grind к Late×грейд HR с множителем gap; блоки Gem / Grind / Reapp («Сохранить и пересчитать»); плоские сабы; Eff из поля efficiency в JSON при наличии.',
       ],
     },
   },
@@ -1330,10 +1298,10 @@ const STATIC_CHANGELOG = [
     date: '2026-05-11',
     items: {
       en: [
-        'DEFAULT_FORMULAS replaced to match the current spreadsheet exactly (all 6 archetypes incl. acceptedMains, mustHave, slotRequirements, minStats, requireHR). Preset migration v7 reapplies the six archetype formulas once for existing saves. Canonical export: default-formulas.json in the repo root.',
+        'Six archetype formulas aligned with the spreadsheet; existing saves were refreshed once to pick up the new defaults.',
       ],
       ru: [
-        'DEFAULT_FORMULAS заменены в точном соответствии с текущей таблицей (все 6 архетипов: acceptedMains, mustHave, slotRequirements, minStats, requireHR). Миграция пресета v7 один раз обновляет шесть архетипов для существующих сохранений. Экспорт: default-formulas.json в корне репозитория.',
+        'Шесть архетипов приведены к актуальной таблице; у сохранённых профилей значения обновились один раз под новые умолчания.',
       ],
     },
   },
@@ -1341,18 +1309,18 @@ const STATIC_CHANGELOG = [
     date: '2026-05-10',
     items: {
       en: [
-        'Role engine: Classic DPS uses only the advanced formula path (legacy checkClassicDPS removed). Legacy checkRole is skipped for any role that has a formula entry so formulas are the single source of truth for the six archetypes.',
-        'Formula min-stats: counts Include substats (other than must-have) that are present at or above the Mid/Late HR threshold for the rune’s stage × grade — fixes roles that were too permissive when minStats compared config list length.',
-        'Gem defaults: Only Legend, seven meta sets (incl. Intangible), configurable qualityGate eff floors; Reapp allowed-set list aligned to the same seven. Preset migration v5 applies these defaults once for existing saves.',
-        'SWEX set names: added Seal (24), Intangible (25), Immemorial (99) to match exporter mapping.',
-        'Diagnostics: rune objects include swexEfficiency when the JSON provides it; use window.SWRM.logEfficiencyDiagSample(runes) in the console to compare with calc eff. After reprocessing, window.SWRM.summarizeVerdictsAndRoles(runes) prints verdict and role counts.',
+        'Role logic uses formula definitions as the single source of truth for all six archetypes.',
+        'Role matching: Min Stats counts Include subs at or above the stage×grade High Roll threshold (fixes roles that were too loose before).',
+        'Gem / Reapp defaults tightened (Legend, meta sets); older saves updated once.',
+        'Additional SWEX set IDs mapped (e.g. Seal, Intangible).',
+        'When the JSON includes efficiency per rune, it is kept on each rune for comparison with the app calculation.',
       ],
       ru: [
-        'Роли: Classic DPS только через advanced formula (legacy checkClassicDPS удалён). checkRole не вызывается для ролей, у которых есть запись в formulas — единый источник правды для шести архетипов.',
-        'Min-stats в формулах: считаются Include-сабы (кроме must-have), реально присутствующие не ниже порога HR для стадии×грейда — исправляет излишне широкий матч.',
-        'Gem по умолчанию: только Legend, семь мета-сетов (в т.ч. Intangible), настраиваемые пороги qualityGate; список сетов Reapp совпадает. Миграция пресета v5 один раз подтянет значения в старых сохранениях.',
-        'Имена сетов SWEX: добавлены Seal (24), Intangible (25), Immemorial (99).',
-        'Диагностика: поле swexEfficiency из JSON при наличии; logEfficiencyDiagSample(runes) в консоли; summarizeVerdictsAndRoles(runes) — сводка вердиктов и ролей после пересчёта.',
+        'Роли считаются только по формулам — единый источник для шести архетипов.',
+        'Min Stats: учитываются Include-сабы не ниже порога HR для стадии×грейда (исправлен излишне широкий матч).',
+        'Ужесточены умолчания Gem / Reapp (Legend, мета-сеты); старые сохранения подтянуты один раз.',
+        'Добавлено сопоставление дополнительных set_id из SWEX (например Seal, Intangible).',
+        'Если в JSON есть efficiency у руны, оно сохраняется для сравнения с расчётом приложения.',
       ],
     },
   },
@@ -1360,16 +1328,16 @@ const STATIC_CHANGELOG = [
     date: '2026-05-09',
     items: {
       en: [
-        'Dashboard — Account progression: clearer copy for players; removed duplicate combined score next to the preset, the long formula footer, and internal jargon; clarified how the global filter relates to the suggestion.',
-        'Removed the unused partner coefficient (hrCoeff) from the UI and from saved settings.',
-        'Rune Rules → Engine → Constants: modifier columns use intuitive percents (e.g. 30 instead of 0.30), clearer headers, tooltips, and a longer explanation of what Base is and how the percent columns affect God, Duo, and stage lines.',
-        'Changelog tab now shows these fixed release notes only — no per-browser scratch entries that disappear when storage is cleared.',
+        'Dashboard — Account progression: clearer wording; less clutter around the preset and filters.',
+        'Removed unused legacy Engine fields from saved settings.',
+        'Engine Constants: modifiers entered as plain percents, clearer headers and tooltips.',
+        'Changelog tab shows bundled release notes only (nothing stored per-browser that clears with storage).',
       ],
       ru: [
-        'Дашборд — прогресс аккаунта: проще текст для игроков; убран дубль сводного балла у пресета, длинный блок с формулой и внутренняя терминология; яснее описан общий фильтр и совет по стадии.',
-        'Удалён неиспользуемый коэффициент партнёра (hrCoeff) из интерфейса и из сохраняемых настроек.',
-        'Правила рун → Движок → Constants: модификаторы вводятся как проценты (например 30 вместо 0,30), обновлены заголовки и подсказки, расширено объяснение Base и процентных колонок для God, Duo и стадий.',
-        'Вкладка Changelog показывает только такие зафиксированные записи из сборки — больше нет локальных заметок в браузере, которые пропадают при очистке хранилища.',
+        'Дашборд — прогресс аккаунта: проще формулировки; меньше лишнего у пресета и фильтров.',
+        'Удалены неиспользуемые устаревшие поля движка из сохранённых настроек.',
+        'Constants движка: модификаторы вводятся как проценты, понятнее заголовки и подсказки.',
+        'Вкладка Changelog показывает только записи из сборки (без локальных заметок в браузере).',
       ],
     },
   },

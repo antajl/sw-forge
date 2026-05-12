@@ -1385,6 +1385,28 @@ html[lang="ru"] .btn-dashboard-export-standalone {
   display: flex; gap: 10px; align-items: center; margin-bottom: 14px;
   flex-wrap: wrap;
 }
+.table-count-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  margin-left: auto;
+  text-align: right;
+}
+.table-count-detail {
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-dim);
+  line-height: 1.3;
+  max-width: 22rem;
+}
+.search-hit {
+  background: color-mix(in srgb, var(--accent) 38%, transparent);
+  color: var(--text-hi);
+  border-radius: 2px;
+  padding: 0 1px;
+}
 .table-controls input[type=text] {
   background: var(--surface); border: 1px solid var(--border2);
   color: var(--text); padding: 6px 12px; border-radius: var(--radius);
@@ -1410,7 +1432,7 @@ html[lang="ru"] .btn-dashboard-export-standalone {
   cursor: pointer;
 }
 .table-controls input[type=text]:focus { border-color: var(--accent); }
-.table-count { margin-left: auto; font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-dim); }
+.table-count { font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-dim); }
 
 .table-layout { display: grid; grid-template-columns: 1fr 300px; gap: 14px; }
 .table-summary {
@@ -1633,7 +1655,16 @@ html[lang="ru"] .btn-auto-stage {
   border: 1px solid var(--border2);
 }
 
-.table-wrap { overflow-x: auto; border-radius: var(--radius-lg); border: 1px solid var(--border); }
+.table-wrap {
+  overflow: auto;
+  max-height: min(72vh, 880px);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+}
+.table-wrap:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
 
 .rune-table-more-zone {
   margin-top: 12px;
@@ -1664,6 +1695,16 @@ table { width: 100%; border-collapse: collapse; }
 thead tr {
   background: var(--bg3); border-bottom: 1px solid var(--border2);
 }
+#rune-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--bg3);
+  box-shadow: 0 1px 0 var(--border2);
+}
+#rune-table thead th.th-has-filter {
+  z-index: 22;
+}
 th {
   font-family: var(--font-head); font-size: 0.75rem; font-weight: 700;
   letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim);
@@ -1679,6 +1720,12 @@ tbody tr {
   border-bottom: 1px solid var(--border);
   transition: background 0.1s;
 }
+#rune-table tbody tr:nth-child(even) {
+  background: color-mix(in srgb, var(--surface) 40%, transparent);
+}
+#rune-table tbody tr:nth-child(even):hover {
+  background: var(--surface);
+}
 tbody tr:hover { background: var(--surface); }
 td {
   padding: 8px 12px; font-size: 0.82rem; color: var(--text);
@@ -1688,10 +1735,14 @@ td {
 #rune-table td {
   text-align: center;
 }
+#rune-table th.th-num,
+#rune-table td.td-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
 
-/* Filter integrated into table header cells */
+/* Filter integrated into table header cells (sticky: do not use position:relative — it breaks thead stickiness) */
 #rune-table th.th-has-filter {
-  position: relative;
   padding: 8px 6px;
   min-width: 72px;
 }
@@ -1735,6 +1786,12 @@ td {
   background: var(--bg3);
   border-color: var(--accent);
   color: var(--accent);
+}
+
+.th-text.th-text--filtered {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
 }
 
 .th-filter {
@@ -1799,10 +1856,11 @@ table.show-target .target-col-cell { display: table-cell; }
 .badge-hero   { background: rgba(176,106,255,0.15); color: var(--purple); border: 1px solid rgba(176,106,255,0.3); }
 
 
-/* Efficiency color */
+/* Legacy eff classes (e.g. if reused outside table chips) */
 .eff-hi  { color: var(--green); font-family: var(--font-mono); }
 .eff-mid { color: var(--gold); font-family: var(--font-mono); }
 .eff-lo  { color: var(--text-dim); font-family: var(--font-mono); }
+
 .stat-chip {
   display: inline-flex; align-items: center; gap: 3px;
   padding: 2px 6px; border-radius: 3px;
@@ -1813,49 +1871,86 @@ table.show-target .target-col-cell { display: table-cell; }
   color: var(--text-hi);
 }
 
-/* Grade badges */
-.grade-tag {
-  font-family: var(--font-head); font-size: 0.72rem; font-weight: 600;
-  letter-spacing: 0.04em; color: var(--text-dim);
-  padding: 2px 6px; border-radius: 3px;
+/* Set name: same chip shell, UI font reads better for long set names */
+.stat-chip.stat-chip--set {
+  font-family: var(--font-ui);
+  font-size: 0.74rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
 }
-.grade-tag.legend { background: linear-gradient(135deg, #ffd700, #ffed4e); color: #000; }
-.grade-tag.hero   { background: linear-gradient(135deg, #9b59b6, #c39bd3); color: #000; }
-.grade-tag.rare   { background: linear-gradient(135deg, #1e6b9e, #5dade2); color: #fff; }
-.grade-tag.grade-tag--other {
-  background: var(--surface);
+
+/* Eff%: chip + tier tint (aligned with numeric columns) */
+.stat-chip.stat-chip--eff {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.stat-chip.stat-chip--eff.stat-chip--eff-hi {
+  background: color-mix(in srgb, var(--surface) 76%, var(--green));
+  border-color: color-mix(in srgb, var(--border2) 40%, var(--green));
+  color: var(--text-hi);
+}
+.stat-chip.stat-chip--eff.stat-chip--eff-mid {
+  background: color-mix(in srgb, var(--surface) 80%, var(--gold));
+  border-color: color-mix(in srgb, var(--border2) 45%, var(--gold));
+  color: var(--text-hi);
+}
+.stat-chip.stat-chip--eff.stat-chip--eff-lo {
+  background: color-mix(in srgb, var(--surface) 92%, var(--accent));
+  border-color: var(--border2);
+  color: var(--text-dim);
+}
+
+/* Grade / role / verdict: same visual weight as stat-chip — soft tint, no loud gradients */
+.grade-tag,
+.role-tag,
+.verdict-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  padding: 2px 6px;
+  border-radius: 3px;
   border: 1px solid var(--border2);
+  white-space: nowrap;
+  color: var(--text-hi);
+}
+.grade-tag.legend {
+  background: color-mix(in srgb, var(--surface) 78%, var(--gold));
+  border-color: color-mix(in srgb, var(--border2) 50%, var(--gold));
+}
+.grade-tag.hero {
+  background: color-mix(in srgb, var(--surface) 82%, var(--purple));
+  border-color: color-mix(in srgb, var(--border2) 50%, var(--purple));
+}
+.grade-tag.rare {
+  background: color-mix(in srgb, var(--surface) 82%, var(--accent));
+  border-color: color-mix(in srgb, var(--border2) 50%, var(--accent));
+}
+.grade-tag.grade-tag--other {
+  background: color-mix(in srgb, var(--surface) 94%, var(--text-dim));
   color: var(--text);
 }
 
-/* Role label */
-.role-tag {
-  font-family: var(--font-head); font-size: 0.72rem; font-weight: 600;
-  letter-spacing: 0.04em; color: var(--text-dim);
-  padding: 2px 6px; border-radius: 3px;
-}
-.role-tag.highroll  { background: var(--gold); color: #333; }
-.role-tag.bruiser   { background: var(--sell); color: #333; }
-.role-tag.fastcc    { background: var(--teal); color: #333; }
-.role-tag.tank      { background: var(--purple); color: #333; }
-.role-tag.bomber   { background: var(--orange); color: #333; }
-.role-tag.classicdps { background: var(--accent); color: #fff; }
-.role-tag.slowdps  { background: var(--accent2); color: #fff; }
-.role-tag.duoroll  { background: var(--gold); color: #333; }
+.role-tag.highroll   { background: color-mix(in srgb, var(--surface) 80%, var(--gold)); border-color: color-mix(in srgb, var(--border2) 48%, var(--gold)); }
+.role-tag.bruiser    { background: color-mix(in srgb, var(--surface) 85%, var(--sell)); border-color: color-mix(in srgb, var(--border2) 48%, var(--sell)); }
+.role-tag.fastcc     { background: color-mix(in srgb, var(--surface) 85%, var(--teal)); border-color: color-mix(in srgb, var(--border2) 48%, var(--teal)); }
+.role-tag.tank       { background: color-mix(in srgb, var(--surface) 85%, var(--purple)); border-color: color-mix(in srgb, var(--border2) 48%, var(--purple)); }
+.role-tag.bomber     { background: color-mix(in srgb, var(--surface) 85%, var(--orange)); border-color: color-mix(in srgb, var(--border2) 48%, var(--orange)); }
+.role-tag.classicdps { background: color-mix(in srgb, var(--surface) 78%, var(--accent)); border-color: color-mix(in srgb, var(--border2) 45%, var(--accent)); }
+.role-tag.slowdps    { background: color-mix(in srgb, var(--surface) 80%, var(--accent2)); border-color: color-mix(in srgb, var(--border2) 45%, var(--accent2)); }
+.role-tag.duoroll    { background: color-mix(in srgb, var(--surface) 80%, var(--gold)); border-color: color-mix(in srgb, var(--border2) 48%, var(--gold)); }
 
-/* Verdict badges */
-.verdict-tag {
-  font-family: var(--font-head); font-size: 0.72rem; font-weight: 600;
-  letter-spacing: 0.04em; color: var(--text-dim);
-  padding: 2px 6px; border-radius: 3px;
-}
-.verdict-tag.keep    { background: var(--keep); color: #333; }
-.verdict-tag.sell    { background: var(--sell); color: #333; }
-.verdict-tag.grind   { background: var(--grind); color: #333; }
-.verdict-tag.finish  { background: var(--finish); color: #333; }
-.verdict-tag.reapp   { background: var(--reapp); color: #333; }
-.verdict-tag.upgrade { background: var(--upgrade); color: #333; }
-.verdict-tag.gem     { background: var(--gem); color: #333; }
+.verdict-tag.keep    { background: color-mix(in srgb, var(--surface) 82%, var(--keep)); border-color: color-mix(in srgb, var(--border2) 45%, var(--keep)); }
+.verdict-tag.sell    { background: color-mix(in srgb, var(--surface) 82%, var(--sell)); border-color: color-mix(in srgb, var(--border2) 45%, var(--sell)); }
+.verdict-tag.grind   { background: color-mix(in srgb, var(--surface) 82%, var(--grind)); border-color: color-mix(in srgb, var(--border2) 45%, var(--grind)); }
+.verdict-tag.finish  { background: color-mix(in srgb, var(--surface) 82%, var(--finish)); border-color: color-mix(in srgb, var(--border2) 45%, var(--finish)); }
+.verdict-tag.reapp   { background: color-mix(in srgb, var(--surface) 82%, var(--reapp)); border-color: color-mix(in srgb, var(--border2) 45%, var(--reapp)); }
+.verdict-tag.upgrade { background: color-mix(in srgb, var(--surface) 82%, var(--upgrade)); border-color: color-mix(in srgb, var(--border2) 45%, var(--upgrade)); }
+.verdict-tag.gem     { background: color-mix(in srgb, var(--surface) 82%, var(--gem)); border-color: color-mix(in srgb, var(--border2) 45%, var(--gem)); }
 
 .settings-content-scroll {
   max-width: 900px;

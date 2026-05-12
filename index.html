@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SW Rune Master</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml" sizes="any" />
+  <!-- Inline: SVGs have a huge default intrinsic size before css/style.css loads (e.g. live reload). -->
+  <style>
+    .header-theme-icon { width: 20px; height: 20px; max-width: 20px; max-height: 20px; display: block; flex-shrink: 0; }
+    /* Avoid default link purple (currentColor) until css/style.css loads */
+    #header-donate-link .header-donate-heart { color: #d04356; }
+  </style>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;600;800&family=Manrope:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css" />
@@ -33,7 +39,7 @@
         <div class="header-corner-cluster">
           <div class="header-donate-group">
             <a href="https://app.lava.top/antajl?tabId=donate" class="header-theme-btn header-theme-btn--wide" id="header-donate-link" target="_blank" rel="noopener noreferrer">
-              <svg class="header-theme-icon header-donate-heart" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <svg class="header-theme-icon header-donate-heart" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <path fill="currentColor" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
               </svg>
               <span id="lbl-header-donate">Donate</span>
@@ -41,14 +47,14 @@
           </div>
           <div class="header-theme-group" id="header-theme-group" role="group" aria-label="Color theme">
             <button type="button" class="header-theme-btn is-active" id="theme-sun" aria-pressed="true" title="Light theme">
-              <svg class="header-theme-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <svg class="header-theme-icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <circle cx="12" cy="12" r="4" fill="currentColor" />
                 <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
                   d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m12.02-12.02 1.41-1.41" />
               </svg>
             </button>
             <button type="button" class="header-theme-btn" id="theme-moon" aria-pressed="false" title="Dark theme">
-              <svg class="header-theme-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <svg class="header-theme-icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <path fill="currentColor" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
               </svg>
             </button>
@@ -259,15 +265,19 @@
       <div class="table-layout">
         <div class="table-main">
           <div class="table-controls">
-            <input type="text" id="search-box" placeholder="Search by set, stat, role..." />
+            <input type="text" id="search-box" placeholder="Search by set, stat, role..." autocomplete="off" />
+            <button type="button" id="btn-table-reset-filters" class="btn-ghost">Reset filters</button>
             <label class="toggle-target">
               <input type="checkbox" id="toggle-target-col" />
-              <span>Show Target</span>
+              <span id="lbl-toggle-target">Show Target</span>
             </label>
             <button type="button" id="btn-export-csv" class="btn-ghost">Export CSV</button>
-            <span id="table-count" class="table-count">0 runes</span>
+            <div class="table-count-block">
+              <span id="table-count" class="table-count">0 runes</span>
+              <span id="table-count-detail" class="table-count-detail" aria-live="polite"></span>
+            </div>
           </div>
-          <div class="table-wrap">
+          <div class="table-wrap" id="rune-table-scroll" tabindex="0" role="region" aria-label="Rune table">
             <table id="rune-table">
               <thead>
                 <tr>
@@ -283,8 +293,8 @@
                       <option value="">All</option>
                     </select>
                   </th>
-                  <th data-sort="level">Lvl</th>
-                  <th data-sort="slot" class="th-has-filter">
+                  <th data-sort="level" class="th-num">Lvl</th>
+                  <th data-sort="slot" class="th-has-filter th-num">
                     <span class="th-text" data-filter="slot">Slot</span>
                     <select id="filter-slot" class="th-filter">
                       <option value="">All</option>
@@ -301,7 +311,7 @@
                   <th data-sort="s2">Sub 2</th>
                   <th data-sort="s3">Sub 3</th>
                   <th data-sort="s4">Sub 4</th>
-                  <th data-sort="eff">Eff%</th>
+                  <th data-sort="eff" class="th-num">Eff%</th>
                   <th data-sort="role" class="th-has-filter">
                     <span class="th-text" data-filter="role">Role</span>
                     <select id="filter-role" class="th-filter">

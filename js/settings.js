@@ -27,7 +27,7 @@ const GRADE_NAMES = { 1:'Common', 2:'Magic', 3:'Rare', 4:'Hero', 5:'Legend' };
 const GRADE_SHORT = { 3:'Rare', 4:'Hero', 5:'Legend' };
 
 /** Shown in footer, changelog, and Copy summary — bump when shipping a user-visible build. */
-const APP_VERSION = '1.1.3';
+const APP_VERSION = '1.1.5';
 
 // ==== TRANSLATIONS ====
 const TRANSLATIONS = {
@@ -95,6 +95,11 @@ const TRANSLATIONS = {
     allGrades: 'All Grades',
     runes: 'runes',
     runeTableCountCapped: '{shown} / {total} {runes} in table',
+    tableResetFilters: 'Reset filters',
+    tableShownDetailEmpty: 'No runes match the current filters.',
+    tableShownDetailCapped: 'Showing {shown} of {total} matching runes (load more below).',
+    tableShownDetailAll: 'Showing all {total} matching runes.',
+    toggleTargetCol: 'Show Target',
     runeTableMoreHint:
       'Only the first {shown} rows are loaded for speed. Scroll to this area — then you can load all {total} matching runes (very large lists may feel slower).',
     runeTableShowAllButton: 'Load all {total} in table',
@@ -335,6 +340,11 @@ const TRANSLATIONS = {
     allGrades: 'Все Грейды',
     runes: 'рун',
     runeTableCountCapped: '{shown} / {total} {runes} в таблице',
+    tableResetFilters: 'Сбросить фильтры',
+    tableShownDetailEmpty: 'Нет рун по текущим фильтрам.',
+    tableShownDetailCapped: 'Показано {shown} из {total} подходящих рун (догрузка ниже).',
+    tableShownDetailAll: 'Показаны все {total} подходящих рун.',
+    toggleTargetCol: 'Колонка Target',
     runeTableMoreHint:
       'Для скорости сначала загружены только первые {shown} строк. Прокрутите сюда вниз — затем можно загрузить все {total} подходящих рун (очень большой список может тормозить).',
     runeTableShowAllButton: 'Загрузить все {total} в таблице',
@@ -1202,6 +1212,8 @@ const STATIC_CHANGELOG = [
     date: '2026-05-12',
     items: {
       en: [
+        '**v1.1.5** — Rune Table: Set and Eff% use the same chip style as stats; Grade / Role / Verdict toned down to soft tints and borders so they match the numeric columns without loud gradients.',
+        '**v1.1.4** — Rune Table: numeric columns right-aligned (tabular nums); filter chips on headers when active; zebra rows; sticky header in the scroll area; reset-filters control; debounced search with highlight; `/` focuses search, arrows/PageUp/PageDown scroll the table; URL state in `#runetable?…` (shareable); CSV exports Target only when that column is visible; always-visible “shown of total” line.',
         '**v1.1.3** — Dashboard chart stats column: small “n” / “avg” labels, softer monospace numbers, vertical stack and a light divider so counts are not a bold block beside gold percentages.',
         '**v1.1.2** — Dashboard role/set/slot bars use solid theme colors (accent / finish / grind); counts sit beside the bar so the number color is always the normal UI text color.',
         '**v1.1.1** — Verdict mix ordered by count (largest segment left); role/set/slot bar gradients use the same verdict/theme tokens as the rest of the dashboard; donate heart tint; Copy summary button stretches to the Global filter card height.',
@@ -1218,6 +1230,8 @@ const STATIC_CHANGELOG = [
         'Debug: each parsed rune keeps `_raw` from SWEX for troubleshooting.',
       ],
       ru: [
+        '**v1.1.5** — Таблица рун: Set и Eff% в тех же чипах, что статы; Grade / Role / Verdict приглушены (лёгкий тинт и рамка), без ярких градиентов, ближе к колонкам с цифрами.',
+        '**v1.1.4** — Таблица рун: выравнивание чисел вправо; подсветка активных фильтров в шапке; чередование строк; липкая шапка в зоне прокрутки; кнопка сброса фильтров; поиск с задержкой и подсветкой; `/` — фокус поиска, стрелки/PageUp/PageDown — прокрутка таблицы; состояние в `#runetable?…`; CSV с Target только если колонка видна; строка «показано из» всегда под счётчиком.',
         '**v1.1.3** — Колонка статистики у графиков: подписи n / ср., приглушённые цифры, две строки и разделитель — без «кучи» жирных чисел рядом с процентами.',
         '**v1.1.2** — Полосы ролей/сетов/слотов на дашборде — сплошные цвета темы (accent / finish / grind); числа рядом с полосой, цвет как у обычного текста интерфейса.',
         '**v1.1.1** — Verdict mix по убыванию числа рун (крупнейший сегмент слева); градиенты ролей/сетов/слотов из тех же токенов, что вердикты и тема; красное сердце у доната; кнопка Copy summary по высоте карточки Global filter.',

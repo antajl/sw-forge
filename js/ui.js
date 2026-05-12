@@ -17,7 +17,14 @@
   let sortDir  = 'desc';
   /** First paint of Rune Table: this many rows; user can load the rest explicitly. */
   const RUNE_TABLE_PAGE = 500;
+  const RUNE_TABLE_SORT_KEYS = new Set([
+    'grade', 'set', 'level', 'slot', 'main', 'eff', 'role', 'verdict', 's1', 's2', 's3', 's4',
+  ]);
   let runeTableShowAll = false;
+  let runeTableApplyingHash = false;
+  /** Lowercase search string for highlighting table cells (full query, not debounced). */
+  let tableSearchHighlight = '';
+  let searchDebounceTimer = null;
   let runeTableMoreObserver = null;
   let globalMinLevel = 0;
   let globalMinGrade = 3;
@@ -172,11 +179,19 @@
   /** Main nav tab ids — kept in URL as `#settings` etc. so refresh restores the same view. */
   const MAIN_TAB_IDS = ['dashboard', 'runetable', 'settings', 'guide', 'changelog', 'app-settings'];
 
-  function mainTabIdFromHash() {
-    let h = (window.location.hash || '').replace(/^#/, '').trim();
-    if (!h) return null;
+  function splitMainHash() {
+    const raw = (window.location.hash || '').replace(/^#/, '').trim();
+    if (!raw) return { tab: null, query: '' };
+    const qm = raw.indexOf('?');
+    const tabPart = (qm === -1 ? raw : raw.slice(0, qm)).trim();
+    const query = qm === -1 ? '' : raw.slice(qm + 1);
+    let h = tabPart;
     if (h.startsWith('tab-')) h = h.slice(4);
-    return MAIN_TAB_IDS.includes(h) ? h : null;
+    return { tab: MAIN_TAB_IDS.includes(h) ? h : null, query };
+  }
+
+  function mainTabIdFromHash() {
+    return splitMainHash().tab;
   }
 
   /**
@@ -208,10 +223,21 @@
         const base = window.location.pathname + window.location.search;
         if (id === 'dashboard') {
           history.replaceState(null, '', base);
+        } else if (id === 'runetable') {
+          const suf = buildRuneTableQuerySuffix();
+          history.replaceState(null, '', `${base}#runetable${suf}`);
         } else {
           history.replaceState(null, '', `${base}#${id}`);
         }
       } catch (e) { /* ignore */ }
+    }
+
+    if (id === 'runetable') {
+      const { query } = splitMainHash();
+      if (query) applyRuneTableQueryParams(new URLSearchParams(query));
+      updateSortHeaderClasses();
+      updateRuneTableFilterIndicators();
+      applyFiltersAndSort(getVisibleRunes(), { preserveTableExpansion: true });
     }
   }
 
@@ -415,6 +441,10 @@
 
     const btnExport = document.getElementById('btn-export-csv');
     if (btnExport) btnExport.textContent = t.exportTableCsv || 'Export CSV';
+    const btnResetTbl = document.getElementById('btn-table-reset-filters');
+    if (btnResetTbl) btnResetTbl.textContent = t.tableResetFilters || 'Reset filters';
+    const lblTgt = document.getElementById('lbl-toggle-target');
+    if (lblTgt) lblTgt.textContent = t.toggleTargetCol || 'Show Target';
 
     const filterGrade = document.getElementById('filter-grade');
     if (filterGrade) {
@@ -1762,11 +1792,151 @@
     runeTableMoreObserver.observe(sentinel);
   }
 
+  function buildRuneTableQuerySuffix() {
+    const p = new URLSearchParams();
+    const q = (document.getElementById('search-box')?.value || '').trim();
+    if (q) p.set('q', q);
+    const fv = document.getElementById('filter-verdict')?.value;
+    if (fv) p.set('verdict', fv);
+    const fr = document.getElementById('filter-role')?.value;
+    if (fr) p.set('role', fr);
+    const fg = document.getElementById('filter-grade')?.value;
+    if (fg) p.set('grade', fg);
+    const fs = document.getElementById('filter-set')?.value;
+    if (fs) p.set('set', fs);
+    const fsl = document.getElementById('filter-slot')?.value;
+    if (fsl) p.set('slot', fsl);
+    const fm = document.getElementById('filter-main')?.value;
+    if (fm) p.set('main', fm);
+    if (sortKey !== 'eff') p.set('sort', sortKey);
+    if (sortDir !== 'desc') p.set('dir', sortDir);
+    if (document.getElementById('toggle-target-col')?.checked) p.set('target', '1');
+    if (runeTableShowAll) p.set('all', '1');
+    const s = p.toString();
+    return s ? `?${s}` : '';
+  }
+
+  function replaceRuneTableLocationFromState() {
+    if (runeTableApplyingHash) return;
+    const tabEl = document.getElementById('tab-runetable');
+    if (!tabEl || tabEl.classList.contains('hidden')) return;
+    try {
+      const base = window.location.pathname + window.location.search;
+      const suf = buildRuneTableQuerySuffix();
+      history.replaceState(null, '', `${base}#runetable${suf}`);
+    } catch (e) { /* ignore */ }
+  }
+
+  function applyRuneTableQueryParams(params) {
+    if (!params) return;
+    const keys = [...params.keys()];
+    if (!keys.length) return;
+    runeTableApplyingHash = true;
+    try {
+      if (params.has('q')) document.getElementById('search-box').value = params.get('q');
+      if (params.has('verdict')) document.getElementById('filter-verdict').value = params.get('verdict');
+      if (params.has('role')) document.getElementById('filter-role').value = params.get('role');
+      if (params.has('grade')) document.getElementById('filter-grade').value = params.get('grade');
+      if (params.has('set')) document.getElementById('filter-set').value = params.get('set');
+      if (params.has('slot')) document.getElementById('filter-slot').value = params.get('slot');
+      if (params.has('main')) document.getElementById('filter-main').value = params.get('main');
+      const sk = params.get('sort');
+      if (sk && RUNE_TABLE_SORT_KEYS.has(sk)) sortKey = sk;
+      const sd = params.get('dir');
+      if (sd === 'asc' || sd === 'desc') sortDir = sd;
+      if (params.has('target')) {
+        const on = params.get('target') === '1';
+        const tgl = document.getElementById('toggle-target-col');
+        if (tgl) tgl.checked = on;
+      }
+      if (params.has('all')) runeTableShowAll = params.get('all') === '1';
+      else runeTableShowAll = false;
+      const manualTarget = document.getElementById('toggle-target-col')?.checked;
+      document.getElementById('target-col-header')?.classList.toggle('hidden', !manualTarget);
+      document.getElementById('rune-table')?.classList.toggle('show-target', !!manualTarget);
+    } finally {
+      runeTableApplyingHash = false;
+    }
+  }
+
+  function updateSortHeaderClasses() {
+    document.querySelectorAll('#rune-table thead th[data-sort]').forEach((t) => {
+      t.classList.remove('sort-asc', 'sort-desc');
+      if (t.dataset.sort === sortKey) {
+        t.classList.add(sortDir === 'asc' ? 'sort-asc' : 'sort-desc');
+      }
+    });
+  }
+
+  function updateRuneTableFilterIndicators() {
+    document.querySelectorAll('#rune-table thead .th-text[data-filter]').forEach((textEl) => {
+      const key = textEl.getAttribute('data-filter');
+      const sel = document.getElementById(
+        key === 'grade' ? 'filter-grade'
+          : key === 'set' ? 'filter-set'
+            : key === 'slot' ? 'filter-slot'
+              : key === 'main' ? 'filter-main'
+                : key === 'role' ? 'filter-role'
+                  : key === 'verdict' ? 'filter-verdict' : ''
+      );
+      const on = !!(sel && sel.value);
+      textEl.classList.toggle('th-text--filtered', on);
+    });
+  }
+
+  function highlightSearchInPlain(text, qRaw) {
+    const q = (qRaw || '').trim().toLowerCase();
+    const t = String(text ?? '');
+    if (!q) return escapeHtml(t);
+    const tl = t.toLowerCase();
+    const parts = [];
+    let i = 0;
+    while (i < t.length) {
+      const idx = tl.indexOf(q, i);
+      if (idx === -1) {
+        parts.push(escapeHtml(t.slice(i)));
+        break;
+      }
+      if (idx > i) parts.push(escapeHtml(t.slice(i, idx)));
+      parts.push(`<mark class="search-hit">${escapeHtml(t.slice(idx, idx + q.length))}</mark>`);
+      i = idx + q.length;
+    }
+    return parts.join('');
+  }
+
+  function resetRuneTableFilters() {
+    const sb = document.getElementById('search-box');
+    if (sb) sb.value = '';
+    const fv = document.getElementById('filter-verdict');
+    if (fv) fv.value = '';
+    const fr = document.getElementById('filter-role');
+    if (fr) fr.value = '';
+    const fg = document.getElementById('filter-grade');
+    if (fg) fg.value = '';
+    const fs = document.getElementById('filter-set');
+    if (fs) fs.value = '';
+    const fsl = document.getElementById('filter-slot');
+    if (fsl) fsl.value = '';
+    const fm = document.getElementById('filter-main');
+    if (fm) fm.value = '';
+    const tgl = document.getElementById('toggle-target-col');
+    if (tgl) tgl.checked = false;
+    document.getElementById('target-col-header')?.classList.add('hidden');
+    document.getElementById('rune-table')?.classList.remove('show-target');
+    sortKey = 'eff';
+    sortDir = 'desc';
+    runeTableShowAll = false;
+    updateSortHeaderClasses();
+    updateRuneTableFilterIndicators();
+    applyFiltersAndSort(getVisibleRunes());
+  }
+
   function applyFiltersAndSort(runes, opts) {
     if (!opts || !opts.preserveTableExpansion) {
       runeTableShowAll = false;
     }
     const search  = (document.getElementById('search-box')?.value || '').toLowerCase();
+    tableSearchHighlight = search;
     const verdict = document.getElementById('filter-verdict')?.value || '';
     const role    = document.getElementById('filter-role')?.value    || '';
     const grade   = document.getElementById('filter-grade')?.value   || '';
@@ -1782,9 +1952,11 @@
       if (slotVal && String(r.slot) !== slotVal) return false;
       if (mainVal && r.mainName !== mainVal) return false;
       if (search) {
+        const subParts = (r.substats || []).flatMap((s) => [s.name, String(s.val ?? '')]);
         const haystack = [
           r.setName, r.mainName, r.gradeStr, r.role, r.verdict,
-          ...r.substats.map(s => s.name)
+          r.innate_name, String(r.innate_val ?? ''),
+          ...subParts,
         ].join(' ').toLowerCase();
         if (!haystack.includes(search)) return false;
       }
@@ -1799,9 +1971,9 @@
     const cap = runeTableShowAll ? total : Math.min(RUNE_TABLE_PAGE, total);
     const rows = filteredRunes.slice(0, cap);
 
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const countEl = document.getElementById('table-count');
     if (countEl) {
-      const t = TRANSLATIONS[currentLang];
       if (!runeTableShowAll && total > RUNE_TABLE_PAGE) {
         const tmpl = t.runeTableCountCapped || '{shown} / {total} {runes}';
         countEl.textContent = tmpl
@@ -1813,20 +1985,42 @@
       }
     }
 
+    const detailEl = document.getElementById('table-count-detail');
+    if (detailEl) {
+      if (total === 0) {
+        detailEl.textContent = t.tableShownDetailEmpty || '';
+      } else if (!runeTableShowAll && total > RUNE_TABLE_PAGE) {
+        detailEl.textContent = (t.tableShownDetailCapped || '')
+          .replace(/\{shown\}/g, String(cap))
+          .replace(/\{total\}/g, String(total));
+      } else {
+        detailEl.textContent = (t.tableShownDetailAll || '')
+          .replace(/\{total\}/g, String(total));
+      }
+    }
+
     const verdictFilter = document.getElementById('filter-verdict')?.value || '';
-    const showTarget = verdictFilter === 'Grind' || verdictFilter === 'Gem';
+    const needTargetByVerdict = verdictFilter === 'Grind' || verdictFilter === 'Gem';
+    const tglTarget = document.getElementById('toggle-target-col');
+    if (needTargetByVerdict && tglTarget && !tglTarget.checked) tglTarget.checked = true;
+    const targetManual = document.getElementById('toggle-target-col')?.checked;
+    const showTarget = needTargetByVerdict || targetManual;
     document.getElementById('target-col-header')?.classList.toggle('hidden', !showTarget);
     document.getElementById('target-filter-cell')?.classList.toggle('hidden', !showTarget);
     document.getElementById('rune-table')?.classList.toggle('show-target', showTarget);
     tbody.innerHTML = rows.map(r => runeRow(r)).join('');
     renderRuneSummary(filteredRunes);
     setupRuneTableMoreUi(total, rows.length);
+    updateRuneTableFilterIndicators();
+    replaceRuneTableLocationFromState();
   }
 
   function exportCsv() {
     const rows = filteredRunes;
     if (!rows.length) return;
-    const headers = ['Grade', 'Set', 'Lvl', 'Slot', 'Main', 'Innate', 'Sub1', 'Sub2', 'Sub3', 'Sub4', 'Eff%', 'Role', 'Verdict', 'Target'];
+    const includeTarget = document.getElementById('rune-table')?.classList.contains('show-target');
+    const headers = ['Grade', 'Set', 'Lvl', 'Slot', 'Main', 'Innate', 'Sub1', 'Sub2', 'Sub3', 'Sub4', 'Eff%', 'Role', 'Verdict'];
+    if (includeTarget) headers.push('Target');
     function cellPart(s) {
       const raw = String(s ?? '');
       if (/[,"\n\r]/.test(raw)) return `"${raw.replace(/"/g, '""')}"`;
@@ -1854,8 +2048,8 @@
         `${r.eff}%`,
         r.role || '',
         r.verdict || '',
-        runeTargetText(r),
       ];
+      if (includeTarget) row.push(runeTargetText(r));
       lines.push(row.map(cellPart).join(','));
     });
     const csv = `\uFEFF${lines.join('\r\n')}`;
@@ -1873,8 +2067,9 @@
     if (!s || !s.name) return '';
     const cls = statClass(s.name);
     const flat = s.flat ? ' flat' : '';
+    const inner = highlightSearchInPlain(`${s.name} ${s.val}`, tableSearchHighlight);
     // Base-only in the main rune table. Gem/grind are shown only via Target details.
-    return `<span class="stat-chip ${cls}${flat}">${s.name} ${s.val}</span>`;
+    return `<span class="stat-chip ${cls}${flat}">${inner}</span>`;
   }
 
   function statClass(name) {
@@ -1893,35 +2088,39 @@
   }
 
   function runeRow(r) {
-    const gradeTags = {
-      Legend: '<span class="grade-tag legend">Legend</span>',
-      Hero: '<span class="grade-tag hero">Hero</span>',
-      Rare: '<span class="grade-tag rare">Rare</span>',
-    };
-    const grade = gradeTags[r.gradeStr]
-      || `<span class="grade-tag grade-tag--other">${escapeHtml(String(r.gradeStr))}</span>`;
+    const gradeKey = r.gradeStr;
+    const gradeClass = { Legend: 'legend', Hero: 'hero', Rare: 'rare' }[gradeKey] || 'grade-tag--other';
+    const gradeLabel = { Legend: 'Legend', Hero: 'Hero', Rare: 'Rare' }[gradeKey] || String(r.gradeStr);
+    const grade = `<span class="grade-tag ${gradeClass}">${highlightSearchInPlain(gradeLabel, tableSearchHighlight)}</span>`;
 
-    const effCls = r.eff >= 90 ? 'eff-hi' : r.eff >= 75 ? 'eff-mid' : 'eff-lo';
+    const effTier = r.eff >= 90 ? 'stat-chip--eff-hi' : r.eff >= 75 ? 'stat-chip--eff-mid' : 'stat-chip--eff-lo';
     const rCls   = roleClass(r.role);
     const subs   = r.substats.slice(0, 4);
     const innate = r.innate_name ? `${r.innate_name} ${r.innate_val}` : '';
+    const innateHtml = innate
+      ? `<span class="stat-chip">${highlightSearchInPlain(innate, tableSearchHighlight)}</span>`
+      : '';
     const target = runeTargetText(r);
+    const targetHtml = target
+      ? `<span class="stat-chip">${highlightSearchInPlain(target, tableSearchHighlight)}</span>`
+      : '';
+    const mainInner = highlightSearchInPlain(r.mainName, tableSearchHighlight);
 
     return `<tr>
       <td>${grade}</td>
-      <td>${r.setName}</td>
-      <td><span class="stat-chip">${r.level}</span></td>
-      <td><span class="stat-chip">${r.slot}</span></td>
-      <td><span class="stat-chip ${statClass(r.mainName)}">${r.mainName}</span></td>
-      <td>${innate ? `<span class="stat-chip">${innate}</span>` : ''}</td>
+      <td><span class="stat-chip stat-chip--set">${highlightSearchInPlain(r.setName, tableSearchHighlight)}</span></td>
+      <td class="td-num"><span class="stat-chip">${highlightSearchInPlain(String(r.level), tableSearchHighlight)}</span></td>
+      <td class="td-num"><span class="stat-chip">${highlightSearchInPlain(String(r.slot), tableSearchHighlight)}</span></td>
+      <td><span class="stat-chip ${statClass(r.mainName)}">${mainInner}</span></td>
+      <td>${innateHtml}</td>
       <td>${subs[0] ? statChip(subs[0]) : ''}</td>
       <td>${subs[1] ? statChip(subs[1]) : ''}</td>
       <td>${subs[2] ? statChip(subs[2]) : ''}</td>
       <td>${subs[3] ? statChip(subs[3]) : ''}</td>
-      <td class="${effCls}">${r.eff}%</td>
-      <td><span class="role-tag ${rCls}">${r.role || ''}</span></td>
-      <td><span class="verdict-tag ${(r.verdict||'').toLowerCase()}">${r.verdict || ''}</span></td>
-      <td class="target-col-cell">${target ? `<span class="stat-chip">${target}</span>` : ''}</td>
+      <td class="td-num"><span class="stat-chip stat-chip--eff ${effTier}">${highlightSearchInPlain(`${r.eff}%`, tableSearchHighlight)}</span></td>
+      <td><span class="role-tag ${rCls}">${highlightSearchInPlain(r.role || '', tableSearchHighlight)}</span></td>
+      <td><span class="verdict-tag ${(r.verdict||'').toLowerCase()}">${highlightSearchInPlain(r.verdict || '', tableSearchHighlight)}</span></td>
+      <td class="target-col-cell">${targetHtml}</td>
     </tr>`;
   }
 
@@ -2049,17 +2248,61 @@
   });
 
   // Toggle Target column visibility
-  document.getElementById('toggle-target-col')?.addEventListener('change', (e) => {
-    const show = e.target.checked;
-    document.getElementById('target-col-header')?.classList.toggle('hidden', !show);
-    document.getElementById('target-filter-cell')?.classList.toggle('hidden', !show);
-    document.getElementById('rune-table')?.classList.toggle('show-target', show);
+  document.getElementById('toggle-target-col')?.addEventListener('change', () => {
+    applyFiltersAndSort(getVisibleRunes(), { preserveTableExpansion: true });
   });
 
-  // Table filters
-  ['search-box','filter-verdict','filter-role','filter-grade','filter-set','filter-slot','filter-main'].forEach(id => {
+  document.getElementById('btn-table-reset-filters')?.addEventListener('click', () => {
+    resetRuneTableFilters();
+  });
+
+  // Table filters (search debounced separately)
+  ['filter-verdict', 'filter-role', 'filter-grade', 'filter-set', 'filter-slot', 'filter-main'].forEach((id) => {
     document.getElementById(id)?.addEventListener('input', () => applyFiltersAndSort(getVisibleRunes()));
     document.getElementById(id)?.addEventListener('change', () => applyFiltersAndSort(getVisibleRunes()));
+  });
+
+  document.getElementById('search-box')?.addEventListener('input', () => {
+    clearTimeout(searchDebounceTimer);
+    searchDebounceTimer = setTimeout(() => {
+      searchDebounceTimer = null;
+      applyFiltersAndSort(getVisibleRunes());
+    }, 280);
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.defaultPrevented) return;
+    const tag = e.target && e.target.tagName;
+    const inField = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT'
+      || (e.target && e.target.isContentEditable);
+    const tabRt = document.getElementById('tab-runetable');
+    const onTableTab = tabRt && !tabRt.classList.contains('hidden');
+
+    if (e.key === '/' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      if (inField && e.target.id !== 'search-box') return;
+      if (inField && e.target.id === 'search-box') return;
+      e.preventDefault();
+      document.getElementById('search-box')?.focus();
+      return;
+    }
+
+    if (!onTableTab || inField) return;
+    const wrap = document.getElementById('rune-table-scroll');
+    if (!wrap) return;
+    const step = Math.max(96, Math.floor(wrap.clientHeight * 0.82));
+    if (e.key === 'PageDown') {
+      e.preventDefault();
+      wrap.scrollBy({ top: step, behavior: 'smooth' });
+    } else if (e.key === 'PageUp') {
+      e.preventDefault();
+      wrap.scrollBy({ top: -step, behavior: 'smooth' });
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      wrap.scrollBy({ top: 56, behavior: 'smooth' });
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      wrap.scrollBy({ top: -56, behavior: 'smooth' });
+    }
   });
 
   // ===================== ADVANCED FORMULAS UI =====================

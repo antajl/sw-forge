@@ -28,7 +28,16 @@ const GRADE_NAMES = { 1:'Common', 2:'Magic', 3:'Rare', 4:'Hero', 5:'Legend' };
 const GRADE_SHORT = { 3:'Rare', 4:'Hero', 5:'Legend' };
 
 /** Shown in footer, changelog, and Copy summary — bump when shipping a user-visible build. */
-const APP_VERSION = '1.2.9';
+const APP_VERSION = '1.2.15';
+
+/**
+ * Debug only: when true, the verdict engine skips every check that compares `rune.eff`
+ * (Gem quality gate, Reapp max-eff, Hero +9…+11 Sell-on-low-eff, and the no-role branch that
+ * only exists to Sell by eff — that branch falls through to Grind/Keep). `rune.eff` is still
+ * filled by the parser; dashboard, charts, table, and sorting are unchanged.
+ * Set to `true` locally to compare behavior with spreadsheets; keep `false` for normal use.
+ */
+const DEBUG_BYPASS_EFFICIENCY_GATES = false;
 
 // ==== TRANSLATIONS ====
 const TRANSLATIONS = {
@@ -630,6 +639,12 @@ const DEFAULT_DUO_THRESHOLDS = {
   RES_for_DEF:   { Early_Leg:14, Early_Hero:11, Mid_Leg:16, Mid_Hero:14, Late_Leg:20, Late_Hero:14 },
   HP_for_RES:    { Early_Leg:14, Early_Hero:11, Mid_Leg:16, Mid_Hero:14, Late_Leg:20, Late_Hero:14 },
   RES_for_HP:    { Early_Leg:14, Early_Hero:11, Mid_Leg:16, Mid_Hero:14, Late_Leg:20, Late_Hero:14 },
+  HP_for_CDmg:   { Early_Leg:14, Early_Hero:11, Mid_Leg:16, Mid_Hero:14, Late_Leg:20, Late_Hero:14 },
+  CDmg_for_HP:   { Early_Leg:12, Early_Hero:9,  Mid_Leg:15, Mid_Hero:12, Late_Leg:17, Late_Hero:14 },
+  HP_for_ACC:    { Early_Leg:14, Early_Hero:11, Mid_Leg:16, Mid_Hero:14, Late_Leg:20, Late_Hero:14 },
+  ACC_for_HP:    { Early_Leg:18, Early_Hero:14, Mid_Leg:22, Mid_Hero:18, Late_Leg:27, Late_Hero:23 },
+  DEF_for_ACC:   { Early_Leg:14, Early_Hero:11, Mid_Leg:16, Mid_Hero:14, Late_Leg:20, Late_Hero:14 },
+  ACC_for_DEF:   { Early_Leg:18, Early_Hero:14, Mid_Leg:22, Mid_Hero:18, Late_Leg:27, Late_Hero:23 },
 };
 
 /** Stat order for the Constants table (8 substats). */
@@ -643,20 +658,21 @@ function roundThresh(x) {
 
 /**
  * Stage+grade High Roll threshold cell from Constants:
- * Mid_Hero = Base; Mid_Leg = Base×(1−Grade_Mod); Early_Hero = Base×Early_Scale; Late_Hero = Base×Late_Scale;
+ * Mid_Hero = Base; Mid_Leg = Base×(1−Grade_Mod);
+ * Early_Hero = Base×(1−Early_Discount); Late_Hero = Base×(1+Late_Tougher);
  * Early/Legend and Late/Legend = Hero cell × (1−Grade_Mod).
  */
 function stageHrValue(statRow, colKey) {
   const base = Number(statRow.base);
   if (!Number.isFinite(base) || base <= 0) return 0;
-  const earlyScale = Number.isFinite(Number(statRow.earlyScale)) ? Number(statRow.earlyScale) : 1;
-  const lateScale = Number.isFinite(Number(statRow.lateScale)) ? Number(statRow.lateScale) : 1;
+  const earlyDiscount = Number.isFinite(Number(statRow.earlyScale)) ? Number(statRow.earlyScale) : 0;
+  const lateTougher = Number.isFinite(Number(statRow.lateScale)) ? Number(statRow.lateScale) : 0;
   const gradeMod = Number.isFinite(Number(statRow.gradeMod)) ? Number(statRow.gradeMod) : 0;
   const leg = colKey.indexOf('_Leg') !== -1;
   const heroFactor = leg ? (1 - gradeMod) : 1;
-  if (colKey.startsWith('Early')) return base * earlyScale * heroFactor;
+  if (colKey.startsWith('Early')) return base * (1 - earlyDiscount) * heroFactor;
   if (colKey.startsWith('Mid')) return (leg ? base * (1 - gradeMod) : base);
-  if (colKey.startsWith('Late')) return base * lateScale * heroFactor;
+  if (colKey.startsWith('Late')) return base * (1 + lateTougher) * heroFactor;
   return base;
 }
 
@@ -665,14 +681,14 @@ function stageHrValue(statRow, colKey) {
  * HR/Duo threshold grids are derived — do not duplicate numbers here and in DEFAULT_THRESHOLDS manually.
  */
 const EXPLICIT_DEFAULT_STAT_CONSTANTS = {
-  SPD:    { base: 16, godMod: 0.30, duoMod: 0.20, earlyScale: 0.80, lateScale: 1.30, gradeMod: 0.05 },
-  'HP%':  { base: 20, godMod: 0.40, duoMod: 0.25, earlyScale: 0.80, lateScale: 1.20, gradeMod: 0.08 },
-  'DEF%': { base: 20, godMod: 0.40, duoMod: 0.25, earlyScale: 0.80, lateScale: 1.20, gradeMod: 0.08 },
-  'ATK%': { base: 17, godMod: 0.40, duoMod: 0.25, earlyScale: 0.80, lateScale: 1.20, gradeMod: 0.08 },
-  CRate:  { base: 13, godMod: 0.35, duoMod: 0.30, earlyScale: 0.80, lateScale: 1.15, gradeMod: 0.05 },
-  CDmg:   { base: 16, godMod: 0.40, duoMod: 0.30, earlyScale: 0.80, lateScale: 1.20, gradeMod: 0.08 },
-  ACC:    { base: 18, godMod: 0.30, duoMod: 0.30, earlyScale: 0.80, lateScale: 1.15, gradeMod: 0.10 },
-  RES:    { base: 18, godMod: 0.30, duoMod: 0.30, earlyScale: 0.80, lateScale: 1.15, gradeMod: 0.10 },
+  SPD:    { base: 16, godMod: 0.25, duoMod: 0.15, earlyScale: 0.20, lateScale: 0.30, gradeMod: 0.05 },
+  'HP%':  { base: 20, godMod: 0.30, duoMod: 0.25, earlyScale: 0.20, lateScale: 0.20, gradeMod: 0.08 },
+  'DEF%': { base: 20, godMod: 0.30, duoMod: 0.25, earlyScale: 0.20, lateScale: 0.20, gradeMod: 0.08 },
+  'ATK%': { base: 17, godMod: 0.30, duoMod: 0.25, earlyScale: 0.20, lateScale: 0.20, gradeMod: 0.08 },
+  CRate:  { base: 13, godMod: 0.25, duoMod: 0.25, earlyScale: 0.20, lateScale: 0.15, gradeMod: 0.05 },
+  CDmg:   { base: 16, godMod: 0.30, duoMod: 0.30, earlyScale: 0.20, lateScale: 0.20, gradeMod: 0.08 },
+  ACC:    { base: 18, godMod: 0.30, duoMod: 0.30, earlyScale: 0.20, lateScale: 0.15, gradeMod: 0.10 },
+  RES:    { base: 18, godMod: 0.30, duoMod: 0.30, earlyScale: 0.20, lateScale: 0.15, gradeMod: 0.10 },
 };
 
 function defaultStatConstants() {
@@ -767,8 +783,8 @@ function inferStatConstantsFromLegacyHrDuo(hr, duo, god) {
     const eh = Number(row.Early_Hero);
     const lh = Number(row.Late_Hero);
     const ml = Number(row.Mid_Leg);
-    const earlyScale = base > 0 && Number.isFinite(eh) ? eh / base : 1;
-    const lateScale = base > 0 && Number.isFinite(lh) ? lh / base : 1;
+    const earlyScale = base > 0 && Number.isFinite(eh) ? (1 - (eh / base)) : 0;
+    const lateScale = base > 0 && Number.isFinite(lh) ? ((lh / base) - 1) : 0;
     const gradeMod = base > 0 && Number.isFinite(ml) ? 1 - ml / base : 0;
     sc[stat] = {
       base,
@@ -816,6 +832,7 @@ function computeDuoThresholds(statConstants, hrTable) {
     'SPD_partner_CRate',
     'CRate_for_CDmg', 'CDmg_for_CRate', 'CRate_for_ATK', 'ATK_for_CRate',
     'HP_for_DEF', 'DEF_for_HP', 'DEF_for_RES', 'RES_for_DEF', 'HP_for_RES', 'RES_for_HP',
+    'HP_for_CDmg', 'CDmg_for_HP', 'HP_for_ACC', 'ACC_for_HP', 'DEF_for_ACC', 'ACC_for_DEF',
   ];
   for (let ki = 0; ki < keys.length; ki++) {
     d[keys[ki]] = {};
@@ -841,18 +858,31 @@ function computeDuoThresholds(statConstants, hrTable) {
     d.RES_for_DEF[col] = duoLineForStat('RES', col, hrTable, statConstants);
     d.HP_for_RES[col] = duoLineForStat('HP%', col, hrTable, statConstants);
     d.RES_for_HP[col] = duoLineForStat('RES', col, hrTable, statConstants);
+    d.HP_for_CDmg[col] = duoLineForStat('HP%', col, hrTable, statConstants);
+    d.CDmg_for_HP[col] = duoLineForStat('CDmg', col, hrTable, statConstants);
+    d.HP_for_ACC[col] = duoLineForStat('HP%', col, hrTable, statConstants);
+    d.ACC_for_HP[col] = duoLineForStat('ACC', col, hrTable, statConstants);
+    d.DEF_for_ACC[col] = duoLineForStat('DEF%', col, hrTable, statConstants);
+    d.ACC_for_DEF[col] = duoLineForStat('ACC', col, hrTable, statConstants);
   }
   return d;
 }
 
-/** God threshold: Base × (1 + God_Mod) from statConstants (stage-independent). */
-function getGodThreshold(stat, settings) {
+/**
+ * God threshold by grade:
+ * Hero/Rare: base × (1 + godMod)
+ * Legend:    base × (1 - gradeMod) × (1 + godMod)
+ */
+function getGodThreshold(stat, settings, gradeStr) {
   const row = settings?.statConstants?.[stat];
   if (!row || row.base == null) return null;
   const base = Number(row.base);
   if (!Number.isFinite(base) || base <= 0) return null;
   const mod = Number.isFinite(Number(row.godMod)) ? Number(row.godMod) : 0;
-  return base * (1 + mod);
+  const gradeMod = Number.isFinite(Number(row.gradeMod)) ? Number(row.gradeMod) : 0;
+  const isLegend = gradeStr === 'Legend';
+  const baseByGrade = isLegend ? base * (1 - gradeMod) : base;
+  return baseByGrade * (1 + mod);
 }
 
 /** godConstants mirror for legacy readers — derived from statConstants. */
@@ -882,7 +912,7 @@ function mergeGodConstants(saved) {
 const DEFAULT_FORMULAS = {
   'Classic DPS': {
     enabled: true,
-    acceptedMains: { 2: ['SPD', 'None', 'None'], 4: ['CRate', 'CDmg', 'None'], 6: ['ATK%', 'None', 'None'] },
+    acceptedMains: { 2: 'ATK%', 4: 'CDmg, CRate', 6: 'ATK%' },
     substats: {
       SPD: { Early: 'Include', Mid: 'Include', Late: 'Include' },
       'HP%': { Early: 'None', Mid: 'None', Late: 'None' },
@@ -894,13 +924,13 @@ const DEFAULT_FORMULAS = {
       RES: { Early: 'None', Mid: 'None', Late: 'None' },
     },
     mustHave: { Early: 'SPD', Mid: 'SPD', Late: 'SPD' },
-    slotRequirements: { 2: { Early: 'None', Mid: 'None', Late: 'None' }, 4: { Early: 'SPD', Mid: 'SPD', Late: 'SPD' }, 6: { Early: 'CRate', Mid: 'CRate', Late: 'CRate' } },
+    slotRequirements: { 2: { Early: 'None', Mid: 'None', Late: 'None' }, 4: { Early: 'None', Mid: 'None', Late: 'None' }, 6: { Early: 'CRate', Mid: 'CRate', Late: 'CRate' } },
     minStats: { '1/3/5': { Early: 1, Mid: 2, Late: 3 }, 'Slot 2': { Early: 1, Mid: 1, Late: 2 }, 'Slot 4': { Early: 1, Mid: 1, Late: 2 }, 'Slot 6': { Early: 1, Mid: 1, Late: 2 } },
     requireHR: { 'High Roll for Hero': { Early: false, Mid: true, Late: true }, 'High Roll for Legend': { Early: false, Mid: false, Late: true } },
   },
   'Slow DPS': {
     enabled: true,
-    acceptedMains: { 2: ['ATK%', 'None', 'None'], 4: ['CRate', 'CDmg', 'None'], 6: ['ATK%', 'None', 'None'] },
+    acceptedMains: { 2: 'ATK%', 4: 'CDmg, CRate', 6: 'ATK%' },
     substats: {
       SPD: { Early: 'None', Mid: 'None', Late: 'None' },
       'HP%': { Early: 'None', Mid: 'None', Late: 'None' },
@@ -918,43 +948,53 @@ const DEFAULT_FORMULAS = {
   },
   'Bomber': {
     enabled: true,
-    acceptedMains: { 2: ['SPD', 'ATK%', 'None'], 4: ['ATK%', 'None', 'None'], 6: ['ATK%', 'ACC', 'None'] },
+    acceptedMains: { 2: 'ATK%', 4: 'ATK%', 6: 'ATK%' },
     substats: {
       SPD: { Early: 'Include', Mid: 'Include', Late: 'Include' },
-      'HP%': { Early: 'None', Mid: 'None', Late: 'None' },
+      'HP%': { Early: 'Include', Mid: 'Include', Late: 'Include' },
       'ATK%': { Early: 'Include', Mid: 'Include', Late: 'Include' },
-      'DEF%': { Early: 'None', Mid: 'None', Late: 'None' },
-      CRate: { Early: 'None', Mid: 'None', Late: 'None' },
-      CDmg: { Early: 'None', Mid: 'None', Late: 'None' },
+      'DEF%': { Early: 'Include', Mid: 'Include', Late: 'Include' },
+      CRate: { Early: 'Exclude', Mid: 'Exclude', Late: 'Exclude' },
+      CDmg: { Early: 'Exclude', Mid: 'Exclude', Late: 'Exclude' },
       ACC: { Early: 'Include', Mid: 'Include', Late: 'Include' },
       RES: { Early: 'None', Mid: 'None', Late: 'None' }
     },
     mustHave: { Early: 'ATK%', Mid: 'ATK%', Late: 'ATK%' },
     slotRequirements: { 2: { Early: 'None', Mid: 'None', Late: 'None' }, 4: { Early: 'None', Mid: 'None', Late: 'None' }, 6: { Early: 'None', Mid: 'None', Late: 'None' } },
-    minStats: { '1/3/5': { Early: 1, Mid: 2, Late: 2 }, 'Slot 2': { Early: 1, Mid: 1, Late: 1 }, 'Slot 4': { Early: 1, Mid: 1, Late: 1 }, 'Slot 6': { Early: 1, Mid: 1, Late: 1 } },
+    minStats: {
+      '1/3/5': { Early: 2, Mid: 2, Late: 3 },
+      'Slot 2': { Early: 2, Mid: 2, Late: 3 },
+      'Slot 4': { Early: 2, Mid: 2, Late: 3 },
+      'Slot 6': { Early: 2, Mid: 2, Late: 3 },
+    },
     requireHR: { 'High Roll for Hero': { Early: false, Mid: true, Late: true }, 'High Roll for Legend': { Early: false, Mid: false, Late: true } }
   },
   'Fast CC': {
     enabled: true,
-    acceptedMains: { 2: ['SPD', 'HP%', 'DEF%'], 4: ['HP%', 'DEF%', 'None'], 6: ['HP%', 'DEF%', 'ACC'] },
+    acceptedMains: { 2: 'SPD', 4: 'HP%, DEF%', 6: 'ACC, HP%, DEF%' },
     substats: {
       SPD: { Early: 'Include', Mid: 'Include', Late: 'Include' },
       'HP%': { Early: 'Include', Mid: 'Include', Late: 'Include' },
-      'ATK%': { Early: 'None', Mid: 'None', Late: 'None' },
+      'ATK%': { Early: 'Exclude', Mid: 'Exclude', Late: 'Exclude' },
       'DEF%': { Early: 'Include', Mid: 'Include', Late: 'Include' },
-      CRate: { Early: 'None', Mid: 'None', Late: 'None' },
-      CDmg: { Early: 'None', Mid: 'None', Late: 'None' },
+      CRate: { Early: 'Exclude', Mid: 'Exclude', Late: 'Exclude' },
+      CDmg: { Early: 'Exclude', Mid: 'Exclude', Late: 'Exclude' },
       ACC: { Early: 'Include', Mid: 'Include', Late: 'Include' },
-      RES: { Early: 'None', Mid: 'None', Late: 'None' },
+      RES: { Early: 'Include', Mid: 'Include', Late: 'Include' },
     },
     mustHave: { Early: 'SPD', Mid: 'SPD', Late: 'SPD' },
     slotRequirements: { 2: { Early: 'SPD', Mid: 'SPD', Late: 'SPD' }, 4: { Early: 'SPD', Mid: 'SPD', Late: 'SPD' }, 6: { Early: 'SPD', Mid: 'SPD', Late: 'SPD' } },
-    minStats: { '1/3/5': { Early: 2, Mid: 2, Late: 2 }, 'Slot 2': { Early: 1, Mid: 1, Late: 2 }, 'Slot 4': { Early: 1, Mid: 1, Late: 2 }, 'Slot 6': { Early: 1, Mid: 1, Late: 2 } },
+    minStats: {
+      '1/3/5': { Early: 2, Mid: 2, Late: 3 },
+      'Slot 2': { Early: 2, Mid: 2, Late: 3 },
+      'Slot 4': { Early: 2, Mid: 2, Late: 3 },
+      'Slot 6': { Early: 2, Mid: 2, Late: 3 },
+    },
     requireHR: { 'High Roll for Hero': { Early: false, Mid: true, Late: true }, 'High Roll for Legend': { Early: false, Mid: false, Late: true } },
   },
   'Tank': {
     enabled: true,
-    acceptedMains: { 2: ['HP%', 'DEF%', 'None'], 4: ['HP%', 'DEF%', 'None'], 6: ['HP%', 'DEF%', 'RES'] },
+    acceptedMains: { 2: 'HP%, DEF%', 4: 'HP%, DEF%', 6: 'HP%, DEF%, RES' },
     substats: {
       SPD: { Early: 'Include', Mid: 'Include', Late: 'Include' },
       'HP%': { Early: 'Include', Mid: 'Include', Late: 'Include' },
@@ -972,7 +1012,7 @@ const DEFAULT_FORMULAS = {
   },
   'Bruiser': {
     enabled: true,
-    acceptedMains: { 2: ['SPD', 'HP%', 'ATK%'], 4: ['CRate', 'CDmg', 'HP%'], 6: ['DEF%', 'HP%', 'ATK%'] },
+    acceptedMains: { 2: 'SPD, HP%, ATK%, DEF%', 4: 'CRate, CDmg, ATK%, DEF%, HP%', 6: 'ATK%, HP%, DEF%' },
     substats: {
       SPD: { Early: 'Include', Mid: 'Include', Late: 'Include' },
       'HP%': { Early: 'Include', Mid: 'Include', Late: 'Include' },
@@ -985,10 +1025,47 @@ const DEFAULT_FORMULAS = {
     },
     mustHave: { Early: 'CRate', Mid: 'CRate', Late: 'CRate' },
     slotRequirements: { 2: { Early: 'None', Mid: 'None', Late: 'None' }, 4: { Early: 'None', Mid: 'None', Late: 'None' }, 6: { Early: 'HP%', Mid: 'HP%', Late: 'HP%' } },
-    minStats: { '1/3/5': { Early: 3, Mid: 3, Late: 3 }, 'Slot 2': { Early: 2, Mid: 2, Late: 3 }, 'Slot 4': { Early: 2, Mid: 2, Late: 3 }, 'Slot 6': { Early: 2, Mid: 2, Late: 3 } },
+    minStats: {
+      '135': { Early: 2, Mid: 2, Late: 3 },
+      '2': { Early: 2, Mid: 2, Late: 3 },
+      '4': { Early: 2, Mid: 2, Late: 3 },
+      '6': { Early: 2, Mid: 2, Late: 3 },
+    },
     requireHR: { 'High Roll for Hero': { Early: false, Mid: true, Late: true }, 'High Roll for Legend': { Early: false, Mid: true, Late: true } },
   },
 };
+
+/** UI row labels → minStats key preference (sheet-style numeric/alternate keys vs legacy slot labels). */
+const FORMULA_MINSTAT_KEY_GROUPS = {
+  '1/3/5': ['135', '1/3/5'],
+  'Slot 2': ['2', 'Slot 2'],
+  'Slot 4': ['4', 'Slot 4'],
+  'Slot 6': ['6', 'Slot 6'],
+};
+
+function readFormulaMinStat(ms, uiSlotType, stage) {
+  const keys = FORMULA_MINSTAT_KEY_GROUPS[uiSlotType] || [uiSlotType];
+  for (let i = 0; i < keys.length; i++) {
+    const k = keys[i];
+    const raw = ms?.[k]?.[stage];
+    if (raw != null && raw !== '') return Number(raw);
+  }
+  return 1;
+}
+
+function formulaMinStatWriteKey(ms, uiSlotType) {
+  const keys = FORMULA_MINSTAT_KEY_GROUPS[uiSlotType] || [uiSlotType];
+  for (let i = 0; i < keys.length; i++) {
+    const k = keys[i];
+    if (ms && typeof ms[k] === 'object' && ms[k] !== null) return k;
+  }
+  return keys[keys.length - 1];
+}
+
+function readFormulaMinStatForRuneSlot(ms, runeSlot, stage) {
+  const uiSlotType = [1, 3, 5].includes(runeSlot) ? '1/3/5' : `Slot ${runeSlot}`;
+  return readFormulaMinStat(ms, uiSlotType, stage);
+}
 
 const DEFAULT_ROLE_PRIORITY = ['Fast CC', 'Classic DPS', 'Bomber', 'Tank', 'Bruiser', 'Slow DPS', 'Duo Roll', 'High Roll'];
 
@@ -999,7 +1076,7 @@ const DEFAULT_ROLES = {
     substats: { SPD:'Include', 'ATK%':'Include', CRate:'Include', CDmg:'Include',
                 'HP%':'None', 'DEF%':'None', ACC:'None', RES:'None' },
     mustHave: { Early: 'SPD', Mid: 'SPD', Late: 'SPD' },
-    acceptedMains: { 2:['SPD'], 4:['CRate','CDmg'], 6:['ATK%'] },
+    acceptedMains: { 2: ['SPD', 'ATK%'], 4: ['CRate', 'CDmg'], 6: ['ATK%'] },
     minStats: { Early:1, Mid:2, Late:3 },
     requireHR: { Early_Hero:false, Mid_Hero:true, Late_Hero:true, Early_Leg:false, Mid_Leg:false, Late_Leg:true },
   },
@@ -1047,7 +1124,7 @@ const DEFAULT_ROLES = {
 
 const DEFAULT_REAPP = {
   maxEff: 75,
-  sets: ['Violent', 'Will', 'Swift', 'Despair', 'Vampire', 'Rage', 'Intangible'],
+  sets: ['Swift', 'Violent', 'Rage', 'Will'],
   innateStats: ['SPD', 'HP%', 'ATK%', 'DEF%'],
   mainBySlot: {
     2: ['SPD'],
@@ -1222,6 +1299,44 @@ function getSettings() {
       }
     });
   }
+  // v11: Classic DPS only — slot 2 add ATK% accepted main; slot 4 slotRequirements → None (spreadsheet).
+  if (presetVersion < 11) {
+    if (DEFAULT_FORMULAS['Classic DPS']) {
+      formulas['Classic DPS'] = JSON.parse(JSON.stringify(DEFAULT_FORMULAS['Classic DPS']));
+    }
+  }
+  // v12: Bruiser — min stats for slots 1/3/5: Early & Mid 2 (was 3); Late unchanged (spreadsheet).
+  if (presetVersion < 12) {
+    if (DEFAULT_FORMULAS.Bruiser) {
+      formulas.Bruiser = JSON.parse(JSON.stringify(DEFAULT_FORMULAS.Bruiser));
+    }
+  }
+  // v13: accepted mains moved to comma-list per slot + latest sheet-aligned mains defaults.
+  if (presetVersion < 13) {
+    ['Classic DPS', 'Slow DPS', 'Bomber', 'Fast CC', 'Tank', 'Bruiser'].forEach((name) => {
+      if (DEFAULT_FORMULAS[name]) {
+        formulas[name] = JSON.parse(JSON.stringify(DEFAULT_FORMULAS[name]));
+      }
+    });
+    // Align constants model to the new Sheets baseline (early discount / late tougher + updated mods).
+    statConstants = mergeStatConstants(null);
+  }
+  // v14: narrower Reapp sets; tightened Fast CC + Bomber presets (spreadsheet).
+  if (presetVersion < 14) {
+    reapp.sets = DEFAULT_REAPP.sets.slice();
+    if (DEFAULT_FORMULAS['Fast CC']) {
+      formulas['Fast CC'] = JSON.parse(JSON.stringify(DEFAULT_FORMULAS['Fast CC']));
+    }
+    if (DEFAULT_FORMULAS.Bomber) {
+      formulas.Bomber = JSON.parse(JSON.stringify(DEFAULT_FORMULAS.Bomber));
+    }
+  }
+  // v15: Bruiser preset synced to Sheets (accepted mains, minStats keys 135/2/4/6).
+  if (presetVersion < 15) {
+    if (DEFAULT_FORMULAS.Bruiser) {
+      formulas.Bruiser = JSON.parse(JSON.stringify(DEFAULT_FORMULAS.Bruiser));
+    }
+  }
 
   return {
     thresholds:    saved?.thresholds    || JSON.parse(JSON.stringify(DEFAULT_THRESHOLDS)),
@@ -1232,7 +1347,7 @@ function getSettings() {
     roles,
     formulas,
     rolePriority,
-    presetVersion: 10,
+    presetVersion: 15,
     reapp,
     grind,
     gemMeta,
@@ -1259,6 +1374,12 @@ const STATIC_CHANGELOG = [
     date: '2026-05-12',
     items: {
       en: [
+        'v1.2.15 — Bruiser preset synced to Google Sheets (accepted mains, minStats keys 135/2/4/6).',
+        'v1.2.14 — Reapp sets narrowed (Swift/Violent/Rage/Will); Fast CC and Bomber presets tightened; no-role verdict branch is Grind-to-God → Reapp → Sell only.',
+        'v1.2.13 — Threshold constants synced to Sheets (new god/duo mods, early/late discount+tougher model), grade-aware God for Legend, accepted mains moved to comma-list format, and no-role Grind-to-God path added.',
+        'v1.2.12 — Bruiser preset: min stats for 1/3/5 slots Early & Mid set to 2 (Late still 3); migration v12 reapplies Bruiser for saved profiles.',
+        'v1.2.11 — Classic DPS preset: slot 2 accepted mains add ATK%; slot 4 slotRequirements None; migration v11 reapplies Classic for saved profiles.',
+        'v1.2.10 — Optional DEBUG_BYPASS_EFFICIENCY_GATES in settings.js: when true, verdict path ignores rune.eff (Gem gate, Reapp max eff, Hero finish sell cuts, no-role eff sells); UI still shows real eff.',
         'v1.2.9 — Changelog: entries trimmed and unified for reading; release dates unchanged.',
         'v1.2.8 — First-load screen: drag and drop your SWEX .json onto the overlay (same as choosing a file); short hint under the title.',
         'v1.2.7 — Guide split into sections (getting started, dashboard, depth, table, rules, tips); fuller EN/RU copy; remembers the last section for this session.',
@@ -1276,6 +1397,12 @@ const STATIC_CHANGELOG = [
         'Core — SWEX stat IDs match the exporter; roles and verdict thresholds use base rolled subs (gem/grind flags still drive Gem and Grind); Min Stats vs Require High Roll as in Guide; Gem vs Sell safety rails; Grind toward Late×grade HR with configurable gap; Gem / Grind / Reapp on separate Verdict cards (Save & Recalculate); bad-flat handling; Eff uses exporter efficiency when present.',
       ],
       ru: [
+        'v1.2.15 — Пресет Bruiser синхронизирован с Google Sheets (accepted mains, minStats с ключами 135/2/4/6).',
+        'v1.2.14 — Сузили набор сетов для Reapp (Swift/Violent/Rage/Will); ужесточены пресеты Fast CC и Bomber; для рун без роли вердикт только Grind-to-God → Reapp → Sell.',
+        'v1.2.13 — Константы порогов синхронизированы с таблицей (новые god/duo моды, модель early/late как discount+tougher), God теперь учитывает Legend gradeMod, accepted mains переведены в формат строк по слотам, добавлен путь Grind-to-God для рун без роли.',
+        'v1.2.12 — Пресет Bruiser: min stats для слотов 1/3/5 — Early и Mid по 2 (Late по-прежнему 3); миграция v12 подтягивает Bruiser в сохранённых профилях.',
+        'v1.2.11 — Пресет Classic DPS: слот 2 — ATK% в accepted mains; слот 4 — slotRequirements None; миграция v11 подтягивает Classic в сохранённых профилях.',
+        'v1.2.10 — В settings.js флаг DEBUG_BYPASS_EFFICIENCY_GATES: при true движок вердиктов не сравнивает rune.eff (порог Gem, верх Reapp, Hero Sell на +9…+11, ветка Sell только по eff без роли); в интерфейсе eff как был.',
         'v1.2.9 — Журнал изменений: тексты сокращены и приведены к одному виду; даты релизов те же.',
         'v1.2.8 — Первый экран загрузки: перетащите SWEX .json на оверлей (то же, что выбор файла); короткая подсказка под текстом.',
         'v1.2.7 — Гайд разбит на разделы (старт, панель, глубина, таблица, правила, советы); больше текста EN/RU; последний открытый раздел на сессию.',
@@ -1359,6 +1486,7 @@ const STATIC_ROADMAP = {
 
 window.SWRM = window.SWRM || {};
 window.SWRM.APP_VERSION = APP_VERSION;
+window.SWRM.DEBUG_BYPASS_EFFICIENCY_GATES = DEBUG_BYPASS_EFFICIENCY_GATES;
 window.SWRM.settings = getSettings();
 window.SWRM.applyDerivedThresholdFields = applyDerivedThresholdFields;
 window.SWRM.STAT_NAMES = STAT_NAMES;
@@ -1386,6 +1514,9 @@ window.SWRM.DEFAULT_GRIND = DEFAULT_GRIND;
 window.SWRM.DEFAULT_GEM_META = DEFAULT_GEM_META;
 window.SWRM.mergeGemMeta = mergeGemMeta;
 window.SWRM.DEFAULT_FORMULAS = DEFAULT_FORMULAS;
+window.SWRM.readFormulaMinStat = readFormulaMinStat;
+window.SWRM.formulaMinStatWriteKey = formulaMinStatWriteKey;
+window.SWRM.readFormulaMinStatForRuneSlot = readFormulaMinStatForRuneSlot;
 window.SWRM.saveSettings = saveSettings;
 window.SWRM.TRANSLATIONS = TRANSLATIONS;
 window.SWRM.STATIC_CHANGELOG = STATIC_CHANGELOG;

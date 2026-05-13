@@ -2607,24 +2607,29 @@
       </label>`;
       html += `</div>`;
       
+      function acceptedMainsToText(raw) {
+        if (Array.isArray(raw)) {
+          const vals = raw.map((v) => String(v || '').trim()).filter((v) => v && v !== 'None');
+          return vals.length ? vals.join(', ') : 'None';
+        }
+        if (typeof raw === 'string') {
+          const txt = raw.trim();
+          return txt || 'None';
+        }
+        return 'None';
+      }
+
       // Accepted Mains section
       html += `<div style="margin-bottom:16px">`;
       html += `<div style="font-size:0.85rem;color:var(--text-dim);margin-bottom:8px;font-family:var(--font-head);letter-spacing:0.08em;text-transform:uppercase">Accepted Mains</div>`;
-      html += `<div style="display:grid;grid-template-columns:80px repeat(3,1fr);gap:8px;font-size:0.82rem;">`;
-      html += `<div style="font-weight:600;color:var(--text)">Slot</div><div>Main 1</div><div>Main 2</div><div>Main 3</div>`;
+      html += `<div style="display:grid;grid-template-columns:80px 1fr;gap:8px;font-size:0.82rem;">`;
+      html += `<div style="font-weight:600;color:var(--text)">Slot</div><div>Allowed mains (comma-separated)</div>`;
       
       for (const slot of [2, 4, 6]) {
-        const mains = formulaCfg.acceptedMains?.[slot] || ['None', 'None', 'None'];
+        const mainsText = acceptedMainsToText(formulaCfg.acceptedMains?.[slot]);
         html += `<div style="font-weight:600;color:var(--text)">Slot ${slot}</div>`;
-        for (let i = 0; i < 3; i++) {
-          html += `<select data-formula="${formulaName}" data-field="acceptedMains" data-slot="${slot}" data-index="${i}" style="padding:4px 8px;font-size:0.8rem">`;
-          const options = ['None', 'SPD', 'HP%', 'ATK%', 'DEF%', 'CRate', 'CDmg', 'ACC', 'RES'];
-          for (const opt of options) {
-            html += `<option value="${opt}" ${mains[i] === opt ? 'selected' : ''}>${opt === 'None' ? '' : opt}</option>`;
-          }
-          html += `</select>`;
-        }
-        html += ``;
+        const safeValue = String(mainsText).replace(/"/g, '&quot;');
+        html += `<input type="text" data-formula="${formulaName}" data-field="acceptedMains" data-slot="${slot}" value="${safeValue}" placeholder="None or SPD, HP%, DEF%" style="padding:4px 8px;font-size:0.8rem">`;
       }
       html += `</div></div>`;
       
@@ -2697,7 +2702,10 @@
       for (const slotType of slotTypes) {
         html += `<div style="font-weight:600;color:var(--text)">${slotType}</div>`;
         for (const stage of ['Early', 'Mid', 'Late']) {
-          const value = formulaCfg.minStats?.[slotType]?.[stage] || 1;
+          const value =
+            typeof window.SWRM.readFormulaMinStat === 'function'
+              ? window.SWRM.readFormulaMinStat(formulaCfg.minStats, slotType, stage)
+              : formulaCfg.minStats?.[slotType]?.[stage] || 1;
           html += `<input type="number" data-formula="${formulaName}" data-field="minStats" data-slot="${slotType}" data-stage="${stage}" value="${value}" min="0" max="4" style="padding:4px 8px;font-size:0.8rem;width:60px">`;
         }
       }
@@ -2761,11 +2769,10 @@
       if (field === 'enabled') {
         settings.formulas[formulaName].enabled = value;
       } else if (field === 'acceptedMains') {
-        const slot = parseInt(element.dataset.slot);
-        const index = parseInt(element.dataset.index);
+        const slot = parseInt(element.dataset.slot, 10);
         if (!settings.formulas[formulaName].acceptedMains) settings.formulas[formulaName].acceptedMains = {};
-        if (!settings.formulas[formulaName].acceptedMains[slot]) settings.formulas[formulaName].acceptedMains[slot] = ['None', 'None', 'None'];
-        settings.formulas[formulaName].acceptedMains[slot][index] = value;
+        const cleaned = String(value || '').trim();
+        settings.formulas[formulaName].acceptedMains[slot] = cleaned || 'None';
       } else if (field === 'substats') {
         const stat = element.dataset.stat;
         const stage = element.dataset.stage;
@@ -2785,9 +2792,14 @@
       } else if (field === 'minStats') {
         const slotType = element.dataset.slot;
         const stage = element.dataset.stage;
-        if (!settings.formulas[formulaName].minStats) settings.formulas[formulaName].minStats = {};
-        if (!settings.formulas[formulaName].minStats[slotType]) settings.formulas[formulaName].minStats[slotType] = {};
-        settings.formulas[formulaName].minStats[slotType][stage] = value;
+        const fm = settings.formulas[formulaName];
+        if (!fm.minStats) fm.minStats = {};
+        const writeKey =
+          typeof window.SWRM.formulaMinStatWriteKey === 'function'
+            ? window.SWRM.formulaMinStatWriteKey(fm.minStats, slotType)
+            : slotType;
+        if (!fm.minStats[writeKey]) fm.minStats[writeKey] = {};
+        fm.minStats[writeKey][stage] = value;
       } else if (field === 'requireHR') {
         const anchorType = element.dataset.anchor;
         const stage = element.dataset.stage;
@@ -2916,24 +2928,32 @@
       }
       html += `</div>`;
       
+      function acceptedMainsToText(raw) {
+        if (Array.isArray(raw)) {
+          const vals = raw.map((v) => String(v || '').trim()).filter((v) => v && v !== 'None');
+          return vals.length ? vals.join(', ') : 'None';
+        }
+        if (typeof raw === 'string') {
+          const txt = raw.trim();
+          return txt || 'None';
+        }
+        return 'None';
+      }
+
       // Accepted Mains section - FOR ALL ROLES
       html += `<div style="margin-bottom:16px">`;
       html += `<div style="font-size:0.85rem;color:var(--text-dim);margin-bottom:8px;font-family:var(--font-head);letter-spacing:0.08em;text-transform:uppercase">Accepted Mains</div>`;
-      html += `<div style="display:grid;grid-template-columns:80px repeat(3,1fr);gap:8px;font-size:0.82rem;">`;
-      html += `<div style="font-weight:600;color:var(--text)">Slot</div><div>Main 1</div><div>Main 2</div><div>Main 3</div>`;
+      html += `<div style="display:grid;grid-template-columns:80px 1fr;gap:8px;font-size:0.82rem;">`;
+      html += `<div style="font-weight:600;color:var(--text)">Slot</div><div>Allowed mains (comma-separated)</div>`;
       
       for (const slot of [2, 4, 6]) {
-        const mains = roleCfg.acceptedMains?.[slot] || (isFormula ? ['None', 'None', 'None'] : ['HP%', 'ATK%', 'DEF%']);
+        const mainsText = acceptedMainsToText(roleCfg.acceptedMains?.[slot]);
         html += `<div style="font-weight:600;color:var(--text)">Slot ${slot}</div>`;
-        for (let i = 0; i < 3; i++) {
-          const dataAttr = isFormula ? `data-formula="${roleName}" data-field="acceptedMains" data-slot="${slot}" data-index="${i}"` : `data-role="${roleName}" data-field="acceptedMains" data-slot="${slot}" data-index="${i}"`;
-          html += `<select ${dataAttr} style="padding:4px 8px;font-size:0.8rem">`;
-          const options = ['None', 'SPD', 'HP%', 'ATK%', 'DEF%', 'CRate', 'CDmg', 'ACC', 'RES'];
-          for (const opt of options) {
-            html += `<option value="${opt}" ${mains[i] === opt ? 'selected' : ''}>${opt === 'None' ? '' : opt}</option>`;
-          }
-          html += `</select>`;
-        }
+        const dataAttr = isFormula
+          ? `data-formula="${roleName}" data-field="acceptedMains" data-slot="${slot}"`
+          : `data-role="${roleName}" data-field="acceptedMains" data-slot="${slot}"`;
+        const safeValue = String(mainsText).replace(/"/g, '&quot;');
+        html += `<input type="text" ${dataAttr} value="${safeValue}" placeholder="None or SPD, HP%, DEF%" style="padding:4px 8px;font-size:0.8rem">`;
       }
       html += `</div></div>`;
       
@@ -3009,7 +3029,11 @@
       for (const slotType of slotTypes) {
         html += `<div style="font-weight:600;color:var(--text)">${slotType}</div>`;
         for (const stage of ['Early', 'Mid', 'Late']) {
-          const value = (isFormula ? roleCfg.minStats?.[slotType]?.[stage] : roleCfg.minStats?.[stage]) || 1;
+          const value = isFormula
+            ? (typeof window.SWRM.readFormulaMinStat === 'function'
+              ? window.SWRM.readFormulaMinStat(roleCfg.minStats, slotType, stage)
+              : roleCfg.minStats?.[slotType]?.[stage] || 1)
+            : (roleCfg.minStats?.[stage] || 1);
           const dataAttr = isFormula ? `data-formula="${roleName}" data-field="minStats" data-slot="${slotType}" data-stage="${stage}"` : `data-role="${roleName}" data-field="minStats" data-slot="${slotType}" data-stage="${stage}"`;
           html += `<input type="number" ${dataAttr} value="${value}" min="0" max="4" style="padding:4px 8px;font-size:0.8rem;width:60px">`;
         }
@@ -3277,11 +3301,7 @@
     // Create new role with full formula interface
     const template = {
       enabled: true,
-      acceptedMains: {
-        2: ['None', 'None', 'None'],
-        4: ['None', 'None', 'None'],
-        6: ['None', 'None', 'None']
-      },
+      acceptedMains: { 2: 'None', 4: 'None', 6: 'None' },
       substats: {
         SPD: { Early: 'None', Mid: 'None', Late: 'None' },
         'HP%': { Early: 'None', Mid: 'None', Late: 'None' },
@@ -3525,7 +3545,7 @@
       reapp: JSON.parse(JSON.stringify(DEFAULT_REAPP)),
       grind: JSON.parse(JSON.stringify(DEFAULT_GRIND)),
       gemMeta: JSON.parse(JSON.stringify(DEFAULT_GEM_META)),
-      presetVersion: 10,
+      presetVersion: 15,
     };
     window.SWRM.applyDerivedThresholdFields(window.SWRM.settings);
     localStorage.removeItem('swrm_settings_v1');

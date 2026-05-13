@@ -8,6 +8,18 @@
   const modeKey = S.modeKey;
   const qSub = (s) => (typeof S.isQualifyingSubstatRow === 'function' ? S.isQualifyingSubstatRow(s) : s.source !== 'innate');
 
+  function effGatesBypassed() {
+    return S.DEBUG_BYPASS_EFFICIENCY_GATES === true;
+  }
+
+  function isLegendGrade(gradeStr) {
+    return gradeStr === 'Legend';
+  }
+
+  function isHeroLikeGrade(gradeStr) {
+    return gradeStr === 'Hero' || gradeStr === 'Rare';
+  }
+
   const FLAT_SUB_TYPE_IDS = [1, 3, 5];
   const FLAT_SUB_THRESHOLDS = { 1: 200, 3: 20, 5: 20 };
 
@@ -33,15 +45,27 @@
     return cleanFlatCount >= requiredFlats;
   }
 
+  function getGrindGainByGrade(statName, gradeStr) {
+    if (isLegendGrade(gradeStr)) {
+      return statName === 'SPD' ? 5 : 10;
+    }
+    if (gradeStr === 'Hero') {
+      return statName === 'SPD' ? 4 : 8;
+    }
+    if (gradeStr === 'Rare') {
+      return statName === 'SPD' ? 3 : 6;
+    }
+    return 0;
+  }
+
   /** Target row is always Late×grade (Sheets grind line), never the account preset stage */
   function checkGrind(rune, stage, settings) {
     const key = modeKey('Late', rune.gradeStr);
     const th = (settings.hrThresholds && Object.keys(settings.hrThresholds).length)
       ? settings.hrThresholds
       : settings.thresholds;
-    // Spreadsheet parity: grind recommendation checks only these stats.
-    const GRIND_GAIN = { SPD: 5, 'HP%': 10, 'DEF%': 10, 'ATK%': 10 };
-    const ALLOWED_STATS = new Set(Object.keys(GRIND_GAIN));
+    // Spreadsheet parity: grind recommendation checks only these stats (gain by grade: Legend SPD 5 / % 10, Hero 4/8, Rare 3/6).
+    const ALLOWED_STATS = new Set(['SPD', 'HP%', 'DEF%', 'ATK%']);
     const gap = Number.isFinite(Number(settings?.grind?.gap)) ? Number(settings.grind.gap) : 1;
 
     for (const s of rune.substats) {
@@ -55,7 +79,7 @@
       if (!threshold) continue;
       // Base-only current value; simulate grind gain from there.
       const currentVal = (s.val || 0);
-      const gain = GRIND_GAIN[s.name] || 0;
+      const gain = getGrindGainByGrade(s.name, rune.gradeStr);
       const distance = threshold - currentVal;
       if (currentVal < threshold && currentVal + gain >= threshold && distance <= gain * gap) {
         return { can: true, stat: s.name, from: currentVal, to: currentVal + gain, need: threshold };
@@ -105,6 +129,7 @@
   }
 
   function passesGemQualityGate(rune, stage, isHero, hasHighDuo, settings) {
+    if (effGatesBypassed()) return true;
     const gm = settings?.gemMeta || {};
     const q = gm.qualityGate || {};
     const early = q.early || { min: 40, heroMin: 52 };
@@ -124,7 +149,7 @@
     if (rune.gradeStr !== 'Legend') return false;
 
     const rc = settings.reapp || {};
-    if (rune.eff > (rc.maxEff ?? 65)) return false;
+    if (!effGatesBypassed() && rune.eff > (rc.maxEff ?? 65)) return false;
 
     if (rc.sets?.length && !rc.sets.includes(rune.setName)) return false;
 
@@ -161,8 +186,8 @@
 
   function getVerdict(rune, stage, settings, roleResult, mergedResults) {
     const hasRole = roleResult !== '';
-    const isHero = rune.gradeStr === 'Hero';
-    const isLegend = rune.gradeStr === 'Legend';
+    const isHero = isHeroLikeGrade(rune.gradeStr);
+    const isLegend = isLegendGrade(rune.gradeStr);
     const hasHighDuo = roleResult === 'High Roll' || roleResult === 'Duo Roll';
 
     if (rune.level < 9) {
@@ -170,7 +195,7 @@
     }
 
     if (rune.level < 12 && hasRole) {
-      if (isHero && !hasHighDuo) {
+      if (!effGatesBypassed() && isHero && !hasHighDuo) {
         const effThreshold = stage === 'Late' ? 85 : (stage === 'Mid' ? 85 : 65);
         if (rune.eff < effThreshold) return finalizeGodSellOverride('Sell', mergedResults, rune, stage, settings);
       }
@@ -195,14 +220,16 @@
     }
 
     if (!hasRole) {
-      const effThreshold = stage === 'Late' ? 65 : (stage === 'Mid' ? 50 : 35);
-      if (isHero && !hasHighDuo) {
-        const heroEffThreshold = stage === 'Late' ? 80 : (stage === 'Mid' ? 65 : 50);
-        if (rune.eff < heroEffThreshold) return finalizeGodSellOverride('Sell', mergedResults, rune, stage, settings);
-      } else if (rune.eff < effThreshold) {
-        return finalizeGodSellOverride('Sell', mergedResults, rune, stage, settings);
-      } else {
-        return finalizeGodSellOverride('Sell', mergedResults, rune, stage, settings);
+      if (!effGatesBypassed()) {
+        const effThreshold = stage === 'Late' ? 65 : (stage === 'Mid' ? 50 : 35);
+        if (isHero && !hasHighDuo) {
+          const heroEffThreshold = stage === 'Late' ? 80 : (stage === 'Mid' ? 65 : 50);
+          if (rune.eff < heroEffThreshold) return finalizeGodSellOverride('Sell', mergedResults, rune, stage, settings);
+        } else if (rune.eff < effThreshold) {
+          return finalizeGodSellOverride('Sell', mergedResults, rune, stage, settings);
+        } else {
+          return finalizeGodSellOverride('Sell', mergedResults, rune, stage, settings);
+        }
       }
     }
 
@@ -225,4 +252,31 @@
   S.isPrimaryBuildRole = isPrimaryBuildRole;
   S.finalizeGodSellOverride = finalizeGodSellOverride;
   S.getBaseVerdict = getVerdict;
+
+  /**
+   * No-role rescue path: can one ungrinded, unenchanted line reach God with one grind?
+   */
+  function checkGrindToGod(rune, settings) {
+    const gap = Number.isFinite(Number(settings?.grind?.gap)) ? Number(settings.grind.gap) : 0.5;
+    const ALLOWED_STATS = new Set(['SPD', 'HP%', 'ATK%', 'DEF%']);
+    for (const s of (rune.substats || [])) {
+      if (!qSub(s)) continue;
+      if (!ALLOWED_STATS.has(s.name)) continue;
+      if ((s.grind || 0) !== 0) continue;
+      if (s.enchanted === true || (s.gem || 0) !== 0) continue;
+      const gain = getGrindGainByGrade(s.name, rune.gradeStr);
+      if (!gain) continue;
+      const god = S.getGodThreshold?.(s.name, settings, rune.gradeStr);
+      if (!Number.isFinite(Number(god)) || god <= 0) continue;
+      const current = Number(s.val || 0);
+      const distance = god - current;
+      if (current < god && current + gain >= god && distance <= gain * gap) {
+        return { can: true, stat: s.name, from: current, to: current + gain, need: god, gain };
+      }
+    }
+    return { can: false };
+  }
+
+  S.checkGrindToGod = checkGrindToGod;
+  S.getGrindGainByGrade = getGrindGainByGrade;
 })();

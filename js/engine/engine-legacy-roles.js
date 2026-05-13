@@ -11,14 +11,15 @@
   }
 
   /**
-   * God Roll (UI label «High Roll»): любой саб ≥ Base×(1+God_Mod) из settings.godConstants — без стадии.
+   * God Roll (UI label «High Roll»): any sub >= grade-aware God threshold.
+   * Legend uses gradeMod discount before applying godMod.
    */
   function checkHighRoll(rune, stage, settings) {
     const sm = statMap(rune);
     const order = window.SWRM.GOD_STAT_ORDER || [];
     for (let i = 0; i < order.length; i++) {
       const stat = order[i];
-      const threshold = window.SWRM.getGodThreshold?.(stat, settings);
+      const threshold = window.SWRM.getGodThreshold?.(stat, settings, rune.gradeStr);
       if (threshold != null && threshold > 0 && (sm[stat] || 0) >= threshold) {
         return true;
       }
@@ -37,6 +38,7 @@
     const atk = sm['ATK%'] || 0;
     const cr = sm['CRate'] || 0;
     const cd = sm['CDmg'] || 0;
+    const acc = sm.ACC || 0;
     const res = sm['RES'] || 0;
 
     if (spd >= dr.SPD_min[key]) {
@@ -57,6 +59,15 @@
     if (hp >= dr.HP_for_DEF[key] && def >= dr.DEF_for_HP[key]) return true;
     if (def >= dr.DEF_for_RES[key] && res >= dr.RES_for_DEF[key]) return true;
     if (hp >= dr.HP_for_RES[key] && res >= dr.RES_for_HP[key]) return true;
+    const hpCdA = dr.HP_for_CDmg?.[key];
+    const hpCdB = dr.CDmg_for_HP?.[key];
+    if (hpCdA != null && hpCdB != null && hp >= hpCdA && cd >= hpCdB) return true;
+    const hpAccA = dr.HP_for_ACC?.[key];
+    const hpAccB = dr.ACC_for_HP?.[key];
+    if (hpAccA != null && hpAccB != null && hp >= hpAccA && acc >= hpAccB) return true;
+    const defAccA = dr.DEF_for_ACC?.[key];
+    const defAccB = dr.ACC_for_DEF?.[key];
+    if (defAccA != null && defAccB != null && def >= defAccA && acc >= defAccB) return true;
 
     return false;
   }

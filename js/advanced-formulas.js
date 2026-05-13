@@ -6,6 +6,10 @@
 (function() {
   'use strict';
 
+  function effGatesBypassed() {
+    return window.SWRM && window.SWRM.DEBUG_BYPASS_EFFICIENCY_GATES === true;
+  }
+
   // Get the threshold key string for a given stage + grade
   function modeKey(stage, grade) {
     const g = grade === 'Legend' ? 'Leg' : 'Hero';
@@ -33,16 +37,39 @@
     return settings.formulas?.[formulaName]?.enabled !== false;
   }
 
+  function isHeroLikeGrade(gradeStr) {
+    return gradeStr === 'Hero' || gradeStr === 'Rare';
+  }
+
+  function splitAcceptedMains(v) {
+    if (Array.isArray(v)) {
+      return v
+        .map((x) => String(x || '').trim())
+        .filter((x) => x && x !== 'None');
+    }
+    if (typeof v === 'string') {
+      return v
+        .split(',')
+        .map((x) => x.trim())
+        .filter((x) => x && x !== 'None');
+    }
+    return [];
+  }
+
   // Check accepted main stats for slots
   function checkAcceptedMains(rune, formula) {
     if ([2, 4, 6].includes(rune.slot)) {
       const accepted = formula.acceptedMains?.[rune.slot];
-      if (accepted && accepted.length > 0) {
-        // Filter out 'None' values
-        const validMains = accepted.filter(m => m !== 'None');
-        if (validMains.length > 0 && !validMains.includes(rune.mainName)) {
-          return false;
+      if (typeof accepted === 'string') {
+        const raw = accepted.trim();
+        if (raw && raw !== 'None') {
+          return raw.includes(rune.mainName);
         }
+        return true;
+      }
+      const validMains = splitAcceptedMains(accepted);
+      if (validMains.length > 0 && !validMains.includes(rune.mainName)) {
+        return false;
       }
     }
     return true;
@@ -95,14 +122,15 @@
    * This is independent from Anchor Requirements; anchors are handled separately in checkAnchorRequirements().
    */
   function checkMinStats(rune, formula, stage, includedStats, mustHaveStat, settings, sm) {
-    let slotKey;
-    if ([1, 3, 5].includes(rune.slot)) {
-      slotKey = '1/3/5';
-    } else {
-      slotKey = `Slot ${rune.slot}`;
-    }
-
-    const minRequired = formula.minStats?.[slotKey]?.[stage] || 1;
+    const minRequired =
+      typeof window.SWRM.readFormulaMinStatForRuneSlot === 'function'
+        ? window.SWRM.readFormulaMinStatForRuneSlot(formula.minStats, rune.slot, stage)
+        : (() => {
+          let slotKey;
+          if ([1, 3, 5].includes(rune.slot)) slotKey = '1/3/5';
+          else slotKey = `Slot ${rune.slot}`;
+          return formula.minStats?.[slotKey]?.[stage] || 1;
+        })();
 
     let count = 0;
     for (let i = 0; i < includedStats.length; i++) {
@@ -126,7 +154,7 @@
 
   // Check high roll anchor requirements
   function checkAnchorRequirements(rune, formula, stage, settings, sm) {
-    const isHero = rune.gradeStr === 'Hero';
+    const isHero = isHeroLikeGrade(rune.gradeStr);
     const isLegend = rune.gradeStr === 'Legend';
     
     for (const [anchorType, stageConfig] of Object.entries(formula.requireHR || {})) {
@@ -242,12 +270,20 @@
       ?? getBestFormulaMatch(mergedResults, settings);
     const hasRole = bestRole !== '';
     
-    const isHero = rune.gradeStr === 'Hero';
+    const isHero = isHeroLikeGrade(rune.gradeStr);
     const isLegend = rune.gradeStr === 'Legend';
-    /** Hero Finish/Gem gates: only when Best Role is God/Duo (UI: High Roll / Duo Roll), not merely a match in merged flags */
-    const hasHighDuo = bestRole === 'High Roll' || bestRole === 'Duo Roll';
+    /**
+     * Duo/God for verdict gates: true when Best Role is High/Duo, or when those lines matched even if pickBestRole
+     * picked a build archetype first (e.g. Bomber + Duo Roll → still no Grind rescue, Keep after Gem).
+     */
+    const hasHighDuo =
+      bestRole === 'High Roll'
+      || bestRole === 'Duo Roll'
+      || !!mergedResults['Duo Roll']
+      || !!mergedResults['High Roll']
+      || !!mergedResults['God Roll'];
     
-    // Priority order: Upgrade → Finish → Reapp → (Gem if Flat) → (Keep, or Grind if Keep-worthy) → Sell
+    // Priority order: Upgrade → Finish → Reapp → Gem → Duo/God Keep → no-role Grind-to-God / HR-Grind / Sell → Grind (hasRole) → Keep
     
     // 1. Upgrade: below +9, power up first
     if (rune.level < 9) {
@@ -257,8 +293,8 @@
     // 2. Finish: +9 with potential, take to +12
     if (rune.level < 12 && hasRole) {
       // Check efficiency thresholds for Hero without High Roll/Duo Roll
-      if (isHero && !hasHighDuo) {
-        const effThreshold = stage === 'Late' ? 85 : (stage === 'Mid' ? 85 : 65);
+      if (!effGatesBypassed() && isHero && !hasHighDuo) {
+        const effThreshold = stage === 'Late' ? 85 : 65;
         if (rune.eff < effThreshold) return godSell('Sell');
       }
       return 'Finish';
@@ -286,27 +322,31 @@
       }
     }
     
-    // 5. Check if rune qualifies for Keep at all
-    if (!hasRole) {
-      // No formula matching - check efficiency thresholds
-      const effThreshold = stage === 'Late' ? 65 : (stage === 'Mid' ? 50 : 35);
-      if (isHero && !hasHighDuo) {
-        const heroEffThreshold = stage === 'Late' ? 80 : (stage === 'Mid' ? 65 : 50);
-        if (rune.eff < heroEffThreshold) return godSell('Sell');
-      } else if (rune.eff < effThreshold) {
-        return godSell('Sell');
-      } else {
-        return godSell('Sell'); // No formula but meets efficiency - still Sell per logic
-      }
+    // 5. Duo/God as best role: no Grind rescue — verdict is Keep.
+    if (hasHighDuo) {
+      return 'Keep';
     }
     
-    // 6. Grind: Keep-quality, one grindstone from High Roll
+    // 6. No role: Grind-to-God → HR Grind (same checkGrind as step 7) → Sell.
+    if (!hasRole) {
+      const grindToGod = window.SWRM.checkGrindToGod?.(rune, settings);
+      if (grindToGod?.can) {
+        return 'Grind';
+      }
+      const grindNoRole = window.SWRM.checkGrind?.(rune, stage, settings);
+      if (grindNoRole?.can) {
+        return 'Grind';
+      }
+      return godSell('Sell');
+    }
+    
+    // 7. Grind: Keep-quality, one grindstone from High Roll
     const grind = window.SWRM.checkGrind?.(rune, stage, settings);
     if (grind?.can) {
       return 'Grind';
     }
     
-    // 7. Keep: strong stats, ready to equip
+    // 8. Keep: strong stats, ready to equip
     return 'Keep';
   }
 

@@ -81,9 +81,11 @@
     rune.verdict = window.SWRM.getAdvancedVerdict?.(rune, stage, settings, mergedResults) ||
       S.getBaseVerdict(rune, stage, settings, bestRole, mergedResults);
     // Safety invariant: without any matched role (including Duo/High), rune cannot remain Keep/Finish/Gem/Grind.
-    // Allowed outcomes in this state are Sell, Reapp (for eligible legends), or Upgrade (<+9).
-    if (!bestRole && !mergedResults['Duo Roll'] && !mergedResults['High Roll'] && !mergedResults['God Roll']) {
-      if (!['Sell', 'Reapp', 'Upgrade'].includes(rune.verdict)) {
+    // Allowed outcomes in this state are Sell, Reapp (for eligible legends), Upgrade (<+9),
+    // or explicit no-role rescue paths like Grind-to-God.
+    // Skipped when DEBUG_BYPASS_EFFICIENCY_GATES so no-role runes can fall through to Grind/Keep for eff A/B tests.
+    if (S.DEBUG_BYPASS_EFFICIENCY_GATES !== true && !bestRole && !mergedResults['Duo Roll'] && !mergedResults['High Roll'] && !mergedResults['God Roll']) {
+      if (!['Sell', 'Reapp', 'Upgrade', 'Grind'].includes(rune.verdict)) {
         rune.verdict = 'Sell';
       }
     }

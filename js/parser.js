@@ -8,6 +8,7 @@
   /**
    * SWEX / Com2US rarity: normally 1–5 (Common…Legend). Some payloads (often unit_list runes)
    * send 11–15 (same values + 10). Anything else is returned as-is for debugging.
+   * All ranks 1–5 are preserved (including 4 = Hero); filtering by grade happens in parseSWEX, not here.
    */
   function normalizeGradeRank(rank) {
     const n = Number(rank);
@@ -52,26 +53,33 @@
     11: 8,    // RES
     12: 8,    // ACC
   };
+  window.SWRM.SUB_MAX = SUB_MAX;
 
   /**
    * Raw efficiency % from SWOP-style score (2.8 baseline), not capped.
    * SWOP can show well above 100%; UI table still uses capped calcEfficiency for a 0–100 scale.
    */
   function calcEfficiencyUncapped(rune) {
-    let score = 0;
-    score += 1.0;
+    let score = 1.0; // main
     if (rune.innate_type && SUB_MAX[rune.innate_type]) {
-      score += 0.5 * (rune.innate_val / (SUB_MAX[rune.innate_type] * 5));
+      let innateScore = 0.5 * ((rune.innate_val || 0) / (SUB_MAX[rune.innate_type] * 5));
+      if (rune.innate_type === 1 || rune.innate_type === 3 || rune.innate_type === 5) {
+        innateScore *= 0.5;
+      }
+      score += innateScore;
     }
     for (const s of rune.substats) {
       const maxRoll = SUB_MAX[s.type];
       if (maxRoll) {
-        // Efficiency should ignore gem/grind: base roll only.
-        score += ((s.val || 0) / (maxRoll * 5));
+        let subScore = (s.val || 0) / (maxRoll * 5);
+        if (s.type === 1 || s.type === 3 || s.type === 5) {
+          subScore *= 0.5;
+        }
+        score += subScore;
       }
     }
     return Math.round((score / 2.8) * 100 * 10) / 10;
-  }
+}
 
   function calcEfficiency(rune) {
     return Math.min(100, calcEfficiencyUncapped(rune));
@@ -81,7 +89,7 @@
    * Parse a single rune object from SWEX JSON
    */
   function parseRune(raw) {
-    const gradeRaw = raw.rank;
+    const gradeRaw = raw.extra;
     const grade = normalizeGradeRank(gradeRaw);
     const slot  = raw.slot_no;        // 1–6
     const setId = raw.set_id;
@@ -96,16 +104,27 @@
     const innType = raw.prefix_eff ? raw.prefix_eff[0] : 0;
     const innVal  = raw.prefix_eff ? raw.prefix_eff[1] : 0;
 
-    // Substats: SWEX usually [type, val, extra, grind]; some exports may use object form.
+    // Substats: SWEX array [type, value, grind, procs]; object exports may use named fields.
     const substats = (raw.sec_eff || []).map((s) => {
       const isObj = s && typeof s === 'object' && !Array.isArray(s);
       const type = isObj ? Number(s.type ?? s.stat_type ?? s.statType ?? 0) : Number(s[0] || 0);
       const val = isObj ? Number(s.value ?? s.val ?? 0) : Number(s[1] || 0);
-      const gem = isObj ? Number(s.extra ?? s.enchant ?? s.enchant_value ?? s.enchantValue ?? 0) : Number(s[2] || 0);
-      const grind = isObj ? Number(s.gvalue ?? s.grind ?? s.grind_value ?? s.grindValue ?? 0) : Number(s[3] || 0);
-      const enchanted = isObj
-        ? !!(s.enchanted === true || s.is_enchanted === true || s.isEnchanted === true)
-        : gem > 0; // Best-effort fallback for array payloads.
+      let grind;
+      let procs;
+      let gem;
+      if (isObj) {
+        grind = Number(s.gvalue ?? s.grind ?? s.grind_value ?? s.grindValue ?? 0);
+        procs = Number(s.procs ?? s.proc ?? s.proc_count ?? s.procCount ?? 0);
+        gem = 0;
+      } else {
+        grind = Number(s[2] || 0);
+        procs = Number(s[3] || 0);
+        gem = 0;
+      }
+      const enchanted = !!(
+        isObj
+        && (s.enchanted === true || s.is_enchanted === true || s.isEnchanted === true)
+      );
       return {
         type,
         name:  statName(type),
@@ -113,16 +132,13 @@
         val:   Number.isFinite(val) ? val : 0,
         gem:   Number.isFinite(gem) ? gem : 0,
         grind: Number.isFinite(grind) ? grind : 0,
+        procs: Number.isFinite(procs) ? procs : 0,
         enchanted,
         flat:  isFlat(type),
         /** Qualifying sub rows for roles (`innate` if exporter duplicates prefix into sec_eff — excluded from statMap) */
         source: 'sub',
       };
     });
-
-    let swexEffRaw = raw.efficiency;
-    if (swexEffRaw == null && raw.eff != null) swexEffRaw = raw.eff;
-    const swexEffNum = Number(swexEffRaw);
 
     const rune = {
       // Keep a reference to the original payload for debugging weird cases (e.g. impossible mains per slot).
@@ -144,15 +160,12 @@
       innate_name: innType ? statName(innType) : null,
       innate_val:  innVal  || 0,
       substats,
-      swexEfficiency: Number.isFinite(swexEffNum) ? Math.round(swexEffNum * 10) / 10 : null,
       // filled by engine:
-      eff:        0,
       role:       '',
       verdict:    '',
     };
 
-    // Prefer the efficiency provided by the export (SWEX/SWOP). Fallback to local calc.
-    rune.eff = Number.isFinite(rune.swexEfficiency) ? rune.swexEfficiency : calcEfficiency(rune);
+    rune.eff = calcEfficiency(rune);
     return rune;
   }
 
@@ -242,11 +255,11 @@
 
   function logEfficiencyDiagSample(runes, limit) {
     const n = limit != null && limit > 0 ? limit : 40;
-    const rows = (runes || []).slice(0, n).map((r) => {
-      const sx = r.swexEfficiency;
-      const delta = sx != null && Number.isFinite(sx) ? Math.round((r.eff - sx) * 10) / 10 : null;
-      return { id: r.id, calcEff: r.eff, swexEff: sx, delta };
-    });
+    const rows = (runes || []).slice(0, n).map((r) => ({
+      id: r.id,
+      eff: r.eff,
+      effUncapped: calcEfficiencyUncapped(r),
+    }));
     if (typeof console !== 'undefined' && console.table) console.table(rows);
     return rows;
   }

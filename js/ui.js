@@ -3179,11 +3179,16 @@
     for (let i = 0; i < colLabels.length; i++) html += `<th>${colLabels[i]}</th>`;
     html += '</tr></thead><tbody>';
     for (const [rowKey, vals] of Object.entries(dataObj)) {
-      html += `<tr><td>${String(rowKey).replace(/_/g, ' ')}</td>`;
+      html += `<tr><td>${escapeHtml(String(rowKey).replace(/_/g, ' '))}</td>`;
       for (let ci = 0; ci < colKeys.length; ci++) {
         const c = colKeys[ci];
         const v = vals && vals[c];
-        html += `<td>${v != null && v !== '' ? v : '—'}</td>`;
+        let cell = '—';
+        if (v != null && v !== '') {
+          const n = Number(v);
+          cell = Number.isFinite(n) ? String(Math.round(n)) : String(v);
+        }
+        html += `<td>${escapeHtml(cell)}</td>`;
       }
       html += '</tr>';
     }

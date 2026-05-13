@@ -64,7 +64,7 @@
     const th = (settings.hrThresholds && Object.keys(settings.hrThresholds).length)
       ? settings.hrThresholds
       : settings.thresholds;
-    // Spreadsheet parity: grind recommendation checks only these stats (gain by grade: Legend SPD 5 / % 10, Hero 4/8, Rare 3/6).
+    // Spreadsheet parity: grind vs Late HR uses fixed gain SPD+5 / HP% DEF% ATK%+10 for all grades.
     const ALLOWED_STATS = new Set(['SPD', 'HP%', 'DEF%', 'ATK%']);
     const gap = Number.isFinite(Number(settings?.grind?.gap)) ? Number(settings.grind.gap) : 1;
 
@@ -75,11 +75,11 @@
       if ((s.grind || 0) !== 0) continue;
       if (s.enchanted === true || (s.gem || 0) !== 0) continue;
       const thresholdRaw = th[s.name]?.[key];
-      const threshold = Number.isFinite(Number(thresholdRaw)) ? Math.ceil(Number(thresholdRaw)) : null;
+      const threshold = Number.isFinite(Number(thresholdRaw)) ? Math.round(Number(thresholdRaw)) : null;
       if (!threshold) continue;
       // Base-only current value; simulate grind gain from there.
       const currentVal = (s.val || 0);
-      const gain = getGrindGainByGrade(s.name, rune.gradeStr);
+      const gain = s.name === 'SPD' ? 5 : 10;
       const distance = threshold - currentVal;
       if (currentVal < threshold && currentVal + gain >= threshold && distance <= gain * gap) {
         return { can: true, stat: s.name, from: currentVal, to: currentVal + gain, need: threshold };

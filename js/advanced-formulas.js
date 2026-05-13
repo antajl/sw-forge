@@ -283,11 +283,17 @@
       || !!mergedResults['High Roll']
       || !!mergedResults['God Roll'];
     
-    // Priority order: Upgrade → Finish → Reapp → Gem → Duo/God Keep → no-role Grind-to-God / HR-Grind / Sell → Grind (hasRole) → Keep
+    // Priority order: Upgrade → Duo/God Finish (+9…+11) → Finish (+9…+11, role, eff for Hero) → Gem →
+    // hasHighDuo Keep (≥+12) → Reapp → no-role … → Grind (hasRole) → Keep
     
     // 1. Upgrade: below +9, power up first
     if (rune.level < 9) {
       return 'Upgrade';
+    }
+    
+    // 1b. Duo/God +9…+11: always Finish (no eff gate); avoids falling through to Keep before +12.
+    if (rune.level < 12 && hasHighDuo) {
+      return 'Finish';
     }
     
     // 2. Finish: +9 with potential, take to +12
@@ -300,17 +306,7 @@
       return 'Finish';
     }
     
-    // 3. Reapp: Legend with good set/main, bad subs (skip for settled build archetypes)
-    if (hasRole && isLegend && window.SWRM.matchReappRule?.(rune, settings)) {
-      const skipReapp = typeof window.SWRM.isPrimaryBuildRole === 'function'
-        ? window.SWRM.isPrimaryBuildRole(bestRole)
-        : ['Classic DPS', 'Slow DPS', 'Bomber', 'Bruiser', 'Fast CC', 'Tank'].includes(bestRole);
-      if (!skipReapp) {
-        return 'Reapp';
-      }
-    }
-    
-    // 4. Gem — bad-flat subs → grindable % (Enchant Gem is sub-only)
+    // 3. Gem — bad-flat subs → grindable % (Enchant Gem is sub-only)
     if (hasRole) {
       const gem = window.SWRM.evaluateGemRecommendation?.(rune, stage, settings) || { can: false };
       if (gem.can) {
@@ -322,9 +318,19 @@
       }
     }
     
-    // 5. Duo/God as best role: no Grind rescue — verdict is Keep.
+    // 4. Duo/God: Keep before Reapp so Legend + Duo/God never falls through to Reapp.
     if (hasHighDuo) {
       return 'Keep';
+    }
+    
+    // 5. Reapp: Legend with good set/main, bad subs (skip for settled build archetypes)
+    if (hasRole && isLegend && window.SWRM.matchReappRule?.(rune, settings)) {
+      const skipReapp = typeof window.SWRM.isPrimaryBuildRole === 'function'
+        ? window.SWRM.isPrimaryBuildRole(bestRole)
+        : ['Classic DPS', 'Slow DPS', 'Bomber', 'Bruiser', 'Fast CC', 'Tank'].includes(bestRole);
+      if (!skipReapp) {
+        return 'Reapp';
+      }
     }
     
     // 6. No role: Grind-to-God → HR Grind (same checkGrind as step 7) → Sell.

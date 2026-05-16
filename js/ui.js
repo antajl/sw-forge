@@ -26,13 +26,29 @@
   let tableSearchHighlight = '';
   let searchDebounceTimer = null;
   let globalMinLevel = 0;
-  let globalMinGrade = 3;
+  let globalGradeMin = 3;
+  let globalGradeMax = 5;
   try {
-    const _mg = parseInt(localStorage.getItem('swrm_dashboard_min_grade_v1'), 10);
-    if (_mg >= 3 && _mg <= 5) globalMinGrade = _mg;
+    const _gmin = parseInt(localStorage.getItem('swrm_dashboard_grade_min_v1'), 10);
+    const _gmax = parseInt(localStorage.getItem('swrm_dashboard_grade_max_v1'), 10);
+    if (_gmin >= 3 && _gmin <= 5 && _gmax >= 3 && _gmax <= 5 && _gmin <= _gmax) {
+      globalGradeMin = _gmin;
+      globalGradeMax = _gmax;
+    } else {
+      const _mg = parseInt(localStorage.getItem('swrm_dashboard_min_grade_v1'), 10);
+      if (_mg >= 3 && _mg <= 5) {
+        globalGradeMin = _mg;
+        globalGradeMax = 5;
+      }
+    }
   } catch (e) { /* ignore */ }
   /** User explicitly expanded the progression panel (`1` = expanded; default collapsed). */
   const STAGE_PROGRESSION_EXPANDED_KEY = 'swrm_stage_progression_expanded_v1';
+  const TOP_SPD_STORAGE_KEY = 'swrm_dashboard_top_spd_set_v1';
+  const TOP_SPD_PER_SLOT = 3;
+  const DASH_UNIFIED_DIST_KEY = 'swrm_dashboard_unified_dist_v1';
+  /** Legacy Role/Sets-only toggle — migrated once into {@link DASH_UNIFIED_DIST_KEY}. */
+  const DASH_DIST_TAB_LEGACY_KEY = 'swrm_dashboard_dist_tab_v1';
   let currentLang = localStorage.getItem(APP_LANG_KEY) || localStorage.getItem('swrm-lang') || 'en';
   let currentTheme = localStorage.getItem('swrm-theme') || 'light';
 
@@ -89,7 +105,6 @@
     setText('lbl-stage-advisor-lead', t.stageAdvisorLead || '');
     setText('lbl-stage-suggested', t.stageSuggestedLabel || '');
     setText('lbl-stage-your-preset', t.stageYourPresetLabel || '');
-    setText('lbl-stage-score-label', t.stageScoreLabel || '');
     setText('lbl-stage-metrics-explainer', t.stageMetricsExplainer || '');
     const formulaEl = document.getElementById('lbl-stage-formula');
     if (formulaEl) {
@@ -97,17 +112,22 @@
       formulaEl.textContent = ft;
       formulaEl.hidden = !ft;
     }
-    setText('lbl-card-hr-name', t.stageCardHrName || '');
+    setText('lbl-card-hr-name', (t.stageCardHrName || '').trim());
     setText('lbl-card-hr-desc', t.stageCardHrDesc || '');
-    setText('lbl-card-keep-name', t.stageCardKeepName || '');
+    setText('lbl-card-keep-name', (t.stageCardKeepName || '').trim());
     setText('lbl-card-keep-desc', t.stageCardKeepDesc || '');
-    setText('lbl-card-meta-name', t.stageCardMetaName || '');
+    setText('lbl-card-meta-name', (t.stageCardMetaName || '').trim());
     setText('lbl-card-meta-desc', t.stageCardMetaDesc || '');
     setText('lbl-card-hr-weight', t.stageCardHrWeight || '');
     setText('lbl-card-keep-weight', t.stageCardKeepWeight || '');
     setText('lbl-card-meta-weight', t.stageCardMetaWeight || '');
     const btnAuto = document.getElementById('btn-auto-stage');
-    if (btnAuto) btnAuto.textContent = t.stageApplySuggestion || 'Apply suggestion';
+    if (btnAuto) {
+      btnAuto.textContent = t.stageApplySuggestion || 'Apply suggestion';
+      const aria = String(t.stageApplySuggestionAria || t.stageApplySuggestion || '').trim();
+      if (aria) btnAuto.setAttribute('aria-label', aria);
+      else btnAuto.removeAttribute('aria-label');
+    }
   }
 
   const RULES_SUBTAB_KEY = 'swrm_rules_subtab_v1';
@@ -251,7 +271,9 @@
    * @param {{ writeHash?: boolean }} [options] pass writeHash: true when user (or app) chose a tab and URL should update
    */
   function showMainTab(tabId, options) {
-    const writeHash = options && options.writeHash === true;
+    const opts = options || {};
+    const writeHash = opts.writeHash === true;
+    const pushHistory = opts.pushHistory === true;
     const id = MAIN_TAB_IDS.includes(tabId) ? tabId : 'dashboard';
     document.querySelectorAll('.tab').forEach((t) => {
       t.classList.toggle('active', t.dataset.tab === id);
@@ -278,14 +300,12 @@
     if (writeHash) {
       try {
         const base = window.location.pathname + window.location.search;
-        if (id === 'dashboard') {
-          history.replaceState(null, '', base);
-        } else if (id === 'runetable') {
-          const suf = buildRuneTableQuerySuffix();
-          history.replaceState(null, '', `${base}#runetable${suf}`);
-        } else {
-          history.replaceState(null, '', `${base}#${id}`);
-        }
+        let url;
+        if (id === 'dashboard') url = base;
+        else if (id === 'runetable') url = `${base}#runetable${buildRuneTableQuerySuffix()}`;
+        else url = `${base}#${id}`;
+        if (pushHistory) history.pushState(null, '', url);
+        else history.replaceState(null, '', url);
       } catch (e) { /* ignore */ }
     }
 
@@ -391,14 +411,12 @@
 
     // Update header elements
     const uploadLabel = document.querySelector('label[for="json-upload"] span');
-    if (uploadLabel) uploadLabel.textContent = '⬆ ' + t.loadJson;
+    if (uploadLabel) uploadLabel.textContent = t.loadJson;
     const settingsBtn = document.getElementById('open-app-settings');
     if (settingsBtn) settingsBtn.textContent = t.settings;
 
-    const scopeTitle = document.getElementById('dashboard-scope-title');
-    if (scopeTitle) scopeTitle.textContent = t.dashboardScopeTitle || '';
-    const scopeHint = document.getElementById('dashboard-scope-hint');
-    if (scopeHint) scopeHint.textContent = t.dashboardScopeHint || '';
+    const scopeLine = document.getElementById('dashboard-scope-line');
+    if (scopeLine) scopeLine.textContent = t.dashboardScopeBarLine || '';
     const minLvlLbl = document.getElementById('dashboard-minlvl-label');
     if (minLvlLbl) minLvlLbl.textContent = t.minLvl || '';
 
@@ -415,6 +433,9 @@
       <option value="Late">${t.late}</option>`;
       stageSelect.value = preserved;
       stage = preserved;
+      const mq = analyzeGameStage(allRunes);
+      const rq = getRecommendedStage(parseFloat(mq.score), mq.stageMidMin, mq.stageLateMin);
+      syncGameStageVisualClasses(stage, rq, !!(allRunes.length && mq.runeCount));
     }
     
     // Update upload prompt
@@ -438,7 +459,10 @@
     
     // Update dashboard cards
     updateDashboardLabels();
-    
+    if (processedRunes.length) {
+      renderDashboard(getVisibleRunes());
+    }
+
     // Update table elements
     updateTableLabels();
     refreshRoleFilterOptions();
@@ -454,55 +478,49 @@
 
   function updateDashboardLabels() {
     const t = TRANSLATIONS[currentLang];
-    const labels = {
-      'sc-total': t.totalRunes,
-      'sc-keep': t.keep,
-      'sc-sell': t.sell,
-      'sc-grind': t.grind,
-      'sc-finish': t.finish,
-      'sc-reapp': t.reapp,
-      'sc-upgrade': t.upgrade,
-      'sc-gem': t.gem
-    };
-    
-    Object.entries(labels).forEach(([id, text]) => {
-      const element = document.getElementById(id);
-      if (element) {
-        const label = element.querySelector('.sc-label');
-        if (label) label.textContent = text;
-      }
-    });
-    
-    // Update chart titles
-    const chartTitles = {
-      'panel-roles': t.roleDistribution,
-      'panel-sets': t.setDistribution,
-      'panel-slots': t.slotDistribution,
-      'panel-eff': t.efficiencyDistribution
-    };
-    
-    Object.entries(chartTitles).forEach(([id, text]) => {
-      const element = document.getElementById(id);
-      if (element) {
-        const title = element.querySelector('.panel-title');
-        if (title) title.textContent = text;
-      }
-    });
 
-    const lblMix = document.getElementById('lbl-verdict-mix-title');
-    if (lblMix) lblMix.textContent = t.dashboardVerdictMixTitle || '';
-    const vhint = document.getElementById('lbl-verdict-stack-hint');
+    const tv = document.getElementById('dash-unified-tab-verdict');
+    const tr = document.getElementById('dash-unified-tab-roles');
+    const ts = document.getElementById('dash-unified-tab-sets');
+    const tsl = document.getElementById('dash-unified-tab-slots');
+    const te = document.getElementById('dash-unified-tab-eff');
+    if (tv) tv.textContent = t.dashboardDistVerdict || '';
+    if (tr) tr.textContent = t.dashboardDistRoles || '';
+    if (ts) ts.textContent = t.dashboardDistSets || '';
+    if (tsl) tsl.textContent = t.dashboardDistSlots || '';
+    if (te) te.textContent = t.dashboardDistEff || '';
+    const uniTabs = document.getElementById('dash-unified-tabs');
+    if (uniTabs) uniTabs.setAttribute('aria-label', t.dashboardUnifiedDistAria || '');
+
+    const lblTopSpd = document.getElementById('lbl-top-spd-title');
+    if (lblTopSpd) lblTopSpd.textContent = t.dashboardTopSpdTitle || '';
+
+    const lblTopSpdSet = document.getElementById('lbl-top-spd-set-label');
+    if (lblTopSpdSet) lblTopSpdSet.textContent = t.dashboardTopSpdSetLabel || 'Set';
+
+    const hintTopSpd = document.getElementById('lbl-top-spd-hint');
+    if (hintTopSpd) hintTopSpd.textContent = t.dashboardTopSpdHint || '';
+
+    const vhint = document.getElementById('lbl-dash-unified-verdict-hint');
     if (vhint) vhint.textContent = t.dashboardVerdictStackHint || '';
+
+    const btnAll = document.getElementById('btn-dash-open-all-runes');
+    if (btnAll) btnAll.textContent = t.dashboardOpenAllRunes || 'Open table';
+
     const gk = document.getElementById('lbl-dash-group-keepers');
     if (gk) gk.textContent = t.dashboardGroupKeepers || '';
     const gq = document.getElementById('lbl-dash-group-queue');
     if (gq) gq.textContent = t.dashboardGroupQueue || '';
     const exp = document.getElementById('btn-dashboard-export-summary');
     if (exp) exp.textContent = t.dashboardExportSummary || 'Copy summary';
-    const mgLbl = document.getElementById('dashboard-mingrade-label');
-    if (mgLbl) mgLbl.textContent = t.dashboardMinGradeLabel || 'Min grade';
+    const gr = document.getElementById('lbl-dashboard-grade-range');
+    const glm = document.getElementById('lbl-dashboard-grade-min');
+    const glx = document.getElementById('lbl-dashboard-grade-max');
+    if (gr) gr.textContent = t.dashboardGradeRangeGroup || 'Grades';
+    if (glm) glm.textContent = t.dashboardGradeRangeFrom || 'From';
+    if (glx) glx.textContent = t.dashboardGradeRangeTo || 'To';
 
-    syncDashboardGradeSelect();
+    syncDashboardGradeRangeSelects();
     applyStageAdvisorCollapsed(!readStageProgressionExpanded());
   }
 
@@ -731,6 +749,11 @@
     else showMainTab('dashboard');
   });
 
+  window.addEventListener('popstate', () => {
+    const id = mainTabIdFromHash() || 'dashboard';
+    showMainTab(id);
+  });
+
   // ===================== STAGE =====================
   document.getElementById('stage-select').addEventListener('change', e => {
     stage = e.target.value;
@@ -773,11 +796,37 @@
     }
   });
 
-  document.getElementById('global-min-grade')?.addEventListener('change', (e) => {
-    globalMinGrade = parseInt(e.target.value || '3', 10) || 3;
-    if (globalMinGrade < 3) globalMinGrade = 3;
-    if (globalMinGrade > 5) globalMinGrade = 5;
-    try { localStorage.setItem('swrm_dashboard_min_grade_v1', String(globalMinGrade)); } catch (err) { /* ignore */ }
+  document.getElementById('global-grade-min')?.addEventListener('change', (e) => {
+    let v = parseInt(e.target.value || '3', 10) || 3;
+    if (v < 3) v = 3;
+    if (v > 5) v = 5;
+    globalGradeMin = v;
+    if (globalGradeMin > globalGradeMax) globalGradeMax = globalGradeMin;
+    try {
+      localStorage.setItem('swrm_dashboard_grade_min_v1', String(globalGradeMin));
+      localStorage.setItem('swrm_dashboard_grade_max_v1', String(globalGradeMax));
+    } catch (err) { /* ignore */ }
+    const smax = document.getElementById('global-grade-max');
+    if (smax) smax.value = String(globalGradeMax);
+    if (processedRunes.length) {
+      const visible = getVisibleRunes();
+      renderDashboard(visible);
+      renderTable(visible);
+    }
+  });
+
+  document.getElementById('global-grade-max')?.addEventListener('change', (e) => {
+    let v = parseInt(e.target.value || '5', 10) || 5;
+    if (v < 3) v = 3;
+    if (v > 5) v = 5;
+    globalGradeMax = v;
+    if (globalGradeMax < globalGradeMin) globalGradeMin = globalGradeMax;
+    try {
+      localStorage.setItem('swrm_dashboard_grade_min_v1', String(globalGradeMin));
+      localStorage.setItem('swrm_dashboard_grade_max_v1', String(globalGradeMax));
+    } catch (err) { /* ignore */ }
+    const smin = document.getElementById('global-grade-min');
+    if (smin) smin.value = String(globalGradeMin);
     if (processedRunes.length) {
       const visible = getVisibleRunes();
       renderDashboard(visible);
@@ -796,6 +845,59 @@
     } catch (err) { /* ignore */ }
   });
 
+  function readDashboardUnifiedTab() {
+    try {
+      let v = localStorage.getItem(DASH_UNIFIED_DIST_KEY);
+      if (!v) {
+        const legacy = localStorage.getItem(DASH_DIST_TAB_LEGACY_KEY);
+        if (legacy === 'sets') v = 'sets';
+        else if (legacy === 'roles') v = 'roles';
+      }
+      if (['verdict', 'roles', 'sets', 'slots', 'eff'].includes(v)) return v;
+    } catch (e) { /* ignore */ }
+    return 'verdict';
+  }
+
+  function applyDashboardUnifiedTab(which) {
+    const keys = ['verdict', 'roles', 'sets', 'slots', 'eff'];
+    const active = keys.includes(which) ? which : 'verdict';
+    keys.forEach((k) => {
+      const btn = document.getElementById(`dash-unified-tab-${k}`);
+      const pane = document.getElementById(`dash-pane-${k}`);
+      if (!btn || !pane) return;
+      const on = k === active;
+      btn.classList.toggle('is-active', on);
+      btn.setAttribute('aria-selected', String(on));
+      pane.toggleAttribute('hidden', !on);
+      pane.classList.toggle('is-active', on);
+    });
+  }
+
+  function initDashboardUnifiedTabs() {
+    applyDashboardUnifiedTab(readDashboardUnifiedTab());
+    document.querySelectorAll('.dash-unified-tab[data-dash-uni]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const raw = btn.getAttribute('data-dash-uni') || 'verdict';
+        const w = ['verdict', 'roles', 'sets', 'slots', 'eff'].includes(raw) ? raw : 'verdict';
+        applyDashboardUnifiedTab(w);
+        try {
+          localStorage.setItem(DASH_UNIFIED_DIST_KEY, w);
+        } catch (e) { /* ignore */ }
+      });
+    });
+  }
+
+  document.getElementById('btn-dash-open-all-runes')?.addEventListener('click', () => {
+    navigateToRuneTableWithFilters({
+      verdict: '',
+      role: '',
+      gradeStr: gradeStrForDashboardNav(),
+      set: '',
+      slot: '',
+      clearSearch: true,
+    });
+  });
+
   document.getElementById('btn-dashboard-export-summary')?.addEventListener('click', async () => {
     const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const ok = await copyTextToClipboard(getDashboardExportText());
@@ -806,34 +908,34 @@
   });
 
   function dashboardNavigateFromClick(e) {
-    const seg = e.target.closest('.dashboard-verdict-seg[data-dash-verdict]');
-    if (seg) {
+    const vrow = e.target.closest('.chart-row--clickable[data-dash-verdict]');
+    if (vrow) {
       navigateToRuneTableWithFilters({
-        verdict: seg.getAttribute('data-dash-verdict') || '',
+        verdict: vrow.getAttribute('data-dash-verdict') || '',
         role: '',
-        gradeStr: gradeStrFromMinGrade(globalMinGrade),
+        gradeStr: gradeStrForDashboardNav(),
+        set: '',
+        slot: '',
         clearSearch: true,
       });
       return;
     }
-    const card = e.target.closest('.stat-card--clickable[data-dash-filter]');
-    if (card) {
-      const f = card.getAttribute('data-dash-filter');
-      if (f === 'all') {
-        navigateToRuneTableWithFilters({
-          verdict: '',
-          role: '',
-          gradeStr: gradeStrFromMinGrade(globalMinGrade),
-          clearSearch: true,
-        });
-      } else if (f === 'verdict') {
-        navigateToRuneTableWithFilters({
-          verdict: card.getAttribute('data-dash-verdict') || '',
-          role: '',
-          gradeStr: gradeStrFromMinGrade(globalMinGrade),
-          clearSearch: true,
-        });
+    const setRow = e.target.closest('.chart-row--clickable[data-dash-set]');
+    if (setRow) {
+      let setName = '';
+      try {
+        setName = decodeURIComponent(setRow.getAttribute('data-dash-set') || '');
+      } catch (err) {
+        setName = setRow.getAttribute('data-dash-set') || '';
       }
+      navigateToRuneTableWithFilters({
+        verdict: '',
+        role: '',
+        set: setName,
+        slot: '',
+        gradeStr: gradeStrForDashboardNav(),
+        clearSearch: true,
+      });
       return;
     }
     const row = e.target.closest('.chart-row--clickable[data-dash-role]');
@@ -841,7 +943,9 @@
       navigateToRuneTableWithFilters({
         verdict: '',
         role: row.getAttribute('data-dash-role') || '',
-        gradeStr: gradeStrFromMinGrade(globalMinGrade),
+        gradeStr: gradeStrForDashboardNav(),
+        set: '',
+        slot: '',
         clearSearch: true,
       });
     }
@@ -853,13 +957,26 @@
     if (e.key !== 'Enter' && e.key !== ' ') return;
     const t = e.target;
     if (!t || !t.closest || !t.closest('#tab-dashboard')) return;
-    if (t.closest('.dashboard-verdict-seg')) return;
+    const setRow = t.closest('.chart-row--clickable[data-dash-set]');
+    const vrow = t.closest('.chart-row--clickable[data-dash-verdict]');
     const row = t.closest('.chart-row--clickable[data-dash-role]');
-    const card = t.closest('.stat-card--clickable[data-dash-filter]');
-    if (row || card) {
+    if (setRow || vrow || row) {
       e.preventDefault();
-      (row || card).click();
+      (setRow || vrow || row).click();
     }
+  });
+
+  document.getElementById('top-spd-set-select')?.addEventListener('change', (e) => {
+    const v = e.target.value || '';
+    try {
+      localStorage.setItem(TOP_SPD_STORAGE_KEY, v);
+    } catch (err) { /* ignore */ }
+    renderTopSpdGrid(
+      document.getElementById('top-spd-grid'),
+      getVisibleRunes(),
+      v,
+      TRANSLATIONS[currentLang] || TRANSLATIONS.en,
+    );
   });
 
   // ===================== FILE UPLOAD =====================
@@ -1072,14 +1189,8 @@
     } else {
       document.getElementById('upload-prompt').classList.add('hidden');
     }
-    document.getElementById('sc-total').querySelector('.sc-value').textContent = '—';
-    document.getElementById('sc-keep').querySelector('.sc-value').textContent = '—';
-    document.getElementById('sc-sell').querySelector('.sc-value').textContent = '—';
-    document.getElementById('sc-grind').querySelector('.sc-value').textContent = '—';
-    document.getElementById('sc-finish').querySelector('.sc-value').textContent = '—';
-    document.getElementById('sc-reapp').querySelector('.sc-value').textContent = '—';
-    document.getElementById('sc-upgrade').querySelector('.sc-value').textContent = '—';
-    document.getElementById('sc-gem').querySelector('.sc-value').textContent = '—';
+    const accCt = document.getElementById('dashboard-account-run-count');
+    if (accCt) accCt.textContent = '\u2014';
     document.getElementById('rune-tbody').innerHTML = '';
     renderDashboard([]);
     renderTable([]);
@@ -1217,16 +1328,8 @@
     return processedRunes.filter((r) => {
       if (r.level < globalMinLevel) return false;
       const g = typeof r.grade === 'number' ? r.grade : 0;
-      return g >= globalMinGrade;
+      return g >= globalGradeMin && g <= globalGradeMax;
     });
-  }
-
-  function escapeHtml(s) {
-    return String(s ?? '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
   }
 
   /** Bar track + fill only (counts live in chartRowStatsHtml). */
@@ -1251,6 +1354,204 @@
       <span class="chart-stat-val">${avgInner}</span>
     </div>`;
     return `<div class="chart-row-stats">${countLine}${avgLine}</div>`;
+  }
+
+  const VERDICT_LABEL_MAP = {
+    Keep: 'keep',
+    Sell: 'sell',
+    Grind: 'grind',
+    Finish: 'finish',
+    Reapp: 'reapp',
+    Upgrade: 'upgrade',
+    Gem: 'gem',
+  };
+
+  function verdictUiLabel(t, verdictKey) {
+    const lk = VERDICT_LABEL_MAP[verdictKey];
+    return lk ? (t[lk] || verdictKey) : verdictKey;
+  }
+
+  function sumRuneSpdSubs(r) {
+    let s = 0;
+    for (const sub of r.substats || []) {
+      if (sub.name === 'SPD') s += (sub.val || 0);
+    }
+    return s;
+  }
+
+  function chartBarTrackHtmlVerdict(pctStr, bgCss) {
+    return `<div class="chart-bar-wrap">
+      <div class="chart-bar-fill chart-bar-fill--verdict" style="width:${pctStr}%;background:${bgCss};"></div>
+    </div>`;
+  }
+
+  function buildSlotMainPivot(list) {
+    const slotTotals = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
+    const cell = {};
+    const runes = Array.isArray(list) ? list : [];
+    for (let i = 0; i < runes.length; i++) {
+      const r = runes[i];
+      const slot = r.slot | 0;
+      if (slot < 1 || slot > 6) continue;
+      slotTotals[slot]++;
+      const m = r.mainName || '\u2014';
+      if (!cell[m]) cell[m] = {};
+      cell[m][slot] = (cell[m][slot] || 0) + 1;
+    }
+    const mains = Object.keys(cell).sort((a, b) => {
+      const ta = Object.values(cell[a]).reduce((x, y) => x + y, 0);
+      const tb = Object.values(cell[b]).reduce((x, y) => x + y, 0);
+      if (tb !== ta) return tb - ta;
+      return String(a).localeCompare(String(b));
+    });
+    return { slotTotals, cell, mains };
+  }
+
+  function renderSlotMainCards(hostEl, pivot, tloc) {
+    if (!hostEl || !pivot) return;
+    hostEl.innerHTML = '';
+    const root = document.createElement('div');
+    root.className = 'slot-main-cards';
+    const grid = document.createElement('div');
+    grid.className = 'slot-main-cards-grid';
+
+    const slotHdr = (n) =>
+      ((tloc && tloc.dashboardTopSpdSlotLabel) || 'Slot {n}').replace('{n}', String(n));
+
+    for (let s = 1; s <= 6; s++) {
+      const tot = pivot.slotTotals[s] || 0;
+      const card = document.createElement('article');
+      card.className = 'slot-main-card';
+      const hd = document.createElement('header');
+      hd.className = 'slot-main-card-hdr';
+      hd.textContent = slotHdr(s);
+      const meta = document.createElement('div');
+      meta.className = 'slot-main-card-meta';
+      meta.textContent = tot
+        ? `${tot}\u00A0${(tloc && tloc.runes) || 'runes'}`
+        : ((tloc && tloc.dashboardSlotCardEmpty) || '\u2014');
+      const list = document.createElement('ul');
+      list.className = 'slot-main-card-list';
+
+      const entries = pivot.mains
+        .map((main) => ({
+          main,
+          c: (pivot.cell[main] && pivot.cell[main][s]) || 0,
+        }))
+        .filter((e) => e.c > 0)
+        .sort((a, b) => b.c - a.c)
+        .slice(0, 7);
+
+      if (!entries.length) {
+        const li = document.createElement('li');
+        li.className = 'slot-main-card-li slot-main-card-li--empty';
+        li.textContent = (tloc && tloc.dashboardSlotCardEmpty) || '\u2014';
+        list.appendChild(li);
+      } else {
+        const maxC = entries[0].c;
+        for (let i = 0; i < entries.length; i++) {
+          const e = entries[i];
+          const pct = tot ? Math.round((e.c / tot) * 1000) / 10 : 0;
+          const barW = maxC ? Math.round((e.c / maxC) * 100) : 0;
+          const li = document.createElement('li');
+          li.className = 'slot-main-card-li';
+          li.innerHTML =
+            `<span class="slot-main-card-name">${escapeHtml(e.main)}</span>` +
+            `<span class="slot-main-card-track" aria-hidden="true"><span class="slot-main-card-bar" style="width:${barW}%"></span></span>` +
+            `<span class="slot-main-card-stat"><span class="slot-main-card-n">${e.c}</span>` +
+            `<span class="slot-main-card-p">${pct}%</span></span>`;
+          list.appendChild(li);
+        }
+      }
+
+      card.appendChild(hd);
+      card.appendChild(meta);
+      card.appendChild(list);
+      grid.appendChild(card);
+    }
+
+    root.appendChild(grid);
+
+    const foot = document.createElement('footer');
+    foot.className = 'slot-main-cards-foot';
+    const lbl = escapeHtml((tloc && tloc.dashboardSlotMatrixCountRow) || 'Count');
+    foot.innerHTML =
+      `<span class="slot-main-foot-lbl">${lbl}</span>` +
+      `<div class="slot-main-foot-nums">${[1, 2, 3, 4, 5, 6]
+        .map((i) => {
+          const n = pivot.slotTotals[i] || 0;
+          return `<span class="slot-main-foot-chip"><b>${i}</b>${n}</span>`;
+        })
+        .join('')}</div>`;
+    root.appendChild(foot);
+    hostEl.appendChild(root);
+  }
+
+  function renderTopSpdGrid(gridEl, runes, selectedSet, tloc) {
+    if (!gridEl) return;
+    gridEl.innerHTML = '';
+    if (!selectedSet) {
+      const empty = document.createElement('div');
+      empty.className = 'top-spd-slot-empty';
+      empty.style.gridColumn = '1 / -1';
+      empty.textContent = (tloc && tloc.dashboardTopSpdPickHint) || '';
+      gridEl.appendChild(empty);
+      return;
+    }
+    const filtered = runes.filter((r) => r.setName === selectedSet);
+    for (let slot = 1; slot <= 6; slot++) {
+      const col = document.createElement('div');
+      col.className = 'top-spd-slot-col';
+      const hdr = document.createElement('div');
+      hdr.className = 'top-spd-slot-hdr';
+      hdr.textContent = ((tloc && tloc.dashboardTopSpdSlotLabel) || 'Slot {n}').replace('{n}', String(slot));
+      col.appendChild(hdr);
+      const inSlot = filtered.filter((r) => (r.slot | 0) === slot);
+      inSlot.sort((a, b) => sumRuneSpdSubs(b) - sumRuneSpdSubs(a));
+      const pick = inSlot.slice(0, TOP_SPD_PER_SLOT);
+      if (!pick.length) {
+        const empty = document.createElement('div');
+        empty.className = 'top-spd-slot-empty';
+        empty.textContent = (tloc && tloc.dashboardTopSpdNoRunes) || '\u2014';
+        col.appendChild(empty);
+      } else {
+        for (let pi = 0; pi < pick.length; pi++) {
+          const r = pick[pi];
+          const spd = sumRuneSpdSubs(r);
+          const eff = Number.isFinite(r.eff) ? r.eff.toFixed(1) : '\u2014';
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'top-spd-chip';
+          btn.textContent = `+${spd} SPD · ${eff}% · ${r.gradeStr || ''}`;
+          const setNm = selectedSet;
+          const sl = slot;
+          btn.addEventListener('click', () => {
+            navigateToRuneTableWithFilters({
+              verdict: '',
+              role: '',
+              gradeStr: gradeStrForDashboardNav(),
+              set: setNm,
+              slot: String(sl),
+              clearSearch: true,
+            });
+          });
+          col.appendChild(btn);
+        }
+      }
+      gridEl.appendChild(col);
+    }
+  }
+
+  function fillTopSpdSetSelect(selectEl, setOrder, tloc, preferredName) {
+    if (!selectEl) return;
+    const blank = escapeHtml((tloc && tloc.dashboardTopSpdNoneOption) || '\u2014');
+    const opts = [`<option value="">${blank}</option>`].concat(
+      (setOrder || []).map((nm) => `<option value="${escapeHtml(nm)}">${escapeHtml(nm)}</option>`),
+    );
+    selectEl.innerHTML = opts.join('');
+    const pick =
+      preferredName && setOrder && setOrder.includes(preferredName) ? preferredName : '';
+    selectEl.value = pick;
   }
 
   function medianSorted(sorted) {
@@ -1287,6 +1588,8 @@
     const fv = document.getElementById('filter-verdict');
     const fr = document.getElementById('filter-role');
     const fg = document.getElementById('filter-grade');
+    const fs = document.getElementById('filter-set');
+    const fsl = document.getElementById('filter-slot');
     if (partial.clearSearch) {
       const sb = document.getElementById('search-box');
       if (sb) sb.value = '';
@@ -1300,25 +1603,65 @@
     if (fg && Object.prototype.hasOwnProperty.call(partial, 'gradeStr')) {
       fg.value = partial.gradeStr || '';
     }
-    showMainTab('runetable', { writeHash: true });
+    if (fs && Object.prototype.hasOwnProperty.call(partial, 'set')) {
+      fs.value = partial.set || '';
+    }
+    if (fsl && Object.prototype.hasOwnProperty.call(partial, 'slot')) {
+      fsl.value = partial.slot || '';
+    }
+    const onDashboard = document.querySelector('.tab.active')?.dataset.tab === 'dashboard';
+    showMainTab('runetable', { writeHash: true, pushHistory: onDashboard });
     const visible = getVisibleRunes();
     renderTable(visible);
   }
 
-  /** Table grade filter is exact match only — align when dashboard is Legend-only. */
-  function gradeStrFromMinGrade(g) {
-    return g >= 5 ? 'Legend' : '';
+  /** Table grade filter is exact match — set only when dashboard range is a single grade. */
+  function gradeStrForDashboardNav() {
+    if (globalGradeMin === globalGradeMax) {
+      if (globalGradeMin === 5) return 'Legend';
+      if (globalGradeMin === 4) return 'Hero';
+      if (globalGradeMin === 3) return 'Rare';
+    }
+    return '';
   }
 
   /** @param {boolean} collapsed — true = one-line bar only */
   function applyStageAdvisorCollapsed(collapsed) {
     const root = document.getElementById('stage-advisor');
     const btn = document.getElementById('btn-stage-compact');
+    const expandedWrap = document.getElementById('stage-advisor-expanded-wrap');
     if (!root || !btn) return;
     root.classList.toggle('is-compact', collapsed);
     btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+    if (expandedWrap) {
+      if (collapsed) expandedWrap.setAttribute('aria-hidden', 'true');
+      else expandedWrap.removeAttribute('aria-hidden');
+    }
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     btn.title = collapsed ? (t.stageCompactExpand || '') : (t.stageCompactCollapse || '');
+  }
+
+  /** Preset & suggestion UI: stage colors (Early/Mid/Late). */
+  function syncGameStageVisualClasses(presetStageKey, suggestedStageKey, hasProgressionMetrics) {
+    const sel = document.getElementById('stage-select');
+    const wrap = sel && sel.closest('.stage-select-wrap');
+    const root = document.getElementById('stage-advisor');
+    const preset = String(presetStageKey || '').toLowerCase();
+    const sug = String(suggestedStageKey || '').toLowerCase();
+
+    ['early', 'mid', 'late'].forEach((k) => {
+      if (sel) sel.classList.remove(`stage-select--${k}`);
+      if (wrap) wrap.classList.remove(`stage-select-wrap--${k}`);
+    });
+    if (preset === 'early' || preset === 'mid' || preset === 'late') {
+      if (sel) sel.classList.add(`stage-select--${preset}`);
+      if (wrap) wrap.classList.add(`stage-select-wrap--${preset}`);
+    }
+
+    if (root) root.classList.remove('stage-accent-early', 'stage-accent-mid', 'stage-accent-late');
+    if (hasProgressionMetrics && (sug === 'early' || sug === 'mid' || sug === 'late')) {
+      if (root) root.classList.add(`stage-accent-${sug}`);
+    }
   }
 
   function readStageProgressionExpanded() {
@@ -1455,29 +1798,73 @@
     });
   }
 
-  function setStatCard(id, count, total, hidePct) {
+  function setStatCard(id, count, total, hidePct, avgEff) {
     const wrap = document.getElementById(id);
     if (!wrap) return;
     const v = wrap.querySelector('.sc-value');
     const p = wrap.querySelector('.sc-pct');
-    if (v) v.textContent = String(count);
+    const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const avgPx = String(tloc.dashboardVerdictAvgPrefix || 'avg').trim();
+    const pctNum = total ? Math.round((count / total) * 1000) / 10 : 0;
+    const hasAvg =
+      !hidePct &&
+      total > 0 &&
+      count > 0 &&
+      avgEff != null &&
+      Number.isFinite(avgEff);
+    if (v) {
+      if (hidePct || !total) {
+        v.textContent = String(count);
+      } else if (hasAvg) {
+        v.textContent = `${count} (${pctNum}%) · ${avgPx} ${avgEff.toFixed(1)}%`;
+      } else {
+        v.textContent = `${count} (${pctNum}%)`;
+      }
+    }
     if (p) {
-      if (hidePct || !total) p.textContent = '';
-      else p.textContent = `${Math.round((count / total) * 1000) / 10}%`;
+      p.textContent = '';
     }
   }
 
-  function syncDashboardGradeSelect() {
-    const sel = document.getElementById('global-min-grade');
-    if (!sel) return;
+  function dashboardGradeRangeSummary(t) {
+    const tr = (k, fb) => (t && t[k]) || fb;
+    const r = tr('dashboardGradeOptRare', 'Rare');
+    const h = tr('dashboardGradeOptHero', 'Hero');
+    const l = tr('dashboardGradeOptLegend', 'Legend');
+    const name = (n) => (n === 3 ? r : n === 4 ? h : l);
+    if (globalGradeMin === globalGradeMax) return String(name(globalGradeMin));
+    return `${name(globalGradeMin)}\u2013${name(globalGradeMax)}`;
+  }
+
+  function syncDashboardGradeRangeSelects() {
+    const selMin = document.getElementById('global-grade-min');
+    const selMax = document.getElementById('global-grade-max');
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-    sel.innerHTML =
-      `<option value="3">${escapeHtml(t.dashboardMinGradeRare || 'Rare+')}</option>` +
-      `<option value="4">${escapeHtml(t.dashboardMinGradeHero || 'Hero+')}</option>` +
-      `<option value="5">${escapeHtml(t.dashboardMinGradeLegend || 'Legend')}</option>`;
-    const pick = Math.min(5, Math.max(3, globalMinGrade));
-    sel.value = String(pick);
-    globalMinGrade = pick;
+    const opt = (val) => {
+      let txt = String(val);
+      if (val === 3) txt = t.dashboardGradeOptRare || 'Rare';
+      else if (val === 4) txt = t.dashboardGradeOptHero || 'Hero';
+      else if (val === 5) txt = t.dashboardGradeOptLegend || 'Legend';
+      return `<option value="${val}">${escapeHtml(txt)}</option>`;
+    };
+    const optsHtml = [3, 4, 5].map((v) => opt(v)).join('');
+    if (selMin) {
+      selMin.innerHTML = optsHtml;
+      selMin.value = String(Math.min(5, Math.max(3, globalGradeMin)));
+    }
+    if (selMax) {
+      selMax.innerHTML = optsHtml;
+      selMax.value = String(Math.min(5, Math.max(3, globalGradeMax)));
+    }
+    globalGradeMin = parseInt(selMin && selMin.value, 10) || globalGradeMin;
+    globalGradeMax = parseInt(selMax && selMax.value, 10) || globalGradeMax;
+    if (globalGradeMin > globalGradeMax) {
+      const x = globalGradeMin;
+      globalGradeMin = globalGradeMax;
+      globalGradeMax = x;
+      if (selMin) selMin.value = String(globalGradeMin);
+      if (selMax) selMax.value = String(globalGradeMax);
+    }
   }
 
   /** Full game roster + unknown exporter sets; ordered by count high→low (ties A→Z). */
@@ -1507,9 +1894,15 @@
     const slotMain = { 1: {}, 2: {}, 3: {}, 4: {}, 5: {}, 6: {} };
     const effBuckets = new Array(20).fill(0);
     const effVals = [];
+    const verdictEff = {};
     for (let i = 0; i < runes.length; i++) {
       const r = runes[i];
       counts[r.verdict] = (counts[r.verdict] || 0) + 1;
+      const rv = r.verdict || '';
+      if (rv) {
+        verdictEff[rv] = verdictEff[rv] || [];
+        verdictEff[rv].push(Number.isFinite(r.eff) ? r.eff : 0);
+      }
       if (r.role) {
         roleCounts[r.role] = (roleCounts[r.role] || 0) + 1;
         roleEff[r.role] = roleEff[r.role] || [];
@@ -1535,7 +1928,14 @@
       slotMain,
       effBuckets,
       medianEff: medianSorted(effVals),
+      verdictEff,
     };
+  }
+
+  function verdictMeanEff(verdictEff, verdictKey) {
+    const a = verdictEff && verdictEff[verdictKey];
+    if (!a || !a.length) return null;
+    return a.reduce((x, y) => x + y, 0) / a.length;
   }
 
   function getDashboardExportText() {
@@ -1558,17 +1958,28 @@
     lines.push(
       `${t.stageCardHrName || 'SPD depth'}: ${metrics.spdDepthCount}, ${t.stageCardKeepName || '+15'}: ${metrics.plus15DepthCount}, ${t.stageCardMetaName || 'Elite'}: ${metrics.eliteAvgEff}% (${metrics.eliteSampleSize})`
     );
-    lines.push(`${t.dashboardScopeTitle || 'Filter'}: ${t.minLvl || 'Min Lvl'} +${globalMinLevel}, ${t.dashboardMinGradeLabel || 'Grade'} ≥ ${globalMinGrade}`);
-    lines.push(`${t.totalRunes || 'Total'} (${t.dashboardScopeTitle || 'view'}): ${vis.length}`);
+    const gradeLine = `${t.dashboardGradeRangeInExport || 'Grades'}: ${dashboardGradeRangeSummary(t)}`;
+    lines.push(`${t.dashboardScopeTitle || 'Filter'}: ${t.minLvl || 'Min Lvl'} +${globalMinLevel}, ${gradeLine}`);
+    lines.push(
+      `${(t.dashboardExportTotalCurrent || 'Total {acc} · Current {view}')
+        .replace(/\{acc\}/g, String(allRunes.length))
+        .replace(/\{view\}/g, String(vis.length))}`,
+    );
 
     lines.push('');
-    lines.push(t.dashboardVerdictMixTitle || 'Verdict mix');
+    lines.push(t.dashboardDistVerdict || t.dashboardVerdictMixTitle || 'Verdict distribution');
+    const avgPx = String(t.dashboardVerdictAvgPrefix || 'avg').trim();
     sortVerdictKeysByCount(agg.counts).forEach((k) => {
-      lines.push(`  ${k}: ${agg.counts[k] || 0}`);
+      const c = agg.counts[k] || 0;
+      const pct = vis.length ? Math.round((c / vis.length) * 1000) / 10 : 0;
+      const mu = verdictMeanEff(agg.verdictEff, k);
+      const avgBit =
+        c > 0 && mu != null && Number.isFinite(mu) ? ` · ${avgPx} ${mu.toFixed(1)}%` : '';
+      lines.push(`  ${k}: ${c} (${pct}%)${avgBit}`);
     });
 
     lines.push('');
-    lines.push(t.roleDistribution || 'Role Distribution');
+    lines.push(t.dashboardDistRoles || t.roleDistribution || 'Role distribution');
     const sortedRoles = Object.keys(agg.roleCounts).sort((a, b) => (agg.roleCounts[b] || 0) - (agg.roleCounts[a] || 0));
     sortedRoles.forEach((role) => {
       const cnt = agg.roleCounts[role] || 0;
@@ -1579,7 +1990,7 @@
     });
 
     lines.push('');
-    lines.push(t.setDistribution || 'Set Distribution');
+    lines.push(t.dashboardDistSets || t.setDistribution || 'Set distribution');
     getDashboardSetDisplayOrder(agg.setCounts).forEach((name) => {
       const cnt = agg.setCounts[name] || 0;
       const se = agg.setEff[name];
@@ -1590,15 +2001,29 @@
     });
 
     lines.push('');
-    lines.push(t.slotDistribution || 'Slot Distribution');
-    for (let s = 1; s <= 6; s++) {
-      const cnt = agg.slotCounts[s] || 0;
-      const mains = Object.entries(agg.slotMain[s])
-        .sort((a, b) => b[1] - a[1])
-        .map(([stat, c]) => `${stat} ${c}`)
-        .join(', ');
-      lines.push(`  Slot ${s}: ${cnt}${mains ? ` (${mains})` : ''}`);
+    lines.push(t.dashboardDistSlots || t.dashboardSlotMatrixTitle || 'Slot × main distribution');
+    const pivot = buildSlotMainPivot(vis);
+    const sep = '\t';
+    const hdr =
+      `  ${t.dashboardSlotMatrixCorner || 'Main'}${sep}${[1, 2, 3, 4, 5, 6].join(sep)}`;
+    lines.push(hdr);
+    for (const main of pivot.mains) {
+      const cells = [];
+      for (let s = 1; s <= 6; s++) {
+        const tot = pivot.slotTotals[s] || 0;
+        const c = (pivot.cell[main] && pivot.cell[main][s]) || 0;
+        if (!c) cells.push('\u2014');
+        else {
+          const p = tot ? Math.round((c / tot) * 1000) / 10 : 0;
+          cells.push(`${c} (${p}%)`);
+        }
+      }
+      lines.push(`  ${main}${sep}${cells.join(sep)}`);
     }
+    const countLbl = t.dashboardSlotMatrixCountRow || 'Count';
+    lines.push(
+      `  ${countLbl}${sep}${[1, 2, 3, 4, 5, 6].map((s) => String(pivot.slotTotals[s] || 0)).join(sep)}`,
+    );
 
     lines.push('');
     lines.push(t.efficiencyDistribution || 'Efficiency Distribution');
@@ -1635,9 +2060,12 @@
     const metricKe = document.getElementById('metric-val-keepeff');
     const metricMe = document.getElementById('metric-val-meta');
     const recDisp = document.getElementById('recommended-stage-display');
-    const scoreNum = document.getElementById('stage-score-num');
+    const scoreInline = document.getElementById('lbl-stage-score-inline');
+    const scoreFootnote = document.getElementById('lbl-stage-score-footnote');
     const mismatchLine = document.getElementById('stage-mismatch-line');
     const noEligLine = document.getElementById('stage-noeligible-line');
+
+    const hasProg = !!(allRunes.length && metrics.runeCount);
 
     if (metricHr) {
       metricHr.textContent = metrics.runeCount ? String(metrics.spdDepthCount) : '\u2014';
@@ -1657,11 +2085,72 @@
     if (recDisp) {
       recDisp.textContent =
         allRunes.length && metrics.runeCount ? stageDisplayName(tloc, recStage) : '\u2014';
+      recDisp.classList.remove(
+        'stage-advisor-suggestion-value--early',
+        'stage-advisor-suggestion-value--mid',
+        'stage-advisor-suggestion-value--late'
+      );
+      if (hasProg) {
+        const sg = String(recStage || '').toLowerCase();
+        if (sg === 'early' || sg === 'mid' || sg === 'late') {
+          recDisp.classList.add(`stage-advisor-suggestion-value--${sg}`);
+        }
+      }
     }
-    if (scoreNum) {
-      scoreNum.textContent =
-        allRunes.length && metrics.runeCount ? String(metrics.score) : '\u2014';
+
+    if (scoreInline) {
+      scoreInline.classList.remove('stage-score-inline--early', 'stage-score-inline--mid', 'stage-score-inline--late');
+      if (!hasProg) {
+        scoreInline.textContent = '';
+        scoreInline.hidden = true;
+      } else {
+        scoreInline.hidden = false;
+        const label = tloc.stageScoreLabel || 'Combined score';
+        const bandsTpl = String(tloc.stageScoreInlineBandsTpl || 'Mid from {mid}, Late from {late}').trim();
+        const bands = bandsTpl
+          .replace(/\{mid\}/g, String(metrics.stageMidMin))
+          .replace(/\{late\}/g, String(metrics.stageLateMin));
+        const strong = document.createElement('strong');
+        strong.className = 'stage-advisor-score-inline-num';
+        strong.textContent = String(metrics.score);
+        scoreInline.replaceChildren(
+          document.createTextNode(`${label}: `),
+          strong,
+          document.createTextNode(` \u00b7 ${bands}`),
+        );
+        const seg = String(recStage || '').toLowerCase();
+        if (seg === 'early' || seg === 'mid' || seg === 'late') {
+          scoreInline.classList.add(`stage-score-inline--${seg}`);
+        }
+      }
     }
+
+    if (scoreFootnote) {
+      const foot = String(tloc.stageCombinedScoreFootnote || '').trim();
+      scoreFootnote.textContent = foot;
+      scoreFootnote.hidden = !foot || !hasProg;
+    }
+
+    const setMetricTitleName = (spanId, nameTpl) => {
+      const el = document.getElementById(spanId);
+      const n = String(nameTpl || '').trim();
+      if (el && n) el.textContent = n;
+    };
+    setMetricTitleName('lbl-card-hr-name', tloc.stageCardHrName || '');
+    setMetricTitleName('lbl-card-keep-name', tloc.stageCardKeepName || '');
+    setMetricTitleName('lbl-card-meta-name', tloc.stageCardMetaName || '');
+
+    const metricsExpl = document.getElementById('lbl-stage-metrics-explainer');
+    if (metricsExpl) {
+      const raw = tloc.stageMetricsExplainer || '';
+      metricsExpl.textContent = raw.split(/\bCard weights:?\s*/i)[0].trim();
+    }
+
+    try {
+      if (localStorage.getItem(STAGE_PROGRESSION_EXPANDED_KEY) == null) {
+        applyStageAdvisorCollapsed(true);
+      }
+    } catch (e) { /* ignore */ }
 
     if (noEligLine) {
       const showNoElig = allRunes.length === 0 && processedRunes.length === 0;
@@ -1675,7 +2164,15 @@
         metrics.runeCount > 0 &&
         stage !== recStage;
       mismatchLine.hidden = !showMismatch;
-      mismatchLine.textContent = showMismatch ? (tloc.stageMismatchHint || '') : '';
+      if (!showMismatch) {
+        mismatchLine.textContent = '';
+      } else {
+        const explain = String(tloc.stageMismatchExplainTpl || '{preset} vs {suggested}. {hint}');
+        mismatchLine.textContent = explain
+          .replace(/\{preset\}/g, stageDisplayName(tloc, stage))
+          .replace(/\{suggested\}/g, stageDisplayName(tloc, recStage))
+          .replace(/\{hint\}/g, (tloc.stageMismatchHint || '').trim());
+      }
     }
 
     const tplContrib = tloc.stageMetricContribTpl || '+{pts} / {cap} pts';
@@ -1696,6 +2193,30 @@
       }
     });
 
+    /** Native tooltip: children receive hover, so duplicate title onto card + headline + values (Sheets parity text from hidden desc or i18n). */
+    const attachMetricCardTooltip = (descId, fallback) => {
+      const desc = document.getElementById(descId);
+      const card = desc && desc.closest('.stage-metric-card');
+      if (!card) return;
+      let tip = String(desc.textContent || '').replace(/\s+/g, ' ').trim();
+      if (!tip) tip = String(fallback || '').replace(/\s+/g, ' ').trim();
+      const safe = tip ? tip.replace(/"/g, '\u2019') : '';
+      const targets = [
+        card,
+        ...card.querySelectorAll('.stage-metric-card-head, .stage-metric-val, .stage-metric-contrib, .stage-metric-weight, .stage-metric-icon'),
+      ];
+      targets.forEach((node) => {
+        if (!node) return;
+        if (safe) node.setAttribute('title', safe);
+        else node.removeAttribute('title');
+      });
+    };
+    attachMetricCardTooltip('lbl-card-hr-desc', tloc.stageCardHrDesc || '');
+    attachMetricCardTooltip('lbl-card-keep-desc', tloc.stageCardKeepDesc || '');
+    attachMetricCardTooltip('lbl-card-meta-desc', tloc.stageCardMetaDesc || '');
+
+    syncGameStageVisualClasses(stage, recStage, hasProg);
+
     const agg = aggregateDashboardRunes(runes);
     const {
       counts,
@@ -1703,54 +2224,54 @@
       roleEff,
       setCounts,
       setEff,
-      slotCounts,
-      slotMain,
       effBuckets,
       medianEff,
+      verdictEff,
     } = agg;
 
-    const total = runes.length;
-    setStatCard('sc-total', total, total, true);
-    setStatCard('sc-keep', counts.Keep || 0, total, false);
-    setStatCard('sc-sell', counts.Sell || 0, total, false);
-    setStatCard('sc-grind', counts.Grind || 0, total, false);
-    setStatCard('sc-finish', counts.Finish || 0, total, false);
-    setStatCard('sc-reapp', counts.Reapp || 0, total, false);
-    setStatCard('sc-upgrade', counts.Upgrade || 0, total, false);
-    setStatCard('sc-gem', counts.Gem || 0, total, false);
+    const setOrder = getDashboardSetDisplayOrder(setCounts);
 
-    const vs = document.getElementById('verdict-stack');
-    if (vs) {
-      vs.innerHTML = '';
-      let sumV = 0;
-      DASH_VERDICT_SEG_ORDER.forEach((v) => { sumV += counts[v] || 0; });
-      if (!sumV) {
-        vs.setAttribute('aria-label', tloc.dashboardVerdictMixTitle || 'Verdict mix');
-      } else {
-        const parts = [];
-        DASH_VERDICT_SEG_ORDER.forEach((v) => {
-          const c = counts[v] || 0;
-          if (c > 0) parts.push({ v, c, raw: (c / sumV) * 100 });
-        });
-        parts.sort((a, b) => {
-          if (b.c !== a.c) return b.c - a.c;
-          return DASH_VERDICT_SEG_ORDER.indexOf(a.v) - DASH_VERDICT_SEG_ORDER.indexOf(b.v);
-        });
-        const wsum = parts.reduce((a, p) => a + Math.max(p.raw, 0.2), 0);
-        const ariaBits = [];
-        parts.forEach((p) => {
-          const flexPct = wsum ? (Math.max(p.raw, 0.2) / wsum) * 100 : 0;
-          const seg = document.createElement('button');
-          seg.type = 'button';
-          seg.className = 'dashboard-verdict-seg';
-          seg.style.flex = `0 0 ${flexPct}%`;
-          seg.style.background = DASH_VERDICT_SEG_CSS[p.v] || '#888';
-          seg.title = `${p.v}: ${p.c}`;
-          seg.setAttribute('data-dash-verdict', p.v);
-          vs.appendChild(seg);
-          ariaBits.push(`${p.v} ${p.c}`);
-        });
-        vs.setAttribute('aria-label', ariaBits.join(', '));
+    const total = runes.length;
+
+    const accCt = document.getElementById('dashboard-account-run-count');
+    if (accCt) {
+      const tpl = (tloc.dashboardAccountRunesInline || 'Total: {acc} · Current: {view}').trim();
+      accCt.textContent = tpl
+        .replace(/\{acc\}/g, String(allRunes.length))
+        .replace(/\{view\}/g, String(total));
+    }
+
+    const verdictChartEl = document.getElementById('verdict-chart');
+    if (verdictChartEl) {
+      verdictChartEl.innerHTML = '';
+      const vRows = [];
+      DASH_VERDICT_SEG_ORDER.forEach((v) => {
+        const c = counts[v] || 0;
+        if (c > 0) vRows.push({ v, c });
+      });
+      vRows.sort((a, b) => {
+        if (b.c !== a.c) return b.c - a.c;
+        return DASH_VERDICT_SEG_ORDER.indexOf(a.v) - DASH_VERDICT_SEG_ORDER.indexOf(b.v);
+      });
+      const maxV = Math.max(...vRows.map((x) => x.c), 1);
+      const openHint = String((tloc.dashboardOpenTableHint || '').trim());
+      for (let i = 0; i < vRows.length; i++) {
+        const { v, c } = vRows[i];
+        const avgMu = verdictMeanEff(verdictEff, v);
+        const avg =
+          c > 0 && avgMu != null && Number.isFinite(avgMu) ? avgMu.toFixed(1) : '-';
+        const pct = ((c / maxV) * 100).toFixed(1);
+        const lblRaw = verdictUiLabel(tloc, v);
+        const lbl = escapeHtml(lblRaw);
+        const bg = DASH_VERDICT_SEG_CSS[v] || '#888';
+        const titleRaw = openHint ? `${lblRaw}: ${c}. ${openHint}` : `${lblRaw}: ${c}`;
+        const titleAttr = escapeHtml(titleRaw);
+        verdictChartEl.innerHTML += `
+        <div class="chart-row chart-row--clickable chart-row--verdict" role="button" tabindex="0" data-dash-verdict="${escapeHtml(v)}" title="${titleAttr}">
+          <div class="chart-label">${lbl}</div>
+          ${chartBarTrackHtmlVerdict(pct, bg)}
+          ${chartRowStatsHtml(c, avg, tloc)}
+        </div>`;
       }
     }
 
@@ -1773,8 +2294,8 @@
 
     const setEl = document.getElementById('set-chart');
     setEl.innerHTML = '';
-    const setOrder = getDashboardSetDisplayOrder(setCounts);
     const maxSet = Math.max(...setOrder.map((nm) => setCounts[nm] || 0), 1);
+    const openHint = String((tloc.dashboardOpenTableHint || '').trim());
     for (const name of setOrder) {
       const cnt = setCounts[name] || 0;
       const effList = setEff[name];
@@ -1783,37 +2304,30 @@
         : '-';
       const pct = ((cnt / maxSet) * 100).toFixed(1);
       const en = escapeHtml(name);
+      const enc = encodeURIComponent(name);
+      const encAttr = escapeHtml(enc);
+      const titleRaw = openHint ? `${name}: ${cnt}. ${openHint}` : `${name}: ${cnt}`;
+      const titleAttr = escapeHtml(titleRaw);
       setEl.innerHTML += `
-        <div class="chart-row">
+        <div class="chart-row chart-row--clickable chart-row--set" role="button" tabindex="0" data-dash-set="${encAttr}" title="${titleAttr}">
           <div class="chart-label">${en}</div>
           ${chartBarTrackHtml(pct, 'chart-bar--sets')}
           ${chartRowStatsHtml(cnt, avg, tloc)}
         </div>`;
     }
 
-    const slotEl = document.getElementById('slot-chart');
-    slotEl.innerHTML = '';
-    const maxSlot = Math.max(...Object.values(slotCounts), 1);
-    for (let s = 1; s <= 6; s++) {
-      const cnt = slotCounts[s] || 0;
-      const pct = ((cnt / maxSlot) * 100).toFixed(1);
-      const topMain = Object.entries(slotMain[s])
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 2)
-        .map(([stat, c]) => `${stat} ${c}`)
-        .join(' | ');
-      const fullTip = Object.entries(slotMain[s])
-        .sort((a, b) => b[1] - a[1])
-        .map(([stat, c]) => `${stat}: ${c}`)
-        .join(' · ');
-      const tip = escapeHtml(fullTip || `Slot ${s}`);
-      slotEl.innerHTML += `
-        <div class="chart-row" title="${tip}">
-          <div class="chart-label">Slot ${s}<br><small class="chart-slot-preview">${escapeHtml(topMain || '—')}</small></div>
-          ${chartBarTrackHtml(pct, 'chart-bar--slots')}
-          ${chartRowStatsHtml(cnt, undefined, tloc)}
-        </div>`;
-    }
+    const slotCardsRoot = document.getElementById('slot-main-cards-root');
+    const pivot = buildSlotMainPivot(runes);
+    renderSlotMainCards(slotCardsRoot, pivot, tloc);
+
+    let savedSet = '';
+    try {
+      savedSet = localStorage.getItem(TOP_SPD_STORAGE_KEY) || '';
+    } catch (e) { /* ignore */ }
+    const spdSel = document.getElementById('top-spd-set-select');
+    fillTopSpdSetSelect(spdSel, setOrder, tloc, savedSet);
+    const spdPick = spdSel && spdSel.value ? spdSel.value : '';
+    renderTopSpdGrid(document.getElementById('top-spd-grid'), runes, spdPick, tloc);
 
     const effEl = document.getElementById('eff-chart');
     effEl.innerHTML = '';
@@ -1836,7 +2350,7 @@
       if (medCap) medCap.hidden = true;
     }
     for (let i = 0; i < 20; i++) {
-      const h = Math.max(4, (effBuckets[i] / maxBucket) * 72);
+      const h = Math.max(4, (effBuckets[i] / maxBucket) * 80);
       const label = `${i * 5}-${i * 5 + 4}`;
       const cls = i >= 18 ? 'great' : i >= 14 ? 'good' : '';
       effEl.innerHTML += `
@@ -3444,6 +3958,7 @@
   document.addEventListener('DOMContentLoaded', async () => {
     initTheme();
     updateLanguage(currentLang);
+    initDashboardUnifiedTabs();
     initRuneTablePrefsFromStorage();
     initRulesSubtabs();
     initChangelogSubtabs();

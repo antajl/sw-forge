@@ -72,7 +72,8 @@
       <div class="dashboard-grid">
 
         <div class="dashboard-stage-wrap dashboard-hero">
-          <div class="stage-advisor is-compact" id="stage-advisor">
+          <div class="stage-advisor is-compact" id="stage-advisor" role="region" aria-labelledby="lbl-stage-advisor-title">
+            <div class="stage-advisor-shell">
             <div class="stage-advisor-bar">
               <p class="stage-advisor-title" id="lbl-stage-advisor-title">Account progression suggestion</p>
               <div class="stage-advisor-bar-suggest">
@@ -90,17 +91,16 @@
                   </select>
                 </div>
               </div>
-              <button type="button" class="btn-stage-compact" id="btn-stage-compact" aria-expanded="false" title="More"></button>
+              <button type="button" class="btn-stage-compact" id="btn-stage-compact" aria-controls="stage-advisor-expanded" aria-expanded="false" title="More"></button>
             </div>
 
-            <div class="stage-advisor-expanded">
+            <div class="stage-advisor-expanded-wrap" aria-hidden="true">
+            <div class="stage-advisor-expanded" id="stage-advisor-expanded">
               <p class="stage-advisor-lead" id="lbl-stage-advisor-lead">
                 Early, Mid, and Late change how strict the rules are. The combined score estimates account depth from your full rune export (Rare and above): fast runes, upgraded runes, and quality on your best pieces. It ignores the preset below and the dashboard minimum level filter.
               </p>
-              <div class="stage-advisor-score-block">
-                <span id="lbl-stage-score-label">Combined score</span>
-                <span class="stage-advisor-score-num" id="stage-score-num">—</span>
-              </div>
+              <p class="stage-advisor-score-inline" id="lbl-stage-score-inline" aria-live="polite" hidden></p>
+              <p class="stage-advisor-score-inline-note" id="lbl-stage-score-footnote" hidden></p>
               <p class="stage-advisor-mismatch" id="stage-mismatch-line" hidden></p>
               <p class="stage-advisor-noeligible" id="stage-noeligible-line" hidden></p>
 
@@ -110,7 +110,12 @@
               <div class="stage-advisor-metrics">
                 <article class="stage-metric-card">
                   <header class="stage-metric-card-head">
-                    <span id="lbl-card-hr-name">Speed Depth</span>
+                    <span class="stage-metric-card-title-row">
+                      <span class="stage-metric-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 10-14h-7l0-6z"/></svg>
+                      </span>
+                      <span id="lbl-card-hr-name">Speed Depth</span>
+                    </span>
                     <span class="stage-metric-weight" id="lbl-card-hr-weight">35%</span>
                   </header>
                   <p class="stage-metric-val" id="metric-val-highroll">—</p>
@@ -119,7 +124,12 @@
                 </article>
                 <article class="stage-metric-card">
                   <header class="stage-metric-card-head">
-                    <span id="lbl-card-keep-name">Power Depth</span>
+                    <span class="stage-metric-card-title-row">
+                      <span class="stage-metric-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+                      </span>
+                      <span id="lbl-card-keep-name">Power Depth</span>
+                    </span>
                     <span class="stage-metric-weight" id="lbl-card-keep-weight">35%</span>
                   </header>
                   <p class="stage-metric-val" id="metric-val-keepeff">—</p>
@@ -128,7 +138,12 @@
                 </article>
                 <article class="stage-metric-card">
                   <header class="stage-metric-card-head">
-                    <span id="lbl-card-meta-name">Elite Quality</span>
+                    <span class="stage-metric-card-title-row">
+                      <span class="stage-metric-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7L12 17.8 5.7 21l2.3-7-6-4.6h7.6L12 2z"/></svg>
+                      </span>
+                      <span id="lbl-card-meta-name">Elite Quality</span>
+                    </span>
                     <span class="stage-metric-weight" id="lbl-card-meta-weight">30%</span>
                   </header>
                   <p class="stage-metric-val" id="metric-val-meta">—</p>
@@ -138,14 +153,19 @@
               </div>
               <p class="stage-advisor-formula" id="lbl-stage-formula" hidden></p>
             </div>
+            </div>
+            </div>
           </div>
         </div>
 
         <div class="dashboard-scope-row">
           <div class="dashboard-scope-bar">
             <div class="dashboard-scope-bar-text">
-              <span class="dashboard-scope-title" id="dashboard-scope-title">Global filter</span>
-              <span class="dashboard-scope-hint" id="dashboard-scope-hint">Applies to the summary cards, charts below, and Rune Table. The suggested stage above is calculated from the full export separately.</span>
+              <p class="dashboard-scope-line" id="dashboard-scope-line"></p>
+              <p class="dashboard-account-run-inline">
+                <span id="dashboard-account-run-count"></span>
+                <button type="button" class="btn-dash-open-all-inline" id="btn-dash-open-all-runes"></button>
+              </p>
             </div>
             <div class="dashboard-scope-controls">
               <label class="level-filter dashboard-min-level" for="global-min-level">
@@ -159,14 +179,17 @@
                   <option value="15">+15</option>
                 </select>
               </label>
-              <label class="level-filter dashboard-min-grade" for="global-min-grade">
-                <span id="dashboard-mingrade-label">Min grade</span>
-                <select id="global-min-grade">
-                  <option value="3">Rare+</option>
-                  <option value="4">Hero+</option>
-                  <option value="5">Legend</option>
-                </select>
-              </label>
+              <div class="dashboard-grade-range" role="group" aria-labelledby="lbl-dashboard-grade-range">
+                <span id="lbl-dashboard-grade-range" class="dashboard-grade-range-label">Grades</span>
+                <label class="level-filter dashboard-grade-min" for="global-grade-min">
+                  <span id="lbl-dashboard-grade-min">From</span>
+                  <select id="global-grade-min"></select>
+                </label>
+                <label class="level-filter dashboard-grade-max" for="global-grade-max">
+                  <span id="lbl-dashboard-grade-max">To</span>
+                  <select id="global-grade-max"></select>
+                </label>
+              </div>
             </div>
           </div>
           <div class="dashboard-export-aside">
@@ -174,89 +197,51 @@
           </div>
         </div>
 
-        <div class="dashboard-verdict-panel">
-          <div class="panel-title" id="lbl-verdict-mix-title">Verdict mix</div>
-          <div id="verdict-stack" class="dashboard-verdict-stack" role="img" aria-hidden="true"></div>
-          <p class="dashboard-verdict-stack-hint" id="lbl-verdict-stack-hint"></p>
-        </div>
-
-        <div class="dashboard-summary-area">
-          <div class="stat-card stat-card-total stat-card--clickable" id="sc-total" tabindex="0" role="button" data-dash-filter="all">
-            <div class="sc-label">Total Runes</div>
-            <div class="sc-value">—</div>
-            <div class="sc-pct" id="sc-total-pct"></div>
+        <div class="panel panel-wide panel-dash-distributions" id="panel-dash-distributions">
+          <div class="dash-unified-tabs" role="tablist" id="dash-unified-tabs" aria-label="">
+            <button type="button" class="dash-unified-tab is-active" role="tab" id="dash-unified-tab-verdict"
+              aria-controls="dash-pane-verdict" aria-selected="true" data-dash-uni="verdict">Verdict</button>
+            <button type="button" class="dash-unified-tab" role="tab" id="dash-unified-tab-roles"
+              aria-controls="dash-pane-roles" aria-selected="false" data-dash-uni="roles">Roles</button>
+            <button type="button" class="dash-unified-tab" role="tab" id="dash-unified-tab-sets"
+              aria-controls="dash-pane-sets" aria-selected="false" data-dash-uni="sets">Sets</button>
+            <button type="button" class="dash-unified-tab" role="tab" id="dash-unified-tab-slots"
+              aria-controls="dash-pane-slots" aria-selected="false" data-dash-uni="slots">Slots</button>
+            <button type="button" class="dash-unified-tab" role="tab" id="dash-unified-tab-eff"
+              aria-controls="dash-pane-eff" aria-selected="false" data-dash-uni="eff">Efficiency</button>
           </div>
-          <h4 class="summary-group-title" id="lbl-dash-group-keepers">Stash &amp; power</h4>
-          <div class="summary-cards-row summary-cards-row--keepers">
-            <div class="stat-card keep stat-card--clickable" id="sc-keep" tabindex="0" role="button" data-dash-filter="verdict" data-dash-verdict="Keep">
-              <div class="sc-label">Keep</div>
-              <div class="sc-value">—</div>
-              <div class="sc-pct"></div>
-            </div>
-            <div class="stat-card finish stat-card--clickable" id="sc-finish" tabindex="0" role="button" data-dash-filter="verdict" data-dash-verdict="Finish">
-              <div class="sc-label">Finish</div>
-              <div class="sc-value">—</div>
-              <div class="sc-pct"></div>
-            </div>
-            <div class="stat-card upgrade stat-card--clickable" id="sc-upgrade" tabindex="0" role="button" data-dash-filter="verdict" data-dash-verdict="Upgrade">
-              <div class="sc-label">Upgrade</div>
-              <div class="sc-value">—</div>
-              <div class="sc-pct"></div>
-            </div>
-            <div class="stat-card gem stat-card--clickable" id="sc-gem" tabindex="0" role="button" data-dash-filter="verdict" data-dash-verdict="Gem">
-              <div class="sc-label">Gem</div>
-              <div class="sc-value">—</div>
-              <div class="sc-pct"></div>
+          <div id="dash-pane-verdict" class="dash-unified-pane is-active" role="tabpanel" aria-labelledby="dash-unified-tab-verdict">
+            <p class="dash-unified-pane-hint" id="lbl-dash-unified-verdict-hint"></p>
+            <div id="verdict-chart" class="role-chart verdict-chart"></div>
+          </div>
+          <div id="dash-pane-roles" class="dash-unified-pane" role="tabpanel" aria-labelledby="dash-unified-tab-roles" hidden>
+            <div id="role-chart" class="role-chart"></div>
+          </div>
+          <div id="dash-pane-sets" class="dash-unified-pane" role="tabpanel" aria-labelledby="dash-unified-tab-sets" hidden>
+            <div id="set-chart-scroll" class="chart-scroll chart-scroll--sets">
+              <div id="set-chart" class="set-chart"></div>
             </div>
           </div>
-          <h4 class="summary-group-title" id="lbl-dash-group-queue">Needs attention</h4>
-          <div class="summary-cards-row summary-cards-row--queue">
-            <div class="stat-card sell stat-card--clickable" id="sc-sell" tabindex="0" role="button" data-dash-filter="verdict" data-dash-verdict="Sell">
-              <div class="sc-label">Sell</div>
-              <div class="sc-value">—</div>
-              <div class="sc-pct"></div>
-            </div>
-            <div class="stat-card grind stat-card--clickable" id="sc-grind" tabindex="0" role="button" data-dash-filter="verdict" data-dash-verdict="Grind">
-              <div class="sc-label">Grind</div>
-              <div class="sc-value">—</div>
-              <div class="sc-pct"></div>
-            </div>
-            <div class="stat-card reapp stat-card--clickable" id="sc-reapp" tabindex="0" role="button" data-dash-filter="verdict" data-dash-verdict="Reapp">
-              <div class="sc-label">Reapp</div>
-              <div class="sc-value">—</div>
-              <div class="sc-pct"></div>
+          <div id="dash-pane-slots" class="dash-unified-pane" role="tabpanel" aria-labelledby="dash-unified-tab-slots" hidden>
+            <div id="slot-main-cards-root" class="slot-main-cards-root"></div>
+          </div>
+          <div id="dash-pane-eff" class="dash-unified-pane" role="tabpanel" aria-labelledby="dash-unified-tab-eff" hidden>
+            <p class="dash-unified-pane-hint" id="eff-median-caption" hidden></p>
+            <div class="eff-histo-host eff-histo-host--dash-pane">
+              <div class="eff-median-line" id="eff-median-line" hidden></div>
+              <div id="eff-chart" class="eff-chart"></div>
             </div>
           </div>
         </div>
 
-        <!-- Role distribution chart -->
-        <div class="panel" id="panel-roles">
-          <div class="panel-title">Role Distribution</div>
-          <div id="role-chart" class="role-chart"></div>
-        </div>
-
-        <!-- Set distribution -->
-        <div class="panel" id="panel-sets">
-          <div class="panel-title">Set Distribution</div>
-          <div id="set-chart-scroll" class="chart-scroll chart-scroll--sets">
-            <div id="set-chart" class="set-chart"></div>
+        <div class="panel panel-wide panel-top-spd" id="panel-top-spd">
+          <div class="top-spd-toolbar">
+            <div class="panel-title panel-title--inline" id="lbl-top-spd-title">Top SPD (subs) per slot</div>
+            <label class="top-spd-set-label" for="top-spd-set-select" id="lbl-top-spd-set-label">Set</label>
+            <select id="top-spd-set-select" class="top-spd-set-select"></select>
           </div>
-        </div>
-
-        <!-- Slot distribution -->
-        <div class="panel" id="panel-slots">
-          <div class="panel-title">Slot Distribution</div>
-          <div id="slot-chart" class="slot-chart"></div>
-        </div>
-
-        <!-- Efficiency histogram -->
-        <div class="panel panel-wide" id="panel-eff">
-          <div class="panel-title">Efficiency Distribution</div>
-          <p class="eff-median-caption" id="eff-median-caption" hidden></p>
-          <div class="eff-histo-host">
-            <div class="eff-median-line" id="eff-median-line" hidden></div>
-            <div id="eff-chart" class="eff-chart"></div>
-          </div>
+          <p class="top-spd-hint" id="lbl-top-spd-hint"></p>
+          <div id="top-spd-grid" class="top-spd-grid"></div>
         </div>
 
       </div>
@@ -621,20 +606,20 @@
             <section class="guide-section" aria-labelledby="guide-h-dash-en">
               <h3 id="guide-h-dash-en">Dashboard</h3>
               <p><strong>Account progression</strong> (the block at the top) scores how <strong>deep your rune inventory</strong> is. The <strong>combined score</strong> and the three metric lines always use your <strong>full active export</strong> (Rare+ only, rank ≥ 3). Under each metric you’ll see its <strong>point share</strong> toward the 100-point bar (for example +12 / 35 pts). By default that block is <strong>collapsed</strong>; open the chevron for the long explanation and cards. <strong>Apply suggestion</strong> aligns <strong>Your preset</strong> (Early / Mid / Late) with the suggested stage — you can still change the preset manually.</p>
-              <p><strong>Global filters</strong> (<strong>Min level</strong>, <strong>Min grade</strong>) apply to verdict cards, all charts, the efficiency chart (including the median), and the Rune Table. They do <strong>not</strong> apply to account progression above — that block ignores min level and preset for its math.</p>
-              <p><strong>Verdict mix &amp; cards:</strong> The stacked bar and the number tiles match; percentages are shares of the <em>filtered</em> total. Click a segment, tile, or role row to open the Rune Table with the same verdict/role filters. If the dashboard min grade is <strong>Legend only</strong>, the table opens with grade = Legend; for Rare+ / Hero+ the table does not force a grade filter (the grid picks an exact grade, not a “floor”).</p>
+              <p><strong>Global filters</strong> (<strong>Min level</strong>, <strong>Grade range</strong> From/To) apply to verdict cards, all charts, the efficiency chart (including the median), and the Rune Table. They do <strong>not</strong> apply to account progression above — that block ignores min level and preset for its math.</p>
+              <p><strong>Verdict mix &amp; cards:</strong> The stacked bar and the number tiles match; percentages are shares of the <em>filtered</em> total. Click a segment, tile, or role row to open the Rune Table with the same verdict/role filters. If From and To are the <strong>same grade</strong> (e.g. Hero only), the table opens with that grade. If the range spans more than one grade, the table does not force a grade filter (the grid picks an exact grade, not a “floor”).</p>
               <p><strong>Copy summary:</strong> Next to the global filter card — copies a text snapshot: preset, suggested stage, depth metrics, filters, verdict counts, role / set / slot chart numbers, efficiency median and histogram buckets.</p>
-              <p><strong>Charts:</strong> <em>Role Distribution</em> — counts and average efficiency per role (custom roles show up after you save rules). <em>Set Distribution</em> — every in-game set, sorted by count (high to low); scroll inside the panel; the scrollbar track is hidden but wheel and touch scrolling work. <em>Slot Distribution</em> — hover a slot row for the full main-stat mix. <em>Efficiency Distribution</em> — 5% buckets with a median marker.</p>
+              <p><strong>Charts:</strong> Five tabs under one panel — <em>Verdict distribution</em>, roles, sets, slot × main stats, and <em>efficiency</em> (5% buckets with a median line). Roles show counts and average efficiency; sets are scrollable inside the panel; slot view uses compact cards.</p>
             </section>
           </div>
           <div class="guide-lang guide-lang--ru guide-list">
             <section class="guide-section" aria-labelledby="guide-h-dash-ru">
               <h3 id="guide-h-dash-ru">Панель (Dashboard)</h3>
               <p><strong>Прогресс аккаунта</strong> (верхний блок) оценивает <strong>глубину коллекции рун</strong>. <strong>Сводный балл</strong> и три метрики всегда берут <strong>весь активный экспорт</strong> (только Rare+, ранг ≥ 3). Под каждой метрикой — <strong>вклад в 100 баллов</strong> (например +12 / 35). Блок по умолчанию <strong>свёрнут</strong>; раскройте стрелку за подробностями. <strong>Применить совет</strong> выставляет <strong>Ваш пресет</strong> (Early / Mid / Late) по предложенной стадии — вручную пресет можно сменить.</p>
-              <p><strong>Глобальные фильтры</strong> (<strong>Мин ур</strong>, <strong>Мин грейд</strong>) действуют на карточки вердиктов, все графики, гистограмму eff (и медиану), и таблицу рун. На блок прогресса выше они <strong>не</strong> влияют — там своя математика без мин. уровня и без привязки к пресету.</p>
-              <p><strong>Verdict mix и плитки:</strong> Столбиковая диаграмма и цифры совпадают; проценты — от <em>отфильтрованного</em> количества. Клик по сегменту, плитке или строке роли открывает таблицу с теми же фильтрами. При <strong>только Legend</strong> на панели в таблице сразу выбран Legend; для Rare+ / Hero+ фильтр грейда в таблице не навязан (в сетке — точный грейд, не «от и выше»).</p>
+              <p><strong>Глобальные фильтры</strong> (<strong>Мин ур</strong>, <strong>Диапазон грейдов</strong> От/До) действуют на карточки вердиктов, все графики, гистограмму eff (и медиану), и таблицу рун. На блок прогресса выше они <strong>не</strong> влияют — там своя математика без мин. уровня и без привязки к пресету.</p>
+              <p><strong>Verdict mix и плитки:</strong> Столбиковая диаграмма и цифры совпадают; проценты — от <em>отфильтрованного</em> количества. Клик по сегменту, плитке или строке роли открывает таблицу с теми же фильтрами. Если <strong>От и До совпадают</strong> (например только Hero), в таблице сразу выбран этот грейд; если диапазон шире одного грейда, фильтр грейда в таблице не навязан.</p>
               <p><strong>Копировать сводку:</strong> Рядом с карточкой фильтров — текст: пресет, совет по стадии, метрики глубины, фильтры, вердикты, роли / сеты / слоты, медиана eff и корзины гистограммы.</p>
-              <p><strong>Графики:</strong> <em>Роли</em> — число рун и средняя eff по роли. <em>Сеты</em> — все игровые сеты по убыванию числа рун; прокрутка внутри панели. <em>Слоты</em> — наведите на строку за полным разбором мейнов. <em>Эффективность</em> — корзины по 5% и медиана.</p>
+              <p><strong>Графики:</strong> Пять вкладок в одной панели — вердикты, роли, сеты, слот × мейны и распределение eff (корзины по 5% и медиана). Роли — число рун и средняя eff; сеты со скроллом внутри панели; слоты — компактные карточки.</p>
             </section>
           </div>
         </div>

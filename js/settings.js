@@ -110,10 +110,10 @@ const TRANSLATIONS = {
     gem: 'Gem',
     
     // Charts
-    roleDistribution: 'Role Distribution',
-    setDistribution: 'Set Distribution',
-    slotDistribution: 'Slot Distribution',
-    efficiencyDistribution: 'Efficiency Distribution',
+    roleDistribution: 'Role distribution',
+    setDistribution: 'Set distribution',
+    slotDistribution: 'Slot distribution',
+    efficiencyDistribution: 'Efficiency distribution',
     
     // Table
     searchPlaceholder: 'Search by set, stat, role...',
@@ -273,7 +273,15 @@ const TRANSLATIONS = {
     stageYourPresetLabel: 'Your preset',
     stageScoreLabel: 'Combined score',
     stageApplySuggestion: 'Apply suggestion',
+    stageApplySuggestionAria:
+      'Set your preset stage to the suggestion (Early, Mid, or Late) using the dropdown next to Apply.',
     stageMismatchHint: 'Your preset differs from the suggestion—you can still keep your choice.',
+    stageMismatchExplainTpl:
+      'Preset: {preset}. Suggestion: {suggested}. {hint}',
+    stageCombinedScoreFootnote:
+      'Uses your full Rare+ export; ignores dashboard filters and your preset picker above.',
+    stageScoreBandsTpl: 'Recommendation on this score: Mid from {mid} pts, Late from {late}.',
+    stageScoreInlineBandsTpl: 'Mid from {mid}, Late from {late}',
     stageAdvisorNoEligible:
       'Load a SWEX export to see progression depth and combined score.',
 
@@ -300,8 +308,8 @@ const TRANSLATIONS = {
     stageFormulaExpl: '',
 
     dashboardScopeTitle: 'Global filter',
-    dashboardScopeHint:
-      'Applies to verdict cards, charts, and Rune Table (min rune level and minimum grade). Account progression above always uses the full export.',
+    dashboardScopeBarLine:
+      'Global filter · verdicts, charts & Rune Table (lvl/grade) · progression uses full export',
     dashboardMinGradeLabel: 'Min grade',
     dashboardMinGradeRare: 'Rare+',
     dashboardMinGradeHero: 'Hero+',
@@ -309,8 +317,37 @@ const TRANSLATIONS = {
     dashboardExportSummary: 'Copy summary',
     dashboardExportDone: 'Dashboard summary copied.',
     dashboardExportFail: 'Could not copy summary.',
-    dashboardVerdictMixTitle: 'Verdict mix',
-    dashboardVerdictStackHint: 'Click a segment to open the Rune Table with that verdict.',
+    dashboardDistVerdict: 'Verdict distribution',
+    dashboardDistRoles: 'Role distribution',
+    dashboardDistSets: 'Set distribution',
+    dashboardDistSlots: 'Slot × main distribution',
+    dashboardDistEff: 'Efficiency distribution',
+    dashboardVerdictMixTitle: 'Verdict distribution',
+    dashboardVerdictAvgPrefix: 'avg',
+    dashboardVerdictStackHint: 'Click a verdict row to open the Rune Table with that filter.',
+    dashboardSlotMatrixTitle: 'Slot × main distribution',
+    dashboardSlotMatrixCorner: 'Main',
+    dashboardSlotMatrixCountRow: 'Count',
+    dashboardSlotCardEmpty: 'No runes',
+    dashboardTopSpdTitle: 'Top SPD (subs) by slot',
+    dashboardTopSpdSetLabel: 'Set',
+    dashboardTopSpdHint:
+      'Percentages are share of runes in that slot (row main × slot column). Pick a set from the list for top SPD substats per slot.',
+    dashboardTopSpdPickHint: 'Select a set to show top SPD substats per slot.',
+    dashboardTopSpdSlotLabel: 'Slot {n}',
+    dashboardTopSpdNoRunes: '—',
+    dashboardTopSpdNoneOption: '—',
+    dashboardGradeRangeGroup: 'Grades',
+    dashboardGradeRangeFrom: 'From',
+    dashboardGradeRangeTo: 'To',
+    dashboardGradeRangeInExport: 'Grades',
+    dashboardGradeOptRare: 'Rare',
+    dashboardGradeOptHero: 'Hero',
+    dashboardGradeOptLegend: 'Legend',
+    dashboardExportTotalCurrent: 'Total {acc} · Current {view}',
+    dashboardUnifiedDistAria: 'Distribution: verdicts, roles, sets, slot mains, or efficiency',
+    dashboardAccountRunesInline: 'Total: {acc} · Current: {view}',
+    dashboardOpenAllRunes: 'Open table',
     dashboardChartLblAvg: 'avg',
     dashboardGroupKeepers: 'Stash & power',
     dashboardGroupQueue: 'Needs attention',
@@ -390,10 +427,10 @@ const TRANSLATIONS = {
     gem: 'Камень',
     
     // Charts
-    roleDistribution: 'Роли',
-    setDistribution: 'Сеты',
-    slotDistribution: 'Слоты',
-    efficiencyDistribution: 'Эффективность',
+    roleDistribution: 'Role distribution',
+    setDistribution: 'Set distribution',
+    slotDistribution: 'Slot distribution',
+    efficiencyDistribution: 'Efficiency distribution',
     
     // Table
     searchPlaceholder: 'Поиск по сету, стату, роли...',
@@ -554,7 +591,15 @@ const TRANSLATIONS = {
     stageYourPresetLabel: 'Ваш выбор',
     stageScoreLabel: 'Сводный балл',
     stageApplySuggestion: 'Применить совет',
+    stageApplySuggestionAria:
+      'Подставить в пресет стадию из совета (ранняя, средняя или поздняя) через список рядом с кнопкой.',
     stageMismatchHint: 'Ваш выбор отличается от совета — так можно оставить.',
+    stageMismatchExplainTpl:
+      'Пресет: {preset}. Совет: {suggested}. {hint}',
+    stageCombinedScoreFootnote:
+      'Считается по полному экспорту Rare+ и не учитывает общие фильтры дашборда и выбор пресета выше.',
+    stageScoreBandsTpl: 'Порог по этому баллу: средняя стадия от {mid}+, поздняя от {late}+.',
+    stageScoreInlineBandsTpl: 'Средняя от {mid}+, поздняя от {late}+',
     stageAdvisorNoEligible:
       'Загрузите SWEX JSON, чтобы увидеть глубину и сводный балл.',
 
@@ -581,8 +626,8 @@ const TRANSLATIONS = {
     stageFormulaExpl: '',
 
     dashboardScopeTitle: 'Общий фильтр',
-    dashboardScopeHint:
-      'Влияет на карточки вердиктов, графики и таблицу (мин. уровень и мин. грейд). Прогресс аккаунта выше — всегда по полному экспорту.',
+    dashboardScopeBarLine:
+      'Общий фильтр · вердикты, графики и таблица (ур./грейд) · прогресс по полному экспорту',
     dashboardMinGradeLabel: 'Мин. грейд',
     dashboardMinGradeRare: 'Rare+',
     dashboardMinGradeHero: 'Hero+',
@@ -590,8 +635,37 @@ const TRANSLATIONS = {
     dashboardExportSummary: 'Копировать сводку',
     dashboardExportDone: 'Сводка скопирована.',
     dashboardExportFail: 'Не удалось скопировать.',
-    dashboardVerdictMixTitle: 'Вердикты',
-    dashboardVerdictStackHint: 'Клик по сегменту откроет таблицу с этим вердиктом.',
+    dashboardDistVerdict: 'Распределение вердиктов',
+    dashboardDistRoles: 'Распределение ролей',
+    dashboardDistSets: 'Распределение сетов',
+    dashboardDistSlots: 'Слот × основной стат',
+    dashboardDistEff: 'Распределение эффективности',
+    dashboardVerdictMixTitle: 'Распределение вердиктов',
+    dashboardVerdictAvgPrefix: 'ср.',
+    dashboardVerdictStackHint: 'Клик по строке вердикта откроет таблицу с этим фильтром.',
+    dashboardSlotMatrixTitle: 'Слот × основной стат',
+    dashboardSlotMatrixCorner: 'Осн.',
+    dashboardSlotMatrixCountRow: 'Всего',
+    dashboardSlotCardEmpty: 'Нет рун',
+    dashboardTopSpdTitle: 'Топ SPD (сабы) по слотам',
+    dashboardTopSpdSetLabel: 'Сет',
+    dashboardTopSpdHint:
+      'Проценты — доля среди рун в этом слоте (основной стат × колонка слота). Выберите сет в списке для топа SPD в сабах по слотам.',
+    dashboardTopSpdPickHint: 'Выберите сет, чтобы показать топ SPD по слотам.',
+    dashboardTopSpdSlotLabel: 'Слот {n}',
+    dashboardTopSpdNoRunes: '—',
+    dashboardTopSpdNoneOption: '—',
+    dashboardGradeRangeGroup: 'Грейды',
+    dashboardGradeRangeFrom: 'От',
+    dashboardGradeRangeTo: 'До',
+    dashboardGradeRangeInExport: 'Грейды',
+    dashboardGradeOptRare: 'Rare',
+    dashboardGradeOptHero: 'Hero',
+    dashboardGradeOptLegend: 'Legend',
+    dashboardExportTotalCurrent: 'Всего {acc} · Текущий вид {view}',
+    dashboardUnifiedDistAria: 'Распределение: вердикты, роли, сеты, основные по слотам или эффективность',
+    dashboardAccountRunesInline: 'Всего: {acc} · Текущий вид: {view}',
+    dashboardOpenAllRunes: 'Таблица',
     dashboardChartLblAvg: 'ср.',
     dashboardGroupKeepers: 'Запас и качество',
     dashboardGroupQueue: 'Требуют внимания',

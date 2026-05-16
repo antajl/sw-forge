@@ -2226,13 +2226,13 @@
 
   const DASH_VERDICT_SEG_ORDER = ['Keep', 'Finish', 'Upgrade', 'Gem', 'Grind', 'Reapp', 'Sell'];
   const DASH_VERDICT_SEG_CSS = {
-    Keep: 'var(--keep)',
-    Finish: 'var(--finish)',
-    Upgrade: 'var(--gold)',
-    Gem: 'var(--gem)',
-    Grind: 'var(--grind)',
-    Reapp: 'var(--reapp)',
-    Sell: 'var(--sell)',
+    Keep: 'var(--tint-keep)',
+    Finish: 'var(--tint-finish)',
+    Upgrade: 'var(--tint-upgrade)',
+    Gem: 'var(--tint-gem)',
+    Grind: 'var(--tint-grind)',
+    Reapp: 'var(--tint-reapp)',
+    Sell: 'var(--tint-sell)',
   };
 
   /** Sort verdict keys by count (desc), then stable tie-break using DASH_VERDICT_SEG_ORDER. */
@@ -3364,16 +3364,23 @@
 
   /** Counter‑clockwise circular arrows (gem / replaced sub) — stroke reads clearly at small sizes. */
   const STAT_SUB_GEM_ICON_SVG =
-    '<svg class="stat-chip-gem-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">'
+    '<svg class="table-stat-gem-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">'
     + '<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M1 4v6h6"/>'
     + '<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M23 20v-6h-6"/>'
     + '<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>'
     + '</svg>';
 
-  function statChip(s) {
+  /** Plain table text (no chip) — set / main / innate / subs / target */
+  function tableStatLine(innerHtml, opts) {
+    const setCls = opts && opts.set ? ' table-stat--set' : '';
+    const gemOnlyCls = opts && opts.gemOnly ? ' table-stat--gem-only' : '';
+    const tipAttr = opts && opts.tip ? ` title="${escapeAttr(opts.tip)}"` : '';
+    const gemSvg = opts && opts.gem ? STAT_SUB_GEM_ICON_SVG : '';
+    return `<span class="table-stat${setCls}${gemOnlyCls}"${tipAttr}>${innerHtml}${gemSvg}</span>`;
+  }
+
+  function renderSubStat(s) {
     if (!s || !s.name) return '';
-    const cls = statClass(s.name);
-    const flat = s.flat ? ' flat' : '';
     const grindAmt = Number(s.grind) || 0;
     const gemMarked = !!(s.enchanted || (Number(s.gem) || 0) !== 0);
     // Typical grind bonuses are ≥2; [1] was almost always the enchant flag parsed wrong (fixed in parser).
@@ -3382,8 +3389,7 @@
       showGrindSuffix ? `${s.val} [${grindAmt}]` : String(s.val ?? '');
     const plain = `${s.name} ${valShown}`;
     const inner = highlightSearchInPlain(plain, tableSearchHighlight);
-    const innerGrindCls = showGrindSuffix ? ' stat-chip-inner--grind' : '';
-    const gemOnlyCls = gemMarked && !showGrindSuffix ? ' stat-chip--gem-only' : '';
+    const grindCls = showGrindSuffix ? ' table-stat__text--grind' : '';
     const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const tipParts = [];
     if (showGrindSuffix) {
@@ -3391,15 +3397,11 @@
     }
     if (gemMarked) tipParts.push(tloc.tableSubGemTooltip || '');
     const tip = tipParts.filter(Boolean).join(' ');
-    const tipAttr = tip ? ` title="${escapeAttr(tip)}"` : '';
-    const gemSvg = gemMarked ? STAT_SUB_GEM_ICON_SVG : '';
-    return `<span class="stat-chip ${cls}${flat}${gemOnlyCls}"${tipAttr}><span class="stat-chip-inner${innerGrindCls}">${inner}</span>${gemSvg}</span>`;
-  }
-
-  function statClass(name) {
-    const m = { 'SPD':'spd','HP%':'hp','HP':'hp flat','ATK%':'atk','ATK':'atk',
-                'DEF%':'def','DEF':'def','CRate':'cr','CDmg':'cd','ACC':'acc','RES':'res' };
-    return m[name] || '';
+    return tableStatLine(`<span class="table-stat__text${grindCls}">${inner}</span>`, {
+      tip,
+      gem: gemMarked,
+      gemOnly: gemMarked && !showGrindSuffix,
+    });
   }
 
   function roleClass(role) {
@@ -3416,14 +3418,15 @@
     const gradeKey = r.gradeStr;
     const gradeClass = { Legend: 'legend', Hero: 'hero', Rare: 'rare' }[gradeKey] || 'grade-tag--other';
     const gradeLabel = { Legend: 'Legend', Hero: 'Hero', Rare: 'Rare' }[gradeKey] || String(r.gradeStr);
-    const gradeTag = `<span class="grade-tag ${gradeClass}">${highlightSearchInPlain(gradeLabel, tableSearchHighlight)}</span>`;
+    const gradeLabelHtml = highlightSearchInPlain(gradeLabel, tableSearchHighlight);
     const ancientTipRaw = tloc.tableAncientBadgeTitle || '';
-    const ancientTipAttr = ancientTipRaw ? ` title="${escapeAttr(ancientTipRaw)}"` : '';
+    const ancientTipAttr = r.isAncient && ancientTipRaw ? ` title="${escapeAttr(ancientTipRaw)}"` : '';
     const ancientLbl = escapeAttr(tloc.tableAncientBadge || 'Ancient');
     const ancientIcon = r.isAncient
-      ? `<span class="ancient-grade-icon-wrap"${ancientTipAttr} role="img" aria-label="${ancientLbl}">${ANCIENT_GRADE_ICON_SVG}</span>`
+      ? `<span class="ancient-grade-icon-wrap" aria-hidden="true">${ANCIENT_GRADE_ICON_SVG}</span>`
       : '';
-    const grade = `<span class="grade-cell">${ancientIcon}${gradeTag}</span>`;
+    const gradeAria = r.isAncient ? ` aria-label="${ancientLbl}, ${escapeAttr(gradeLabel)}"` : '';
+    const grade = `<span class="grade-tag ${gradeClass}${r.isAncient ? ' grade-tag--ancient' : ''}"${ancientTipAttr}${gradeAria}>${ancientIcon}<span class="grade-tag__lbl">${gradeLabelHtml}</span></span>`;
 
     const effNum = getRuneNumericEff(r);
     const effTier =
@@ -3433,11 +3436,11 @@
     const subs   = r.substats.slice(0, 4);
     const innate = r.innate_name ? `${r.innate_name} ${r.innate_val}` : '';
     const innateHtml = innate
-      ? `<span class="stat-chip">${highlightSearchInPlain(innate, tableSearchHighlight)}</span>`
+      ? tableStatLine(highlightSearchInPlain(innate, tableSearchHighlight))
       : '';
     const target = runeTargetText(r);
     const targetHtml = target
-      ? `<span class="stat-chip">${highlightSearchInPlain(target, tableSearchHighlight)}</span>`
+      ? tableStatLine(highlightSearchInPlain(target, tableSearchHighlight))
       : '';
     const targetTipRaw = runeEngineDetailTooltip(r);
     const targetTipAttr = targetTipRaw ? ` title="${escapeAttr(targetTipRaw)}"` : '';
@@ -3451,21 +3454,27 @@
       ? `<span class="verdict-tag ${verdictText.toLowerCase()}">${highlightSearchInPlain(verdictText, tableSearchHighlight)}</span>`
       : '';
 
+    const subCell = (sub, first) => {
+      const inner = sub ? renderSubStat(sub) : '';
+      const cls = first ? 'col-sub col-sub-first' : 'col-sub';
+      return `<td class="${cls}">${inner}</td>`;
+    };
+
     return `<tr>
-      <td>${grade}</td>
-      <td><span class="stat-chip stat-chip--set">${highlightSearchInPlain(r.setName, tableSearchHighlight)}</span></td>
-      <td class="td-num"><span class="stat-chip">${highlightSearchInPlain(String(r.level), tableSearchHighlight)}</span></td>
-      <td class="td-num"><span class="stat-chip">${highlightSearchInPlain(String(r.slot), tableSearchHighlight)}</span></td>
-      <td><span class="stat-chip ${statClass(r.mainName)}">${mainInner}</span></td>
-      <td>${innateHtml}</td>
-      <td>${subs[0] ? statChip(subs[0]) : ''}</td>
-      <td>${subs[1] ? statChip(subs[1]) : ''}</td>
-      <td>${subs[2] ? statChip(subs[2]) : ''}</td>
-      <td>${subs[3] ? statChip(subs[3]) : ''}</td>
-      <td class="td-num"><span class="stat-chip stat-chip--eff ${effTier}">${highlightSearchInPlain(effShown, tableSearchHighlight)}</span></td>
-      <td>${roleHtml}</td>
-      <td>${verdictHtml}</td>
-      <td class="target-col-cell"${targetTipAttr}>${targetHtml}</td>
+      <td class="col-grade col-pin">${grade}</td>
+      <td class="col-set col-pin col-text">${tableStatLine(highlightSearchInPlain(r.setName, tableSearchHighlight), { set: true })}</td>
+      <td class="col-num td-num-plain">${highlightSearchInPlain(String(r.level), tableSearchHighlight)}</td>
+      <td class="col-num td-num-plain">${highlightSearchInPlain(String(r.slot), tableSearchHighlight)}</td>
+      <td class="col-text">${tableStatLine(mainInner)}</td>
+      <td class="col-text">${innateHtml}</td>
+      ${subCell(subs[0], true)}
+      ${subCell(subs[1], false)}
+      ${subCell(subs[2], false)}
+      ${subCell(subs[3], false)}
+      <td class="col-num td-num"><span class="stat-chip stat-chip--eff ${effTier}">${highlightSearchInPlain(effShown, tableSearchHighlight)}</span></td>
+      <td class="col-text">${roleHtml}</td>
+      <td class="col-text">${verdictHtml}</td>
+      <td class="target-col-cell col-text"${targetTipAttr}>${targetHtml}</td>
     </tr>`;
   }
 

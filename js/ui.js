@@ -20,6 +20,7 @@
   const RUNE_TABLE_SORT_KEYS = new Set([
     'grade', 'set', 'level', 'slot', 'main', 'eff', 'role', 'verdict', 's1', 's2', 's3', 's4',
   ]);
+  const RUNE_TABLE_ANCIENT_ONLY_KEY = 'swrm_rune_table_ancient_only_v1';
   let runeTableShowAll = false;
   let runeTableApplyingHash = false;
   /** Lowercase search string for highlighting table cells (full query, not debounced). */
@@ -50,6 +51,7 @@
   /** Legacy Role/Sets-only toggle — migrated once into {@link DASH_UNIFIED_DIST_KEY}. */
   const DASH_DIST_TAB_LEGACY_KEY = 'swrm_dashboard_dist_tab_v1';
   let currentLang = localStorage.getItem(APP_LANG_KEY) || localStorage.getItem('swrm-lang') || 'en';
+  if (!['en', 'ru', 'fr'].includes(currentLang)) currentLang = 'en';
   let currentTheme = localStorage.getItem('swrm-theme') || 'light';
 
   // ===================== THEME (header sun / moon) =====================
@@ -322,9 +324,9 @@
   function updateLanguage(lang) {
     currentLang = lang;
     localStorage.setItem(APP_LANG_KEY, lang);
-    const t = TRANSLATIONS[lang];
+    const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
 
-    document.documentElement.lang = lang === 'ru' ? 'ru' : 'en';
+    document.documentElement.lang = lang === 'ru' ? 'ru' : lang === 'fr' ? 'fr' : 'en';
 
     updateStageAdvisorLabels(t);
 
@@ -415,8 +417,6 @@
     const settingsBtn = document.getElementById('open-app-settings');
     if (settingsBtn) settingsBtn.textContent = t.settings;
 
-    const scopeLine = document.getElementById('dashboard-scope-line');
-    if (scopeLine) scopeLine.textContent = t.dashboardScopeBarLine || '';
     const minLvlLbl = document.getElementById('dashboard-minlvl-label');
     if (minLvlLbl) minLvlLbl.textContent = t.minLvl || '';
 
@@ -474,6 +474,9 @@
     }
     renderChangelog();
     renderRoadmap();
+    applyDemoBannerTextFromTranslations();
+    syncDemoBannerVisibility();
+    applySwrmDropVeilTranslations();
   }
 
   function updateDashboardLabels() {
@@ -490,6 +493,8 @@
     if (tsl) tsl.textContent = t.dashboardDistSlots || '';
     if (te) te.textContent = t.dashboardDistEff || '';
     const uniTabs = document.getElementById('dash-unified-tabs');
+    const unifiedBlockTitle = document.getElementById('lbl-dash-unified-block-title');
+    if (unifiedBlockTitle) unifiedBlockTitle.textContent = t.dashboardUnifiedBlockTitle || '';
     if (uniTabs) uniTabs.setAttribute('aria-label', t.dashboardUnifiedDistAria || '');
 
     const lblTopSpd = document.getElementById('lbl-top-spd-title');
@@ -503,6 +508,9 @@
 
     const vhint = document.getElementById('lbl-dash-unified-verdict-hint');
     if (vhint) vhint.textContent = t.dashboardVerdictStackHint || '';
+
+    const slotPaneHint = document.getElementById('lbl-dash-slot-pane-hint');
+    if (slotPaneHint) slotPaneHint.textContent = t.dashboardSlotPaneHint || '';
 
     const btnAll = document.getElementById('btn-dash-open-all-runes');
     if (btnAll) btnAll.textContent = t.dashboardOpenAllRunes || 'Open table';
@@ -556,16 +564,10 @@
     if (btnExport) btnExport.textContent = t.exportTableCsv || 'Export CSV';
     const btnResetTbl = document.getElementById('btn-table-reset-filters');
     if (btnResetTbl) btnResetTbl.textContent = t.tableResetFilters || 'Reset filters';
+    const lblAncientOnly = document.getElementById('lbl-toggle-ancient-only');
+    if (lblAncientOnly) lblAncientOnly.textContent = t.tableAncientOnly || 'Ancient only';
     const lblTgt = document.getElementById('lbl-toggle-target');
     if (lblTgt) lblTgt.textContent = t.toggleTargetCol || 'Show Target';
-    const lblUnc = document.getElementById('lbl-toggle-uncapped-eff');
-    if (lblUnc) lblUnc.textContent = t.tableToggleUncappedEff || '';
-    const wrapUnc = document.getElementById('lbl-wrap-uncapped-eff');
-    if (wrapUnc) wrapUnc.title = t.tableToggleUncappedEffTitle || '';
-    const lblCp = document.getElementById('lbl-toggle-table-compact');
-    if (lblCp) lblCp.textContent = t.tableToggleCompact || '';
-    const wrapCp = document.getElementById('lbl-wrap-table-compact');
-    if (wrapCp) wrapCp.title = t.tableToggleCompactTitle || '';
     const thTgt = document.getElementById('target-col-header');
     if (thTgt) thTgt.textContent = t.targetHeading || 'Target';
 
@@ -583,7 +585,7 @@
       filterSet.innerHTML = `<option value="">All Sets</option>${sets.map(s => `<option value="${s}">${s}</option>`).join('')}`;
       if (sets.includes(current)) filterSet.value = current;
     }
-    updateRuneTableEffHeaderUi();
+    applyRuneTableEffHeader();
 
     const filterSlot = document.getElementById('filter-slot');
     if (filterSlot) {
@@ -595,7 +597,7 @@
     const filterMain = document.getElementById('filter-main');
     if (filterMain) {
       const current = filterMain.value;
-      const mains = Object.values(STAT_NAMES || {});
+    const mains = Object.values((window.SWRM.statNamesUiForLang || (() => STAT_NAMES))(currentLang) || STAT_NAMES);
       filterMain.innerHTML = `<option value="">All Mains</option>${mains.map(s => `<option value="${s}">${s}</option>`).join('')}`;
       if (mains.includes(current)) filterMain.value = current;
     }
@@ -733,6 +735,11 @@
     if (document.getElementById('stat-constants-wrap')) {
       buildStatConstantsTable();
       refreshEnginePreviews();
+    }
+
+    /* Keep DB slot cards in sync with locale (otherwise only title/description update when language changes). */
+    if (document.getElementById('db-slots-wrap')) {
+      renderDbSlots();
     }
   }
 
@@ -990,6 +997,7 @@
   // Clear saved runes button
   document.getElementById('btn-clear-saved-runes')?.addEventListener('click', async () => {
     if (!confirm('Are you sure you want to clear all saved runes? This will remove the currently loaded runes from browser storage.')) return;
+    resetDemoAndRealPersistenceFlags();
     clearLocalStorageRuneBackup();
     try {
       await clearAllIndexedDbRunePayloads();
@@ -1000,14 +1008,216 @@
     uiEmptyRuneApplicationState();
     renderDbSlots();
     console.log('Cleared saved runes from browser storage');
+    const demoOk = await installEmbeddedDemoDataset();
+    if (!demoOk) uiShowUploadPrompt();
   });
 
   function reprocess() {
     processedRunes = processAll(allRunes, stage, window.SWRM.settings);
     window.SWRM.debugLastProcessedRunes = processedRunes;
     const visible = getVisibleRunes();
-    renderDashboard(visible);
+    renderDashboard(visible, { animateCharts: true });
     renderTable(visible);
+  }
+
+  const LS_USING_DEMO = 'swrm_using_demo_dataset_v1';
+  const LS_USER_LOADED_REAL = 'swrm_user_loaded_real_swex_v1';
+  const SS_DEMO_BANNER_DISMISS = 'swrm_demo_banner_dismissed_session';
+
+  function userHasLoadedRealExport() {
+    try {
+      return localStorage.getItem(LS_USER_LOADED_REAL) === '1';
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function markUsingDemoDataset(on) {
+    try {
+      if (on) localStorage.setItem(LS_USING_DEMO, '1');
+      else localStorage.removeItem(LS_USING_DEMO);
+    } catch (e) { /* ignore */ }
+  }
+
+  function markUserLoadedRealExport() {
+    try {
+      localStorage.setItem(LS_USER_LOADED_REAL, '1');
+      markUsingDemoDataset(false);
+    } catch (e) { /* ignore */ }
+    try {
+      sessionStorage.removeItem(SS_DEMO_BANNER_DISMISS);
+    } catch (e2) { /* ignore */ }
+  }
+
+  function resetDemoAndRealPersistenceFlags() {
+    try {
+      localStorage.removeItem(LS_USING_DEMO);
+      localStorage.removeItem(LS_USER_LOADED_REAL);
+      sessionStorage.removeItem(SS_DEMO_BANNER_DISMISS);
+    } catch (e) { /* ignore */ }
+  }
+
+  function applyDemoBannerTextFromTranslations() {
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en || {};
+    const aside = document.getElementById('demo-dataset-banner');
+    if (!aside) return;
+    const badge = aside.querySelector('.demo-dataset-banner__badge');
+    if (badge) badge.textContent = t.demoBannerBadge || '';
+    const txt = aside.querySelector('.demo-dataset-banner__text');
+    if (txt) txt.textContent = t.demoBannerText || '';
+    const uploadBtn = document.getElementById('demo-banner-upload-btn');
+    if (uploadBtn) uploadBtn.textContent = t.demoBannerUpload || 'Upload JSON';
+    const dismissBtn = document.getElementById('demo-banner-dismiss');
+    if (dismissBtn) dismissBtn.setAttribute('aria-label', t.demoBannerDismissAria || '');
+  }
+
+  function applySwrmDropVeilTranslations() {
+    const root = document.getElementById('swrm-drop-veil');
+    if (!root) return;
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en || {};
+    const title = root.querySelector('.swrm-drop-veil__title');
+    const hint = root.querySelector('.swrm-drop-veil__hint');
+    if (title) title.textContent = t.dragDropVeilTitle || '';
+    if (hint) hint.textContent = t.dragDropVeilHint || '';
+    const aria = String(t.dragDropVeilAria || '').trim();
+    if (aria) root.setAttribute('aria-label', aria);
+    else root.removeAttribute('aria-label');
+  }
+
+  /** When upload overlay hidden: page-wide SWEX drop + veil while dragging .json onto the window. */
+  let swrmDropVeilDragging = false;
+
+  function hideSwrmDropVeilUi() {
+    swrmDropVeilDragging = false;
+    const v = document.getElementById('swrm-drop-veil');
+    if (v) {
+      v.dataset.active = '0';
+      v.setAttribute('hidden', '');
+      v.classList.remove('is-active');
+    }
+    document.body.classList.remove('swrm-drop-veil-open');
+  }
+
+  function showSwrmDropVeilUiFromDrag() {
+    if (swrmDropVeilDragging) return;
+    swrmDropVeilDragging = true;
+    applySwrmDropVeilTranslations();
+    const v = document.getElementById('swrm-drop-veil');
+    if (!v) return;
+    v.dataset.active = '1';
+    v.removeAttribute('hidden');
+    v.classList.add('is-active');
+    document.body.classList.add('swrm-drop-veil-open');
+  }
+
+  function dataTransferLooksLikeNativeFiles(dt) {
+    return dt && dt.types && Array.from(dt.types).includes('Files');
+  }
+
+  /** @param {(s: DragEvent)=>void} fn */
+  function guardedUploadOverlayBypass(fn, e) {
+    const overlay = document.getElementById('upload-prompt');
+    if (overlay && !overlay.classList.contains('hidden')) {
+      hideSwrmDropVeilUi();
+      return;
+    }
+    fn(e);
+  }
+
+  function syncDemoBannerVisibility() {
+    const aside = document.getElementById('demo-dataset-banner');
+    if (!aside) return;
+    let usingDemo = false;
+    try {
+      usingDemo = localStorage.getItem(LS_USING_DEMO) === '1';
+    } catch (e) { /* ignore */ }
+    let dismissed = false;
+    try {
+      dismissed = sessionStorage.getItem(SS_DEMO_BANNER_DISMISS) === '1';
+    } catch (e2) { /* ignore */ }
+    const show =
+      Boolean(usingDemo && allRunes.length && !userHasLoadedRealExport() && !dismissed);
+    if (show) aside.removeAttribute('hidden');
+    else aside.setAttribute('hidden', '');
+    aside.setAttribute('aria-hidden', show ? 'false' : 'true');
+  }
+
+  /**
+   * Save SWEX JSON + slot summaries (same path as loading from disk into Data 1).
+   * @param {string} jsonText
+   * @param {string} displayNameForSlot
+   * @param {object} jsonObj
+   */
+  async function persistSwexPayloadToSlots(jsonText, displayNameForSlot, jsonObj) {
+    allRunes = parseSWEX(jsonObj);
+    reprocess();
+
+    const fileSizeKB = Math.round(jsonText.length / 1024);
+    const maxLocalStorageSize = 4 * 1024;
+
+    if (fileSizeKB <= maxLocalStorageSize) {
+      localStorage.setItem('loadedRunes', jsonText);
+      localStorage.setItem('loadedRunesName', displayNameForSlot);
+      localStorage.setItem('loadedRunesDate', new Date().toISOString());
+      localStorage.setItem('loadedRunesSize', fileSizeKB.toString());
+    } else {
+      await saveSlotData('current-runes', jsonText);
+      localStorage.setItem('loadedRunesName', displayNameForSlot);
+      localStorage.setItem('loadedRunesDate', new Date().toISOString());
+      localStorage.setItem('loadedRunesSize', fileSizeKB.toString());
+      localStorage.setItem('loadedRunesStorage', 'indexeddb');
+    }
+
+    const slots = loadDbSlots();
+    const targetSlot = slots.find(s => s.id === 1) || slots[0];
+    applySlotSummaryFromJson(targetSlot, displayNameForSlot, jsonObj);
+    targetSlot.active = true;
+    slots.forEach((s) => {
+      if (s.id !== targetSlot.id) s.active = false;
+    });
+    saveDbSlots(slots);
+    await saveSlotData(targetSlot.id, jsonText);
+  }
+
+  /**
+   * Fetch root demo.json, validate, persist like a real load, mark demo mode.
+   * @param {{ keepTab?: boolean }} [options]
+   */
+  async function installEmbeddedDemoDataset(options = {}) {
+    let jsonText;
+    try {
+      const res = await fetch(new URL('demo.json', window.location.href), { cache: 'no-store' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      jsonText = await res.text();
+    } catch (e) {
+      console.warn('Embedded demo fetch failed:', e);
+      return false;
+    }
+    let json;
+    try {
+      json = JSON.parse(jsonText);
+    } catch (e) {
+      console.warn('Embedded demo JSON parse failed:', e);
+      return false;
+    }
+    try {
+      const runesProbe = parseSWEX(json);
+      if (!runesProbe.length) {
+        console.warn('Embedded demo: parseSWEX returned no runes');
+        return false;
+      }
+      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en || {};
+      const label = t.demoDatasetSlotLabel || 'Example SWEX export';
+      await persistSwexPayloadToSlots(jsonText, label, json);
+      markUsingDemoDataset(true);
+      uiAfterSuccessfulRuneRestore({ name: label, id: 1 }, { keepTab: options.keepTab === true });
+      applyDemoBannerTextFromTranslations();
+      syncDemoBannerVisibility();
+      return true;
+    } catch (e) {
+      console.warn('Embedded demo persist/load failed:', e);
+      return false;
+    }
   }
 
   function readFileAsText(file) {
@@ -1031,43 +1241,24 @@
     }
     try {
       const json = JSON.parse(jsonText);
-      allRunes = parseSWEX(json);
-      reprocess();
-
       const fileSizeKB = Math.round(jsonText.length / 1024);
       const maxLocalStorageSize = 4 * 1024;
-
-      if (fileSizeKB <= maxLocalStorageSize) {
-        localStorage.setItem('loadedRunes', jsonText);
-        localStorage.setItem('loadedRunesName', file.name);
-        localStorage.setItem('loadedRunesDate', new Date().toISOString());
-        localStorage.setItem('loadedRunesSize', fileSizeKB.toString());
-        console.log(`Saved ${file.name} (${fileSizeKB}KB) to localStorage`);
-      } else {
-        try {
-          await saveSlotData('current-runes', jsonText);
-          localStorage.setItem('loadedRunesName', file.name);
-          localStorage.setItem('loadedRunesDate', new Date().toISOString());
-          localStorage.setItem('loadedRunesSize', fileSizeKB.toString());
-          localStorage.setItem('loadedRunesStorage', 'indexeddb');
-          console.log(`Saved ${file.name} (${fileSizeKB}KB) to IndexedDB`);
-        } catch (err) {
+      try {
+        await persistSwexPayloadToSlots(jsonText, file.name, json);
+      } catch (err) {
+        if (fileSizeKB > maxLocalStorageSize) {
           alert(`Failed to save large file (${fileSizeKB}KB): ${err.message}`);
           return;
         }
+        throw err;
       }
-
-      const slots = loadDbSlots();
-      const targetSlot = slots.find(s => s.id === 1) || slots[0];
-      applySlotSummaryFromJson(targetSlot, file.name, json);
-      targetSlot.active = true;
-      slots.forEach((s) => {
-        if (s.id !== targetSlot.id) s.active = false;
-      });
-      saveDbSlots(slots);
-
-      await saveSlotData(targetSlot.id, jsonText);
-
+      if (fileSizeKB <= maxLocalStorageSize) {
+        console.log(`Saved ${file.name} (${fileSizeKB}KB) to localStorage`);
+      } else {
+        console.log(`Saved ${file.name} (${fileSizeKB}KB) to IndexedDB`);
+      }
+      markUserLoadedRealExport();
+      syncDemoBannerVisibility();
       document.getElementById('upload-prompt').classList.add('hidden');
       showMainTab('dashboard', { writeHash: true });
     } catch (err) {
@@ -1100,6 +1291,7 @@
 
     overlay.addEventListener('drop', async (e) => {
       e.preventDefault();
+      e.stopPropagation();
       overlay.classList.remove('is-dragover');
       if (overlay.classList.contains('hidden')) return;
       const files = e.dataTransfer && e.dataTransfer.files;
@@ -1116,6 +1308,55 @@
     });
   }
 
+  /** When the fullscreen upload overlay is hidden, users can still drop a .json onto the page (e.g. demo mode). */
+  function initSiteWideSwexDragDrop() {
+    if (document.body.dataset.swrmSiteDropInit === '1') return;
+    document.body.dataset.swrmSiteDropInit = '1';
+
+    document.addEventListener(
+      'dragover',
+      (e) => {
+        guardedUploadOverlayBypass(() => {
+          const dt = e.dataTransfer;
+          if (!dataTransferLooksLikeNativeFiles(dt)) return;
+          e.preventDefault();
+          dt.dropEffect = 'copy';
+          showSwrmDropVeilUiFromDrag();
+        }, e);
+      },
+      true,
+    );
+
+    document.addEventListener('dragend', () => hideSwrmDropVeilUi(), true);
+
+    window.addEventListener('blur', () => hideSwrmDropVeilUi());
+
+    document.addEventListener(
+      'drop',
+      async (e) => {
+        guardedUploadOverlayBypass(async () => {
+          hideSwrmDropVeilUi();
+          const files = e.dataTransfer && e.dataTransfer.files;
+          if (!files || files.length === 0) return;
+          e.preventDefault();
+          const file = files[0];
+          const nameOk = /\.json$/i.test(file.name || '');
+          const typeOk = (file.type || '').toLowerCase().includes('json');
+          if (!(nameOk || typeOk)) return;
+          if (files.length > 1) {
+            const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+            showSwrmToast(tloc.uploadDropMultipleHint || 'Using the first file only.', {
+              type: 'info',
+              duration: 4200,
+            });
+          }
+          await loadSwexJsonFromFile(file);
+        }, e);
+      },
+      true,
+    );
+  }
+
   document.getElementById('json-upload').addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -1123,6 +1364,7 @@
     e.target.value = '';
   });
   initUploadPromptDragDrop();
+  initSiteWideSwexDragDrop();
 
   /** Parse stored SWEX JSON (string or object) and populate allRunes. */
   function tryHydrateRunesFromJsonText(raw) {
@@ -1161,6 +1403,7 @@
     if (meta && meta.name) {
       console.log(`Auto-loaded runes from ${meta.name}${meta.id != null ? ` (Data ${meta.id})` : ''}`);
     }
+    syncDemoBannerVisibility();
   }
 
   function uiShowUploadPrompt() {
@@ -1332,10 +1575,14 @@
     });
   }
 
-  /** Bar track + fill only (counts live in chartRowStatsHtml). */
-  function chartBarTrackHtml(pctStr, fillClass) {
+  /** Bar track + fill only (counts live in chartRowStatsHtml). Optional startPct for width animation. */
+  function chartBarTrackHtml(pctStr, fillClass, startPctOpt) {
+    const initial =
+      startPctOpt != null && Number.isFinite(Number(startPctOpt))
+        ? Number(startPctOpt).toFixed(1)
+        : pctStr;
     return `<div class="chart-bar-wrap">
-            <div class="chart-bar-fill ${fillClass}" style="width:${pctStr}%"></div>
+            <div class="chart-bar-fill ${fillClass}" style="width:${initial}%"></div>
           </div>`;
   }
 
@@ -1379,10 +1626,135 @@
     return s;
   }
 
-  function chartBarTrackHtmlVerdict(pctStr, bgCss) {
+  function chartBarTrackHtmlVerdict(pctStr, bgCss, startPctOpt) {
+    const initial =
+      startPctOpt != null && Number.isFinite(Number(startPctOpt))
+        ? Number(startPctOpt).toFixed(1)
+        : pctStr;
     return `<div class="chart-bar-wrap">
-      <div class="chart-bar-fill chart-bar-fill--verdict" style="width:${pctStr}%;background:${bgCss};"></div>
+      <div class="chart-bar-fill chart-bar-fill--verdict" style="width:${initial}%;background:${bgCss};"></div>
     </div>`;
+  }
+
+  function rafTwice(fn) {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(fn);
+    });
+  }
+
+  /** Verdict/Roles/Sets chart row reorder: FLIP translation duration (viewport coords). */
+  const DASH_CHART_ROW_FLIP_MS = 460;
+
+  function snapshotKeyedRowRects(container, attrName) {
+    const map = new Map();
+    if (!container) return map;
+    const safe = String(attrName).replace(/"/g, '');
+    container.querySelectorAll(`[${safe}]`).forEach((row) => {
+      const k = row.getAttribute(safe);
+      if (k == null) return;
+      const r = row.getBoundingClientRect();
+      map.set(k, { top: r.top, left: r.left, width: r.width, height: r.height });
+    });
+    return map;
+  }
+
+  /** FLIP invert: move rows visually back to prior viewport positions (transform only). */
+  function collectChartRowFlipMoves(container, attrName, oldRectMap) {
+    const moved = [];
+    if (!container || !oldRectMap || !oldRectMap.size) return moved;
+    const safe = String(attrName).replace(/"/g, '');
+    container.querySelectorAll(`[${safe}]`).forEach((row) => {
+      const k = row.getAttribute(safe);
+      if (k == null || !oldRectMap.has(k)) return;
+      const o = oldRectMap.get(k);
+      const n = row.getBoundingClientRect();
+      const dx = o.left - n.left;
+      const dy = o.top - n.top;
+      if (Math.abs(dx) < 0.35 && Math.abs(dy) < 0.35) return;
+      row.style.transformOrigin = '0 0';
+      row.style.transform = `translate(${dx}px, ${dy}px)`;
+      row.style.transition = 'transform 0s';
+      moved.push(row);
+    });
+    return moved;
+  }
+
+  function playChartRowFlipMoves(movedRows) {
+    movedRows.forEach((row) => {
+      row.style.transition = `transform ${DASH_CHART_ROW_FLIP_MS}ms cubic-bezier(0.25, 0.1, 0.25, 1)`;
+      row.style.transform = 'translate(0, 0)';
+      const clear = () => {
+        row.style.transition = '';
+        row.style.transform = '';
+        row.style.transformOrigin = '';
+      };
+      row.addEventListener(
+        'transitionend',
+        (e) => {
+          if (e.propertyName === 'transform') clear();
+        },
+        { once: true },
+      );
+      setTimeout(clear, DASH_CHART_ROW_FLIP_MS + 120);
+    });
+  }
+
+  function snapshotRowBarWidthMap(container, attrName) {
+    const map = new Map();
+    if (!container) return map;
+    const safe = String(attrName).replace(/"/g, '');
+    container.querySelectorAll(`[${safe}]`).forEach((row) => {
+      const key = row.getAttribute(safe);
+      if (key == null) return;
+      const fill = row.querySelector('.chart-bar-fill');
+      if (!fill) return;
+      const w = fill.style.width;
+      const m = w && String(w).match(/([\d.]+)/);
+      const n = m ? parseFloat(m[1]) : NaN;
+      map.set(key, Number.isFinite(n) ? n : 0);
+    });
+    return map;
+  }
+
+  function snapshotEffBarHeights(el) {
+    if (!el) return [];
+    return Array.from(el.querySelectorAll('.eff-bar')).map((bar) => {
+      const h = bar.style.height;
+      const m = h && String(h).match(/([\d.]+)/);
+      const n = m ? parseFloat(m[1]) : NaN;
+      return Number.isFinite(n) ? n : null;
+    });
+  }
+
+  function snapshotSlotShareBarHeights(hostEl) {
+    const map = new Map();
+    if (!hostEl) return map;
+    let cells = hostEl.querySelectorAll('.slot-share-cell[data-slot]');
+    if (!cells.length) cells = hostEl.querySelectorAll('.slot-share-cell');
+    cells.forEach((cell, idx) => {
+      const key = cell.getAttribute('data-slot') || String(idx + 1);
+      const fill = cell.querySelector('.slot-share-bar-fill');
+      if (!fill) return;
+      const h = fill.style.height;
+      const m = h && String(h).match(/([\d.]+)/);
+      const n = m ? parseFloat(m[1]) : NaN;
+      map.set(String(key), Number.isFinite(n) ? n : 0);
+    });
+    return map;
+  }
+
+  function applyRowBarWidthMap(container, attrName, targetMap) {
+    if (!container || !targetMap || !targetMap.size) return;
+    const safe = String(attrName).replace(/"/g, '');
+    container.querySelectorAll(`[${safe}]`).forEach((row) => {
+      const k = row.getAttribute(safe);
+      if (k == null || !targetMap.has(k)) return;
+      const fill = row.querySelector('.chart-bar-fill');
+      if (!fill) return;
+      const v = targetMap.get(k);
+      if (!Number.isFinite(v)) return;
+      fill.style.width = `${Number(v).toFixed(1)}%`;
+    });
   }
 
   function buildSlotMainPivot(list) {
@@ -1407,84 +1779,159 @@
     return { slotTotals, cell, mains };
   }
 
-  function renderSlotMainCards(hostEl, pivot, tloc) {
-    if (!hostEl || !pivot) return;
+  function renderSlotMainCards(hostEl, pivot, tloc, opts) {
+    if (!hostEl || !pivot) return null;
+    const animateCharts = !!(opts && opts.animateCharts);
+    const prevSlotHeights = animateCharts ? snapshotSlotShareBarHeights(hostEl) : new Map();
+
     hostEl.innerHTML = '';
     const root = document.createElement('div');
-    root.className = 'slot-main-cards';
-    const grid = document.createElement('div');
-    grid.className = 'slot-main-cards-grid';
+    root.className = 'slot-distribution';
 
     const slotHdr = (n) =>
       ((tloc && tloc.dashboardTopSpdSlotLabel) || 'Slot {n}').replace('{n}', String(n));
 
-    for (let s = 1; s <= 6; s++) {
-      const tot = pivot.slotTotals[s] || 0;
-      const card = document.createElement('article');
-      card.className = 'slot-main-card';
-      const hd = document.createElement('header');
-      hd.className = 'slot-main-card-hdr';
-      hd.textContent = slotHdr(s);
-      const meta = document.createElement('div');
-      meta.className = 'slot-main-card-meta';
-      meta.textContent = tot
-        ? `${tot}\u00A0${(tloc && tloc.runes) || 'runes'}`
-        : ((tloc && tloc.dashboardSlotCardEmpty) || '\u2014');
-      const list = document.createElement('ul');
-      list.className = 'slot-main-card-list';
+    const grandTotal = [1, 2, 3, 4, 5, 6].reduce((acc, s) => acc + (pivot.slotTotals[s] || 0), 0);
 
-      const entries = pivot.mains
+    /** Bar height scale: tallest slot count + headroom so the max bar uses most of the track. */
+    const SLOT_SHARE_BAR_HEADROOM = 50;
+    let maxSlotCount = 0;
+    for (let si = 1; si <= 6; si++) {
+      maxSlotCount = Math.max(maxSlotCount, pivot.slotTotals[si] || 0);
+    }
+    const barScaleDen = maxSlotCount + SLOT_SHARE_BAR_HEADROOM;
+
+    const slotShareTargets = new Map();
+
+    const shareSection = document.createElement('section');
+    shareSection.className = 'slot-share-section';
+    const shareTitle = document.createElement('h3');
+    shareTitle.className = 'slot-dist-section-title';
+    shareTitle.textContent = (tloc && tloc.dashboardSlotShareTitle) || 'Runes by slot';
+    shareSection.appendChild(shareTitle);
+
+    const shareGrid = document.createElement('div');
+    shareGrid.className = 'slot-share-grid';
+    shareGrid.setAttribute('role', 'group');
+    shareGrid.setAttribute(
+      'aria-label',
+      (tloc && tloc.dashboardSlotShareAria) || 'Rune count share per slot',
+    );
+
+    for (let s = 1; s <= 6; s++) {
+      const n = pivot.slotTotals[s] || 0;
+      const sharePct = grandTotal ? Math.round((n / grandTotal) * 1000) / 10 : 0;
+      const barH =
+        grandTotal && barScaleDen > 0
+          ? Math.min(100, Math.round((n / barScaleDen) * 1000) / 10)
+          : 0;
+      const cell = document.createElement('div');
+      cell.className = 'slot-share-cell';
+      cell.setAttribute('data-slot', String(s));
+      cell.setAttribute(
+        'aria-label',
+        `${slotHdr(s)}, ${grandTotal ? n : '—'} runes, ${grandTotal ? `${sharePct}%` : '—'}`,
+      );
+
+      const lbl = document.createElement('div');
+      lbl.className = 'slot-share-slot-lbl';
+      lbl.textContent = slotHdr(s);
+
+      const countEl = document.createElement('div');
+      countEl.className = 'slot-share-count';
+      countEl.textContent = grandTotal ? String(n) : '\u2014';
+
+      const track = document.createElement('div');
+      track.className = 'slot-share-bar-track';
+      track.setAttribute('aria-hidden', 'true');
+      const fill = document.createElement('div');
+      fill.className = 'slot-share-bar-fill';
+      const startH = !animateCharts
+        ? barH
+        : prevSlotHeights.has(String(s))
+          ? prevSlotHeights.get(String(s))
+          : 0;
+      fill.style.height = `${startH}%`;
+      slotShareTargets.set(String(s), barH);
+      track.appendChild(fill);
+
+      const pctEl = document.createElement('div');
+      pctEl.className = 'slot-share-pct';
+      pctEl.textContent = grandTotal ? `${sharePct}%` : '\u2014';
+
+      cell.appendChild(lbl);
+      cell.appendChild(countEl);
+      cell.appendChild(track);
+      cell.appendChild(pctEl);
+      shareGrid.appendChild(cell);
+    }
+
+    shareSection.appendChild(shareGrid);
+    root.appendChild(shareSection);
+
+    const fillVariableList = (listEl, s) => {
+      listEl.className = 'slot-main-card-list slot-dist-var-list';
+      const tot = pivot.slotTotals[s] || 0;
+      const rawEntries = pivot.mains
         .map((main) => ({
           main,
           c: (pivot.cell[main] && pivot.cell[main][s]) || 0,
         }))
         .filter((e) => e.c > 0)
-        .sort((a, b) => b.c - a.c)
-        .slice(0, 7);
+        .sort((a, b) => b.c - a.c);
+      const entries = rawEntries.slice(0, 7);
 
-      if (!entries.length) {
+      if (!tot || !entries.length) {
         const li = document.createElement('li');
         li.className = 'slot-main-card-li slot-main-card-li--empty';
         li.textContent = (tloc && tloc.dashboardSlotCardEmpty) || '\u2014';
-        list.appendChild(li);
-      } else {
-        const maxC = entries[0].c;
-        for (let i = 0; i < entries.length; i++) {
-          const e = entries[i];
-          const pct = tot ? Math.round((e.c / tot) * 1000) / 10 : 0;
-          const barW = maxC ? Math.round((e.c / maxC) * 100) : 0;
-          const li = document.createElement('li');
-          li.className = 'slot-main-card-li';
-          li.innerHTML =
-            `<span class="slot-main-card-name">${escapeHtml(e.main)}</span>` +
-            `<span class="slot-main-card-track" aria-hidden="true"><span class="slot-main-card-bar" style="width:${barW}%"></span></span>` +
-            `<span class="slot-main-card-stat"><span class="slot-main-card-n">${e.c}</span>` +
-            `<span class="slot-main-card-p">${pct}%</span></span>`;
-          list.appendChild(li);
-        }
+        listEl.appendChild(li);
+        return;
       }
 
-      card.appendChild(hd);
-      card.appendChild(meta);
-      card.appendChild(list);
-      grid.appendChild(card);
+      const maxC = entries[0].c;
+      for (let i = 0; i < entries.length; i++) {
+        const e = entries[i];
+        const pct = tot ? Math.round((e.c / tot) * 1000) / 10 : 0;
+        const barW = maxC ? Math.round((e.c / maxC) * 100) : 0;
+        const li = document.createElement('li');
+        li.className = 'slot-main-card-li';
+        li.innerHTML =
+          `<span class="slot-main-card-name">${escapeHtml(e.main)}</span>` +
+          `<span class="slot-main-card-track" aria-hidden="true"><span class="slot-main-card-bar" style="width:${barW}%"></span></span>` +
+          `<span class="slot-main-card-stat"><span class="slot-main-card-n">${e.c}</span>` +
+          `<span class="slot-main-card-p">${pct}%</span></span>`;
+        listEl.appendChild(li);
+      }
+    };
+
+    const mainsSection = document.createElement('section');
+    mainsSection.className = 'slot-mains-section';
+    const mainsTitle = document.createElement('h3');
+    mainsTitle.className = 'slot-dist-section-title';
+    mainsTitle.textContent = (tloc && tloc.dashboardSlotMainsTitle) || 'Main stats (2 / 4 / 6)';
+
+    const varGrid = document.createElement('div');
+    varGrid.className = 'slot-dist-variable-grid';
+    for (const s of [2, 4, 6]) {
+      const article = document.createElement('article');
+      article.className = 'slot-dist-var-block';
+      const hd = document.createElement('header');
+      hd.className = 'slot-dist-var-hdr';
+      hd.textContent = slotHdr(s);
+      const list = document.createElement('ul');
+      fillVariableList(list, s);
+      article.appendChild(hd);
+      article.appendChild(list);
+      varGrid.appendChild(article);
     }
 
-    root.appendChild(grid);
+    mainsSection.appendChild(mainsTitle);
+    mainsSection.appendChild(varGrid);
+    root.appendChild(mainsSection);
 
-    const foot = document.createElement('footer');
-    foot.className = 'slot-main-cards-foot';
-    const lbl = escapeHtml((tloc && tloc.dashboardSlotMatrixCountRow) || 'Count');
-    foot.innerHTML =
-      `<span class="slot-main-foot-lbl">${lbl}</span>` +
-      `<div class="slot-main-foot-nums">${[1, 2, 3, 4, 5, 6]
-        .map((i) => {
-          const n = pivot.slotTotals[i] || 0;
-          return `<span class="slot-main-foot-chip"><b>${i}</b>${n}</span>`;
-        })
-        .join('')}</div>`;
-    root.appendChild(foot);
     hostEl.appendChild(root);
+    return animateCharts ? slotShareTargets : null;
   }
 
   function renderTopSpdGrid(gridEl, runes, selectedSet, tloc) {
@@ -1891,6 +2338,7 @@
     const setCounts = {};
     const setEff = {};
     const slotCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
+    const slotEff = { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] };
     const slotMain = { 1: {}, 2: {}, 3: {}, 4: {}, 5: {}, 6: {} };
     const effBuckets = new Array(20).fill(0);
     const effVals = [];
@@ -1911,9 +2359,14 @@
       setCounts[r.setName] = (setCounts[r.setName] || 0) + 1;
       setEff[r.setName] = setEff[r.setName] || [];
       setEff[r.setName].push(r.eff);
+      const eff = Number.isFinite(r.eff) ? r.eff : 0;
       slotCounts[r.slot] = (slotCounts[r.slot] || 0) + 1;
       slotMain[r.slot][r.mainName] = (slotMain[r.slot][r.mainName] || 0) + 1;
-      const eff = Number.isFinite(r.eff) ? r.eff : 0;
+      const si =
+        typeof r.slot === 'number' && Number.isFinite(r.slot)
+          ? r.slot
+          : parseInt(String(r.slot), 10);
+      if (si >= 1 && si <= 6 && !Number.isNaN(si)) slotEff[si].push(eff);
       effVals.push(eff);
       effBuckets[Math.min(19, Math.floor(eff / 5))]++;
     }
@@ -1925,6 +2378,7 @@
       setCounts,
       setEff,
       slotCounts,
+      slotEff,
       slotMain,
       effBuckets,
       medianEff: medianSorted(effVals),
@@ -1967,7 +2421,7 @@
     );
 
     lines.push('');
-    lines.push(t.dashboardDistVerdict || t.dashboardVerdictMixTitle || 'Verdict distribution');
+    lines.push(t.dashboardVerdictMixTitle || 'Verdict distribution');
     const avgPx = String(t.dashboardVerdictAvgPrefix || 'avg').trim();
     sortVerdictKeysByCount(agg.counts).forEach((k) => {
       const c = agg.counts[k] || 0;
@@ -1979,7 +2433,7 @@
     });
 
     lines.push('');
-    lines.push(t.dashboardDistRoles || t.roleDistribution || 'Role distribution');
+    lines.push(t.roleDistribution || 'Role distribution');
     const sortedRoles = Object.keys(agg.roleCounts).sort((a, b) => (agg.roleCounts[b] || 0) - (agg.roleCounts[a] || 0));
     sortedRoles.forEach((role) => {
       const cnt = agg.roleCounts[role] || 0;
@@ -1990,7 +2444,7 @@
     });
 
     lines.push('');
-    lines.push(t.dashboardDistSets || t.setDistribution || 'Set distribution');
+    lines.push(t.setDistribution || 'Set distribution');
     getDashboardSetDisplayOrder(agg.setCounts).forEach((name) => {
       const cnt = agg.setCounts[name] || 0;
       const se = agg.setEff[name];
@@ -2001,29 +2455,17 @@
     });
 
     lines.push('');
-    lines.push(t.dashboardDistSlots || t.dashboardSlotMatrixTitle || 'Slot × main distribution');
-    const pivot = buildSlotMainPivot(vis);
-    const sep = '\t';
-    const hdr =
-      `  ${t.dashboardSlotMatrixCorner || 'Main'}${sep}${[1, 2, 3, 4, 5, 6].join(sep)}`;
-    lines.push(hdr);
-    for (const main of pivot.mains) {
-      const cells = [];
-      for (let s = 1; s <= 6; s++) {
-        const tot = pivot.slotTotals[s] || 0;
-        const c = (pivot.cell[main] && pivot.cell[main][s]) || 0;
-        if (!c) cells.push('\u2014');
-        else {
-          const p = tot ? Math.round((c / tot) * 1000) / 10 : 0;
-          cells.push(`${c} (${p}%)`);
-        }
-      }
-      lines.push(`  ${main}${sep}${cells.join(sep)}`);
+    lines.push(t.dashboardSlotMatrixTitle || 'Slot × main distribution');
+    const slotLabelTmpl = String(t.dashboardTopSpdSlotLabel || 'Slot {n}').trim();
+    const slotAvgPx = String(t.dashboardChartLblAvg || t.dashboardVerdictAvgPrefix || 'avg').trim();
+    for (let s = 1; s <= 6; s++) {
+      const cnt = agg.slotCounts[s] || 0;
+      const list = agg.slotEff[s] || [];
+      const avgStr = list.length
+        ? (list.reduce((a, b) => a + b, 0) / list.length).toFixed(1)
+        : '-';
+      lines.push(`  ${slotLabelTmpl.replace('{n}', String(s))}: ${cnt} · ${slotAvgPx} ${avgStr}%`);
     }
-    const countLbl = t.dashboardSlotMatrixCountRow || 'Count';
-    lines.push(
-      `  ${countLbl}${sep}${[1, 2, 3, 4, 5, 6].map((s) => String(pivot.slotTotals[s] || 0)).join(sep)}`,
-    );
 
     lines.push('');
     lines.push(t.efficiencyDistribution || 'Efficiency Distribution');
@@ -2046,7 +2488,8 @@
   }
 
   // ===================== DASHBOARD =====================
-  function renderDashboard(runes) {
+  function renderDashboard(runes, opts) {
+    const animateCharts = !!(opts && opts.animateCharts);
     // Account progression: full export rune list, absolute counts + top-N eff (not affected by preset / Min Lvl).
     const metrics = analyzeGameStage(allRunes);
     const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
@@ -2241,8 +2684,22 @@
         .replace(/\{view\}/g, String(total));
     }
 
+    let oldRectsVerdict = null;
+    let oldRectsRoles = null;
+    let oldRectsSets = null;
+
+    let verdictBarTargets = null;
+    let roleBarTargets = null;
+    let setBarTargets = null;
+    let effBarTargets = null;
+    let slotShareAnimTargets = null;
+
     const verdictChartEl = document.getElementById('verdict-chart');
     if (verdictChartEl) {
+      oldRectsVerdict = animateCharts ? snapshotKeyedRowRects(verdictChartEl, 'data-dash-verdict') : null;
+      const prevVerdictW = animateCharts
+        ? snapshotRowBarWidthMap(verdictChartEl, 'data-dash-verdict')
+        : new Map();
       verdictChartEl.innerHTML = '';
       const vRows = [];
       DASH_VERDICT_SEG_ORDER.forEach((v) => {
@@ -2254,6 +2711,7 @@
         return DASH_VERDICT_SEG_ORDER.indexOf(a.v) - DASH_VERDICT_SEG_ORDER.indexOf(b.v);
       });
       const maxV = Math.max(...vRows.map((x) => x.c), 1);
+      verdictBarTargets = new Map();
       const openHint = String((tloc.dashboardOpenTableHint || '').trim());
       for (let i = 0; i < vRows.length; i++) {
         const { v, c } = vRows[i];
@@ -2261,6 +2719,13 @@
         const avg =
           c > 0 && avgMu != null && Number.isFinite(avgMu) ? avgMu.toFixed(1) : '-';
         const pct = ((c / maxV) * 100).toFixed(1);
+        const pctNum = parseFloat(pct);
+        verdictBarTargets.set(v, pctNum);
+        const startPct = !animateCharts
+          ? pctNum
+          : prevVerdictW.has(v)
+            ? prevVerdictW.get(v)
+            : 0;
         const lblRaw = verdictUiLabel(tloc, v);
         const lbl = escapeHtml(lblRaw);
         const bg = DASH_VERDICT_SEG_CSS[v] || '#888';
@@ -2269,56 +2734,83 @@
         verdictChartEl.innerHTML += `
         <div class="chart-row chart-row--clickable chart-row--verdict" role="button" tabindex="0" data-dash-verdict="${escapeHtml(v)}" title="${titleAttr}">
           <div class="chart-label">${lbl}</div>
-          ${chartBarTrackHtmlVerdict(pct, bg)}
+          ${chartBarTrackHtmlVerdict(pct, bg, animateCharts ? startPct : undefined)}
           ${chartRowStatsHtml(c, avg, tloc)}
         </div>`;
       }
     }
 
     const roleEl = document.getElementById('role-chart');
-    roleEl.innerHTML = '';
-    const sortedRoles = Object.keys(roleCounts).sort((a, b) => (roleCounts[b] || 0) - (roleCounts[a] || 0));
-    const maxCount = Math.max(...sortedRoles.map(rr => roleCounts[rr] || 0), 1);
-    for (const role of sortedRoles) {
-      const cnt = roleCounts[role] || 0;
-      const avg = roleEff[role] ? (roleEff[role].reduce((a, b) => a + b, 0) / roleEff[role].length).toFixed(1) : '-';
-      const pct = ((cnt / maxCount) * 100).toFixed(1);
-      const er = escapeHtml(role);
-      roleEl.innerHTML += `
+    if (roleEl) {
+      oldRectsRoles = animateCharts ? snapshotKeyedRowRects(roleEl, 'data-dash-role') : null;
+      const prevRoleW = animateCharts ? snapshotRowBarWidthMap(roleEl, 'data-dash-role') : new Map();
+      roleEl.innerHTML = '';
+      const sortedRoles = Object.keys(roleCounts).sort((a, b) => (roleCounts[b] || 0) - (roleCounts[a] || 0));
+      const maxCount = Math.max(...sortedRoles.map((rr) => roleCounts[rr] || 0), 1);
+      roleBarTargets = new Map();
+      for (const role of sortedRoles) {
+        const cnt = roleCounts[role] || 0;
+        const avg = roleEff[role]
+          ? (roleEff[role].reduce((a, b) => a + b, 0) / roleEff[role].length).toFixed(1)
+          : '-';
+        const pct = ((cnt / maxCount) * 100).toFixed(1);
+        const pctNum = parseFloat(pct);
+        roleBarTargets.set(role, pctNum);
+        const startPct = !animateCharts
+          ? pctNum
+          : prevRoleW.has(role)
+            ? prevRoleW.get(role)
+            : 0;
+        const er = escapeHtml(role);
+        roleEl.innerHTML += `
         <div class="chart-row chart-row--clickable" role="button" tabindex="0" data-dash-role="${er}">
           <div class="chart-label">${er}</div>
-          ${chartBarTrackHtml(pct, 'chart-bar--roles')}
+          ${chartBarTrackHtml(pct, 'chart-bar--roles', animateCharts ? startPct : undefined)}
           ${chartRowStatsHtml(cnt, avg, tloc)}
         </div>`;
+      }
     }
 
     const setEl = document.getElementById('set-chart');
-    setEl.innerHTML = '';
-    const maxSet = Math.max(...setOrder.map((nm) => setCounts[nm] || 0), 1);
-    const openHint = String((tloc.dashboardOpenTableHint || '').trim());
-    for (const name of setOrder) {
-      const cnt = setCounts[name] || 0;
-      const effList = setEff[name];
-      const avg = effList && effList.length
-        ? (effList.reduce((a, b) => a + b, 0) / effList.length).toFixed(1)
-        : '-';
-      const pct = ((cnt / maxSet) * 100).toFixed(1);
-      const en = escapeHtml(name);
-      const enc = encodeURIComponent(name);
-      const encAttr = escapeHtml(enc);
-      const titleRaw = openHint ? `${name}: ${cnt}. ${openHint}` : `${name}: ${cnt}`;
-      const titleAttr = escapeHtml(titleRaw);
-      setEl.innerHTML += `
+    if (setEl) {
+      oldRectsSets = animateCharts ? snapshotKeyedRowRects(setEl, 'data-dash-set') : null;
+      const prevSetW = animateCharts ? snapshotRowBarWidthMap(setEl, 'data-dash-set') : new Map();
+      setEl.innerHTML = '';
+      const maxSet = Math.max(...setOrder.map((nm) => setCounts[nm] || 0), 1);
+      setBarTargets = new Map();
+      const openHintSets = String((tloc.dashboardOpenTableHint || '').trim());
+      for (const name of setOrder) {
+        const cnt = setCounts[name] || 0;
+        const effList = setEff[name];
+        const avg =
+          effList && effList.length
+            ? (effList.reduce((a, b) => a + b, 0) / effList.length).toFixed(1)
+            : '-';
+        const pct = ((cnt / maxSet) * 100).toFixed(1);
+        const pctNum = parseFloat(pct);
+        const enc = encodeURIComponent(name);
+        setBarTargets.set(enc, pctNum);
+        const startPct = !animateCharts
+          ? pctNum
+          : prevSetW.has(enc)
+            ? prevSetW.get(enc)
+            : 0;
+        const en = escapeHtml(name);
+        const encAttr = escapeHtml(enc);
+        const titleRaw = openHintSets ? `${name}: ${cnt}. ${openHintSets}` : `${name}: ${cnt}`;
+        const titleAttr = escapeHtml(titleRaw);
+        setEl.innerHTML += `
         <div class="chart-row chart-row--clickable chart-row--set" role="button" tabindex="0" data-dash-set="${encAttr}" title="${titleAttr}">
           <div class="chart-label">${en}</div>
-          ${chartBarTrackHtml(pct, 'chart-bar--sets')}
+          ${chartBarTrackHtml(pct, 'chart-bar--sets', animateCharts ? startPct : undefined)}
           ${chartRowStatsHtml(cnt, avg, tloc)}
         </div>`;
+      }
     }
 
     const slotCardsRoot = document.getElementById('slot-main-cards-root');
     const pivot = buildSlotMainPivot(runes);
-    renderSlotMainCards(slotCardsRoot, pivot, tloc);
+    slotShareAnimTargets = renderSlotMainCards(slotCardsRoot, pivot, tloc, { animateCharts });
 
     let savedSet = '';
     try {
@@ -2330,7 +2822,8 @@
     renderTopSpdGrid(document.getElementById('top-spd-grid'), runes, spdPick, tloc);
 
     const effEl = document.getElementById('eff-chart');
-    effEl.innerHTML = '';
+    const prevEffHeights = animateCharts && effEl ? snapshotEffBarHeights(effEl) : null;
+    if (effEl) effEl.innerHTML = '';
     const maxBucket = Math.max(...effBuckets, 1);
     const medEff = medianEff;
     const medLine = document.getElementById('eff-median-line');
@@ -2349,15 +2842,70 @@
       if (medLine) medLine.hidden = true;
       if (medCap) medCap.hidden = true;
     }
-    for (let i = 0; i < 20; i++) {
-      const h = Math.max(4, (effBuckets[i] / maxBucket) * 80);
-      const label = `${i * 5}-${i * 5 + 4}`;
-      const cls = i >= 18 ? 'great' : i >= 14 ? 'good' : '';
-      effEl.innerHTML += `
+    if (effEl) {
+      effBarTargets = [];
+      for (let i = 0; i < 20; i++) {
+        const h = Math.max(4, (effBuckets[i] / maxBucket) * 80);
+        effBarTargets[i] = h;
+        const h0 = !animateCharts
+          ? h
+          : prevEffHeights && prevEffHeights[i] != null
+            ? prevEffHeights[i]
+            : 0;
+        const label = `${i * 5}-${i * 5 + 4}`;
+        const cls = i >= 18 ? 'great' : i >= 14 ? 'good' : '';
+        effEl.innerHTML += `
         <div class="eff-bar-wrap" title="${label}%: ${effBuckets[i]} runes">
-          <div class="eff-bar ${cls}" style="height:${h}px"></div>
+          <div class="eff-bar ${cls}" style="height:${h0}px"></div>
           <div class="eff-label">${i * 5}</div>
         </div>`;
+      }
+    }
+
+    if (animateCharts) {
+      rafTwice(() => {
+        const mv = verdictChartEl
+          ? collectChartRowFlipMoves(verdictChartEl, 'data-dash-verdict', oldRectsVerdict)
+          : [];
+        const mr = roleEl ? collectChartRowFlipMoves(roleEl, 'data-dash-role', oldRectsRoles) : [];
+        const ms = setEl ? collectChartRowFlipMoves(setEl, 'data-dash-set', oldRectsSets) : [];
+        const allFlip = [...mv, ...mr, ...ms];
+
+        const applyBarAndEffTargets = () => {
+          if (verdictChartEl && verdictBarTargets && verdictBarTargets.size) {
+            applyRowBarWidthMap(verdictChartEl, 'data-dash-verdict', verdictBarTargets);
+          }
+          if (roleEl && roleBarTargets && roleBarTargets.size) {
+            applyRowBarWidthMap(roleEl, 'data-dash-role', roleBarTargets);
+          }
+          if (setEl && setBarTargets && setBarTargets.size) {
+            applyRowBarWidthMap(setEl, 'data-dash-set', setBarTargets);
+          }
+          if (effEl && effBarTargets && effBarTargets.length) {
+            const bars = effEl.querySelectorAll('.eff-bar');
+            bars.forEach((bar, i) => {
+              if (effBarTargets[i] != null) bar.style.height = `${effBarTargets[i]}px`;
+            });
+          }
+          if (slotCardsRoot && slotShareAnimTargets && slotShareAnimTargets.size) {
+            slotCardsRoot.querySelectorAll('.slot-share-cell[data-slot]').forEach((cell) => {
+              const s = cell.getAttribute('data-slot');
+              const fill = cell.querySelector('.slot-share-bar-fill');
+              if (!fill || !s || !slotShareAnimTargets.has(s)) return;
+              fill.style.height = `${slotShareAnimTargets.get(s)}%`;
+            });
+          }
+        };
+
+        if (allFlip.length) {
+          requestAnimationFrame(() => {
+            playChartRowFlipMoves(allFlip);
+            applyBarAndEffTargets();
+          });
+        } else {
+          applyBarAndEffTargets();
+        }
+      });
     }
   }
 
@@ -2375,41 +2923,25 @@
 
   function getRuneNumericEff(r) {
     if (!r) return 0;
-    if (document.getElementById('toggle-table-uncapped-eff')?.checked && window.SWRM.calcEfficiencyUncapped) {
-      const v = window.SWRM.calcEfficiencyUncapped(r);
-      return Number.isFinite(v) ? v : 0;
-    }
     return Number.isFinite(r.eff) ? r.eff : 0;
   }
 
-  function syncRuneTableCompactLayout() {
-    const wrap = document.getElementById('rune-table-scroll');
-    const on = !!document.getElementById('toggle-table-compact')?.checked;
-    wrap?.classList.toggle('rune-table-scroll--compact', on);
-  }
-
-  function updateRuneTableEffHeaderUi() {
+  function applyRuneTableEffHeader() {
     const lbl = document.getElementById('lbl-th-eff');
     if (!lbl) return;
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-    const unc = !!document.getElementById('toggle-table-uncapped-eff')?.checked;
-    lbl.textContent = unc ? (t.tableEffHeaderUncapped || 'Eff%') : (t.tableEffHeaderCapped || 'Eff%');
-    lbl.setAttribute(
-      'title',
-      unc ? (t.tableEffHeaderUncappedTitle || '') : (t.tableEffHeaderCappedTitle || '')
-    );
+    lbl.textContent = t.tableEffHeaderCapped || 'Eff%';
+    lbl.setAttribute('title', t.tableEffHeaderCappedTitle || '');
   }
 
   function initRuneTablePrefsFromStorage() {
-    try {
-      const ue = document.getElementById('toggle-table-uncapped-eff');
-      if (ue) ue.checked = localStorage.getItem('swrm_table_uncapped_eff_v1') === '1';
-      const cp = document.getElementById('toggle-table-compact');
-      /* Default ON; explicit '0' turns off (legacy '' treated as default on). */
-      if (cp) cp.checked = localStorage.getItem('swrm_table_compact_v1') !== '0';
-    } catch (e) { /* ignore */ }
-    syncRuneTableCompactLayout();
-    updateRuneTableEffHeaderUi();
+    applyRuneTableEffHeader();
+    const ancient = document.getElementById('toggle-ancient-only');
+    if (ancient) {
+      const v = localStorage.getItem(RUNE_TABLE_ANCIENT_ONLY_KEY);
+      if (v === '1') ancient.checked = true;
+      else if (v === '0') ancient.checked = false;
+    }
   }
 
   function sortRunesInPlace(arr, key, dir) {
@@ -2544,9 +3076,8 @@
     if (sortKey !== 'eff') p.set('sort', sortKey);
     if (sortDir !== 'desc') p.set('dir', sortDir);
     if (document.getElementById('toggle-target-col')?.checked) p.set('target', '1');
+    if (document.getElementById('toggle-ancient-only')?.checked) p.set('ancient', '1');
     if (runeTableShowAll) p.set('all', '1');
-    if (document.getElementById('toggle-table-uncapped-eff')?.checked) p.set('ueff', '1');
-    if (document.getElementById('toggle-table-compact')?.checked) p.set('cpt', '1');
     const s = p.toString();
     return s ? `?${s}` : '';
   }
@@ -2584,27 +3115,20 @@
         const tgl = document.getElementById('toggle-target-col');
         if (tgl) tgl.checked = on;
       }
+      if (params.has('ancient')) {
+        const on = params.get('ancient') === '1';
+        const tgl = document.getElementById('toggle-ancient-only');
+        if (tgl) tgl.checked = on;
+        localStorage.setItem(RUNE_TABLE_ANCIENT_ONLY_KEY, on ? '1' : '0');
+      }
       if (params.has('all')) runeTableShowAll = params.get('all') === '1';
       else runeTableShowAll = false;
-      if (params.has('ueff')) {
-        const on = params.get('ueff') === '1';
-        const ue = document.getElementById('toggle-table-uncapped-eff');
-        if (ue) ue.checked = on;
-        try { localStorage.setItem('swrm_table_uncapped_eff_v1', on ? '1' : ''); } catch (e2) { /* ignore */ }
-      }
-      if (params.has('cpt')) {
-        const on = params.get('cpt') === '1';
-        const cp = document.getElementById('toggle-table-compact');
-        if (cp) cp.checked = on;
-        try { localStorage.setItem('swrm_table_compact_v1', on ? '1' : '0'); } catch (e2) { /* ignore */ }
-      }
       const manualTarget = document.getElementById('toggle-target-col')?.checked;
       document.getElementById('target-col-header')?.classList.toggle('hidden', !manualTarget);
       document.getElementById('rune-table')?.classList.toggle('show-target', !!manualTarget);
     } finally {
       runeTableApplyingHash = false;
-      syncRuneTableCompactLayout();
-      updateRuneTableEffHeaderUi();
+      applyRuneTableEffHeader();
     }
   }
 
@@ -2670,6 +3194,9 @@
     if (fm) fm.value = '';
     const tgl = document.getElementById('toggle-target-col');
     if (tgl) tgl.checked = false;
+    const tglAncient = document.getElementById('toggle-ancient-only');
+    if (tglAncient) tglAncient.checked = false;
+    localStorage.setItem(RUNE_TABLE_ANCIENT_ONLY_KEY, '0');
     document.getElementById('target-col-header')?.classList.add('hidden');
     document.getElementById('rune-table')?.classList.remove('show-target');
     sortKey = 'eff';
@@ -2686,14 +3213,17 @@
     }
     const search  = (document.getElementById('search-box')?.value || '').toLowerCase();
     tableSearchHighlight = search;
+    const tTable = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const verdict = document.getElementById('filter-verdict')?.value || '';
     const role    = document.getElementById('filter-role')?.value    || '';
     const grade   = document.getElementById('filter-grade')?.value   || '';
     const setName = document.getElementById('filter-set')?.value || '';
     const slotVal = document.getElementById('filter-slot')?.value || '';
     const mainVal = document.getElementById('filter-main')?.value || '';
+    const ancientOnly = !!document.getElementById('toggle-ancient-only')?.checked;
 
     filteredRunes = runes.filter(r => {
+      if (ancientOnly && !r.isAncient) return false;
       if (verdict && r.verdict !== verdict) return false;
       if (role    && r.role    !== role)    return false;
       if (grade   && r.gradeStr !== grade)  return false;
@@ -2702,9 +3232,13 @@
       if (mainVal && r.mainName !== mainVal) return false;
       if (search) {
         const subParts = (r.substats || []).flatMap((s) => [s.name, String(s.val ?? '')]);
+        const ancientTokens = r.isAncient
+          ? [String(tTable.tableAncientBadge || 'Ancient'), 'ancient']
+          : [];
         const haystack = [
           r.setName, r.mainName, r.gradeStr, r.role, r.verdict,
           r.innate_name, String(r.innate_val ?? ''),
+          ...ancientTokens,
           ...subParts,
         ].join(' ').toLowerCase();
         if (!haystack.includes(search)) return false;
@@ -2758,7 +3292,6 @@
     document.getElementById('target-filter-cell')?.classList.toggle('hidden', !showTarget);
     document.getElementById('rune-table')?.classList.toggle('show-target', showTarget);
     tbody.innerHTML = rows.map(r => runeRow(r)).join('');
-    renderRuneSummary(filteredRunes);
     setupRuneTableMoreUi(total, rows.length);
     updateRuneTableFilterIndicators();
     replaceRuneTableLocationFromState();
@@ -2767,8 +3300,13 @@
   function exportCsv() {
     const rows = filteredRunes;
     if (!rows.length) return;
+    const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const includeTarget = document.getElementById('rune-table')?.classList.contains('show-target');
-    const headers = ['Grade', 'Set', 'Lvl', 'Slot', 'Main', 'Innate', 'Sub1', 'Sub2', 'Sub3', 'Sub4', 'Eff%', 'Role', 'Verdict'];
+    const headers = [
+      'Grade',
+      tloc.csvHeaderAncient || 'Ancient',
+      'Set', 'Lvl', 'Slot', 'Main', 'Innate', 'Sub1', 'Sub2', 'Sub3', 'Sub4', 'Eff%', 'Role', 'Verdict',
+    ];
     if (includeTarget) headers.push('Target');
     function cellPart(s) {
       const raw = String(s ?? '');
@@ -2777,14 +3315,19 @@
     }
     function subcell(sub) {
       if (!sub || !sub.name) return '';
-      // Export base-only values; gem/grind are not part of calculation view.
-      return `${sub.name} ${sub.val}`;
+      const g = Number(sub.grind) || 0;
+      const gem = !!(sub.enchanted || (Number(sub.gem) || 0) !== 0);
+      let out = `${sub.name} ${sub.val}`;
+      if (g >= 2) out += ` [${g}]`;
+      if (gem) out += ' (gem)';
+      return out;
     }
     const lines = [headers.map(cellPart).join(',')];
     rows.forEach(r => {
       const subs = r.substats || [];
       const row = [
         r.gradeStr,
+        r.isAncient ? (tloc.csvAncientYes || 'yes') : '',
         r.setName,
         r.level,
         r.slot,
@@ -2812,13 +3355,45 @@
     document.body.removeChild(a);
   }
 
+  /** Stylised “Ancient” mark: A without crossbar, dot at mid-height (matches in-game cue). */
+  const ANCIENT_GRADE_ICON_SVG =
+    '<svg class="ancient-grade-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">'
+    + '<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.85" d="M2.35 12.85L8 2.65l5.65 10.2"/>'
+    + '<circle cx="8" cy="9.55" r="1.45" fill="currentColor"/>'
+    + '</svg>';
+
+  /** Counter‑clockwise circular arrows (gem / replaced sub) — stroke reads clearly at small sizes. */
+  const STAT_SUB_GEM_ICON_SVG =
+    '<svg class="stat-chip-gem-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">'
+    + '<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M1 4v6h6"/>'
+    + '<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M23 20v-6h-6"/>'
+    + '<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>'
+    + '</svg>';
+
   function statChip(s) {
     if (!s || !s.name) return '';
     const cls = statClass(s.name);
     const flat = s.flat ? ' flat' : '';
-    const inner = highlightSearchInPlain(`${s.name} ${s.val}`, tableSearchHighlight);
-    // Base-only in the main rune table. Gem/grind are shown only via Target details.
-    return `<span class="stat-chip ${cls}${flat}">${inner}</span>`;
+    const grindAmt = Number(s.grind) || 0;
+    const gemMarked = !!(s.enchanted || (Number(s.gem) || 0) !== 0);
+    // Typical grind bonuses are ≥2; [1] was almost always the enchant flag parsed wrong (fixed in parser).
+    const showGrindSuffix = grindAmt >= 2;
+    const valShown =
+      showGrindSuffix ? `${s.val} [${grindAmt}]` : String(s.val ?? '');
+    const plain = `${s.name} ${valShown}`;
+    const inner = highlightSearchInPlain(plain, tableSearchHighlight);
+    const innerGrindCls = showGrindSuffix ? ' stat-chip-inner--grind' : '';
+    const gemOnlyCls = gemMarked && !showGrindSuffix ? ' stat-chip--gem-only' : '';
+    const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const tipParts = [];
+    if (showGrindSuffix) {
+      tipParts.push((tloc.tableSubGrindTooltip || '').replace(/\{n\}/g, String(grindAmt)));
+    }
+    if (gemMarked) tipParts.push(tloc.tableSubGemTooltip || '');
+    const tip = tipParts.filter(Boolean).join(' ');
+    const tipAttr = tip ? ` title="${escapeAttr(tip)}"` : '';
+    const gemSvg = gemMarked ? STAT_SUB_GEM_ICON_SVG : '';
+    return `<span class="stat-chip ${cls}${flat}${gemOnlyCls}"${tipAttr}><span class="stat-chip-inner${innerGrindCls}">${inner}</span>${gemSvg}</span>`;
   }
 
   function statClass(name) {
@@ -2837,10 +3412,18 @@
   }
 
   function runeRow(r) {
+    const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const gradeKey = r.gradeStr;
     const gradeClass = { Legend: 'legend', Hero: 'hero', Rare: 'rare' }[gradeKey] || 'grade-tag--other';
     const gradeLabel = { Legend: 'Legend', Hero: 'Hero', Rare: 'Rare' }[gradeKey] || String(r.gradeStr);
-    const grade = `<span class="grade-tag ${gradeClass}">${highlightSearchInPlain(gradeLabel, tableSearchHighlight)}</span>`;
+    const gradeTag = `<span class="grade-tag ${gradeClass}">${highlightSearchInPlain(gradeLabel, tableSearchHighlight)}</span>`;
+    const ancientTipRaw = tloc.tableAncientBadgeTitle || '';
+    const ancientTipAttr = ancientTipRaw ? ` title="${escapeAttr(ancientTipRaw)}"` : '';
+    const ancientLbl = escapeAttr(tloc.tableAncientBadge || 'Ancient');
+    const ancientIcon = r.isAncient
+      ? `<span class="ancient-grade-icon-wrap"${ancientTipAttr} role="img" aria-label="${ancientLbl}">${ANCIENT_GRADE_ICON_SVG}</span>`
+      : '';
+    const grade = `<span class="grade-cell">${ancientIcon}${gradeTag}</span>`;
 
     const effNum = getRuneNumericEff(r);
     const effTier =
@@ -2884,56 +3467,6 @@
       <td>${verdictHtml}</td>
       <td class="target-col-cell"${targetTipAttr}>${targetHtml}</td>
     </tr>`;
-  }
-
-  function renderRuneSummary(runes) {
-    const box = document.getElementById('rune-summary');
-    if (!box) return;
-
-    const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-    const byVerdict = {};
-    const byRole = {};
-    for (const r of runes) {
-      const ef = getRuneNumericEff(r);
-      byVerdict[r.verdict] = byVerdict[r.verdict] || { c: 0, e: 0 };
-      byVerdict[r.verdict].c++;
-      byVerdict[r.verdict].e += ef;
-      if (r.role) {
-        byRole[r.role] = byRole[r.role] || { c: 0, e: 0 };
-        byRole[r.role].c++;
-        byRole[r.role].e += ef;
-      }
-    }
-
-    const verdictLabel = (k) =>
-      ({
-        Keep: tloc.keep,
-        Sell: tloc.sell,
-        Grind: tloc.grind,
-        Gem: tloc.gem,
-        Finish: tloc.finish,
-        Upgrade: tloc.upgrade,
-        Reapp: tloc.reapp,
-      }[k] || k);
-    const avgBit = escapeHtml((tloc.tableAvgEffSuffix || 'avg'));
-
-    let html = `<div class="summary-title">${escapeHtml(tloc.tableSummaryTitle || '')}</div>`;
-    html += `<div class="summary-row"><span>${escapeHtml(tloc.tableSummaryTotal || '')}</span><span>${runes.length}</span></div>`;
-    ['Keep', 'Grind', 'Gem', 'Finish', 'Upgrade', 'Reapp', 'Sell'].forEach((v) => {
-      const item = byVerdict[v];
-      if (!item) return;
-      const avg = (item.e / item.c).toFixed(1);
-      html += `<div class="summary-row"><span>${escapeHtml(verdictLabel(v))}</span><span>${item.c} <span class="summary-eff">${avg}% ${avgBit}</span></span></div>`;
-    });
-    html += `<div class="summary-title summary-title--sub">${escapeHtml(tloc.tableSummaryRolesTitle || '')}</div>`;
-    Object.keys(byRole)
-      .sort((a, b) => byRole[b].c - byRole[a].c)
-      .forEach((role) => {
-        const item = byRole[role];
-        if (!item) return;
-        html += `<div class="summary-row"><span>${escapeHtml(role)}</span><span>${item.c} <span class="summary-eff">${(item.e / item.c).toFixed(1)}% ${avgBit}</span></span></div>`;
-      });
-    box.innerHTML = html;
   }
 
   // Table sorting — main table (skip filter columns; those have th-text/th-filter)
@@ -3031,21 +3564,9 @@
     applyFiltersAndSort(getVisibleRunes(), { preserveTableExpansion: true });
   });
 
-  document.getElementById('toggle-table-uncapped-eff')?.addEventListener('change', (e) => {
-    try {
-      localStorage.setItem('swrm_table_uncapped_eff_v1', e.target.checked ? '1' : '');
-    } catch (err) { /* ignore */ }
-    updateRuneTableEffHeaderUi();
-    replaceRuneTableLocationFromState();
+  document.getElementById('toggle-ancient-only')?.addEventListener('change', (e) => {
+    localStorage.setItem(RUNE_TABLE_ANCIENT_ONLY_KEY, e.target.checked ? '1' : '0');
     applyFiltersAndSort(getVisibleRunes(), { preserveTableExpansion: true });
-  });
-
-  document.getElementById('toggle-table-compact')?.addEventListener('change', (e) => {
-    try {
-      localStorage.setItem('swrm_table_compact_v1', e.target.checked ? '1' : '0');
-    } catch (err) { /* ignore */ }
-    syncRuneTableCompactLayout();
-    replaceRuneTableLocationFromState();
   });
 
   document.getElementById('btn-table-reset-filters')?.addEventListener('click', () => {
@@ -3980,7 +4501,12 @@
 
       if (!Array.isArray(slots) || slots.length === 0) {
         console.error('Invalid slots array:', slots);
-        uiShowUploadPrompt();
+        if (!userHasLoadedRealExport()) {
+          const demoOk = await installEmbeddedDemoDataset();
+          if (!demoOk) uiShowUploadPrompt();
+        } else {
+          uiShowUploadPrompt();
+        }
       } else {
         console.log('Slots metadata key present:', !!localStorage.getItem(DB_SLOTS_META_KEY));
 
@@ -4036,18 +4562,47 @@
         }
 
         if (!restored) {
-          if (hasSlotMeta && targetSlot) {
-            console.log(`Slot ${targetSlot.id} has metadata but no readable JSON; showing upload prompt`);
+          if (userHasLoadedRealExport()) {
+            if (hasSlotMeta && targetSlot) {
+              console.log(`Slot ${targetSlot.id} has metadata but no readable JSON; showing upload prompt`);
+            } else {
+              console.log('No saved runes found; showing upload prompt');
+            }
+            uiShowUploadPrompt();
           } else {
-            console.log('No saved runes found; showing upload prompt');
+            if (hasSlotMeta && targetSlot) {
+              console.log(`Slot ${targetSlot.id} has metadata but no readable JSON; trying embedded demo`);
+            } else {
+              console.log('No saved runes found; trying embedded demo');
+            }
+            const demoOk = await installEmbeddedDemoDataset();
+            if (!demoOk) uiShowUploadPrompt();
           }
-          uiShowUploadPrompt();
         }
       }
     } catch (err) {
       console.error('Error during restore:', err);
-      uiShowUploadPrompt();
+      try {
+        if (!userHasLoadedRealExport()) {
+          const demoOk = await installEmbeddedDemoDataset();
+          if (!demoOk) uiShowUploadPrompt();
+        } else {
+          uiShowUploadPrompt();
+        }
+      } catch (e2) {
+        uiShowUploadPrompt();
+      }
     }
+
+    document.getElementById('demo-banner-dismiss')?.addEventListener('click', () => {
+      try {
+        sessionStorage.setItem(SS_DEMO_BANNER_DISMISS, '1');
+      } catch (e) { /* ignore */ }
+      syncDemoBannerVisibility();
+    });
+    document.getElementById('demo-banner-upload-btn')?.addEventListener('click', () => {
+      uiShowUploadPrompt();
+    });
 
     // Initialize Database slots
     renderDbSlots();
@@ -4207,6 +4762,8 @@
     const json = JSON.parse(jsonText);
     allRunes = parseSWEX(json);
     reprocess();
+    markUserLoadedRealExport();
+    syncDemoBannerVisibility();
     document.getElementById('upload-prompt').classList.add('hidden');
   }
 
@@ -4219,7 +4776,10 @@
   if (appLangSelect) {
     appLangSelect.value = currentLang;
     appLangSelect.addEventListener('change', () => {
-      updateLanguage(appLangSelect.value);
+      let v = appLangSelect.value || 'en';
+      if (!['en', 'ru', 'fr'].includes(v)) v = 'en';
+      updateLanguage(v);
+      appLangSelect.value = currentLang;
     });
   }
 
@@ -4256,6 +4816,8 @@
         applySlotSummaryFromJson(slot, `Clipboard ${slotId}`, jsonObj);
         saveDbSlots(slots);
         renderDbSlots();
+        markUserLoadedRealExport();
+        syncDemoBannerVisibility();
       } catch(err) {
         alert('Clipboard access denied or not available');
       }
@@ -4288,6 +4850,8 @@
             applySlotSummaryFromJson(slot, file.name, jsonObj);
             saveDbSlots(slots);
             renderDbSlots();
+            markUserLoadedRealExport();
+            syncDemoBannerVisibility();
             console.log('Slot saved and rendered');
           } catch(err) {
             console.error('Error saving to IndexedDB:', err);
@@ -4328,11 +4892,15 @@
         const namedSlots = slots.filter(s => s.name && s.name.trim() !== '');
 
         if (namedSlots.length === 0) {
+          resetDemoAndRealPersistenceFlags();
           await clearAllIndexedDbRunePayloads();
           clearLocalStorageRuneBackup();
           saveDbSlots(defaultEmptyDbSlotsMeta());
           uiEmptyRuneApplicationState({ keepTab: true });
           showSwrmToast(t.slotDeleteAllCleared || 'All saved databases were removed.', { type: 'info' });
+          renderDbSlots();
+          const demoOk = await installEmbeddedDemoDataset({ keepTab: true });
+          if (!demoOk) uiEmptyRuneApplicationState({ keepTab: false });
           renderDbSlots();
           return;
         }
@@ -4350,11 +4918,15 @@
           clearLocalStorageRuneBackup();
           const jsonText = await loadSlotData(next.id);
           if (!jsonText || !tryHydrateRunesFromJsonText(jsonText)) {
+            resetDemoAndRealPersistenceFlags();
             await clearAllIndexedDbRunePayloads();
             clearLocalStorageRuneBackup();
             saveDbSlots(defaultEmptyDbSlotsMeta());
             uiEmptyRuneApplicationState({ keepTab: true });
             showSwrmToast(t.slotDeleteNextLoadFailed || 'Could not load the next database.', { type: 'error', duration: 7000 });
+            renderDbSlots();
+            const demoOk = await installEmbeddedDemoDataset({ keepTab: true });
+            if (!demoOk) uiEmptyRuneApplicationState({ keepTab: false });
             renderDbSlots();
             return;
           }
@@ -4414,7 +4986,7 @@
       list.innerHTML = `<p class="settings-desc">${escapeChangelogText(t.changelogEmpty || '')}</p>`;
       return;
     }
-    const lang = currentLang === 'ru' ? 'ru' : 'en';
+    const lang = currentLang === 'ru' ? 'ru' : currentLang === 'fr' ? 'fr' : 'en';
     list.innerHTML = releases.map((rel) => {
       const items = changelogItemsForLang(rel, lang);
       const ul = items.length
@@ -4428,8 +5000,11 @@
     const list = document.getElementById('changelog-roadmap-list');
     if (!list) return;
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-    const lang = currentLang === 'ru' ? 'ru' : 'en';
-    const items = (window.SWRM && window.SWRM.STATIC_ROADMAP && window.SWRM.STATIC_ROADMAP[lang]) || [];
+    const lang = currentLang === 'ru' ? 'ru' : currentLang === 'fr' ? 'fr' : 'en';
+    const items =
+      (window.SWRM && window.SWRM.STATIC_ROADMAP && window.SWRM.STATIC_ROADMAP[lang]) ||
+      (window.SWRM && window.SWRM.STATIC_ROADMAP && window.SWRM.STATIC_ROADMAP.en) ||
+      [];
     if (!items.length) {
       list.innerHTML = `<p class="settings-desc">${escapeChangelogText(t.changelogRoadmapEmpty || '')}</p>`;
       return;

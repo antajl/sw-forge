@@ -9,6 +9,9 @@
    * SWEX / Com2US rarity: normally 1–5 (Common…Legend). Some payloads (often unit_list runes)
    * send 11–15 (same values + 10). Anything else is returned as-is for debugging.
    * All ranks 1–5 are preserved (including 4 = Hero); filtering by grade happens in parseSWEX, not here.
+   *
+   * Ancient runes: exporter uses the same +10 scheme — `extra` / `rank` can be 11–15, and `class`
+   * becomes stars + 10 (e.g. 6★ Legend → class 16). Same rule as SWOP: ancient ⇔ `class > 10`.
    */
   function normalizeGradeRank(rank) {
     const n = Number(rank);
@@ -94,7 +97,18 @@
     const slot  = raw.slot_no;        // 1–6
     const setId = raw.set_id;
     const level = raw.upgrade_curr || 0;
-    const stars = raw.class || 6;
+
+    const classRaw = Number(raw.class);
+    const rankRaw = Number(raw.rank);
+    const isAncient =
+      (Number.isFinite(classRaw) && classRaw > 10)
+      || (Number.isFinite(rankRaw) && rankRaw >= 11 && rankRaw <= 15);
+    // Star tier for metrics (e.g. +15 depth): non-ancient uses class as tier (6 for 6★); ancient uses class − 10.
+    let tierStars = 0;
+    if (Number.isFinite(classRaw) && classRaw > 0) {
+      tierStars = classRaw > 10 ? classRaw - 10 : classRaw;
+    }
+    const stars = tierStars > 0 ? tierStars : 6;
 
     // Main stat
     const mainType = raw.pri_eff ? raw.pri_eff[0] : 0;
@@ -104,7 +118,8 @@
     const innType = raw.prefix_eff ? raw.prefix_eff[0] : 0;
     const innVal  = raw.prefix_eff ? raw.prefix_eff[1] : 0;
 
-    // Substats: SWEX array [type, value, grind, procs]; object exports may use named fields.
+    // Substats: array tuples are usually [type, value, enchanted (0|1), grind_bonus] in SWEX/API exports.
+    // Some older payloads used [type, value, grind_bonus, extra]; detect via slot 2 not being 0|1.
     const substats = (raw.sec_eff || []).map((s) => {
       const isObj = s && typeof s === 'object' && !Array.isArray(s);
       const type = isObj ? Number(s.type ?? s.stat_type ?? s.statType ?? 0) : Number(s[0] || 0);
@@ -112,19 +127,43 @@
       let grind;
       let procs;
       let gem;
+      let enchanted = false;
       if (isObj) {
         grind = Number(s.gvalue ?? s.grind ?? s.grind_value ?? s.grindValue ?? 0);
         procs = Number(s.procs ?? s.proc ?? s.proc_count ?? s.procCount ?? 0);
-        gem = 0;
+        gem = Number(s.gem ?? s.gem_value ?? s.gemValue ?? s.enchant_gem ?? 0);
+        enchanted = !!(
+          s.enchanted === true || s.is_enchanted === true || s.isEnchanted === true
+          || Number(s.enchanted) === 1
+          || (!Number.isFinite(gem) ? false : gem !== 0)
+        );
       } else {
-        grind = Number(s[2] || 0);
-        procs = Number(s[3] || 0);
+        const slot2 = Number(s[2]);
+        const slot3 = Number(s[3]);
         gem = 0;
+        const slot2IsEnchantFlag = slot2 === 0 || slot2 === 1;
+        if (slot2IsEnchantFlag) {
+          enchanted = slot2 === 1;
+          grind = Number.isFinite(slot3) ? slot3 : 0;
+          procs = 0;
+        } else if (Number.isFinite(slot2) && slot2 > 1) {
+          // Legacy / alternate: grind amount at index 2 when it's clearly not an enchant flag.
+          enchanted =
+            s.length >= 5 && (s[4] === true || s[4] === 1 || s[4] === '1');
+          grind = slot2;
+          procs = Number.isFinite(slot3) ? slot3 : 0;
+        } else {
+          grind = 0;
+          procs = Number.isFinite(slot3) ? slot3 : 0;
+          if (s.length >= 5) {
+            const tail = s[4];
+            if (tail === true || tail === 1 || tail === '1') enchanted = true;
+          }
+        }
       }
-      const enchanted = !!(
-        isObj
-        && (s.enchanted === true || s.is_enchanted === true || s.isEnchanted === true)
-      );
+      if (!Number.isFinite(gem)) gem = 0;
+      if (!Number.isFinite(grind)) grind = 0;
+      if (!Number.isFinite(procs)) procs = 0;
       return {
         type,
         name:  statName(type),
@@ -149,6 +188,8 @@
       gradeStr: (grade >= 1 && grade <= 5)
         ? (GRADE_SHORT[grade] || GRADE_NAMES[grade] || `r${gradeRaw}`)
         : `r${gradeRaw}`,
+      /** Derived from SWEX `class`/`rank` (+10 encoding); not a separate JSON field in exports. */
+      isAncient,
       stars,
       level,
       setId,

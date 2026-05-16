@@ -12,7 +12,7 @@
     #header-donate-link .header-donate-heart { color: #d04356; }
   </style>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;600;800&family=Manrope:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body class="light-theme">
@@ -64,6 +64,15 @@
     </div>
   </header>
 
+  <aside id="demo-dataset-banner" class="demo-dataset-banner" hidden aria-hidden="true">
+    <div class="demo-dataset-banner__inner">
+      <span class="demo-dataset-banner__badge" aria-hidden="true"></span>
+      <span class="demo-dataset-banner__text"></span>
+      <button type="button" class="btn-ghost demo-dataset-banner__upload-btn" id="demo-banner-upload-btn"></button>
+      <button type="button" class="demo-dataset-banner__dismiss" id="demo-banner-dismiss" aria-label="Dismiss">&times;</button>
+    </div>
+  </aside>
+
   <!-- MAIN -->
   <main>
 
@@ -112,7 +121,9 @@
                   <header class="stage-metric-card-head">
                     <span class="stage-metric-card-title-row">
                       <span class="stage-metric-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 10-14h-7l0-6z"/></svg>
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                        </svg>
                       </span>
                       <span id="lbl-card-hr-name">Speed Depth</span>
                     </span>
@@ -126,7 +137,10 @@
                   <header class="stage-metric-card-head">
                     <span class="stage-metric-card-title-row">
                       <span class="stage-metric-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M12 4.5l6.5 3.75v7.5L12 19.5l-6.5-3.75v-7.5L12 4.5z"/>
+                          <path d="M12 9v6M9 12h6"/>
+                        </svg>
                       </span>
                       <span id="lbl-card-keep-name">Power Depth</span>
                     </span>
@@ -140,7 +154,10 @@
                   <header class="stage-metric-card-head">
                     <span class="stage-metric-card-title-row">
                       <span class="stage-metric-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7L12 17.8 5.7 21l2.3-7-6-4.6h7.6L12 2z"/></svg>
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M4 17V12l3-4 3 4 2-4 2 4 3-4 3 4v5"/>
+                          <path d="M3.5 17h17"/>
+                        </svg>
                       </span>
                       <span id="lbl-card-meta-name">Elite Quality</span>
                     </span>
@@ -161,7 +178,6 @@
         <div class="dashboard-scope-row">
           <div class="dashboard-scope-bar">
             <div class="dashboard-scope-bar-text">
-              <p class="dashboard-scope-line" id="dashboard-scope-line"></p>
               <p class="dashboard-account-run-inline">
                 <span id="dashboard-account-run-count"></span>
                 <button type="button" class="btn-dash-open-all-inline" id="btn-dash-open-all-runes"></button>
@@ -198,6 +214,7 @@
         </div>
 
         <div class="panel panel-wide panel-dash-distributions" id="panel-dash-distributions">
+          <div class="panel-title" id="lbl-dash-unified-block-title">Distributions</div>
           <div class="dash-unified-tabs" role="tablist" id="dash-unified-tabs" aria-label="">
             <button type="button" class="dash-unified-tab is-active" role="tab" id="dash-unified-tab-verdict"
               aria-controls="dash-pane-verdict" aria-selected="true" data-dash-uni="verdict">Verdict</button>
@@ -206,7 +223,7 @@
             <button type="button" class="dash-unified-tab" role="tab" id="dash-unified-tab-sets"
               aria-controls="dash-pane-sets" aria-selected="false" data-dash-uni="sets">Sets</button>
             <button type="button" class="dash-unified-tab" role="tab" id="dash-unified-tab-slots"
-              aria-controls="dash-pane-slots" aria-selected="false" data-dash-uni="slots">Slots</button>
+              aria-controls="dash-pane-slots" aria-selected="false" data-dash-uni="slots">Slot</button>
             <button type="button" class="dash-unified-tab" role="tab" id="dash-unified-tab-eff"
               aria-controls="dash-pane-eff" aria-selected="false" data-dash-uni="eff">Efficiency</button>
           </div>
@@ -223,6 +240,7 @@
             </div>
           </div>
           <div id="dash-pane-slots" class="dash-unified-pane" role="tabpanel" aria-labelledby="dash-unified-tab-slots" hidden>
+            <p class="dash-unified-pane-hint" id="lbl-dash-slot-pane-hint"></p>
             <div id="slot-main-cards-root" class="slot-main-cards-root"></div>
           </div>
           <div id="dash-pane-eff" class="dash-unified-pane" role="tabpanel" aria-labelledby="dash-unified-tab-eff" hidden>
@@ -277,16 +295,12 @@
                   <span class="table-toolbar__group-label" id="lbl-table-toolbar-display">Display</span>
                   <div class="table-toolbar__toggles">
                     <label class="toggle-target">
+                      <input type="checkbox" id="toggle-ancient-only" />
+                      <span id="lbl-toggle-ancient-only">Ancient only</span>
+                    </label>
+                    <label class="toggle-target">
                       <input type="checkbox" id="toggle-target-col" />
                       <span id="lbl-toggle-target">Show Target</span>
-                    </label>
-                    <label class="toggle-target" id="lbl-wrap-uncapped-eff">
-                      <input type="checkbox" id="toggle-table-uncapped-eff" />
-                      <span id="lbl-toggle-uncapped-eff"></span>
-                    </label>
-                    <label class="toggle-target" id="lbl-wrap-table-compact">
-                      <input type="checkbox" id="toggle-table-compact" />
-                      <span id="lbl-toggle-table-compact"></span>
                     </label>
                   </div>
                 </div>
@@ -351,7 +365,6 @@
             </table>
           </div>
         </div>
-        <aside class="table-summary" id="rune-summary"></aside>
       </div>
     </section>
 
@@ -608,8 +621,8 @@
               <p><strong>Account progression</strong> (the block at the top) scores how <strong>deep your rune inventory</strong> is. The <strong>combined score</strong> and the three metric lines always use your <strong>full active export</strong> (Rare+ only, rank ≥ 3). Under each metric you’ll see its <strong>point share</strong> toward the 100-point bar (for example +12 / 35 pts). By default that block is <strong>collapsed</strong>; open the chevron for the long explanation and cards. <strong>Apply suggestion</strong> aligns <strong>Your preset</strong> (Early / Mid / Late) with the suggested stage — you can still change the preset manually.</p>
               <p><strong>Global filters</strong> (<strong>Min level</strong>, <strong>Grade range</strong> From/To) apply to verdict cards, all charts, the efficiency chart (including the median), and the Rune Table. They do <strong>not</strong> apply to account progression above — that block ignores min level and preset for its math.</p>
               <p><strong>Verdict mix &amp; cards:</strong> The stacked bar and the number tiles match; percentages are shares of the <em>filtered</em> total. Click a segment, tile, or role row to open the Rune Table with the same verdict/role filters. If From and To are the <strong>same grade</strong> (e.g. Hero only), the table opens with that grade. If the range spans more than one grade, the table does not force a grade filter (the grid picks an exact grade, not a “floor”).</p>
-              <p><strong>Copy summary:</strong> Next to the global filter card — copies a text snapshot: preset, suggested stage, depth metrics, filters, verdict counts, role / set / slot chart numbers, efficiency median and histogram buckets.</p>
-              <p><strong>Charts:</strong> Five tabs under one panel — <em>Verdict distribution</em>, roles, sets, slot × main stats, and <em>efficiency</em> (5% buckets with a median line). Roles show counts and average efficiency; sets are scrollable inside the panel; slot view uses compact cards.</p>
+              <p><strong>Copy summary:</strong> Next to the global filter card — copies a text snapshot: preset, suggested stage, depth metrics, filters, verdict counts, role / set lines, per-slot totals with average efficiency (not the full slot×main matrix), efficiency median and histogram buckets.</p>
+              <p><strong>Charts:</strong> The <strong>Distributions</strong> panel has one header plus five tabs — Verdict, Roles, Sets, Slot, and Efficiency. The efficiency tab shows 5% buckets with a median line. Roles combine counts with average efficiency; sets scroll inside the panel; Slot shows each slot's share of runes (1–6) and main-stat distributions for 2 / 4 / 6.</p>
             </section>
           </div>
           <div class="guide-lang guide-lang--ru guide-list">
@@ -618,8 +631,8 @@
               <p><strong>Прогресс аккаунта</strong> (верхний блок) оценивает <strong>глубину коллекции рун</strong>. <strong>Сводный балл</strong> и три метрики всегда берут <strong>весь активный экспорт</strong> (только Rare+, ранг ≥ 3). Под каждой метрикой — <strong>вклад в 100 баллов</strong> (например +12 / 35). Блок по умолчанию <strong>свёрнут</strong>; раскройте стрелку за подробностями. <strong>Применить совет</strong> выставляет <strong>Ваш пресет</strong> (Early / Mid / Late) по предложенной стадии — вручную пресет можно сменить.</p>
               <p><strong>Глобальные фильтры</strong> (<strong>Мин ур</strong>, <strong>Диапазон грейдов</strong> От/До) действуют на карточки вердиктов, все графики, гистограмму eff (и медиану), и таблицу рун. На блок прогресса выше они <strong>не</strong> влияют — там своя математика без мин. уровня и без привязки к пресету.</p>
               <p><strong>Verdict mix и плитки:</strong> Столбиковая диаграмма и цифры совпадают; проценты — от <em>отфильтрованного</em> количества. Клик по сегменту, плитке или строке роли открывает таблицу с теми же фильтрами. Если <strong>От и До совпадают</strong> (например только Hero), в таблице сразу выбран этот грейд; если диапазон шире одного грейда, фильтр грейда в таблице не навязан.</p>
-              <p><strong>Копировать сводку:</strong> Рядом с карточкой фильтров — текст: пресет, совет по стадии, метрики глубины, фильтры, вердикты, роли / сеты / слоты, медиана eff и корзины гистограммы.</p>
-              <p><strong>Графики:</strong> Пять вкладок в одной панели — вердикты, роли, сеты, слот × мейны и распределение eff (корзины по 5% и медиана). Роли — число рун и средняя eff; сеты со скроллом внутри панели; слоты — компактные карточки.</p>
+              <p><strong>Копировать сводку:</strong> Рядом с карточкой фильтров — текст: пресет, совет по стадии, метрики глубины, фильтры, вердикты, роли / сеты, по каждому слоту число рун и средняя eff (без полной матрицы слот×мейн), медиана eff и корзины гистограммы.</p>
+              <p><strong>Графики:</strong> У панели «Распределения» общий заголовок и пять вкладок — Вердикты, Роли, Сеты, Слот и Эффективность. Во вкладке эффективности — корзины по 5% и медиана. Роли — число рун и средняя eff; сеты со скроллом внутри панели; Слот — компактные карточки.</p>
             </section>
           </div>
         </div>
@@ -649,7 +662,7 @@
                 <li><strong>Mid</strong> — from <strong>45</strong> up to (but not including) <strong>85</strong></li>
                 <li><strong>Late</strong> — <strong>85</strong> or more</li>
               </ul>
-              <p><strong>Efficiency columns:</strong> By default the Rune Table shows Eff% capped at <strong>100</strong> (or the JSON value). Turn on <strong>Eff over 100%</strong> to line up with the uncapped math used inside Elite Quality — numbers above 100 mean “stronger than the formula’s 100% reference build”, not a game bug.</p>
+              <p><strong>Rune Table Eff:</strong> The Eff% column prefers SWEX <code>efficiency</code> when present (otherwise this app’s calculation). Display stays at or below <strong>100%</strong>; account-depth <strong>Elite Quality</strong> above uses uncapped math internally so its average can exceed 100%.</p>
             </section>
           </div>
           <div class="guide-lang guide-lang--ru guide-list">
@@ -675,7 +688,7 @@
                 <li><strong>Mid</strong> — от <strong>45</strong> до <strong>85</strong> не включая</li>
                 <li><strong>Late</strong> — <strong>85</strong> и выше</li>
               </ul>
-              <p><strong>Колонки Eff:</strong> По умолчанию в таблице Eff% обрезан на <strong>100</strong> (или значение из JSON). Включите <strong>Eff выше 100%</strong>, чтобы совпадать с расчётом для Elite Quality — значения &gt; 100 значат «сильнее референсной 100%» в формуле, а не ошибку.</p>
+              <p><strong>Eff в таблице:</strong> Колонка в первую очередь берёт <code>efficiency</code> из SWEX при наличии (иначе расчёт приложения). Отображение не выше <strong>100%</strong>; для метрики <strong>Elite Quality</strong> в блоке прогресса используется отдельный расчёт без потолка, поэтому среднее там может быть &gt; 100%.</p>
             </section>
           </div>
         </div>
@@ -685,12 +698,12 @@
           <div class="guide-lang guide-lang--en guide-list">
             <section class="guide-section" aria-labelledby="guide-h-table-en">
               <h3 id="guide-h-table-en">Rune Table</h3>
-              <p><strong>Toolbar:</strong> Search, <strong>Actions</strong> (reset filters, export CSV), and <strong>Display</strong> toggles. If many runes match, the grid loads the <strong>first 500</strong> rows for responsiveness — use <strong>Load all … in table</strong> when you need the complete filtered list (very large exports can feel slower).</p>
+              <p><strong>Toolbar:</strong> Search, <strong>Actions</strong> (reset filters, export CSV), optional <strong>Target</strong> column toggle. If many runes match, the grid loads the <strong>first 500</strong> rows for responsiveness — use <strong>Load all … in table</strong> when you need the complete filtered list (very large exports can feel slower).</p>
               <p><strong>Filters &amp; sort:</strong> Header row filters for verdict, role, grade, set, slot, main stat; click column headers to sort. Default sort is Eff% descending. Innate line and full substats show in each row.</p>
-              <p><strong>Eff% vs Eff (full):</strong> With the default mode the column prefers SWEX <code>efficiency</code> when present; otherwise the app calculation, shown up to 100% in the grid. The optional uncapped column uses the same formula without the 100 cap — useful to compare god-tier runes and to read the same scale as Elite Quality.</p>
-              <p><strong>Dense rows:</strong> Tighter padding on wide screens (on by default). Turn off if you prefer more air.</p>
+              <p><strong>Eff column:</strong> Prefers SWEX <code>efficiency</code> when present; otherwise the app calculation, shown capped at <strong>100%</strong>.</p>
+              <p><strong>Ancient:</strong> Not a separate JSON field — SWEX uses <strong>+10</strong> on <code>class</code> (&gt;10, e.g. 6★ Ancient Legend often <code>class</code> 16) and <code>rank</code> / <code>extra</code> in 11–15. Ancient rows show a small <strong>A-with-dot</strong> icon before the grade chip; use <strong>Ancient only</strong> in the toolbar to filter. Shared URLs can include <code>ancient=1</code>; CSV still has an Ancient column.</p>
+              <p><strong>Subs (grind / gem):</strong> If the JSON carries grind bonus on a substat, you’ll see <code>value [grind]</code> (for example <code>11 [5]</code>) with that label in a <strong>warm gold–orange</strong> tone. Enchanted lines add the circular-arrows icon next to the stat — when there’s no grind bracket, only the icon is visually heavier (stroke); the stat text stays normal weight.</p>
               <p><strong>Target column:</strong> Appears when the verdict filter is Gem or Grind. <strong>Grind</strong> — numeric goals (rounded up). <strong>Gem</strong> — which flat substats should be replaced (for example “Replace HP” or “Replace HP or DEF”), without naming the enchant destination stat. Hover for raw <code>grindInfo</code> / <code>gemInfo</code> when present.</p>
-              <p><strong>Rune Summary:</strong> Side panel — totals and average efficiency by verdict and role for whatever passes the current filters.</p>
               <p><strong>Shareable URL:</strong> When you change filters / sort / search on this tab, the address bar can include <code>#runetable?…</code> query params — copy the link to reopen the same view later on this device/browser.</p>
               <p><strong>Debug:</strong> Each parsed rune keeps <code>_raw</code> from SWEX for inspection in devtools.</p>
             </section>
@@ -698,12 +711,12 @@
           <div class="guide-lang guide-lang--ru guide-list">
             <section class="guide-section" aria-labelledby="guide-h-table-ru">
               <h3 id="guide-h-table-ru">Таблица рун</h3>
-              <p><strong>Панель инструментов:</strong> Поиск, <strong>Действия</strong> (сброс фильтров, CSV), переключатели <strong>Отображение</strong>. При большом числе совпадений в сетке сначала <strong>первые 500</strong> строк — нажмите <strong>Загрузить все …</strong> для полного списка (очень большие выгрузки могут тормозить).</p>
+              <p><strong>Панель инструментов:</strong> Поиск, <strong>Действия</strong> (сброс фильтров, CSV), опция колонки <strong>Target</strong>. При большом числе совпадений в сетке сначала <strong>первые 500</strong> строк — нажмите <strong>Загрузить все …</strong> для полного списка (очень большие выгрузки могут тормозить).</p>
               <p><strong>Фильтры и сортировка:</strong> Строка под заголовками — вердикт, роль, грейд, сет, слот, мейн; клик по заголовку колонки меняет сортировку. По умолчанию — Eff% по убыванию. В строке видны innate и все сабы.</p>
-              <p><strong>Eff% и режим без потолка:</strong> В обычном режиме колонка берёт <code>efficiency</code> из SWEX при наличии, иначе свой расчёт с отображением до 100%. Опциональная колонка без потолка — та же формула, для сравнения топовых рун и совпадения с Elite Quality.</p>
-              <p><strong>Плотные строки:</strong> Уже отступы на широких экранах (по умолчанию вкл.). Отключите, если нужно просторнее.</p>
+              <p><strong>Eff:</strong> При наличии берётся <code>efficiency</code> из SWEX; иначе расчёт приложения, отображение не выше <strong>100%</strong>.</p>
+              <p><strong>Древние (Ancient):</strong> Отдельного поля нет — в SWEX кодирование <strong>+10</strong>: <code>class</code> &gt; 10 (у 6★ древней легендарки часто <code>class</code> 16) и <code>rank</code> / <code>extra</code> в 11–15. В колонке грейда — маленькая иконка <strong>«A с точкой»</strong> перед чипом; фильтр <strong>Только древние</strong> в панели таблицы. В ссылке можно <code>ancient=1</code>; в CSV по-прежнему колонка Ancient.</p>
+              <p><strong>Сабы (гринд / гем):</strong> При бонусе гринда — <code>значение [гринд]</code> (например <code>11 [5]</code>), подпись <strong>теплым золотисто‑оранжевым</strong> цветом. Зачарованный гемом саб: значок круговых стрелок рядом; если скобок гринда нет, акцент только на иконке (толще штрих), текст обычный. Подсказка при наведении на чип.</p>
               <p><strong>Колонка Target:</strong> Для фильтров Gem или Grind. <strong>Grind</strong> — числовые цели (округление вверх). <strong>Gem</strong> — какие плоские сабы заменить, без указания целевого % стата. Подсказка при наведении — сырые <code>grindInfo</code> / <code>gemInfo</code>.</p>
-              <p><strong>Сводка по рунам:</strong> Боковая панель — число рун и средняя eff по вердикту и роли для текущих фильтров.</p>
               <p><strong>Ссылка с состоянием:</strong> При смене фильтров / сортировки / поиска в адресе может появиться <code>#runetable?…</code> — можно скопировать и открыть тот же вид позже в этом браузере.</p>
               <p><strong>Отладка:</strong> У каждой руны есть <code>_raw</code> из SWEX для просмотра в консоли.</p>
             </section>
@@ -751,7 +764,7 @@
               <h3 id="guide-h-tips-en">Tips, FAQ &amp; misc</h3>
               <p><strong>Where language lives:</strong> Open the <strong>App Settings</strong> tab and use the <strong>Language</strong> dropdown (English / Russian).</p>
               <p><strong>Theme:</strong> Light / dark toggle sits beside the donate control in the header.</p>
-              <p><strong>What persists:</strong> Loaded runes per slot, customized rules, table preferences (dense rows, uncapped Eff, etc.), and theme/language usually live in <strong>localStorage</strong> for this origin. Clearing site data removes them.</p>
+              <p><strong>What persists:</strong> Loaded runes per slot, customized rules, Rune Table view state in the URL hash, and theme/language usually live in <strong>localStorage</strong> for this origin. Clearing site data removes them.</p>
               <p><strong>No cloud sync:</strong> There is no account system — backups are whatever you export from SWEX or copy yourself.</p>
               <p><strong>SWEX quirks:</strong> Rare exports expose <code>set_id</code> <strong>99</strong>; that is not a normal playable rune set name in-game, so the UI may label it Set99.</p>
               <p><strong>Keyboard:</strong> On the Rune Table tab, press <strong>/</strong> to focus search; arrow keys / Page Up / Page Down scroll the grid when focus is inside it.</p>
@@ -765,7 +778,7 @@
               <h3 id="guide-h-tips-ru">Советы, вопросы и прочее</h3>
               <p><strong>Язык:</strong> Вкладка <strong>Приложение</strong> — список <strong>Язык</strong> (English / Русский).</p>
               <p><strong>Тема:</strong> Светлая / тёмная — переключатель рядом с донатом в шапке.</p>
-              <p><strong>Что сохраняется:</strong> Руны по слотам, кастомные правила, настройки таблицы и обычно тема/язык лежат в <strong>localStorage</strong> этого сайта. Очистка данных сайта всё сбросит.</p>
+              <p><strong>Что сохраняется:</strong> Руны по слотам, правила, состояние вида вкладки «Таблица» в хэше URL, тема и язык — как правило в <strong>localStorage</strong>. Очистка данных сайта всё сбросит.</p>
               <p><strong>Без облака:</strong> Аккаунта нет — «бэкап» это ваш SWEX JSON и то, что сами сохраните.</p>
               <p><strong>Особенности SWEX:</strong> Редкий <code>set_id</code> <strong>99</strong> не соответствует обычному игровому сету — в интерфейсе может отображаться Set99.</p>
               <p><strong>Клавиатура:</strong> На вкладке таблицы <strong>/</strong> фокусирует поиск; стрелки и Page Up/Down листают сетку, когда фокус внутри неё.</p>
@@ -820,6 +833,7 @@
               <select id="app-language">
                 <option value="en">English</option>
                 <option value="ru">Русский</option>
+                <option value="fr">Français</option>
               </select>
             </label>
           </div>
@@ -857,6 +871,20 @@
       <p id="upload-prompt-hint" class="prompt-hint">All processing happens in your browser — your data never leaves your device.</p>
     </div>
   </section>
+
+  <div id="swrm-drop-veil" class="swrm-drop-veil" hidden aria-hidden="true">
+    <div class="swrm-drop-veil__ring" aria-hidden="true"></div>
+    <div class="swrm-drop-veil__card">
+      <div class="swrm-drop-veil__icon" aria-hidden="true">
+        <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 15V3m0 12l-4-4m4 4l4-4" />
+          <rect x="3" y="15" width="18" height="6" rx="1.5" />
+        </svg>
+      </div>
+      <p class="swrm-drop-veil__title"></p>
+      <p class="swrm-drop-veil__hint"></p>
+    </div>
+  </div>
 
   <div id="swrm-toast-host" class="swrm-toast-host" aria-live="polite" aria-relevant="additions text"></div>
 

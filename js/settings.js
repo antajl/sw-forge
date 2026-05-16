@@ -11,6 +11,28 @@ const STAT_NAMES = {
   11: 'RES',    12: 'ACC'
 };
 
+/** Localized stat abbreviations for dropdowns (engine + JSON still use {@link STAT_NAMES}). French uses in-game style: VIT, PV, ATQ… */
+const STAT_NAMES_UI_BY_LANG = {
+  en: { ...STAT_NAMES },
+  ru: { ...STAT_NAMES },
+  fr: {
+    1: 'PV',
+    2: 'PV%',
+    3: 'ATQ',
+    4: 'ATQ%',
+    5: 'DEF',
+    6: 'DEF%',
+    8: 'VIT',
+    9: 'Taux CR',
+    10: 'DG CR',
+    11: 'RÉS',
+    12: 'PRÉ',
+  },
+};
+function statNamesUiForLang(lang) {
+  return STAT_NAMES_UI_BY_LANG[lang] || STAT_NAMES_UI_BY_LANG.en;
+}
+
 const SET_NAMES = {
   1:  'Energy',   2:  'Guard',    3:  'Swift',
   4:  'Blade',    5:  'Rage',     6:  'Focus',
@@ -28,7 +50,7 @@ const GRADE_NAMES = { 1:'Common', 2:'Magic', 3:'Rare', 4:'Hero', 5:'Legend' };
 const GRADE_SHORT = { 3:'Rare', 4:'Hero', 5:'Legend' };
 
 /** Shown in footer, changelog, and Copy summary — bump when shipping a user-visible build. */
-const APP_VERSION = '1.2.15';
+const APP_VERSION = '1.2.16';
 
 /**
  * Debug only: when true, the verdict engine skips every check that compares `rune.eff`
@@ -91,6 +113,14 @@ const TRANSLATIONS = {
     uploadPromptLead: 'Export with Summoners War Exporter (SWEX), then select your .json file. Analysis runs entirely in this browser.',
     uploadPromptDragHint: 'Or drag and drop your .json file anywhere on this screen.',
     uploadDropMultipleHint: 'Multiple files dropped — loading the first one only.',
+    demoBannerBadge: 'DEMO',
+    demoBannerText: 'Demo data — upload your SWEX JSON to see your stats.',
+    demoBannerUpload: 'Upload JSON',
+    demoBannerDismissAria: 'Dismiss example data notice',
+    demoDatasetSlotLabel: 'Example SWEX export',
+    dragDropVeilTitle: 'Drop SWEX JSON here',
+    dragDropVeilHint: 'Release to load your file · replaces active Data 1',
+    dragDropVeilAria: 'File drop zone for SWEX JSON',
     uploadPromptSecondary: 'This becomes your active profile (Data 1). Add or switch accounts in App Settings → Database Slots.',
     uploadClearAll: 'Clear all saved data',
     lvAbbr: 'Lv.',
@@ -127,20 +157,16 @@ const TRANSLATIONS = {
     tableShownDetailCapped: 'Showing {shown} of {total} matching runes — use Load all above for the full list.',
     tableShownDetailAll: 'Showing all {total} matching runes.',
     toggleTargetCol: 'Show Target',
-    tableSummaryTitle: 'Rune summary',
-    tableSummaryRolesTitle: 'Roles',
-    tableSummaryTotal: 'Total',
-    tableAvgEffSuffix: 'avg',
-    tableToggleUncappedEff: 'Eff over 100%',
-    tableToggleUncappedEffTitle:
-      'Normally Eff% is capped at 100 (or taken from the JSON file). Turn this on to show the same formula as SWOP/SWOP-style sheets but without cutting at 100 — values above 100 mean “stronger than the formula’s reference build”, similar to how the Dashboard depth elite calc uses uncapped scores. When enabled, the table ignores exporter-only efficiency and uses our calculation.',
-    tableToggleCompact: 'Dense rows',
-    tableToggleCompactTitle: 'Tighter padding and chips on wide viewports (about 1200px+)',
+    tableAncientOnly: 'Ancient only',
     tableEffHeaderCapped: 'Eff%',
-    tableEffHeaderUncapped: 'Eff (full)',
     tableEffHeaderCappedTitle: 'Efficiency up to 100%, or the efficiency field from your export if the file has one.',
-    tableEffHeaderUncappedTitle:
-      'Same internal formula as the capped column, but not limited at 100%. Useful to compare very strong runes and to align with account-depth math.',
+    tableSubGrindTooltip: 'Grindstones contributed +{n} on this sub.',
+    tableSubGemTooltip: 'Enchanted substat (magic gem).',
+    tableAncientBadge: 'Ancient',
+    tableAncientBadgeTitle:
+      'Detected from SWEX: rune.class > 10 and/or rank 11–15 (same +10 encoding as grade on extra).',
+    csvHeaderAncient: 'Ancient',
+    csvAncientYes: 'yes',
     tableTooltipGrind: 'Grind',
     tableTooltipGem: 'Gem',
     tableToolbarSearchLabel: 'Search runes',
@@ -308,8 +334,6 @@ const TRANSLATIONS = {
     stageFormulaExpl: '',
 
     dashboardScopeTitle: 'Global filter',
-    dashboardScopeBarLine:
-      'Global filter · verdicts, charts & Rune Table (lvl/grade) · progression uses full export',
     dashboardMinGradeLabel: 'Min grade',
     dashboardMinGradeRare: 'Rare+',
     dashboardMinGradeHero: 'Hero+',
@@ -317,11 +341,12 @@ const TRANSLATIONS = {
     dashboardExportSummary: 'Copy summary',
     dashboardExportDone: 'Dashboard summary copied.',
     dashboardExportFail: 'Could not copy summary.',
-    dashboardDistVerdict: 'Verdict distribution',
-    dashboardDistRoles: 'Role distribution',
-    dashboardDistSets: 'Set distribution',
-    dashboardDistSlots: 'Slot × main distribution',
-    dashboardDistEff: 'Efficiency distribution',
+    dashboardUnifiedBlockTitle: 'Distributions',
+    dashboardDistVerdict: 'Verdict',
+    dashboardDistRoles: 'Roles',
+    dashboardDistSets: 'Sets',
+    dashboardDistSlots: 'Slot',
+    dashboardDistEff: 'Efficiency',
     dashboardVerdictMixTitle: 'Verdict distribution',
     dashboardVerdictAvgPrefix: 'avg',
     dashboardVerdictStackHint: 'Click a verdict row to open the Rune Table with that filter.',
@@ -329,6 +354,11 @@ const TRANSLATIONS = {
     dashboardSlotMatrixCorner: 'Main',
     dashboardSlotMatrixCountRow: 'Count',
     dashboardSlotCardEmpty: 'No runes',
+    dashboardSlotPaneHint:
+      'Top: share of filtered runes in each slot. Below: main-stat mix for slots 2, 4, and 6.',
+    dashboardSlotShareTitle: 'Runes by slot',
+    dashboardSlotShareAria: 'Rune count share per slot',
+    dashboardSlotMainsTitle: 'Main stats (2 / 4 / 6)',
     dashboardTopSpdTitle: 'Top SPD (subs) by slot',
     dashboardTopSpdSetLabel: 'Set',
     dashboardTopSpdHint:
@@ -345,7 +375,7 @@ const TRANSLATIONS = {
     dashboardGradeOptHero: 'Hero',
     dashboardGradeOptLegend: 'Legend',
     dashboardExportTotalCurrent: 'Total {acc} · Current {view}',
-    dashboardUnifiedDistAria: 'Distribution: verdicts, roles, sets, slot mains, or efficiency',
+    dashboardUnifiedDistAria: 'Charts: verdicts, roles, sets, slot mains, or efficiency buckets',
     dashboardAccountRunesInline: 'Total: {acc} · Current: {view}',
     dashboardOpenAllRunes: 'Open table',
     dashboardChartLblAvg: 'avg',
@@ -408,6 +438,15 @@ const TRANSLATIONS = {
     uploadPromptLead: 'Экспортируйте аккаунт через Summoners War Exporter (SWEX) и выберите .json файл. Всё считается только в браузере.',
     uploadPromptDragHint: 'Или перетащите .json файл в любое место этого экрана.',
     uploadDropMultipleHint: 'Несколько файлов — загружается только первый.',
+    demoBannerBadge: 'ДЕМО',
+    demoBannerText:
+      'Демо-данные — загрузите свой SWEX JSON, чтобы увидеть свою статистику.',
+    demoBannerUpload: 'Загрузить JSON',
+    demoBannerDismissAria: 'Закрыть подсказку о примере данных',
+    demoDatasetSlotLabel: 'Пример экспорта SWEX',
+    dragDropVeilTitle: 'Отпустите SWEX JSON здесь',
+    dragDropVeilHint: 'Отпускание — загрузка файла · заменит активный Data 1',
+    dragDropVeilAria: 'Зона сброса файла SWEX JSON',
     uploadPromptSecondary: 'Файл станет активным профилем (Data 1). Другие аккаунты — в Настройках приложения → Слоты баз данных.',
     uploadClearAll: 'Удалить все сохранения',
     lvAbbr: 'Ур.',
@@ -444,20 +483,16 @@ const TRANSLATIONS = {
     tableShownDetailCapped: 'Показано {shown} из {total} подходящих рун — полный список: «Загрузить все» выше.',
     tableShownDetailAll: 'Показаны все {total} подходящих рун.',
     toggleTargetCol: 'Колонка Target',
-    tableSummaryTitle: 'Сводка рун',
-    tableSummaryRolesTitle: 'Роли',
-    tableSummaryTotal: 'Всего',
-    tableAvgEffSuffix: 'средн.',
-    tableToggleUncappedEff: 'Eff выше 100%',
-    tableToggleUncappedEffTitle:
-      'Обычно Eff% ограничен 100 (или берётся из JSON экспорта). Включите, чтобы показать тот же расчёт, что и в таблицах SWOP, но без обрезки на 100 — значения выше 100 означают «сильнее эталонной сборки». В этом режиме игнорируется только поле efficiency из файла, берётся наш расчёт.',
-    tableToggleCompact: 'Плотнее строки',
-    tableToggleCompactTitle: 'Меньше отступов и чипов на широком экране (от ~1200px)',
+    tableAncientOnly: 'Только древние',
     tableEffHeaderCapped: 'Eff%',
-    tableEffHeaderUncapped: 'Eff (полн.)',
     tableEffHeaderCappedTitle: 'Eff до 100% или значение efficiency из экспорта, если оно есть.',
-    tableEffHeaderUncappedTitle:
-      'Та же формула, что и в обычной колонке, но без ограничения 100%. Удобно сравнивать очень сильные руны и сверяться с расчётом глубины аккаунта.',
+    tableSubGrindTooltip: 'Гринд даёт +{n} к этой строке.',
+    tableSubGemTooltip: 'Строка зачарована гемом (замена саба).',
+    tableAncientBadge: 'Древняя',
+    tableAncientBadgeTitle:
+      'Из SWEX: rune.class > 10 и/или rank 11–15 (то же +10 к кодированию, что у грейда в extra).',
+    csvHeaderAncient: 'Древ.',
+    csvAncientYes: 'да',
     tableTooltipGrind: 'Grind',
     tableTooltipGem: 'Gem',
     tableToolbarSearchLabel: 'Поиск по рунам',
@@ -626,8 +661,6 @@ const TRANSLATIONS = {
     stageFormulaExpl: '',
 
     dashboardScopeTitle: 'Общий фильтр',
-    dashboardScopeBarLine:
-      'Общий фильтр · вердикты, графики и таблица (ур./грейд) · прогресс по полному экспорту',
     dashboardMinGradeLabel: 'Мин. грейд',
     dashboardMinGradeRare: 'Rare+',
     dashboardMinGradeHero: 'Hero+',
@@ -635,11 +668,12 @@ const TRANSLATIONS = {
     dashboardExportSummary: 'Копировать сводку',
     dashboardExportDone: 'Сводка скопирована.',
     dashboardExportFail: 'Не удалось скопировать.',
-    dashboardDistVerdict: 'Распределение вердиктов',
-    dashboardDistRoles: 'Распределение ролей',
-    dashboardDistSets: 'Распределение сетов',
-    dashboardDistSlots: 'Слот × основной стат',
-    dashboardDistEff: 'Распределение эффективности',
+    dashboardUnifiedBlockTitle: 'Распределения',
+    dashboardDistVerdict: 'Вердикты',
+    dashboardDistRoles: 'Роли',
+    dashboardDistSets: 'Сеты',
+    dashboardDistSlots: 'Слот',
+    dashboardDistEff: 'Эффективность',
     dashboardVerdictMixTitle: 'Распределение вердиктов',
     dashboardVerdictAvgPrefix: 'ср.',
     dashboardVerdictStackHint: 'Клик по строке вердикта откроет таблицу с этим фильтром.',
@@ -647,6 +681,11 @@ const TRANSLATIONS = {
     dashboardSlotMatrixCorner: 'Осн.',
     dashboardSlotMatrixCountRow: 'Всего',
     dashboardSlotCardEmpty: 'Нет рун',
+    dashboardSlotPaneHint:
+      'Сверху — доля отфильтрованных рун по каждому слоту. Ниже — основные статы для слотов 2, 4 и 6.',
+    dashboardSlotShareTitle: 'Руны по слотам',
+    dashboardSlotShareAria: 'Доля рун по слотам',
+    dashboardSlotMainsTitle: 'Основные статы (2 / 4 / 6)',
     dashboardTopSpdTitle: 'Топ SPD (сабы) по слотам',
     dashboardTopSpdSetLabel: 'Сет',
     dashboardTopSpdHint:
@@ -663,7 +702,7 @@ const TRANSLATIONS = {
     dashboardGradeOptHero: 'Hero',
     dashboardGradeOptLegend: 'Legend',
     dashboardExportTotalCurrent: 'Всего {acc} · Текущий вид {view}',
-    dashboardUnifiedDistAria: 'Распределение: вердикты, роли, сеты, основные по слотам или эффективность',
+    dashboardUnifiedDistAria: 'Графики: вердикты, роли, сеты, основные по слотам или эффективность',
     dashboardAccountRunesInline: 'Всего: {acc} · Текущий вид: {view}',
     dashboardOpenAllRunes: 'Таблица',
     dashboardChartLblAvg: 'ср.',
@@ -675,8 +714,139 @@ const TRANSLATIONS = {
     stageMetricContribTpl: '+{pts} / {cap} балл.',
     effMedianCaption: 'Медиана eff (с фильтром): {pct}%',
     dashboardExportEffBuckets: 'Гистограмма (корзины по 5%):',
-  }
+  },
 };
+
+/** UI strings for français — merges over English; deep rules/engine copy stays EN until localized. Stats in filters use PV/VIT via {@link statNamesUiForLang}. */
+const TRANSLATIONS_FR_PARTIAL = {
+  donateShort: 'Soutenir',
+  donateTitle: 'Soutenir le projet — ouvre la page de paiement Lava.top',
+  donateAria: 'Soutenir le projet (page externe)',
+  footerDisclaimer:
+    'Summoners War™ est une marque de Com2uS Corp. Ce site n’est pas affilié ni approuvé par Com2uS Corp.',
+  dashboard: 'Accueil',
+  runeTable: 'Liste des runes',
+  runeRules: 'Règles des runes',
+  guide: 'Guide',
+  changelog: 'Notes',
+  changelogPageLead:
+    'Fournies avec cette version (pas stockées localement). Basculez entre les nouveautés et la feuille de route.',
+  changelogSubtabShipped: 'Versions',
+  changelogSubtabRoadmap: 'Feuille de route',
+  changelogShippedLead: 'Résumés haut niveau uniquement.',
+  changelogRoadmapLead: 'Pistes suivantes — pas forcément encore dans cette build.',
+  changelogRoadmapEmpty: 'Aucune entrée de feuille de route pour cette build.',
+  changelogSubtabsAria: 'Sections changelog',
+  changelogEmpty: 'Aucune entrée changelog pour cette build.',
+  guidePageLead:
+    'Texte simple au quotidien. Les sous-sections suivent les onglets ; la dernière ouverte reste en session.',
+  guideSubtabsAria: 'Sections du guide',
+  loadJson: 'Charger JSON',
+  minLvl: 'Niv. mini',
+  settings: 'Paramètres',
+
+  loadYourSWEX: 'Charger votre fichier SWEX (JSON)',
+  uploadDescription:
+    'Exportez votre <strong>Summoners War Exporter (SWEX)</strong> et chargez le JSON ici pour analyser vos runes.',
+  chooseJsonFile: 'Choisir un fichier JSON',
+  privacyNote: 'Tout est traité dans votre navigateur — vos données ne quittent pas l’appareil.',
+  uploadPromptLead: 'Export SWEX, puis sélection du .json. Analyse 100 % locale.',
+  uploadPromptDragHint: 'Ou glissez-déposez votre .json sur la page ou l’écran d’import.',
+  uploadDropMultipleHint: 'Plusieurs fichiers — seul le premier est chargé.',
+  demoBannerBadge: 'DÉMO',
+  demoBannerText:
+    'Données de démo — importez votre SWEX JSON pour voir vos stats.',
+  demoBannerUpload: 'Importer JSON',
+  demoBannerDismissAria: 'Masquer la bannière de démo (cette session)',
+  demoDatasetSlotLabel: 'Exemple d’export SWEX',
+  dragDropVeilTitle: 'Relâchez le SWEX (.json)',
+  dragDropVeilHint: 'Chargement en relâchant — remplace le profil Data 1 actif',
+  dragDropVeilAria: 'Zone de dépôt fichier SWEX',
+  uploadPromptSecondary: 'Devient le profil actif (Data 1). D’autres comptes : Paramètres app → Slots base.',
+  uploadClearAll: 'Effacer les données locales',
+
+  totalRunes: 'Total runes',
+  keep: 'Garder',
+  sell: 'Vendre',
+  grind: 'Moudre',
+  finish: 'Terminer',
+  reapp: 'Réapp',
+  upgrade: '+niveaux',
+  gem: 'Gemme',
+
+  roleDistribution: 'Rôles',
+  setDistribution: 'Sets',
+  slotDistribution: 'Emplacements',
+  efficiencyDistribution: 'Efficience',
+
+  searchPlaceholder: 'Recherche par set, stat, rôle…',
+  tableSubGrindTooltip: 'Meule : +{n} sur cette ligne.',
+  tableSubGemTooltip: 'Sous-stat enchantée (gemme magique).',
+  tableAncientBadge: 'Ancient',
+  tableAncientBadgeTitle:
+    'Détecté via SWEX : rune.class > 10 et/ou rank 11–15 (même encodage +10 que la qualité dans extra).',
+  csvHeaderAncient: 'Ancient',
+  csvAncientYes: 'oui',
+  tableAncientOnly: 'Uniquement Ancient',
+  allVerdicts: 'Tous les verdicts',
+  allRoles: 'Tous les rôles',
+  allGrades: 'Tous les grades',
+  runesWord: 'runes',
+  runesHeroPlus: 'runes',
+  monsShort: 'monstres',
+
+  appSettings: 'Paramètres de l’app',
+  language: 'Langue',
+  theme: 'Thème',
+  themeGroupAria: 'Thème affichage',
+  themeLightTitle: 'Thème clair',
+  themeDarkTitle: 'Thème sombre',
+  dbSlotsTitle: 'Slots de bases',
+  dbSlotsDesc: 'Jusqu’à 4 exports SWEX : résumé magicien, niveau, runes, monstres si présents.',
+
+  early: 'Début',
+  mid: 'Milieu',
+  late: 'Fin',
+
+  stageAdvisorTitle: 'Progression de compte',
+  stageSuggestedLabel: 'Segment suggéré',
+  stageYourPresetLabel: 'Votre pré-réglage',
+  stageScoreLabel: 'Score combiné',
+  stageApplySuggestion: 'Appliquer suggestion',
+  stageAdvisorNoEligible: 'Chargez un export SWEX pour la profondeur de compte.',
+  stageMismatchHint:
+    'Votre pré-réglage diffère du segment suggéré — vous pouvez garder votre choix.',
+  stageCombinedScoreFootnote:
+    'Utilise uniquement Rare+ du fichier ; ignore les filtres du tableau de bord et le pré-réglage ci-dessus.',
+  stageCardHrName: 'Puissance VIT',
+  stageCardHrDesc:
+    'Runes où la somme VIT en sous-stat (roll + mouture) ≥ 18. Jusqu’à 35 pts à 250 runes.',
+  dashboardTopSpdTitle: 'Top VIT (sous-stats) par emplacement',
+  dashboardTopSpdHint:
+    'Pourcentages = part des runes de l’emplacement (stat principale × colonne). Choisissez un set pour le top VIT par emplacement.',
+  dashboardTopSpdPickHint: 'Choisissez un set pour le top VIT par emplacement.',
+  dashboardSlotPaneHint:
+    'Haut : part filtrée par emplacement / Bas : stats principales des emplacements 2, 4 et 6.',
+  clipboardNotJson: 'Le presse-papiers ne contient pas du JSON valide.',
+
+  dbSlot: 'Slot base',
+  activeProfile: 'Actif',
+  current: 'Actuel',
+  name: 'Nom',
+  uploaded: 'Importé',
+  clipboard: 'Presse‑pap.',
+  upload: 'Importer',
+  download: 'Téléch.',
+  delete: 'Suppr.',
+  swap: 'Changer',
+
+  thresholds: 'Seuils',
+  roleFilters: 'Filtres de rôle',
+  reappRules: 'Réapp — règles',
+  saveRecalculate: 'Enregistrer & recalculer',
+};
+
+TRANSLATIONS.fr = { ...TRANSLATIONS.en, ...TRANSLATIONS_FR_PARTIAL };
 
 const SLOT_MAIN_FIXED = {
   1: { type: 3,  name: 'ATK' },   // Flat ATK
@@ -1449,56 +1619,43 @@ function applyDerivedThresholdFields(settings) {
  * Release notes bundled with the app (Changelog tab → Releases). Roadmap: STATIC_ROADMAP.
  * Each `items[locale]` is a string[] (legacy `{ shipped: [] }` is still read).
  * Entries are newest-first by date. Plain text — the UI escapes HTML (no markdown).
+ * Style: each locale uses the same count/order of bullets — thematic only (no shipped build/version strings); section title is always `date` above.
  */
 const STATIC_CHANGELOG = [
+  {
+    date: '2026-05-16',
+    items: {
+      en: [
+        'Light theme: tinted gradients on preset + Apply suggestion; Speed / Power / Elite cards pick up stage accent on borders and fills.',
+        'English returns to sentence casing like localized builds; App Settings uses the column width, equal-width action grid, shorter FR labels, language switch redraw, scrollbar gutter to stop width flicker.',
+      ],
+      ru: [
+        'Светлая тема: градиенты на пресете и «Применить совет», карточки метрик подсвечены цветом этапов.',
+        'Английский в обычной кассе, как у переводов; настройки БД — на всю колонку, ровная сетка кнопок, короткие FR подписи, перерисовка при смене языка, резерв под скроллбар.',
+      ],
+      fr: [
+        'Thème clair : gradients sur préréglage segment + suggestion ; cartes VIT / Puissance / élites en phase avec les teintes d’étape.',
+        'Anglais en casse phrase comme FR/RU ; Paramètres : largeur mieux utilisée, grille de boutons équilibrée, libellés FR courts, rafraîchissement au changement de langue, gouttière scrollbar anti‑à‑coups.',
+      ],
+    },
+  },
   {
     date: '2026-05-12',
     items: {
       en: [
-        'v1.2.15 — Bruiser preset synced to Google Sheets (accepted mains, minStats keys 135/2/4/6).',
-        'v1.2.14 — Reapp sets narrowed (Swift/Violent/Rage/Will); Fast CC and Bomber presets tightened; no-role verdict branch is Grind-to-God → Reapp → Sell only.',
-        'v1.2.13 — Threshold constants synced to Sheets (new god/duo mods, early/late discount+tougher model), grade-aware God for Legend, accepted mains moved to comma-list format, and no-role Grind-to-God path added.',
-        'v1.2.12 — Bruiser preset: min stats for 1/3/5 slots Early & Mid set to 2 (Late still 3); migration v12 reapplies Bruiser for saved profiles.',
-        'v1.2.11 — Classic DPS preset: slot 2 accepted mains add ATK%; slot 4 slotRequirements None; migration v11 reapplies Classic for saved profiles.',
-        'v1.2.10 — Optional DEBUG_BYPASS_EFFICIENCY_GATES in settings.js: when true, verdict path ignores rune.eff (Gem gate, Reapp max eff, Hero finish sell cuts, no-role eff sells); UI still shows real eff.',
-        'v1.2.9 — Changelog: entries trimmed and unified for reading; release dates unchanged.',
-        'v1.2.8 — First-load screen: drag and drop your SWEX .json onto the overlay (same as choosing a file); short hint under the title.',
-        'v1.2.7 — Guide split into sections (getting started, dashboard, depth, table, rules, tips); fuller EN/RU copy; remembers the last section for this session.',
-        'v1.2.6 — Rare exporter set_id 99 is labeled Set99 (not a normal playable set name in-game).',
-        'v1.2.5 — Set Distribution: sets sorted by rune count (high to low).',
-        'v1.2.4 — Dashboard charts and Copy summary aligned; every in-game set listed with scroll where needed.',
-        'v1.2.3 — Footer spans full width; compact “load all rows” hint with full explanation on hover.',
-        'v1.2.2 — Rune Table: toolbar at the top (search, load all matching rows, Actions vs Display); smoother behavior on large exports.',
-        'v1.2.1 — Gem Target lists flat subs to replace only (no fake grind destination stats).',
-        'v1.2.0 — Gem verdict follows in-game enchant rules (substats path); saved settings are migrated once if needed.',
-        'v1.1.9 — Clearer “Eff over 100%” labeling; dense table rows on by default.',
-        'v1.1.4–v1.1.8 — Rune Table: translations and typography; optional uncapped Eff%; chip styling; empty Role/Verdict cells stay blank; sidebar summary follows Eff mode; tooltips on Target where useful.',
-        'v1.1.0–v1.1.4 — Rune Table: filters, sticky header, zebra rows, debounced search and highlight, shareable #runetable links, CSV export, reset filters, “shown of total” line.',
-        'v1.1.0–v1.1.3 — Dashboard: verdict mix order, chart layout and colors, footer with disclaimer and build, donate link, Copy summary beside global filters.',
-        'Core — SWEX stat IDs match the exporter; roles and verdict thresholds use base rolled subs (gem/grind flags still drive Gem and Grind); Min Stats vs Require High Roll as in Guide; Gem vs Sell safety rails; Grind toward Late×grade HR with configurable gap; Gem / Grind / Reapp on separate Verdict cards (Save & Recalculate); bad-flat handling; Eff uses exporter efficiency when present.',
+        'Engine ↔ spreadsheet parity: thresholds, God/Duo, Legend, Reapp, Fast CC / Bomber / Bruiser / Classic with silent migrations; optional mode skips internal exporter-eff comparisons while the UI still surfaces true eff.',
+        'Dashboard and rune table: verdict flow and Copy summary match the charts; full set inventory and sorted distributions; heavy-SWEX UX (toolbar, sticky grid, `#runetable`, CSV, dense row typography on desktop); first-run JSON drag-drop; guide sections remember the session anchor.',
+        'SWEX foundations kept: stat IDs and per-rune exporter efficiency for audits; Gem / Grind / Reapp align with Require HR vs Min Stats and Late×HR grind pacing.',
       ],
       ru: [
-        'v1.2.15 — Пресет Bruiser синхронизирован с Google Sheets (accepted mains, minStats с ключами 135/2/4/6).',
-        'v1.2.14 — Сузили набор сетов для Reapp (Swift/Violent/Rage/Will); ужесточены пресеты Fast CC и Bomber; для рун без роли вердикт только Grind-to-God → Reapp → Sell.',
-        'v1.2.13 — Константы порогов синхронизированы с таблицей (новые god/duo моды, модель early/late как discount+tougher), God теперь учитывает Legend gradeMod, accepted mains переведены в формат строк по слотам, добавлен путь Grind-to-God для рун без роли.',
-        'v1.2.12 — Пресет Bruiser: min stats для слотов 1/3/5 — Early и Mid по 2 (Late по-прежнему 3); миграция v12 подтягивает Bruiser в сохранённых профилях.',
-        'v1.2.11 — Пресет Classic DPS: слот 2 — ATK% в accepted mains; слот 4 — slotRequirements None; миграция v11 подтягивает Classic в сохранённых профилях.',
-        'v1.2.10 — В settings.js флаг DEBUG_BYPASS_EFFICIENCY_GATES: при true движок вердиктов не сравнивает rune.eff (порог Gem, верх Reapp, Hero Sell на +9…+11, ветка Sell только по eff без роли); в интерфейсе eff как был.',
-        'v1.2.9 — Журнал изменений: тексты сокращены и приведены к одному виду; даты релизов те же.',
-        'v1.2.8 — Первый экран загрузки: перетащите SWEX .json на оверлей (то же, что выбор файла); короткая подсказка под текстом.',
-        'v1.2.7 — Гайд разбит на разделы (старт, панель, глубина, таблица, правила, советы); больше текста EN/RU; последний открытый раздел на сессию.',
-        'v1.2.6 — Редкий set_id 99 в экспорте показывается как Set99 (не обычное имя сета в игре).',
-        'v1.2.5 — Распределение по сетам: сортировка по числу рун по убыванию.',
-        'v1.2.4 — Дашборд и экспорт сводки согласованы; все игровые сеты в списке со скроллом.',
-        'v1.2.3 — Футер на всю ширину; короткая подсказка у «загрузить все строки», полный текст в подсказке.',
-        'v1.2.2 — Таблица рун: тулбар сверху (поиск, загрузка всех строк, блоки Действия / Отображение); стабильнее на больших выгрузках.',
-        'v1.2.1 — Gem Target: только какие плоские сабы заменить (без выдуманных целей гринда).',
-        'v1.2.0 — Вердикт Gem по правилам зачарования сабов; при необходимости разовая миграция сохранённых настроек.',
-        'v1.1.9 — Понятнее подписи «Eff выше 100%»; плотные строки таблицы по умолчанию.',
-        'v1.1.4–v1.1.8 — Таблица рун: переводы и типографика; Eff без потолка; стиль чипов; пустые Role/Verdict без оболочки; сводка согласована с режимом Eff; подсказки у Target.',
-        'v1.1.0–v1.1.4 — Таблица рун: фильтры, липкая шапка, зебра, поиск с подсветкой, ссылка #runetable, CSV, сброс фильтров, строка «показано из».',
-        'v1.1.0–v1.1.3 — Дашборд: порядок вердиктов, графики, футер и сборка, донат, Copy summary рядом с фильтрами.',
-        'База — ID статов SWEX как в экспорте; роли и пороги вердиктов по базовым сабам (флаги для Gem/Grind); Min Stats и Require High Roll как в Гайде; защита Gem/Sell; Grind к Late×грейд HR с множителем gap; блоки Gem / Grind / Reapp («Сохранить и пересчитать»); плоские сабы; Eff из поля efficiency в JSON при наличии.',
+        'Движок и таблица согласованы: God/Duo, Legend, Reapp, пресеты Fast CC / Bomber / Bruiser / Classic с миграциями профилей; есть режим, где расчёт не опирается на eff из JSON, а интерфейс всё равно показывает фактический eff.',
+        'Дашборд и таблица рун: вердикты и Copy summary совпадают с графиками; полный список сетов и сортированные распределения; режим большого SWEX (тулбар, липкая сетка, `#runetable`, CSV, плотная типографика строк на широком экране); первый запуск через drag‑and‑drop `.json`; гайд по разделам с якорем на сессию.',
+        'Совместимость с экспортом: ID статов и efficiency на руне; карточки Gem/Grind/Reapp следуют Min Stats / Require HR и цепочке grind к позднему порогу.',
+      ],
+      fr: [
+        'Alignement tableur : seuils God/Duo, Legend, Reapp et archétypes Fast CC / Bomber / Bruiser / Classic migrés sans friction ; mode diagnostic qui évite les comparaisons eff internes tout en reflétant l’efficience réelle.',
+        'Dashboard et liste runes : verdicts et copier‑synthèse fidèles aux graphes ; inventaire complet des sets et distributions triées ; prêt aux gros SWEX (toolbar, grille sticky, lien `#runetable`, CSV, lignes resserrées sur grand écran) ; onboarding par glisser‑déposer `.json` ; guide segmenté avec ancrage de session.',
+        'Socle SWEX préservé : identifiants stats et eff export rune par rune pour audit ; Gem / Meule / Réapp restent sous Require HR vs Min Stats avec cadence grind Late×HR.',
       ],
     },
   },
@@ -1506,29 +1663,16 @@ const STATIC_CHANGELOG = [
     date: '2026-05-11',
     items: {
       en: [
-        'Six archetype formulas aligned with the spreadsheet; existing saves were refreshed once to pick up the new defaults.',
+        'Formula layer is canonical: six archetypes plus Min Stats (Include subs at HR for stage×grade), Gem/Reapp tightened for Legend/meta, one-shot migrations for older saves.',
+        'Additional SWEX set IDs recognized; exporter efficiency stays on each rune to compare with the app.',
       ],
       ru: [
-        'Шесть архетипов приведены к актуальной таблице; у сохранённых профилей значения обновились один раз под новые умолчания.',
+        'Формулы — единый источник правды: шесть архетипов и Min Stats с учётом HR для стадии×грейда, Gem/Reapp жёстче для Legend и меты, миграция профилей одним проходом.',
+        'Расширен список set_id из SWEX; efficiency экспортёра остаётся на руне для сверки с приложением.',
       ],
-    },
-  },
-  {
-    date: '2026-05-10',
-    items: {
-      en: [
-        'Role logic uses formula definitions as the single source of truth for all six archetypes.',
-        'Role matching: Min Stats counts Include subs at or above the stage×grade High Roll threshold (fixes roles that were too loose before).',
-        'Gem / Reapp defaults tightened (Legend, meta sets); older saves updated once.',
-        'Additional SWEX set IDs mapped (e.g. Seal, Intangible).',
-        'When the JSON includes efficiency per rune, it is kept on each rune for comparison with the app calculation.',
-      ],
-      ru: [
-        'Роли считаются только по формулам — единый источник для шести архетипов.',
-        'Min Stats: учитываются Include-сабы не ниже порога HR для стадии×грейда (исправлен излишне широкий матч).',
-        'Ужесточены умолчания Gem / Reapp (Legend, мета-сеты); старые сохранения подтянуты один раз.',
-        'Добавлено сопоставление дополнительных set_id из SWEX (например Seal, Intangible).',
-        'Если в JSON есть efficiency у руны, оно сохраняется для сравнения с расчётом приложения.',
+      fr: [
+        'Les formules font foi : six archétypes + Min Stats (lignes « Include » au niveau HR stade×grade), Gem/Réapp resserrés Legend/meta, migration unique des sauvegardes.',
+        'Mapping set_id SWEX élargi ; efficience export conservée rune par rune pour contrôle.',
       ],
     },
   },
@@ -1536,16 +1680,16 @@ const STATIC_CHANGELOG = [
     date: '2026-05-09',
     items: {
       en: [
-        'Dashboard — Account progression: clearer wording; less clutter around the preset and filters.',
-        'Removed unused legacy Engine fields from saved settings.',
-        'Engine Constants: modifiers entered as plain percents, clearer headers and tooltips.',
-        'Changelog tab shows bundled release notes only (nothing stored per-browser that clears with storage).',
+        'Account progression on the dashboard: clearer wording and less clutter around the preset and filters.',
+        'Persisted settings: unused engine fields removed; Constants use clearer percent UX; Releases tab ships only bundled notes (no browser-only changelog storage).',
       ],
       ru: [
-        'Дашборд — прогресс аккаунта: проще формулировки; меньше лишнего у пресета и фильтров.',
-        'Удалены неиспользуемые устаревшие поля движка из сохранённых настроек.',
-        'Constants движка: модификаторы вводятся как проценты, понятнее заголовки и подсказки.',
-        'Вкладка Changelog показывает только записи из сборки (без локальных заметок в браузере).',
+        'Полоска прогресса аккаунта аккуратнее описана и не перебивает пресеты и фильтры.',
+        'Чистка настроек и Constants: убраны неиспользуемые поля движка, процентный ввод и подсказки читаются проще; во вкладке Releases только текст из сборки, без локального журнала в браузере.',
+      ],
+      fr: [
+        'Bandeau progression nettoyé : moins de bruit lumineux autour filtres/préréglages.',
+        'Grand ménage des réglages : clés fantômes supprimées, Constants retrouvent des pourcents lisibles ; onglet Releases limité aux notes figées incluses avec la livraison.',
       ],
     },
   },
@@ -1563,6 +1707,11 @@ const STATIC_ROADMAP = {
     'Опционально ужесточить Grind (например порог eff или число линий уровня HR).',
     'Дальнейшая подгонка под таблицу при расхождении после правок констант.',
   ],
+  fr: [
+    'Indicateur optionnel « potentiel God » (info seulement, pas un verdict Moudre).',
+    'Règles Moudre plus strictes (ex. efficience minimum ou nombre de lignes « HR »).',
+    'Alignement tableur si les comptes dérivent après changement des constantes.',
+  ],
 };
 
 window.SWRM = window.SWRM || {};
@@ -1571,6 +1720,8 @@ window.SWRM.DEBUG_BYPASS_EFFICIENCY_GATES = DEBUG_BYPASS_EFFICIENCY_GATES;
 window.SWRM.settings = getSettings();
 window.SWRM.applyDerivedThresholdFields = applyDerivedThresholdFields;
 window.SWRM.STAT_NAMES = STAT_NAMES;
+window.SWRM.STAT_NAMES_UI_BY_LANG = STAT_NAMES_UI_BY_LANG;
+window.SWRM.statNamesUiForLang = statNamesUiForLang;
 window.SWRM.SET_NAMES  = SET_NAMES;
 window.SWRM.GRADE_NAMES = GRADE_NAMES;
 window.SWRM.GRADE_SHORT = GRADE_SHORT;

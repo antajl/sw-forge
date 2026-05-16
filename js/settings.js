@@ -75,7 +75,7 @@ const TRANSLATIONS = {
     dashboard: 'Dashboard',
     runeTable: 'Rune Table',
     runeRules: 'Rune Rules',
-    guide: 'Guide',
+    guide: 'Archive',
     changelog: 'Changelog',
     changelogPageLead:
       'Bundled with the app (not stored in your browser). Switch between release highlights and the roadmap.',
@@ -156,7 +156,14 @@ const TRANSLATIONS = {
     tableShownDetailEmpty: 'No runes match the current filters.',
     tableShownDetailCapped: 'Showing {shown} of {total} matching runes — use Load all above for the full list.',
     tableShownDetailAll: 'Showing all {total} matching runes.',
-    toggleTargetCol: 'Show Target',
+    toggleTargetCol: 'Hide Target',
+    sellReasonNoRole: 'No matching role',
+    sellReasonDuoNear: 'Duo pair almost matched',
+    sellReasonExclude: 'Exclude stat blocks {role}',
+    sellReasonBadFlat: 'Too many bad flat subs',
+    sellReasonLowEff: 'Eff too low (no role)',
+    sellReasonLowEffFinish: 'Eff too low to finish (+9–+11)',
+    roleGodRoll: 'God Roll',
     tableAncientOnly: 'Ancient only',
     tableEffHeaderCapped: 'Eff%',
     tableEffHeaderCappedTitle: 'Efficiency up to 100%, or the efficiency field from your export if the file has one.',
@@ -195,7 +202,7 @@ const TRANSLATIONS = {
       'Stage and grade affect grind targets, rune power (0–3), and formula anchors «High Roll for Hero/Legend». They do not set the God Roll line.',
     godRollConstants: 'God Roll constants',
     godRollConstantsDesc:
-      'Per stat: God line = Base × (1 + God%). The rescue signal (role filter «High Roll») fires when any sub line (roll + grind) reaches that God line — not the HR grid below.',
+      'Per stat: God line = Base × (1 + God%). The rescue signal (role filter «God Roll») fires when any sub line (roll + grind) reaches that God line — not the HR grid below.',
     rulesPageTitle: 'Rune Rules',
     rulesPageLead:
       'Constants define the numeric thresholds; roles map runes to archetypes. Save at the bottom to refresh verdicts on the Dashboard and Rune Table.',
@@ -267,7 +274,7 @@ const TRANSLATIONS = {
     resetDefaults: 'Reset to Defaults',
     
     // App settings
-    appSettings: 'App Settings',
+    appSettings: 'Settings',
     language: 'Language',
     theme: 'Theme',
     themeGroupAria: 'Color theme',
@@ -310,7 +317,7 @@ const TRANSLATIONS = {
     stageMismatchExplainTpl:
       'Preset: {preset}. Suggestion: {suggested}. {hint}',
     stageCombinedScoreFootnote:
-      'Uses your full Rare+ export; ignores dashboard filters and your preset picker above.',
+      'Ignores dashboard filters below (Min level, grade range, preset).',
     stageScoreBandsTpl: 'Recommendation on this score: Mid from {mid} pts, Late from {late}.',
     stageScoreInlineBandsTpl: 'Mid from {mid}, Late from {late}',
     stageAdvisorNoEligible:
@@ -354,7 +361,7 @@ const TRANSLATIONS = {
     dashboardDistEff: 'Efficiency',
     dashboardVerdictMixTitle: 'Verdict distribution',
     dashboardVerdictAvgPrefix: 'avg',
-    dashboardVerdictStackHint: 'Click a verdict row to open the Rune Table with that filter.',
+    dashboardVerdictStackHint: 'Click a chart row (Verdict, Roles, Sets, or Slot) to open the Rune Table with that filter.',
     dashboardSlotMatrixTitle: 'Slot × main distribution',
     dashboardSlotMatrixCorner: 'Main',
     dashboardSlotMatrixCountRow: 'Count',
@@ -366,8 +373,7 @@ const TRANSLATIONS = {
     dashboardSlotMainsTitle: 'Main stats (2 / 4 / 6)',
     dashboardTopSpdTitle: 'Top SPD by slot',
     dashboardTopSpdSetAria: 'Rune set',
-    dashboardTopSpdHint:
-      'Percentages are share of runes in that slot (row main × slot column). Top SPD substats for the selected set per slot.',
+    dashboardTopSpdHint: '',
     dashboardTopSpdPickHint: 'Select a set to show top SPD per slot.',
     dashboardTopSpdSlotLabel: 'Slot {n}',
     dashboardTopSpdNoRunes: '—',
@@ -405,7 +411,7 @@ const TRANSLATIONS = {
     dashboard: 'Панель',
     runeTable: 'Руны',
     runeRules: 'Правила',
-    guide: 'Гайд',
+    guide: 'Архив',
     changelog: 'Лог',
     changelogPageLead:
       'Идёт вместе со сборкой (не в localStorage). Переключайте вкладки: релизы и дорожная карта.',
@@ -487,7 +493,14 @@ const TRANSLATIONS = {
     tableShownDetailEmpty: 'Нет рун по текущим фильтрам.',
     tableShownDetailCapped: 'Показано {shown} из {total} подходящих рун — полный список: «Загрузить все» выше.',
     tableShownDetailAll: 'Показаны все {total} подходящих рун.',
-    toggleTargetCol: 'Колонка Target',
+    toggleTargetCol: 'Скрыть Target',
+    sellReasonNoRole: 'Нет подходящей роли',
+    sellReasonDuoNear: 'Пара Duo почти сошлась',
+    sellReasonExclude: 'Exclude блокирует роль {role}',
+    sellReasonBadFlat: 'Слишком много плохих flat',
+    sellReasonLowEff: 'Низкий eff (нет роли)',
+    sellReasonLowEffFinish: 'Низкий eff для докачки (+9–+11)',
+    roleGodRoll: 'God Roll',
     tableAncientOnly: 'Только древние',
     tableEffHeaderCapped: 'Eff%',
     tableEffHeaderCappedTitle: 'Eff до 100% или значение efficiency из экспорта, если оно есть.',
@@ -526,7 +539,7 @@ const TRANSLATIONS = {
       'Стадия и грейд влияют на гринд, уровень силы руны (0–3) и якоря «High Roll for Hero/Legend». Линию God Roll они не задают.',
     godRollConstants: 'Константы God Roll',
     godRollConstantsDesc:
-      'По стату: линия God = Base × (1 + God%). Спасение (фильтр роли «High Roll») — когда любая строка саба (ролл + гринд) дотягивает до God, а не до сетки HR ниже.',
+      'По стату: линия God = Base × (1 + God%). Спасение (фильтр роли «God Roll») — когда любая строка саба (ролл + гринд) дотягивает до God, а не до сетки HR ниже.',
     rulesPageTitle: 'Правила рун',
     rulesPageLead:
       'Constants задают числовые пороги; роли относят руны к архетипам. Сохраните внизу — пересчитаются вердикты на дашборде и в таблице.',
@@ -599,7 +612,7 @@ const TRANSLATIONS = {
     resetDefaults: 'Сбросить по умолчанию',
     
     // App settings
-    appSettings: 'Приложение',
+    appSettings: 'Настройки',
     language: 'Язык',
     theme: 'Тема',
     themeGroupAria: 'Тема оформления',
@@ -642,7 +655,7 @@ const TRANSLATIONS = {
     stageMismatchExplainTpl:
       'Пресет: {preset}. Совет: {suggested}. {hint}',
     stageCombinedScoreFootnote:
-      'Считается по полному экспорту Rare+ и не учитывает общие фильтры дашборда и выбор пресета выше.',
+      'Не учитывает фильтры дашборда ниже (мин. уровень, грейды, пресет).',
     stageScoreBandsTpl: 'Порог по этому баллу: средняя стадия от {mid}+, поздняя от {late}+.',
     stageScoreInlineBandsTpl: 'Средняя от {mid}+, поздняя от {late}+',
     stageAdvisorNoEligible:
@@ -686,7 +699,7 @@ const TRANSLATIONS = {
     dashboardDistEff: 'Эффективность',
     dashboardVerdictMixTitle: 'Распределение вердиктов',
     dashboardVerdictAvgPrefix: 'ср.',
-    dashboardVerdictStackHint: 'Клик по строке вердикта откроет таблицу с этим фильтром.',
+    dashboardVerdictStackHint: 'Клик по строке графика (Verdict, Roles, Sets или Slot) откроет таблицу с этим фильтром.',
     dashboardSlotMatrixTitle: 'Слот × основной стат',
     dashboardSlotMatrixCorner: 'Осн.',
     dashboardSlotMatrixCountRow: 'Всего',
@@ -698,8 +711,7 @@ const TRANSLATIONS = {
     dashboardSlotMainsTitle: 'Основные статы (2 / 4 / 6)',
     dashboardTopSpdTitle: 'Топ SPD по слотам',
     dashboardTopSpdSetAria: 'Сет рун',
-    dashboardTopSpdHint:
-      'Проценты — доля среди рун в этом слоте (основной стат × колонка слота). Топ SPD в сабах для выбранного сета по слотам.',
+    dashboardTopSpdHint: '',
     dashboardTopSpdPickHint: 'Выберите сет, чтобы показать топ SPD по слотам.',
     dashboardTopSpdSlotLabel: 'Слот {n}',
     dashboardTopSpdNoRunes: '—',
@@ -737,7 +749,7 @@ const TRANSLATIONS_FR_PARTIAL = {
   dashboard: 'Accueil',
   runeTable: 'Liste des runes',
   runeRules: 'Règles des runes',
-  guide: 'Guide',
+  guide: 'Archives',
   changelog: 'Notes',
   changelogPageLead:
     'Fournies avec cette version (pas stockées localement). Basculez entre les nouveautés et la feuille de route.',
@@ -805,7 +817,7 @@ const TRANSLATIONS_FR_PARTIAL = {
   runesHeroPlus: 'runes',
   monsShort: 'monstres',
 
-  appSettings: 'Paramètres de l’app',
+  appSettings: 'Paramètres',
   language: 'Langue',
   theme: 'Thème',
   themeGroupAria: 'Thème affichage',
@@ -827,13 +839,12 @@ const TRANSLATIONS_FR_PARTIAL = {
   stageMismatchHint:
     'Votre pré-réglage diffère du segment suggéré — vous pouvez garder votre choix.',
   stageCombinedScoreFootnote:
-    'Utilise uniquement Rare+ du fichier ; ignore les filtres du tableau de bord et le pré-réglage ci-dessus.',
+    'Hors filtres du tableau de bord ci-dessous (niveau min, grades, pré-réglage).',
   stageCardHrName: 'Puissance VIT',
   stageCardHrDesc:
     'Runes où la somme VIT en sous-stat (roll + mouture) ≥ 18. Jusqu’à 35 pts à 250 runes.',
   dashboardTopSpdTitle: 'Top VIT (sous-stats) par emplacement',
-  dashboardTopSpdHint:
-    'Pourcentages = part des runes de l’emplacement (stat principale × colonne). Choisissez un set pour le top VIT par emplacement.',
+  dashboardTopSpdHint: '',
   dashboardTopSpdPickHint: 'Choisissez un set pour le top VIT par emplacement.',
   dashboardSlotPaneHint:
     'Haut : part filtrée par emplacement / Bas : stats principales des emplacements 2, 4 et 6.',
@@ -1298,7 +1309,7 @@ function readFormulaMinStatForRuneSlot(ms, runeSlot, stage) {
   return readFormulaMinStat(ms, uiSlotType, stage);
 }
 
-const DEFAULT_ROLE_PRIORITY = ['Fast CC', 'Classic DPS', 'Bomber', 'Tank', 'Bruiser', 'Slow DPS', 'Duo Roll', 'High Roll'];
+const DEFAULT_ROLE_PRIORITY = ['Fast CC', 'Classic DPS', 'Bomber', 'Tank', 'Bruiser', 'Slow DPS', 'Duo Roll', 'God Roll'];
 
 // ---- LEGACY ROLE DEFINITIONS (for backward compatibility) ----
 // Include/Exclude/None; mustHave per stage; acceptedMains per slot; minStats per slot

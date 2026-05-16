@@ -268,11 +268,12 @@
      * picked a build archetype first (e.g. Bomber + Duo Roll → still no Grind rescue, Keep after Gem).
      */
     const hasHighDuo =
-      bestRole === 'High Roll'
+      bestRole === 'God Roll'
+      || bestRole === 'High Roll'
       || bestRole === 'Duo Roll'
       || !!mergedResults['Duo Roll']
-      || !!mergedResults['High Roll']
-      || !!mergedResults['God Roll'];
+      || !!mergedResults['God Roll']
+      || !!mergedResults['High Roll'];
     
     // Priority order: Upgrade → Duo/God Finish (+9…+11) → Finish (+9…+11, role, eff for Hero) → Gem →
     // hasHighDuo Keep (≥+12) → Reapp → no-role … → Grind (hasRole) → Keep

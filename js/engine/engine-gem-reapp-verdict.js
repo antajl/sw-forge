@@ -184,11 +184,101 @@
     return 'Keep';
   }
 
+  function wouldMatchRoleIfNotExclude(rune, roleKey, stage, settings) {
+    const cfg = settings.roles?.[roleKey];
+    if (!cfg) return false;
+    const key = modeKey(stage, rune.gradeStr);
+    const sm = S.statMap(rune);
+    let excludeBlocks = false;
+    for (const [stat, inc] of Object.entries(cfg.substats || {})) {
+      if (inc === 'Exclude' && (sm[stat] || 0) > 0) excludeBlocks = true;
+    }
+    if (!excludeBlocks) return false;
+
+    if ([2, 4, 6].includes(rune.slot)) {
+      const accepted = cfg.acceptedMains?.[rune.slot];
+      if (accepted && !accepted.includes(rune.mainName)) return false;
+    }
+
+    const includedStats = Object.entries(cfg.substats || {})
+      .filter(([, v]) => v === 'Include')
+      .map(([k]) => k);
+    const foundCount = includedStats.filter((s) => (sm[s] || 0) > 0).length;
+    const minNeeded = cfg.minStats?.[stage] || 1;
+    if (foundCount < minNeeded) return false;
+
+    const must = cfg.mustHave?.[stage];
+    if (must && !(sm[must] > 0)) return false;
+
+    const needHR = cfg.requireHR?.[key];
+    if (needHR && !(S.runeHasHrAnchor && S.runeHasHrAnchor(rune, stage, settings))) return false;
+
+    return true;
+  }
+
+  function findExcludeBlockedRole(rune, stage, settings) {
+    for (const roleKey of Object.keys(settings.roles || {})) {
+      if (wouldMatchRoleIfNotExclude(rune, roleKey, stage, settings)) return roleKey;
+    }
+    return '';
+  }
+
+  function computeSellReason(rune, stage, settings, mergedResults) {
+    const empty = { code: '', detail: '' };
+    if (!rune || rune.verdict !== 'Sell') return empty;
+
+    const bestRole = rune.role || '';
+    const isHero = isHeroLikeGrade(rune.gradeStr);
+    const godMatched = !!(mergedResults?.['God Roll'] || mergedResults?.['High Roll']);
+    const duoMatched = !!mergedResults?.['Duo Roll'];
+    const hasHighDuo =
+      bestRole === 'God Roll' ||
+      bestRole === 'High Roll' ||
+      bestRole === 'Duo Roll' ||
+      duoMatched ||
+      godMatched;
+
+    if (!duoMatched && !godMatched && S.checkDuoNearMiss?.(rune, stage, settings)) {
+      return { code: 'duo_near', detail: '' };
+    }
+
+    if (!bestRole && !godMatched && !duoMatched) {
+      const blocked = findExcludeBlockedRole(rune, stage, settings);
+      if (blocked) return { code: 'exclude', detail: blocked };
+    }
+
+    if (!bestRole && !godMatched && !duoMatched && hasBadFlat(rune, stage)) {
+      const gem = evaluateGemRecommendation(rune, stage, settings);
+      if (!gem.can) return { code: 'bad_flat', detail: '' };
+    }
+
+    if (rune.level < 12 && bestRole && !hasHighDuo && isHero && !effGatesBypassed()) {
+      const effThreshold = stage === 'Late' ? 85 : stage === 'Mid' ? 85 : 65;
+      if (rune.eff < effThreshold) return { code: 'low_eff_finish', detail: '' };
+    }
+
+    if (!bestRole && !godMatched && !duoMatched) {
+      if (!effGatesBypassed()) {
+        let effCut = stage === 'Late' ? 65 : stage === 'Mid' ? 50 : 35;
+        if (isHero) {
+          effCut = stage === 'Late' ? 80 : stage === 'Mid' ? 65 : 50;
+        }
+        if (rune.eff < effCut) return { code: 'low_eff', detail: '' };
+      }
+      return { code: 'no_role', detail: '' };
+    }
+
+    return { code: 'no_role', detail: '' };
+  }
+
   function getVerdict(rune, stage, settings, roleResult, mergedResults) {
     const hasRole = roleResult !== '';
     const isHero = isHeroLikeGrade(rune.gradeStr);
     const isLegend = isLegendGrade(rune.gradeStr);
-    const hasHighDuo = roleResult === 'High Roll' || roleResult === 'Duo Roll';
+    const hasHighDuo =
+      roleResult === 'God Roll' ||
+      roleResult === 'High Roll' ||
+      roleResult === 'Duo Roll';
 
     if (rune.level < 9) {
       return 'Upgrade';
@@ -252,6 +342,7 @@
   S.isPrimaryBuildRole = isPrimaryBuildRole;
   S.finalizeGodSellOverride = finalizeGodSellOverride;
   S.getBaseVerdict = getVerdict;
+  S.computeSellReason = computeSellReason;
 
   /**
    * No-role rescue path: can one ungrinded, unenchanted line reach God with one grind?

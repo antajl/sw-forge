@@ -1,0 +1,183 @@
+/* =============================================
+   SW RUNE MASTER — Dark gaming aesthetic
+   ============================================= */
+
+:root {
+  color-scheme: dark;
+
+  /* Neutral warm dark (less blue-grey than before) */
+  --bg:       #161514;
+  --bg2:      #1b1b1a;
+  --bg3:      #222221;
+  --surface:  #2c2c2c;
+  --border:   #474543;
+  --border2:  #585652;
+  --text:     #ebe8e2;
+  --text-dim: #a59e94;
+  --text-hi:  #f7f5f1;
+
+  --accent:   #8ec5ff;
+  --accent2:  #c9b8ff;
+  --gold:     #e3c76a;
+  --green:    #69d6a9;
+  --red:      #ff8a93;
+  --orange:   #ffb86b;
+  --purple:   #cfa8ff;
+  --teal:     #62d8d2;
+
+  --keep:    #9cd4a8;
+  --sell:    #ff9aaa;
+  --grind:   #7cdbdb;
+  --finish:  #9acbff;
+  --reapp:   #fde86e;
+  --upgrade: #ffcc82;
+  --gem:     #e0b8ef;
+
+  --font-ui:   'IBM Plex Sans', system-ui, sans-serif;
+  --font-head: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'Share Tech Mono', ui-monospace, monospace;
+
+  --radius: 6px;
+  --radius-lg: 10px;
+  --glow-accent: 0 0 24px rgba(142, 197, 255, 0.22);
+
+  --app-content-max: 1200px;
+  --app-gutter: 20px;
+
+  /* Progression stages (Early / Mid / Late) — shared accents */
+  --stage-early: var(--green);
+  --stage-mid: var(--gold);
+  --stage-late: var(--red);
+
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%23a59e94' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --stage-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%23f7f5f1' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+
+  /*
+   * Chip design system — one shell (surface + border + semantic tint).
+   * Override only --chip-tint (and optionally --chip-surface-pct) per modifier.
+   * Light theme inherits the same tokens via remapped base hues below.
+   */
+  --chip-surface-pct: 74%;
+  --chip-border-base-pct: 42%;
+
+  --tint-neutral: var(--accent);
+  --tint-muted: var(--text-dim);
+  --tint-ancient: var(--teal);
+
+  --tint-spd: var(--teal);
+  --tint-hp: var(--green);
+  --tint-atk: var(--orange);
+  --tint-def: var(--accent);
+  --tint-cr: var(--gold);
+  --tint-cd: var(--purple);
+  --tint-acc: var(--accent2);
+  --tint-res: var(--purple);
+
+  --tint-legend: var(--gold);
+  --tint-hero: var(--purple);
+  --tint-rare: var(--accent);
+
+  --tint-keep: var(--keep);
+  --tint-sell: var(--sell);
+  --tint-grind: var(--grind);
+  --tint-finish: var(--finish);
+  --tint-reapp: var(--reapp);
+  --tint-upgrade: var(--upgrade);
+  --tint-gem: var(--gem);
+
+  --tint-highroll: var(--gold);
+  --tint-bruiser: var(--sell);
+  --tint-fastcc: var(--teal);
+  --tint-tank: var(--purple);
+  --tint-bomber: var(--orange);
+  --tint-classicdps: var(--accent);
+  --tint-slowdps: var(--accent2);
+  --tint-duoroll: var(--gold);
+
+  --tint-eff-hi: var(--green);
+  --tint-eff-mid: var(--gold);
+  --tint-eff-lo: var(--accent);
+}
+
+.light-theme {
+  color-scheme: light;
+
+  --bg:       #efece6;
+  --bg2:      #faf8f5;
+  --bg3:      #ffffff;
+  --surface:  #ffffff;
+  --border:   #dbd5cd;
+  --border2:  #ccc5bb;
+  --text:     #362f28;
+  --text-dim: #696257;
+  --text-hi:  #1b1612;
+
+  --accent:   #2d6aad;
+  --accent2:  #5a3f8c;
+  --gold:     #9a7218;
+  --green:    #1f7348;
+  --red:      #b83242;
+  --orange:   #b85c18;
+  --purple:   #634090;
+  --teal:     #157a74;
+
+  --keep:    #3d7a32;
+  --sell:    #b83a48;
+  --grind:   #1a7a72;
+  --finish:  #2a6db8;
+  --reapp:   #a88608;
+  --upgrade: #b87418;
+  --gem:     #7d3d94;
+
+  --glow-accent: 0 0 20px rgba(58, 123, 200, 0.16);
+
+  --stage-early: var(--green);
+  --stage-mid: var(--gold);
+  --stage-late: var(--red);
+
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%23696257' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --stage-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%23f7f5f1' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+
+  /* Stronger chip tint on white surface */
+  --chip-surface-pct: 58%;
+  --chip-border-base-pct: 22%;
+}
+
+.btn-ghost,
+.btn-primary {
+  font-size: 0.85em;
+  white-space: nowrap;
+}
+
+/* Light theme header fix */
+.light-theme .site-header {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+}
+
+.light-theme .header-shell {
+  background: transparent;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  font-size: 16px;
+  /* Avoid ~15px horizontal layout shift when vertical overflow / scrollbar toggles (locale strings change length). */
+  scrollbar-gutter: stable;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-image: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(255, 205, 150, 0.05) 0%, transparent 72%);
+}
+
+/* ---- SCROLLBAR ---- */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg2); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }

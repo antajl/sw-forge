@@ -7,7 +7,8 @@
 (function() {
   const S = window.SWRM;
 
-  const ROLE_PRIORITY_CORE = ['Fast CC', 'Classic DPS', 'Bomber', 'Tank', 'Bruiser', 'Slow DPS', 'Duo Roll', 'High Roll'];
+  const ROLE_PRIORITY_CORE = ['Fast CC', 'Classic DPS', 'Bomber', 'Tank', 'Bruiser', 'Slow DPS', 'Duo Roll', 'God Roll'];
+  const GOD_ROLL_LEGACY = 'High Roll';
 
   function roleMatchActive(name, mergedResults, settings) {
     if (!mergedResults[name]) return false;
@@ -27,7 +28,7 @@
       ...configuredNames.filter(name => !storedPriority.includes(name)),
     ];
     if (mergedPriority.length) {
-      return mergedPriority.concat(['Duo Roll', 'High Roll']);
+      return mergedPriority.concat(['Duo Roll', 'God Roll']);
     }
 
     const pivot = ROLE_PRIORITY_CORE.indexOf('Duo Roll');
@@ -62,7 +63,9 @@
   function processRune(rune, stage, settings) {
     const results = {};
 
-    results['High Roll'] = S.checkHighRoll(rune, stage, settings);
+    const godRoll = S.checkHighRoll(rune, stage, settings);
+    results['God Roll'] = godRoll;
+    results[GOD_ROLL_LEGACY] = godRoll;
     results['Duo Roll'] = S.checkDuoRoll(rune, stage, settings);
 
     const formulaKeys = new Set(Object.keys(settings.formulas || {}));
@@ -75,7 +78,8 @@
 
     const mergedResults = { ...results, ...advancedResults };
 
-    const bestRole = pickBestRole(mergedResults, settings);
+    let bestRole = pickBestRole(mergedResults, settings);
+    if (bestRole === GOD_ROLL_LEGACY) bestRole = 'God Roll';
 
     rune.role = bestRole;
     rune.verdict = window.SWRM.getAdvancedVerdict?.(rune, stage, settings, mergedResults) ||
@@ -84,7 +88,13 @@
     // Allowed outcomes in this state are Sell, Reapp (for eligible legends), Upgrade (<+9),
     // or explicit no-role rescue paths like Grind-to-God.
     // Skipped when DEBUG_BYPASS_EFFICIENCY_GATES so no-role runes can fall through to Grind/Keep for eff A/B tests.
-    if (S.DEBUG_BYPASS_EFFICIENCY_GATES !== true && !bestRole && !mergedResults['Duo Roll'] && !mergedResults['High Roll'] && !mergedResults['God Roll']) {
+    if (
+      S.DEBUG_BYPASS_EFFICIENCY_GATES !== true &&
+      !bestRole &&
+      !mergedResults['Duo Roll'] &&
+      !mergedResults['God Roll'] &&
+      !mergedResults[GOD_ROLL_LEGACY]
+    ) {
       if (!['Sell', 'Reapp', 'Upgrade', 'Grind'].includes(rune.verdict)) {
         rune.verdict = 'Sell';
       }
@@ -93,6 +103,9 @@
     rune.grindInfo = S.checkGrind(rune, stage, settings);
     rune.gemInfo = S.evaluateGemRecommendation(rune, stage, settings);
     rune.formulaResults = mergedResults;
+    const sellReason = S.computeSellReason?.(rune, stage, settings, mergedResults) || { code: '', detail: '' };
+    rune.sellReasonCode = sellReason.code || '';
+    rune.sellReasonDetail = sellReason.detail || '';
 
     return rune;
   }

@@ -21,6 +21,7 @@
     'grade', 'set', 'level', 'slot', 'main', 'eff', 'role', 'verdict', 's1', 's2', 's3', 's4',
   ]);
   const RUNE_TABLE_ANCIENT_ONLY_KEY = 'swrm_rune_table_ancient_only_v1';
+  const RUNE_TABLE_HIDE_TARGET_KEY = 'swrm_rune_table_hide_target_v1';
   let runeTableShowAll = false;
   let runeTableApplyingHash = false;
   /** Lowercase search string for highlighting table cells (full query, not debounced). */
@@ -141,7 +142,7 @@
     return 'engine';
   }
 
-  function setRulesSubtab(id) {
+  function setRulesSubtab(id, instant) {
     const v = normalizeRulesSubtabId(id);
     try { sessionStorage.setItem(RULES_SUBTAB_KEY, v); } catch (e) { /* ignore */ }
     document.querySelectorAll('#tab-settings .rules-subtab').forEach((btn) => {
@@ -150,9 +151,15 @@
       btn.setAttribute('aria-selected', on ? 'true' : 'false');
       btn.tabIndex = on ? 0 : -1;
     });
-    document.querySelectorAll('#tab-settings .rules-subpanel').forEach((panel) => {
-      panel.classList.toggle('is-active', panel.dataset.rulesSubtab === v);
-    });
+    const panels = Array.from(document.querySelectorAll('#tab-settings .rules-subpanel'));
+    const motionApi = window.SWRM_MOTION;
+    if (motionApi) {
+      motionApi.swapSubpanels(panels, (p) => p.dataset.rulesSubtab === v, !!instant);
+    } else {
+      panels.forEach((panel) => {
+        panel.classList.toggle('is-active', panel.dataset.rulesSubtab === v);
+      });
+    }
   }
 
   function initRulesSubtabs() {
@@ -164,13 +171,13 @@
     });
     let saved = 'engine';
     try { saved = sessionStorage.getItem(RULES_SUBTAB_KEY) || 'engine'; } catch (e) { /* ignore */ }
-    setRulesSubtab(saved);
+    setRulesSubtab(saved, true);
   }
 
   const CHANGELOG_SUBTAB_KEY = 'swrm_changelog_subtab_v1';
   let changelogSubtabsBound = false;
 
-  function setChangelogSubtab(subtabId) {
+  function setChangelogSubtab(subtabId, instant) {
     const nav = document.getElementById('changelog-subtabs');
     if (!nav) return;
     const v = subtabId === 'roadmap' ? 'roadmap' : 'shipped';
@@ -180,9 +187,15 @@
       btn.setAttribute('aria-selected', active ? 'true' : 'false');
       btn.tabIndex = active ? 0 : -1;
     });
-    document.querySelectorAll('#tab-changelog .rules-subpanel').forEach((panel) => {
-      panel.classList.toggle('is-active', panel.dataset.changelogSubtab === v);
-    });
+    const panels = Array.from(document.querySelectorAll('#tab-changelog .rules-subpanel'));
+    const motionApi = window.SWRM_MOTION;
+    if (motionApi) {
+      motionApi.swapSubpanels(panels, (p) => p.dataset.changelogSubtab === v, !!instant);
+    } else {
+      panels.forEach((panel) => {
+        panel.classList.toggle('is-active', panel.dataset.changelogSubtab === v);
+      });
+    }
     try { sessionStorage.setItem(CHANGELOG_SUBTAB_KEY, v); } catch (e) { /* ignore */ }
   }
 
@@ -195,7 +208,7 @@
     });
     let saved = 'shipped';
     try { saved = sessionStorage.getItem(CHANGELOG_SUBTAB_KEY) || 'shipped'; } catch (e) { /* ignore */ }
-    setChangelogSubtab(saved);
+    setChangelogSubtab(saved, true);
   }
 
   const GUIDE_SUBTAB_KEY = 'swrm_guide_subtab_v1';
@@ -215,7 +228,7 @@
     return 'start';
   }
 
-  function setGuideSubtab(subtabId) {
+  function setGuideSubtab(subtabId, instant) {
     const nav = document.getElementById('guide-subtabs');
     if (!nav) return;
     const v = normalizeGuideSubtabId(subtabId);
@@ -225,9 +238,17 @@
       btn.setAttribute('aria-selected', active ? 'true' : 'false');
       btn.tabIndex = active ? 0 : -1;
     });
-    document.querySelectorAll('#tab-guide .rules-subpanel[data-guide-subtab]').forEach((panel) => {
-      panel.classList.toggle('is-active', panel.dataset.guideSubtab === v);
-    });
+    const panels = Array.from(
+      document.querySelectorAll('#tab-guide .rules-subpanel[data-guide-subtab]'),
+    );
+    const motionApi = window.SWRM_MOTION;
+    if (motionApi) {
+      motionApi.swapSubpanels(panels, (p) => p.dataset.guideSubtab === v, !!instant);
+    } else {
+      panels.forEach((panel) => {
+        panel.classList.toggle('is-active', panel.dataset.guideSubtab === v);
+      });
+    }
     try {
       sessionStorage.setItem(GUIDE_SUBTAB_KEY, v);
     } catch (e) {
@@ -248,7 +269,7 @@
     } catch (e) {
       /* ignore */
     }
-    setGuideSubtab(saved);
+    setGuideSubtab(saved, true);
   }
 
   /** Main nav tab ids — kept in URL as `#settings` etc. so refresh restores the same view. */
@@ -338,17 +359,19 @@
     const siteLogoLink = document.getElementById('site-logo-link');
     if (siteLogoLink) siteLogoLink.setAttribute('aria-label', t.title);
     
+    const setMainNavTabLabel = (btn, text) => {
+      if (!btn || text == null) return;
+      const label = btn.querySelector('.tab__label');
+      if (label) label.textContent = text;
+      btn.setAttribute('title', text);
+    };
+
     // Update tabs - safely check if elements exist
-    const dashboardTab = document.querySelector('[data-tab="dashboard"]');
-    if (dashboardTab) dashboardTab.textContent = t.dashboard;
-    const runeTableTab = document.querySelector('[data-tab="runetable"]');
-    if (runeTableTab) runeTableTab.textContent = t.runeTable;
-    const settingsTab = document.querySelector('[data-tab="settings"]');
-    if (settingsTab) settingsTab.textContent = t.runeRules;
-    const guideTab = document.querySelector('[data-tab="guide"]');
-    if (guideTab) guideTab.textContent = t.guide;
-    const changelogTab = document.querySelector('[data-tab="changelog"]');
-    if (changelogTab) changelogTab.textContent = t.changelog;
+    setMainNavTabLabel(document.querySelector('[data-tab="dashboard"]'), t.dashboard);
+    setMainNavTabLabel(document.querySelector('[data-tab="runetable"]'), t.runeTable);
+    setMainNavTabLabel(document.querySelector('[data-tab="settings"]'), t.runeRules);
+    setMainNavTabLabel(document.querySelector('[data-tab="guide"]'), t.guide);
+    setMainNavTabLabel(document.querySelector('[data-tab="changelog"]'), t.changelog);
     const guidePageTitle = document.getElementById('lbl-guide-page-title');
     if (guidePageTitle) guidePageTitle.textContent = t.guide;
     const guidePageLead = document.getElementById('lbl-guide-page-lead');
@@ -393,8 +416,7 @@
     if (subRoadmap) subRoadmap.textContent = t.changelogSubtabRoadmap || 'Roadmap';
     const chNav = document.getElementById('changelog-subtabs');
     if (chNav) chNav.setAttribute('aria-label', t.changelogSubtabsAria || 'Changelog');
-    const appSettingsTab = document.querySelector('[data-tab="app-settings"]');
-    if (appSettingsTab) appSettingsTab.textContent = t.appSettings;
+    setMainNavTabLabel(document.querySelector('[data-tab="app-settings"]'), t.appSettings);
 
     const donateLbl = document.getElementById('lbl-header-donate');
     if (donateLbl) donateLbl.textContent = t.donateShort || 'Donate';
@@ -482,16 +504,16 @@
   function updateDashboardLabels() {
     const t = TRANSLATIONS[currentLang];
 
-    const tv = document.getElementById('dash-unified-tab-verdict');
-    const tr = document.getElementById('dash-unified-tab-roles');
-    const ts = document.getElementById('dash-unified-tab-sets');
-    const tsl = document.getElementById('dash-unified-tab-slots');
-    const te = document.getElementById('dash-unified-tab-eff');
-    if (tv) tv.textContent = t.dashboardDistVerdict || '';
-    if (tr) tr.textContent = t.dashboardDistRoles || '';
-    if (ts) ts.textContent = t.dashboardDistSets || '';
-    if (tsl) tsl.textContent = t.dashboardDistSlots || '';
-    if (te) te.textContent = t.dashboardDistEff || '';
+    const setDashUniTabLabel = (id, text) => {
+      const btn = document.getElementById(id);
+      const lbl = btn && btn.querySelector('.rules-subtab__label');
+      if (lbl) lbl.textContent = text || '';
+    };
+    setDashUniTabLabel('dash-unified-tab-verdict', t.dashboardDistVerdict);
+    setDashUniTabLabel('dash-unified-tab-roles', t.dashboardDistRoles);
+    setDashUniTabLabel('dash-unified-tab-sets', t.dashboardDistSets);
+    setDashUniTabLabel('dash-unified-tab-slots', t.dashboardDistSlots);
+    setDashUniTabLabel('dash-unified-tab-eff', t.dashboardDistEff);
     const uniTabs = document.getElementById('dash-unified-tabs');
     const unifiedBlockTitle = document.getElementById('lbl-dash-unified-block-title');
     if (unifiedBlockTitle) unifiedBlockTitle.textContent = t.dashboardUnifiedBlockTitle || '';
@@ -505,14 +527,11 @@
       topSpdSetSelect.setAttribute('aria-label', t.dashboardTopSpdSetAria || 'Rune set');
     }
 
-    const hintTopSpd = document.getElementById('lbl-top-spd-hint');
-    if (hintTopSpd) hintTopSpd.textContent = t.dashboardTopSpdHint || '';
+    const chartHint = document.getElementById('lbl-dash-unified-chart-hint');
+    if (chartHint) chartHint.textContent = t.dashboardVerdictStackHint || '';
 
-    const vhint = document.getElementById('lbl-dash-unified-verdict-hint');
-    if (vhint) vhint.textContent = t.dashboardVerdictStackHint || '';
-
-    const slotPaneHint = document.getElementById('lbl-dash-slot-pane-hint');
-    if (slotPaneHint) slotPaneHint.textContent = t.dashboardSlotPaneHint || '';
+    const slotShareTitle = document.getElementById('lbl-dash-slot-share-title');
+    if (slotShareTitle) slotShareTitle.textContent = t.dashboardSlotShareTitle || '';
 
     const btnAll = document.getElementById('btn-dash-open-all-runes');
     if (btnAll) btnAll.textContent = t.dashboardOpenAllRunes || 'Open table';
@@ -531,7 +550,7 @@
     if (glx) glx.textContent = t.dashboardGradeRangeTo || 'To';
 
     syncDashboardGradeRangeSelects();
-    applyStageAdvisorCollapsed(!readStageProgressionExpanded());
+    applyStageAdvisorCollapsed(!readStageProgressionExpanded(), { instant: true });
   }
 
   function updateTableLabels() {
@@ -869,23 +888,91 @@
     return 'verdict';
   }
 
-  function applyDashboardUnifiedTab(which) {
+  function syncDashboardUnifiedTabButtons(active) {
     const keys = ['verdict', 'roles', 'sets', 'slots', 'eff'];
-    const active = keys.includes(which) ? which : 'verdict';
     keys.forEach((k) => {
       const btn = document.getElementById(`dash-unified-tab-${k}`);
-      const pane = document.getElementById(`dash-pane-${k}`);
-      if (!btn || !pane) return;
+      if (!btn) return;
       const on = k === active;
       btn.classList.toggle('is-active', on);
       btn.setAttribute('aria-selected', String(on));
-      pane.toggleAttribute('hidden', !on);
-      pane.classList.toggle('is-active', on);
+      btn.tabIndex = on ? 0 : -1;
     });
   }
 
+  function setDashboardUnifiedPaneState(pane, on) {
+    if (!pane) return;
+    pane.classList.toggle('is-active', on);
+    pane.classList.toggle('is-shown', on);
+    pane.classList.remove('is-exiting');
+    pane.toggleAttribute('hidden', !on);
+    pane.setAttribute('aria-hidden', String(!on));
+  }
+
+  function applyDashboardUnifiedTab(which) {
+    const keys = ['verdict', 'roles', 'sets', 'slots', 'eff'];
+    const active = keys.includes(which) ? which : 'verdict';
+    const host = document.getElementById('dash-unified-panes');
+    const next = document.getElementById(`dash-pane-${active}`);
+    if (!next) return;
+
+    const current = host?.querySelector('.dash-unified-pane.is-active') || null;
+    if (current === next) {
+      syncDashboardUnifiedTabButtons(active);
+      keys.forEach((k) => setDashboardUnifiedPaneState(document.getElementById(`dash-pane-${k}`), k === active));
+      return;
+    }
+
+    syncDashboardUnifiedTabButtons(active);
+
+    const finalizePanes = () => {
+      keys.forEach((k) => {
+        const pane = document.getElementById(`dash-pane-${k}`);
+        if (!pane) return;
+        pane.classList.remove('is-exiting');
+        setDashboardUnifiedPaneState(pane, k === active);
+      });
+    };
+
+    const motionApi = window.SWRM_MOTION;
+    const playPaneBarIntro = (pane) => {
+      if (!pane || !motionApi || !motionApi.enabled()) return;
+      requestAnimationFrame(() => motionApi.animateDashboardPaneBars(pane));
+    };
+
+    if (!host || !motionApi || !motionApi.enabled()) {
+      motionApi && motionApi.cancelDashUnifiedTab();
+      finalizePanes();
+      playPaneBarIntro(next);
+      host?.classList.remove('dash-unified-panes--animate', 'dash-unified-panes--gsap');
+      return;
+    }
+
+    host.classList.add('dash-unified-panes--gsap');
+    host.classList.remove('dash-unified-panes--animate');
+    const started = motionApi.animateDashUnifiedTab({
+      host,
+      current,
+      next,
+      onComplete: finalizePanes,
+    });
+    if (!started) {
+      finalizePanes();
+      playPaneBarIntro(next);
+    }
+  }
+
   function initDashboardUnifiedTabs() {
-    applyDashboardUnifiedTab(readDashboardUnifiedTab());
+    const host = document.getElementById('dash-unified-panes');
+    const initial = readDashboardUnifiedTab();
+    const keys = ['verdict', 'roles', 'sets', 'slots', 'eff'];
+    keys.forEach((k) => {
+      setDashboardUnifiedPaneState(document.getElementById(`dash-pane-${k}`), k === initial);
+    });
+    syncDashboardUnifiedTabButtons(initial);
+    if (host && window.SWRM_MOTION && window.SWRM_MOTION.enabled()) {
+      host.classList.add('dash-unified-panes--gsap');
+    }
     document.querySelectorAll('.dash-unified-tab[data-dash-uni]').forEach((btn) => {
       btn.addEventListener('click', () => {
         const raw = btn.getAttribute('data-dash-uni') || 'verdict';
@@ -959,6 +1046,18 @@
         slot: '',
         clearSearch: true,
       });
+      return;
+    }
+    const slotCell = e.target.closest('.slot-share-cell--clickable[data-dash-slot]');
+    if (slotCell) {
+      navigateToRuneTableWithFilters({
+        verdict: '',
+        role: '',
+        gradeStr: gradeStrForDashboardNav(),
+        set: '',
+        slot: slotCell.getAttribute('data-dash-slot') || '',
+        clearSearch: true,
+      });
     }
   }
 
@@ -971,9 +1070,10 @@
     const setRow = t.closest('.chart-row--clickable[data-dash-set]');
     const vrow = t.closest('.chart-row--clickable[data-dash-verdict]');
     const row = t.closest('.chart-row--clickable[data-dash-role]');
-    if (setRow || vrow || row) {
+    const slotCell = t.closest('.slot-share-cell--clickable[data-dash-slot]');
+    if (setRow || vrow || row || slotCell) {
       e.preventDefault();
-      (setRow || vrow || row).click();
+      (setRow || vrow || row || slotCell).click();
     }
   });
 
@@ -1574,6 +1674,8 @@
         clearTimeout(hideTimer);
         hideTimer = null;
       }
+      const motionApi = window.SWRM_MOTION;
+      if (motionApi && motionApi.toastOut(el, () => el.remove())) return;
       el.classList.remove('swrm-toast--in');
       el.classList.add('swrm-toast--out');
       setTimeout(() => el.remove(), 320);
@@ -1581,9 +1683,156 @@
 
     closeBtn.addEventListener('click', dismiss);
     requestAnimationFrame(() => {
-      requestAnimationFrame(() => el.classList.add('swrm-toast--in'));
+      requestAnimationFrame(() => {
+        const motionApi = window.SWRM_MOTION;
+        if (!motionApi || !motionApi.toastIn(el)) el.classList.add('swrm-toast--in');
+      });
     });
     if (duration > 0) hideTimer = setTimeout(dismiss, duration);
+  }
+
+  const SWRM_FLOAT_TIP_SHOW_MS = 220;
+  const SWRM_FLOAT_TIP_HIDE_MS = 80;
+  let swrmFloatTipEl = null;
+  let swrmFloatTipShowTimer = null;
+  let swrmFloatTipHideTimer = null;
+  let swrmFloatTipAnchor = null;
+
+  function ensureSwrmFloatTipEl() {
+    if (swrmFloatTipEl) return swrmFloatTipEl;
+    const el = document.createElement('d' + 'iv');
+    el.id = 'swrm-floating-tip';
+    el.className = 'swrm-floating-tip';
+    el.setAttribute('role', 'tooltip');
+    el.hidden = true;
+    document.body.appendChild(el);
+    swrmFloatTipEl = el;
+    return el;
+  }
+
+  function positionSwrmFloatTip(anchor) {
+    const tip = ensureSwrmFloatTipEl();
+    if (!anchor || tip.hidden) return;
+    const r = anchor.getBoundingClientRect();
+    const pad = 8;
+    const gap = 10;
+    tip.style.left = '0px';
+    tip.style.top = '0px';
+    tip.hidden = false;
+    const tw = tip.offsetWidth;
+    const th = tip.offsetHeight;
+    let left = r.left + r.width / 2 - tw / 2;
+    left = Math.max(pad, Math.min(left, window.innerWidth - tw - pad));
+    let top = r.top - th - gap;
+    if (top < pad) top = r.bottom + gap;
+    tip.style.left = `${Math.round(left)}px`;
+    tip.style.top = `${Math.round(top)}px`;
+  }
+
+  function hideSwrmFloatTip(immediate) {
+    if (swrmFloatTipShowTimer) {
+      clearTimeout(swrmFloatTipShowTimer);
+      swrmFloatTipShowTimer = null;
+    }
+    if (swrmFloatTipHideTimer) {
+      clearTimeout(swrmFloatTipHideTimer);
+      swrmFloatTipHideTimer = null;
+    }
+    const tip = swrmFloatTipEl;
+    if (!tip) return;
+    const finish = () => {
+      tip.hidden = true;
+      tip.classList.remove('swrm-floating-tip--in');
+      tip.textContent = '';
+      swrmFloatTipAnchor = null;
+    };
+    if (immediate) {
+      finish();
+      return;
+    }
+    const motionApi = window.SWRM_MOTION;
+    if (motionApi && motionApi.floatTipOut(tip, finish)) return;
+    tip.classList.remove('swrm-floating-tip--in');
+    swrmFloatTipHideTimer = window.setTimeout(finish, SWRM_FLOAT_TIP_HIDE_MS);
+  }
+
+  function showSwrmFloatTip(anchor, text) {
+    const tipText = String(text || '').replace(/\s+/g, ' ').trim();
+    if (!anchor || !tipText) return;
+    if (swrmFloatTipShowTimer) {
+      clearTimeout(swrmFloatTipShowTimer);
+      swrmFloatTipShowTimer = null;
+    }
+    if (swrmFloatTipHideTimer) {
+      clearTimeout(swrmFloatTipHideTimer);
+      swrmFloatTipHideTimer = null;
+    }
+    swrmFloatTipAnchor = anchor;
+    swrmFloatTipShowTimer = window.setTimeout(() => {
+      swrmFloatTipShowTimer = null;
+      if (swrmFloatTipAnchor !== anchor) return;
+      const tip = ensureSwrmFloatTipEl();
+      tip.textContent = tipText;
+      tip.hidden = false;
+      requestAnimationFrame(() => {
+        positionSwrmFloatTip(anchor);
+        const motionApi = window.SWRM_MOTION;
+        if (!motionApi || !motionApi.floatTipIn(tip)) tip.classList.add('swrm-floating-tip--in');
+      });
+    }, SWRM_FLOAT_TIP_SHOW_MS);
+  }
+
+  function setSwrmFloatTipTarget(el, text) {
+    if (!el) return;
+    const tipText = String(text || '').replace(/\s+/g, ' ').trim();
+    if (tipText) {
+      el.setAttribute('data-swrm-tip', tipText);
+      el.removeAttribute('title');
+    } else {
+      el.removeAttribute('data-swrm-tip');
+      el.removeAttribute('title');
+    }
+  }
+
+  function initSwrmFloatingTips() {
+    if (initSwrmFloatingTips._done) return;
+    initSwrmFloatingTips._done = true;
+
+    const onEnter = (e) => {
+      const t = e.target && e.target.closest ? e.target.closest('[data-swrm-tip]') : null;
+      if (!t) return;
+      showSwrmFloatTip(t, t.getAttribute('data-swrm-tip'));
+    };
+    const onLeave = (e) => {
+      const t = e.target && e.target.closest ? e.target.closest('[data-swrm-tip]') : null;
+      if (!t) return;
+      const rel = e.relatedTarget;
+      if (rel && t.contains(rel)) return;
+      if (swrmFloatTipAnchor === t) hideSwrmFloatTip(false);
+    };
+    const onFocusIn = (e) => {
+      const t = e.target && e.target.closest ? e.target.closest('[data-swrm-tip]') : null;
+      if (t) showSwrmFloatTip(t, t.getAttribute('data-swrm-tip'));
+    };
+    const onFocusOut = (e) => {
+      const t = e.target && e.target.closest ? e.target.closest('[data-swrm-tip]') : null;
+      if (t && swrmFloatTipAnchor === t) hideSwrmFloatTip(false);
+    };
+
+    document.addEventListener('mouseover', onEnter);
+    document.addEventListener('mouseout', onLeave);
+    document.addEventListener('focusin', onFocusIn);
+    document.addEventListener('focusout', onFocusOut);
+    window.addEventListener(
+      'scroll',
+      () => {
+        if (swrmFloatTipAnchor) positionSwrmFloatTip(swrmFloatTipAnchor);
+      },
+      true,
+    );
+    window.addEventListener('resize', () => {
+      if (swrmFloatTipAnchor) positionSwrmFloatTip(swrmFloatTipAnchor);
+    });
   }
 
   function getVisibleRunes() {
@@ -1704,6 +1953,11 @@
   }
 
   function playChartRowFlipMoves(movedRows) {
+    const motionApi = window.SWRM_MOTION;
+    if (motionApi) {
+      motionApi.playChartRowFlip(movedRows);
+      return;
+    }
     movedRows.forEach((row) => {
       row.style.transition = `transform ${DASH_CHART_ROW_FLIP_MS}ms cubic-bezier(0.25, 0.1, 0.25, 1)`;
       row.style.transform = 'translate(0, 0)';
@@ -1829,10 +2083,6 @@
 
     const shareSection = document.createElement('section');
     shareSection.className = 'slot-share-section';
-    const shareTitle = document.createElement('h3');
-    shareTitle.className = 'slot-dist-section-title';
-    shareTitle.textContent = (tloc && tloc.dashboardSlotShareTitle) || 'Runes by slot';
-    shareSection.appendChild(shareTitle);
 
     const shareGrid = document.createElement('div');
     shareGrid.className = 'slot-share-grid';
@@ -1849,8 +2099,11 @@
         grandTotal && barScaleDen > 0
           ? Math.min(100, Math.round((n / barScaleDen) * 1000) / 10)
           : 0;
-      const cell = document.createElement('div');
-      cell.className = 'slot-share-cell';
+      const cell = document.createElement('d' + 'iv');
+      cell.className = 'slot-share-cell slot-share-cell--clickable';
+      cell.setAttribute('role', 'button');
+      cell.setAttribute('tabindex', '0');
+      cell.setAttribute('data-dash-slot', String(s));
       cell.setAttribute('data-slot', String(s));
       cell.setAttribute(
         'aria-label',
@@ -1989,11 +2242,11 @@
         for (let pi = 0; pi < pick.length; pi++) {
           const r = pick[pi];
           const spd = sumRuneSpdSubs(r);
-          const eff = Number.isFinite(r.eff) ? r.eff.toFixed(1) : '\u2014';
+          const grade = String(r.gradeStr || '').trim();
           const btn = document.createElement('button');
           btn.type = 'button';
           btn.className = 'top-spd-chip';
-          btn.textContent = `+${spd} SPD · ${eff}% · ${r.gradeStr || ''}`;
+          btn.textContent = grade ? `+${spd} SPD · ${grade}` : `+${spd} SPD`;
           const setNm = selectedSet;
           const sl = slot;
           btn.addEventListener('click', () => {
@@ -2104,13 +2357,32 @@
     return '';
   }
 
-  /** @param {boolean} collapsed — true = one-line bar only */
-  function applyStageAdvisorCollapsed(collapsed) {
+  function getStageExpandedWrap() {
+    return (
+      document.getElementById('stage-advisor-expanded-wrap') ||
+      document.querySelector('.dashboard-stage-wrap .stage-advisor-expanded-wrap')
+    );
+  }
+
+  function finishStageAdvisorCollapsed(collapsed) {
     const root = document.getElementById('stage-advisor');
     const btn = document.getElementById('btn-stage-compact');
-    const expandedWrap = document.getElementById('stage-advisor-expanded-wrap');
+    const expandedWrap = getStageExpandedWrap();
     if (!root || !btn) return;
-    root.classList.toggle('is-compact', collapsed);
+    if (window.SWRM_MOTION) window.SWRM_MOTION.killStage();
+    if (expandedWrap) {
+      expandedWrap.style.minHeight = '';
+      expandedWrap.style.transition = '';
+      expandedWrap.classList.remove(
+        'is-panel-content-locked',
+        'is-panel-shrinking',
+        'is-panel-opening-ready',
+        'is-motion-running',
+      );
+    }
+    root.classList.remove('is-panel-closing', 'is-panel-closing-shrink', 'is-panel-opening');
+    if (collapsed) root.classList.add('is-compact');
+    else root.classList.remove('is-compact');
     btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
     if (expandedWrap) {
       if (collapsed) expandedWrap.setAttribute('aria-hidden', 'true');
@@ -2118,6 +2390,56 @@
     }
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     btn.title = collapsed ? (t.stageCompactExpand || '') : (t.stageCompactCollapse || '');
+  }
+
+  /** @param {boolean} collapsed — true = one-line bar only */
+  function applyStageAdvisorCollapsed(collapsed, opts) {
+    const instant = opts && opts.instant === true;
+    const root = document.getElementById('stage-advisor');
+    const btn = document.getElementById('btn-stage-compact');
+    const expandedWrap = getStageExpandedWrap();
+    if (!root || !btn) return;
+
+    const wasCollapsed = root.classList.contains('is-compact');
+    const wrapAnimating = expandedWrap && expandedWrap.classList.contains('is-motion-running');
+    if (wasCollapsed === collapsed && !wrapAnimating) {
+      finishStageAdvisorCollapsed(collapsed);
+      return;
+    }
+
+    const motionApi = window.SWRM_MOTION;
+    const motionOff =
+      !motionApi || !motionApi.enabled() || motionApi.reduced();
+    if (instant || motionOff) {
+      finishStageAdvisorCollapsed(collapsed);
+      return;
+    }
+
+    const inner = expandedWrap && expandedWrap.querySelector('.stage-advisor-expanded');
+
+    if (collapsed) {
+      btn.setAttribute('aria-expanded', 'false');
+      const started = motionApi.animateStageAdvisor({
+        collapsed: true,
+        wrap: expandedWrap,
+        inner,
+        root,
+        onComplete: () => finishStageAdvisorCollapsed(true),
+      });
+      if (!started) finishStageAdvisorCollapsed(true);
+      return;
+    }
+
+    btn.setAttribute('aria-expanded', 'true');
+    if (expandedWrap) expandedWrap.removeAttribute('aria-hidden');
+    const started = motionApi.animateStageAdvisor({
+      collapsed: false,
+      wrap: expandedWrap,
+      inner,
+      root,
+      onComplete: () => finishStageAdvisorCollapsed(false),
+    });
+    if (!started) finishStageAdvisorCollapsed(false);
   }
 
   /** Preset & suggestion UI: stage colors (Early/Mid/Late). */
@@ -2593,6 +2915,13 @@
           strong,
           document.createTextNode(` \u00b7 ${bands}`),
         );
+        const filtersNote = String(tloc.stageCombinedScoreFootnote || '').trim();
+        if (filtersNote) {
+          const note = document.createElement('span');
+          note.className = 'stage-score-inline-filters-note';
+          note.textContent = filtersNote;
+          scoreInline.appendChild(note);
+        }
         const seg = String(recStage || '').toLowerCase();
         if (seg === 'early' || seg === 'mid' || seg === 'late') {
           scoreInline.classList.add(`stage-score-inline--${seg}`);
@@ -2601,9 +2930,8 @@
     }
 
     if (scoreFootnote) {
-      const foot = String(tloc.stageCombinedScoreFootnote || '').trim();
-      scoreFootnote.textContent = foot;
-      scoreFootnote.hidden = !foot || !hasProg;
+      scoreFootnote.textContent = '';
+      scoreFootnote.hidden = true;
     }
 
     const setMetricTitleName = (spanId, nameTpl) => {
@@ -2623,7 +2951,7 @@
 
     try {
       if (localStorage.getItem(STAGE_PROGRESSION_EXPANDED_KEY) == null) {
-        applyStageAdvisorCollapsed(true);
+        applyStageAdvisorCollapsed(true, { instant: true });
       }
     } catch (e) { /* ignore */ }
 
@@ -2668,22 +2996,20 @@
       }
     });
 
-    /** Native tooltip: children receive hover, so duplicate title onto card + headline + values (Sheets parity text from hidden desc or i18n). */
+    /** Custom floating tip on metric cards (Sheets parity text from hidden desc or i18n). */
     const attachMetricCardTooltip = (descId, fallback) => {
       const desc = document.getElementById(descId);
       const card = desc && desc.closest('.stage-metric-card');
       if (!card) return;
       let tip = String(desc.textContent || '').replace(/\s+/g, ' ').trim();
       if (!tip) tip = String(fallback || '').replace(/\s+/g, ' ').trim();
-      const safe = tip ? tip.replace(/"/g, '\u2019') : '';
       const targets = [
         card,
         ...card.querySelectorAll('.stage-metric-card-head, .stage-metric-val, .stage-metric-contrib, .stage-metric-weight, .stage-metric-icon'),
       ];
       targets.forEach((node) => {
         if (!node) return;
-        if (safe) node.setAttribute('title', safe);
-        else node.removeAttribute('title');
+        setSwrmFloatTipTarget(node, tip);
       });
     };
     attachMetricCardTooltip('lbl-card-hr-desc', tloc.stageCardHrDesc || '');
@@ -2861,20 +3187,22 @@
     const maxBucket = Math.max(...effBuckets, 1);
     const medEff = medianEff;
     const medLine = document.getElementById('eff-median-line');
-    const medCap = document.getElementById('eff-median-caption');
+    const medianTipTpl = tloc.effMedianCaption || 'Median efficiency (filtered): {pct}%';
     if (medEff != null && runes.length) {
       const pos = Math.min(100, Math.max(0, medEff));
       if (medLine) {
         medLine.style.left = `calc(${pos}% - 1px)`;
         medLine.hidden = false;
+        medLine.setAttribute('aria-hidden', 'false');
+        const tip = medianTipTpl.replace('{pct}', medEff.toFixed(1));
+        medLine.setAttribute('aria-label', tip);
+        setSwrmFloatTipTarget(medLine, tip);
       }
-      if (medCap) {
-        medCap.textContent = (tloc.effMedianCaption || '').replace('{pct}', medEff.toFixed(1));
-        medCap.hidden = false;
-      }
-    } else {
-      if (medLine) medLine.hidden = true;
-      if (medCap) medCap.hidden = true;
+    } else if (medLine) {
+      medLine.hidden = true;
+      medLine.setAttribute('aria-hidden', 'true');
+      medLine.removeAttribute('aria-label');
+      setSwrmFloatTipTarget(medLine, '');
     }
     if (effEl) {
       effBarTargets = [];
@@ -2906,28 +3234,53 @@
         const allFlip = [...mv, ...mr, ...ms];
 
         const applyBarAndEffTargets = () => {
-          if (verdictChartEl && verdictBarTargets && verdictBarTargets.size) {
-            applyRowBarWidthMap(verdictChartEl, 'data-dash-verdict', verdictBarTargets);
-          }
-          if (roleEl && roleBarTargets && roleBarTargets.size) {
-            applyRowBarWidthMap(roleEl, 'data-dash-role', roleBarTargets);
-          }
-          if (setEl && setBarTargets && setBarTargets.size) {
-            applyRowBarWidthMap(setEl, 'data-dash-set', setBarTargets);
-          }
+          const motionApi = window.SWRM_MOTION;
+          const useGsap = motionApi && motionApi.enabled();
+          const barEntries = [];
+          const heightEntries = [];
+
+          const collectBarMap = (container, attr, map) => {
+            if (!container || !map || !map.size) return;
+            const safe = String(attr).replace(/"/g, '');
+            container.querySelectorAll(`[${safe}]`).forEach((row) => {
+              const k = row.getAttribute(safe);
+              if (k == null || !map.has(k)) return;
+              const fill = row.querySelector('.chart-bar-fill');
+              const v = map.get(k);
+              if (!fill || !Number.isFinite(v)) return;
+              if (useGsap) barEntries.push({ el: fill, pct: v });
+              else fill.style.width = `${Number(v).toFixed(1)}%`;
+            });
+          };
+
+          collectBarMap(verdictChartEl, 'data-dash-verdict', verdictBarTargets);
+          collectBarMap(roleEl, 'data-dash-role', roleBarTargets);
+          collectBarMap(setEl, 'data-dash-set', setBarTargets);
+
           if (effEl && effBarTargets && effBarTargets.length) {
             const bars = effEl.querySelectorAll('.eff-bar');
             bars.forEach((bar, i) => {
-              if (effBarTargets[i] != null) bar.style.height = `${effBarTargets[i]}px`;
+              if (effBarTargets[i] == null) return;
+              const px = `${effBarTargets[i]}px`;
+              if (useGsap) heightEntries.push({ el: bar, value: px });
+              else bar.style.height = px;
             });
           }
+
           if (slotCardsRoot && slotShareAnimTargets && slotShareAnimTargets.size) {
             slotCardsRoot.querySelectorAll('.slot-share-cell[data-slot]').forEach((cell) => {
               const s = cell.getAttribute('data-slot');
               const fill = cell.querySelector('.slot-share-bar-fill');
               if (!fill || !s || !slotShareAnimTargets.has(s)) return;
-              fill.style.height = `${slotShareAnimTargets.get(s)}%`;
+              const pct = `${slotShareAnimTargets.get(s)}%`;
+              if (useGsap) heightEntries.push({ el: fill, value: pct });
+              else fill.style.height = pct;
             });
+          }
+
+          if (useGsap) {
+            motionApi.animateBarWidthFills(barEntries);
+            motionApi.animateHeightFills(heightEntries);
           }
         };
 
@@ -2976,6 +3329,9 @@
       if (v === '1') ancient.checked = true;
       else if (v === '0') ancient.checked = false;
     }
+    const hideTarget = document.getElementById('toggle-target-col');
+    if (hideTarget) hideTarget.checked = readRuneTableHideTarget();
+    applyRuneTableTargetColumnVisibility();
   }
 
   function sortRunesInPlace(arr, key, dir) {
@@ -3003,9 +3359,52 @@
     });
   }
 
+  function readRuneTableHideTarget() {
+    try {
+      return localStorage.getItem(RUNE_TABLE_HIDE_TARGET_KEY) === '1';
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function roleDisplayName(role) {
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    if (role === 'God Roll' || role === 'High Roll') return t.roleGodRoll || 'God Roll';
+    return role || '';
+  }
+
+  function sellReasonText(r) {
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const code = r.sellReasonCode || '';
+    if (!code) return t.sellReasonNoRole || 'No matching role';
+    if (code === 'duo_near') return t.sellReasonDuoNear || '';
+    if (code === 'exclude') {
+      const roleLbl = roleDisplayName(r.sellReasonDetail || '');
+      return (t.sellReasonExclude || 'Exclude stat blocks {role}').replace(/\{role\}/g, roleLbl);
+    }
+    if (code === 'bad_flat') return t.sellReasonBadFlat || '';
+    if (code === 'low_eff') return t.sellReasonLowEff || '';
+    if (code === 'low_eff_finish') return t.sellReasonLowEffFinish || '';
+    return t.sellReasonNoRole || 'No matching role';
+  }
+
+  function runeTableTargetColumnVisible() {
+    const verdictFilter = document.getElementById('filter-verdict')?.value || '';
+    if (verdictFilter === 'Grind' || verdictFilter === 'Gem') return true;
+    return !readRuneTableHideTarget() && !document.getElementById('toggle-target-col')?.checked;
+  }
+
+  function applyRuneTableTargetColumnVisibility() {
+    const show = runeTableTargetColumnVisible();
+    document.getElementById('target-col-header')?.classList.toggle('hidden', !show);
+    document.getElementById('target-filter-cell')?.classList.toggle('hidden', !show);
+    document.getElementById('rune-table')?.classList.toggle('show-target', show);
+  }
+
   function runeTargetText(r) {
     const tl = TRANSLATIONS[currentLang];
     const v = r.verdict || '';
+    if (v === 'Sell') return sellReasonText(r);
     if (v === 'Grind') {
       const g = r.grindInfo;
       if (g && g.can && g.stat) {
@@ -3109,7 +3508,7 @@
     if (fm) p.set('main', fm);
     if (sortKey !== 'eff') p.set('sort', sortKey);
     if (sortDir !== 'desc') p.set('dir', sortDir);
-    if (document.getElementById('toggle-target-col')?.checked) p.set('target', '1');
+    if (document.getElementById('toggle-target-col')?.checked) p.set('target', '0');
     if (document.getElementById('toggle-ancient-only')?.checked) p.set('ancient', '1');
     if (runeTableShowAll) p.set('all', '1');
     const s = p.toString();
@@ -3145,9 +3544,12 @@
       const sd = params.get('dir');
       if (sd === 'asc' || sd === 'desc') sortDir = sd;
       if (params.has('target')) {
-        const on = params.get('target') === '1';
+        const hide = params.get('target') === '0';
         const tgl = document.getElementById('toggle-target-col');
-        if (tgl) tgl.checked = on;
+        if (tgl) tgl.checked = hide;
+        try {
+          localStorage.setItem(RUNE_TABLE_HIDE_TARGET_KEY, hide ? '1' : '0');
+        } catch (e) { /* ignore */ }
       }
       if (params.has('ancient')) {
         const on = params.get('ancient') === '1';
@@ -3157,9 +3559,7 @@
       }
       if (params.has('all')) runeTableShowAll = params.get('all') === '1';
       else runeTableShowAll = false;
-      const manualTarget = document.getElementById('toggle-target-col')?.checked;
-      document.getElementById('target-col-header')?.classList.toggle('hidden', !manualTarget);
-      document.getElementById('rune-table')?.classList.toggle('show-target', !!manualTarget);
+      applyRuneTableTargetColumnVisibility();
     } finally {
       runeTableApplyingHash = false;
       applyRuneTableEffHeader();
@@ -3228,11 +3628,13 @@
     if (fm) fm.value = '';
     const tgl = document.getElementById('toggle-target-col');
     if (tgl) tgl.checked = false;
+    try {
+      localStorage.setItem(RUNE_TABLE_HIDE_TARGET_KEY, '0');
+    } catch (e) { /* ignore */ }
     const tglAncient = document.getElementById('toggle-ancient-only');
     if (tglAncient) tglAncient.checked = false;
     localStorage.setItem(RUNE_TABLE_ANCIENT_ONLY_KEY, '0');
-    document.getElementById('target-col-header')?.classList.add('hidden');
-    document.getElementById('rune-table')?.classList.remove('show-target');
+    applyRuneTableTargetColumnVisibility();
     sortKey = 'eff';
     sortDir = 'desc';
     runeTableShowAll = false;
@@ -3259,7 +3661,11 @@
     filteredRunes = runes.filter(r => {
       if (ancientOnly && !r.isAncient) return false;
       if (verdict && r.verdict !== verdict) return false;
-      if (role    && r.role    !== role)    return false;
+      if (role) {
+        if (role === 'God Roll') {
+          if (r.role !== 'God Roll' && r.role !== 'High Roll') return false;
+        } else if (r.role !== role) return false;
+      }
       if (grade   && r.gradeStr !== grade)  return false;
       if (setName && r.setName !== setName) return false;
       if (slotVal && String(r.slot) !== slotVal) return false;
@@ -3320,15 +3726,7 @@
       }
     }
 
-    const verdictFilter = document.getElementById('filter-verdict')?.value || '';
-    const needTargetByVerdict = verdictFilter === 'Grind' || verdictFilter === 'Gem';
-    const tglTarget = document.getElementById('toggle-target-col');
-    if (needTargetByVerdict && tglTarget && !tglTarget.checked) tglTarget.checked = true;
-    const targetManual = document.getElementById('toggle-target-col')?.checked;
-    const showTarget = needTargetByVerdict || targetManual;
-    document.getElementById('target-col-header')?.classList.toggle('hidden', !showTarget);
-    document.getElementById('target-filter-cell')?.classList.toggle('hidden', !showTarget);
-    document.getElementById('rune-table')?.classList.toggle('show-target', showTarget);
+    applyRuneTableTargetColumnVisibility();
     tbody.innerHTML = rows.map(r => runeRow(r)).join('');
     setupRuneTableMoreUi(total, rows.length);
     updateRuneTableFilterIndicators();
@@ -3377,7 +3775,7 @@
         subcell(subs[2]),
         subcell(subs[3]),
         `${getRuneNumericEff(r).toFixed(1)}%`,
-        r.role || '',
+        roleDisplayName(r.role || ''),
         r.verdict || '',
       ];
       if (includeTarget) row.push(runeTargetText(r));
@@ -3444,7 +3842,7 @@
 
   function roleClass(role) {
     const m = {
-      'High Roll':'highroll','Bruiser':'bruiser','Fast CC':'fastcc',
+      'God Roll':'godroll','High Roll':'godroll','Bruiser':'bruiser','Fast CC':'fastcc',
       'Classic DPS':'classicdps','Slow DPS':'slowdps','Bomber':'bomber',
       'Tank':'tank','Duo Roll':'duoroll'
     };
@@ -3483,7 +3881,7 @@
     const targetTipRaw = runeEngineDetailTooltip(r);
     const targetTipAttr = targetTipRaw ? ` title="${escapeAttr(targetTipRaw)}"` : '';
     const mainInner = highlightSearchInPlain(r.mainName, tableSearchHighlight);
-    const roleText = (r.role || '').trim();
+    const roleText = roleDisplayName((r.role || '').trim());
     const roleHtml = roleText
       ? `<span class="role-tag ${rCls}">${highlightSearchInPlain(roleText, tableSearchHighlight)}</span>`
       : '';
@@ -3607,7 +4005,10 @@
   });
 
   // Toggle Target column visibility
-  document.getElementById('toggle-target-col')?.addEventListener('change', () => {
+  document.getElementById('toggle-target-col')?.addEventListener('change', (e) => {
+    try {
+      localStorage.setItem(RUNE_TABLE_HIDE_TARGET_KEY, e.target.checked ? '1' : '0');
+    } catch (err) { /* ignore */ }
     applyFiltersAndSort(getVisibleRunes(), { preserveTableExpansion: true });
   });
 
@@ -4215,19 +4616,33 @@
     if (!roleSelect) return;
     const current = roleSelect.value;
     const formulas = Object.keys(window.SWRM.settings.formulas || {});
-    const roleNames = Array.from(new Set([...formulas, ...Object.keys(window.SWRM.settings.roles || {})]));
+    const roleNamesRaw = Array.from(new Set([...formulas, ...Object.keys(window.SWRM.settings.roles || {})]));
+    const roleNames = roleNamesRaw.map((n) => (n === 'High Roll' ? 'God Roll' : n));
     const defaultPriority = ['Fast CC', 'Classic DPS', 'Bomber', 'Tank', 'Bruiser', 'Slow DPS'];
-    const storedPriority = Array.isArray(window.SWRM.settings.rolePriority)
+    const storedPriority = (Array.isArray(window.SWRM.settings.rolePriority)
       ? window.SWRM.settings.rolePriority
-      : defaultPriority;
+      : defaultPriority
+    ).map((n) => (n === 'High Roll' ? 'God Roll' : n));
     const orderedRoles = [
-      ...storedPriority.filter(name => roleNames.includes(name)),
-      ...roleNames.filter(name => !storedPriority.includes(name)),
-    ];
-    const roles = [...orderedRoles, 'Duo Roll', 'High Roll'];
+      ...storedPriority.filter((name) => roleNames.includes(name) || name === 'God Roll'),
+      ...roleNames.filter((name) => !storedPriority.includes(name)),
+    ].filter((name, idx, arr) => arr.indexOf(name) === idx);
+    const roles = [...orderedRoles, 'Duo Roll', 'God Roll'].filter(
+      (name, idx, arr) => arr.indexOf(name) === idx,
+    );
     const t = TRANSLATIONS[currentLang];
-    roleSelect.innerHTML = `<option value="">${t.allRoles || 'All Roles'}</option>${roles.map(r => `<option value="${r}">${r}</option>`).join('')}`;
-    if (roles.includes(current)) roleSelect.value = current;
+    const godLbl = t.roleGodRoll || 'God Roll';
+    roleSelect.innerHTML =
+      `<option value="">${t.allRoles || 'All Roles'}</option>` +
+      roles
+        .map((r) => {
+          const value = r === 'High Roll' ? 'God Roll' : r;
+          const label = value === 'God Roll' ? godLbl : r;
+          return `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`;
+        })
+        .join('');
+    const cur = current === 'High Roll' ? 'God Roll' : current;
+    if (roles.includes(cur) || cur === 'God Roll') roleSelect.value = cur;
   }
 
   function collectStatConstantsFromForm() {
@@ -4553,6 +4968,7 @@
   
   // Initialize on page load
   document.addEventListener('DOMContentLoaded', async () => {
+    initSwrmFloatingTips();
     initTheme();
     updateLanguage(currentLang);
     initDashboardUnifiedTabs();

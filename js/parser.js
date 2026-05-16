@@ -167,7 +167,7 @@
       return {
         type,
         name:  statName(type),
-        // All calculations use base-only (no gem, no grind).
+        // Base roll; grind stored separately — use SWRM.subRuneValue() for roll+grind totals.
         val:   Number.isFinite(val) ? val : 0,
         gem:   Number.isFinite(gem) ? gem : 0,
         grind: Number.isFinite(grind) ? grind : 0,

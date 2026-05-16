@@ -26,8 +26,11 @@
       if (typeof window.SWRM.isQualifyingSubstatRow === 'function') {
         if (!window.SWRM.isQualifyingSubstatRow(s)) continue;
       } else if (s.source === 'innate') continue;
-      // Base-only: ignore gem/grind.
-      m[s.name] = (m[s.name] || 0) + (s.val || 0);
+      const lineVal =
+        typeof window.SWRM.subRuneValue === 'function'
+          ? window.SWRM.subRuneValue(s)
+          : (s.val || 0);
+      m[s.name] = (m[s.name] || 0) + lineVal;
     }
     return m;
   }
@@ -152,11 +155,11 @@
     return true;
   }
 
-  // Check high roll anchor requirements
-  function checkAnchorRequirements(rune, formula, stage, settings, sm) {
+  // Require High Roll: any of the four sub lines (not innate) >= HR for stage × grade.
+  function checkAnchorRequirements(rune, formula, stage, settings) {
     const isHero = isHeroLikeGrade(rune.gradeStr);
     const isLegend = rune.gradeStr === 'Legend';
-    
+
     for (const [anchorType, stageConfig] of Object.entries(formula.requireHR || {})) {
       const required = stageConfig[stage];
       if (!required) continue;
@@ -165,26 +168,14 @@
       const isLegendAnchor = anchorType.includes('Legend');
 
       if ((isHero && isHeroAnchor) || (isLegend && isLegendAnchor)) {
-        const hrKey = modeKey(stage, rune.gradeStr);
-        const thresholds = settings.hrThresholds;
-        
-        let hasAnchor = false;
-        for (const [stat, value] of Object.entries(sm)) {
-          if (value > 0) {
-            const threshold = thresholds[stat]?.[hrKey];
-            if (threshold && value >= threshold) {
-              hasAnchor = true;
-              break;
-            }
-          }
-        }
-        
-        if (!hasAnchor) {
-          return false;
-        }
+        const hasAnchor =
+          typeof window.SWRM.runeHasHrAnchor === 'function'
+            ? window.SWRM.runeHasHrAnchor(rune, stage, settings)
+            : false;
+        if (!hasAnchor) return false;
       }
     }
-    
+
     return true;
   }
 
@@ -226,7 +217,7 @@
     }
 
     // Check anchor requirements
-    if (!checkAnchorRequirements(rune, formula, stage, settings, substatResult.statMap)) {
+    if (!checkAnchorRequirements(rune, formula, stage, settings)) {
       return false;
     }
 

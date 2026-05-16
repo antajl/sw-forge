@@ -46,13 +46,14 @@
   /** User explicitly expanded the progression panel (`1` = expanded; default collapsed). */
   const STAGE_PROGRESSION_EXPANDED_KEY = 'swrm_stage_progression_expanded_v1';
   const TOP_SPD_STORAGE_KEY = 'swrm_dashboard_top_spd_set_v1';
+  const TOP_SPD_DEFAULT_SET = 'Swift';
   const TOP_SPD_PER_SLOT = 3;
   const DASH_UNIFIED_DIST_KEY = 'swrm_dashboard_unified_dist_v1';
   /** Legacy Role/Sets-only toggle — migrated once into {@link DASH_UNIFIED_DIST_KEY}. */
   const DASH_DIST_TAB_LEGACY_KEY = 'swrm_dashboard_dist_tab_v1';
   let currentLang = localStorage.getItem(APP_LANG_KEY) || localStorage.getItem('swrm-lang') || 'en';
   if (!['en', 'ru', 'fr'].includes(currentLang)) currentLang = 'en';
-  let currentTheme = localStorage.getItem('swrm-theme') || 'light';
+  let currentTheme = localStorage.getItem('swrm-theme') || 'dark';
 
   // ===================== THEME (header sun / moon) =====================
   function applyThemeDom() {
@@ -283,7 +284,6 @@
     document.querySelectorAll('.tab-content').forEach((el) => {
       el.classList.toggle('hidden', el.id !== `tab-${id}`);
     });
-    document.documentElement.classList.toggle('swrm-runetable-active', id === 'runetable');
     if (id === 'settings') {
       const rulesRoot = document.getElementById('tab-settings');
       if (rulesRoot) rulesRoot.scrollTop = 0;
@@ -335,8 +335,8 @@
     
     // Update title
     document.title = t.title;
-    const logoText = document.querySelector('.logo-text');
-    if (logoText) logoText.innerHTML = `SW <strong>${t.title.substring(3)}</strong>`;
+    const siteLogoLink = document.getElementById('site-logo-link');
+    if (siteLogoLink) siteLogoLink.setAttribute('aria-label', t.title);
     
     // Update tabs - safely check if elements exist
     const dashboardTab = document.querySelector('[data-tab="dashboard"]');
@@ -500,8 +500,10 @@
     const lblTopSpd = document.getElementById('lbl-top-spd-title');
     if (lblTopSpd) lblTopSpd.textContent = t.dashboardTopSpdTitle || '';
 
-    const lblTopSpdSet = document.getElementById('lbl-top-spd-set-label');
-    if (lblTopSpdSet) lblTopSpdSet.textContent = t.dashboardTopSpdSetLabel || 'Set';
+    const topSpdSetSelect = document.getElementById('top-spd-set-select');
+    if (topSpdSetSelect) {
+      topSpdSetSelect.setAttribute('aria-label', t.dashboardTopSpdSetAria || 'Rune set');
+    }
 
     const hintTopSpd = document.getElementById('lbl-top-spd-hint');
     if (hintTopSpd) hintTopSpd.textContent = t.dashboardTopSpdHint || '';
@@ -655,10 +657,12 @@
 
     const dConst = settingsTab.querySelector('.constants-sheet-desc');
     if (dConst) dConst.textContent = t.constantsSheetDesc || '';
-    const hrPv = document.getElementById('lbl-hr-preview');
-    if (hrPv) hrPv.textContent = t.enginePreviewHr || '';
-    const duoPv = document.getElementById('lbl-duo-preview');
-    if (duoPv) duoPv.textContent = t.enginePreviewDuo || '';
+    const godPvTitle = document.getElementById('lbl-god-preview-title');
+    if (godPvTitle) godPvTitle.textContent = t.enginePreviewGod || 'God Roll';
+    const hrPvTitle = document.getElementById('lbl-hr-preview-title');
+    if (hrPvTitle) hrPvTitle.textContent = t.enginePreviewHr || 'High Roll';
+    const duoPvTitle = document.getElementById('lbl-duo-preview-title');
+    if (duoPvTitle) duoPvTitle.textContent = t.enginePreviewDuo || 'Duo Roll';
     const dg = settingsTab.querySelector('.gem-meta-desc');
     if (dg) dg.textContent = t.gemMetaRulesDesc;
     const gh = document.getElementById('gem-bad-flat-hint');
@@ -1180,15 +1184,30 @@
   }
 
   /**
-   * Fetch root demo.json, validate, persist like a real load, mark demo mode.
+   * Fetch assets/demo.json, validate, persist like a real load, mark demo mode.
    * @param {{ keepTab?: boolean }} [options]
    */
   async function installEmbeddedDemoDataset(options = {}) {
     let jsonText;
     try {
-      const res = await fetch(new URL('demo.json', window.location.href), { cache: 'no-store' });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      jsonText = await res.text();
+      const demoPaths = ['assets/demo.json', 'demo.json'];
+      let lastErr = null;
+      for (const rel of demoPaths) {
+        try {
+          const res = await fetch(new URL(rel, window.location.href), { cache: 'no-store' });
+          if (!res.ok) {
+            lastErr = new Error(`HTTP ${res.status} (${rel})`);
+            continue;
+          }
+          jsonText = await res.text();
+          lastErr = null;
+          break;
+        } catch (e) {
+          lastErr = e;
+        }
+      }
+      if (lastErr) throw lastErr;
+      if (!jsonText) throw new Error('demo.json not found');
     } catch (e) {
       console.warn('Embedded demo fetch failed:', e);
       return false;
@@ -1618,10 +1637,15 @@
     return lk ? (t[lk] || verdictKey) : verdictKey;
   }
 
+  function subLineTotal(s) {
+    if (typeof window.SWRM?.subRuneValue === 'function') return window.SWRM.subRuneValue(s);
+    return (Number(s?.val) || 0) + (Number(s?.grind) || 0);
+  }
+
   function sumRuneSpdSubs(r) {
     let s = 0;
     for (const sub of r.substats || []) {
-      if (sub.name === 'SPD') s += (sub.val || 0);
+      if (sub.name === 'SPD') s += subLineTotal(sub);
     }
     return s;
   }
@@ -1989,6 +2013,16 @@
     }
   }
 
+  function resolveTopSpdSetPick(preferredName, setOrder) {
+    const order = setOrder || [];
+    if (preferredName !== null && preferredName !== undefined) {
+      if (preferredName === '') return '';
+      if (order.includes(preferredName)) return preferredName;
+    }
+    if (order.includes(TOP_SPD_DEFAULT_SET)) return TOP_SPD_DEFAULT_SET;
+    return order[0] || '';
+  }
+
   function fillTopSpdSetSelect(selectEl, setOrder, tloc, preferredName) {
     if (!selectEl) return;
     const blank = escapeHtml((tloc && tloc.dashboardTopSpdNoneOption) || '\u2014');
@@ -1996,9 +2030,7 @@
       (setOrder || []).map((nm) => `<option value="${escapeHtml(nm)}">${escapeHtml(nm)}</option>`),
     );
     selectEl.innerHTML = opts.join('');
-    const pick =
-      preferredName && setOrder && setOrder.includes(preferredName) ? preferredName : '';
-    selectEl.value = pick;
+    selectEl.value = resolveTopSpdSetPick(preferredName, setOrder);
   }
 
   function medianSorted(sorted) {
@@ -2141,7 +2173,7 @@
     function runeSpdSubTotal(r) {
       let s = 0;
       for (const sub of r.substats || []) {
-        if (sub.name === 'SPD') s += (sub.val || 0);
+        if (sub.name === 'SPD') s += subLineTotal(sub);
       }
       return s;
     }
@@ -2812,9 +2844,11 @@
     const pivot = buildSlotMainPivot(runes);
     slotShareAnimTargets = renderSlotMainCards(slotCardsRoot, pivot, tloc, { animateCharts });
 
-    let savedSet = '';
+    let savedSet = null;
     try {
-      savedSet = localStorage.getItem(TOP_SPD_STORAGE_KEY) || '';
+      if (localStorage.getItem(TOP_SPD_STORAGE_KEY) !== null) {
+        savedSet = localStorage.getItem(TOP_SPD_STORAGE_KEY);
+      }
     } catch (e) { /* ignore */ }
     const spdSel = document.getElementById('top-spd-set-select');
     fillTopSpdSetSelect(spdSel, setOrder, tloc, savedSet);
@@ -3231,7 +3265,11 @@
       if (slotVal && String(r.slot) !== slotVal) return false;
       if (mainVal && r.mainName !== mainVal) return false;
       if (search) {
-        const subParts = (r.substats || []).flatMap((s) => [s.name, String(s.val ?? '')]);
+        const subParts = (r.substats || []).flatMap((s) => {
+          const total = subLineTotal(s);
+          const grind = Number(s.grind) || 0;
+          return [s.name, String(total), grind > 0 ? String(s.val ?? '') : ''];
+        });
         const ancientTokens = r.isAncient
           ? [String(tTable.tableAncientBadge || 'Ancient'), 'ancient']
           : [];
@@ -3317,8 +3355,9 @@
       if (!sub || !sub.name) return '';
       const g = Number(sub.grind) || 0;
       const gem = !!(sub.enchanted || (Number(sub.gem) || 0) !== 0);
-      let out = `${sub.name} ${sub.val}`;
-      if (g >= 2) out += ` [${g}]`;
+      const total = subLineTotal(sub);
+      let out = `${sub.name} ${total}`;
+      if (g > 0) out += ` [${g}]`;
       if (gem) out += ' (gem)';
       return out;
     }
@@ -3383,10 +3422,9 @@
     if (!s || !s.name) return '';
     const grindAmt = Number(s.grind) || 0;
     const gemMarked = !!(s.enchanted || (Number(s.gem) || 0) !== 0);
-    // Typical grind bonuses are ≥2; [1] was almost always the enchant flag parsed wrong (fixed in parser).
-    const showGrindSuffix = grindAmt >= 2;
-    const valShown =
-      showGrindSuffix ? `${s.val} [${grindAmt}]` : String(s.val ?? '');
+    const total = subLineTotal(s);
+    const showGrindSuffix = grindAmt > 0;
+    const valShown = showGrindSuffix ? `${total} [${grindAmt}]` : String(total);
     const plain = `${s.name} ${valShown}`;
     const inner = highlightSearchInPlain(plain, tableSearchHighlight);
     const grindCls = showGrindSuffix ? ' table-stat__text--grind' : '';
@@ -4216,23 +4254,64 @@
     return window.SWRM.mergeStatConstants(raw);
   }
 
-  function renderReadonlyMatrix(containerId, rowLabelKey, dataObj, colKeys, colLabels) {
+  const HR_PREVIEW_COL_KEYS = [
+    'Early_Hero', 'Early_Leg', 'Mid_Hero', 'Mid_Leg', 'Late_Hero', 'Late_Leg',
+  ];
+
+  function thresholdPreviewColLabels(tloc) {
+    const gte = (tloc && tloc.previewThresholdGte) || '≥';
+    return HR_PREVIEW_COL_KEYS.map((col) => {
+      const [stage, gradeKey] = col.split('_');
+      const grade = gradeKey === 'Leg' ? 'Leg' : 'Hero';
+      const gradeLabel = grade === 'Leg'
+        ? ((tloc && tloc.previewGradeLegend) || 'Leg')
+        : ((tloc && tloc.previewGradeHero) || 'Hero');
+      return `${gte} ${stage} ${gradeLabel}`;
+    });
+  }
+
+  function formatPreviewCell(v) {
+    if (v == null || v === '') return '—';
+    const n = Number(v);
+    return Number.isFinite(n) ? String(Math.round(n)) : String(v);
+  }
+
+  function renderGodRollPreview(containerId, sc, tloc) {
     const el = document.getElementById(containerId);
     if (!el) return;
+    const gte = (tloc && tloc.previewThresholdGte) || '≥';
+    const cStat = (tloc && tloc.constantsColStat) || 'Stat';
+    const hHero = `${gte} ${(tloc && tloc.previewGradeHero) || 'Hero'}`;
+    const hLeg = `${gte} ${(tloc && tloc.previewGradeLegend) || 'Legend'}`;
+    let html = `<table class="s-table s-table--preview" role="region" aria-readonly="true" aria-label="God Roll preview"><thead><tr><th>${cStat}</th><th>${hHero}</th><th>${hLeg}</th></tr></thead><tbody>`;
+    const order = window.SWRM.GOD_STAT_ORDER || [];
+    for (let i = 0; i < order.length; i++) {
+      const stat = order[i];
+      const vHero = window.SWRM.getGodThreshold(stat, { statConstants: sc }, 'Hero');
+      const vLeg = window.SWRM.getGodThreshold(stat, { statConstants: sc }, 'Legend');
+      html += `<tr><td>${escapeHtml(stat)}</td><td>${escapeHtml(formatPreviewCell(vHero))}</td><td>${escapeHtml(formatPreviewCell(vLeg))}</td></tr>`;
+    }
+    html += '</tbody></table>';
+    el.innerHTML = html;
+  }
+
+  function renderReadonlyMatrix(containerId, rowLabelKey, dataObj, colKeys, colLabels, rowOrder) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    const keys = rowOrder && rowOrder.length ? rowOrder : Object.keys(dataObj || {});
     let html = `<table class="s-table s-table--preview" role="region" aria-readonly="true" aria-label="Engine threshold preview (read-only)"><thead><tr><th>${rowLabelKey}</th>`;
     for (let i = 0; i < colLabels.length; i++) html += `<th>${colLabels[i]}</th>`;
     html += '</tr></thead><tbody>';
-    for (const [rowKey, vals] of Object.entries(dataObj)) {
-      html += `<tr><td>${escapeHtml(String(rowKey).replace(/_/g, ' '))}</td>`;
+    for (let ri = 0; ri < keys.length; ri++) {
+      const rowKey = keys[ri];
+      const vals = dataObj[rowKey];
+      if (!vals) continue;
+      const rowLabel = String(rowKey).replace(/_/g, ' ');
+      html += `<tr><td>${escapeHtml(rowLabel)}</td>`;
       for (let ci = 0; ci < colKeys.length; ci++) {
         const c = colKeys[ci];
-        const v = vals && vals[c];
-        let cell = '—';
-        if (v != null && v !== '') {
-          const n = Number(v);
-          cell = Number.isFinite(n) ? String(Math.round(n)) : String(v);
-        }
-        html += `<td>${escapeHtml(cell)}</td>`;
+        const v = vals[c];
+        html += `<td>${escapeHtml(formatPreviewCell(v))}</td>`;
       }
       html += '</tr>';
     }
@@ -4244,14 +4323,16 @@
     const sc = document.getElementById('stat-constants-wrap')
       ? collectStatConstantsFromForm()
       : (window.SWRM.settings.statConstants || window.SWRM.DEFAULT_STAT_CONSTANTS);
+    const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const hr = window.SWRM.computeHrThresholds(sc);
     const duo = window.SWRM.computeDuoThresholds(sc, hr);
-    const stages = ['Early', 'Mid', 'Late'];
-    const grades = ['Leg', 'Hero'];
-    const colKeys = stages.flatMap(s => grades.map(g => `${s}_${g}`));
-    const colLabels = stages.flatMap(s => grades.map(g => `${s} ${g === 'Leg' ? 'Legend' : 'Hero'}`));
-    renderReadonlyMatrix('hr-preview-wrap', 'Stat', hr, colKeys, colLabels);
-    renderReadonlyMatrix('duo-preview-wrap', 'Pair', duo, colKeys, colLabels);
+    const colKeys = HR_PREVIEW_COL_KEYS;
+    const colLabels = thresholdPreviewColLabels(tloc);
+    const statOrder = window.SWRM.GOD_STAT_ORDER || [];
+    const rowStat = (tloc && tloc.constantsColStat) || 'Stat';
+    renderGodRollPreview('god-preview-wrap', sc, tloc);
+    renderReadonlyMatrix('hr-preview-wrap', rowStat, hr, colKeys, colLabels, statOrder);
+    renderReadonlyMatrix('duo-preview-wrap', rowStat, duo, colKeys, colLabels, statOrder);
   }
 
   function statConstantDecimalToPercentInput(d) {
@@ -4268,20 +4349,8 @@
   }
 
   function wireStatConstantsTableInputs(wrap) {
-    const updateGodResultForTr = (tr) => {
-      const st = tr.querySelector('[data-sc-field="base"]');
-      const gm = tr.querySelector('[data-sc-field="godMod"]');
-      const span = tr.querySelector('.god-th-result');
-      const b = parseFloat(st && st.value);
-      const mRaw = parseFloat(gm && gm.value);
-      const m = Number.isFinite(mRaw) ? mRaw / 100 : 0;
-      const tval = (Number.isFinite(b) && b > 0) ? b * (1 + m) : NaN;
-      if (span) span.textContent = Number.isFinite(tval) && tval > 0 ? tval.toFixed(2) : '—';
-    };
     wrap.querySelectorAll('.sc-inp').forEach((inp) => {
       inp.addEventListener('input', () => {
-        const tr = inp.closest('tr');
-        if (tr) updateGodResultForTr(tr);
         refreshEnginePreviews();
       });
     });
@@ -4294,12 +4363,11 @@
     const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const cStat = tloc.constantsColStat || 'Stat';
     const cB = tloc.godColBase || 'Base';
-    const cG = tloc.godColMod || 'God +%';
+    const cG = tloc.godColMod || 'God (+%)';
     const cD = tloc.constColDuoMod || 'Duo −%';
     const cE = tloc.constColEarly || 'Early %';
     const cL = tloc.constColLate || 'Late %';
-    const cGm = tloc.constColGrade || 'Leg @Mid −%';
-    const cRes = tloc.godColResult || 'God line';
+    const cGm = tloc.constColGrade || 'Legend (−%)';
     const hB = escapeAttr(tloc.constantsColHintBase || '');
     const hG = escapeAttr(tloc.constantsColHintGod || '');
     const hD = escapeAttr(tloc.constantsColHintDuo || '');
@@ -4308,13 +4376,12 @@
     const hGm = escapeAttr(tloc.constantsColHintGrade || '');
     let html = `<table class="s-table stat-constants-table"><thead><tr><th>${cStat}</th>`;
     html += `<th title="${hB}">${cB}</th><th title="${hG}">${cG}</th><th title="${hD}">${cD}</th>`;
-    html += `<th title="${hE}">${cE}</th><th title="${hL}">${cL}</th><th title="${hGm}">${cGm}</th><th>${cRes}</th></tr></thead><tbody>`;
+    html += `<th title="${hE}">${cE}</th><th title="${hL}">${cL}</th><th title="${hGm}">${cGm}</th></tr></thead><tbody>`;
     const order = window.SWRM.GOD_STAT_ORDER || [];
     const percentFields = new Set(['godMod', 'duoMod', 'earlyScale', 'lateScale', 'gradeMod']);
     for (let i = 0; i < order.length; i++) {
       const stat = order[i];
       const row = sc[stat] || {};
-      const gval = window.SWRM.getGodThreshold(stat, { statConstants: sc });
       const fields = ['base', 'godMod', 'duoMod', 'earlyScale', 'lateScale', 'gradeMod'];
       html += `<tr><td>${stat}</td>`;
       for (let fi = 0; fi < fields.length; fi++) {
@@ -4330,7 +4397,7 @@
         html += `<input type="number" class="sc-inp" data-sc-stat="${stat}" data-sc-field="${f}" data-sc-unit="${unit}" value="${displayVal}" step="${step}" />`;
         html += `${suffix}</span></td>`;
       }
-      html += `<td><span class="god-th-result">${gval != null && gval > 0 ? gval.toFixed(2) : '—'}</span></td></tr>`;
+      html += '</tr>';
     }
     html += '</tbody></table>';
     wrap.innerHTML = html;

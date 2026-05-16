@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SW Rune Master</title>
-  <link rel="icon" href="favicon.svg" type="image/svg+xml" sizes="any" />
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" sizes="any" />
   <!-- Inline: SVGs have a huge default intrinsic size before css/style.css loads (e.g. live reload). -->
   <style>
     .header-theme-icon { width: 20px; height: 20px; max-width: 20px; max-height: 20px; display: block; flex-shrink: 0; }
@@ -15,16 +15,17 @@
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css" />
 </head>
-<body class="light-theme">
+<body>
 
+  <div class="site-chrome-sticky">
   <!-- HEADER -->
   <header class="site-header">
     <div class="header-shell">
       <div class="header-row header-row--nav">
         <div class="header-brand">
-          <div class="logo">
-            <span class="logo-text">SW <strong>RUNE</strong> MASTER</span>
-          </div>
+          <a class="logo" href="./" id="site-logo-link" aria-label="SW Rune Master">
+            <img class="logo__img" src="assets/logo.svg" width="196" height="36" alt="" decoding="async" />
+          </a>
         </div>
         <div class="tabs-scroll" aria-label="Main navigation">
           <nav class="tabs">
@@ -46,14 +47,14 @@
             </a>
           </div>
           <div class="header-theme-group" id="header-theme-group" role="group" aria-label="Color theme">
-            <button type="button" class="header-theme-btn is-active" id="theme-sun" aria-pressed="true" title="Light theme">
+            <button type="button" class="header-theme-btn" id="theme-sun" aria-pressed="false" title="Light theme">
               <svg class="header-theme-icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <circle cx="12" cy="12" r="4" fill="currentColor" />
                 <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
                   d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m12.02-12.02 1.41-1.41" />
               </svg>
             </button>
-            <button type="button" class="header-theme-btn" id="theme-moon" aria-pressed="false" title="Dark theme">
+            <button type="button" class="header-theme-btn is-active" id="theme-moon" aria-pressed="true" title="Dark theme">
               <svg class="header-theme-icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <path fill="currentColor" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
               </svg>
@@ -66,12 +67,15 @@
 
   <aside id="demo-dataset-banner" class="demo-dataset-banner" hidden aria-hidden="true">
     <div class="demo-dataset-banner__inner">
-      <span class="demo-dataset-banner__badge" aria-hidden="true"></span>
-      <span class="demo-dataset-banner__text"></span>
-      <button type="button" class="btn-ghost demo-dataset-banner__upload-btn" id="demo-banner-upload-btn"></button>
-      <button type="button" class="demo-dataset-banner__dismiss" id="demo-banner-dismiss" aria-label="Dismiss">&times;</button>
+      <div class="demo-dataset-banner__content">
+        <span class="demo-dataset-banner__badge" aria-hidden="true"></span>
+        <span class="demo-dataset-banner__text"></span>
+        <button type="button" class="btn-ghost demo-dataset-banner__upload-btn" id="demo-banner-upload-btn"></button>
+        <button type="button" class="demo-dataset-banner__dismiss" id="demo-banner-dismiss" aria-label="Dismiss">&times;</button>
+      </div>
     </div>
   </aside>
+  </div>
 
   <!-- MAIN -->
   <main>
@@ -254,9 +258,10 @@
 
         <div class="panel panel-wide panel-top-spd" id="panel-top-spd">
           <div class="top-spd-toolbar">
-            <div class="panel-title panel-title--inline" id="lbl-top-spd-title">Top SPD (subs) per slot</div>
-            <label class="top-spd-set-label" for="top-spd-set-select" id="lbl-top-spd-set-label">Set</label>
-            <select id="top-spd-set-select" class="top-spd-set-select"></select>
+            <div class="top-spd-toolbar__row">
+              <div class="panel-title panel-title--inline" id="lbl-top-spd-title">Top SPD by slot</div>
+              <select id="top-spd-set-select" class="top-spd-set-select" aria-label="Rune set"></select>
+            </div>
           </div>
           <p class="top-spd-hint" id="lbl-top-spd-hint"></p>
           <div id="top-spd-grid" class="top-spd-grid"></div>
@@ -371,28 +376,32 @@
     <!-- SETTINGS TAB (Rune Rules) -->
     <section id="tab-settings" class="tab-content hidden">
       <div class="rules-tab-shell">
-        <header class="rules-page-header">
-          <h2 class="rules-page-title" id="lbl-rules-page-title">Rune Rules</h2>
-          <p class="rules-page-lead" id="lbl-rules-page-lead"></p>
-        </header>
-
-        <nav class="rules-subtabs" id="rules-subtabs" role="tablist" aria-label="Rune Rules sections">
+        <div class="rules-page-shell">
+          <div class="rules-page-bar">
+            <div class="rules-page-bar__intro">
+              <h2 class="rules-page-title" id="lbl-rules-page-title">Rune Rules</h2>
+              <p class="rules-page-lead" id="lbl-rules-page-lead"></p>
+            </div>
+            <nav class="rules-subtabs rules-subtabs--chrome" id="rules-subtabs" role="tablist" aria-label="Rune Rules sections">
           <button type="button" role="tab" class="rules-subtab is-active" id="rules-subtab-engine"
             data-rules-subtab="engine" aria-selected="true" aria-controls="rules-panel-engine" tabindex="0">
             <span class="rules-subtab__label" id="lbl-rules-subtab-engine">Engine</span>
             <span class="rules-subtab__hint" id="lbl-rules-subtab-engine-hint"></span>
-          </button>
-          <button type="button" role="tab" class="rules-subtab" id="rules-subtab-verdict"
-            data-rules-subtab="verdict" aria-selected="false" aria-controls="rules-panel-verdict" tabindex="-1">
-            <span class="rules-subtab__label" id="lbl-rules-subtab-verdict">Verdict rules</span>
-            <span class="rules-subtab__hint" id="lbl-rules-subtab-verdict-hint"></span>
           </button>
           <button type="button" role="tab" class="rules-subtab" id="rules-subtab-roles"
             data-rules-subtab="roles" aria-selected="false" aria-controls="rules-panel-roles" tabindex="-1">
             <span class="rules-subtab__label" id="lbl-rules-subtab-roles">Roles</span>
             <span class="rules-subtab__hint" id="lbl-rules-subtab-roles-hint"></span>
           </button>
+          <button type="button" role="tab" class="rules-subtab" id="rules-subtab-verdict"
+            data-rules-subtab="verdict" aria-selected="false" aria-controls="rules-panel-verdict" tabindex="-1">
+            <span class="rules-subtab__label" id="lbl-rules-subtab-verdict">Verdict rules</span>
+            <span class="rules-subtab__hint" id="lbl-rules-subtab-verdict-hint"></span>
+          </button>
         </nav>
+          </div>
+
+          <div class="rules-page-body">
 
         <div id="rules-panel-engine" role="tabpanel" aria-labelledby="rules-subtab-engine"
           class="rules-subpanel is-active" data-rules-subtab="engine">
@@ -425,11 +434,15 @@
               </div>
               <div class="rules-card__body rules-card__body--previews">
                 <div class="rules-preview-cluster">
-                  <p class="settings-desc hr-preview-desc" id="lbl-hr-preview"></p>
+                  <h4 class="engine-preview-heading" id="lbl-god-preview-title">God Roll</h4>
+                  <div class="rules-table-scroll"><div id="god-preview-wrap"></div></div>
+                </div>
+                <div class="rules-preview-cluster">
+                  <h4 class="engine-preview-heading" id="lbl-hr-preview-title">High Roll</h4>
                   <div class="rules-table-scroll"><div id="hr-preview-wrap"></div></div>
                 </div>
                 <div class="rules-preview-cluster">
-                  <p class="settings-desc duo-preview-desc" id="lbl-duo-preview"></p>
+                  <h4 class="engine-preview-heading" id="lbl-duo-preview-title">Duo Roll</h4>
                   <div class="rules-table-scroll"><div id="duo-preview-wrap"></div></div>
                 </div>
               </div>
@@ -544,6 +557,8 @@
           <button type="button" id="btn-save-settings" class="btn-primary">Save & Recalculate</button>
           <button type="button" id="btn-reset-settings" class="btn-ghost">Reset to Defaults</button>
         </footer>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -702,7 +717,8 @@
               <p><strong>Filters &amp; sort:</strong> Header row filters for verdict, role, grade, set, slot, main stat; click column headers to sort. Default sort is Eff% descending. Innate line and full substats show in each row.</p>
               <p><strong>Eff column:</strong> Prefers SWEX <code>efficiency</code> when present; otherwise the app calculation, shown capped at <strong>100%</strong>.</p>
               <p><strong>Ancient:</strong> Not a separate JSON field — SWEX uses <strong>+10</strong> on <code>class</code> (&gt;10, e.g. 6★ Ancient Legend often <code>class</code> 16) and <code>rank</code> / <code>extra</code> in 11–15. Ancient rows show a small <strong>A-with-dot</strong> icon before the grade chip; use <strong>Ancient only</strong> in the toolbar to filter. Shared URLs can include <code>ancient=1</code>; CSV still has an Ancient column.</p>
-              <p><strong>Subs (grind / gem):</strong> If the JSON carries grind bonus on a substat, you’ll see <code>value [grind]</code> (for example <code>11 [5]</code>) with that label in a <strong>warm gold–orange</strong> tone. Enchanted lines add the circular-arrows icon next to the stat — when there’s no grind bracket, only the icon is visually heavier (stroke); the stat text stays normal weight.</p>
+              <p><strong>Colored chips:</strong> Only <strong>Grade</strong>, <strong>Role</strong>, <strong>Verdict</strong>, and <strong>Eff%</strong> use tinted chips. Set, main, innate, and substats are plain text in the row (easier to scan).</p>
+              <p><strong>Subs (grind / gem):</strong> Each sub shows the <strong>total on the rune</strong> (roll + grind). If grindstone was applied, the bonus appears in brackets — for example <code>HP% 13 [3]</code> means 13 total with +3 from grind (not “13 base plus 3 more”). Grind text uses a <strong>warm gold–orange</strong> tone. Enchanted lines add the circular-arrows icon; when there’s no grind bracket, only the icon is visually heavier.</p>
               <p><strong>Target column:</strong> Appears when the verdict filter is Gem or Grind. <strong>Grind</strong> — numeric goals (rounded up). <strong>Gem</strong> — which flat substats should be replaced (for example “Replace HP” or “Replace HP or DEF”), without naming the enchant destination stat. Hover for raw <code>grindInfo</code> / <code>gemInfo</code> when present.</p>
               <p><strong>Shareable URL:</strong> When you change filters / sort / search on this tab, the address bar can include <code>#runetable?…</code> query params — copy the link to reopen the same view later on this device/browser.</p>
               <p><strong>Debug:</strong> Each parsed rune keeps <code>_raw</code> from SWEX for inspection in devtools.</p>
@@ -715,7 +731,8 @@
               <p><strong>Фильтры и сортировка:</strong> Строка под заголовками — вердикт, роль, грейд, сет, слот, мейн; клик по заголовку колонки меняет сортировку. По умолчанию — Eff% по убыванию. В строке видны innate и все сабы.</p>
               <p><strong>Eff:</strong> При наличии берётся <code>efficiency</code> из SWEX; иначе расчёт приложения, отображение не выше <strong>100%</strong>.</p>
               <p><strong>Древние (Ancient):</strong> Отдельного поля нет — в SWEX кодирование <strong>+10</strong>: <code>class</code> &gt; 10 (у 6★ древней легендарки часто <code>class</code> 16) и <code>rank</code> / <code>extra</code> в 11–15. В колонке грейда — маленькая иконка <strong>«A с точкой»</strong> перед чипом; фильтр <strong>Только древние</strong> в панели таблицы. В ссылке можно <code>ancient=1</code>; в CSV по-прежнему колонка Ancient.</p>
-              <p><strong>Сабы (гринд / гем):</strong> При бонусе гринда — <code>значение [гринд]</code> (например <code>11 [5]</code>), подпись <strong>теплым золотисто‑оранжевым</strong> цветом. Зачарованный гемом саб: значок круговых стрелок рядом; если скобок гринда нет, акцент только на иконке (толще штрих), текст обычный. Подсказка при наведении на чип.</p>
+              <p><strong>Цветные чипы:</strong> Только <strong>грейд</strong>, <strong>роль</strong>, <strong>вердикт</strong> и <strong>Eff%</strong>. Сет, мейн, innate и сабы — обычный текст в строке.</p>
+              <p><strong>Сабы (гринд / гем):</strong> Показывается <strong>итог на руне</strong> (ролл + гринд). В скобках — только прибавка гринда: например <code>HP% 13 [3]</code> — всего 13, из них +3 камнем. Подпись гринда — <strong>золотисто‑оранжевая</strong>. Зачарование — значок стрелок; без скобок гринда акцент на иконке.</p>
               <p><strong>Колонка Target:</strong> Для фильтров Gem или Grind. <strong>Grind</strong> — числовые цели (округление вверх). <strong>Gem</strong> — какие плоские сабы заменить, без указания целевого % стата. Подсказка при наведении — сырые <code>grindInfo</code> / <code>gemInfo</code>.</p>
               <p><strong>Ссылка с состоянием:</strong> При смене фильтров / сортировки / поиска в адресе может появиться <code>#runetable?…</code> — можно скопировать и открыть тот же вид позже в этом браузере.</p>
               <p><strong>Отладка:</strong> У каждой руны есть <code>_raw</code> из SWEX для просмотра в консоли.</p>
@@ -728,30 +745,42 @@
           <div class="guide-lang guide-lang--en guide-list">
             <section class="guide-section" aria-labelledby="guide-h-rules-en">
               <h3 id="guide-h-rules-en">Rune Rules tab</h3>
-              <p><strong>Sections:</strong> Three subtabs — <strong>Engine</strong> (constants for eight substats plus read-only God / Duo / stage-line previews), <strong>Verdict</strong> (Gem, Grind, Reapp cards), and <strong>Roles</strong> (archetype formulas full width). The last-opened subtab is remembered for this browser session.</p>
-              <p><strong>Roles vs Engine vs verdicts:</strong> <strong>Roles</strong> decide whether a rune matches an archetype. <strong>Engine</strong> supplies God, Duo, and Early/Mid/Late “High Roll” numbers for anchors and checks. <strong>Verdict</strong> layers Sell / Keep / Gem / Grind / etc. on top.</p>
-              <p><strong>Base substats:</strong> Role assignment, Duo / High-roll checks, and verdict thresholds compare <em>base rolled values</em> before enchant or grind. Row-level enchant/grind flags still matter for Gem and Grind-specific logic.</p>
+              <p><strong>Sections:</strong> Three subtabs in order — <strong>Engine</strong> (constants for eight substats plus read-only God / Duo / stage-line previews), <strong>Roles</strong> (archetype formulas full width), and <strong>Verdict rules</strong> (Gem, Grind, Reapp cards). The page uses the same chrome shell as <strong>Account progression</strong> on the Dashboard. The last-opened subtab is remembered for this browser session.</p>
+              <p><strong>Roles vs Engine vs verdicts:</strong> <strong>Roles</strong> (six archetype formulas) decide whether a rune fits a build. <strong>Engine</strong> constants feed three read-only previews — <strong>God</strong> (Hero/Leg), <strong>High Roll</strong> (stage × grade), <strong>Duo</strong> (HR × (1 − Duo%), same 8×6 grid). <strong>Verdict</strong> adds Sell / Keep / Gem / Grind / Reapp on top.</p>
+              <p><strong>Sub values in checks:</strong> God, Duo, HR anchors, and Min Stats use <strong>roll + grind</strong> as shown on the rune (innate/prefix excluded from the four sub lines). <strong>Grind verdict</strong> still simulates +5 SPD / +10% from the <em>ungrinded base</em> on that line.</p>
+              <h4 class="guide-subhead">God vs High Roll vs Duo</h4>
+              <ul>
+                <li><strong>God Roll</strong> (role filter «High Roll») — rescue when no archetype matched: any sub line hits the <strong>God</strong> preview line (flat subs ignored).</li>
+                <li><strong>Require High Roll</strong> in formulas — optional: at least one of the four sub lines must reach the <strong>High Roll</strong> grid for your preset stage × grade.</li>
+                <li><strong>Duo Roll</strong> — summed totals per stat vs Duo preview; match when any spreadsheet pair (SPD+HP%, CR+CD, …) both pass.</li>
+              </ul>
               <h4 class="guide-subhead">Formulas — Min Stats vs Require High Roll</h4>
-              <p><strong>Min Stats</strong> counts how many <em>Include</em> substats actually appear on the rune; entries marked must-have do not increase that count. <strong>Require High Roll</strong> is separate — enabling it does not change the Min Stats number.</p>
+              <p><strong>Min Stats</strong> counts how many <em>Include</em> substats appear (roll + grind totals); must-have does not add to that count. <strong>Require High Roll</strong> is separate and checks individual sub lines, not the Min Stats count.</p>
               <h4 class="guide-subhead">Grind verdict</h4>
-              <p>Only SPD / HP% / DEF% / ATK% lines are grind candidates versus the <strong>Late × grade High Roll</strong> line from Engine (God is never the grind reference). The row must still be ungrinded and not enchanted on that stat; the <strong>gap</strong> multiplier tightens how far below the line is acceptable (default <strong>0.5</strong> after preset migration v9 replaced older saves that used <strong>1.0</strong>).</p>
+              <p>Only SPD / HP% / DEF% / ATK% on an <strong>ungrinded, unenchanted</strong> line versus <strong>Late × grade High Roll</strong> (never God). <strong>Gap</strong> default <strong>0.5</strong> (migration v9).</p>
               <h4 class="guide-subhead">Safety rails</h4>
-              <p>Failing a Gem quality gate does not downgrade to <strong>Sell</strong> when the rune already earned a role. Runes with <strong>no role</strong> and <strong>no Duo / High</strong> signal cannot finish as Keep, Finish, Gem, or Grind — only Sell, Reapp, or Upgrade remain.</p>
+              <p>Failing a Gem quality gate does not force <strong>Sell</strong> when a role already matched. With <strong>no role</strong> and no <strong>Duo</strong> or <strong>God</strong> rescue signal, only Sell / Reapp / Upgrade remain.</p>
               <p><strong>Saving:</strong> Changes under <strong>Roles</strong> save continuously and re-run the pipeline immediately. After editing <strong>Engine</strong> constants or <strong>Verdict</strong> inputs, press <strong>Save &amp; Recalculate</strong> at the bottom so Dashboard + Rune Table match.</p>
             </section>
           </div>
           <div class="guide-lang guide-lang--ru guide-list">
             <section class="guide-section" aria-labelledby="guide-h-rules-ru">
               <h3 id="guide-h-rules-ru">Вкладка «Правила рун»</h3>
-              <p><strong>Разделы:</strong> Три подвкладки — <strong>Движок</strong> (константы для восьми сабов и превью God / Duo / стадий), <strong>Вердикт</strong> (Gem, Grind, Reapp), <strong>Роли</strong> (формулы архетипов на всю ширину). Последняя открытая подвкладка запоминается на сессию.</p>
-              <p><strong>Роли, движок, вердикты:</strong> <strong>Роли</strong> — подходит ли руна архетипу. <strong>Движок</strong> — числа God, Duo, High Roll по стадиям для якорей и проверок. <strong>Вердикт</strong> — слой Sell / Keep / Gem / Grind и т.д.</p>
-              <p><strong>Базовые сабы:</strong> Назначение роли, Duo/HR и пороги вердиктов смотрят на <em>базовые</em> значения без гема/гринда. Флаги зачарования/гринда по строкам саба всё равно участвуют в правилах Gem/Grind.</p>
+              <p><strong>Разделы:</strong> Три подвкладки по порядку — <strong>Движок</strong> (константы для восьми сабов и превью God / Duo / стадий), <strong>Роли</strong> (формулы архетипов на всю ширину), <strong>Правила вердикта</strong> (Gem, Grind, Reapp). Оформление — тот же chrome-блок, что у <strong>Прогресса аккаунта</strong> на панели. Последняя открытая подвкладка запоминается на сессию.</p>
+              <p><strong>Роли, движок, вердикты:</strong> <strong>Роли</strong> — шесть формул архетипов. <strong>Движок</strong> — превью God, High Roll (стадия × грейд), Duo (HR × (1 − Duo%)). <strong>Вердикт</strong> — Sell / Keep / Gem / Grind / Reapp.</p>
+              <p><strong>Значения сабов:</strong> God, Duo, якорь HR и Min Stats — <strong>ролл + гринд</strong> как на руне (четыре строки сабов, без innate). <strong>Grind</strong> считает от <em>базы до камня</em> на непрокачанной строке.</p>
+              <h4 class="guide-subhead">God, High Roll и Duo</h4>
+              <ul>
+                <li><strong>God Roll</strong> (в фильтре роли «High Roll») — спасение без архетипа: любая строка саба ≥ линии God (flat не считаются).</li>
+                <li><strong>Require High Roll</strong> в формулах — опционально: хотя бы одна из четырёх строк сабов ≥ сетки High Roll для пресета.</li>
+                <li><strong>Duo Roll</strong> — суммы по статам против превью Duo; пара как в таблице (SPD+HP%, CR+CD, …).</li>
+              </ul>
               <h4 class="guide-subhead">Формулы — Min Stats и Require High Roll</h4>
-              <p><strong>Min Stats</strong> считает, сколько Include-сабов реально есть на руне; must-have в этот счёт не входит. <strong>Require High Roll</strong> — отдельное требование, его включение не меняет число Min Stats.</p>
+              <p><strong>Min Stats</strong> — сколько Include-сабов есть (с учётом гринда); must-have не увеличивает счёт. <strong>Require High Roll</strong> отдельно и проверяет <em>строки</em> сабов, не сумму Min Stats.</p>
               <h4 class="guide-subhead">Вердикт Grind</h4>
-              <p>Кандидаты — только SPD / HP% / DEF% / ATK% относительно линии <strong>Late × грейд High Roll</strong> из движка (God не опорная линия для гринда). Строка без гринда и без зачарования по целевому стату; множитель <strong>gap</strong> сужает допустимое отставание от линии (по умолчанию <strong>0.5</strong> после миграции v9 вместо старого <strong>1.0</strong>).</p>
+              <p>SPD / HP% / DEF% / ATK% на строке <strong>без гринда и гема</strong> к линии <strong>Late × грейд High Roll</strong> (не God). <strong>Gap</strong> по умолчанию <strong>0.5</strong> (миграция v9).</p>
               <h4 class="guide-subhead">Защита от странных вердиктов</h4>
-              <p>Провал quality gate для Gem не превращает руну в <strong>Sell</strong>, если роль уже есть. Без роли и без сигнала Duo/High нельзя получить Keep, Finish, Gem или Grind — остаются Sell, Reapp, Upgrade.</p>
+              <p>Gem quality gate не сбрасывает в <strong>Sell</strong> руну с ролью. Без роли и без <strong>Duo</strong> / <strong>God</strong> — только Sell, Reapp, Upgrade.</p>
               <p><strong>Сохранение:</strong> Правки в <strong>Ролях</strong> сохраняются и пересчитывают руны сразу. После изменений в <strong>Движке</strong> или <strong>Вердикте</strong> нажмите <strong>Сохранить и пересчитать</strong> внизу, чтобы панель и таблица совпали.</p>
             </section>
           </div>
@@ -763,7 +792,8 @@
             <section class="guide-section" aria-labelledby="guide-h-tips-en">
               <h3 id="guide-h-tips-en">Tips, FAQ &amp; misc</h3>
               <p><strong>Where language lives:</strong> Open the <strong>App Settings</strong> tab and use the <strong>Language</strong> dropdown (English / Russian).</p>
-              <p><strong>Theme:</strong> Light / dark toggle sits beside the donate control in the header.</p>
+              <p><strong>Theme:</strong> <strong>Dark</strong> is the default on first visit. Light / dark toggle sits beside the donate control in the header.</p>
+              <p><strong>Demo banner:</strong> When sample data is loaded, a full-width bar sits directly under the header (sticky with the header) and reminds you to upload your own SWEX JSON.</p>
               <p><strong>What persists:</strong> Loaded runes per slot, customized rules, Rune Table view state in the URL hash, and theme/language usually live in <strong>localStorage</strong> for this origin. Clearing site data removes them.</p>
               <p><strong>No cloud sync:</strong> There is no account system — backups are whatever you export from SWEX or copy yourself.</p>
               <p><strong>SWEX quirks:</strong> Rare exports expose <code>set_id</code> <strong>99</strong>; that is not a normal playable rune set name in-game, so the UI may label it Set99.</p>
@@ -777,7 +807,8 @@
             <section class="guide-section" aria-labelledby="guide-h-tips-ru">
               <h3 id="guide-h-tips-ru">Советы, вопросы и прочее</h3>
               <p><strong>Язык:</strong> Вкладка <strong>Приложение</strong> — список <strong>Язык</strong> (English / Русский).</p>
-              <p><strong>Тема:</strong> Светлая / тёмная — переключатель рядом с донатом в шапке.</p>
+              <p><strong>Тема:</strong> По умолчанию при первом заходе — <strong>тёмная</strong>. Переключатель светлой / тёмной темы — рядом с донатом в шапке.</p>
+              <p><strong>Демо-плашка:</strong> При загрузке примера данных — полноширинная полоса сразу под шапкой (липнет вместе с шапкой) с напоминанием загрузить свой SWEX JSON.</p>
               <p><strong>Что сохраняется:</strong> Руны по слотам, правила, состояние вида вкладки «Таблица» в хэше URL, тема и язык — как правило в <strong>localStorage</strong>. Очистка данных сайта всё сбросит.</p>
               <p><strong>Без облака:</strong> Аккаунта нет — «бэкап» это ваш SWEX JSON и то, что сами сохраните.</p>
               <p><strong>Особенности SWEX:</strong> Редкий <code>set_id</code> <strong>99</strong> не соответствует обычному игровому сету — в интерфейсе может отображаться Set99.</p>

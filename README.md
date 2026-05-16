@@ -38,6 +38,7 @@ The project grew out of a **[community-driven Google Sheet](#google-sheet-altern
 ### Rune Table
 
 - Search, header filters (verdict, role, grade, set, slot, main stat), column sort.
+- Substats show **roll + grind** as on the rune; `[n]` in brackets is the **grindstone bonus** only (e.g. `SPD 26 [3]`).
 - Optional **Eff over 100%** column (same formula, uncapped — aligns with elite / god-tier comparisons).
 - **Dense rows** toggle; **CSV export**; **Target** hints for Gem/Grind when relevant.
 - Large matches may **paginate** the grid for speed — **Load all** pulls the full filtered list when needed.
@@ -45,10 +46,10 @@ The project grew out of a **[community-driven Google Sheet](#google-sheet-altern
 
 ### Rune Rules
 
-- **Engine** — eight-stat constants; read-only **God / Duo / stage High Roll** previews.
+- **Engine** — eight-stat constants; read-only **God** (Hero/Leg), **High Roll** (stage × grade), and **Duo** (HR × (1 − Duo%), same 8×6 grid as the spreadsheet Engine columns).
 - **Verdict** — separate cards for **Gem**, **Grind**, **Reapp** (apply with **Save & Recalculate**).
-- **Roles** — six archetype formulas; edits save and reprocess continuously.
-- Last-opened **subtab** is remembered for the session.
+- **Roles** — six archetype formulas; optional **Require High Roll** checks any sub line against the HR grid; edits save and reprocess continuously.
+- Subtabs: **Engine → Roles → Verdict**; last-opened subtab is remembered for the session.
 
 ### Guide & Changelog
 
@@ -57,7 +58,9 @@ The project grew out of a **[community-driven Google Sheet](#google-sheet-altern
 
 ### Interface
 
-- Light / dark theme; **English / Русский** for translated UI strings (**App Settings**).
+- **Dark** theme by default; light/dark toggle in the header.
+- **English / Русский / Français** for UI strings (**App Settings**).
+- Centered content width (~1200px); Rune Rules uses the same chrome as Account progression on the Dashboard.
 
 ---
 
@@ -74,7 +77,14 @@ Thresholds tighten as **account depth** increases (same design goal as the origi
 | **Tank** | HP% + DEF% + RES — effective bulk |
 | **Bruiser** | Mix of survivability and crit-based damage |
 
-On top of roles, **God Roll**, **Duo Roll**, **Reapp**, and **Grind** layers implement rescue paths and optimization — see the in-app **Guide** for details.
+On top of roles:
+
+| Layer | Purpose |
+|-------|---------|
+| **God Roll** | Rescue when no archetype matched — any sub line (roll + grind) hits the God line (role filter still labeled «High Roll»). |
+| **Duo Roll** | Two stats on the rune both meet Duo thresholds (spreadsheet pair list). |
+| **Require HR** | In formulas — at least one sub line reaches the High Roll grid for your preset. |
+| **Grind / Gem / Reapp** | Optimization verdicts — see the in-app **Guide**. |
 
 ---
 
@@ -114,7 +124,7 @@ Verdicts appear in **Column S** after import. Changelog lives on a dedicated she
 
 ## Pipeline (conceptual)
 
-Each rune passes through staged checks — **upgrade gate** → **bad flats** → **reapp / meta scouting** → **God & Duo signals** → **role archetypes** → **grind/gem** optimization — ending in **one verdict**. The web app surfaces this as Dashboard + Table + Rules instead of hidden formulas.
+Each rune passes through staged checks — **upgrade gate** → **bad flats** → **reapp / meta scouting** → **role archetypes** → **God / Duo rescue** → **grind/gem** optimization — ending in **one verdict**. Thresholds use **roll + grind** totals (as on the rune); Grind simulation still starts from the ungrinded base on that line. The web app surfaces this as Dashboard + Table + Rules instead of hidden formulas.
 
 ---
 

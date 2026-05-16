@@ -41,6 +41,9 @@
   --radius-lg: 10px;
   --glow-accent: 0 0 24px rgba(142, 197, 255, 0.22);
 
+  --app-content-max: 1200px;
+  --app-gutter: 20px;
+
   /* Progression stages (Early / Mid / Late) — shared accents */
   --stage-early: var(--green);
   --stage-mid: var(--gold);
@@ -180,10 +183,20 @@ body {
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
 
 /* ===================== HEADER ===================== */
-.site-header {
+.site-chrome-sticky {
   position: sticky;
   top: 0;
   z-index: 100;
+  width: 100%;
+  overflow-x: visible;
+  overflow-y: visible;
+  background: color-mix(in srgb, var(--bg2) 92%, transparent);
+  backdrop-filter: blur(12px);
+}
+
+.site-header {
+  position: relative;
+  z-index: 1;
   background: color-mix(in srgb, var(--bg2) 92%, transparent);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
@@ -192,8 +205,13 @@ body {
   overflow-y: visible;
 }
 
+/* Demo bar supplies its own top gold edge — avoid double line under header */
+.site-chrome-sticky:has(.demo-dataset-banner:not([hidden])) .site-header {
+  border-bottom-color: transparent;
+}
+
 .header-shell {
-  max-width: 1440px;
+  max-width: var(--app-content-max);
   margin: 0 auto;
 }
 
@@ -202,7 +220,6 @@ body {
   align-items: center;
   gap: 10px 14px;
   padding: 8px 14px 8px 12px;
-  border-bottom: 1px solid var(--border);
   min-height: 52px;
 }
 
@@ -213,20 +230,21 @@ body {
 .logo {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-family: var(--font-head);
-  font-size: 1.35rem;
-  letter-spacing: 0.08em;
-  white-space: nowrap;
-  color: var(--text-hi);
+  flex-shrink: 0;
+  text-decoration: none;
+  color: inherit;
+  line-height: 0;
 }
-.logo-icon {
-  color: var(--accent);
-  font-size: 1.5rem;
-  filter: drop-shadow(0 0 6px var(--accent));
+
+.logo__img {
+  display: block;
+  height: 34px;
+  width: auto;
+  max-width: min(196px, 46vw);
 }
-.logo strong {
-  color: var(--accent);
+
+.light-theme .logo__img {
+  filter: brightness(1.05) saturate(1.08);
 }
 
 .tabs-scroll {
@@ -403,6 +421,39 @@ html[lang="ru"] .header-theme-btn.header-theme-btn--wide {
 }
 
 .light-theme #tab-dashboard {
+  --dash-chrome-fill: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--surface) 88%, var(--accent) 12%) 0%,
+    var(--surface) 58%
+  );
+  --dash-chrome-border: 1px solid color-mix(in srgb, var(--border2) 78%, var(--accent));
+  --dash-chrome-shadow:
+    0 1px 3px color-mix(in srgb, var(--text-hi) 4%, transparent),
+    0 0 26px color-mix(in srgb, var(--accent) 11%, transparent);
+  --dash-chrome-shadow-hover:
+    0 4px 22px color-mix(in srgb, var(--accent) 14%, transparent),
+    0 0 34px color-mix(in srgb, var(--accent) 12%, transparent);
+  --dash-inner-well: color-mix(in srgb, var(--surface) 91%, var(--bg2));
+}
+
+/* Rune Rules tab: same chrome tokens as Account progression */
+#tab-settings {
+  --dash-chrome-fill: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--surface) 92%, var(--accent) 8%) 0%,
+    var(--surface) 62%
+  );
+  --dash-chrome-border: 1px solid color-mix(in srgb, var(--border2) 88%, var(--accent));
+  --dash-chrome-shadow:
+    0 1px 3px color-mix(in srgb, var(--text-hi) 5%, transparent),
+    0 0 28px color-mix(in srgb, var(--accent) 7%, transparent);
+  --dash-chrome-shadow-hover:
+    0 4px 22px color-mix(in srgb, var(--accent) 16%, transparent),
+    0 0 36px color-mix(in srgb, var(--accent) 11%, transparent);
+  --dash-inner-well: color-mix(in srgb, var(--surface) 93%, var(--bg3));
+}
+
+.light-theme #tab-settings {
   --dash-chrome-fill: linear-gradient(
     160deg,
     color-mix(in srgb, var(--surface) 88%, var(--accent) 12%) 0%,
@@ -1222,34 +1273,47 @@ select:not(#stage-select) {
 }
 select:not(#stage-select):focus { border-color: var(--accent); }
 
-/* ===================== DEMO DATASET BAR (embedded demo.json) ===================== */
+/* ===================== DEMO DATASET BAR (assets/demo.json) ===================== */
 @keyframes swrm-demo-bar-pulse {
   0%,
   100% {
-    box-shadow:
-      inset 0 0 0 2px rgba(240, 204, 74, 0.55),
-      0 0 0 1px rgba(240, 204, 74, 0.25),
-      0 6px 24px rgba(0, 0, 0, 0.35);
+    border-block-color: color-mix(in srgb, var(--gold) 70%, transparent);
   }
   50% {
-    box-shadow:
-      inset 0 0 0 2px rgba(255, 160, 74, 0.75),
-      0 0 0 1px rgba(255, 160, 74, 0.35),
-      0 10px 32px rgba(255, 160, 74, 0.12);
+    border-block-color: var(--gold);
   }
 }
 
 .demo-dataset-banner {
-  width: 100%;
   flex-shrink: 0;
   position: relative;
-  z-index: 95;
+  z-index: 0;
+  width: 100%;
+  max-width: none;
 }
 
 .demo-dataset-banner__inner {
-  max-width: 1440px;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border-block: 2px solid var(--gold);
+  border-inline: none;
+  background: linear-gradient(
+    100deg,
+    rgba(240, 204, 74, 0.22) 0%,
+    rgba(152, 120, 255, 0.16) 45%,
+    rgba(90, 171, 255, 0.12) 100%
+  );
+  animation: swrm-demo-bar-pulse 2.8s ease-in-out infinite;
+}
+
+.demo-dataset-banner__content {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--app-content-max);
   margin: 0 auto;
-  padding: 12px 16px;
+  padding: 12px var(--app-gutter);
   display: flex;
   align-items: center;
   gap: 14px;
@@ -1258,14 +1322,6 @@ select:not(#stage-select):focus { border-color: var(--accent); }
   line-height: 1.46;
   font-weight: 500;
   color: var(--text);
-  border-bottom: 3px solid var(--gold);
-  background: linear-gradient(
-    100deg,
-    rgba(240, 204, 74, 0.22) 0%,
-    rgba(152, 120, 255, 0.16) 45%,
-    rgba(90, 171, 255, 0.12) 100%
-  );
-  animation: swrm-demo-bar-pulse 2.8s ease-in-out infinite;
 }
 
 .demo-dataset-banner__badge {
@@ -1331,6 +1387,10 @@ select:not(#stage-select):focus { border-color: var(--accent); }
   );
 }
 
+.light-theme .demo-dataset-banner__content {
+  color: var(--text);
+}
+
 .light-theme .demo-dataset-banner__dismiss {
   background: rgba(0, 0, 0, 0.06);
 }
@@ -1346,7 +1406,7 @@ select:not(#stage-select):focus { border-color: var(--accent); }
 }
 
 @media (max-width: 640px) {
-  .demo-dataset-banner__inner {
+  .demo-dataset-banner__content {
     padding: 10px 12px;
     gap: 10px;
     font-size: 0.82rem;
@@ -1472,18 +1532,11 @@ body.swrm-drop-veil-open {
 
 /* ===================== MAIN ===================== */
 main {
-  max-width: 1440px;
+  max-width: var(--app-content-max);
   margin: 0 auto;
-  padding: 24px;
+  padding: var(--app-gutter);
   flex: 1 0 auto;
-}
-
-/*
- * Wide canvas on Rune Table only. Class is toggled from JS — avoids `:has()` + `100vw`
- * coupling (both can hitch the browser badly on resize: style invalidation + scrollbar feedback).
- */
-html.swrm-runetable-active main {
-  max-width: 1760px;
+  width: 100%;
 }
 
 .site-footer {
@@ -1496,32 +1549,60 @@ html.swrm-runetable-active main {
   
 }
 .footer-shell {
-  max-width: 100%;
+  width: 100%;
+  max-width: none;
   margin: 0;
-  padding: 5px 20px 7px;
+  box-sizing: border-box;
+  padding:
+    5px
+    max(16px, env(safe-area-inset-right, 0px))
+    7px
+    max(16px, env(safe-area-inset-left, 0px));
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: space-between;
-  gap: 4px 16px;
+  gap: 12px 20px;
   font-size: 0.62rem;
   color: var(--text-dim);
   line-height: 1.25;
 }
-html.swrm-runetable-active .footer-shell {
-  max-width: 1760px;
-}
+
 .footer-disclaimer {
-  flex: 1 1 200px;
-  max-width: 52rem;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: min(56rem, calc(100vw - 11rem));
   margin: 0;
+  margin-right: auto;
+  text-align: left;
 }
+
 .footer-version {
-  flex-shrink: 0;
-  margin: 0;
+  flex: 0 0 auto;
+  margin: 0 0 0 auto;
   font-family: var(--font-mono);
   font-size: 0.6rem;
   color: var(--text-dim);
+  text-align: right;
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .footer-shell {
+    flex-wrap: wrap;
+    padding-left: max(12px, env(safe-area-inset-left, 0px));
+    padding-right: max(12px, env(safe-area-inset-right, 0px));
+  }
+  .footer-disclaimer {
+    flex: 1 1 100%;
+    max-width: none;
+    margin-right: 0;
+  }
+  .footer-version {
+    margin-left: 0;
+    width: 100%;
+    text-align: right;
+  }
 }
 
 .hidden { display: none !important; }
@@ -1720,6 +1801,34 @@ html.swrm-runetable-active .footer-shell {
 
 #tab-dashboard .panel-title--inline {
   font-size: 0.88rem;
+}
+
+/* Top SPD: override dashboard .panel-title padding (was pushing label above the select) */
+#tab-dashboard .panel-top-spd .panel-title.panel-title--inline {
+  margin: 0;
+  padding: 0;
+  border-bottom: none;
+  line-height: 1.2;
+  height: auto;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+#tab-dashboard .panel-top-spd .top-spd-toolbar__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: unset;
+}
+
+#tab-dashboard .panel-top-spd .top-spd-set-select {
+  height: 32px;
+  min-height: 32px;
+  margin: 0;
+  padding: 5px 28px 5px 10px;
+  line-height: 1.2;
+  box-sizing: border-box;
+  vertical-align: middle;
 }
 
 #tab-dashboard .chart-bar-wrap {
@@ -2332,33 +2441,23 @@ html[lang='ru'] .slot-share-slot-lbl {
   border-radius: 3px;
 }
 
-.panel-top-spd .panel-title--inline {
-  margin-bottom: 0;
-  padding-bottom: 4px;
-  border-bottom: none;
-}
-
 .top-spd-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px 16px;
   margin-bottom: 8px;
 }
 
-.top-spd-set-label {
-  font-family: var(--font-head);
-  font-size: 0.66rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  text-transform: none;
-  color: var(--text-dim);
+.top-spd-toolbar__row {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  max-width: 100%;
 }
 
 .top-spd-set-select {
-  min-width: 11rem;
-  flex: 1 1 160px;
-  max-width: 22rem;
+  min-width: 10.5rem;
+  width: auto;
+  flex: 0 0 auto;
+  max-width: 16rem;
 }
 
 .top-spd-hint {
@@ -3817,10 +3916,131 @@ table.show-target .target-col-cell { display: table-cell; }
 
 /* ========== Rune Rules tab (structured layout) ========== */
 .rules-tab-shell {
-  max-width: 1320px;
+  max-width: var(--app-content-max);
   margin: 0 auto;
-  padding: 8px 48px 36px;
+  padding: 8px 0 36px;
+  width: 100%;
 }
+
+#tab-settings .rules-page-shell {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-lg);
+  border: var(--dash-chrome-border);
+  background: var(--dash-chrome-fill);
+  box-shadow: var(--dash-chrome-shadow);
+  overflow: hidden;
+}
+
+#tab-settings .rules-page-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 16px;
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--border2) 72%, transparent);
+}
+
+#tab-settings .rules-page-bar__intro {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+
+#tab-settings .rules-page-bar .rules-page-title {
+  margin: 0 0 4px;
+  font-size: 1.12rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+#tab-settings .rules-page-bar .rules-page-lead {
+  margin: 0;
+  max-width: none;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+#tab-settings .rules-subtabs--chrome {
+  flex: 1 1 20rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+#tab-settings .rules-subtabs--chrome .rules-subtab {
+  flex: 1 1 auto;
+  min-width: 7.5rem;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--border2) 88%, transparent);
+  background: color-mix(in srgb, var(--surface) 88%, var(--bg3));
+}
+
+#tab-settings .rules-subtabs--chrome .rules-subtab.is-active {
+  border-color: color-mix(in srgb, var(--accent) 48%, var(--border2));
+  background: color-mix(in srgb, var(--surface) 94%, var(--accent) 6%);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+#tab-settings .rules-subtabs--chrome .rules-subtab__label {
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+#tab-settings .rules-subtabs--chrome .rules-subtab__hint {
+  font-size: 0.68rem;
+}
+
+#tab-settings .rules-page-body {
+  display: flex;
+  flex-direction: column;
+  padding: 16px 16px 8px;
+}
+
+#tab-settings #rules-panel-engine {
+  order: 1;
+}
+
+#tab-settings #rules-panel-roles {
+  order: 2;
+}
+
+#tab-settings #rules-panel-verdict {
+  order: 3;
+}
+
+#tab-settings .rules-card {
+  border: 1px solid color-mix(in srgb, var(--border2) 72%, transparent);
+  background: var(--dash-inner-well);
+  box-shadow: none;
+}
+
+#tab-settings .rules-card--engine {
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--accent) 6%, var(--dash-inner-well)) 0%,
+    var(--dash-inner-well) 55%
+  );
+  border-color: color-mix(in srgb, var(--accent) 22%, var(--border));
+}
+
+#tab-settings .rules-card__head {
+  background: color-mix(in srgb, var(--bg3) 28%, transparent);
+  border-bottom-color: color-mix(in srgb, var(--border2) 65%, transparent);
+}
+
+#tab-settings .rules-tab-footer {
+  margin: 0;
+  padding: 14px 16px 16px;
+  border-top: 1px solid color-mix(in srgb, var(--border2) 72%, transparent);
+  background: color-mix(in srgb, var(--bg3) 22%, transparent);
+}
+
 .rules-page-header {
   margin-bottom: 26px;
   padding-bottom: 20px;
@@ -4019,6 +4239,24 @@ table.show-target .target-col-cell { display: table-cell; }
 .rules-preview-cluster:last-child {
   margin-bottom: 4px;
 }
+
+.engine-preview-heading {
+  margin: 0 0 8px;
+  font-family: var(--font-head);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-hi);
+}
+
+.engine-preview-heading:not(:first-child) {
+  margin-top: 4px;
+}
+
+.s-table--preview th {
+  font-size: 0.68rem;
+  white-space: nowrap;
+}
 .rules-table-scroll {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -4056,13 +4294,23 @@ table.show-target .target-col-cell { display: table-cell; }
 
 @media (max-width: 900px) {
   .rules-tab-shell {
-    padding: 8px 16px 28px;
+    padding: 8px 0 28px;
   }
-  .rules-subtabs {
+  .rules-subtabs:not(.rules-subtabs--chrome) {
     flex-direction: column;
   }
-  .rules-subtab {
+  .rules-subtabs:not(.rules-subtabs--chrome) .rules-subtab {
     flex: none;
+    width: 100%;
+  }
+  #tab-settings .rules-page-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  #tab-settings .rules-subtabs--chrome {
+    flex-direction: column;
+  }
+  #tab-settings .rules-subtabs--chrome .rules-subtab {
     width: 100%;
   }
 }
@@ -4072,7 +4320,7 @@ table.show-target .target-col-cell { display: table-cell; }
   grid-template-columns: 1fr 1fr;
   gap: 24px;
   width: 100%;
-  padding: 0 48px 20px;
+  padding: 0 0 20px;
   align-items: start;
   justify-content: space-between;
 }
@@ -4252,7 +4500,7 @@ table.show-target .target-col-cell { display: table-cell; }
   .dashboard-grid { grid-template-columns: 1fr; }
   .panel-wide { grid-column: span 1; }
   .header-row--nav { gap: 8px; padding-left: 10px; padding-right: 10px; }
-  .logo-text { display: none; }
+  .logo__img { height: 30px; max-width: min(168px, 40vw); }
   .settings-two-col { grid-template-columns: 1fr; gap: 32px; padding: 0 16px 20px; }
   .rules-page-title { font-size: 1.25rem; }
 }

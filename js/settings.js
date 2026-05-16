@@ -50,7 +50,7 @@ const GRADE_NAMES = { 1:'Common', 2:'Magic', 3:'Rare', 4:'Hero', 5:'Legend' };
 const GRADE_SHORT = { 3:'Rare', 4:'Hero', 5:'Legend' };
 
 /** Shown in footer, changelog, and Copy summary — bump when shipping a user-visible build. */
-const APP_VERSION = '1.2.16';
+const APP_VERSION = '1.2.17';
 
 /**
  * Debug only: when true, the verdict engine skips every check that compares `rune.eff`
@@ -195,13 +195,13 @@ const TRANSLATIONS = {
       'Stage and grade affect grind targets, rune power (0–3), and formula anchors «High Roll for Hero/Legend». They do not set the God Roll line.',
     godRollConstants: 'God Roll constants',
     godRollConstantsDesc:
-      'Per stat: God threshold = Base plus the God +% column (same at every stage). The «High Roll» role in the engine uses that God line only.',
+      'Per stat: God line = Base × (1 + God%). The rescue signal (role filter «High Roll») fires when any sub line (roll + grind) reaches that God line — not the HR grid below.',
     rulesPageTitle: 'Rune Rules',
     rulesPageLead:
       'Constants define the numeric thresholds; roles map runes to archetypes. Save at the bottom to refresh verdicts on the Dashboard and Rune Table.',
     rulesSectionPreviewsTitle: 'Threshold previews',
     rulesSectionPreviewsDesc:
-      'Read-only tables: values are computed from Constants above (stage × grade for High Roll lines; Duo lines use the same base scales and each stat’s Duo mod).',
+      'Read-only previews for the 8 stats above. God Roll: Hero vs Legend. High Roll and Duo Roll: stage × grade (Duo = High Roll × (1 − Duo%)).',
     rulesSubtabsAria: 'Rune Rules sections',
     rulesSubtabEngine: 'Engine',
     rulesSubtabEngineDesc: 'Constants and HR/Duo previews',
@@ -213,9 +213,15 @@ const TRANSLATIONS = {
     rolesNavTitle: 'Roles',
     constantsSheetTitle: 'Constants (8 stats)',
     constantsSheetDesc:
-      'Base is the Mid / Hero anchor for that substat (rolled value including grind). Change it when a whole row feels too strict or too soft. The next columns are entered as percents (30 means 30%, not 0.30): God +% adds on top of Base for the God-only line (30 → Base×1.30). Duo −% lowers Duo pair thresholds below the High Roll value (20 → Duo line = 80% of HR). Early % and Late % scale those stages versus Base (80 → 80% of Base). Legend −% at Mid lowers Legend Mid versus Hero Mid for HR (5 → Legend Mid = 95% of Base). The right column shows the computed God threshold. Previews update as you type; use Save to refresh verdicts.',
-    enginePreviewHr: 'High Roll thresholds (by stage & grade)',
-    enginePreviewDuo: 'Duo Roll thresholds (by stage & grade)',
+      'Base is the Mid / Hero anchor for that substat (roll + grind). Percent columns use whole numbers (30 = 30%): God (+%) builds the God Roll line; Duo (−%) scales Duo below High Roll; Early (−%) and Late (+%) scale HR by stage; Legend (−%) lowers Legend vs Hero at Mid. See the three preview blocks below for computed lines. Previews update as you type; Save recalculates verdicts.',
+    enginePreviewGod: 'God Roll',
+    enginePreviewHr: 'High Roll',
+    enginePreviewDuo: 'Duo Roll',
+    enginePreviewDuoHint:
+      'Per-stat Duo line = High Roll × (1 − Duo%). Match when any allowed stat pair both meet their Duo lines (spreadsheet pair list).',
+    previewThresholdGte: '≥',
+    previewGradeHero: 'Hero',
+    previewGradeLegend: 'Legend',
     constantsColStat: 'Stat',
     constantsColHintBase:
       'Mid-game Hero anchor for this substat (roll + grind). Other columns scale from here.',
@@ -229,12 +235,11 @@ const TRANSLATIONS = {
     constantsColHintGrade:
       'At Mid, Legend HR uses Base × (1 − this%/100); Hero Mid stays exactly Base.',
     godColBase: 'Base',
-    godColMod: 'God +%',
-    godColResult: 'God line',
-    constColDuoMod: 'Duo −%',
-    constColEarly: 'Early %',
-    constColLate: 'Late %',
-    constColGrade: 'Leg @Mid −%',
+    godColMod: 'God (+%)',
+    constColDuoMod: 'Duo (−%)',
+    constColEarly: 'Early (−%)',
+    constColLate: 'Late (+%)',
+    constColGrade: 'Legend (−%)',
     resetConstantsButton: 'Reset Constants to defaults',
     resetConstantsHint: 'Reloads the built-in Constants table only. Roles, formulas, and other settings stay unchanged.',
     resetConstantsConfirm:
@@ -359,11 +364,11 @@ const TRANSLATIONS = {
     dashboardSlotShareTitle: 'Runes by slot',
     dashboardSlotShareAria: 'Rune count share per slot',
     dashboardSlotMainsTitle: 'Main stats (2 / 4 / 6)',
-    dashboardTopSpdTitle: 'Top SPD (subs) by slot',
-    dashboardTopSpdSetLabel: 'Set',
+    dashboardTopSpdTitle: 'Top SPD by slot',
+    dashboardTopSpdSetAria: 'Rune set',
     dashboardTopSpdHint:
-      'Percentages are share of runes in that slot (row main × slot column). Pick a set from the list for top SPD substats per slot.',
-    dashboardTopSpdPickHint: 'Select a set to show top SPD substats per slot.',
+      'Percentages are share of runes in that slot (row main × slot column). Top SPD substats for the selected set per slot.',
+    dashboardTopSpdPickHint: 'Select a set to show top SPD per slot.',
     dashboardTopSpdSlotLabel: 'Slot {n}',
     dashboardTopSpdNoRunes: '—',
     dashboardTopSpdNoneOption: '—',
@@ -521,13 +526,13 @@ const TRANSLATIONS = {
       'Стадия и грейд влияют на гринд, уровень силы руны (0–3) и якоря «High Roll for Hero/Legend». Линию God Roll они не задают.',
     godRollConstants: 'Константы God Roll',
     godRollConstantsDesc:
-      'По стату: порог God = Base плюс колонка God +% (одинаков при любой стадии). Роль «High Roll» в движке использует только эту линию God.',
+      'По стату: линия God = Base × (1 + God%). Спасение (фильтр роли «High Roll») — когда любая строка саба (ролл + гринд) дотягивает до God, а не до сетки HR ниже.',
     rulesPageTitle: 'Правила рун',
     rulesPageLead:
       'Constants задают числовые пороги; роли относят руны к архетипам. Сохраните внизу — пересчитаются вердикты на дашборде и в таблице.',
     rulesSectionPreviewsTitle: 'Превью порогов',
     rulesSectionPreviewsDesc:
-      'Только чтение: числа считаются из Constants выше (стадия × грейд для линий High Roll; Duo — те же масштабы и Duo mod по каждому стату).',
+      'Превью для 8 статов выше. God Roll: Hero и Legend. High Roll и Duo Roll: стадия × грейд (Duo = High Roll × (1 − Duo%)).',
     rulesSubtabsAria: 'Разделы правил рун',
     rulesSubtabEngine: 'Движок',
     rulesSubtabEngineDesc: 'Constants и превью HR/Duo',
@@ -539,9 +544,15 @@ const TRANSLATIONS = {
     rolesNavTitle: 'Роли',
     constantsSheetTitle: 'Constants (8 статов)',
     constantsSheetDesc:
-      'Base — якорь Mid / Hero для этого сабстата (ролл + камень). Меняйте, если вся строка кажется слишком жёсткой или слишком мягкой. Следующие колонки вводятся в процентах (30 значит 30%, не 0,30): God +% добавляется к Base для отдельной линии God (30 → Base×1,30). Duo −% опускает пороги пар относительно High Roll (20 → линия Duo = 80% от HR). Early % и Late % масштабируют эти стадии от Base (80 → 80% от Base). Leg @Mid −% в Mid опускает Legend относительно Hero для HR (5 → Legend Mid = 95% от Base). Справа — вычисленный порог God. Превью обновляются при вводе; вердикты — после Сохранить.',
-    enginePreviewHr: 'Пороги High Roll (стадия × грейд)',
-    enginePreviewDuo: 'Пороги Duo Roll (стадия × грейд)',
+      'Base — якорь Mid / Hero (ролл + камень). Проценты целым числом (30 = 30%): God (+%), Duo (−%), Early (−%), Late (+%), Legend (−%) для Mid. Итоговые линии — в трёх превью ниже. Превью при вводе; вердикты — после Сохранить.',
+    enginePreviewGod: 'God Roll',
+    enginePreviewHr: 'High Roll',
+    enginePreviewDuo: 'Duo Roll',
+    enginePreviewDuoHint:
+      'Duo по стату = High Roll × (1 − Duo%). Match — если любая пара из списка таблицы оба стата ≥ своих Duo-линий.',
+    previewThresholdGte: '≥',
+    previewGradeHero: 'Hero',
+    previewGradeLegend: 'Legend',
     constantsColStat: 'Стат',
     constantsColHintBase:
       'Якорь Mid / Hero для сабстата (ролл + камень). Остальные колонки масштабируют от него.',
@@ -555,12 +566,11 @@ const TRANSLATIONS = {
     constantsColHintGrade:
       'В Mid Legend HR = Base × (1 − этот%/100); Hero Mid ровно Base.',
     godColBase: 'Base',
-    godColMod: 'God +%',
-    godColResult: 'Линия God',
-    constColDuoMod: 'Duo −%',
-    constColEarly: 'Early %',
-    constColLate: 'Late %',
-    constColGrade: 'Leg @Mid −%',
+    godColMod: 'God (+%)',
+    constColDuoMod: 'Duo (−%)',
+    constColEarly: 'Early (−%)',
+    constColLate: 'Late (+%)',
+    constColGrade: 'Legend (−%)',
     resetConstantsButton: 'Сбросить Constants к умолчанию',
     resetConstantsHint:
       'Подставляет встроенную таблицу Constants. Роли, формулы и остальные настройки не трогаются.',
@@ -686,10 +696,10 @@ const TRANSLATIONS = {
     dashboardSlotShareTitle: 'Руны по слотам',
     dashboardSlotShareAria: 'Доля рун по слотам',
     dashboardSlotMainsTitle: 'Основные статы (2 / 4 / 6)',
-    dashboardTopSpdTitle: 'Топ SPD (сабы) по слотам',
-    dashboardTopSpdSetLabel: 'Сет',
+    dashboardTopSpdTitle: 'Топ SPD по слотам',
+    dashboardTopSpdSetAria: 'Сет рун',
     dashboardTopSpdHint:
-      'Проценты — доля среди рун в этом слоте (основной стат × колонка слота). Выберите сет в списке для топа SPD в сабах по слотам.',
+      'Проценты — доля среди рун в этом слоте (основной стат × колонка слота). Топ SPD в сабах для выбранного сета по слотам.',
     dashboardTopSpdPickHint: 'Выберите сет, чтобы показать топ SPD по слотам.',
     dashboardTopSpdSlotLabel: 'Слот {n}',
     dashboardTopSpdNoRunes: '—',
@@ -1065,51 +1075,21 @@ function duoLineForStat(stat, colKey, hrTable, statConstants) {
   return roundThresh(hr * (1 - d));
 }
 
+/**
+ * Duo thresholds per stat (Engine K:R): ROUND(HR × (1 − Duo_Mod), 0) for each stage×grade.
+ * Same 8×6 layout as hrThresholds.
+ */
 function computeDuoThresholds(statConstants, hrTable) {
-  const d = {};
-  const cols = HR_COL_KEYS;
-  const keys = [
-    'SPD_min',
-    'SPD_partner_HP',
-    'SPD_partner_DEF',
-    'SPD_partner_ATK',
-    'SPD_partner_CRate',
-    'CRate_for_CDmg', 'CDmg_for_CRate', 'CRate_for_ATK', 'ATK_for_CRate',
-    'HP_for_DEF', 'DEF_for_HP', 'DEF_for_RES', 'RES_for_DEF', 'HP_for_RES', 'RES_for_HP',
-    'HP_for_CDmg', 'CDmg_for_HP', 'HP_for_ACC', 'ACC_for_HP', 'DEF_for_ACC', 'ACC_for_DEF',
-  ];
-  for (let ki = 0; ki < keys.length; ki++) {
-    d[keys[ki]] = {};
-    for (let ci = 0; ci < cols.length; ci++) {
-      const col = cols[ci];
-      d[keys[ki]][col] = 0;
+  const out = {};
+  for (const stat of GOD_STAT_ORDER) {
+    out[stat] = {};
+    for (let i = 0; i < HR_COL_KEYS.length; i++) {
+      const col = HR_COL_KEYS[i];
+      const raw = duoLineForStat(stat, col, hrTable, statConstants);
+      out[stat][col] = Number.isFinite(raw) ? Math.round(raw) : 0;
     }
   }
-  for (let ci = 0; ci < cols.length; ci++) {
-    const col = cols[ci];
-    d.SPD_min[col] = duoLineForStat('SPD', col, hrTable, statConstants);
-    d.SPD_partner_HP[col] = duoLineForStat('HP%', col, hrTable, statConstants);
-    d.SPD_partner_DEF[col] = duoLineForStat('DEF%', col, hrTable, statConstants);
-    d.SPD_partner_ATK[col] = duoLineForStat('ATK%', col, hrTable, statConstants);
-    d.SPD_partner_CRate[col] = duoLineForStat('CRate', col, hrTable, statConstants);
-    d.CRate_for_CDmg[col] = duoLineForStat('CRate', col, hrTable, statConstants);
-    d.CDmg_for_CRate[col] = duoLineForStat('CDmg', col, hrTable, statConstants);
-    d.CRate_for_ATK[col] = duoLineForStat('CRate', col, hrTable, statConstants);
-    d.ATK_for_CRate[col] = duoLineForStat('ATK%', col, hrTable, statConstants);
-    d.HP_for_DEF[col] = duoLineForStat('HP%', col, hrTable, statConstants);
-    d.DEF_for_HP[col] = duoLineForStat('DEF%', col, hrTable, statConstants);
-    d.DEF_for_RES[col] = duoLineForStat('DEF%', col, hrTable, statConstants);
-    d.RES_for_DEF[col] = duoLineForStat('RES', col, hrTable, statConstants);
-    d.HP_for_RES[col] = duoLineForStat('HP%', col, hrTable, statConstants);
-    d.RES_for_HP[col] = duoLineForStat('RES', col, hrTable, statConstants);
-    d.HP_for_CDmg[col] = duoLineForStat('HP%', col, hrTable, statConstants);
-    d.CDmg_for_HP[col] = duoLineForStat('CDmg', col, hrTable, statConstants);
-    d.HP_for_ACC[col] = duoLineForStat('HP%', col, hrTable, statConstants);
-    d.ACC_for_HP[col] = duoLineForStat('ACC', col, hrTable, statConstants);
-    d.DEF_for_ACC[col] = duoLineForStat('DEF%', col, hrTable, statConstants);
-    d.ACC_for_DEF[col] = duoLineForStat('ACC', col, hrTable, statConstants);
-  }
-  return d;
+  return out;
 }
 
 /**
@@ -1626,16 +1606,19 @@ const STATIC_CHANGELOG = [
     date: '2026-05-16',
     items: {
       en: [
-        'Light theme: tinted gradients on preset + Apply suggestion; Speed / Power / Elite cards pick up stage accent on borders and fills.',
-        'English returns to sentence casing like localized builds; App Settings uses the column width, equal-width action grid, shorter FR labels, language switch redraw, scrollbar gutter to stop width flicker.',
+        'Spreadsheet-aligned thresholds: sub values use roll + grind (as on the rune); Duo preview is 8 stats × stage×grade (HR × (1 − Duo%)); Duo match uses the sheet pair list; Require HR checks any of the four sub lines; God rescue uses the God line per sub line.',
+        'Rune Table shows total sub value with [grind bonus] in brackets; Guide, Engine copy, and README updated for God vs High Roll vs Duo.',
+        'UI polish: dark theme default, unified content width, Rune Rules chrome aligned with Account progression; light-theme gradients on depth cards; App Settings layout and FR labels.',
       ],
       ru: [
-        'Светлая тема: градиенты на пресете и «Применить совет», карточки метрик подсвечены цветом этапов.',
-        'Английский в обычной кассе, как у переводов; настройки БД — на всю колонку, ровная сетка кнопок, короткие FR подписи, перерисовка при смене языка, резерв под скроллбар.',
+        'Пороги как в таблице: сабы = ролл + гринд; превью Duo — 8 статов × стадия×грейд; Duo по списку пар; Require HR — любая из четырёх строк сабов; God-спасение — линия God по строке саба.',
+        'Таблица рун: итог саба и [бонус гринда] в скобках; обновлены Guide, подписи Engine и README (God / High Roll / Duo).',
+        'Интерфейс: тёмная тема по умолчанию, единая ширина контента, chrome «Правила рун» как у прогресса; градиенты в светлой теме; настройки приложения и FR.',
       ],
       fr: [
-        'Thème clair : gradients sur préréglage segment + suggestion ; cartes VIT / Puissance / élites en phase avec les teintes d’étape.',
-        'Anglais en casse phrase comme FR/RU ; Paramètres : largeur mieux utilisée, grille de boutons équilibrée, libellés FR courts, rafraîchissement au changement de langue, gouttière scrollbar anti‑à‑coups.',
+        'Seuils alignés tableur : sous-stat = roll + meule ; aperçu Duo 8 stats × stade×grade ; paires Duo comme la feuille ; Require HR sur une des 4 lignes ; sauvetage God ligne par ligne.',
+        'Table runes : total affiché et [bonus meule] entre crochets ; Guide, Engine et README mis à jour.',
+        'UI : thème sombre par défaut, largeur unifiée, chrome Règles runes ; cartes profondeur en thème clair ; Paramètres app.',
       ],
     },
   },
@@ -1695,22 +1678,55 @@ const STATIC_CHANGELOG = [
   },
 ];
 
-/** Roadmap (Changelog tab → Plans) — discussed work not necessarily shipped yet. */
+/** Roadmap (Changelog tab → Plans) — ideas under discussion; not committed. */
 const STATIC_ROADMAP = {
   en: [
-    'Optional “God potential” hint in the UI (informational only, not a Grind verdict).',
-    'Optional stricter Grind rules (e.g. minimum efficiency or count of HR-quality lines).',
-    'Further spreadsheet parity if counts drift after constant tweaks.',
+    'Fix-pack (assets): restore site favicon after move to assets/; confirm demo.json loads from assets/demo.json (keep root fallback). Small, do first.',
+    'Rune Table — Target column on by default; toolbar control only hides/shows the column (invert today’s “Show Target” opt-in).',
+    'Target column — Sell reasons: no role match, Duo near-miss, excluded stat blocking a role, bad flat, low eff for Finish path. Reuse engine flags; keep Gem/Grind targets as today.',
+    'Rename role filter «High Roll» → «God Roll» (matches God rescue; avoids confusion with HR grid).',
+    'Monster Builder — pick archetype (reuse role formulas), show top-5 runes per slot from active export. Note: scoring heuristic + performance on 1000+ runes; not a full rune optimizer.',
+    'Rune Score — separate sortable column: points for strengths, penalties for weaknesses; independent of verdict/role. Note: publish formula in Guide; avoid duplicating Sell logic.',
+    'Artifacts tab — new main tab + SWEX artifact parsing, filters, and rules (large scope; separate from rune engine).',
+    'Monsters tab — 6★ only: % with runes equipped, charts by element and nat3/4/5. Note: needs monster↔rune linkage from SWEX; decide equipped = any rune vs full 6 slots.',
+    'Dashboard — hexagon / radar for Top SPD by slot (slots 1–6): visual vs preset or set target; highlight where speed lags.',
+    'Optional: «God potential» hint (informational, not a verdict).',
+    'Optional: stricter Grind (min eff or min HR-quality sub lines).',
+    'Idea: export Monster Builder picks as text/JSON; copy slot list for in-game equipping.',
+    'Idea: side-by-side compare two database slots (verdict/role diff summary).',
+    'Idea: French guide bodies for new tabs (EN/RU today).',
   ],
   ru: [
-    'Опциональная подсказка «God potential» в интерфейсе (только информация, не вердикт Grind).',
-    'Опционально ужесточить Grind (например порог eff или число линий уровня HR).',
-    'Дальнейшая подгонка под таблицу при расхождении после правок констант.',
+    'Fix-pack (assets): вернуть favicon из assets/; проверить загрузку demo.json из assets/demo.json (fallback в корень). Мелочь, сделать первым.',
+    'Таблица рун — колонка Target включена по умолчанию; кнопка только скрывает/показывает (инверсия нынешнего «Show Target»).',
+    'Target — причины Sell: нет роли, почти Duo, Exclude блокирует роль, плохой flat, низкий eff для Finish. Gem/Grind как сейчас.',
+    'Переименовать фильтр роли «High Roll» → «God Roll» (спасение по God, не путать с HR).',
+    'Monster Builder — архетип (формулы ролей), топ-5 рун на слот из активного экспорта. Заметка: эвристика + производительность на больших коробках; не полный оптимизатор.',
+    'Rune Score — отдельная сортируемая колонка: баллы за сильные стороны, штрафы за слабые; не связана с вердиктом. Заметка: формула в Guide; не дублировать Sell.',
+    'Вкладка артефактов — парсинг SWEX, фильтры, правила (большой объём, отдельно от рун).',
+    'Вкладка монстров — только 6★: % с рунами, разбивка по стихии и nat3/4/5. Заметка: связка монстр↔руна в SWEX; «экипирован» = любая руна или все 6 слотов.',
+    'Dashboard — шестиугольник/радар Top SPD по слотам 1–6 на фоне цели пресета; где не хватает скорости.',
+    'Опционально: подсказка «God potential» (не вердикт).',
+    'Опционально: ужесточить Grind (порог eff или число сабов уровня HR).',
+    'Идея: экспорт подбора Monster Builder текстом/JSON.',
+    'Идея: сравнение двух слотов базы (сводка отличий вердиктов/ролей).',
+    'Идея: французские тексты Guide для новых вкладок.',
   ],
   fr: [
-    'Indicateur optionnel « potentiel God » (info seulement, pas un verdict Moudre).',
-    'Règles Moudre plus strictes (ex. efficience minimum ou nombre de lignes « HR »).',
-    'Alignement tableur si les comptes dérivent après changement des constantes.',
+    'Correctif assets : favicon dans assets/ ; demo.json via assets/demo.json (repli racine). Priorité rapide.',
+    'Table runes — colonne Target visible par défaut ; le bouton masque/affiche seulement.',
+    'Target — motifs Sell : pas de rôle, Duo presque, stat Exclude, flat faible, eff bas pour Finish. Gem/Meule inchangés.',
+    'Renommer le filtre « High Roll » en « God Roll ».',
+    'Monster Builder — archétype (formules rôles), top-5 runes par emplacement. Heuristique + perfs gros comptes ; pas d’optimiseur complet.',
+    'Rune Score — colonne triable indépendante des verdicts ; formule documentée dans le Guide.',
+    'Onglet artéfacts — parsing SWEX dédié (gros chantier, moteur séparé).',
+    'Onglet monstres — 6★ : % runes équipées, élément, nat3/4/5 ; lien monstre↔rune SWEX à définir.',
+    'Dashboard — hexagone / radar VIT par slot (1–6) vs cible preset.',
+    'Optionnel : indicateur « potentiel God » (informatif).',
+    'Optionnel : Meule plus stricte (eff min ou lignes HR).',
+    'Idée : export texte/JSON des picks Monster Builder.',
+    'Idée : comparer deux slots de base (écarts verdicts/rôles).',
+    'Idée : corps de guide FR pour les nouveaux onglets.',
   ],
 };
 

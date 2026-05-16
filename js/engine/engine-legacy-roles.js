@@ -11,65 +11,48 @@
   }
 
   /**
-   * God Roll (UI label «High Roll»): any sub >= grade-aware God threshold.
-   * Legend uses gradeMod discount before applying godMod.
+   * God Roll rescue (UI role label «High Roll»): any sub line (roll + grind) >= God line.
    */
   function checkHighRoll(rune, stage, settings) {
-    const sm = statMap(rune);
-    const order = window.SWRM.GOD_STAT_ORDER || [];
-    for (let i = 0; i < order.length; i++) {
-      const stat = order[i];
-      const threshold = window.SWRM.getGodThreshold?.(stat, settings, rune.gradeStr);
-      if (threshold != null && threshold > 0 && (sm[stat] || 0) >= threshold) {
-        return true;
-      }
+    const subVal = S.subRuneValue || ((s) => (Number(s?.val) || 0) + (Number(s?.grind) || 0));
+    const qRow = S.isQualifyingSubstatRow || ((s) => !!s && s.source !== 'innate');
+    for (const s of rune.substats || []) {
+      if (!qRow(s) || !s.name || s.flat) continue;
+      const threshold = window.SWRM.getGodThreshold?.(s.name, settings, rune.gradeStr);
+      if (threshold != null && threshold > 0 && subVal(s) >= threshold) return true;
     }
     return false;
   }
 
+  /** Spreadsheet Duo: sums per stat vs K:R lines; any listed pair both pass. */
   function checkDuoRoll(rune, stage, settings) {
     const key = modeKey(stage, rune.gradeStr);
     const dr = settings.duoThresholds;
+    if (!dr || typeof dr !== 'object') return false;
     const sm = statMap(rune);
 
-    const spd = sm['SPD'] || 0;
-    const hp = sm['HP%'] || 0;
-    const def = sm['DEF%'] || 0;
-    const atk = sm['ATK%'] || 0;
-    const cr = sm['CRate'] || 0;
-    const cd = sm['CDmg'] || 0;
-    const acc = sm.ACC || 0;
-    const res = sm['RES'] || 0;
+    const hit = (stat) => {
+      const th = dr[stat]?.[key];
+      if (th == null || !(th > 0)) return 0;
+      return (sm[stat] || 0) >= th ? 1 : 0;
+    };
 
-    if (spd >= dr.SPD_min[key]) {
-      const leg = dr.SPD_partner?.[key];
-      const thHp = dr.SPD_partner_HP?.[key] ?? leg;
-      const thDef = dr.SPD_partner_DEF?.[key] ?? leg;
-      const thAtk = dr.SPD_partner_ATK?.[key] ?? leg;
-      const thCr = dr.SPD_partner_CRate?.[key] ?? leg;
-      if (
-        (thHp != null && hp >= thHp) ||
-        (thDef != null && def >= thDef) ||
-        (thAtk != null && atk >= thAtk) ||
-        (thCr != null && cr >= thCr)
-      ) return true;
-    }
-    if (cr >= dr.CRate_for_CDmg[key] && cd >= dr.CDmg_for_CRate[key]) return true;
-    if (cr >= dr.CRate_for_ATK[key] && atk >= dr.ATK_for_CRate[key]) return true;
-    if (hp >= dr.HP_for_DEF[key] && def >= dr.DEF_for_HP[key]) return true;
-    if (def >= dr.DEF_for_RES[key] && res >= dr.RES_for_DEF[key]) return true;
-    if (hp >= dr.HP_for_RES[key] && res >= dr.RES_for_HP[key]) return true;
-    const hpCdA = dr.HP_for_CDmg?.[key];
-    const hpCdB = dr.CDmg_for_HP?.[key];
-    if (hpCdA != null && hpCdB != null && hp >= hpCdA && cd >= hpCdB) return true;
-    const hpAccA = dr.HP_for_ACC?.[key];
-    const hpAccB = dr.ACC_for_HP?.[key];
-    if (hpAccA != null && hpAccB != null && hp >= hpAccA && acc >= hpAccB) return true;
-    const defAccA = dr.DEF_for_ACC?.[key];
-    const defAccB = dr.ACC_for_DEF?.[key];
-    if (defAccA != null && defAccB != null && def >= defAccA && acc >= defAccB) return true;
+    const spd = hit('SPD');
+    const hp = hit('HP%');
+    const def = hit('DEF%');
+    const atk = hit('ATK%');
+    const cr = hit('CRate');
+    const cd = hit('CDmg');
+    const acc = hit('ACC');
+    const res = hit('RES');
 
-    return false;
+    const pairs =
+      spd * hp + spd * def + spd * atk + spd * cr + spd * cd + spd * acc + spd * res
+      + cr * cd + cr * atk
+      + hp * def + hp * res + hp * cd + hp * acc
+      + def * res + def * acc;
+
+    return pairs >= 1;
   }
 
   function checkRole(rune, roleKey, stage, settings) {
@@ -100,7 +83,7 @@
 
     const hrKey = `${key}`;
     const needHR = cfg.requireHR?.[hrKey];
-    if (needHR && !checkHighRoll(rune, stage, settings)) return false;
+    if (needHR && !(S.runeHasHrAnchor && S.runeHasHrAnchor(rune, stage, settings))) return false;
 
     return true;
   }

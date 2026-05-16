@@ -19,15 +19,36 @@
     return !!s && s.source !== 'innate';
   }
 
+  /** Roll + grind on one sub line (matches in-game / Analysis columns). */
+  function subRuneValue(s) {
+    if (!s) return 0;
+    const base = Number(s.val);
+    const grind = Number(s.grind);
+    return (Number.isFinite(base) ? base : 0) + (Number.isFinite(grind) ? grind : 0);
+  }
+
   /** { statName: rolled value } from qualifying substats only */
   function statMap(rune) {
     const m = {};
     for (const s of rune.substats) {
       if (!isQualifyingSubstatRow(s)) continue;
-      // Base-only: ignore gem/grind for all calculations.
-      m[s.name] = (m[s.name] || 0) + (s.val || 0);
+      m[s.name] = (m[s.name] || 0) + subRuneValue(s);
     }
     return m;
+  }
+
+  /** Any qualifying sub line (not innate) at/above HR for stage × grade. */
+  function runeHasHrAnchor(rune, stage, settings) {
+    const key = modeKey(stage, rune.gradeStr);
+    const th = settings?.hrThresholds || {};
+    for (const s of rune.substats || []) {
+      if (!isQualifyingSubstatRow(s)) continue;
+      if (!s.name) continue;
+      const threshold = th[s.name]?.[key];
+      if (threshold == null || !(threshold > 0)) continue;
+      if (subRuneValue(s) >= threshold) return true;
+    }
+    return false;
   }
 
   /**
@@ -43,8 +64,7 @@
       if (!tvals) continue;
       const threshold = tvals[key];
       if (threshold == null) continue;
-      const val = (s.val || 0);
-      if (val >= threshold) count++;
+      if (subRuneValue(s) >= threshold) count++;
     }
     if (count >= 3) return 3;
     if (count >= 2) return 2;
@@ -54,6 +74,8 @@
 
   S.modeKey = modeKey;
   S.isQualifyingSubstatRow = isQualifyingSubstatRow;
+  S.subRuneValue = subRuneValue;
   S.statMap = statMap;
+  S.runeHasHrAnchor = runeHasHrAnchor;
   S.runePowerLevel0to3 = runePowerLevel0to3;
 })();

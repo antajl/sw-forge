@@ -6071,7 +6071,6 @@
   const MONSTERS_TAGS_REGISTRY_KEY = 'swrm_monsters_tags_registry_v1';
   const MONSTERS_SELECTED_KEY = 'swrm_monsters_selected_unit_v1';
   const MONSTERS_VIEW_KEY = 'swrm_monsters_view_v1';
-  const MONSTERS_BULK_MODE_KEY = 'swrm_monsters_bulk_mode_v1';
   const MONSTERS_BULK_SEL_KEY = 'swrm_monsters_bulk_sel_v1';
   const ELEMENT_ORDER = ['Fire', 'Water', 'Wind', 'Light', 'Dark'];
   const MONSTER_ROLE_ORDER = ['HP', 'Attack', 'Defense', 'Support'];
@@ -6083,10 +6082,22 @@
   let monstersVisibleUnitIds = [];
   let monstersDetailHideTimer = null;
   let monstersDetailHoverUnitId = null;
-  let monstersBulkMode = false;
   let monstersBulkSelected = new Set();
   let monstersBulkLastIndex = -1;
   let monstersDetailTab = 'info';
+  let monstersRuneFocusState = null;
+
+  function fmtRuneStatVal(type, val, slotNo) {
+    const n = Number(val);
+    if (!Number.isFinite(n)) return '0';
+    const flatFn =
+      window.SWRM && typeof window.SWRM.isMainStatFlat === 'function'
+        ? window.SWRM.isMainStatFlat
+        : window.SWRM && typeof window.SWRM.isFlat === 'function'
+          ? (slot, typeId) => window.SWRM.isFlat(typeId)
+          : () => false;
+    return flatFn(slotNo, type) ? String(Math.round(n)) : `${n}%`;
+  }
 
   function readMonstersFilters() {
     const defaults = {
@@ -6282,26 +6293,33 @@
     for (const id of unitIds) setUnitMetaFlag(id, 'storageMark', !!on);
   }
 
+  function bulkToggleFoodFlag(unitIds) {
+    if (!unitIds.length) return;
+    const allOn = unitIds.every((id) => unitMetaFor(id).food);
+    bulkSetFoodFlag(unitIds, !allOn);
+  }
+
+  function bulkToggleStorageMark(unitIds) {
+    const eligible = unitIds.filter((id) => {
+      const u = monstersEnrichedCache.find((x) => String(x.unitId) === String(id));
+      return !u || !u.inStorage;
+    });
+    if (!eligible.length) return;
+    const allOn = eligible.every((id) => unitMetaFor(id).storageMark);
+    bulkSetStorageMark(eligible, !allOn);
+  }
+
+  function bulkToggleFavoriteFlag(unitIds) {
+    if (!unitIds.length) return;
+    const allOn = unitIds.every((id) => unitMetaFor(id).favorite);
+    for (const id of unitIds) setUnitMetaFlag(id, 'favorite', !allOn);
+  }
+
   function bulkAddCustomTag(unitIds, tag) {
     const n = normalizeCustomTag(tag);
     if (!n) return;
     for (const id of unitIds) addUnitCustomTag(id, n);
     registerCustomTag(n);
-  }
-
-  function readMonstersBulkMode() {
-    try {
-      return localStorage.getItem(MONSTERS_BULK_MODE_KEY) === '1';
-    } catch (e) {
-      return false;
-    }
-  }
-
-  function writeMonstersBulkMode(on) {
-    monstersBulkMode = !!on;
-    try {
-      localStorage.setItem(MONSTERS_BULK_MODE_KEY, monstersBulkMode ? '1' : '0');
-    } catch (e) { /* ignore */ }
   }
 
   function readMonstersBulkSelected() {
@@ -6628,28 +6646,21 @@
     window.addEventListener('resize', reposition);
   }
 
-  function formatMonsterRuneTooltip(r, t) {
+  function formatMonsterRuneTooltip(r, t, slotNo) {
     if (!r) return '';
     const subFn =
       window.SWRM && typeof window.SWRM.subRuneValue === 'function'
         ? window.SWRM.subRuneValue
         : (s) => (Number(s?.val) || 0) + (Number(s?.grind) || 0);
-    const isFlat =
-      window.SWRM && typeof window.SWRM.isFlat === 'function'
-        ? window.SWRM.isFlat
-        : () => false;
-    const fmtVal = (type, val) => {
-      const n = Number(val);
-      if (!Number.isFinite(n)) return '0';
-      return isFlat(type) ? String(Math.round(n)) : `${n}%`;
-    };
     const parts = [];
     const hdr = [r.setName, `+${r.level || 0}`, r.gradeStr || ''].filter(Boolean).join(' ');
     if (hdr) parts.push(hdr);
-    if (r.mainName) parts.push(`${r.mainName} ${fmtVal(r.mainType, r.mainVal)}`);
+    if (r.mainName) {
+      parts.push(`${r.mainName} ${fmtRuneStatVal(r.mainType, r.mainVal, slotNo)}`);
+    }
     if (r.innate_name && r.innate_val) {
       parts.push(
-        `${t.monstersRuneInnate || 'Inn'} ${r.innate_name} ${fmtVal(r.innate_type, r.innate_val)}`,
+        `${t.monstersRuneInnate || 'Inn'} ${r.innate_name} ${fmtRuneStatVal(r.innate_type, r.innate_val, null)}`,
       );
     }
     for (const s of r.substats || []) {
@@ -6664,13 +6675,117 @@
     return parts.join(' · ');
   }
 
+  function computeActiveSetBonuses(u) {
+    const counts = {};
+    for (const slot of u.runeSlots || []) {
+      const name = slot.rune && slot.rune.setName;
+      if (!name) continue;
+      counts[name] = (counts[name] || 0) + 1;
+    }
+    const out = [];
+    for (const [name, total] of Object.entries(counts)) {
+      let left = total;
+      const parts = [];
+      while (left >= 4) {
+        parts.push(4);
+        left -= 4;
+      }
+      if (left >= 2) {
+        parts.push(2);
+        left -= 2;
+      }
+      for (const pieces of parts) {
+        out.push({ name, pieces });
+      }
+    }
+    out.sort((a, b) => b.pieces - a.pieces || String(a.name).localeCompare(String(b.name)));
+    return out;
+  }
+
+  function buildRuneSetBonusSummaryHtml(u, t, db) {
+    const bonuses = computeActiveSetBonuses(u);
+    if (!bonuses.length) return '';
+    const chips = bonuses
+      .map((b) => {
+        const icon =
+          db && typeof db.runeSetImageUrl === 'function' ? db.runeSetImageUrl(b.name) : '';
+        const iconHtml = icon
+          ? `<img class="monsters-rune-set-chip__icon" src="${escapeHtml(icon)}" alt="" width="18" height="18" loading="lazy" decoding="async" referrerpolicy="no-referrer" />`
+          : '';
+        return `<span class="monsters-rune-set-chip">${iconHtml}<span class="monsters-rune-set-chip__label">${escapeHtml(String(b.pieces))} ${escapeHtml(b.name)}</span></span>`;
+      })
+      .join('');
+    const lbl = t.monstersRuneSetsActive || 'Active sets';
+    return (
+      '<div class="monsters-rune-sets" aria-label="' +
+      escapeHtml(lbl) +
+      '">' +
+      chips +
+      '</div>'
+    );
+  }
+
+  function buildListRuneLineHtml(slot, db, t) {
+    const emptySlot = t.monstersRuneEmpty || '—';
+    const slotLbl = t.monstersRuneSlot || 'Slot';
+    const r = slot.rune;
+    const setName = r && r.setName ? r.setName : '';
+    const runeIconUrl = setName && db ? db.runeSetImageUrl(setName) : '';
+    const iconInner = runeIconUrl
+      ? `<img src="${escapeHtml(runeIconUrl)}" alt="" width="16" height="16" loading="lazy" decoding="async" referrerpolicy="no-referrer" />`
+      : '<span class="monsters-list-rune-row__ph" aria-hidden="true"></span>';
+
+    if (!r && !slot.runeId) {
+      return `<div class="monsters-list-rune-row monsters-list-rune-row--empty" data-slot="${slot.slot}" title="${escapeHtml(`${slotLbl} ${slot.slot}`)}">
+        <span class="monsters-list-rune-row__icon">${iconInner}</span>
+        <span class="monsters-list-rune-row__text">${slotLbl} ${slot.slot}: ${escapeHtml(emptySlot)}</span>
+      </div>`;
+    }
+
+    const subFn =
+      window.SWRM && typeof window.SWRM.subRuneValue === 'function'
+        ? window.SWRM.subRuneValue
+        : (s) => (Number(s?.val) || 0) + (Number(s?.grind) || 0);
+    const hdr = [setName, r.level != null ? `+${r.level}` : '', r.gradeStr || '']
+      .filter(Boolean)
+      .join(' ');
+    const mainPart = r.mainName
+      ? `${r.mainName} ${fmtRuneStatVal(r.mainType, r.mainVal, slot.slot)}`
+      : '';
+    const innPart =
+      r.innate_name && r.innate_val
+        ? `${t.monstersRuneInnate || 'Inn'} ${r.innate_name} ${fmtRuneStatVal(r.innate_type, r.innate_val, null)}`
+        : '';
+    const subPart = (r.substats || [])
+      .map((s) => {
+        let line = `${s.name} +${subFn(s)}`;
+        if (s.enchanted) line += '*';
+        if (Number(s.grind) > 0) line += `+${s.grind}`;
+        return line;
+      })
+      .join(', ');
+    const text = [hdr, mainPart, innPart, subPart].filter(Boolean).join(' · ');
+    const tip = formatMonsterRuneTooltip(r, t, slot.slot);
+
+    return `<div class="monsters-list-rune-row" data-slot="${slot.slot}" title="${escapeHtml(tip || text)}">
+        <span class="monsters-list-rune-row__icon">${iconInner}</span>
+        <span class="monsters-list-rune-row__text"><strong>${slotLbl} ${slot.slot}</strong> ${escapeHtml(text)}</span>
+      </div>`;
+  }
+
+  function buildListRuneColumnHtml(u, db, t) {
+    const slots = (u.runeSlots || []).slice().sort((a, b) => a.slot - b.slot);
+    const lines = slots.map((slot) => buildListRuneLineHtml(slot, db, t)).join('');
+    return `<div class="monsters-list__runes-col">${lines}</div>`;
+  }
+
   function bindMonsterRuneTooltips(root, unit, t) {
     if (!root || !unit || typeof setSwrmFloatTipTarget !== 'function') return;
     root.querySelectorAll('[data-slot]').forEach((el) => {
       const slotNo = Number(el.getAttribute('data-slot'));
       if (!Number.isFinite(slotNo)) return;
       const slot = (unit.runeSlots || []).find((s) => s.slot === slotNo);
-      const tip = slot && slot.rune ? formatMonsterRuneTooltip(slot.rune, t) : '';
+      const tip = slot && slot.rune ? formatMonsterRuneTooltip(slot.rune, t, slotNo) : '';
       setSwrmFloatTipTarget(el, tip);
     });
   }
@@ -6713,8 +6828,9 @@
   }
 
   const DETAIL_RUNE_GRID_ORDER = [6, 1, 2, 5, 4, 3];
+  const STAR_SLOT_ANGLES = { 6: -150, 1: -90, 2: -30, 3: 30, 4: 90, 5: 150 };
 
-  function buildRuneDetailPanelHtml(r, t) {
+  function buildRuneDetailPanelHtml(r, t, slotNo) {
     if (!r) {
       return `<p class="monsters-detail__muted">${escapeHtml(t.monstersRuneEmpty || '—')}</p>`;
     }
@@ -6722,15 +6838,6 @@
       window.SWRM && typeof window.SWRM.subRuneValue === 'function'
         ? window.SWRM.subRuneValue
         : (s) => (Number(s?.val) || 0) + (Number(s?.grind) || 0);
-    const isFlat =
-      window.SWRM && typeof window.SWRM.isFlat === 'function'
-        ? window.SWRM.isFlat
-        : () => false;
-    const fmtVal = (type, val) => {
-      const n = Number(val);
-      if (!Number.isFinite(n)) return '0';
-      return isFlat(type) ? String(Math.round(n)) : `${n}%`;
-    };
     const lines = [];
     const hdr = [r.setName, `+${r.level || 0}`, r.gradeStr || ''].filter(Boolean).join(' ');
     if (hdr) {
@@ -6740,12 +6847,12 @@
     }
     if (r.mainName) {
       lines.push(
-        `<div class="monsters-rune-focus__line"><span class="monsters-rune-focus__k">${escapeHtml(r.mainName)}</span><span class="monsters-rune-focus__v">${escapeHtml(fmtVal(r.mainType, r.mainVal))}</span></div>`,
+        `<div class="monsters-rune-focus__line"><span class="monsters-rune-focus__k">${escapeHtml(r.mainName)}</span><span class="monsters-rune-focus__v">${escapeHtml(fmtRuneStatVal(r.mainType, r.mainVal, slotNo))}</span></div>`,
       );
     }
     if (r.innate_name && r.innate_val) {
       lines.push(
-        `<div class="monsters-rune-focus__line"><span class="monsters-rune-focus__k">${escapeHtml(t.monstersRuneInnate || 'Inn')} ${escapeHtml(r.innate_name)}</span><span class="monsters-rune-focus__v">${escapeHtml(fmtVal(r.innate_type, r.innate_val))}</span></div>`,
+        `<div class="monsters-rune-focus__line"><span class="monsters-rune-focus__k">${escapeHtml(t.monstersRuneInnate || 'Inn')} ${escapeHtml(r.innate_name)}</span><span class="monsters-rune-focus__v">${escapeHtml(fmtRuneStatVal(r.innate_type, r.innate_val, null))}</span></div>`,
       );
     }
     for (const s of r.substats || []) {
@@ -6770,33 +6877,99 @@
     return `<div class="monsters-rune-focus">${lines.join('')}</div>`;
   }
 
+  function clearMonsterRuneFocus(root) {
+    if (!root) return;
+    const panel = root.querySelector('[data-rune-focus]');
+    const grid = root.querySelector('.monsters-detail__runes, .monsters-runes--hex-star');
+    if (panel) {
+      panel.hidden = true;
+      panel.innerHTML = '';
+    }
+    if (grid) grid.removeAttribute('aria-hidden');
+    monstersRuneFocusState = null;
+  }
+
   function bindMonsterRuneFocusPanel(root, unit, t) {
     if (!root || !unit) return;
     const panel = root.querySelector('[data-rune-focus]');
     if (!panel) return;
-    const clear = () => {
-      panel.hidden = true;
-      panel.innerHTML = '';
+    const grid = root.querySelector('.monsters-detail__runes, .monsters-runes--hex-star');
+    const unitId = String(unit.unitId);
+
+    const showSlot = (slotNo) => {
+      const slot = (unit.runeSlots || []).find((s) => s.slot === slotNo);
+      if (!slot || !slot.rune) {
+        clearMonsterRuneFocus(root);
+        return;
+      }
+      if (
+        monstersRuneFocusState &&
+        monstersRuneFocusState.unitId === unitId &&
+        monstersRuneFocusState.slot === slotNo
+      ) {
+        return;
+      }
+      monstersRuneFocusState = { unitId, slot: slotNo };
+      panel.innerHTML = buildRuneDetailPanelHtml(slot.rune, t, slotNo);
+      panel.hidden = false;
+      if (grid) grid.setAttribute('aria-hidden', 'true');
+      if (typeof setSwrmFloatTipTarget === 'function') {
+        root.querySelectorAll('[data-slot]').forEach((el) => setSwrmFloatTipTarget(el, ''));
+      }
+      history.pushState({ swrmMonsterRuneFocus: 1, unitId, slot: slotNo }, '');
     };
+
     root.querySelectorAll('[data-slot]').forEach((el) => {
-      if (typeof setSwrmFloatTipTarget === 'function') setSwrmFloatTipTarget(el, '');
       const slotNo = Number(el.getAttribute('data-slot'));
       if (!Number.isFinite(slotNo)) return;
-      el.addEventListener('mouseenter', () => {
-        const slot = (unit.runeSlots || []).find((s) => s.slot === slotNo);
-        if (!slot || !slot.rune) {
-          clear();
-          return;
-        }
-        panel.innerHTML = buildRuneDetailPanelHtml(slot.rune, t);
-        panel.hidden = false;
+      const slot = (unit.runeSlots || []).find((s) => s.slot === slotNo);
+      const tip = slot && slot.rune ? formatMonsterRuneTooltip(slot.rune, t, slotNo) : '';
+      if (typeof setSwrmFloatTipTarget === 'function') setSwrmFloatTipTarget(el, tip);
+
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        if (!slot || !slot.rune) return;
+        showSlot(slotNo);
       });
-      el.addEventListener('mouseleave', clear);
     });
+  }
+
+  if (!window.__swrmMonsterRunePopstate) {
+    window.__swrmMonsterRunePopstate = true;
+    window.addEventListener('popstate', () => {
+      if (!monstersRuneFocusState) return;
+      const wrap = document.querySelector('.monsters-detail__runes-wrap');
+      clearMonsterRuneFocus(wrap);
+    });
+  }
+
+  function isStorageMarked(u) {
+    return !!(u && (u.storageMark || u.inStorage));
+  }
+
+  function buildCardActionsHtml(u, t) {
+    const uid = escapeHtml(String(u.unitId));
+    const storageOn = isStorageMarked(u);
+    const storageTitle = u.inStorage
+      ? t.monstersStorageSwex || t.monstersLocationStorage || 'Storage (SWEX)'
+      : t.monstersStorageMark || 'Storage tag';
+    const storageDisabled = u.inStorage ? ' disabled' : '';
+    return `<div class="monsters-card__actions">
+        <button type="button" class="monsters-tag-btn monsters-tag-btn--sm${u.favorite ? ' monsters-tag-btn--on' : ''}" data-unit-tag="favorite" data-unit-id="${uid}" aria-pressed="${u.favorite}" title="${escapeHtml(t.monstersFavorite || 'Favorite')}">★</button>
+        <button type="button" class="monsters-tag-btn monsters-tag-btn--sm${u.food ? ' monsters-tag-btn--on' : ''}" data-unit-tag="food" data-unit-id="${uid}" aria-pressed="${u.food}" title="${escapeHtml(t.monstersFood || 'Food')}">🍖</button>
+        <button type="button" class="monsters-tag-btn monsters-tag-btn--sm${storageOn ? ' monsters-tag-btn--on' : ''}${u.inStorage ? ' monsters-tag-btn--swex' : ''}" data-unit-tag="storageMark" data-unit-id="${uid}" aria-pressed="${storageOn}" title="${escapeHtml(storageTitle)}"${storageDisabled}>▣</button>
+        ${buildLocationIconHtml(u, t)}
+      </div>`;
   }
 
   function buildListRowMetaHtml(u, t) {
     const uid = escapeHtml(String(u.unitId));
+    const storageOn = isStorageMarked(u);
+    const storageTitle = u.inStorage
+      ? t.monstersStorageSwex || t.monstersLocationStorage || 'Storage (SWEX)'
+      : t.monstersStorageMark || 'Storage tag';
+    const storageDisabled = u.inStorage ? ' disabled' : '';
     const tagChips = (u.customTags || [])
       .map(
         (tag) =>
@@ -6807,7 +6980,7 @@
       <div class="monsters-card__actions monsters-card__actions--list">
         <button type="button" class="monsters-tag-btn monsters-tag-btn--sm${u.favorite ? ' monsters-tag-btn--on' : ''}" data-unit-tag="favorite" data-unit-id="${uid}" aria-pressed="${u.favorite}" title="${escapeHtml(t.monstersFavorite || 'Favorite')}">★</button>
         <button type="button" class="monsters-tag-btn monsters-tag-btn--sm${u.food ? ' monsters-tag-btn--on' : ''}" data-unit-tag="food" data-unit-id="${uid}" aria-pressed="${u.food}" title="${escapeHtml(t.monstersFood || 'Food')}">🍖</button>
-        <button type="button" class="monsters-tag-btn monsters-tag-btn--sm${u.storageMark ? ' monsters-tag-btn--on' : ''}" data-unit-tag="storageMark" data-unit-id="${uid}" aria-pressed="${u.storageMark}" title="${escapeHtml(t.monstersStorageMark || 'Storage tag')}">▣</button>
+        <button type="button" class="monsters-tag-btn monsters-tag-btn--sm${storageOn ? ' monsters-tag-btn--on' : ''}${u.inStorage ? ' monsters-tag-btn--swex' : ''}" data-unit-tag="storageMark" data-unit-id="${uid}" aria-pressed="${storageOn}" title="${escapeHtml(storageTitle)}"${storageDisabled}>▣</button>
         ${buildLocationIconHtml(u, t)}
       </div>
       <div class="monsters-list__tags">
@@ -6841,27 +7014,37 @@
   function syncMonstersBulkBar(t) {
     const bar = document.getElementById('monsters-bulk-bar');
     const countEl = document.getElementById('monsters-bulk-count');
-    const toggle = document.getElementById('monsters-bulk-toggle');
-    if (toggle) {
-      const on = monstersBulkMode;
-      toggle.classList.toggle('monsters-toolbar-btn--active', on);
-      toggle.setAttribute('aria-pressed', on ? 'true' : 'false');
-      const lbl = document.getElementById('lbl-monsters-bulk-toggle');
-      const text = on
-        ? t.monstersBulkModeOn || 'Selecting…'
-        : t.monstersBulkModeOff || 'Select';
-      if (lbl) lbl.textContent = text;
-      else toggle.textContent = text;
-    }
-    if (!bar) return;
-    if (!monstersBulkMode) {
-      bar.hidden = true;
-      return;
-    }
-    bar.hidden = false;
     const n = monstersBulkSelected.size;
     const tpl = t.monstersBulkCountTpl || '{n} selected';
-    if (countEl) countEl.textContent = tpl.replace(/\{n\}/g, String(n));
+    if (countEl) countEl.textContent = n ? tpl.replace(/\{n\}/g, String(n)) : '';
+    if (!bar) return;
+    bar.hidden = !n;
+    if (!n) return;
+    const ids = [...monstersBulkSelected];
+    const syncMarkBtn = (id, key, isOn) => {
+      const btn = document.getElementById(id);
+      if (!btn) return;
+      const on = isOn(ids);
+      btn.classList.toggle('monsters-bulk-mark-btn--on', on);
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    };
+    syncMarkBtn('monsters-bulk-favorite', 'favorite', (list) => list.length > 0 && list.every((uid) => unitMetaFor(uid).favorite));
+    syncMarkBtn('monsters-bulk-food', 'food', (list) => list.length > 0 && list.every((uid) => unitMetaFor(uid).food));
+    syncMarkBtn('monsters-bulk-storage', 'storageMark', (list) => {
+      const eligible = list.filter((uid) => {
+        const u = monstersEnrichedCache.find((x) => String(x.unitId) === String(uid));
+        return !u || !u.inStorage;
+      });
+      return eligible.length > 0 && eligible.every((uid) => unitMetaFor(uid).storageMark);
+    });
+    const storageBtn = document.getElementById('monsters-bulk-storage');
+    if (storageBtn) {
+      const allSwex = ids.length > 0 && ids.every((uid) => {
+        const u = monstersEnrichedCache.find((x) => String(x.unitId) === String(uid));
+        return u && u.inStorage;
+      });
+      storageBtn.disabled = allSwex;
+    }
   }
 
   function openMonsterRunesInTable(u) {
@@ -6903,10 +7086,28 @@
   }
 
   function buildRuneBlockHtml(u, db, t, view) {
-    if (view === 'list') return buildRuneSetIconsHtml(u, db, t);
-    if (view !== 'list') return '';
-    const inner = buildRuneSlotHtml(u, db, t, {});
-    return `<div class="monsters-runes monsters-runes--hex">${inner}</div>`;
+    if (view === 'list') return '';
+    return '';
+  }
+
+  function buildListRowInfoHtml(u, t) {
+    const filled = (u.runeSlots || []).filter((s) => s.rune || s.runeId).length;
+    const runeTpl = t.monstersListRunesTpl || '{n}/6 runes';
+    const runeTip = t.monstersRunesLabel || 'Runes';
+    const runeHtml = `<span class="monsters-list-info__runes" title="${escapeHtml(runeTip)}">${escapeHtml(runeTpl.replace(/\{n\}/g, String(filled)))}</span>`;
+    const bonuses = computeActiveSetBonuses(u);
+    const setHtml = bonuses.length
+      ? `<span class="monsters-list-info__sets">${bonuses
+          .slice(0, 3)
+          .map((b) => `<span class="monsters-list-info__set">${escapeHtml(b.pieces)} ${escapeHtml(b.name)}</span>`)
+          .join('')}</span>`
+      : '';
+    const skillHtml =
+      u.skillUpsNeeded > 0
+        ? `<span class="monsters-list-info__skills" title="${escapeHtml((t.monstersSkillDeficitTip || '{n} to max').replace(/\{n\}/g, String(u.skillUpsNeeded)))}">${devilmonIconHtml('monsters-list-info__skill-icon')}<span class="monsters-list-info__skill-n">${escapeHtml(String(u.skillUpsNeeded))}</span></span>`
+        : '';
+    const locHtml = u.inStorage ? buildLocationIconHtml(u, t) : '';
+    return `<div class="monsters-list-info">${runeHtml}${setHtml}${skillHtml}${locHtml}</div>`;
   }
 
   function buildRuneSlotHtml(u, db, t, opts) {
@@ -6914,6 +7115,7 @@
     const clickable = opts && opts.clickable;
     const hideNum = opts && opts.hideSlotNum;
     const gridOrder = opts && opts.gridOrder;
+    const starLayout = opts && opts.starLayout;
     const emptySlot = t.monstersRuneEmpty || '—';
     const clsBase = large ? 'monsters-detail-rune' : 'monsters-rune-slot';
     const slotList = gridOrder
@@ -6921,12 +7123,15 @@
           .map((n) => (u.runeSlots || []).find((s) => Number(s.slot) === Number(n)))
           .filter(Boolean)
       : u.runeSlots || [];
-    return slotList
+    const inner = slotList
       .map((slot) => {
         const r = slot.rune;
         const filled = !!(r || slot.runeId);
         const setName = r && r.setName ? r.setName : '';
         const cls = filled ? '' : ` ${clsBase}--empty`;
+        const starCls = starLayout ? ' monsters-rune-star' : '';
+        const angle = starLayout ? STAR_SLOT_ANGLES[slot.slot] : null;
+        const starStyle = angle != null ? ` style="--star-angle: ${angle}deg"` : '';
         const runeIconUrl = filled && db && setName ? db.runeSetImageUrl(setName) : '';
         const iconHtml = runeIconUrl
           ? `<img class="${clsBase}__icon" src="${escapeHtml(runeIconUrl)}" alt="${escapeHtml(setName)}" width="${large ? 32 : 22}" height="${large ? 32 : 22}" loading="lazy" decoding="async" referrerpolicy="no-referrer" />`
@@ -6937,7 +7142,7 @@
             : '';
         const tip = [setName, mainTxt].filter(Boolean).join(' · ') || emptySlot;
         const clickAttr = clickable
-          ? ` role="button" tabindex="0" data-open-runes="1" title="${escapeHtml(t.monstersOpenRunesHint || 'Open in Rune Table')}"`
+          ? ` role="button" tabindex="0" title="${escapeHtml(tip)}"`
           : ` title="${escapeHtml(tip)}"`;
         const labelHtml = runeIconUrl
           ? `<span class="${clsBase}__set ${clsBase}__set--sr">${escapeHtml(setName)}</span>`
@@ -6949,7 +7154,7 @@
         const numHtml = hideNum
           ? ''
           : `<span class="${clsBase}__num">${slot.slot}</span>`;
-        return `<div class="${clsBase}${cls}" data-slot="${slot.slot}"${clickAttr}>
+        return `<div class="${clsBase}${cls}${starCls}" data-slot="${slot.slot}"${starStyle}${clickAttr}>
           ${numHtml}
           ${iconHtml}
           ${labelHtml}
@@ -6957,6 +7162,11 @@
         </div>`;
       })
       .join('');
+    if (starLayout) {
+      const lbl = escapeHtml(t.monstersDetailRunes || 'Runes');
+      return `<div class="monsters-runes monsters-runes--hex-star monsters-runes--game" role="group" aria-label="${lbl}">${inner}${'<'+'/div>'}`;
+    }
+    return inner;
   }
 
   function renderMonstersDetail(u, t, anchorEl) {
@@ -7044,8 +7254,9 @@
       </div>
       <div class="monsters-detail__panel" data-detail-panel="runes"${tab !== 'runes' ? ' hidden' : ''}>
         <h4 class="monsters-detail__section-title monsters-detail__section-title--sr">${escapeHtml(t.monstersDetailRunes || 'Runes')}</h4>
+        ${buildRuneSetBonusSummaryHtml(u, t, db)}
         ${'<div class="monsters-detail__runes-wrap">'}
-          <div class="monsters-detail__runes">${buildRuneSlotHtml(u, db, t, { large: true, clickable: true, hideSlotNum: true, gridOrder: DETAIL_RUNE_GRID_ORDER })}</div>
+          ${buildRuneSlotHtml(u, db, t, { large: true, clickable: true, hideSlotNum: true, gridOrder: DETAIL_RUNE_GRID_ORDER, starLayout: true })}
           <div class="monsters-rune-focus-panel" data-rune-focus hidden></div>
         </div>
       </div>
@@ -7088,6 +7299,10 @@
     const uid = btn.getAttribute('data-unit-id');
     if (!tag || !uid) return;
     if (tag === 'favorite' || tag === 'food' || tag === 'storageMark') {
+      if (tag === 'storageMark') {
+        const u = monstersEnrichedCache.find((x) => String(x.unitId) === String(uid));
+        if (u && u.inStorage) return;
+      }
       toggleUnitMetaFlag(uid, tag);
       renderMonstersPanel();
     }
@@ -7099,8 +7314,6 @@
       const uid = card.getAttribute('data-unit-id');
       const on = monstersBulkSelected.has(String(uid));
       card.classList.toggle('monsters-card--bulk-on', on);
-      const cb = card.querySelector('[data-bulk-check]');
-      if (cb) cb.checked = on;
     });
   }
 
@@ -7108,19 +7321,6 @@
     const grid = document.getElementById('monsters-grid');
     if (!grid || grid.dataset.monstersDelegation === '1') return;
     grid.dataset.monstersDelegation = '1';
-
-    grid.addEventListener('change', (e) => {
-      const cb = e.target.closest('[data-bulk-check]');
-      if (!cb || !grid.contains(cb) || !monstersBulkMode) return;
-      const uid = cb.getAttribute('data-unit-id');
-      if (!uid) return;
-      if (cb.checked) monstersBulkSelected.add(String(uid));
-      else monstersBulkSelected.delete(String(uid));
-      writeMonstersBulkSelected(monstersBulkSelected);
-      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-      syncMonstersBulkBar(t);
-      syncBulkCardStates(grid);
-    });
 
     grid.addEventListener('click', (e) => {
       const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
@@ -7167,30 +7367,23 @@
       const uid = card.getAttribute('data-unit-id');
       if (!uid) return;
 
-      if (e.target.closest('[data-bulk-check]') || e.target.closest('label.monsters-card__bulk')) {
-        return;
-      }
       if (e.target.closest('a')) return;
       if (e.target.closest('[data-tag-input]')) return;
+      if (e.target.closest('.monsters-tag-btn')) return;
 
-      if (monstersBulkMode) {
-        e.preventDefault();
-        const idx = monstersVisibleUnitIds.indexOf(String(uid));
-        if (e.shiftKey && monstersBulkLastIndex >= 0 && idx >= 0) {
-          const a = Math.min(monstersBulkLastIndex, idx);
-          const b = Math.max(monstersBulkLastIndex, idx);
-          for (let i = a; i <= b; i++) monstersBulkSelected.add(monstersVisibleUnitIds[i]);
-        } else {
-          toggleMonstersBulkSelect(uid);
-          monstersBulkLastIndex = idx;
-        }
-        writeMonstersBulkSelected(monstersBulkSelected);
-        syncMonstersBulkBar(t);
-        syncBulkCardStates(grid);
-        return;
+      e.preventDefault();
+      const idx = monstersVisibleUnitIds.indexOf(String(uid));
+      if (e.shiftKey && monstersBulkLastIndex >= 0 && idx >= 0) {
+        const a = Math.min(monstersBulkLastIndex, idx);
+        const b = Math.max(monstersBulkLastIndex, idx);
+        for (let i = a; i <= b; i++) monstersBulkSelected.add(monstersVisibleUnitIds[i]);
+      } else {
+        toggleMonstersBulkSelect(uid);
+        monstersBulkLastIndex = idx;
       }
-
-      selectMonsterUnit(uid, card);
+      writeMonstersBulkSelected(monstersBulkSelected);
+      syncMonstersBulkBar(t);
+      syncBulkCardStates(grid);
     });
   }
 
@@ -7222,42 +7415,12 @@
     const runeCells = buildRuneBlockHtml(u, db, t, view);
     const listCls = view === 'list' ? ' monsters-card--list' : '';
     const bulkSel = monstersBulkSelected.has(String(u.unitId));
-    const bulkCls = monstersBulkMode ? ' monsters-card--bulk-mode' : '';
-    const bulkChecked = bulkSel ? ' checked' : '';
-    const bulkHtml = monstersBulkMode
-      ? `<label class="monsters-card__bulk" title="${escapeHtml(t.monstersBulkSelectOne || 'Select')}"><input type="checkbox" class="monsters-card__bulk-cb" data-bulk-check data-unit-id="${escapeHtml(String(u.unitId))}"${bulkChecked} /></label>`
-      : '';
     const isList = view === 'list';
+    const listInfoHtml = isList ? buildListRowInfoHtml(u, t) : '';
     const listMetaHtml = isList ? buildListRowMetaHtml(u, t) : '';
-    const locHtml = isList ? '' : '';
-    const tagsHtml = isList ? buildCustomTagsHtml(u.customTags) : '';
-    const flagBadges = isList
-      ? [
-          u.favorite
-            ? `<span class="monsters-card__badge monsters-card__badge--fav" title="${escapeHtml(t.monstersFavorite || 'Favorite')}">★</span>`
-            : '',
-          u.food
-            ? `<span class="monsters-card__badge monsters-card__badge--food" title="${escapeHtml(t.monstersFood || 'Food')}">🍖</span>`
-            : '',
-          u.storageMark
-            ? `<span class="monsters-card__badge monsters-card__badge--tag-storage" title="${escapeHtml(t.monstersStorageMark || 'Storage tag')}">▣</span>`
-            : '',
-        ].join('')
-      : '';
-    const actionsHtml = isList
-      ? ''
-      : '';
-    const deficitTipTpl = t.monstersSkillDeficitTip || '{n} skill level(s) to max';
-    const deficitTip =
-      u.skillUpsNeeded > 0
-        ? deficitTipTpl.replace(/\{n\}/g, String(u.skillUpsNeeded))
-        : '';
-    const skillDeficitHtml =
-      view === 'list' && u.skillUpsNeeded > 0
-        ? `<span class="monsters-card__skill-deficit" title="${escapeHtml(deficitTip)}">${devilmonIconHtml('monsters-card__skill-deficit-icon')}<span class="monsters-card__skill-deficit-pill"><span class="monsters-card__skill-deficit-n">${escapeHtml(String(u.skillUpsNeeded))}</span></span></span>`
-        : '';
-    return `<article class="monsters-card${listCls}${bulkCls}${u.favorite ? ' monsters-card--favorite' : ''}${u.food ? ' monsters-card--food' : ''}${u.inStorage ? ' monsters-card--storage' : ''}${bulkSel ? ' monsters-card--bulk-on' : ''}${selected ? ' monsters-card--selected' : ''}${hover ? ' monsters-card--hover' : ''}${elCls ? ` monsters-card--${elCls}` : ''}" data-unit-id="${escapeHtml(String(u.unitId))}" data-master-id="${u.masterId}" tabindex="0">
-          ${bulkHtml}
+    const locHtml = !isList && u.inStorage ? buildLocationIconHtml(u, t) : '';
+    const actionsHtml = isList ? '' : buildCardActionsHtml(u, t);
+    return `<article class="monsters-card${listCls}${u.favorite ? ' monsters-card--favorite' : ''}${u.food ? ' monsters-card--food' : ''}${u.inStorage ? ' monsters-card--storage' : ''}${bulkSel ? ' monsters-card--bulk-on' : ''}${selected ? ' monsters-card--selected' : ''}${hover ? ' monsters-card--hover' : ''}${elCls ? ` monsters-card--${elCls}` : ''}" data-unit-id="${escapeHtml(String(u.unitId))}" data-master-id="${u.masterId}" tabindex="0">
           <div class="monsters-card__bar monsters-card__bar--${elCls}" aria-hidden="true"></div>
           ${actionsHtml}
           <div class="monsters-card__top">
@@ -7265,11 +7428,11 @@
               <img class="monsters-card__img" alt="" width="48" height="48" data-img-file="${escapeHtml(u.imageFilename || '')}" loading="lazy" decoding="async" />
             </div>
             <div class="monsters-card__meta">
-              <p class="monsters-card__name">${locHtml}${nameInner}${skillDeficitHtml}</p>
+              <p class="monsters-card__name">${locHtml}${nameInner}</p>
               <p class="monsters-card__sub">${subBits.join(' · ')}</p>
-              <span class="monsters-card__badges">${flagBadges}</span>${tagsHtml}
             </div>
           </div>
+          ${listInfoHtml}
           ${runeCells}
           ${listMetaHtml}
         </article>`;
@@ -7306,7 +7469,6 @@
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     if (!grid) return;
 
-    monstersBulkMode = readMonstersBulkMode();
     monstersBulkSelected = readMonstersBulkSelected();
     syncMonstersBulkBar(t);
 
@@ -7439,34 +7601,21 @@
       if (file) bindMonsterPortrait(img, file);
     });
 
-    if (view === 'list') {
-      grid.querySelectorAll('.monsters-card').forEach((card) => {
-        const uid = card.getAttribute('data-unit-id');
-        const uRow = enriched.find((x) => String(x.unitId) === String(uid));
-        bindMonsterRuneTooltips(card, uRow, t);
-      });
-    }
-
     grid.querySelectorAll('.monsters-card').forEach((card) => {
       const uid = card.getAttribute('data-unit-id');
-      card.addEventListener('mouseenter', () => {
-        if (!monstersBulkMode) showMonsterDetailForCard(uid, card);
-      });
+      card.addEventListener('mouseenter', () => showMonsterDetailForCard(uid, card));
       card.addEventListener('mouseleave', scheduleMonstersDetailHide);
-      card.addEventListener('focus', () => {
-        if (!monstersBulkMode) showMonsterDetailForCard(uid, card);
-      });
+      card.addEventListener('focus', () => showMonsterDetailForCard(uid, card));
       card.addEventListener('blur', scheduleMonstersDetailHide);
       card.addEventListener('keydown', (e) => {
         if (e.key !== 'Enter' && e.key !== ' ') return;
         e.preventDefault();
-        if (monstersBulkMode) {
-          toggleMonstersBulkSelect(uid);
-          syncMonstersBulkBar(t);
-          syncBulkCardStates(grid);
-        } else {
-          selectMonsterUnit(uid, card);
-        }
+        toggleMonstersBulkSelect(uid);
+        const idx = monstersVisibleUnitIds.indexOf(String(uid));
+        monstersBulkLastIndex = idx;
+        writeMonstersBulkSelected(monstersBulkSelected);
+        syncMonstersBulkBar(t);
+        syncBulkCardStates(grid);
       });
     });
 
@@ -7639,8 +7788,21 @@
     }
     syncMonstersBulkBar(t);
     syncMonstersShowAllButton(readMonstersFilters().fullSixOnly, t);
+    updateMonstersFilterSummary();
+    const bulkMarksLbl = document.getElementById('lbl-monsters-bulk-marks');
+    if (bulkMarksLbl) bulkMarksLbl.textContent = t.monstersBulkMarksGroup || 'Bulk marks';
+    const bulkFavBtn = document.getElementById('monsters-bulk-favorite');
+    if (bulkFavBtn) {
+      const lbl = bulkFavBtn.querySelector('.monsters-bulk-mark-btn__label');
+      if (lbl) lbl.textContent = t.monstersBulkFavorite || t.monstersFavorite || 'Favorite';
+      bulkFavBtn.title = t.monstersFavorite || 'Favorite';
+    }
     const bulkFoodBtn = document.getElementById('monsters-bulk-food');
-    if (bulkFoodBtn) bulkFoodBtn.textContent = t.monstersBulkFood || 'Mark food';
+    if (bulkFoodBtn) {
+      const lbl = bulkFoodBtn.querySelector('.monsters-bulk-mark-btn__label');
+      if (lbl) lbl.textContent = t.monstersBulkFood || 'Food';
+      bulkFoodBtn.title = t.monstersFood || 'Food';
+    }
     const bulkTagLbl = document.getElementById('lbl-monsters-bulk-tag');
     if (bulkTagLbl) bulkTagLbl.textContent = t.monstersFilterTag || 'Tag';
     const bulkApplyBtn = document.getElementById('monsters-bulk-tag-apply');
@@ -7648,7 +7810,11 @@
     const bulkClearBtn = document.getElementById('monsters-bulk-clear');
     if (bulkClearBtn) bulkClearBtn.textContent = t.monstersBulkClear || 'Clear selection';
     const bulkStorageBtn = document.getElementById('monsters-bulk-storage');
-    if (bulkStorageBtn) bulkStorageBtn.textContent = t.monstersBulkStorage || 'Storage tag';
+    if (bulkStorageBtn) {
+      const lbl = bulkStorageBtn.querySelector('.monsters-bulk-mark-btn__label');
+      if (lbl) lbl.textContent = t.monstersBulkStorage || 'Storage';
+      bulkStorageBtn.title = t.monstersStorageMark || 'Storage tag';
+    }
     const lblCards = document.getElementById('lbl-monsters-view-cards');
     if (lblCards) lblCards.title = t.monstersViewCards || 'Cards';
     const btnCards = document.getElementById('monsters-view-cards');
@@ -7695,6 +7861,38 @@
     }
   }
 
+  function countMonstersActiveFilters(f) {
+    let n = 0;
+    if ((f.q || '').trim()) n += 1;
+    if (f.element) n += 1;
+    if (f.location && f.location !== 'all') n += 1;
+    if (f.skillFilter) n += 1;
+    if (f.runeFilter) n += 1;
+    if (f.runeSet) n += 1;
+    if (f.tagFilter) n += 1;
+    if (f.roleFilter) n += 1;
+    if (f.markFilter) n += 1;
+    if (f.fullSixOnly) n += 1;
+    return n;
+  }
+
+  function updateMonstersFilterSummary() {
+    const f = readMonstersFiltersFromDom();
+    const n = countMonstersActiveFilters(f);
+    const det = document.getElementById('monsters-filters-details');
+    const sum = document.getElementById('lbl-monsters-filters-toggle');
+    const countEl = document.getElementById('monsters-filters-active-count');
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const base = t.monstersFiltersToggle || 'Filters';
+    if (sum) sum.textContent = base;
+    const activeTpl = t.monstersFiltersActive || '{n} active';
+    if (countEl) {
+      countEl.textContent = n ? activeTpl.replace(/\{n\}/g, String(n)) : '';
+      countEl.hidden = !n;
+    }
+    if (det) det.classList.toggle('monsters-toolbar__filters--active', n > 0);
+  }
+
   function readMonstersFiltersFromDom() {
     const sixBtn = document.getElementById('monsters-filter-full-six');
     const fullSixOnly = sixBtn?.getAttribute('aria-pressed') === 'true';
@@ -7716,6 +7914,7 @@
   function bindMonstersToolbar() {
     const onFilter = () => {
       writeMonstersFilters(readMonstersFiltersFromDom());
+      updateMonstersFilterSummary();
       renderMonstersPanel();
     };
     document.getElementById('monsters-filter-q')?.addEventListener('input', onFilter);
@@ -7727,25 +7926,19 @@
     document.getElementById('monsters-filter-rune-set')?.addEventListener('change', onFilter);
     document.getElementById('monsters-filter-tag')?.addEventListener('change', onFilter);
     document.getElementById('monsters-filter-role')?.addEventListener('change', onFilter);
-    document.getElementById('monsters-bulk-toggle')?.addEventListener('click', () => {
-      writeMonstersBulkMode(!monstersBulkMode);
-      if (!monstersBulkMode) {
-        monstersBulkSelected = new Set();
-        writeMonstersBulkSelected(monstersBulkSelected);
-        monstersBulkLastIndex = -1;
-      }
-      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-      syncMonstersBulkBar(t);
+    document.getElementById('monsters-bulk-favorite')?.addEventListener('click', () => {
+      if (!monstersBulkSelected.size) return;
+      bulkToggleFavoriteFlag([...monstersBulkSelected]);
       renderMonstersPanel();
     });
     document.getElementById('monsters-bulk-food')?.addEventListener('click', () => {
       if (!monstersBulkSelected.size) return;
-      bulkSetFoodFlag([...monstersBulkSelected], true);
+      bulkToggleFoodFlag([...monstersBulkSelected]);
       renderMonstersPanel();
     });
     document.getElementById('monsters-bulk-storage')?.addEventListener('click', () => {
       if (!monstersBulkSelected.size) return;
-      bulkSetStorageMark([...monstersBulkSelected], true);
+      bulkToggleStorageMark([...monstersBulkSelected]);
       renderMonstersPanel();
     });
     document.getElementById('monsters-bulk-tag-apply')?.addEventListener('click', () => {
@@ -7764,6 +7957,7 @@
       monstersBulkLastIndex = -1;
       const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
       syncMonstersBulkBar(t);
+      syncBulkCardStates(document.getElementById('monsters-grid'));
       renderMonstersPanel();
     });
     document.getElementById('monsters-filter-mark')?.addEventListener('change', onFilter);
@@ -7790,6 +7984,7 @@
     syncMonstersViewToggle(readMonstersView());
     const t0 = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     syncMonstersShowAllButton(readMonstersFilters().fullSixOnly, t0);
+    updateMonstersFilterSummary();
     bindMonstersDetailFloat();
     bindMonstersGridDelegation();
   }

@@ -1,0 +1,120 @@
+.monsters-toolbar-sticky {
+  position: sticky;
+  top: 70px;
+  z-index: 20;
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-xs);
+  background: color-mix(in srgb, var(--bg2) 94%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.monsters-toolbar__row--main {
+  align-items: flex-end;
+}
+
+.monsters-toolbar__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  min-width: 0;
+}
+
+.monsters-toolbar__field-label {
+  font-size: var(--text-caption);
+  font-weight: 600;
+  color: var(--text-dim);
+  line-height: 1.2;
+}
+
+.monsters-toolbar__field--element select {
+  min-width: 7.5rem;
+}
+
+.monsters-toolbar__field--sort select {
+  min-width: 9rem;
+}
+
+.monsters-toolbar__row--main .monsters-search {
+  flex: 1 1 12rem;
+  max-width: 24rem;
+}
+
+.monsters-toolbar__row--main > .monsters-toolbar__filters {
+  flex: 0 0 auto;
+  margin-left: auto;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 0;
+}
+
+.monsters-toolbar__row--main > .monsters-toolbar__filters[open] {
+  flex: 1 1 100%;
+  order: 10;
+  margin-left: 0;
+  margin-top: var(--space-xs);
+}
+
+.monsters-toolbar__row--main > .monsters-toolbar__filters .monsters-toolbar__filters-summary {
+  min-height: 32px;
+  padding: var(--space-xs) var(--space-md);
+  margin: 0;
+}
+
+.monsters-toolbar__filters-panel {
+  padding: 0 var(--space-md) var(--space-md);
+  border-top: 1px solid var(--border2);
+}
+
+.monsters-toolbar__filters-heading {
+  margin: var(--space-sm) 0 var(--space-xs);
+  font-size: var(--text-caption);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+}
+
+.monsters-toolbar__filter-action {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.monsters-toolbar-btn--block {
+  width: 100%;
+  justify-content: center;
+}
+
+.monsters-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-lg) var(--space-md);
+  text-align: center;
+  border: 1px dashed var(--border2);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--bg3) 80%, transparent);
+}
+
+.monsters-empty__title {
+  margin: 0;
+  font-size: var(--text-body);
+  font-weight: 600;
+  color: var(--text-hi);
+}
+
+.monsters-empty__hint {
+  margin: 0;
+  font-size: var(--text-secondary);
+  color: var(--text-dim);
+  max-width: 28rem;
+}
+
+.monsters-empty__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-sm);
+}

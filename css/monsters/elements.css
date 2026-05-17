@@ -1,0 +1,68 @@
+/* Element accents — border / bar only, no full fill */
+:root {
+  --monsters-el-fire: #b85c5c;
+  --monsters-el-water: #5a8fae;
+  --monsters-el-wind: #6a9e62;
+  --monsters-el-light: #c4a84a;
+  --monsters-el-dark: #8a72a8;
+}
+
+.monsters-card--fire {
+  border-color: color-mix(in srgb, var(--monsters-el-fire) 38%, var(--border2));
+}
+
+.monsters-card--water {
+  border-color: color-mix(in srgb, var(--monsters-el-water) 38%, var(--border2));
+}
+
+.monsters-card--wind {
+  border-color: color-mix(in srgb, var(--monsters-el-wind) 38%, var(--border2));
+}
+
+.monsters-card--light {
+  border-color: color-mix(in srgb, var(--monsters-el-light) 40%, var(--border2));
+}
+
+.monsters-card--dark {
+  border-color: color-mix(in srgb, var(--monsters-el-dark) 38%, var(--border2));
+}
+
+.monsters-card__bar--fire {
+  background: var(--monsters-el-fire);
+}
+
+.monsters-card__bar--water {
+  background: var(--monsters-el-water);
+}
+
+.monsters-card__bar--wind {
+  background: var(--monsters-el-wind);
+}
+
+.monsters-card__bar--light {
+  background: var(--monsters-el-light);
+}
+
+.monsters-card__bar--dark {
+  background: var(--monsters-el-dark);
+}
+
+.monsters-detail__portrait-wrap--fire {
+  border-color: color-mix(in srgb, var(--monsters-el-fire) 55%, var(--border2));
+}
+
+.monsters-detail__portrait-wrap--water {
+  border-color: color-mix(in srgb, var(--monsters-el-water) 55%, var(--border2));
+}
+
+.monsters-detail__portrait-wrap--wind {
+  border-color: color-mix(in srgb, var(--monsters-el-wind) 55%, var(--border2));
+}
+
+.monsters-detail__portrait-wrap--light {
+  border-color: color-mix(in srgb, var(--monsters-el-light) 55%, var(--border2));
+}
+
+.monsters-detail__portrait-wrap--dark {
+  border-color: color-mix(in srgb, var(--monsters-el-dark) 55%, var(--border2));
+}

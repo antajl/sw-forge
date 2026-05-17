@@ -1,0 +1,8 @@
+{
+  "name": "sw-rune-master",
+  "private": true,
+  "scripts": {
+    "build:ui": "node tools/build-ui.mjs",
+    "watch:ui": "node tools/watch-ui.mjs"
+  }
+}

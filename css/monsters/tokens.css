@@ -1,0 +1,13 @@
+/* Monsters tab — spacing & type tokens */
+:root {
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --text-caption: 0.75rem; /* 12px min */
+  --text-secondary: 0.8125rem; /* 13px */
+  --text-body: 0.875rem; /* 14px */
+  --text-xs: var(--text-caption);
+  --text-sm: var(--text-body);
+  --text-md: 1rem;
+}

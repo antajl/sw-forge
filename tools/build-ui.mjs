@@ -34,6 +34,19 @@ const CHUNKS = [
   ['14-monsters.js'],
 ];
 
+/** Concatenated before 14-monsters.js (same IIFE scope) */
+const MONSTER_PARTS = [
+  'monsters/monsters-state.js',
+  'monsters/monsters-storage.js',
+  'monsters/monsters-bulk.js',
+  'monsters/monsters-filters.js',
+  'monsters/monsters-runes.js',
+  'monsters/monsters-detail.js',
+  'monsters/monsters-card.js',
+  'monsters/monsters-list.js',
+  'monsters/monsters-events.js',
+];
+
 const partNames = CHUNKS.map(([name]) => name);
 
 function splitFromBak() {
@@ -95,10 +108,33 @@ for (let i = 0; i < partNames.length - 1; i++) {
   }
 }
 
+function readPart(relPath, stripHeader) {
+  const full = relPath.startsWith('monsters/')
+    ? path.join(root, 'js', relPath)
+    : path.join(partsDir, relPath);
+  let raw = fs.readFileSync(full, 'utf8');
+  if (stripHeader) {
+    raw = raw.replace(/^\/\/ (?:ui-parts|js\/monsters)\/[^\n]+\n/, '');
+  }
+  return raw;
+}
+
+const missingMonsters = MONSTER_PARTS.filter((f) => !fs.existsSync(path.join(root, 'js', f)));
+const useMonsterModules = missingMonsters.length === 0;
+if (!useMonsterModules && missingMonsters.length < MONSTER_PARTS.length) {
+  console.error('Partial js/monsters/ — run: node tools/split-monsters.mjs');
+  process.exit(1);
+}
+if (!useMonsterModules) {
+  console.warn('Using monolithic ui-parts/14-monsters.js (run node tools/split-monsters.mjs to split)');
+}
+
 const body = partNames
-  .map((f) => {
-    const raw = fs.readFileSync(path.join(partsDir, f), 'utf8');
-    return raw.replace(/^\/\/ ui-parts\/[^\n]+\n/, '');
+  .flatMap((f) => {
+    if (f === '14-monsters.js' && useMonsterModules) {
+      return [...MONSTER_PARTS.map((mp) => readPart(mp, true)), readPart(f, true)];
+    }
+    return [readPart(f, true)];
   })
   .join('\n');
 

@@ -673,22 +673,27 @@
         </header>
         <div class="monsters-layout" id="monsters-layout">
           <div class="monsters-layout__list">
+        <div class="monsters-toolbar-sticky">
         <div class="monsters-toolbar">
+          <div class="monsters-toolbar__row monsters-toolbar__row--main">
           <div class="monsters-view-toggle" role="group" aria-label="View">
             <button type="button" id="monsters-view-cards" class="monsters-view-btn monsters-view-btn--active" aria-pressed="true" title="Cards">
-              <span id="lbl-monsters-view-cards" aria-hidden="true">▦</span>
+              <svg class="monsters-toolbar-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg>
+              <span class="sr-only" id="lbl-monsters-view-cards">Cards</span>
             </button>
             <button type="button" id="monsters-view-list" class="monsters-view-btn" aria-pressed="false" title="List">
-              <span id="lbl-monsters-view-list" aria-hidden="true">☰</span>
+              <svg class="monsters-toolbar-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg>
+              <span class="sr-only" id="lbl-monsters-view-list">List</span>
             </button>
           </div>
-          <label class="monsters-search">
-            <span id="lbl-monsters-filter-q">Search</span>
-            <input type="search" id="monsters-filter-q" autocomplete="off" spellcheck="false" />
+          <span class="monsters-toolbar__sep" aria-hidden="true"></span>
+          <label class="monsters-search monsters-toolbar__field">
+            <span class="monsters-toolbar__field-label" id="lbl-monsters-filter-q">Search</span>
+            <input type="search" id="monsters-filter-q" autocomplete="off" spellcheck="false" placeholder="Search name or ID…" aria-labelledby="lbl-monsters-filter-q" />
           </label>
-          <label>
-            <span id="lbl-monsters-filter-element">Element</span>
-            <select id="monsters-filter-element">
+          <label class="monsters-toolbar__field monsters-toolbar__field--element">
+            <span class="monsters-toolbar__field-label" id="lbl-monsters-filter-element">Element</span>
+            <select id="monsters-filter-element" aria-labelledby="lbl-monsters-filter-element">
               <option value="">All elements</option>
               <option value="Fire">Fire</option>
               <option value="Water">Water</option>
@@ -697,12 +702,43 @@
               <option value="Dark">Dark</option>
             </select>
           </label>
+          <label class="monsters-toolbar__field monsters-toolbar__field--sort">
+            <span class="monsters-toolbar__field-label" id="lbl-monsters-filter-sort">Sort</span>
+            <select id="monsters-filter-sort" aria-labelledby="lbl-monsters-filter-sort">
+              <option value="name">Name</option>
+              <option value="level-desc">Level ↓</option>
+              <option value="level-asc">Level ↑</option>
+              <option value="runes-desc">Runes equipped</option>
+              <option value="element">Element</option>
+              <option value="favorite-first">Favorites first</option>
+              <option value="food-first">Food first</option>
+            </select>
+          </label>
+          <details class="monsters-toolbar__filters" id="monsters-filters-details">
+            <summary class="monsters-toolbar__filters-summary"><span id="lbl-monsters-filters-toggle">Filters</span> <span class="monsters-toolbar__filters-count" id="monsters-filters-active-count" hidden></span></summary>
+            <div class="monsters-toolbar__filters-panel">
+            <div class="monsters-toolbar__filters-grid monsters-toolbar__filters-grid--primary">
           <label>
             <span id="lbl-monsters-filter-location">Location</span>
             <select id="monsters-filter-location">
               <option value="all">All</option>
               <option value="active">In use</option>
               <option value="storage">Storage</option>
+            </select>
+          </label>
+          <div class="monsters-toolbar__filter-action">
+            <span class="monsters-toolbar__field-label" id="lbl-monsters-filter-full-six">Runes</span>
+            <button type="button" id="monsters-filter-full-six" class="monsters-toolbar-btn monsters-toolbar-btn--block" aria-pressed="false">
+              <span id="lbl-monsters-filter-full-six-btn">6/6 runes only</span>
+            </button>
+          </div>
+            </div>
+            <p class="monsters-toolbar__filters-heading" id="lbl-monsters-filters-advanced">Advanced filters</p>
+            <div class="monsters-toolbar__filters-grid monsters-toolbar__filters-grid--advanced">
+          <label>
+            <span id="lbl-monsters-filter-rune-set">Set</span>
+            <select id="monsters-filter-rune-set">
+              <option value="">Any set</option>
             </select>
           </label>
           <label>
@@ -714,17 +750,11 @@
             </select>
           </label>
           <label>
-            <span id="lbl-monsters-filter-rune">Runes</span>
+            <span id="lbl-monsters-filter-rune">Equipped</span>
             <select id="monsters-filter-rune">
               <option value="">All runes</option>
               <option value="unruned">Unruned</option>
               <option value="partial">Partial (1–5)</option>
-            </select>
-          </label>
-          <label>
-            <span id="lbl-monsters-filter-rune-set">Set</span>
-            <select id="monsters-filter-rune-set">
-              <option value="">Any set</option>
             </select>
           </label>
           <label>
@@ -751,29 +781,20 @@
               <option value="food">🍖 Food</option>
             </select>
           </label>
-              <label>
-                <span id="lbl-monsters-filter-sort">Sort</span>
-                <select id="monsters-filter-sort">
-                  <option value="name">Name</option>
-                  <option value="level-desc">Level ↓</option>
-                  <option value="level-asc">Level ↑</option>
-                  <option value="runes-desc">Runes equipped</option>
-                  <option value="element">Element</option>
-                  <option value="favorite-first">Favorites first</option>
-                  <option value="food-first">Food first</option>
-                </select>
-              </label>
-              <button type="button" id="monsters-filter-full-six" class="monsters-toolbar-btn" aria-pressed="false">
-                <span id="lbl-monsters-filter-full-six">6/6 runes only</span>
-              </button>
-              <button type="button" id="monsters-bulk-toggle" class="monsters-toolbar-btn" aria-pressed="false">
-                <span id="lbl-monsters-bulk-toggle">Select</span>
-              </button>
+            </div>
+            </div>
+          </details>
+          </div>
         </div>
+        </DIV>
         <div class="monsters-bulk-bar" id="monsters-bulk-bar" hidden>
           <span class="monsters-bulk-bar__count" id="monsters-bulk-count">0 selected</span>
-          <button type="button" id="monsters-bulk-food" class="monsters-toolbar-btn btn-sm">Mark food</button>
-          <button type="button" id="monsters-bulk-storage" class="monsters-toolbar-btn btn-sm">Storage tag</button>
+          <span class="monsters-bulk-marks" role="group" aria-labelledby="lbl-monsters-bulk-marks">
+            <span id="lbl-monsters-bulk-marks" class="visually-hidden">Bulk marks</span>
+            <button type="button" id="monsters-bulk-favorite" class="monsters-bulk-mark-btn" aria-pressed="false" title="Favorite">★ <span class="monsters-bulk-mark-btn__label">Favorite</span></button>
+            <button type="button" id="monsters-bulk-food" class="monsters-bulk-mark-btn" aria-pressed="false" title="Food">🍖 <span class="monsters-bulk-mark-btn__label">Food</span></button>
+            <button type="button" id="monsters-bulk-storage" class="monsters-bulk-mark-btn" aria-pressed="false" title="Storage">▣ <span class="monsters-bulk-mark-btn__label">Storage</span></button>
+          </span>
           <label class="monsters-bulk-bar__tag">
             <span id="lbl-monsters-bulk-tag">Tag</span>
             <input type="text" id="monsters-bulk-tag-input" maxlength="32" autocomplete="off" spellcheck="false" />
@@ -782,7 +803,14 @@
           <button type="button" id="monsters-bulk-clear" class="monsters-toolbar-btn btn-sm">Clear selection</button>
         </div>
             <div class="monsters-chips" id="monsters-chips" aria-live="polite"></div>
-        <p id="monsters-empty" class="monsters-empty" hidden></p>
+        <div class="monsters-empty" id="monsters-empty" hidden>
+          <p class="monsters-empty__title" id="monsters-empty-title"></p>
+          <p class="monsters-empty__hint" id="monsters-empty-hint" hidden></p>
+          <div class="monsters-empty__actions" id="monsters-empty-actions" hidden>
+            <button type="button" class="monsters-toolbar-btn" id="monsters-empty-clear-filters">Clear filters</button>
+            <button type="button" class="monsters-toolbar-btn" id="monsters-empty-reset-search">Reset search</button>
+          </div>
+        </div>
         <div id="monsters-grid" class="monsters-grid monsters-grid--cards"></div>
           </div>
         </div>

@@ -38,6 +38,14 @@
     return typeId === 1 || typeId === 3 || typeId === 5;
   }
 
+  /** Main property by slot: 1/3/5 flat, 2/4/6 percent (game rule). */
+  function isMainStatFlat(slotNo, typeId) {
+    const slot = Number(slotNo);
+    if (slot === 1 || slot === 3 || slot === 5) return true;
+    if (slot === 2 || slot === 4 || slot === 6) return false;
+    return isFlat(typeId);
+  }
+
   /**
    * Calculate rune efficiency % (Legend 6★ baseline)
    * Formula: (sum of substat_value / max_possible_substat_value) / 2.8 * 100
@@ -403,6 +411,8 @@
   }
 
   window.SWRM.logEfficiencyDiagSample = logEfficiencyDiagSample;
+  window.SWRM.isFlat = isFlat;
+  window.SWRM.isMainStatFlat = isMainStatFlat;
   window.SWRM.parseRune  = parseRune;
   window.SWRM.parseSWEX  = parseSWEX;
   window.SWRM.parseUnits = parseUnits;

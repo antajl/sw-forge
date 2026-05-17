@@ -1,0 +1,1359 @@
+.monsters-shell {
+  max-width: min(1400px, var(--content-max, 1200px));
+  margin: 0 auto;
+  padding: 0 4px 24px;
+}
+
+.monsters-layout {
+  display: block;
+}
+
+.monsters-layout__list {
+  min-width: 0;
+}
+
+.monsters-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+  align-items: center;
+}
+
+.monsters-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 4px 10px;
+  font-size: 0.68rem;
+  border-radius: 999px;
+  border: 1px solid var(--border2);
+  background: var(--bg3);
+}
+
+.monsters-chip__label {
+  color: var(--text-dim);
+}
+
+.monsters-chip__value {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text-hi);
+}
+
+.monsters-index-warn--inline {
+  flex: 1 1 100%;
+  margin: 0;
+}
+
+.monsters-toolbar__check {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px !important;
+  padding-bottom: 6px;
+}
+
+.monsters-toolbar__check input {
+  width: auto;
+  min-height: auto;
+}
+
+.monsters-head {
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.monsters-head .rules-page-title {
+  margin: 0 0 8px;
+  font-size: 1.15rem;
+}
+
+.monsters-lead {
+  margin: 0;
+  font-size: 0.74rem;
+  color: var(--text-dim);
+  line-height: 1.45;
+}
+
+.monsters-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  margin-top: 12px;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+
+.monsters-index-warn {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: var(--warn-text, #c9a227);
+  background: var(--warn-bg, rgba(201, 162, 39, 0.12));
+  border: 1px solid var(--warn-border, rgba(201, 162, 39, 0.35));
+  border-radius: var(--radius);
+  flex: 1 1 100%;
+}
+
+.monsters-stats strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.monsters-view-toggle {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border2);
+  background: var(--bg3);
+}
+
+.monsters-view-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 30px;
+  padding: 4px 8px;
+  border: none;
+  border-radius: calc(var(--radius) - 2px);
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.monsters-view-btn:hover {
+  color: var(--text-hi);
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+}
+
+.monsters-view-btn--active {
+  color: var(--text-hi);
+  background: var(--surface);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.monsters-toolbar-btn {
+  min-height: 32px;
+  padding: 5px 12px;
+  font-size: 0.74rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border2);
+  background: var(--bg3);
+  color: var(--text-dim);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.monsters-toolbar-btn:hover {
+  color: var(--text-hi);
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border2));
+}
+
+.monsters-toolbar-btn--active {
+  color: var(--text-hi);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border2));
+  background: color-mix(in srgb, var(--accent) 12%, var(--bg3));
+}
+
+.monsters-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px 14px;
+  margin-bottom: 16px;
+}
+
+.monsters-toolbar label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.68rem;
+  color: var(--text-dim);
+}
+
+.monsters-toolbar input,
+.monsters-toolbar select {
+  min-height: 32px;
+  padding: 5px 10px;
+  font-size: 0.78rem;
+}
+
+.monsters-search {
+  flex: 1 1 12rem;
+  min-width: 10rem;
+}
+
+.monsters-empty {
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 0.82rem;
+  border: 1px dashed var(--border2);
+  border-radius: var(--radius);
+}
+
+.monsters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: 12px;
+}
+
+.monsters-grid--list {
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.monsters-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 10px 10px 10px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  cursor: pointer;
+}
+
+.monsters-card:hover {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border2));
+}
+
+.monsters-card--selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.monsters-card--hover {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border2));
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.monsters-card--list {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 8px 10px 8px 14px;
+}
+
+.monsters-card--list .monsters-card__top {
+  flex: 0 1 auto;
+  margin-bottom: 0;
+  min-width: 12rem;
+}
+
+.monsters-card--list .monsters-runes,
+.monsters-card--list .monsters-rune-icons {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.monsters-rune-icons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.monsters-rune-icon {
+  position: relative;
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+}
+
+.monsters-rune-icon--empty {
+  opacity: 0.4;
+}
+
+.monsters-rune-icon__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 3px;
+}
+
+.monsters-rune-icon__n {
+  position: absolute;
+  right: 1px;
+  bottom: 0;
+  font-family: var(--font-mono);
+  font-size: 0.48rem;
+  line-height: 1;
+  color: var(--text-hi);
+  text-shadow: 0 0 2px var(--bg), 0 0 4px var(--bg);
+  pointer-events: none;
+}
+
+.monsters-runes--hex {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(2, auto);
+  gap: 4px;
+}
+
+.monsters-runes--hex .monsters-rune-slot[data-slot='6'] {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.monsters-runes--hex .monsters-rune-slot[data-slot='1'] {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.monsters-runes--hex .monsters-rune-slot[data-slot='2'] {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+.monsters-runes--hex .monsters-rune-slot[data-slot='5'] {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.monsters-runes--hex .monsters-rune-slot[data-slot='4'] {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.monsters-runes--hex .monsters-rune-slot[data-slot='3'] {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+.monsters-card__bar {
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 4px;
+  border-radius: 0 3px 3px 0;
+  background: var(--border2);
+}
+
+.monsters-card__bar--fire { background: #c44; }
+.monsters-card__bar--water { background: #48a; }
+.monsters-card__bar--wind { background: #5a5; }
+.monsters-card__bar--light { background: #ca4; }
+.monsters-card__bar--dark { background: #a6a; }
+
+.monsters-card__actions {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  gap: 2px;
+  z-index: 1;
+}
+
+.monsters-tag-btn {
+  border: none;
+  background: color-mix(in srgb, var(--bg3) 90%, transparent);
+  color: var(--text-dim);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 0.72rem;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.monsters-tag-btn--sm {
+  padding: 1px 4px;
+  font-size: 0.62rem;
+}
+
+.monsters-tag-btn--on {
+  color: #f0c040;
+  background: color-mix(in srgb, #f0c040 28%, var(--bg3));
+  box-shadow: 0 0 0 1px color-mix(in srgb, #f0c040 45%, transparent);
+}
+
+.monsters-tag-btn[data-unit-tag='food'].monsters-tag-btn--on {
+  color: #e87850;
+  background: color-mix(in srgb, #e87850 24%, var(--bg3));
+  box-shadow: 0 0 0 1px color-mix(in srgb, #e87850 40%, transparent);
+}
+
+.monsters-card--favorite {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, #f0c040 35%, transparent);
+}
+
+.monsters-card--food {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, #e87850 30%, transparent);
+}
+
+.monsters-card__badges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-top: 2px;
+}
+
+.monsters-card__badge--fav {
+  color: #f0c040;
+  background: color-mix(in srgb, #f0c040 18%, var(--bg3));
+  border: 1px solid color-mix(in srgb, #f0c040 40%, var(--border2));
+  font-size: 0.62rem;
+  padding: 0 4px;
+  border-radius: 3px;
+}
+
+.monsters-card__badge--food {
+  font-size: 0.62rem;
+  padding: 0 3px;
+  border-radius: 3px;
+  background: color-mix(in srgb, #e87850 14%, var(--bg3));
+  border: 1px solid color-mix(in srgb, #e87850 35%, var(--border2));
+}
+
+.monsters-tag-btn:hover {
+  color: var(--text-hi);
+}
+
+.monsters-card--storage {
+  opacity: 0.82;
+}
+
+.monsters-card__top {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.monsters-card__img-wrap {
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--bg3);
+}
+
+.monsters-card__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.monsters-card__img--placeholder {
+  opacity: 0.35;
+}
+
+.monsters-card__meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.monsters-card__name {
+  margin: 0;
+  font-family: var(--font-head);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.25;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.monsters-card__skill-deficit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  padding: 0;
+  margin-left: 4px;
+  vertical-align: middle;
+  cursor: help;
+}
+
+.monsters-card__skill-deficit-icon {
+  width: 18px;
+  height: 18px;
+  display: block;
+  object-fit: contain;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.monsters-card__skill-deficit-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.15em;
+  margin-left: -3px;
+  padding: 2px 6px 2px 7px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1.2;
+  border-radius: 0 5px 5px 0;
+  background: color-mix(in srgb, #a6a 22%, var(--bg3));
+  border: 1px solid color-mix(in srgb, #a6a 45%, var(--border2));
+  border-left: none;
+  color: color-mix(in srgb, #e8d4ff 90%, var(--text-hi));
+}
+
+.monsters-card__skill-deficit-n {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  line-height: 1;
+}
+
+.monsters-card__name a {
+  color: var(--text-hi);
+  text-decoration: none;
+}
+
+.monsters-card__name a:hover {
+  color: var(--accent);
+}
+
+.monsters-card__sub {
+  margin: 2px 0 0;
+  font-size: 0.66rem;
+  color: var(--text-dim);
+}
+
+.monsters-card__badge {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 1px 6px;
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--border2) 60%, transparent);
+  color: var(--text-dim);
+}
+
+.monsters-card__badge--storage {
+  background: color-mix(in srgb, var(--orange) 18%, transparent);
+  color: color-mix(in srgb, var(--orange) 85%, var(--text));
+}
+
+.monsters-runes {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.monsters-rune-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  padding: 4px 2px;
+  font-size: 0.58rem;
+  line-height: 1.2;
+  text-align: center;
+  border-radius: 4px;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+}
+
+.monsters-rune-slot--empty {
+  opacity: 0.45;
+}
+
+.monsters-rune-slot__num {
+  font-family: var(--font-mono);
+  font-size: 0.52rem;
+  color: var(--text-dim);
+}
+
+.monsters-rune-slot__icon {
+  display: block;
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.monsters-rune-slot__set {
+  font-weight: 600;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+  font-size: 0.52rem;
+  line-height: 1.1;
+}
+
+.monsters-rune-slot__set--sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.monsters-rune-slot:has(.monsters-rune-slot__icon) {
+  position: relative;
+  padding: 3px 2px 4px;
+  gap: 1px;
+}
+
+.monsters-rune-slot--fire {
+  border-color: color-mix(in srgb, #c44 35%, var(--border2));
+}
+.monsters-rune-slot--water {
+  border-color: color-mix(in srgb, #48a 35%, var(--border2));
+}
+.monsters-rune-slot--wind {
+  border-color: color-mix(in srgb, #5a5 35%, var(--border2));
+}
+.monsters-rune-slot--light {
+  border-color: color-mix(in srgb, #ca4 35%, var(--border2));
+}
+.monsters-rune-slot--dark {
+  border-color: color-mix(in srgb, #a6a 35%, var(--border2));
+}
+
+.monsters-attrib {
+  margin-top: 14px;
+  font-size: 0.64rem;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+.monsters-attrib a {
+  color: var(--accent);
+}
+
+.monsters-detail.monsters-detail--float {
+  position: fixed;
+  z-index: 40;
+  width: min(320px, calc(100vw - 24px));
+  max-height: min(480px, calc(100vh - 24px));
+  overflow: auto;
+  padding: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
+  pointer-events: auto;
+}
+
+.monsters-detail.monsters-detail--float[hidden] {
+  display: none !important;
+}
+
+.monsters-detail.monsters-detail--float.monsters-detail--visible {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border2));
+}
+
+.monsters-detail__placeholder {
+  margin: 0;
+  padding: 24px 12px;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+.monsters-detail__head {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.monsters-detail__portrait-wrap {
+  flex: 0 0 96px;
+  width: 96px;
+  height: 96px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg3);
+  border: 2px solid var(--border2);
+}
+
+.monsters-detail__portrait-wrap--fire { border-color: #c44; }
+.monsters-detail__portrait-wrap--water { border-color: #48a; }
+.monsters-detail__portrait-wrap--wind { border-color: #5a5; }
+.monsters-detail__portrait-wrap--light { border-color: #ca4; }
+.monsters-detail__portrait-wrap--dark { border-color: #a6a; }
+
+.monsters-detail__portrait {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.monsters-detail__head-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.monsters-detail__title {
+  margin: 0 0 4px;
+  font-family: var(--font-head);
+  font-size: 1rem;
+  line-height: 1.25;
+}
+
+.monsters-detail__title a {
+  color: var(--text-hi);
+  text-decoration: none;
+}
+
+.monsters-detail__title a:hover {
+  color: var(--accent);
+}
+
+.monsters-detail__sub {
+  margin: 0 0 8px;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+
+.monsters-detail__tags {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.monsters-detail__open-runes {
+  width: 100%;
+  max-width: 14rem;
+}
+
+.monsters-detail__section {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border2);
+}
+
+.monsters-detail__section-title {
+  margin: 0 0 8px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+}
+
+.monsters-detail__runes-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.monsters-detail__runes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(2, auto);
+  gap: 8px;
+}
+
+.monsters-detail__runes .monsters-detail-rune[data-slot='6'] {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.monsters-detail__runes .monsters-detail-rune[data-slot='1'] {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.monsters-detail__runes .monsters-detail-rune[data-slot='2'] {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+.monsters-detail__runes .monsters-detail-rune[data-slot='5'] {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.monsters-detail__runes .monsters-detail-rune[data-slot='4'] {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.monsters-detail__runes .monsters-detail-rune[data-slot='3'] {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+.monsters-detail__runes .monsters-detail-rune__num {
+  display: none;
+}
+
+.monsters-rune-focus-panel {
+  min-height: 3.5rem;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  font-size: 0.68rem;
+}
+
+.monsters-rune-focus-panel[hidden] {
+  display: none;
+}
+
+.monsters-rune-focus__line {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 3px;
+}
+
+.monsters-rune-focus__hdr {
+  font-weight: 600;
+  color: var(--text-hi);
+  margin-bottom: 6px;
+}
+
+.monsters-rune-focus__k {
+  color: var(--text-dim);
+}
+
+.monsters-rune-focus__v {
+  color: var(--text-hi);
+  font-family: var(--font-mono);
+}
+
+.monsters-card__loc--on {
+  color: #8ab4f8;
+}
+
+.monsters-card__loc--on .monsters-card__loc-icon {
+  opacity: 1;
+}
+
+.monsters-card__list-meta {
+  flex: 1 1 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border2);
+}
+
+.monsters-card--list .monsters-card__actions--list {
+  position: static;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.monsters-list__tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  flex: 1 1 12rem;
+}
+
+.monsters-list__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  font-size: 0.65rem;
+}
+
+.monsters-list__tag-rm {
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+}
+
+.monsters-list__tag-input {
+  flex: 1 1 6rem;
+  min-width: 5rem;
+  max-width: 10rem;
+  font-size: 0.65rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border2);
+  background: var(--bg2);
+  color: var(--text);
+}
+
+.monsters-list__tag-add {
+  border: 1px solid var(--border2);
+  background: var(--bg3);
+  color: var(--text);
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.monsters-detail-rune {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 6px;
+  font-size: 0.62rem;
+  text-align: center;
+  border-radius: 6px;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  cursor: pointer;
+}
+
+.monsters-detail-rune:hover {
+  border-color: var(--accent);
+}
+
+.monsters-detail-rune--empty {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.monsters-detail-rune__num {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  color: var(--text-dim);
+}
+
+.monsters-detail-rune__icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.monsters-detail-rune__set--sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+
+.monsters-detail-rune__main {
+  font-size: 0.58rem;
+  color: var(--text-dim);
+  line-height: 1.2;
+}
+
+.monsters-detail__skills {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.monsters-detail__skills li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  font-size: 0.72rem;
+  border-radius: 4px;
+  background: var(--bg3);
+  margin-bottom: 4px;
+}
+
+.monsters-detail__skill-slot {
+  color: var(--text-dim);
+  font-size: 0.68rem;
+}
+
+.monsters-detail__skill-lv {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  font-family: var(--font-mono);
+}
+
+.monsters-detail__skill-lv {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-hi);
+}
+
+.monsters-detail__skill-lv--maxed {
+  color: color-mix(in srgb, var(--accent) 85%, var(--text-hi));
+}
+
+.monsters-detail__skill-lv--unknown {
+  color: var(--text-dim);
+  font-weight: 500;
+}
+
+.monsters-detail__skill--maxed {
+  opacity: 0.92;
+}
+
+.monsters-detail__muted {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+
+.monsters-detail-back {
+  display: none;
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 40;
+  padding: 10px 18px;
+  font-size: 0.8rem;
+  border-radius: 999px;
+  border: 1px solid var(--border2);
+  background: var(--surface);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+}
+
+.table-toolbar__monster-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 8px 12px;
+  font-size: 0.72rem;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--accent) 12%, var(--bg3));
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border2));
+}
+
+.monsters-card__loc {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+.monsters-card__loc-icon {
+  display: block;
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+  border: 1px solid var(--border2);
+  background: var(--bg3);
+}
+
+.monsters-card__loc--active .monsters-card__loc-icon {
+  background: color-mix(in srgb, var(--accent) 28%, var(--bg3));
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border2));
+}
+
+.monsters-card__loc--storage .monsters-card__loc-icon {
+  border-style: double;
+  border-width: 2px;
+  width: 10px;
+  height: 10px;
+  opacity: 0.85;
+}
+
+.monsters-card__loc-text {
+  margin-left: 3px;
+  font-size: 0.58rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--orange, #c8863a);
+}
+
+.monsters-grid--cards .monsters-card {
+  min-height: 5.5rem;
+}
+
+.monsters-detail__tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 10px 0 8px;
+  width: 4.5rem;
+  flex-shrink: 0;
+}
+
+.monsters-detail__body {
+  display: flex;
+  flex-direction: column;
+}
+
+.monsters-detail__layout {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-top: 4px;
+}
+
+.monsters-detail__tabs {
+  flex-direction: column;
+  width: 4.25rem;
+  margin: 0;
+}
+
+.monsters-detail__tab-panels {
+  flex: 1;
+  min-width: 0;
+}
+
+.monsters-detail__tab {
+  flex: 1;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  background: var(--bg3);
+  color: var(--text-dim);
+}
+
+.monsters-detail__tab.is-active {
+  background: color-mix(in srgb, var(--accent) 22%, var(--bg3));
+  color: var(--text-hi);
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+.monsters-detail__panel[hidden] {
+  display: none !important;
+}
+
+.monsters-detail__level {
+  margin: 0 0 8px;
+  font-size: 0.78rem;
+  color: var(--text-hi);
+}
+
+.monsters-detail__level strong {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+}
+
+.monsters-detail__storage {
+  color: var(--orange, #c8863a);
+  font-weight: 600;
+}
+
+.monsters-detail__role {
+  margin: 0 0 8px;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  text-align: right;
+}
+
+.monsters-detail__section-title--sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+
+.monsters-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.monsters-card__tag {
+  display: inline-block;
+  padding: 1px 6px;
+  font-size: 0.58rem;
+  font-weight: 600;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--accent) 14%, var(--bg3));
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--border2));
+  color: var(--text-hi);
+}
+
+.monsters-card--bulk-mode {
+  padding-left: 28px;
+}
+
+.monsters-card__bulk {
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+}
+
+.monsters-card__bulk-cb {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+
+.monsters-card--bulk-on {
+  outline: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: -1px;
+}
+
+.monsters-bulk-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 0 0 12px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border2);
+  background: var(--bg3);
+}
+
+.monsters-bulk-bar__count {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-hi);
+  margin-right: 4px;
+}
+
+.monsters-bulk-bar__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.68rem;
+}
+
+.monsters-bulk-bar__tag input {
+  width: 9rem;
+  max-width: 40vw;
+  min-height: 28px;
+  padding: 4px 8px;
+  font-size: 0.72rem;
+}
+
+.monsters-detail__custom-tags-label {
+  margin: 0 0 6px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.monsters-detail__tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.monsters-detail__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 4px 2px 8px;
+  font-size: 0.66rem;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--accent) 12%, var(--bg3));
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--border2));
+}
+
+.monsters-detail__tag-remove {
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+  font-size: 0.85rem;
+}
+
+.monsters-detail__tag-remove:hover {
+  color: var(--text-hi);
+}
+
+.monsters-detail__tag-add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.monsters-detail__tag-input {
+  flex: 1 1 8rem;
+  min-width: 6rem;
+  min-height: 28px;
+  padding: 4px 8px;
+  font-size: 0.72rem;
+}
+
+.monsters-card__badge--tag-storage {
+  background: color-mix(in srgb, var(--orange) 16%, var(--bg3));
+  color: color-mix(in srgb, var(--orange) 85%, var(--text));
+  border: 1px solid color-mix(in srgb, var(--orange) 35%, var(--border2));
+}
+
+.monsters-detail__stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 12px;
+  margin: 0 0 6px;
+}
+
+.monsters-detail__stat {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.7rem;
+}
+
+.monsters-detail__stat-k {
+  color: var(--text-dim);
+}
+
+.monsters-detail__stat-v {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--text-hi);
+}
+
+.monsters-detail__stats-note {
+  margin: 0;
+  font-size: 0.62rem;
+  color: var(--text-dim);
+  line-height: 1.35;
+}
+
+@media (max-width: 640px) {
+  .monsters-detail.monsters-detail--float {
+    width: min(300px, calc(100vw - 16px));
+    max-height: min(420px, calc(100vh - 16px));
+  }
+
+  .monsters-card--list .monsters-card__top {
+    min-width: 0;
+    flex: 1 1 100%;
+  }
+
+  .monsters-card--list .monsters-runes,
+  .monsters-card--list .monsters-rune-icons {
+    flex: 1 1 100%;
+  }
+}

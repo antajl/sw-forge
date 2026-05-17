@@ -36,8 +36,9 @@
 }
 
 .dashboard-stage-wrap .stage-advisor-expanded-wrap.is-motion-running {
-  display: block;
-  grid-template-rows: none;
+  display: grid;
+  grid-template-rows: 1fr;
+  overflow: hidden;
   transition: none !important;
 }
 
@@ -49,6 +50,10 @@
 .dashboard-stage-wrap .stage-advisor.is-compact .stage-advisor-expanded-wrap,
 .dashboard-stage-wrap .stage-advisor.is-panel-closing .stage-advisor-expanded-wrap {
   pointer-events: none;
+}
+
+.dashboard-stage-wrap .stage-advisor:not(.is-compact) .stage-advisor-expanded-wrap {
+  visibility: visible;
 }
 
 /* Open / expanded: full height; during close phase 1 keep 1fr while content fades */

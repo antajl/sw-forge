@@ -7,6 +7,33 @@
 
   const gsap = global.gsap;
 
+  /** Clear stuck GSAP stage state after reload / bfcache (prevents expanded panel + huge metric SVG flash). */
+  function bootStageMotionGuard() {
+    const doc = global.document;
+    if (!doc) return;
+    const wrap =
+      doc.getElementById('stage-advisor-expanded-wrap') ||
+      doc.querySelector('.dashboard-stage-wrap .stage-advisor-expanded-wrap');
+    if (!wrap) return;
+    wrap.classList.remove('is-motion-running');
+    wrap.style.height = '';
+    wrap.style.overflow = '';
+    wrap.style.minHeight = '';
+    if (gsap) {
+      gsap.killTweensOf(wrap);
+      const inner = wrap.querySelector('.stage-advisor-expanded');
+      if (inner) gsap.killTweensOf(inner);
+      gsap.set(wrap, { clearProps: 'height,overflow,minHeight,borderTopWidth,borderTopColor' });
+      if (inner) gsap.set(inner, { clearProps: 'opacity' });
+    }
+  }
+
+  bootStageMotionGuard();
+  if (global.document) {
+    global.document.addEventListener('DOMContentLoaded', bootStageMotionGuard, { once: true });
+    global.addEventListener('pageshow', bootStageMotionGuard);
+  }
+
   let reducedMotion = false;
   const mq = global.matchMedia && global.matchMedia('(prefers-reduced-motion: reduce)');
 
@@ -382,6 +409,50 @@
     tweenStyleTargets(targets, 'height', 0.4, 'power2.inOut');
   }
 
+  let topSpdRadarGen = 0;
+
+  /**
+   * Morph Top SPD radar polygon `points` when the selected set changes.
+   * @param {{ curPoly: SVGPolygonElement, potPoly: SVGPolygonElement, curPoints: string, potPoints: string, onMid?: () => void, instant?: boolean }} opts
+   * @returns {boolean}
+   */
+  function animateTopSpdRadar(opts) {
+    const { curPoly, potPoly, curPoints, potPoints, onMid, instant } = opts || {};
+    if (!curPoly || !potPoly) return false;
+    topSpdRadarGen++;
+    const gen = topSpdRadarGen;
+    killTweensOf([curPoly, potPoly]);
+
+    if (instant || !enabled()) {
+      curPoly.setAttribute('points', curPoints);
+      potPoly.setAttribute('points', potPoints);
+      onMid && onMid();
+      return false;
+    }
+
+    const tl = gsap.timeline({
+      onComplete: () => {
+        if (gen !== topSpdRadarGen) return;
+      },
+    });
+    tl.to(
+      curPoly,
+      { attr: { points: curPoints }, duration: 0.48, ease: 'power2.inOut' },
+      0,
+    );
+    tl.to(
+      potPoly,
+      { attr: { points: potPoints }, duration: 0.48, ease: 'power2.inOut' },
+      0,
+    );
+    if (onMid) tl.call(onMid, [], 0.18);
+    return true;
+  }
+
+  function cancelTopSpdRadar() {
+    topSpdRadarGen++;
+  }
+
   if (enabled() && global.document && global.document.documentElement) {
     global.document.documentElement.classList.add('swrm-has-gsap');
   }
@@ -402,6 +473,8 @@
     animateBarWidthFills,
     animateHeightFills,
     animateDashboardPaneBars,
+    animateTopSpdRadar,
+    cancelTopSpdRadar,
     killTweensOf,
   };
 })(typeof window !== 'undefined' ? window : globalThis);

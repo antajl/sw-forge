@@ -305,9 +305,111 @@
     return rows;
   }
 
+  /** SWEX unit `class` → display stars (handles ancient +10). */
+  function unitDisplayStars(classVal) {
+    const n = Number(classVal);
+    if (!Number.isFinite(n) || n <= 0) return 0;
+    if (n >= 11 && n <= 15) return n - 10;
+    if (n > 10) {
+      const mod = n % 10;
+      return mod >= 1 && mod <= 6 ? mod : n;
+    }
+    return n;
+  }
+
+  /** Monster Storage Box: SWEX `unit_list[].island_id === 4` (Sky Island id for storage). */
+  function unitInStorage(unit) {
+    if (!unit) return false;
+    return Number(unit.island_id) === 4;
+  }
+
+  /**
+   * Build six rune slots (1–6) for a unit; prefers parsed runes from inventory map.
+   * @param {object} unit SWEX unit_list entry
+   * @param {Map<number, object>} [runeById]
+   */
+  function unitRuneSlots(unit, runeById) {
+    const slots = [];
+    for (let s = 1; s <= 6; s++) slots.push({ slot: s, rune: null });
+    const list = (unit && unit.runes) || [];
+    for (const raw of list) {
+      if (!raw || raw.slot_no == null) continue;
+      const slotNo = Number(raw.slot_no);
+      if (slotNo < 1 || slotNo > 6) continue;
+      let rune = runeById && raw.rune_id != null ? runeById.get(Number(raw.rune_id)) : null;
+      if (!rune && raw.rune_id != null) {
+        try {
+          rune = parseRune(raw);
+        } catch (e) { /* ignore */ }
+      }
+      slots[slotNo - 1] = { slot: slotNo, rune: rune || null, runeId: raw.rune_id != null ? Number(raw.rune_id) : null };
+    }
+    return slots;
+  }
+
+  function countEquippedRuneSlots(slots) {
+    if (!slots || !slots.length) return 0;
+    return slots.filter((s) => s.rune || s.runeId).length;
+  }
+
+  /**
+   * @param {object} json SWEX root
+   * @param {{ sixStarOnly?: boolean, runeById?: Map<number, object> }} [opts]
+   */
+  function parseUnits(json, opts) {
+    const o = opts || {};
+    const units = (json && json.unit_list) || [];
+    const runeById = o.runeById || null;
+    const out = [];
+    for (const u of units) {
+      if (!u || u.unit_master_id == null) continue;
+      const stars = unitDisplayStars(u.class);
+      if (o.sixStarOnly && stars !== 6) continue;
+      const runeSlots = unitRuneSlots(u, runeById);
+      const equippedCount = countEquippedRuneSlots(runeSlots);
+      const skills = [];
+      if (Array.isArray(u.skills)) {
+        for (const row of u.skills) {
+          if (!Array.isArray(row) || row.length < 2) continue;
+          const skillId = Number(row[0]);
+          const level = Number(row[1]);
+          if (Number.isFinite(skillId)) skills.push({ skillId, level: Number.isFinite(level) ? level : 0 });
+        }
+      }
+      out.push({
+        unitId: u.unit_id,
+        masterId: Number(u.unit_master_id),
+        level: Number(u.unit_level) || 0,
+        stars,
+        islandId: Number(u.island_id) || 0,
+        inStorage: unitInStorage(u),
+        stats: {
+          hp: Number(u.con) || 0,
+          atk: Number(u.atk) || 0,
+          def: Number(u.def) || 0,
+          spd: Number(u.spd) || 0,
+          critRate: Number(u.critical_rate) || 0,
+          critDmg: Number(u.critical_damage) || 0,
+          res: Number(u.resist) || 0,
+          acc: Number(u.accuracy) || 0,
+        },
+        runeSlots,
+        equippedCount,
+        hasFullRunes: equippedCount >= 6,
+        skills,
+      });
+    }
+    return out;
+  }
+
   window.SWRM.logEfficiencyDiagSample = logEfficiencyDiagSample;
   window.SWRM.parseRune  = parseRune;
   window.SWRM.parseSWEX  = parseSWEX;
+  window.SWRM.parseUnits = parseUnits;
+  window.SWRM.unitDisplayStars = unitDisplayStars;
+  window.SWRM.unitInStorage = unitInStorage;
+  window.SWRM.unitRuneSlots = unitRuneSlots;
+  window.SWRM.countEquippedRuneSlots = countEquippedRuneSlots;
   window.SWRM.calcEfficiency = calcEfficiency;
   window.SWRM.calcEfficiencyUncapped = calcEfficiencyUncapped;
   window.SWRM.extractSwexSummary = extractSwexSummary;

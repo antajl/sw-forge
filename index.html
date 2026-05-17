@@ -7,9 +7,12 @@
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" sizes="any" />
   <!-- Inline: SVGs have a huge default intrinsic size before css/style.css loads (e.g. live reload). -->
   <style>
-    .header-theme-icon, .tab__icon-svg { width: 20px; height: 20px; max-width: 20px; max-height: 20px; display: block; flex-shrink: 0; }
+    .header-theme-icon, .tab__icon-svg, .tab__icon-mask, .theme-toggle__icon { width: 22px; height: 22px; max-width: 22px; max-height: 22px; display: block; flex-shrink: 0; }
     /* Avoid default link purple (currentColor) until css/style.css loads */
     #header-donate-link .header-donate-heart { color: #d04356; }
+    /* Stage metric SVGs are huge by default — clip collapsed progression panel until CSS loads */
+    .stage-metric-icon svg { width: 18px; height: 18px; max-width: 18px; max-height: 18px; display: block; }
+    #stage-advisor.is-compact .stage-advisor-expanded-wrap { max-height: 0 !important; overflow: hidden !important; visibility: hidden; }
   </style>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -29,42 +32,21 @@
         </div>
         <div class="tabs-scroll" aria-label="Main navigation">
           <nav class="tabs">
-            <button type="button" class="tab active" data-tab="dashboard" title="Dashboard">
+            <button type="button" class="tab active" data-tab="runes" title="Runes">
               <span class="tab__icon" aria-hidden="true">
-                <svg class="tab__icon-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false">
-                  <rect x="3" y="15" width="18" height="4" rx="1" />
-                  <rect x="3" y="10" width="14" height="4" rx="1" />
-                  <rect x="3" y="5" width="8" height="4" rx="1" />
-                </svg>
+                <span class="tab__icon-mask tab__icon-mask--runes"></span>
               </span>
-              <span class="tab__label">Dashboard</span>
+              <span class="tab__label" id="lbl-tab-runes">Runes</span>
             </button>
-            <button type="button" class="tab" data-tab="runetable" title="Rune Table">
+            <button type="button" class="tab" data-tab="monsters" title="Monsters">
               <span class="tab__icon" aria-hidden="true">
-                <svg class="tab__icon-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false">
-                  <rect x="3" y="3" width="18" height="18" rx="2" />
-                  <path d="M3 9h18" />
-                  <path d="M3 15h18" />
-                  <path d="M10 9v12" />
-                </svg>
+                <span class="tab__icon-mask tab__icon-mask--monsters"></span>
               </span>
-              <span class="tab__label">Rune Table</span>
-            </button>
-            <button type="button" class="tab" data-tab="settings" title="Rune Rules">
-              <span class="tab__icon" aria-hidden="true">
-                <svg class="tab__icon-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false">
-                  <path d="M12 12H21" />
-                  <path d="M12 6H21" />
-                  <path d="M12 18H21" />
-                  <path d="M3 6l2 2 4-4" />
-                  <path d="M3 18l2 2 4-4" />
-                </svg>
-              </span>
-              <span class="tab__label">Rune Rules</span>
+              <span class="tab__label" id="lbl-tab-monsters">Monsters</span>
             </button>
             <button type="button" class="tab" data-tab="guide" title="Archive">
               <span class="tab__icon" aria-hidden="true">
-                <svg class="tab__icon-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false">
+                <svg class="tab__icon-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false">
                   <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
                   <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
                 </svg>
@@ -73,7 +55,7 @@
             </button>
             <button type="button" class="tab" data-tab="changelog" title="Changelog">
               <span class="tab__icon" aria-hidden="true">
-                <svg class="tab__icon-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false">
+                <svg class="tab__icon-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false">
                   <path d="M12 8v4l3 3" />
                   <path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5" />
                 </svg>
@@ -82,7 +64,7 @@
             </button>
             <button type="button" class="tab" data-tab="app-settings" title="Settings">
               <span class="tab__icon" aria-hidden="true">
-                <svg class="tab__icon-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false">
+                <svg class="tab__icon-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false">
                   <circle cx="12" cy="12" r="3" />
                   <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
                 </svg>
@@ -100,18 +82,19 @@
               <span id="lbl-header-donate">Donate</span>
             </a>
           </div>
-          <div class="header-theme-group" id="header-theme-group" role="group" aria-label="Color theme">
-            <button type="button" class="header-theme-btn" id="theme-sun" aria-pressed="false" title="Light theme">
-              <svg class="header-theme-icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <circle cx="12" cy="12" r="4" fill="currentColor" />
-                <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                  d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m12.02-12.02 1.41-1.41" />
-              </svg>
-            </button>
-            <button type="button" class="header-theme-btn is-active" id="theme-moon" aria-pressed="true" title="Dark theme">
-              <svg class="header-theme-icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <path fill="currentColor" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
-              </svg>
+          <div class="header-theme-group" id="header-theme-group">
+            <button type="button" class="theme-toggle is-dark" id="theme-toggle" aria-pressed="false" title="Light theme" aria-label="Light theme">
+              <span class="theme-toggle__track">
+                <span class="theme-toggle__thumb" aria-hidden="true"></span>
+                <svg class="theme-toggle__icon theme-toggle__icon--sun" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <circle cx="12" cy="12" r="4" fill="currentColor" />
+                  <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                    d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m12.02-12.02 1.41-1.41" />
+                </svg>
+                <svg class="theme-toggle__icon theme-toggle__icon--moon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path fill="currentColor" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+                </svg>
+              </span>
             </button>
           </div>
         </div>
@@ -134,8 +117,25 @@
   <!-- MAIN -->
   <main>
 
-    <!-- DASHBOARD TAB -->
-    <section id="tab-dashboard" class="tab-content hidden">
+    <!-- RUNES HUB (Dashboard + Table + Rules) -->
+    <section id="tab-runes" class="tab-content hidden">
+      <nav class="rules-subtabs runes-hub-tabs" id="runes-hub-tabs" role="tablist" aria-labelledby="lbl-runes-hub-title">
+        <span id="lbl-runes-hub-title" class="visually-hidden">Runes</span>
+        <button type="button" role="tab" class="rules-subtab runes-hub-tab is-active" id="runes-hub-tab-dashboard"
+          data-runes-hub="dashboard" aria-selected="true" aria-controls="tab-dashboard" tabindex="0">
+          <span class="rules-subtab__label" id="lbl-runes-hub-dashboard">Dashboard</span>
+        </button>
+        <button type="button" role="tab" class="rules-subtab runes-hub-tab" id="runes-hub-tab-runetable"
+          data-runes-hub="runetable" aria-selected="false" aria-controls="tab-runetable" tabindex="-1">
+          <span class="rules-subtab__label" id="lbl-runes-hub-runetable">Table</span>
+        </button>
+        <button type="button" role="tab" class="rules-subtab runes-hub-tab" id="runes-hub-tab-settings"
+          data-runes-hub="settings" aria-selected="false" aria-controls="tab-settings" tabindex="-1">
+          <span class="rules-subtab__label" id="lbl-runes-hub-settings">Rules</span>
+        </button>
+      </nav>
+
+      <div id="tab-dashboard" class="runes-hub-pane is-active" data-runes-pane="dashboard" role="tabpanel" aria-labelledby="runes-hub-tab-dashboard">
       <div class="dashboard-grid">
 
         <div class="dashboard-stage-wrap dashboard-hero">
@@ -180,7 +180,7 @@
                     <span class="stage-metric-card-title-row">
                       <span class="stage-metric-name" id="lbl-card-hr-name">Speed Depth</span>
                       <span class="stage-metric-icon" aria-hidden="true">
-                        <svg viewBox="0 0 842 673" fill="currentColor" aria-hidden="true">
+                        <svg viewBox="0 0 842 673" width="18" height="18" fill="currentColor" aria-hidden="true">
                           <g transform="translate(0,673) scale(0.1,-0.1)">
                             <path d="M6481 6715 c-127 -23 -253 -75 -361 -148 -66 -45 -186 -163 -236 -234 -264 -367 -229 -886 81 -1221 311 -336 810 -395 1186 -141 494 333 567 1043 150 1472 -217 224 -523 326 -820 272z"/>
                             <path d="M32 6392 l-32 -3 0 -215 0 -214 1328 0 c1495 0 1397 -5 1470 74 85 92 81 216 -8 303 -18 18 -48 38 -67 44 -23 7 -419 11 -1346 12 -721 1 -1327 1 -1345 -1z"/>
@@ -206,7 +206,7 @@
                     <span class="stage-metric-card-title-row">
                       <span class="stage-metric-name" id="lbl-card-keep-name">Power Depth</span>
                       <span class="stage-metric-icon" aria-hidden="true">
-                        <svg viewBox="0 0 627 571" fill="currentColor" aria-hidden="true">
+                        <svg viewBox="0 0 627 571" width="18" height="18" fill="currentColor" aria-hidden="true">
                           <path d="M0 0 C64.02 0 128.04 0 194 0 C194 19.14 194 38.28 194 58 C150.44 58.33 106.88 58.66 62 59 C60.35 77.48 58.7 95.96 57 115 C59.97 114.01 62.94 113.02 66 112 C87.41622977 107.15893597 111.6774865 106.46284466 133 112 C133.98299072 112.24943359 133.98299072 112.24943359 134.98583984 112.50390625 C158.85861592 118.7180779 181.3399882 132.48347149 195.0625 153.375 C210.0696717 179.94507449 211.12135793 211.53515102 204.12109375 240.65625 C196.46122658 267.57795889 176.91312183 287.32052986 153.02734375 300.66015625 C135.74275917 309.75608165 115.50209994 314.48084688 96 315 C95.31679688 315.02046387 94.63359375 315.04092773 93.9296875 315.06201172 C46.88639055 316.30161079 5.92854992 302.3559585 -30 272 C-28.30685281 268.10005423 -25.75187197 264.92671107 -23.125 261.625 C-22.6417627 261.01358154 -22.15852539 260.40216309 -21.66064453 259.7722168 C-17.6751262 254.76695373 -13.54398911 249.89676063 -9.35766602 245.05908203 C-5.46050718 240.55516084 -1.66978862 235.97842618 2.0859375 231.35546875 C4.36619504 228.5493559 6.67791413 225.77152185 9 223 C12.24236736 223.61877931 14.34892941 224.74055234 17.01953125 226.66015625 C17.7868457 227.20285156 18.55416016 227.74554688 19.34472656 228.3046875 C20.1590918 228.88476562 20.97345703 229.46484375 21.8125 230.0625 C44.98177862 246.18486061 70.96177743 256.77369928 99.625 251.875 C111.74304878 249.20171557 122.35499048 243.6539345 129.609375 233.40234375 C135.75565802 222.78446718 136.87763502 209.67087635 134.3046875 197.7890625 C131.0402501 187.99575029 125.77290607 180.46838887 117 175 C116.41863281 174.62101563 115.83726562 174.24203125 115.23828125 173.8515625 C98.8250308 164.38101018 74.69169604 166.37805926 57 171 C46.59042065 173.86438136 46.59042065 173.86438136 36.80078125 178.24609375 C34.10483165 179.37476679 32.78168008 178.90758206 30 178 C27.17553459 176.64794334 24.4667258 175.11787514 21.75 173.5625 C20.96657227 173.12091553 20.18314453 172.67933105 19.37597656 172.22436523 C13.09128697 168.66610336 6.8582089 165.01811903 0.65917969 161.31274414 C0.00336914 160.92207764 -0.65244141 160.53141113 -1.328125 160.12890625 C-1.8943457 159.78931885 -2.46056641 159.44973145 -3.04394531 159.09985352 C-5.64813136 157.63556768 -8.32534291 156.33025176 -11 155 C-10.34457424 141.5012928 -9.47205562 128.02835336 -8.4765625 114.55078125 C-8.32807856 112.52142983 -8.17975692 110.49206653 -8.03158569 108.46269226 C-7.64321187 103.14998783 -7.2524791 97.83745946 -6.86126709 92.52496338 C-6.55057142 88.30051356 -6.24155214 84.07594198 -5.93264198 79.85136127 C-5.55204292 74.64695771 -5.1706535 69.44261217 -4.7890625 64.23828125 C-4.72106068 63.31064783 -4.65305885 62.38301441 -4.58299637 61.42727089 C-3.08040906 40.94961531 -1.53564293 20.47523911 0 0 Z" transform="translate(419,131)"/>
                           <path d="M0 0 C0 102.96 0 205.92 0 312 C-23.1 312 -46.2 312 -70 312 C-71.93618769 310.06381231 -71.12298391 307.14018209 -71.12908131 304.56319803 C-71.12616847 303.62839233 -71.12325563 302.69358663 -71.12025452 301.73045349 C-71.12110894 300.74546295 -71.12196337 299.7604724 -71.12284368 298.74563366 C-71.12450147 295.41821365 -71.11897225 292.09084316 -71.11352539 288.76342773 C-71.11324356 286.3889262 -71.11340118 284.01442458 -71.1139679 281.6399231 C-71.11422605 275.8440998 -71.10987473 270.04829294 -71.10353024 264.25247341 C-71.0963963 257.51097875 -71.09488635 250.76948647 -71.09374207 244.02798856 C-71.09155123 232.00473954 -71.08489027 219.98149729 -71.07543945 207.95825195 C-71.06626616 196.27596063 -71.05918492 184.59367115 -71.05493164 172.91137695 C-71.05466892 172.19177374 -71.05440619 171.47217053 -71.05413551 170.73076116 C-71.05283051 167.12087064 -71.05156679 163.5109801 -71.05032361 159.90108955 C-71.03995 129.93405496 -71.02225669 99.96702827 -71 70 C-72.21993652 70.35304199 -73.43987305 70.70608398 -74.69677734 71.06982422 C-79.26167573 72.38969962 -83.82811594 73.70417112 -88.39501953 75.01708984 C-90.36418841 75.58399624 -92.33294702 76.1523299 -94.30126953 76.72216797 C-97.14506746 77.54518298 -99.99034496 78.36290196 -102.8359375 79.1796875 C-103.70302338 79.43185028 -104.57010925 79.68401306 -105.46347046 79.94381714 C-111.26104938 81.60071503 -117.07115267 82.90391805 -123 84 C-124.981391 77.00905882 -126.95658645 70.01639741 -128.92651367 63.0222168 C-129.5970987 60.64448195 -130.26928305 58.26719753 -130.94311523 55.89038086 C-131.91293215 52.46846596 -132.87693346 49.04495764 -133.83984375 45.62109375 C-134.14091537 44.56353378 -134.441987 43.50597382 -134.75218201 42.41636658 C-136.19133679 37.27785808 -137.42112459 32.30799319 -138 27 C-130.29633597 24.51267269 -122.5925052 22.02586268 -114.88847923 19.53965664 C-111.30855086 18.38434283 -107.72867346 17.22887164 -104.14892578 16.07299805 C-100.67360976 14.95085184 -97.19814263 13.82917469 -93.72258377 12.70778084 C-91.79675876 12.0862895 -89.87107802 11.46435115 -87.94540405 10.84239197 C-54.54026244 0.06634286 -39.79961533 0 0 0 Z" transform="translate(350,129)"/>
                           <path d="M0 0 C19.14 0 38.28 0 58 0 C58 22.11 58 44.22 58 67 C81.1 67 104.2 67 128 67 C128 84.82 128 102.64 128 121 C125.16605613 122.41697193 122.79126262 122.11945929 119.62255859 122.11352539 C118.64188667 122.11374443 118.64188667 122.11374443 117.6414032 122.1139679 C115.47704773 122.11327036 113.31277796 122.1054854 111.1484375 122.09765625 C109.64913988 122.09579151 108.14984166 122.09436787 106.65054321 122.09336853 C102.70168378 122.08954779 98.75286104 122.07972128 94.80401611 122.06866455 C90.77559913 122.05844091 86.74717622 122.05386887 82.71875 122.04882812 C74.81248315 122.03809862 66.90624614 122.0210275 59 122 C58.98969254 122.79957626 58.97938507 123.59915253 58.96876526 124.42295837 C58.87095918 131.94267296 58.76846935 139.46230193 58.66066074 146.98187923 C58.60539645 150.8481601 58.551971 154.71444848 58.50268555 158.58081055 C58.4550935 162.30910087 58.40275285 166.03729652 58.34705925 169.76547432 C58.32661222 171.19086933 58.30790309 172.61629032 58.29092598 174.04173088 C58.26693404 176.03170541 58.23629864 178.02159655 58.20532227 180.01147461 C58.18977798 181.14620712 58.1742337 182.28093964 58.15821838 183.45005798 C58 186 58 186 57 187 C55.25617465 187.09887792 53.50834457 187.12799032 51.76171875 187.12939453 C50.64385986 187.13254669 49.52600098 187.13569885 48.37426758 187.13894653 C47.15763428 187.1369223 45.94100098 187.13489807 44.6875 187.1328125 C43.44830811 187.13376923 42.20911621 187.13472595 40.93237305 187.13571167 C38.30611719 187.13639374 35.67995367 187.13503538 33.05371094 187.13037109 C29.68071286 187.12467381 26.30779435 187.12795302 22.93479919 187.13394356 C19.72736323 187.1384177 16.519937 187.13528882 13.3125 187.1328125 C11.48755005 187.13584885 11.48755005 187.13584885 9.62573242 187.13894653 C7.94894409 187.13421829 7.94894409 187.13421829 6.23828125 187.12939453 C5.24868408 187.12859894 4.25908691 187.12780334 3.23950195 187.12698364 C1 187 1 187 0 186 C-0.09409479 183.97505769 -0.11743122 181.9468013 -0.11352539 179.91967773 C-0.11341209 177.96776772 -0.11341209 177.96776772 -0.11329651 175.97642517 C-0.10818909 174.54548098 -0.10297308 173.11453718 -0.09765625 171.68359375 C-0.09579203 170.2277074 -0.09436815 168.77182043 -0.09336853 167.31593323 C-0.08954365 163.47720621 -0.07971364 159.63851681 -0.06866455 155.79980469 C-0.05844978 151.88542184 -0.05387077 147.97103294 -0.04882812 144.05664062 C-0.03809134 136.37107657 -0.02101529 128.68554355 0 121 C-1.02155182 121.16233124 -2.04310364 121.32466248 -3.09561157 121.49191284 C-6.6135682 121.94971273 -9.92791012 122.12679195 -13.47021484 122.12939453 C-14.70774506 122.13254669 -15.94527527 122.13569885 -17.2203064 122.13894653 C-18.53721466 122.1369223 -19.85412292 122.13489807 -21.2109375 122.1328125 C-22.5885927 122.13348687 -23.96624779 122.13445801 -25.34390259 122.13571167 C-28.21674748 122.13717941 -31.08956111 122.13506194 -33.96240234 122.13037109 C-37.65134826 122.12464196 -41.34022193 122.1279786 -45.02916527 122.13394356 C-47.86691845 122.1375467 -50.7046543 122.13641229 -53.54240799 122.13381577 C-54.90363193 122.13314748 -56.26485744 122.13397151 -57.62607956 122.13629532 C-59.51943687 122.13882121 -61.41279969 122.13429201 -63.30615234 122.12939453 C-64.38424164 122.12859894 -65.46233093 122.12780334 -66.5730896 122.12698364 C-69 122 -69 122 -70 121 C-70.09868509 119.34808604 -70.12798837 117.69196783 -70.12939453 116.03710938 C-70.13254669 114.97931274 -70.13569885 113.92151611 -70.13894653 112.83166504 C-70.13591019 111.10514709 -70.13591019 111.10514709 -70.1328125 109.34375 C-70.13376923 108.17114624 -70.13472595 106.99854248 -70.13571167 105.79040527 C-70.1363937 103.30541938 -70.13453784 100.82043171 -70.13037109 98.33544922 C-70.12502319 94.51656113 -70.13031536 90.69779065 -70.13671875 86.87890625 C-70.13605797 84.47135391 -70.13477682 82.06380163 -70.1328125 79.65625 C-70.13483673 78.50523804 -70.13686096 77.35422607 -70.13894653 76.16833496 C-70.13579437 75.11053833 -70.13264221 74.0527417 -70.12939453 72.96289062 C-70.12859894 72.02658813 -70.12780334 71.09028564 -70.12698364 70.12561035 C-70 68 -70 68 -69 67 C-66.85256451 66.90574405 -64.70198974 66.88257352 -62.55249023 66.88647461 C-61.54277664 66.88625557 -61.54277664 66.88625557 -60.51266479 66.8860321 C-58.27794216 66.88673122 -56.0433019 66.89452348 -53.80859375 66.90234375 C-52.26302638 66.90420794 -50.71745843 66.90563184 -49.17189026 66.90663147 C-45.09642923 66.9104566 -41.02100363 66.92028683 -36.94555664 66.93133545 C-32.05972272 66.94334434 -27.17387698 66.94795183 -22.28803253 66.95378876 C-14.85866369 66.9634986 -7.42937263 66.98265516 0 67 C0 44.89 0 22.78 0 0 Z" transform="translate(70,187)"/>
@@ -226,7 +226,7 @@
                     <span class="stage-metric-card-title-row">
                       <span class="stage-metric-name" id="lbl-card-meta-name">Elite Quality</span>
                       <span class="stage-metric-icon" aria-hidden="true">
-                        <svg viewBox="0 0 598 572" fill="currentColor" aria-hidden="true">
+                        <svg viewBox="0 0 598 572" width="18" height="18" fill="currentColor" aria-hidden="true">
                           <path d="M0 0 C60.39 0 120.78 0 183 0 C183 18.48 183 36.96 183 56 C143.73 56 104.46 56 64 56 C64 75.14 64 94.28 64 114 C99.64 114 135.28 114 172 114 C172 132.15 172 150.3 172 169 C169.20398984 169.93200339 167.53997491 170.12370367 164.6530304 170.12025452 C163.76542023 170.12162918 162.87781006 170.12300385 161.96330261 170.12442017 C160.99226089 170.12082489 160.02121918 170.11722961 159.02075195 170.11352539 C157.48390747 170.11374443 157.48390747 170.11374443 155.91601562 170.1139679 C152.5234161 170.11327023 149.13087121 170.10548462 145.73828125 170.09765625 C143.3884433 170.09579155 141.03860496 170.09436789 138.68876648 170.09336853 C132.49916514 170.08954743 126.3095872 170.0797206 120.11999512 170.06866455 C112.69608799 170.05664482 105.27217304 170.05204625 97.84825897 170.04621124 C86.5654897 170.03650866 75.28277179 170.01734921 64 170 C64 190.46 64 210.92 64 232 C104.59 232 145.18 232 187 232 C187 250.81 187 269.62 187 289 C125.29 289 63.58 289 0 289 C0 193.63 0 98.26 0 0 Z" transform="translate(0,141)"/>
                           <path d="M0 0 C58.74 0 117.48 0 178 0 C178 18.81 178 37.62 178 57 C140.38 57 102.76 57 64 57 C64 77.46 64 97.92 64 119 C97.99 119 131.98 119 167 119 C167 137.48 167 155.96 167 175 C133.01 175 99.02 175 64 175 C64 212.62 64 250.24 64 289 C42.88 289 21.76 289 0 289 C0 193.63 0 98.26 0 0 Z" transform="translate(216,141)"/>
                           <path d="M0 0 C58.41 0 116.82 0 177 0 C177 18.81 177 37.62 177 57 C139.71 57 102.42 57 64 57 C64 77.46 64 97.92 64 119 C97.66 119 131.32 119 166 119 C166 137.48 166 155.96 166 175 C132.34 175 98.68 175 64 175 C64 212.62 64 250.24 64 289 C42.88 289 21.76 289 0 289 C0 193.63 0 98.26 0 0 Z" transform="translate(421,141)"/>
@@ -254,7 +254,6 @@
             <div class="dashboard-scope-bar-text">
               <p class="dashboard-account-run-inline">
                 <span id="dashboard-account-run-count"></span>
-                <button type="button" class="btn-dash-open-all-inline" id="btn-dash-open-all-runes"></button>
               </p>
             </div>
             <div class="dashboard-scope-controls">
@@ -340,20 +339,42 @@
         </div>
 
         <div class="panel panel-wide panel-top-spd" id="panel-top-spd">
-          <div class="top-spd-toolbar">
-            <div class="top-spd-toolbar__row">
-              <div class="panel-title panel-title--inline" id="lbl-top-spd-title">Top SPD by slot</div>
-              <select id="top-spd-set-select" class="top-spd-set-select" aria-label="Rune set"></select>
+          <header class="panel-top-spd-head">
+            <div class="panel-top-spd-head__row">
+              <h2 class="rules-page-title" id="lbl-top-spd-title">Top SPD by slot</h2>
+              <div class="panel-top-spd-head__tools">
+                <select id="top-spd-set-select" class="top-spd-set-select" aria-label="Rune set"></select>
+                <div class="top-spd-sort" id="top-spd-sort" role="group" aria-labelledby="lbl-top-spd-sort">
+                  <span id="lbl-top-spd-sort" class="visually-hidden">Sort top list</span>
+                  <div class="top-spd-sort-metric" id="top-spd-sort-metric" role="group" aria-label="">
+                    <button type="button" class="top-spd-sort-btn is-active" id="btn-top-spd-sort-cur" data-top-spd-metric="cur">Current</button>
+                    <button type="button" class="top-spd-sort-btn" id="btn-top-spd-sort-pot" data-top-spd-metric="pot">Potential</button>
+                  </div>
+                  <button type="button" class="top-spd-sort-dir" id="btn-top-spd-sort-dir" data-dir="desc" aria-pressed="true" title="">
+                    <span class="top-spd-sort-dir__label" id="lbl-top-spd-sort-dir" aria-hidden="true">↓</span>
+                  </button>
+                </div>
+              </div>
             </div>
+          </header>
+          <div class="top-spd-body">
+            <div class="top-spd-radar-col">
+              <div class="top-spd-radar-stage">
+                <div id="top-spd-radar-host" class="top-spd-radar-host" aria-hidden="true"></div>
+                <div class="top-spd-radar-legend" id="top-spd-radar-legend" hidden aria-hidden="true">
+                  <span class="top-spd-radar-legend__item top-spd-radar-legend__item--cur" id="lbl-top-spd-legend-cur"></span>
+                  <span class="top-spd-radar-legend__item top-spd-radar-legend__item--pot" id="lbl-top-spd-legend-pot"></span>
+                </div>
+              </div>
+            </div>
+            <div id="top-spd-grid" class="top-spd-grid"></div>
           </div>
-          <div id="top-spd-grid" class="top-spd-grid" />
         </div>
 
       </div>
-    </section>
+      </div>
 
-    <!-- RUNE TABLE TAB -->
-    <section id="tab-runetable" class="tab-content hidden">
+      <div id="tab-runetable" class="runes-hub-pane" data-runes-pane="runetable" role="tabpanel" aria-labelledby="runes-hub-tab-runetable" hidden>
       <div class="table-layout">
         <div class="table-main">
           <div class="table-toolbar" aria-label="Rune table tools">
@@ -362,6 +383,10 @@
                 <div class="table-toolbar__search">
                   <label class="visually-hidden" for="search-box" id="lbl-search-box">Search</label>
                   <input type="text" id="search-box" class="table-toolbar__input" placeholder="Search by set, stat, role..." autocomplete="off" />
+                </div>
+                <div id="rune-table-monster-filter" class="table-toolbar__monster-filter" hidden>
+                  <span id="rune-table-monster-filter-label"></span>
+                  <button type="button" id="btn-rune-table-clear-monster-filter" class="btn-secondary btn-sm">Clear</button>
                 </div>
                 <div id="rune-table-load-strip" class="table-toolbar__load hidden" aria-live="polite">
                   <div class="table-toolbar__load-inner">
@@ -453,10 +478,9 @@
           </div>
         </div>
       </div>
-    </section>
+      </div>
 
-    <!-- SETTINGS TAB (Rune Rules) -->
-    <section id="tab-settings" class="tab-content hidden">
+      <div id="tab-settings" class="runes-hub-pane" data-runes-pane="settings" role="tabpanel" aria-labelledby="runes-hub-tab-settings" hidden>
       <div class="rules-tab-shell">
         <header class="rules-page-header">
           <h2 class="rules-page-title" id="lbl-rules-page-title">Rune Rules</h2>
@@ -635,6 +659,137 @@
           <button type="button" id="btn-save-settings" class="btn-primary">Save & Recalculate</button>
           <button type="button" id="btn-reset-settings" class="btn-ghost">Reset to Defaults</button>
         </footer>
+      </div>
+      </div>
+    </section>
+
+    <!-- MONSTERS TAB -->
+    <section id="tab-monsters" class="tab-content hidden">
+      <div class="monsters-shell">
+        <header class="monsters-head">
+          <h2 class="rules-page-title" id="lbl-monsters-title">Monsters</h2>
+          <p class="monsters-lead" id="lbl-monsters-lead">Six-star monsters from your SWEX export. Rune slots 1–6 shown on each card.</p>
+          <div class="monsters-stats" id="monsters-stats" aria-live="polite"></div>
+        </header>
+        <div class="monsters-layout" id="monsters-layout">
+          <div class="monsters-layout__list">
+        <div class="monsters-toolbar">
+          <div class="monsters-view-toggle" role="group" aria-label="View">
+            <button type="button" id="monsters-view-cards" class="monsters-view-btn monsters-view-btn--active" aria-pressed="true" title="Cards">
+              <span id="lbl-monsters-view-cards" aria-hidden="true">▦</span>
+            </button>
+            <button type="button" id="monsters-view-list" class="monsters-view-btn" aria-pressed="false" title="List">
+              <span id="lbl-monsters-view-list" aria-hidden="true">☰</span>
+            </button>
+          </div>
+          <label class="monsters-search">
+            <span id="lbl-monsters-filter-q">Search</span>
+            <input type="search" id="monsters-filter-q" autocomplete="off" spellcheck="false" />
+          </label>
+          <label>
+            <span id="lbl-monsters-filter-element">Element</span>
+            <select id="monsters-filter-element">
+              <option value="">All elements</option>
+              <option value="Fire">Fire</option>
+              <option value="Water">Water</option>
+              <option value="Wind">Wind</option>
+              <option value="Light">Light</option>
+              <option value="Dark">Dark</option>
+            </select>
+          </label>
+          <label>
+            <span id="lbl-monsters-filter-location">Location</span>
+            <select id="monsters-filter-location">
+              <option value="all">All</option>
+              <option value="active">In use</option>
+              <option value="storage">Storage</option>
+            </select>
+          </label>
+          <label>
+            <span id="lbl-monsters-filter-skill">Skills</span>
+            <select id="monsters-filter-skill">
+              <option value="">All skills</option>
+              <option value="maxed">Max skills</option>
+              <option value="needs-up">Needs skill-ups</option>
+            </select>
+          </label>
+          <label>
+            <span id="lbl-monsters-filter-rune">Runes</span>
+            <select id="monsters-filter-rune">
+              <option value="">All runes</option>
+              <option value="unruned">Unruned</option>
+              <option value="partial">Partial (1–5)</option>
+            </select>
+          </label>
+          <label>
+            <span id="lbl-monsters-filter-rune-set">Set</span>
+            <select id="monsters-filter-rune-set">
+              <option value="">Any set</option>
+            </select>
+          </label>
+          <label>
+            <span id="lbl-monsters-filter-tag">Tag</span>
+            <select id="monsters-filter-tag">
+              <option value="">All tags</option>
+            </select>
+          </label>
+          <label>
+            <span id="lbl-monsters-filter-role">Role</span>
+            <select id="monsters-filter-role">
+              <option value="">All roles</option>
+              <option value="HP">HP</option>
+              <option value="Attack">Attack</option>
+              <option value="Defense">Defense</option>
+              <option value="Support">Support</option>
+            </select>
+          </label>
+          <label>
+            <span id="lbl-monsters-filter-mark">Marks</span>
+            <select id="monsters-filter-mark">
+              <option value="">All</option>
+              <option value="favorite">★ Favorites</option>
+              <option value="food">🍖 Food</option>
+            </select>
+          </label>
+              <label>
+                <span id="lbl-monsters-filter-sort">Sort</span>
+                <select id="monsters-filter-sort">
+                  <option value="name">Name</option>
+                  <option value="level-desc">Level ↓</option>
+                  <option value="level-asc">Level ↑</option>
+                  <option value="runes-desc">Runes equipped</option>
+                  <option value="element">Element</option>
+                  <option value="favorite-first">Favorites first</option>
+                  <option value="food-first">Food first</option>
+                </select>
+              </label>
+              <button type="button" id="monsters-filter-full-six" class="monsters-toolbar-btn" aria-pressed="false">
+                <span id="lbl-monsters-filter-full-six">6/6 runes only</span>
+              </button>
+              <button type="button" id="monsters-bulk-toggle" class="monsters-toolbar-btn" aria-pressed="false">
+                <span id="lbl-monsters-bulk-toggle">Select</span>
+              </button>
+        </div>
+        <div class="monsters-bulk-bar" id="monsters-bulk-bar" hidden>
+          <span class="monsters-bulk-bar__count" id="monsters-bulk-count">0 selected</span>
+          <button type="button" id="monsters-bulk-food" class="monsters-toolbar-btn btn-sm">Mark food</button>
+          <button type="button" id="monsters-bulk-storage" class="monsters-toolbar-btn btn-sm">Storage tag</button>
+          <label class="monsters-bulk-bar__tag">
+            <span id="lbl-monsters-bulk-tag">Tag</span>
+            <input type="text" id="monsters-bulk-tag-input" maxlength="32" autocomplete="off" spellcheck="false" />
+            <button type="button" id="monsters-bulk-tag-apply" class="monsters-toolbar-btn btn-sm">Apply</button>
+          </label>
+          <button type="button" id="monsters-bulk-clear" class="monsters-toolbar-btn btn-sm">Clear selection</button>
+        </div>
+            <div class="monsters-chips" id="monsters-chips" aria-live="polite"></div>
+        <p id="monsters-empty" class="monsters-empty" hidden></p>
+        <div id="monsters-grid" class="monsters-grid monsters-grid--cards"></div>
+          </div>
+        </div>
+        <aside id="monsters-detail" class="monsters-detail monsters-detail--float" aria-labelledby="monsters-detail-title" hidden>
+          <div class="monsters-detail__body" id="monsters-detail-body" hidden></div>
+        </aside>
+        <p class="monsters-attrib" id="lbl-monsters-attrib"></p>
       </div>
     </section>
 
@@ -868,7 +1023,7 @@
             <section class="guide-section" aria-labelledby="guide-h-tips-en">
               <h3 id="guide-h-tips-en">Tips, FAQ &amp; misc</h3>
               <p><strong>Where language lives:</strong> Open the <strong>App Settings</strong> tab and use the <strong>Language</strong> dropdown (English / Russian).</p>
-              <p><strong>Theme:</strong> <strong>Dark</strong> is the default on first visit. Light / dark toggle sits beside the donate control in the header.</p>
+              <p><strong>Theme:</strong> <strong>Dark</strong> is the default on first visit. A sun / moon slider beside the donate control switches light and dark.</p>
               <p><strong>Demo banner:</strong> When sample data is loaded, a full-width bar sits directly under the header (sticky with the header) and reminds you to upload your own SWEX JSON.</p>
               <p><strong>What persists:</strong> Loaded runes per slot, customized rules, Rune Table view state in the URL hash, and theme/language usually live in <strong>localStorage</strong> for this origin. Clearing site data removes them.</p>
               <p><strong>No cloud sync:</strong> There is no account system — backups are whatever you export from SWEX or copy yourself.</p>
@@ -995,8 +1150,15 @@
 
   <div id="swrm-toast-host" class="swrm-toast-host" aria-live="polite" aria-relevant="additions text"></div>
 
-  <script src="js/settings.js"></script>
+  <!-- settings: meta → i18n → defaults → changelog → bootstrap -->
+  <script src="js/settings/meta.js"></script>
+  <script src="js/settings/i18n.js"></script>
+  <script src="js/settings/defaults.js"></script>
+  <script src="js/settings/changelog-data.js"></script>
+  <script src="js/settings/bootstrap.js"></script>
   <script src="js/parser.js"></script>
+  <script src="js/skill-db.js"></script>
+  <script src="js/monster-db.js"></script>
   <script src="js/engine/engine-core.js"></script>
   <script src="js/engine/engine-legacy-roles.js"></script>
   <script src="js/engine/engine-gem-reapp-verdict.js"></script>

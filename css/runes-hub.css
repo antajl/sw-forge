@@ -1,0 +1,50 @@
+/* Runes hub — inner tabs (Dashboard / Table / Rules), matches .rules-subtabs look */
+#tab-runes > .runes-hub-tabs.rules-subtabs {
+  margin: 0 0 1.25rem;
+  padding: 4px;
+  gap: 6px;
+  position: sticky;
+  top: 0;
+  z-index: 12;
+  background: color-mix(in srgb, var(--bg-main) 92%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+body.light-theme #tab-runes > .runes-hub-tabs.rules-subtabs {
+  background: color-mix(in srgb, var(--bg-main) 94%, transparent);
+}
+
+.runes-hub-tabs .runes-hub-tab {
+  flex: 1 1 0;
+  min-width: 5.5rem;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 11px 12px;
+}
+
+.runes-hub-tabs .rules-subtab__label {
+  width: 100%;
+  text-align: center;
+  font-size: 0.84rem;
+  letter-spacing: 0.04em;
+}
+
+.runes-hub-pane:not(.is-active) {
+  display: none;
+}
+
+.runes-hub-pane.is-active {
+  display: block;
+  min-width: 0;
+}
+
+@media (max-width: 520px) {
+  .runes-hub-tabs .runes-hub-tab {
+    flex: 1 1 calc(33.33% - 6px);
+    padding: 10px 8px;
+  }
+  .runes-hub-tabs .rules-subtab__label {
+    font-size: 0.78rem;
+  }
+}

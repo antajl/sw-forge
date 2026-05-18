@@ -161,6 +161,7 @@
     }
     syncMonstersBulkBar(t);
     syncMonstersShowAllButton(readMonstersFilters().fullSixOnly, t);
+    syncMonstersShowLevelButton(readMonstersFilters().minLevel36Only, t);
     updateMonstersFilterSummary();
     const bulkMarksLbl = document.getElementById('lbl-monsters-bulk-marks');
     if (bulkMarksLbl) bulkMarksLbl.textContent = t.monstersBulkMarksGroup || 'Bulk marks';
@@ -270,7 +271,9 @@
 
   function readMonstersFiltersFromDom() {
     const sixBtn = document.getElementById('monsters-filter-full-six');
+    const lvlBtn = document.getElementById('monsters-filter-min-level');
     const fullSixOnly = sixBtn?.getAttribute('aria-pressed') === 'true';
+    const minLevel36Only = lvlBtn?.getAttribute('aria-pressed') === 'true';
     return {
       q: document.getElementById('monsters-filter-q')?.value || '',
       element: document.getElementById('monsters-filter-element')?.value || '',
@@ -283,6 +286,7 @@
       roleFilter: document.getElementById('monsters-filter-role')?.value || '',
       markFilter: document.getElementById('monsters-filter-mark')?.value || '',
       fullSixOnly,
+      minLevel36Only,
     };
   }
 
@@ -327,13 +331,9 @@
       renderMonstersPanel();
     });
     document.getElementById('monsters-bulk-clear')?.addEventListener('click', () => {
-      monstersBulkSelected = new Set();
-      writeMonstersBulkSelected(monstersBulkSelected);
-      monstersBulkLastIndex = -1;
+      clearAllMonstersSelection();
       const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
       syncMonstersBulkBar(t);
-      syncBulkCardStates(document.getElementById('monsters-grid'));
-      renderMonstersPanel();
     });
     document.getElementById('monsters-filter-mark')?.addEventListener('change', onFilter);
     document.getElementById('monsters-empty-clear-filters')?.addEventListener('click', () => {
@@ -359,6 +359,16 @@
       syncMonstersShowAllButton(!next, t);
       onFilter();
     });
+    document.getElementById('monsters-filter-min-level')?.addEventListener('click', () => {
+      const btn = document.getElementById('monsters-filter-min-level');
+      if (!btn) return;
+      const next = btn.getAttribute('aria-pressed') !== 'true';
+      btn.setAttribute('aria-pressed', next ? 'true' : 'false');
+      btn.classList.toggle('monsters-toolbar-btn--active', next);
+      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+      syncMonstersShowLevelButton(next, t);
+      onFilter();
+    });
     document.getElementById('monsters-view-cards')?.addEventListener('click', () => {
       writeMonstersView('cards');
       syncMonstersViewToggle('cards');
@@ -367,6 +377,11 @@
     document.getElementById('monsters-view-list')?.addEventListener('click', () => {
       writeMonstersView('list');
       syncMonstersViewToggle('list');
+      renderMonstersPanel();
+    });
+    document.getElementById('monsters-view-table')?.addEventListener('click', () => {
+      writeMonstersView('table');
+      syncMonstersViewToggle('table');
       renderMonstersPanel();
     });
     syncMonstersViewToggle(readMonstersView());

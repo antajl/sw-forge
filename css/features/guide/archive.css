@@ -1,0 +1,10 @@
+/* Archive (Guide) tab — show one locale body at a time. */
+.guide-lang {
+  display: none;
+}
+
+html[lang='en'] .guide-lang--en,
+html[lang='ru'] .guide-lang--ru,
+html[lang='fr'] .guide-lang--fr {
+  display: block;
+}

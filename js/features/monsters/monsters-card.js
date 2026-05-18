@@ -8,6 +8,16 @@
     return `<img class="${className}" src="${escapeHtml(url)}" alt="" width="16" height="16" loading="lazy" decoding="async" referrerpolicy="no-referrer" />`;
   }
 
+  function buildMonsterStarsBadge(u) {
+    const n =
+      u.meta && u.meta.natural_stars != null
+        ? Number(u.meta.natural_stars)
+        : Number(u.stars) || 0;
+    if (!n) return '';
+    const filled = '★'.repeat(Math.min(6, Math.max(0, n)));
+    return `<span class="monsters-card__stars" aria-label="${n}★">${filled}</span>`;
+  }
+
   function buildMonsterCardHtml(u, db, t, view) {
     const elCls = elementClass(u.metaElement);
     const selected = String(u.unitId) === String(monstersSelectedUnitId);
@@ -32,11 +42,13 @@
     const listMetaHtml = isList ? buildListRowMetaHtml(u, t) : '';
     const locHtml = !isList && u.inStorage ? buildLocationIconHtml(u, t) : '';
     const actionsHtml = isList ? '' : buildCardActionsHtml(u, t);
+    const starsBadge = !isList ? buildMonsterStarsBadge(u) : '';
     return `<article class="monsters-card${listCls}${u.favorite ? ' monsters-card--favorite' : ''}${u.food ? ' monsters-card--food' : ''}${u.inStorage ? ' monsters-card--storage' : ''}${bulkSel ? ' monsters-card--bulk-on' : ''}${selected ? ' monsters-card--selected' : ''}${hover ? ' monsters-card--hover' : ''}${elCls ? ` monsters-card--${elCls}` : ''}" data-unit-id="${escapeHtml(String(u.unitId))}" data-master-id="${u.masterId}" tabindex="0">
           <div class="monsters-card__bar monsters-card__bar--${elCls}" aria-hidden="true"></div>
           ${actionsHtml}
           <div class="monsters-card__top">
-            <div class="monsters-card__img-wrap">
+<div class="monsters-card__img-wrap">
+              ${starsBadge}
               <img class="monsters-card__img" alt="" width="48" height="48" data-img-file="${escapeHtml(u.imageFilename || '')}" loading="lazy" decoding="async" />
             </div>
             <div class="monsters-card__meta">

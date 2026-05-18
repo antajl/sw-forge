@@ -35,6 +35,7 @@
     const el = filters.element || '';
     const loc = filters.location || 'all';
     const fullSixOnly = !!filters.fullSixOnly;
+    const minLevel36Only = filters.minLevel36Only !== false;
     const skillFilter = filters.skillFilter || '';
     const runeFilter = filters.runeFilter || '';
     const runeSet = filters.runeSet || '';
@@ -43,6 +44,7 @@
     const markFilter = filters.markFilter || '';
     return units.filter((u) => {
       if (fullSixOnly && !u.hasFullRunes) return false;
+      if (minLevel36Only && (Number(u.level) || 0) <= 35) return false;
       if (el && u.metaElement !== el) return false;
       if (loc === 'active' && u.inStorage) return false;
       if (loc === 'storage' && !u.inStorage) return false;
@@ -165,7 +167,9 @@
 
   function readMonstersView() {
     try {
-      return localStorage.getItem(MONSTERS_VIEW_KEY) === 'list' ? 'list' : 'cards';
+      const v = localStorage.getItem(MONSTERS_VIEW_KEY);
+      if (v === 'list' || v === 'table') return v;
+      return 'cards';
     } catch (e) {
       return 'cards';
     }
@@ -173,7 +177,8 @@
 
   function writeMonstersView(view) {
     try {
-      localStorage.setItem(MONSTERS_VIEW_KEY, view === 'list' ? 'list' : 'cards');
+      const v = view === 'list' || view === 'table' ? view : 'cards';
+      localStorage.setItem(MONSTERS_VIEW_KEY, v);
     } catch (e) { /* ignore */ }
   }
 
@@ -224,7 +229,7 @@
     const actionsEl = document.getElementById('monsters-empty-actions');
     if (!root || !titleEl) return;
     if (mode === 'no-data') {
-      titleEl.textContent = t.monstersEmptyNoData || 'Load a SWEX export to see your 6★ monsters.';
+      titleEl.textContent = t.monstersEmptyNoData || 'Load a SWEX export to see your monsters.';
       if (hintEl) {
         hintEl.textContent = '';
         hintEl.hidden = true;
@@ -241,14 +246,30 @@
     root.hidden = false;
   }
 
+  function syncMonstersShowLevelButton(minLevel36Only, t) {
+    const btn = document.getElementById('monsters-filter-min-level');
+    const lbl = document.getElementById('lbl-monsters-filter-min-level-btn');
+    if (!btn) return;
+    const on = minLevel36Only !== false;
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    btn.classList.toggle('monsters-toolbar-btn--active', on);
+    if (lbl) {
+      lbl.textContent = on
+        ? t.monstersFilterMinLevelOn || 'Lv 36+ only'
+        : t.monstersFilterMinLevelOff || 'All levels';
+    }
+  }
+
   function syncMonstersViewToggle(view) {
     const grid = document.getElementById('monsters-grid');
     if (grid) {
       grid.classList.toggle('monsters-grid--list', view === 'list');
-      grid.classList.toggle('monsters-grid--cards', view !== 'list');
+      grid.classList.toggle('monsters-grid--table', view === 'table');
+      grid.classList.toggle('monsters-grid--cards', view === 'cards');
     }
     const btnCards = document.getElementById('monsters-view-cards');
     const btnList = document.getElementById('monsters-view-list');
+    const btnTable = document.getElementById('monsters-view-table');
     if (btnCards) {
       btnCards.classList.toggle('monsters-view-btn--active', view === 'cards');
       btnCards.setAttribute('aria-pressed', view === 'cards' ? 'true' : 'false');
@@ -256,6 +277,10 @@
     if (btnList) {
       btnList.classList.toggle('monsters-view-btn--active', view === 'list');
       btnList.setAttribute('aria-pressed', view === 'list' ? 'true' : 'false');
+    }
+    if (btnTable) {
+      btnTable.classList.toggle('monsters-view-btn--active', view === 'table');
+      btnTable.setAttribute('aria-pressed', view === 'table' ? 'true' : 'false');
     }
   }
 

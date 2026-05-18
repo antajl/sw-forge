@@ -108,6 +108,7 @@
     if (roleSel && roleSel.value !== (filters.roleFilter || '')) roleSel.value = filters.roleFilter || '';
     if (markSel && markSel.value !== (filters.markFilter || '')) markSel.value = filters.markFilter || '';
     syncMonstersShowAllButton(!!filters.fullSixOnly, t);
+    syncMonstersShowLevelButton(filters.minLevel36Only !== false, t);
 
     const visible = sortMonstersList(filterMonstersList(enriched, filters), filters.sort);
     monstersVisibleUnitIds = visible.map((u) => String(u.unitId));
@@ -125,11 +126,17 @@
 
     const view = readMonstersView();
     syncMonstersViewToggle(view);
-    grid.innerHTML = visible.map((u) => buildMonsterCardHtml(u, db, t, view)).join('');
-    grid.querySelectorAll('.monsters-card__img[data-img-file]').forEach((img) => {
-      const file = img.getAttribute('data-img-file');
-      if (file) bindMonsterPortrait(img, file);
-    });
+
+    if (view === 'table') {
+      grid.innerHTML = buildMonsterTableHtml(visible, t);
+      bindMonsterTableRows(grid, t);
+    } else {
+      grid.innerHTML = visible.map((u) => buildMonsterCardHtml(u, db, t, view)).join('');
+      grid.querySelectorAll('.monsters-card__img[data-img-file]').forEach((img) => {
+        const file = img.getAttribute('data-img-file');
+        if (file) bindMonsterPortrait(img, file);
+      });
+    }
 
     grid.querySelectorAll('.monsters-card').forEach((card) => {
       const uid = card.getAttribute('data-unit-id');

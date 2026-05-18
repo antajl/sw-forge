@@ -1,0 +1,54 @@
+.monsters-grid--table {
+  display: block;
+}
+
+.monsters-table-wrap {
+  overflow: auto;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.monsters-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.72rem;
+}
+
+.monsters-table th,
+.monsters-table td {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border2);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.monsters-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--bg3);
+  color: var(--text-dim);
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: 0.65rem;
+  letter-spacing: 0.04em;
+}
+
+.monsters-table__row {
+  cursor: pointer;
+}
+
+.monsters-table__row:hover {
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+}
+
+.monsters-table__row--bulk-on,
+.monsters-table__row--selected {
+  background: color-mix(in srgb, var(--accent) 16%, var(--surface));
+}
+
+.monsters-table__name {
+  font-weight: 600;
+  color: var(--text-hi);
+}

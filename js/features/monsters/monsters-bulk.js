@@ -79,3 +79,19 @@
       else sessionStorage.removeItem(MONSTERS_SELECTED_KEY);
     } catch (e) { /* ignore */ }
   }
+
+  /** Clear bulk + focus selection and strip highlight classes from the grid. */
+  function clearAllMonstersSelection() {
+    monstersBulkSelected = new Set();
+    writeMonstersBulkSelected(monstersBulkSelected);
+    monstersBulkLastIndex = -1;
+    saveMonstersSelectedUnitId(null);
+    monstersDetailHoverUnitId = null;
+    if (typeof hideMonstersDetailFloat === 'function') hideMonstersDetailFloat();
+    const grid = document.getElementById('monsters-grid');
+    if (grid) {
+      grid.querySelectorAll('.monsters-card').forEach((card) => {
+        card.classList.remove('monsters-card--bulk-on', 'monsters-card--selected', 'monsters-card--hover');
+      });
+    }
+  }

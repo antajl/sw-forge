@@ -377,6 +377,129 @@
   color: var(--text-dim);
 }
 
+.monsters-detail__scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.monsters-detail__section {
+  margin: 0;
+}
+
+.monsters-detail__nat {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+
+.monsters-detail__stats-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.72rem;
+}
+
+.monsters-detail__stats-head,
+.monsters-detail__stat-row {
+  display: grid;
+  grid-template-columns: 1.1fr repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  align-items: center;
+}
+
+.monsters-detail__stats-head {
+  color: var(--text-dim);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.monsters-detail__stat-v {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--text-hi);
+}
+
+.monsters-detail__stats-note {
+  margin-top: 6px;
+}
+
+.monsters-detail__skills-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.monsters-detail__skill-tile {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+}
+
+.monsters-detail__skill-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.monsters-detail__skill-lv-overlay {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  min-width: 16px;
+  padding: 0 3px;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.72);
+  border-radius: 4px;
+}
+
+.monsters-detail__runes-strip {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.monsters-detail__rune-strip__cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 2px;
+  font-size: 0.58rem;
+  text-align: center;
+  border-radius: 6px;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+}
+
+.monsters-detail__rune-strip__cell--empty {
+  opacity: 0.55;
+}
+
+.monsters-detail__rune-strip__slot {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--text-dim);
+}
+
+.monsters-detail__rune-strip__main {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-hi);
+}
+
 .monsters-detail-back {
   display: none;
   position: fixed;

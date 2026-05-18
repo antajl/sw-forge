@@ -122,6 +122,8 @@ const STATIC_CHANGELOG = [
 /** Roadmap (Changelog tab → Plans). Full docs: docs/PLANS.md, Monsters: docs/PLANS-MONSTERS.md */
 const STATIC_ROADMAP = {
   en: [
+    '[Monsters · shipped] All roster units in SWEX (default Lv 36+ filter); grid nat★; unified hover detail (stats, skills, rune strip); table view scaffold; clearer selection and dark-theme action buttons.',
+    '[Runes · shipped] Dashboard chart headroom (~75% scale) and bar replay when switching header tabs.',
     '— SWARFARM gap: shareable account reviews — planned as frontend-only share (?profile=JSON URL or ?data=compressed), GitHub Pages, no backend.',
     '— SWARFARM gap: account-wide devilmon planning (beyond per-monster deficit icons) — later in Monsters.',
     '— SWARFARM gap: authored teams with real speed tuning; in-game layouts are generic — saved local decks later, no public share.',
@@ -135,6 +137,8 @@ const STATIC_ROADMAP = {
     '[—] Out of scope: our own backend, community drop logs; full SWARFARM bestiary clone — link out.',
   ],
   ru: [
+    '[Монстры · сделано] Все юниты из SWEX (фильтр Ур. 36+ по умолчанию); nat★ на карточках; единая панель при наведении; таблица (черновик); выделение и кнопки в тёмной теме.',
+    '[Руны · сделано] Запас по шкале дашборда (~75%) и анимация при смене вкладок шапки.',
     '— Пробел SWARFARM: публичные профили / account review — в игре по-прежнему нельзя; у нас только локальный SWEX (URL без сервера — вне scope).',
     '— Пробел SWARFARM: полная сводка девилмонов по аккаунту (chip skill-ups уже есть).',
     '— Пробел SWARFARM: пачки с точным speed tuning; позже — локальные деки без публичных ссылок.',

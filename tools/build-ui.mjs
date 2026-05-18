@@ -46,6 +46,7 @@ const MONSTER_PARTS = [
   'monsters/monsters-runes.js',
   'monsters/monsters-detail.js',
   'monsters/monsters-card.js',
+  'monsters/monsters-table.js',
   'monsters/monsters-list.js',
   'monsters/monsters-events.js',
 ];

@@ -29,7 +29,7 @@
     for (const r of allRunes) {
       if (r && r.id != null) runeById.set(Number(r.id), r);
     }
-    allUnits = parseUnits(activeSwexJson, { sixStarOnly: true, runeById });
+    allUnits = parseUnits(activeSwexJson, { sixStarOnly: false, runeById });
   }
 
   /**

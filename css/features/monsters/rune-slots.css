@@ -1,0 +1,95 @@
+/* Split from css/monsters.css */
+.monsters-runes {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.monsters-rune-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  padding: 4px 2px;
+  font-size: 0.58rem;
+  line-height: 1.2;
+  text-align: center;
+  border-radius: 4px;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+}
+
+.monsters-rune-slot--empty {
+  opacity: 0.45;
+}
+
+.monsters-rune-slot__num {
+  font-family: var(--font-mono);
+  font-size: 0.52rem;
+  color: var(--text-dim);
+}
+
+.monsters-rune-slot__icon {
+  display: block;
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.monsters-rune-slot__set {
+  font-weight: 600;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+  font-size: 0.52rem;
+  line-height: 1.1;
+}
+
+.monsters-rune-slot__set--sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.monsters-rune-slot:has(.monsters-rune-slot__icon) {
+  position: relative;
+  padding: 3px 2px 4px;
+  gap: 1px;
+}
+
+.monsters-rune-slot--fire {
+  border-color: color-mix(in srgb, #c44 35%, var(--border2));
+}
+.monsters-rune-slot--water {
+  border-color: color-mix(in srgb, #48a 35%, var(--border2));
+}
+.monsters-rune-slot--wind {
+  border-color: color-mix(in srgb, #5a5 35%, var(--border2));
+}
+.monsters-rune-slot--light {
+  border-color: color-mix(in srgb, #ca4 35%, var(--border2));
+}
+.monsters-rune-slot--dark {
+  border-color: color-mix(in srgb, #a6a 35%, var(--border2));
+}
+
+.monsters-attrib {
+  margin-top: 14px;
+  font-size: 0.64rem;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+.monsters-attrib a {
+  color: var(--accent);
+}

@@ -1,0 +1,106 @@
+/* Table header filters */
+/* Filter integrated into table header cells (sticky: do not use position:relative — it breaks thead stickiness) */
+#rune-table th.th-has-filter {
+  padding: 8px 6px;
+  min-width: 72px;
+}
+#rune-table th.col-text.th-has-filter .th-text {
+  margin-right: auto;
+}
+
+.th-text {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-family: var(--font-head);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: none;
+  color: var(--text-dim);
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+/* While filter <select> is shown, keep label in layout so column width does not collapse */
+.th-text.th-text--filter-active {
+  visibility: hidden;
+}
+
+.th-text::after {
+  content: '';
+  display: inline-block;
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid currentColor;
+  opacity: 0.7;
+}
+
+.th-text:hover {
+  background: var(--bg3);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.th-text.th-text--filtered {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+}
+
+.th-filter {
+  display: none;
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  right: 4px;
+  z-index: 100;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  color: var(--text);
+  padding: 4px 20px 4px 6px;
+  border-radius: 4px;
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  text-transform: none;
+  outline: none;
+  cursor: pointer;
+  background-image: var(--select-chevron);
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  background-size: 10px;
+  min-width: 60px;
+}
+
+.th-filter:focus {
+  box-shadow: 0 0 0 2px rgba(90, 171, 255, 0.15);
+}
+
+.light-theme .th-text {
+  background: #ffffff;
+  border-color: var(--border);
+}
+
+.light-theme .th-text:hover {
+  background: #f0f4f8;
+  border-color: var(--accent);
+}
+
+.light-theme .th-filter {
+  background: #ffffff;
+  border-color: var(--accent);
+}
+
+.light-theme .th-filter option {
+  background-color: #ffffff;
+  color: #2a2a2a;
+}

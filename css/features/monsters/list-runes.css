@@ -1,0 +1,131 @@
+/* Split from css/monsters.css */
+.monsters-rune-sets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.monsters-rune-set-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border2));
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg3));
+  color: var(--text-hi);
+}
+
+.monsters-rune-set-chip__icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+.monsters-list__runes-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.6rem;
+  line-height: 1.25;
+  max-width: 13.5rem;
+}
+
+.monsters-list-rune-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 1.15rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.monsters-list-rune-row--empty {
+  opacity: 0.5;
+}
+
+.monsters-list-rune-row__icon {
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.monsters-list-rune-row__icon img {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  display: block;
+}
+
+.monsters-list-rune-row__ph {
+  display: block;
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  border: 1px dashed var(--border2);
+  background: var(--bg3);
+}
+
+.monsters-list-rune-row__text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-dim);
+}
+
+.monsters-list-rune-row__text strong {
+  color: var(--text-hi);
+  font-weight: 600;
+}
+
+.monsters-list-rune__main {
+  color: var(--text-hi);
+  font-weight: 500;
+}
+
+.monsters-list-rune__inn {
+  color: color-mix(in srgb, var(--accent) 70%, var(--text-dim));
+}
+
+.monsters-list-rune__subs {
+  display: block;
+}
+
+.monsters-list-rune__sep {
+  opacity: 0.65;
+}
+
+.monsters-toolbar label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: var(--text-caption);
+  color: var(--text-dim);
+}
+
+.monsters-toolbar input,
+.monsters-toolbar select {
+  min-height: 32px;
+  padding: 5px 10px;
+  font-size: var(--text-secondary);
+}
+
+.monsters-search {
+  flex: 1 1 14rem;
+  min-width: 8rem;
+  max-width: 22rem;
+}
+
+.monsters-toolbar__row--main .monsters-search {
+  flex: 0 1 18rem;
+}
+
+/* .monsters-empty — see monsters/toolbar.css */

@@ -1,40 +1,43 @@
 /**
- * Concatenate js/ui-parts/*.js → js/ui.js (no transforms; same closure as monolith).
- * Split from backup: node tools/build-ui.mjs --split-only
- * Rebuild after edits: node tools/build-ui.mjs
+ * Concatenate ordered UI feature files → js/ui.js (no transforms; same IIFE closure).
+ * Rebuild after edits: npm run build:ui
  */
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const partsDir = path.join(root, 'js/ui-parts');
+const featuresDir = path.join(root, 'js/features');
 const outPath = path.join(root, 'js/ui.js');
-const bakPath = path.join(root, 'js/ui.monolith.bak.js');
 
-/** [filename, startLine, endLine] — concat order matches monolith */
+/** Concat order — must match runtime dependencies inside the IIFE */
 const CHUNKS = [
-  ['01-preamble.js', 5, 58],
-  ['02-theme-nav.js', 59, 343],
-  ['03-i18n.js', 344, 768],
-  ['04-main-tabs.js', 769, 786],
-  ['05-stage-filters.js', 787, 1092],
-  ['06-upload.js', 1093, 1487],
-  ['06b-ui-utils.js', 1488, 1837],
-  ['06c-dashboard-helpers.js', 1838, 2471],
-  ['07-depth.js', 2472, 2843],
-  ['08-dashboard.js', 2844, 3303],
-  ['09-table.js', 3304, 4072],
-  ['10-formulas-ui.js', 4073, 4334],
-  ['11-rules-ui.js', 4335, 4647],
-  ['11-constants-ui.js', 4648, 4820],
-  ['11-rules-bootstrap.js', 4821, 5121],
-  ['12-app-settings.js', 5122, 5455],
-  ['13-changelog.js', 5456, 5507],
-  ['14-monsters.js'],
+  'shell/bootstrap.js',
+  'shell/theme-nav.js',
+  'shell/i18n-bindings.js',
+  'shell/main-tabs.js',
+  'runes/stage-filters.js',
+  'runes/upload.js',
+  'runes/utils.js',
+  'runes/verdict-filters.js',
+  'runes/charts.js',
+  'runes/copy-summary.js',
+  'runes/stage-advisor-ui.js',
+  'runes/depth.js',
+  'runes/dashboard.js',
+  'runes/table-row-render.js',
+  'runes/table-filters.js',
+  'runes/table.js',
+  'rules/formulas-ui.js',
+  'rules/panel.js',
+  'rules/constants-ui.js',
+  'rules/bootstrap.js',
+  'app/settings-ui.js',
+  'app/changelog.js',
+  'monsters/bootstrap.js',
 ];
 
-/** Concatenated before 14-monsters.js (same IIFE scope) */
+/** Concatenated before monsters/bootstrap.js (same IIFE scope) */
 const MONSTER_PARTS = [
   'monsters/monsters-state.js',
   'monsters/monsters-storage.js',
@@ -47,106 +50,58 @@ const MONSTER_PARTS = [
   'monsters/monsters-events.js',
 ];
 
-const partNames = CHUNKS.map(([name]) => name);
-
-function splitFromBak() {
-  if (!fs.existsSync(bakPath)) {
-    console.error('Missing js/ui.monolith.bak.js');
-    process.exit(1);
-  }
-  const lines = fs.readFileSync(bakPath, 'utf8').split('\n');
-  fs.mkdirSync(partsDir, { recursive: true });
-  const written = new Set();
-  for (const [name, start, end] of CHUNKS) {
-    const slice = lines.slice(start - 1, end).join('\n').trimEnd() + '\n';
-    const header = `// ui-parts/${name} — slice of ui.monolith.bak.js L${start}-${end}\n`;
-    fs.writeFileSync(path.join(partsDir, name), header + slice, 'utf8');
-    written.add(name);
-    console.log('wrote ui-parts/' + name, `(${end - start + 1} lines)`);
-  }
-  for (const f of fs.readdirSync(partsDir)) {
-    if (f.endsWith('.js') && !written.has(f)) {
-      fs.unlinkSync(path.join(partsDir, f));
-      console.log('removed stale ui-parts/' + f);
-    }
-  }
+function featurePath(relPath) {
+  return path.join(featuresDir, relPath);
 }
 
-const argv = process.argv.slice(2);
-if (argv.includes('--split') || argv.includes('--split-only')) {
-  splitFromBak();
-  if (argv.includes('--split-only')) process.exit(0);
-}
-
-const missing = partNames.filter((name) => !fs.existsSync(path.join(partsDir, name)));
-if (missing.length && fs.existsSync(bakPath)) {
-  console.log(`js/ui-parts/ missing ${missing.length} part(s) — splitting from ui.monolith.bak.js ...`);
-  splitFromBak();
-}
-
-const stillMissing = partNames.filter((name) => !fs.existsSync(path.join(partsDir, name)));
-if (stillMissing.length) {
-  console.error('Missing ui-parts:', stillMissing.join(', '));
-  console.error('Run: node tools/build-ui.mjs --split-only');
+const missing = CHUNKS.filter((name) => !fs.existsSync(featurePath(name)));
+if (missing.length) {
+  console.error('Missing feature UI parts:', missing.join(', '));
   process.exit(1);
 }
 
 const banner = `// =============================================
-// ui.js — built from js/ui-parts/ (do not edit by hand)
-// Rebuild: node tools/build-ui.mjs
+// ui.js — built from js/features/ (do not edit by hand)
+// Rebuild: npm run build:ui
 // =============================================
 
 `;
 
-const lastPart = partNames[partNames.length - 1];
-for (let i = 0; i < partNames.length - 1; i++) {
-  const name = partNames[i];
-  const raw = fs.readFileSync(path.join(partsDir, name), 'utf8');
+const lastPart = CHUNKS[CHUNKS.length - 1];
+for (let i = 0; i < CHUNKS.length - 1; i++) {
+  const name = CHUNKS[i];
+  const raw = fs.readFileSync(featurePath(name), 'utf8');
   if (/\}\)\(\);\s*$/.test(raw.trim())) {
-    console.error(`ui-parts/${name} must not close the IIFE — only ${lastPart} may end with })();`);
+    console.error(`js/features/${name} must not close the IIFE — only ${lastPart} may end with })();`);
     process.exit(1);
   }
 }
 
 function readPart(relPath, stripHeader) {
-  const full = relPath.startsWith('monsters/')
-    ? path.join(root, 'js', relPath)
-    : path.join(partsDir, relPath);
+  const full = featurePath(relPath);
   let raw = fs.readFileSync(full, 'utf8');
   if (stripHeader) {
-    raw = raw.replace(/^\/\/ (?:ui-parts|js\/monsters)\/[^\n]+\n/, '');
+    raw = raw.replace(/^\/\/ (?:ui-parts|js\/monsters|js\/features)\/[^\n]+\n/, '');
   }
   return raw;
 }
 
-const missingMonsters = MONSTER_PARTS.filter((f) => !fs.existsSync(path.join(root, 'js', f)));
+const missingMonsters = MONSTER_PARTS.filter((f) => !fs.existsSync(featurePath(f)));
 const useMonsterModules = missingMonsters.length === 0;
 if (!useMonsterModules && missingMonsters.length < MONSTER_PARTS.length) {
-  console.error('Partial js/monsters/ — run: node tools/split-monsters.mjs');
+  console.error('Partial js/features/monsters/ — expected all monster modules');
   process.exit(1);
 }
 if (!useMonsterModules) {
-  console.warn('Using monolithic ui-parts/14-monsters.js (run node tools/split-monsters.mjs to split)');
+  console.warn('Using monolithic js/features/monsters/bootstrap.js only');
 }
 
-const body = partNames
-  .flatMap((f) => {
-    if (f === '14-monsters.js' && useMonsterModules) {
-      return [...MONSTER_PARTS.map((mp) => readPart(mp, true)), readPart(f, true)];
-    }
-    return [readPart(f, true)];
-  })
-  .join('\n');
+const body = CHUNKS.flatMap((f) => {
+  if (f === 'monsters/bootstrap.js' && useMonsterModules) {
+    return [...MONSTER_PARTS.map((mp) => readPart(mp, true)), readPart(f, true)];
+  }
+  return [readPart(f, true)];
+}).join('\n');
 
 fs.writeFileSync(outPath, banner + body, 'utf8');
-console.log('wrote js/ui.js from', partNames.length, 'parts (', body.split('\n').length, 'lines )');
-
-if (fs.existsSync(bakPath)) {
-  const bak = fs.readFileSync(bakPath, 'utf8');
-  const built = fs.readFileSync(outPath, 'utf8').replace(/^\/\/ ={3,}[\s\S]*?={3,}\n\n/, '');
-  if (bak === built) {
-    console.log('OK: built ui.js matches ui.monolith.bak.js');
-  } else {
-    console.warn('WARN: built ui.js differs from ui.monolith.bak.js — check part boundaries');
-  }
-}
+console.log('wrote js/ui.js from', CHUNKS.length, 'chunks (', body.split('\n').length, 'lines )');

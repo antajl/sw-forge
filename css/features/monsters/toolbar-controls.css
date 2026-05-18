@@ -1,0 +1,174 @@
+/* Split from css/monsters.css */
+.monsters-view-toggle {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border2);
+  background: var(--bg3);
+}
+
+.monsters-view-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 30px;
+  padding: 4px 8px;
+  border: none;
+  border-radius: calc(var(--radius) - 2px);
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.monsters-view-btn:hover {
+  color: var(--text-hi);
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+}
+
+.monsters-view-btn--active {
+  color: var(--text-hi);
+  background: var(--surface);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.monsters-toolbar-btn {
+  min-height: 32px;
+  padding: 5px 12px;
+  font-size: var(--text-secondary);
+  border-radius: var(--radius);
+  border: 1px solid var(--border2);
+  background: var(--bg3);
+  color: var(--text-dim);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.monsters-toolbar-btn:hover {
+  color: var(--text-hi);
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border2));
+}
+
+.monsters-toolbar-btn--active {
+  color: var(--text-hi);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border2));
+  background: color-mix(in srgb, var(--accent) 12%, var(--bg3));
+}
+
+.monsters-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.monsters-toolbar__row--main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px 10px;
+  width: 100%;
+}
+
+.monsters-toolbar__sep {
+  align-self: stretch;
+  width: 1px;
+  min-height: 28px;
+  margin: 2px 2px 4px;
+  background: var(--border2);
+  flex-shrink: 0;
+}
+
+.monsters-toolbar-icon {
+  display: block;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.monsters-toolbar__filters-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.monsters-toolbar__filters-count {
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: var(--accent);
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 12%, var(--bg3));
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border2));
+}
+
+.monsters-toolbar__filters-count[hidden] {
+  display: none !important;
+}
+
+.monsters-toolbar__sort select {
+  min-width: 9rem;
+}
+
+.monsters-toolbar__filters {
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  background: var(--bg3);
+  padding: 0 10px 10px;
+}
+
+.monsters-toolbar__filters--active {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border2));
+}
+
+.monsters-toolbar__filters-summary {
+  cursor: pointer;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  padding: 8px 0 6px;
+  list-style: none;
+}
+
+.monsters-toolbar__filters-summary::-webkit-details-marker {
+  display: none;
+}
+
+.monsters-toolbar__filters-summary::before {
+  content: '▸ ';
+  display: inline-block;
+  transition: transform 0.15s ease;
+}
+
+.monsters-toolbar__filters[open] .monsters-toolbar__filters-summary::before {
+  transform: rotate(90deg);
+}
+
+.monsters-toolbar__filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+  gap: 8px 12px;
+}
+
+.monsters-toolbar__filters-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.66rem;
+  color: var(--text-dim);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

@@ -1,0 +1,104 @@
+/* Split from css/monsters.css */
+.monsters-shell {
+  max-width: min(1400px, var(--content-max, 1200px));
+  margin: 0 auto;
+  padding: 0 4px 24px;
+}
+
+.monsters-layout {
+  display: block;
+}
+
+.monsters-layout__list {
+  min-width: 0;
+}
+
+.monsters-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+  align-items: center;
+}
+
+.monsters-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 4px 10px;
+  font-size: var(--text-caption);
+  border-radius: 999px;
+  border: 1px solid var(--border2);
+  background: var(--bg3);
+}
+
+.monsters-chip__label {
+  color: var(--text-dim);
+}
+
+.monsters-chip__value {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text-hi);
+}
+
+.monsters-index-warn--inline {
+  flex: 1 1 100%;
+  margin: 0;
+}
+
+.monsters-toolbar__check {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px !important;
+  padding-bottom: 6px;
+}
+
+.monsters-toolbar__check input {
+  width: auto;
+  min-height: auto;
+}
+
+.monsters-head {
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.monsters-head .rules-page-title {
+  margin: 0 0 8px;
+  font-size: 1.15rem;
+}
+
+.monsters-lead {
+  margin: 0;
+  font-size: 0.74rem;
+  color: var(--text-dim);
+  line-height: 1.45;
+}
+
+.monsters-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  margin-top: 12px;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+
+.monsters-index-warn {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: var(--warn-text, #c9a227);
+  background: var(--warn-bg, rgba(201, 162, 39, 0.12));
+  border: 1px solid var(--warn-border, rgba(201, 162, 39, 0.35));
+  border-radius: var(--radius);
+  flex: 1 1 100%;
+}
+
+.monsters-stats strong {
+  color: var(--text);
+  font-weight: 600;
+}

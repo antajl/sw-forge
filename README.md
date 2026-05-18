@@ -105,6 +105,19 @@ python -m http.server 8080
 # then open http://localhost:8080
 ```
 
+### Development workflow
+
+The UI source lives under `js/features/`. `js/ui.js` is a generated artifact for static hosting and should not be edited by hand.
+
+```bash
+npm run build:ui
+npm run watch:ui
+```
+
+See **`docs/PROJECT-CONTEXT.md`** (source of truth) and `docs/ARCHITECTURE.md` for the feature-to-file map and script load order.
+
+**Layout:** `js/core/`, `js/data/`, `js/features/`, `css/foundation/`, `css/features/`. After pulling structural changes, run `MIGRATE.cmd` once (or `node tools/migrate-structure.mjs` then `npm run build:ui`). Demo data: `data/demo.json`.
+
 ---
 
 ## Google Sheet alternative

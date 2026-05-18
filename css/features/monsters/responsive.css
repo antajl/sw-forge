@@ -1,0 +1,20 @@
+/* Split from css/monsters.css */
+@media (max-width: 640px) {
+  .monsters-detail.monsters-detail--float {
+    width: min(300px, calc(100vw - 16px));
+    max-height: min(420px, calc(100vh - 16px));
+  }
+
+  .monsters-card--list .monsters-card__top {
+    min-width: 0;
+    flex: 1 1 100%;
+  }
+
+  .monsters-card--list {
+    grid-template-columns: auto 4px 1fr;
+    grid-template-areas:
+      'bulk bar portrait'
+      'bulk bar info'
+      'bulk bar meta';
+  }
+}

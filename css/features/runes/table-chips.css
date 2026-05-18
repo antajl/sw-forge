@@ -1,0 +1,168 @@
+/* Grade badges (legacy markup) */
+.badge.badge-legend { --chip-tint: var(--tint-legend); }
+.badge.badge-hero { --chip-tint: var(--tint-hero); }
+
+/* Legacy eff classes (e.g. if reused outside table chips) */
+.eff-hi  { color: var(--tint-eff-hi); font-family: var(--font-mono); }
+.eff-mid { color: var(--tint-eff-mid); font-family: var(--font-mono); }
+.eff-lo  { color: var(--text-dim); font-family: var(--font-mono); }
+
+/* ========== Rune table: plain stat lines (no chip) ========== */
+#rune-table .table-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--text-hi);
+  white-space: nowrap;
+}
+
+#rune-table .table-stat--set {
+  font-family: var(--font-ui);
+  font-size: 0.74rem;
+  letter-spacing: 0.02em;
+}
+
+#rune-table .table-stat__text--grind {
+  color: color-mix(in srgb, var(--gold) 58%, var(--orange));
+}
+
+#rune-table .table-stat-gem-icon {
+  width: 14px;
+  height: 14px;
+  margin-left: 2px;
+  flex-shrink: 0;
+  align-self: center;
+  color: var(--text-hi);
+}
+#rune-table .table-stat-gem-icon path {
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  stroke-width: 2.25;
+}
+#rune-table .table-stat--gem-only .table-stat-gem-icon path {
+  stroke-width: 2.95;
+}
+
+/* ========== Chip shell (grade, role, verdict, eff only) ========== */
+.grade-tag,
+.role-tag,
+.verdict-tag,
+.badge,
+.stat-chip.stat-chip--eff {
+  --chip-tint: var(--tint-neutral);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  border: 1px solid color-mix(in srgb, var(--border2) var(--chip-border-base-pct), var(--chip-tint));
+  background: color-mix(in srgb, var(--surface) var(--chip-surface-pct), var(--chip-tint));
+  white-space: nowrap;
+  color: var(--text-hi);
+  font-weight: 400;
+}
+
+.grade-tag,
+.role-tag,
+.verdict-tag {
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-weight: inherit;
+  letter-spacing: 0.02em;
+  color: color-mix(in srgb, var(--text-hi) 48%, var(--chip-tint));
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 7px;
+  font-family: var(--font-head);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+/* Grades */
+.grade-tag.legend { --chip-tint: var(--tint-legend); }
+.grade-tag.hero { --chip-tint: var(--tint-hero); }
+.grade-tag.rare { --chip-tint: var(--tint-rare); }
+.grade-tag.grade-tag--other {
+  --chip-tint: var(--tint-muted);
+  --chip-surface-pct: 94%;
+  color: var(--text);
+}
+
+/* Roles */
+.role-tag.highroll { --chip-tint: var(--tint-highroll); }
+.role-tag.bruiser { --chip-tint: var(--tint-bruiser); }
+.role-tag.fastcc { --chip-tint: var(--tint-fastcc); }
+.role-tag.tank { --chip-tint: var(--tint-tank); }
+.role-tag.bomber { --chip-tint: var(--tint-bomber); }
+.role-tag.classicdps { --chip-tint: var(--tint-classicdps); }
+.role-tag.slowdps { --chip-tint: var(--tint-slowdps); }
+.role-tag.duoroll { --chip-tint: var(--tint-duoroll); }
+
+/* Verdicts */
+.verdict-tag.keep { --chip-tint: var(--tint-keep); }
+.verdict-tag.sell { --chip-tint: var(--tint-sell); }
+.verdict-tag.grind { --chip-tint: var(--tint-grind); }
+.verdict-tag.finish { --chip-tint: var(--tint-finish); }
+.verdict-tag.reapp { --chip-tint: var(--tint-reapp); }
+.verdict-tag.upgrade { --chip-tint: var(--tint-upgrade); }
+.verdict-tag.gem { --chip-tint: var(--tint-gem); }
+
+/* Eff%: chip formula; hi/mid a bit stronger */
+.stat-chip.stat-chip--eff {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: inherit;
+  font-variant-numeric: tabular-nums;
+  color: color-mix(in srgb, var(--text-hi) 48%, var(--chip-tint));
+}
+.stat-chip.stat-chip--eff.stat-chip--eff-hi {
+  --chip-tint: var(--tint-eff-hi);
+  --chip-surface-pct: 70%;
+}
+.stat-chip.stat-chip--eff.stat-chip--eff-mid {
+  --chip-tint: var(--tint-eff-mid);
+  --chip-surface-pct: 74%;
+}
+.stat-chip.stat-chip--eff.stat-chip--eff-lo {
+  --chip-tint: var(--tint-eff-lo);
+  --chip-surface-pct: 82%;
+  color: var(--text-dim);
+}
+
+.grade-tag--ancient {
+  gap: 4px;
+  padding-left: 4px;
+}
+
+.grade-tag__lbl {
+  min-width: 0;
+}
+
+.grade-tag .ancient-grade-icon-wrap {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 13px;
+  height: 13px;
+  margin: 0;
+  color: inherit;
+}
+
+.grade-tag .ancient-grade-icon {
+  width: 13px;
+  height: 13px;
+  display: block;
+}

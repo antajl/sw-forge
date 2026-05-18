@@ -1,6 +1,6 @@
 # SW Rune Master — планы (roadmap)
 
-Краткая версия отображается во вкладке **Changelog → Roadmap** (`js/settings/changelog-data.js`).  
+Краткая версия отображается во вкладке **Changelog → Roadmap** (`js/core/changelog-data.js`).  
 Детальный план вкладки Monsters: **`docs/PLANS-MONSTERS.md`**.
 
 ---
@@ -94,5 +94,5 @@
 
 ## Категория: Инфра / dev
 
-- Сборка `ui.js` из `ui-parts/` (не закрывать IIFE в середине changelog-part).
+- Сборка `ui.js` из `js/features/` (не закрывать IIFE в середине feature-частей).
 - При необходимости: skill max-level DB для Monsters (JSON рядом с `monsters-index.json`).

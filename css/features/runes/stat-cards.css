@@ -1,0 +1,68 @@
+/* Stat cards */
+#tab-dashboard .stat-card {
+  background: var(--dash-chrome-fill);
+  border: var(--dash-chrome-border);
+  box-shadow: var(--dash-chrome-shadow);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.15s ease;
+}
+
+#tab-dashboard .stat-card--clickable:hover {
+  border-color: color-mix(in srgb, var(--accent) 48%, var(--border2));
+  box-shadow: var(--dash-chrome-shadow-hover);
+  transform: translateY(-1px);
+}
+
+.stat-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 16px 20px;
+  position: relative; overflow: hidden;
+  transition: border-color 0.2s;
+}
+.stat-card::before {
+  content: ''; position: absolute;
+  top: 0; left: 0; right: 0; height: 2px;
+  background: var(--border2);
+}
+.stat-card.keep::before  { background: var(--tint-keep); }
+.stat-card.sell::before  { background: var(--tint-sell); }
+.stat-card.grind::before { background: var(--tint-grind); }
+.stat-card.finish::before{ background: var(--tint-finish); }
+.stat-card.reapp::before { background: var(--tint-reapp); }
+.stat-card.upgrade::before { background: var(--tint-upgrade); }
+.stat-card.gem::before { background: var(--tint-gem); }
+.stat-card.stat-card-total::before { background: var(--tint-neutral); }
+
+.sc-label {
+  font-family: var(--font-head); font-size: 0.75rem;
+  font-weight: 600; letter-spacing: 0.04em; text-transform: none;
+  color: var(--text-dim); margin-bottom: 6px;
+}
+.sc-value {
+  font-family: var(--font-mono); font-size: 1.8rem;
+  color: var(--text-hi); line-height: 1;
+}
+.sc-pct {
+  margin-top: 6px;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  min-height: 1em;
+}
+.stat-card--clickable {
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.stat-card--clickable:hover {
+  border-color: var(--accent);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+}
+.stat-card--clickable:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.stat-card-total .sc-value {
+  font-size: 2.1rem;
+}

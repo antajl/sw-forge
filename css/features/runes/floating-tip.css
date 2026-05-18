@@ -1,0 +1,38 @@
+/* Floating tooltip */
+.swrm-floating-tip {
+  position: fixed;
+  z-index: 12050;
+  max-width: min(22rem, calc(100vw - 24px));
+  padding: 10px 12px;
+  border-radius: var(--radius-lg);
+  border: 1px solid color-mix(in srgb, var(--accent) 32%, var(--border2));
+  background: color-mix(in srgb, var(--surface) 94%, var(--bg2));
+  box-shadow:
+    0 10px 28px color-mix(in srgb, var(--bg) 55%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--accent) 10%, transparent);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--text-hi);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.14s ease, transform 0.14s ease;
+}
+
+html.swrm-has-gsap .swrm-floating-tip {
+  transition: none;
+}
+
+.swrm-floating-tip.swrm-floating-tip--in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.light-theme .swrm-floating-tip {
+  background: color-mix(in srgb, var(--surface) 98%, white);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--bg) 18%, transparent);
+}
+
+.stage-metric-card[data-swrm-tip] {
+  cursor: help;
+}

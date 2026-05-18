@@ -1,12 +1,7 @@
 /* SW Rune Master — entry; partials loaded via @import */
-@import url('./base.css');
-@import url('./header.css');
-@import url('./stage-advisor.css');
-@import url('./overlays.css');
-@import url('./dashboard.css');
-@import url('./runes-hub.css');
-@import url('./rune-table.css');
-@import url('./rules.css');
-@import url('./toasts.css');
-@import url('./monsters/index.css');
-@import url('./monsters.css');
+@import url('./foundation/base.css');
+@import url('./foundation/header.css');
+@import url('./foundation/overlays.css');
+@import url('./foundation/toasts.css');
+@import url('./features/runes/index.css');
+@import url('./features/monsters/index.css');

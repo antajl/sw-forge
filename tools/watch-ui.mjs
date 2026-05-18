@@ -1,5 +1,5 @@
 /**
- * Watch js/ui-parts/*.js and rebuild js/ui.js on change.
+ * Watch UI feature files and rebuild js/ui.js on change.
  * Run: node tools/watch-ui.mjs
  */
 import fs from 'fs';
@@ -8,7 +8,7 @@ import { spawn } from 'child_process';
 import { fileURLToPath } from 'url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const partsDir = path.join(root, 'js/ui-parts');
+const featuresDir = path.join(root, 'js/features');
 const buildScript = path.join(root, 'tools/build-ui.mjs');
 
 function runBuild() {
@@ -42,9 +42,9 @@ function scheduleRebuild(label) {
 }
 
 await runBuild();
-process.stdout.write('[watch-ui] watching js/ui-parts/ (Ctrl+C to stop)\n');
+process.stdout.write('[watch-ui] watching js/features/ (Ctrl+C to stop)\n');
 
-fs.watch(partsDir, { recursive: true }, (_event, filename) => {
+fs.watch(featuresDir, { recursive: true }, (_event, filename) => {
   if (!filename || !String(filename).endsWith('.js')) return;
   scheduleRebuild(path.basename(filename));
 });

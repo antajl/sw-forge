@@ -1,0 +1,201 @@
+/* Table core */
+.table-wrap {
+  overflow: auto;
+  max-height: min(82vh, 980px);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+}
+.table-wrap:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Dense row styling on wide viewports */
+@media (min-width: 1200px) {
+  #rune-table-scroll #rune-table thead th {
+    padding: 6px 8px;
+    font-size: 0.7rem;
+  }
+  #rune-table-scroll #rune-table tbody td {
+    padding: 5px 8px;
+    font-size: 0.78rem;
+  }
+  #rune-table-scroll #rune-table .table-stat {
+    font-size: 0.7rem;
+    gap: 2px;
+  }
+  #rune-table-scroll #rune-table .table-stat--set {
+    font-size: 0.68rem;
+  }
+  #rune-table-scroll #rune-table .stat-chip.stat-chip--eff {
+    padding: 1px 5px;
+    font-size: 0.7rem;
+    gap: 2px;
+  }
+  #rune-table-scroll #rune-table .grade-tag,
+  #rune-table-scroll #rune-table .role-tag,
+  #rune-table-scroll #rune-table .verdict-tag {
+    font-size: 0.66rem;
+    padding: 1px 5px;
+  }
+  #rune-table-scroll #rune-table td.td-num-plain {
+    font-size: 0.72rem;
+  }
+}
+
+table { width: 100%; border-collapse: collapse; }
+
+#rune-table {
+  --rt-grade-w: 6.1rem;
+  --rt-set-w: 6.25rem;
+  --rt-row-bg: var(--bg2);
+  --rt-row-bg-even: color-mix(in srgb, var(--surface) 40%, var(--bg2));
+  --rt-row-bg-hover: var(--surface);
+  min-width: 1080px;
+}
+
+thead tr {
+  background: var(--bg3); border-bottom: 1px solid var(--border2);
+}
+#rune-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--bg3);
+  box-shadow: 0 1px 0 var(--border2);
+}
+#rune-table thead th.th-has-filter {
+  z-index: 22;
+}
+#rune-table thead th.col-pin {
+  z-index: 24;
+}
+#rune-table thead th.col-pin.col-set {
+  z-index: 23;
+}
+
+th {
+  font-family: var(--font-head); font-size: 0.75rem; font-weight: 700;
+  letter-spacing: 0.04em; text-transform: none; color: var(--text-dim);
+  padding: 10px 12px; text-align: left; white-space: nowrap;
+  cursor: pointer; user-select: none;
+  transition: color 0.15s;
+}
+th:hover { color: var(--accent); }
+th.sort-asc::after { content: ' ↑'; color: var(--accent); }
+th.sort-desc::after { content: ' ↓'; color: var(--accent); }
+
+tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.1s;
+}
+#rune-table tbody tr {
+  background: var(--rt-row-bg);
+}
+#rune-table tbody tr:nth-child(even) {
+  background: var(--rt-row-bg-even);
+}
+#rune-table tbody tr:hover {
+  background: var(--rt-row-bg-hover);
+}
+tbody tr:hover { background: var(--surface); }
+td {
+  padding: 8px 12px; font-size: 0.82rem; color: var(--text);
+  white-space: nowrap;
+}
+
+/* Column alignment: text left, compact numbers centered */
+#rune-table th.col-text,
+#rune-table td.col-text {
+  text-align: left;
+}
+#rune-table th.col-num,
+#rune-table td.col-num,
+#rune-table th.col-grade,
+#rune-table td.col-grade {
+  text-align: center;
+}
+#rune-table th.th-num,
+#rune-table td.td-num,
+#rune-table td.td-num-plain {
+  font-variant-numeric: tabular-nums;
+}
+#rune-table td.td-num-plain {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: var(--text-dim);
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+/* Grade: fits chip (icon inside when Ancient); Set: content-width, tight to Lvl */
+#rune-table th.col-grade,
+#rune-table td.col-grade {
+  min-width: var(--rt-grade-w);
+  width: auto;
+  max-width: 7.5rem;
+  padding-right: 4px;
+}
+#rune-table th.col-set,
+#rune-table td.col-set {
+  min-width: var(--rt-set-w);
+  max-width: 8.5rem;
+  width: auto;
+  padding-right: 6px;
+}
+#rune-table th.col-set + th.col-num,
+#rune-table td.col-set + td.col-num {
+  padding-left: 4px;
+}
+
+/* Sub columns: same row zebra as the rest (no separate band) */
+#rune-table thead th.col-sub {
+  background: var(--bg3);
+}
+#rune-table tbody td.col-sub {
+  background: var(--rt-row-bg);
+}
+#rune-table tbody tr:nth-child(even) td.col-sub {
+  background: var(--rt-row-bg-even);
+}
+
+/* Sticky Grade + Set when scrolling horizontally */
+#rune-table th.col-pin,
+#rune-table td.col-pin {
+  position: sticky;
+}
+#rune-table th.col-pin.col-grade,
+#rune-table td.col-pin.col-grade {
+  left: 0;
+}
+#rune-table th.col-pin.col-set,
+#rune-table td.col-pin.col-set {
+  left: var(--rt-grade-w);
+  box-shadow: 4px 0 10px -6px rgba(0, 0, 0, 0.45);
+}
+#rune-table thead th.col-pin {
+  background: var(--bg3);
+}
+#rune-table tbody td.col-pin {
+  background: var(--rt-row-bg);
+}
+#rune-table tbody tr:nth-child(even) td.col-pin {
+  background: var(--rt-row-bg-even);
+}
+#rune-table tbody tr:hover td.col-pin,
+#rune-table tbody tr:hover td.col-sub {
+  background: var(--rt-row-bg-hover);
+}
+
+.light-theme #rune-table {
+  --rt-row-bg-even: color-mix(in srgb, var(--surface) 68%, var(--bg2));
+}
+
+.light-theme #rune-table th.col-pin.col-set,
+.light-theme #rune-table td.col-pin.col-set {
+  box-shadow: 4px 0 14px -8px rgba(0, 0, 0, 0.14);
+}
+
+.target-col-cell { display: none; }
+table.show-target .target-col-cell { display: table-cell; }

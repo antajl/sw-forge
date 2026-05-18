@@ -1,0 +1,70 @@
+/* Efficiency histogram */
+.eff-histo-host {
+  position: relative;
+  margin-top: 6px;
+}
+
+.eff-median-line {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 22px;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--accent);
+  border-radius: 1px;
+  pointer-events: auto;
+  cursor: help;
+  z-index: 2;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--bg2) 70%, transparent);
+  transition: left 0.35s ease, box-shadow 0.15s ease;
+}
+
+.eff-median-line::before {
+  content: '';
+  position: absolute;
+  left: -7px;
+  right: -7px;
+  top: 0;
+  bottom: 0;
+}
+
+.eff-median-line:hover,
+.eff-median-line:focus-visible {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--bg2) 70%, transparent),
+    0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent);
+  outline: none;
+}
+
+#dash-pane-eff .eff-histo-host--dash-pane {
+  position: relative;
+  margin-top: 0;
+  padding: 14px 14px 16px;
+  border-radius: var(--radius-lg);
+  background: var(--dash-inner-well);
+  border: 1px solid color-mix(in srgb, var(--border2) 82%, var(--accent));
+}
+
+#dash-pane-eff .eff-chart {
+  height: 88px;
+}
+
+#dash-pane-eff .eff-median-line {
+  bottom: 26px;
+}
+
+.eff-chart {
+  display: flex; align-items: flex-end; gap: 3px;
+  height: 80px;
+}
+.eff-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.eff-bar {
+  width: 100%; border-radius: 2px 2px 0 0;
+  background: var(--grind);
+  transition: height 0.4s;
+  min-height: 2px;
+}
+.eff-bar.good { background: var(--keep); }
+.eff-bar.great { background: var(--finish); }
+.eff-label { font-size: 0.6rem; color: var(--text-dim); }

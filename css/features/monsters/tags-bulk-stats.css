@@ -1,0 +1,177 @@
+/* Split from css/monsters.css */
+.monsters-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.monsters-card__tag {
+  display: inline-block;
+  padding: 1px 6px;
+  font-size: 0.58rem;
+  font-weight: 600;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--accent) 14%, var(--bg3));
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--border2));
+  color: var(--text-hi);
+}
+
+.monsters-card--bulk-mode {
+  padding-left: 28px;
+}
+
+.monsters-card__bulk {
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+}
+
+.monsters-card__bulk-cb {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+
+.monsters-card--bulk-on {
+  border-color: color-mix(in srgb, var(--accent) 80%, var(--border2));
+  background: color-mix(in srgb, var(--accent) 16%, var(--surface));
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+.monsters-card--bulk-on.monsters-card--hover {
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--accent) 60%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.monsters-bulk-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 0 0 12px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border2);
+  background: var(--bg3);
+}
+
+.monsters-bulk-bar__count {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-hi);
+  margin-right: 4px;
+}
+
+.monsters-bulk-bar__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.68rem;
+}
+
+.monsters-bulk-bar__tag input {
+  width: 9rem;
+  max-width: 40vw;
+  min-height: 28px;
+  padding: 4px 8px;
+  font-size: 0.72rem;
+}
+
+.monsters-detail__custom-tags-label {
+  margin: 0 0 6px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.monsters-detail__tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.monsters-detail__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 4px 2px 8px;
+  font-size: 0.66rem;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--accent) 12%, var(--bg3));
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--border2));
+}
+
+.monsters-detail__tag-remove {
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+  font-size: 0.85rem;
+}
+
+.monsters-detail__tag-remove:hover {
+  color: var(--text-hi);
+}
+
+.monsters-detail__tag-add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.monsters-detail__tag-input {
+  flex: 1 1 8rem;
+  min-width: 6rem;
+  min-height: 28px;
+  padding: 4px 8px;
+  font-size: 0.72rem;
+}
+
+.monsters-card__badge--tag-storage {
+  background: color-mix(in srgb, var(--orange) 16%, var(--bg3));
+  color: color-mix(in srgb, var(--orange) 85%, var(--text));
+  border: 1px solid color-mix(in srgb, var(--orange) 35%, var(--border2));
+}
+
+.monsters-detail__stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 12px;
+  margin: 0 0 6px;
+}
+
+.monsters-detail__stat {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.7rem;
+}
+
+.monsters-detail__stat-k {
+  color: var(--text-dim);
+}
+
+.monsters-detail__stat-v {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--text-hi);
+}
+
+.monsters-detail__stats-note {
+  margin: 0;
+  font-size: 0.62rem;
+  color: var(--text-dim);
+  line-height: 1.35;
+}

@@ -257,28 +257,125 @@
     return n;
   }
 
+  function monstersFilterChipDefs(f, t) {
+    const chips = [];
+    const q = (f.q || '').trim();
+    if (q) chips.push({ key: 'q', label: `"${q}"` });
+    if (f.element) chips.push({ key: 'element', label: f.element });
+    if (f.minLevel36Only) chips.push({ key: 'minLevel36Only', label: t.monstersFilterLevel35 || 'Lv 35+' });
+    if (f.location && f.location !== 'all') {
+      const locMap = { active: t.monstersFilterLocActive || 'In use', storage: t.monstersFilterLocStorage || 'Storage' };
+      chips.push({ key: 'location', label: locMap[f.location] || f.location });
+    }
+    if (f.fullSixOnly) chips.push({ key: 'fullSixOnly', label: t.monstersFilterSixOnly || '6/6 runes' });
+    if (f.skillFilter) chips.push({ key: 'skillFilter', label: f.skillFilter });
+    if (f.runeFilter) chips.push({ key: 'runeFilter', label: f.runeFilter });
+    if (f.runeSet) chips.push({ key: 'runeSet', label: f.runeSet });
+    if (f.tagFilter) chips.push({ key: 'tagFilter', label: f.tagFilter });
+    if (f.roleFilter) chips.push({ key: 'roleFilter', label: f.roleFilter });
+    if (f.markFilter) {
+      const markMap = { favorite: '★', food: '🍖' };
+      chips.push({ key: 'markFilter', label: markMap[f.markFilter] || f.markFilter });
+    }
+    return chips;
+  }
+
+  function clearMonstersFilterChip(key) {
+    switch (key) {
+      case 'q':
+        resetMonstersSearchQuery();
+        break;
+      case 'element': {
+        const el = document.getElementById('monsters-filter-element');
+        if (el) el.value = '';
+        break;
+      }
+      case 'minLevel36Only': {
+        const lvl = document.getElementById('monsters-filter-level');
+        if (lvl) lvl.value = '';
+        const btn = document.getElementById('monsters-filter-min-level');
+        if (btn) btn.setAttribute('aria-pressed', 'false');
+        break;
+      }
+      case 'location': {
+        const loc = document.getElementById('monsters-filter-location');
+        if (loc) loc.value = 'all';
+        break;
+      }
+      case 'fullSixOnly': {
+        const six = document.getElementById('monsters-filter-full-six');
+        if (six) {
+          six.setAttribute('aria-pressed', 'false');
+          six.classList.remove('monsters-toolbar-btn--active');
+        }
+        break;
+      }
+      case 'skillFilter':
+        document.getElementById('monsters-filter-skill').value = '';
+        break;
+      case 'runeFilter':
+        document.getElementById('monsters-filter-rune').value = '';
+        break;
+      case 'runeSet':
+        document.getElementById('monsters-filter-rune-set').value = '';
+        break;
+      case 'tagFilter':
+        document.getElementById('monsters-filter-tag').value = '';
+        break;
+      case 'roleFilter':
+        document.getElementById('monsters-filter-role').value = '';
+        break;
+      case 'markFilter':
+        document.getElementById('monsters-filter-mark').value = '';
+        break;
+      default:
+        break;
+    }
+  }
+
+  function renderMonstersActiveFilterChips() {
+    const row = document.getElementById('monsters-active-filters');
+    const host = document.getElementById('monsters-filter-chips');
+    if (!row || !host) return;
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const f = readMonstersFiltersFromDom();
+    const chips = monstersFilterChipDefs(f, t);
+    if (!chips.length) {
+      host.innerHTML = '';
+      row.hidden = true;
+      return;
+    }
+    row.hidden = false;
+    host.innerHTML = chips
+      .map(
+        (c) =>
+          `<span class="monsters-filter-chip">${escapeHtml(c.label)}<button type="button" class="monsters-filter-chip__remove" data-filter-chip-remove="${escapeHtml(c.key)}" aria-label="Remove">✕</button></span>`,
+      )
+      .join('');
+  }
+
   function updateMonstersFilterSummary() {
     const f = readMonstersFiltersFromDom();
     const n = countMonstersActiveFilters(f);
-    const det = document.getElementById('monsters-filters-details');
-    const sum = document.getElementById('lbl-monsters-filters-toggle');
     const countEl = document.getElementById('monsters-filters-active-count');
+    const moreBtn = document.getElementById('monsters-more-filters-btn');
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-    const base = t.monstersFiltersToggle || 'Filters';
-    if (sum) sum.textContent = base;
-    const activeTpl = t.monstersFiltersActive || '{n} active';
+    const activeTpl = t.monstersFiltersActive || '{n}';
     if (countEl) {
       countEl.textContent = n ? activeTpl.replace(/\{n\}/g, String(n)) : '';
       countEl.hidden = !n;
     }
-    if (det) det.classList.toggle('monsters-toolbar__filters--active', n > 0);
+    if (moreBtn) moreBtn.classList.toggle('monsters-toolbar-btn--filters-active', n > 0);
+    renderMonstersActiveFilterChips();
   }
 
   function readMonstersFiltersFromDom() {
     const sixBtn = document.getElementById('monsters-filter-full-six');
     const lvlBtn = document.getElementById('monsters-filter-min-level');
+    const lvlSel = document.getElementById('monsters-filter-level');
     const fullSixOnly = sixBtn?.getAttribute('aria-pressed') === 'true';
-    const minLevel36Only = lvlBtn?.getAttribute('aria-pressed') === 'true';
+    const minLevel36Only =
+      lvlSel?.value === '35' || lvlBtn?.getAttribute('aria-pressed') === 'true';
     return {
       q: document.getElementById('monsters-filter-q')?.value || '',
       element: document.getElementById('monsters-filter-element')?.value || '',
@@ -303,6 +400,7 @@
     };
     document.getElementById('monsters-filter-q')?.addEventListener('input', onFilter);
     document.getElementById('monsters-filter-element')?.addEventListener('change', onFilter);
+    document.getElementById('monsters-filter-level')?.addEventListener('change', onFilter);
     document.getElementById('monsters-filter-location')?.addEventListener('change', onFilter);
     document.getElementById('monsters-filter-sort')?.addEventListener('change', onFilter);
     document.getElementById('monsters-filter-skill')?.addEventListener('change', onFilter);
@@ -372,9 +470,91 @@
       syncMonstersShowLevelButton(next, t);
       onFilter();
     });
-    document.getElementById('monsters-toolbar-clear')?.addEventListener('click', () => {
+    document.getElementById('monsters-filter-clear-all')?.addEventListener('click', () => {
       const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
       resetMonstersToolbarFilters(t);
+      renderMonstersPanel();
+    });
+    document.getElementById('monsters-filter-chips')?.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-filter-chip-remove]');
+      if (!btn) return;
+      clearMonstersFilterChip(btn.dataset.filterChipRemove);
+      writeMonstersFilters(readMonstersFiltersFromDom());
+      updateMonstersFilterSummary();
+      renderMonstersPanel();
+    });
+    function openMonstersFiltersDrawer() {
+      const dlg = document.getElementById('monsters-filters-drawer');
+      if (!dlg) return;
+      if (typeof dlg.showModal === 'function') {
+        try {
+          dlg.showModal();
+        } catch (e) {
+          dlg.setAttribute('open', '');
+        }
+      } else {
+        dlg.setAttribute('open', '');
+      }
+    }
+
+    function closeMonstersFiltersDrawer() {
+      const dlg = document.getElementById('monsters-filters-drawer');
+      if (!dlg) return;
+      if (dlg.open && typeof dlg.close === 'function') dlg.close();
+      else dlg.removeAttribute('open');
+    }
+
+    document.getElementById('monsters-more-filters-btn')?.addEventListener('click', () => {
+      openMonstersFiltersDrawer();
+    });
+    document.getElementById('monsters-filters-drawer-close')?.addEventListener('click', () => {
+      closeMonstersFiltersDrawer();
+    });
+    document.getElementById('monsters-filters-drawer')?.addEventListener('close', () => {
+      const f = readMonstersFiltersFromDom();
+      writeMonstersFilters(f);
+      updateMonstersFilterSummary();
+      renderMonstersPanel();
+    });
+    document.getElementById('monsters-filters-drawer-reset')?.addEventListener('click', () => {
+      clearMonstersPanelFilters();
+      writeMonstersFilters(readMonstersFiltersFromDom());
+      updateMonstersFilterSummary();
+      renderMonstersPanel();
+    });
+    document.getElementById('monsters-select-all-visible')?.addEventListener('click', () => {
+      if (typeof selectAllVisibleMonsters === 'function') selectAllVisibleMonsters();
+    });
+    document.getElementById('monsters-bulk-tag-toggle')?.addEventListener('click', () => {
+      const menu = document.getElementById('monsters-bulk-tag-menu');
+      if (!menu) return;
+      const tags = typeof readTagsRegistry === 'function' ? readTagsRegistry() : [];
+      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+      if (!tags.length) {
+        const val = window.prompt(t.monstersBulkTagPrompt || 'Tag name');
+        if (val && monstersBulkSelected.size) {
+          bulkAddCustomTag([...monstersBulkSelected], val);
+          registerCustomTag(val);
+          populateMonstersTagFilter();
+          renderMonstersPanel();
+        }
+        return;
+      }
+      menu.innerHTML = tags
+        .map(
+          (tag) =>
+            `<button type="button" class="monsters-selection-tag__option" data-bulk-tag="${escapeHtml(tag)}">${escapeHtml(tag)}</button>`,
+        )
+        .join('');
+      const open = menu.hidden;
+      menu.hidden = !open;
+      document.getElementById('monsters-bulk-tag-toggle')?.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    document.getElementById('monsters-bulk-tag-menu')?.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-bulk-tag]');
+      if (!btn || !monstersBulkSelected.size) return;
+      bulkAddCustomTag([...monstersBulkSelected], btn.dataset.bulkTag);
+      document.getElementById('monsters-bulk-tag-menu').hidden = true;
       renderMonstersPanel();
     });
     document.getElementById('monsters-view-cards')?.addEventListener('click', () => {

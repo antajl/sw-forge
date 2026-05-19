@@ -1,0 +1,32 @@
+/* Monsters hub — Roster / Teams inner tabs */
+#tab-monsters > .monsters-hub-tabs.rules-subtabs {
+  margin: 0 0 1.25rem;
+  padding: 4px;
+  gap: 6px;
+}
+
+.monsters-hub-tabs .monsters-hub-tab {
+  flex: 1 1 0;
+  min-width: 6rem;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 11px 14px;
+}
+
+.monsters-hub-pane:not(.is-active) {
+  display: none;
+}
+
+.monsters-hub-pane.is-active {
+  display: block;
+  min-width: 0;
+}
+
+#tab-monsters-teams[hidden] {
+  display: none !important;
+}
+
+#tab-monsters-teams.monsters-hub-pane.is-active[hidden] {
+  display: block !important;
+}

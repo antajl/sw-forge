@@ -171,6 +171,16 @@
    * @param {string} message
    * @param {{ type?: 'success'|'info'|'error', duration?: number }} [options] duration ms; 0 = no auto-dismiss
    */
+  function showToast(message, typeOrOptions) {
+    const opts =
+      typeof typeOrOptions === 'string'
+        ? { type: typeOrOptions }
+        : typeOrOptions && typeof typeOrOptions === 'object'
+          ? typeOrOptions
+          : {};
+    showSwrmToast(message, opts);
+  }
+
   function showSwrmToast(message, options = {}) {
     const type = options.type || 'info';
     const duration = options.duration !== undefined ? options.duration : 5200;

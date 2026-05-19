@@ -1,23 +1,110 @@
 // js/features/app/share.js — Share Profile (read-only links via Worker + D1)
   const SHARE_QUERY_KEY = 's';
   const SHARE_EXPIRY_DAYS = 90;
+  const SHARE_MODE_STORAGE_KEY = 'swrm_share_mode_v1';
   let shareReadOnly = false;
   let shareViewWizardName = '';
+  let shareExportMode = 'equipped-both';
+
+  const SHARE_MODE_LABEL_KEYS = {
+    'all': 'shareModeAll',
+    'equipped-monsters': 'shareModeEquippedMonsters',
+    'equipped-runes': 'shareModeEquippedRunes',
+    'equipped-both': 'shareModeEquippedBoth',
+    selected: 'shareModeSelected',
+    favorites: 'shareModeFavorites',
+  };
+
+  function shareToast(message, type) {
+    const opts = { type: type || 'info', duration: type === 'error' ? 6800 : 5200 };
+    if (typeof showSwrmToast === 'function') showSwrmToast(message, opts);
+    else if (typeof showToast === 'function') showToast(message, opts.type);
+  }
+
+  function readStoredShareMode() {
+    try {
+      const v = localStorage.getItem(SHARE_MODE_STORAGE_KEY);
+      return v && SHARE_MODE_LABEL_KEYS[v] ? v : 'equipped-both';
+    } catch (e) {
+      return 'equipped-both';
+    }
+  }
+
+  function writeStoredShareMode(mode) {
+    try {
+      localStorage.setItem(SHARE_MODE_STORAGE_KEY, mode);
+    } catch (e) { /* ignore */ }
+  }
+
+  function getShareExportMode() {
+    return shareExportMode;
+  }
+
+  function setShareExportMode(mode) {
+    if (!SHARE_MODE_LABEL_KEYS[mode]) mode = 'equipped-both';
+    shareExportMode = mode;
+    writeStoredShareMode(mode);
+    syncShareSplitLabels();
+  }
+
+  function shareModeLabel(mode, t) {
+    const key = SHARE_MODE_LABEL_KEYS[mode] || SHARE_MODE_LABEL_KEYS['equipped-both'];
+    return (t && t[key]) || mode;
+  }
+
+  function syncShareSplitLabels() {
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const label = shareModeLabel(shareExportMode, t);
+    document.querySelectorAll('[data-share-split-label]').forEach((el) => {
+      el.textContent = label;
+    });
+    document.querySelectorAll('[data-share-mode-option]').forEach((btn) => {
+      const on = btn.dataset.shareMode === shareExportMode;
+      btn.classList.toggle('is-active', on);
+      btn.setAttribute('aria-checked', on ? 'true' : 'false');
+    });
+  }
 
   function shareExpiryUnix() {
     return Math.floor(Date.now() / 1000) + SHARE_EXPIRY_DAYS * 24 * 60 * 60;
   }
 
-  function buildShareSlimPayload(fullInventory) {
+  function unitMetaFavorite(unitId) {
+    if (typeof unitMetaFor !== 'function') return false;
+    return !!unitMetaFor(unitId).favorite;
+  }
+
+  function buildShareSlimPayload(mode) {
+    const exportMode = mode || shareExportMode || 'equipped-both';
     const json = activeSwexJson;
     if (!json || !Array.isArray(json.unit_list)) return null;
     const runeById = new Map();
     for (const r of allRunes || []) {
       if (r && r.id != null) runeById.set(Number(r.id), r);
     }
+
+    const selectedIds =
+      typeof monstersBulkSelected !== 'undefined' && monstersBulkSelected && monstersBulkSelected.size
+        ? new Set([...monstersBulkSelected].map(String))
+        : null;
+
     const units = json.unit_list
       .filter((u) => u && u.unit_master_id != null)
-      .filter((u) => fullInventory || (Array.isArray(u.runes) && u.runes.length > 0))
+      .filter((u) => {
+        const uid = u.unit_id != null ? String(u.unit_id) : '';
+        const hasRunes = Array.isArray(u.runes) && u.runes.length > 0;
+        if (exportMode === 'selected') {
+          return selectedIds && selectedIds.has(uid);
+        }
+        if (exportMode === 'favorites') {
+          return unitMetaFavorite(uid);
+        }
+        if (exportMode === 'all') return true;
+        if (exportMode === 'equipped-monsters') return hasRunes;
+        if (exportMode === 'equipped-runes') return hasRunes;
+        if (exportMode === 'equipped-both') return hasRunes;
+        return hasRunes;
+      })
       .map((u) => {
         const runes = (u.runes || []).map((raw) => {
           const rid = raw.rune_id != null ? Number(raw.rune_id) : null;
@@ -57,6 +144,7 @@
         });
         return {
           unit_master_id: u.unit_master_id,
+          unit_id: u.unit_id,
           class: u.class,
           attribute: u.attribute,
           unit_level: u.unit_level,
@@ -68,14 +156,34 @@
       (json.wizard_info && (json.wizard_info.wizard_name || json.wizard_info.name)) ||
       localStorage.getItem('loadedRunesName') ||
       '';
-    return { wizard_name: String(wizardName || '').trim(), unit_list: units };
+    const payload = {
+      wizard_name: String(wizardName || '').trim(),
+      unit_list: units,
+      share_mode: exportMode,
+    };
+    if (typeof exportTeamsForShare === 'function') {
+      const teams = exportTeamsForShare();
+      if (teams) payload.teams = teams;
+    }
+    return payload;
   }
 
-  async function postShareProfile(fullInventory) {
+  function shareHasExportableContent(data) {
+    if (!data) return false;
+    const units = Array.isArray(data.unit_list) ? data.unit_list.length : 0;
+    const teamSets =
+      data.teams && Array.isArray(data.teams.sets) ? data.teams.sets.length : 0;
+    return units > 0 || teamSets > 0;
+  }
+
+  async function postShareProfile(mode) {
     const api = typeof SWRM_API === 'string' ? SWRM_API : '';
     if (!api) throw new Error('API not configured');
-    const data = buildShareSlimPayload(fullInventory);
-    if (!data || !data.unit_list.length) throw new Error('No units to share');
+    const data = buildShareSlimPayload(mode);
+    if (!shareHasExportableContent(data)) {
+      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+      throw new Error(t.shareNoContent || 'Nothing to share for this export mode');
+    }
     const res = await fetch(`${api}/share`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -96,13 +204,65 @@
     return `${base}?${SHARE_QUERY_KEY}=${encodeURIComponent(shareId)}`;
   }
 
-  async function copyShareLink(fullInventory) {
+  async function copyTextToClipboard(text) {
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (e) { /* fallback */ }
+    }
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    let ok = false;
+    try {
+      ok = document.execCommand('copy');
+    } catch (e) { /* ignore */ }
+    document.body.removeChild(ta);
+    if (!ok) throw new Error('Clipboard unavailable');
+    return ok;
+  }
+
+  async function copyShareLink(mode) {
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-    const id = await postShareProfile(fullInventory);
+    const id = await postShareProfile(mode);
     const url = sharePageUrl(id);
-    await navigator.clipboard.writeText(url);
-    if (typeof showToast === 'function') {
-      showToast(t.shareLinkCopied || 'Link copied!', 'success');
+    await copyTextToClipboard(url);
+    shareToast(t.shareLinkCopiedLong || t.shareLinkCopied || 'Share link copied', 'success');
+  }
+
+  function closeShareSplitMenus() {
+    document.querySelectorAll('.share-split').forEach((root) => {
+      root.classList.remove('is-open');
+      const menu = root.querySelector('.share-split__menu');
+      const caret = root.querySelector('.share-split__caret');
+      if (menu) menu.hidden = true;
+      if (caret) caret.setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  async function triggerShareProfile(mode) {
+    const exportMode = mode || shareExportMode;
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const triggers = document.querySelectorAll('.share-split__main, .share-profile-trigger');
+    triggers.forEach((btn) => {
+      btn.disabled = true;
+    });
+    closeShareSplitMenus();
+    try {
+      await copyShareLink(exportMode);
+    } catch (e) {
+      shareToast((t.shareFailed || 'Share failed') + (e.message ? `: ${e.message}` : ''), 'error');
+    } finally {
+      if (!shareReadOnly) {
+        triggers.forEach((btn) => {
+          btn.disabled = false;
+        });
+      }
     }
   }
 
@@ -164,6 +324,9 @@
       if (!tryHydrateRunesFromJsonText(JSON.stringify(wrapped))) return false;
       shareReadOnly = true;
       shareViewWizardName = String(body.wizard_name || parsed.wizard_name || '').trim();
+      if (parsed.teams && typeof setTeamsShareViewPayload === 'function') {
+        setTeamsShareViewPayload(parsed.teams);
+      }
       applyShareReadOnlyUi();
       renderShareViewBanner();
       if (typeof uiAfterSuccessfulRuneRestore === 'function') {
@@ -186,10 +349,9 @@
 
   function applyShareReadOnlyUi() {
     document.body.classList.toggle('share-readonly', shareReadOnly);
-    const shareBtn = document.getElementById('share-profile-btn');
-    const shareEquipped = document.getElementById('share-equipped-only');
-    if (shareBtn) shareBtn.disabled = shareReadOnly;
-    if (shareEquipped) shareEquipped.disabled = shareReadOnly;
+    document.querySelectorAll('.share-split__main, .share-split__caret, .share-profile-trigger').forEach((el) => {
+      el.disabled = shareReadOnly;
+    });
     document.querySelectorAll('.db-slot-btn, #btn-upload-slot, #btn-demo-load').forEach((el) => {
       if (el) el.disabled = shareReadOnly;
     });
@@ -209,20 +371,57 @@
     }
     const bulkBar = document.getElementById('monsters-bulk-bar');
     if (bulkBar) bulkBar.hidden = shareReadOnly || monstersBulkSelected.size === 0;
+    document.querySelectorAll('[data-teams-readonly-hide]').forEach((el) => {
+      el.hidden = shareReadOnly;
+    });
   }
 
   function bindShareProfileUi() {
-    document.getElementById('share-profile-btn')?.addEventListener('click', async () => {
-      const equippedOnly = document.getElementById('share-equipped-only')?.checked === true;
-      const fullInventory = !equippedOnly;
-      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-      try {
-        await copyShareLink(fullInventory);
-      } catch (e) {
-        if (typeof showToast === 'function') {
-          showToast((t.shareFailed || 'Share failed') + (e.message ? `: ${e.message}` : ''), 'error');
-        }
+    shareExportMode = readStoredShareMode();
+    syncShareSplitLabels();
+
+    document.addEventListener('click', (e) => {
+      const mainBtn = e.target.closest('.share-split__main');
+      if (mainBtn && !mainBtn.disabled && !shareReadOnly) {
+        e.preventDefault();
+        void triggerShareProfile();
+        return;
       }
+      const legacyBtn = e.target.closest('.share-profile-trigger');
+      if (legacyBtn && !legacyBtn.disabled && !shareReadOnly) {
+        e.preventDefault();
+        void triggerShareProfile();
+        return;
+      }
+      const modeBtn = e.target.closest('[data-share-mode]');
+      if (modeBtn) {
+        e.preventDefault();
+        setShareExportMode(modeBtn.dataset.shareMode);
+        closeShareSplitMenus();
+        return;
+      }
+      const copyBtn = e.target.closest('[data-share-copy-link]');
+      if (copyBtn) {
+        e.preventDefault();
+        void triggerShareProfile(shareExportMode);
+        return;
+      }
+      const caret = e.target.closest('.share-split__caret');
+      if (caret) {
+        e.preventDefault();
+        const root = caret.closest('.share-split');
+        if (!root) return;
+        const open = !root.classList.contains('is-open');
+        closeShareSplitMenus();
+        if (open) {
+          root.classList.add('is-open');
+          const menu = root.querySelector('.share-split__menu');
+          if (menu) menu.hidden = false;
+          caret.setAttribute('aria-expanded', 'true');
+        }
+        return;
+      }
+      if (!e.target.closest('.share-split')) closeShareSplitMenus();
     });
   }
 

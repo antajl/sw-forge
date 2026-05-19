@@ -1,0 +1,95 @@
+        <div class="monsters-toolbar-sticky">
+        <\class="monsters-toolbar monsters-toolbar--v2">
+          <div class="monsters-toolbar-main">
+            <div class="monsters-toolbar-main__left">
+              <label class="monsters-search monsters-toolbar__field monsters-toolbar__field--search">
+                <span class="visually-hidden" id="lbl-monsters-filter-q">Search</span>
+                <input type="search" id="monsters-filter-q" autocomplete="off" spellcheck="false" placeholder="Search monsters…" aria-labelledby="lbl-monsters-filter-q" />
+              </label>
+              <label class="monsters-toolbar__field monsters-toolbar__field--element">
+                <span class="monsters-toolbar__field-label" id="lbl-monsters-filter-element">Element</span>
+                <select id="monsters-filter-element" aria-labelledby="lbl-monsters-filter-element">
+                  <option value="">All elements</option>
+                  <option value="Fire">Fire</option>
+                  <option value="Water">Water</option>
+                  <option value="Wind">Wind</option>
+                  <option value="Light">Light</option>
+                  <option value="Dark">Dark</option>
+                </select>
+              </label>
+              <label class="monsters-toolbar__field monsters-toolbar__field--level">
+                <span class="monsters-toolbar__field-label" id="lbl-monsters-filter-min-level">Level</span>
+                <select id="monsters-filter-level" aria-labelledby="lbl-monsters-filter-min-level">
+                  <option value="">All levels</option>
+                  <option value="35">Lv 35+</option>
+                </select>
+              </label>
+              <button type="button" id="monsters-filter-min-level" class="visually-hidden" aria-hidden="true" tabindex="-1"></button>
+            <\
+            <div class="monsters-toolbar-main__right">
+              <div class="monsters-view-toggle" role="group" aria-label="View">
+                <button type="button" id="monsters-view-cards" class="monsters-view-btn monsters-view-btn--active" aria-pressed="true" title="Cards">
+                  <svg class="monsters-toolbar-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg>
+                  <span class="sr-only" id="lbl-monsters-view-cards">Cards</span>
+                </button>
+                <button type="button" id="monsters-view-table" class="monsters-view-btn" aria-pressed="false" title="Table">
+                  <svg class="monsters-toolbar-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="16" width="18" height="4" rx="1"/></svg>
+                  <span class="sr-only" id="lbl-monsters-view-table">Table</span>
+                </button>
+              <\
+              <label class="monsters-toolbar__field monsters-toolbar__field--sort">
+                <span class="monsters-toolbar__field-label" id="lbl-monsters-filter-sort">Sort by</span>
+                <select id="monsters-filter-sort" aria-labelledby="lbl-monsters-filter-sort">
+                  <option value="name">Name</option>
+                  <option value="level-desc">Level ↓</option>
+                  <option value="level-asc">Level ↑</option>
+                  <option value="runes-desc">Runes equipped</option>
+                  <option value="element">Element</option>
+                  <option value="favorite-first">Favorites first</option>
+                  <option value="food-first">Food first</option>
+                </select>
+              </label>
+              <div class="share-split" data-share-split>
+                <button type="button" class="share-split__main" id="monsters-share-main">
+                  <span class="share-split__icon" aria-hidden="true">🔗</span>
+                  <span class="share-split__label" data-share-split-label>Share Equipped</span>
+                </button>
+                <button type="button" class="share-split__caret" id="monsters-share-caret" aria-expanded="false" aria-haspopup="true" aria-controls="monsters-share-menu" title="Share options">▼</button>
+                <div class="share-split__menu" id="monsters-share-menu" role="menu" hidden>
+                  <p class="share-split__menu-title" id="lbl-share-menu-title">Share roster</p>
+                  <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="all">All monsters + all runes</button>
+                  <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="equipped-monsters">Equipped monsters only</button>
+                  <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="equipped-runes">Equipped runes only</button>
+                  <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="equipped-both">Equipped monsters + equipped runes</button>
+                  <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="selected">Selected monsters only</button>
+                  <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="favorites">Favorites only</button>
+                  <button type="button" class="share-split__menu-copy" data-share-copy-link>Copy link</button>
+                <\
+              <\
+              <button type="button" class="monsters-toolbar-btn monsters-toolbar-btn--filters" id="monsters-more-filters-btn" aria-haspopup="dialog" aria-controls="monsters-filters-drawer">
+                <span id="lbl-monsters-more-filters">More Filters</span>
+                <span class="monsters-toolbar-btn__badge" id="monsters-filters-active-count" hidden></span>
+              </button>
+            <\
+          <\
+          <div class="monsters-active-filters" id="monsters-active-filters" hidden>
+            <div class="monsters-active-filters__chips" id="monsters-filter-chips" aria-live="polite"><\
+            <button type="button" class="monsters-active-filters__clear" id="monsters-filter-clear-all">Clear all</button>
+          <\
+        <\
+        <\
+        <div class="monsters-selection-bar" id="monsters-bulk-bar" hidden>
+          <span class="monsters-selection-bar__count" id="monsters-bulk-count">0 selected</span>
+          <div class="monsters-selection-bar__actions">
+            <button type="button" id="monsters-bulk-favorite" class="monsters-selection-btn">★ <span class="monsters-selection-btn__label" id="lbl-monsters-bulk-favorite">Add to Favorites</span></button>
+            <button type="button" id="monsters-bulk-food" class="monsters-selection-btn">🍖 <span class="monsters-selection-btn__label" id="lbl-monsters-bulk-food">Mark as Fodder</span></button>
+            <button type="button" id="monsters-bulk-storage" class="monsters-selection-btn">▣ <span class="monsters-selection-btn__label" id="lbl-monsters-bulk-storage">Move to Storage</span></button>
+            <div class="monsters-selection-tag" id="monsters-bulk-tag-wrap">
+              <button type="button" class="monsters-selection-btn" id="monsters-bulk-tag-toggle" aria-haspopup="listbox" aria-expanded="false">🏷 <span id="lbl-monsters-bulk-tag">Add Tag</span> ▾</button>
+              <\class="monsters-selection-tag__menu" id="monsters-bulk-tag-menu" hidden role="listbox"><\
+              <input type="text" id="monsters-bulk-tag-input" class="visually-hidden" maxlength="32" autocomplete="off" spellcheck="false" tabindex="-1" aria-hidden="true" />
+            <\
+            <button type="button" id="monsters-select-all-visible" class="monsters-selection-btn monsters-selection-btn--ghost">Select all</button>
+            <button type="button" id="monsters-bulk-clear" class="monsters-selection-btn monsters-selection-btn--ghost">Deselect all</button>
+          <\
+        <\

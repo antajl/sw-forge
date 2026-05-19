@@ -220,7 +220,9 @@
     ];
     for (const id of ids) {
       const el = document.getElementById(id);
-      if (el) el.value = '';
+      if (!el) continue;
+      if (id === 'monsters-filter-location') el.value = 'all';
+      else el.value = '';
     }
     const sixBtn = document.getElementById('monsters-filter-full-six');
     if (sixBtn) {
@@ -283,17 +285,30 @@
   }
 
   function syncMonstersShowLevelButton(minLevel36Only, t) {
+    const on = !!minLevel36Only;
+    const sel = document.getElementById('monsters-filter-level');
+    if (sel) sel.value = on ? '35' : '';
     const btn = document.getElementById('monsters-filter-min-level');
     const lbl = document.getElementById('lbl-monsters-filter-min-level-btn');
-    if (!btn) return;
-    const on = !!minLevel36Only;
-    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
-    btn.classList.toggle('monsters-toolbar-btn--active', on);
+    if (btn) {
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      btn.classList.toggle('monsters-toolbar-btn--active', on);
+    }
     if (lbl) {
       lbl.textContent = on
         ? t.monstersFilterMinLevelOn || 'Only Lv 35+'
         : t.monstersFilterMinLevelOff || 'All levels';
     }
+  }
+
+  function selectAllVisibleMonsters() {
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    for (const id of monstersVisibleUnitIds) monstersBulkSelected.add(id);
+    writeMonstersBulkSelected(monstersBulkSelected);
+    syncMonstersBulkBar(t);
+    const grid = document.getElementById('monsters-grid');
+    if (typeof syncBulkCardStates === 'function') syncBulkCardStates(grid);
+    syncMonstersSelectAllState();
   }
 
   function syncMonstersSelectAllState() {

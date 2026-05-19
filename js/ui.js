@@ -297,11 +297,16 @@
   const MAIN_TAB_IDS = ['runes', 'monsters', 'guide', 'changelog', 'app-settings'];
   const RUNES_SUBTAB_IDS = ['dashboard', 'runetable', 'settings'];
   const RUNES_SUBTAB_STORAGE_KEY = 'swrm_runes_subtab_v1';
+  const MONSTERS_SUBTAB_IDS = ['roster', 'teams'];
+  const MONSTERS_SUBTAB_STORAGE_KEY = 'swrm_monsters_subtab_v1';
   let runesHubTabsBound = false;
 
   function normalizeMainTabRequest(tabId) {
     if (tabId === 'dashboard' || tabId === 'runetable' || tabId === 'settings') {
       return { main: 'runes', sub: tabId };
+    }
+    if (tabId === 'roster' || tabId === 'teams') {
+      return { main: 'monsters', sub: tabId };
     }
     if (MAIN_TAB_IDS.includes(tabId)) return { main: tabId, sub: null };
     return { main: 'runes', sub: 'dashboard' };
@@ -317,7 +322,7 @@
 
   function splitMainHash() {
     const raw = (window.location.hash || '').replace(/^#/, '').trim();
-    if (!raw) return { tab: null, runesSubtab: null, query: '' };
+    if (!raw) return { tab: null, runesSubtab: null, monstersSubtab: null, query: '' };
     const qm = raw.indexOf('?');
     const tabPart = (qm === -1 ? raw : raw.slice(0, qm)).trim();
     const query = qm === -1 ? '' : raw.slice(qm + 1);
@@ -325,19 +330,36 @@
     if (h.startsWith('tab-')) h = h.slice(4);
     if (h.startsWith('runes/')) {
       const sub = runesSubtabFromHashSegment(h.slice(6).split('/')[0]);
-      if (sub) return { tab: 'runes', runesSubtab: sub, query };
+      if (sub) return { tab: 'runes', runesSubtab: sub, monstersSubtab: null, query };
+    }
+    if (h.startsWith('monsters/')) {
+      const sub = monstersSubtabFromHashSegment(h.slice(9).split('/')[0]);
+      if (sub) return { tab: 'monsters', runesSubtab: null, monstersSubtab: sub, query };
     }
     if (h === 'dashboard' || h === 'runetable' || h === 'settings') {
-      return { tab: 'runes', runesSubtab: h, query };
+      return { tab: 'runes', runesSubtab: h, monstersSubtab: null, query };
     }
-    if (MAIN_TAB_IDS.includes(h)) return { tab: h, runesSubtab: null, query };
-    return { tab: null, runesSubtab: null, query };
+    if (h === 'roster' || h === 'teams') {
+      return { tab: 'monsters', runesSubtab: null, monstersSubtab: h, query };
+    }
+    if (MAIN_TAB_IDS.includes(h)) return { tab: h, runesSubtab: null, monstersSubtab: null, query };
+    return { tab: null, runesSubtab: null, monstersSubtab: null, query };
   }
 
   function mainTabIdFromHash() {
-    const { tab, runesSubtab } = splitMainHash();
+    const { tab, runesSubtab, monstersSubtab } = splitMainHash();
     if (tab === 'runes' && runesSubtab) return runesSubtab;
+    if (tab === 'monsters' && monstersSubtab) return monstersSubtab;
     return tab;
+  }
+
+  function readStoredMonstersSubtab() {
+    try {
+      const v = sessionStorage.getItem(MONSTERS_SUBTAB_STORAGE_KEY);
+      return MONSTERS_SUBTAB_IDS.includes(v) ? v : 'roster';
+    } catch (e) {
+      return 'roster';
+    }
   }
 
   function readStoredRunesSubtab() {
@@ -458,9 +480,17 @@
       renderDbSlots();
     }
     if (main === 'monsters') {
+      initMonstersHubTabs();
+      const monstersSub =
+        sub ||
+        (opts.monstersSubtab && MONSTERS_SUBTAB_IDS.includes(opts.monstersSubtab)
+          ? opts.monstersSubtab
+          : null) ||
+        hashParts.monstersSubtab ||
+        readStoredMonstersSubtab();
+      showMonstersSubtab(monstersSub, opts);
       const monstersRoot = document.getElementById('tab-monsters');
       if (monstersRoot) monstersRoot.scrollTop = 0;
-      void renderMonstersPanel();
     }
 
     if (writeHash) {
@@ -471,6 +501,15 @@
           if (runesSub === 'dashboard') url = base;
           else if (runesSub === 'runetable') url = `${base}#runetable${buildRuneTableQuerySuffix()}`;
           else url = `${base}#${runesSub}`;
+        } else if (main === 'monsters') {
+          const monstersSub =
+            sub ||
+            (opts.monstersSubtab && MONSTERS_SUBTAB_IDS.includes(opts.monstersSubtab)
+              ? opts.monstersSubtab
+              : null) ||
+            hashParts.monstersSubtab ||
+            readStoredMonstersSubtab();
+          url = monstersSub === 'roster' ? `${base}#monsters` : `${base}#monsters/${monstersSub}`;
         } else url = `${base}#${main}`;
         if (pushHistory) history.pushState(null, '', url);
         else history.replaceState(null, '', url);
@@ -912,6 +951,41 @@
     if (shareEquippedLbl) shareEquippedLbl.textContent = t.shareEquippedOnly || '';
     const shareBtn = document.getElementById('share-profile-btn');
     if (shareBtn) shareBtn.textContent = t.shareProfileBtn || 'Share';
+    if (typeof syncShareSplitLabels === 'function') syncShareSplitLabels();
+    const moreFilters = document.getElementById('lbl-monsters-more-filters');
+    if (moreFilters) moreFilters.textContent = t.monstersMoreFilters || 'More Filters';
+    const clearAll = document.getElementById('monsters-filter-clear-all');
+    if (clearAll) clearAll.textContent = t.monstersFilterClearAll || 'Clear all';
+    const bulkFav = document.getElementById('lbl-monsters-bulk-favorite');
+    if (bulkFav) bulkFav.textContent = t.monstersBulkFavorite || '';
+    const bulkFood = document.getElementById('lbl-monsters-bulk-food');
+    if (bulkFood) bulkFood.textContent = t.monstersBulkFood || '';
+    const bulkSt = document.getElementById('lbl-monsters-bulk-storage');
+    if (bulkSt) bulkSt.textContent = t.monstersBulkStorage || '';
+    const selAll = document.getElementById('monsters-select-all-visible');
+    if (selAll) selAll.textContent = t.monstersSelectAll || 'Select all';
+    const desel = document.getElementById('monsters-bulk-clear');
+    if (desel) desel.textContent = t.monstersDeselectAll || 'Deselect all';
+    const hubRoster = document.getElementById('lbl-monsters-hub-roster');
+    if (hubRoster) hubRoster.textContent = t.monstersHubRoster || 'Roster';
+    const hubTeams = document.getElementById('lbl-monsters-hub-teams');
+    if (hubTeams) hubTeams.textContent = t.monstersHubTeams || 'Teams';
+    const teamsSetsTitle = document.getElementById('lbl-teams-sets-title');
+    if (teamsSetsTitle) teamsSetsTitle.textContent = t.teamsSetsTitle || '';
+    const teamsSetName = document.getElementById('lbl-teams-set-name');
+    if (teamsSetName) teamsSetName.textContent = t.teamsSetName || '';
+    const teamsSetHint = document.getElementById('lbl-teams-set-hint');
+    if (teamsSetHint) teamsSetHint.textContent = t.teamsSetHint || '';
+    const teamsEditorTitle = document.getElementById('lbl-teams-editor-title');
+    if (teamsEditorTitle) teamsEditorTitle.textContent = t.teamsEditorTitle || '';
+    const teamsTeamName = document.getElementById('lbl-teams-team-name');
+    if (teamsTeamName) teamsTeamName.textContent = t.teamsTeamName || '';
+    const teamsLeader = document.getElementById('lbl-teams-leader');
+    if (teamsLeader) teamsLeader.textContent = t.teamsLeader || '';
+    const teamsSharePublic = document.getElementById('lbl-teams-share-public');
+    if (teamsSharePublic) teamsSharePublic.textContent = t.teamsSharePublic || '';
+    const teamsSaveTeam = document.getElementById('teams-save-team');
+    if (teamsSaveTeam) teamsSaveTeam.textContent = t.teamsSaveTeam || '';
 
     // Update database slots title and description in app settings tab
     const dbSlotsTitle = document.getElementById('db-slots-title');
@@ -1878,6 +1952,16 @@
    * @param {string} message
    * @param {{ type?: 'success'|'info'|'error', duration?: number }} [options] duration ms; 0 = no auto-dismiss
    */
+  function showToast(message, typeOrOptions) {
+    const opts =
+      typeof typeOrOptions === 'string'
+        ? { type: typeOrOptions }
+        : typeOrOptions && typeof typeOrOptions === 'object'
+          ? typeOrOptions
+          : {};
+    showSwrmToast(message, opts);
+  }
+
   function showSwrmToast(message, options = {}) {
     const type = options.type || 'info';
     const duration = options.duration !== undefined ? options.duration : 5200;
@@ -6125,23 +6209,110 @@
 
   const SHARE_QUERY_KEY = 's';
   const SHARE_EXPIRY_DAYS = 90;
+  const SHARE_MODE_STORAGE_KEY = 'swrm_share_mode_v1';
   let shareReadOnly = false;
   let shareViewWizardName = '';
+  let shareExportMode = 'equipped-both';
+
+  const SHARE_MODE_LABEL_KEYS = {
+    'all': 'shareModeAll',
+    'equipped-monsters': 'shareModeEquippedMonsters',
+    'equipped-runes': 'shareModeEquippedRunes',
+    'equipped-both': 'shareModeEquippedBoth',
+    selected: 'shareModeSelected',
+    favorites: 'shareModeFavorites',
+  };
+
+  function shareToast(message, type) {
+    const opts = { type: type || 'info', duration: type === 'error' ? 6800 : 5200 };
+    if (typeof showSwrmToast === 'function') showSwrmToast(message, opts);
+    else if (typeof showToast === 'function') showToast(message, opts.type);
+  }
+
+  function readStoredShareMode() {
+    try {
+      const v = localStorage.getItem(SHARE_MODE_STORAGE_KEY);
+      return v && SHARE_MODE_LABEL_KEYS[v] ? v : 'equipped-both';
+    } catch (e) {
+      return 'equipped-both';
+    }
+  }
+
+  function writeStoredShareMode(mode) {
+    try {
+      localStorage.setItem(SHARE_MODE_STORAGE_KEY, mode);
+    } catch (e) { /* ignore */ }
+  }
+
+  function getShareExportMode() {
+    return shareExportMode;
+  }
+
+  function setShareExportMode(mode) {
+    if (!SHARE_MODE_LABEL_KEYS[mode]) mode = 'equipped-both';
+    shareExportMode = mode;
+    writeStoredShareMode(mode);
+    syncShareSplitLabels();
+  }
+
+  function shareModeLabel(mode, t) {
+    const key = SHARE_MODE_LABEL_KEYS[mode] || SHARE_MODE_LABEL_KEYS['equipped-both'];
+    return (t && t[key]) || mode;
+  }
+
+  function syncShareSplitLabels() {
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const label = shareModeLabel(shareExportMode, t);
+    document.querySelectorAll('[data-share-split-label]').forEach((el) => {
+      el.textContent = label;
+    });
+    document.querySelectorAll('[data-share-mode-option]').forEach((btn) => {
+      const on = btn.dataset.shareMode === shareExportMode;
+      btn.classList.toggle('is-active', on);
+      btn.setAttribute('aria-checked', on ? 'true' : 'false');
+    });
+  }
 
   function shareExpiryUnix() {
     return Math.floor(Date.now() / 1000) + SHARE_EXPIRY_DAYS * 24 * 60 * 60;
   }
 
-  function buildShareSlimPayload(fullInventory) {
+  function unitMetaFavorite(unitId) {
+    if (typeof unitMetaFor !== 'function') return false;
+    return !!unitMetaFor(unitId).favorite;
+  }
+
+  function buildShareSlimPayload(mode) {
+    const exportMode = mode || shareExportMode || 'equipped-both';
     const json = activeSwexJson;
     if (!json || !Array.isArray(json.unit_list)) return null;
     const runeById = new Map();
     for (const r of allRunes || []) {
       if (r && r.id != null) runeById.set(Number(r.id), r);
     }
+
+    const selectedIds =
+      typeof monstersBulkSelected !== 'undefined' && monstersBulkSelected && monstersBulkSelected.size
+        ? new Set([...monstersBulkSelected].map(String))
+        : null;
+
     const units = json.unit_list
       .filter((u) => u && u.unit_master_id != null)
-      .filter((u) => fullInventory || (Array.isArray(u.runes) && u.runes.length > 0))
+      .filter((u) => {
+        const uid = u.unit_id != null ? String(u.unit_id) : '';
+        const hasRunes = Array.isArray(u.runes) && u.runes.length > 0;
+        if (exportMode === 'selected') {
+          return selectedIds && selectedIds.has(uid);
+        }
+        if (exportMode === 'favorites') {
+          return unitMetaFavorite(uid);
+        }
+        if (exportMode === 'all') return true;
+        if (exportMode === 'equipped-monsters') return hasRunes;
+        if (exportMode === 'equipped-runes') return hasRunes;
+        if (exportMode === 'equipped-both') return hasRunes;
+        return hasRunes;
+      })
       .map((u) => {
         const runes = (u.runes || []).map((raw) => {
           const rid = raw.rune_id != null ? Number(raw.rune_id) : null;
@@ -6181,6 +6352,7 @@
         });
         return {
           unit_master_id: u.unit_master_id,
+          unit_id: u.unit_id,
           class: u.class,
           attribute: u.attribute,
           unit_level: u.unit_level,
@@ -6192,14 +6364,34 @@
       (json.wizard_info && (json.wizard_info.wizard_name || json.wizard_info.name)) ||
       localStorage.getItem('loadedRunesName') ||
       '';
-    return { wizard_name: String(wizardName || '').trim(), unit_list: units };
+    const payload = {
+      wizard_name: String(wizardName || '').trim(),
+      unit_list: units,
+      share_mode: exportMode,
+    };
+    if (typeof exportTeamsForShare === 'function') {
+      const teams = exportTeamsForShare();
+      if (teams) payload.teams = teams;
+    }
+    return payload;
   }
 
-  async function postShareProfile(fullInventory) {
+  function shareHasExportableContent(data) {
+    if (!data) return false;
+    const units = Array.isArray(data.unit_list) ? data.unit_list.length : 0;
+    const teamSets =
+      data.teams && Array.isArray(data.teams.sets) ? data.teams.sets.length : 0;
+    return units > 0 || teamSets > 0;
+  }
+
+  async function postShareProfile(mode) {
     const api = typeof SWRM_API === 'string' ? SWRM_API : '';
     if (!api) throw new Error('API not configured');
-    const data = buildShareSlimPayload(fullInventory);
-    if (!data || !data.unit_list.length) throw new Error('No units to share');
+    const data = buildShareSlimPayload(mode);
+    if (!shareHasExportableContent(data)) {
+      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+      throw new Error(t.shareNoContent || 'Nothing to share for this export mode');
+    }
     const res = await fetch(`${api}/share`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -6220,13 +6412,65 @@
     return `${base}?${SHARE_QUERY_KEY}=${encodeURIComponent(shareId)}`;
   }
 
-  async function copyShareLink(fullInventory) {
+  async function copyTextToClipboard(text) {
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (e) { /* fallback */ }
+    }
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    let ok = false;
+    try {
+      ok = document.execCommand('copy');
+    } catch (e) { /* ignore */ }
+    document.body.removeChild(ta);
+    if (!ok) throw new Error('Clipboard unavailable');
+    return ok;
+  }
+
+  async function copyShareLink(mode) {
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-    const id = await postShareProfile(fullInventory);
+    const id = await postShareProfile(mode);
     const url = sharePageUrl(id);
-    await navigator.clipboard.writeText(url);
-    if (typeof showToast === 'function') {
-      showToast(t.shareLinkCopied || 'Link copied!', 'success');
+    await copyTextToClipboard(url);
+    shareToast(t.shareLinkCopiedLong || t.shareLinkCopied || 'Share link copied', 'success');
+  }
+
+  function closeShareSplitMenus() {
+    document.querySelectorAll('.share-split').forEach((root) => {
+      root.classList.remove('is-open');
+      const menu = root.querySelector('.share-split__menu');
+      const caret = root.querySelector('.share-split__caret');
+      if (menu) menu.hidden = true;
+      if (caret) caret.setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  async function triggerShareProfile(mode) {
+    const exportMode = mode || shareExportMode;
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const triggers = document.querySelectorAll('.share-split__main, .share-profile-trigger');
+    triggers.forEach((btn) => {
+      btn.disabled = true;
+    });
+    closeShareSplitMenus();
+    try {
+      await copyShareLink(exportMode);
+    } catch (e) {
+      shareToast((t.shareFailed || 'Share failed') + (e.message ? `: ${e.message}` : ''), 'error');
+    } finally {
+      if (!shareReadOnly) {
+        triggers.forEach((btn) => {
+          btn.disabled = false;
+        });
+      }
     }
   }
 
@@ -6288,6 +6532,9 @@
       if (!tryHydrateRunesFromJsonText(JSON.stringify(wrapped))) return false;
       shareReadOnly = true;
       shareViewWizardName = String(body.wizard_name || parsed.wizard_name || '').trim();
+      if (parsed.teams && typeof setTeamsShareViewPayload === 'function') {
+        setTeamsShareViewPayload(parsed.teams);
+      }
       applyShareReadOnlyUi();
       renderShareViewBanner();
       if (typeof uiAfterSuccessfulRuneRestore === 'function') {
@@ -6310,10 +6557,9 @@
 
   function applyShareReadOnlyUi() {
     document.body.classList.toggle('share-readonly', shareReadOnly);
-    const shareBtn = document.getElementById('share-profile-btn');
-    const shareEquipped = document.getElementById('share-equipped-only');
-    if (shareBtn) shareBtn.disabled = shareReadOnly;
-    if (shareEquipped) shareEquipped.disabled = shareReadOnly;
+    document.querySelectorAll('.share-split__main, .share-split__caret, .share-profile-trigger').forEach((el) => {
+      el.disabled = shareReadOnly;
+    });
     document.querySelectorAll('.db-slot-btn, #btn-upload-slot, #btn-demo-load').forEach((el) => {
       if (el) el.disabled = shareReadOnly;
     });
@@ -6333,20 +6579,57 @@
     }
     const bulkBar = document.getElementById('monsters-bulk-bar');
     if (bulkBar) bulkBar.hidden = shareReadOnly || monstersBulkSelected.size === 0;
+    document.querySelectorAll('[data-teams-readonly-hide]').forEach((el) => {
+      el.hidden = shareReadOnly;
+    });
   }
 
   function bindShareProfileUi() {
-    document.getElementById('share-profile-btn')?.addEventListener('click', async () => {
-      const equippedOnly = document.getElementById('share-equipped-only')?.checked === true;
-      const fullInventory = !equippedOnly;
-      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-      try {
-        await copyShareLink(fullInventory);
-      } catch (e) {
-        if (typeof showToast === 'function') {
-          showToast((t.shareFailed || 'Share failed') + (e.message ? `: ${e.message}` : ''), 'error');
-        }
+    shareExportMode = readStoredShareMode();
+    syncShareSplitLabels();
+
+    document.addEventListener('click', (e) => {
+      const mainBtn = e.target.closest('.share-split__main');
+      if (mainBtn && !mainBtn.disabled && !shareReadOnly) {
+        e.preventDefault();
+        void triggerShareProfile();
+        return;
       }
+      const legacyBtn = e.target.closest('.share-profile-trigger');
+      if (legacyBtn && !legacyBtn.disabled && !shareReadOnly) {
+        e.preventDefault();
+        void triggerShareProfile();
+        return;
+      }
+      const modeBtn = e.target.closest('[data-share-mode]');
+      if (modeBtn) {
+        e.preventDefault();
+        setShareExportMode(modeBtn.dataset.shareMode);
+        closeShareSplitMenus();
+        return;
+      }
+      const copyBtn = e.target.closest('[data-share-copy-link]');
+      if (copyBtn) {
+        e.preventDefault();
+        void triggerShareProfile(shareExportMode);
+        return;
+      }
+      const caret = e.target.closest('.share-split__caret');
+      if (caret) {
+        e.preventDefault();
+        const root = caret.closest('.share-split');
+        if (!root) return;
+        const open = !root.classList.contains('is-open');
+        closeShareSplitMenus();
+        if (open) {
+          root.classList.add('is-open');
+          const menu = root.querySelector('.share-split__menu');
+          if (menu) menu.hidden = false;
+          caret.setAttribute('aria-expanded', 'true');
+        }
+        return;
+      }
+      if (!e.target.closest('.share-split')) closeShareSplitMenus();
     });
   }
 
@@ -6441,6 +6724,470 @@
   let monstersBulkLastIndex = -1;
   let monstersDetailTab = 'info';
   let monstersRuneFocusState = null;
+
+  const TEAMS_STORAGE_KEY = 'swrm_teams_v1';
+  const TEAM_SLOT_COUNT = 5;
+  const SET_TEAM_COUNT = 5;
+
+  let teamsStateCache = null;
+  let teamsActiveSetId = null;
+  let teamsActiveTeamId = null;
+  let teamsShareViewPayload = null;
+
+  function newTeamsId(prefix) {
+    return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+  }
+
+  function defaultTeamsState() {
+    return { version: 1, sets: [], teams: {} };
+  }
+
+  function normalizeTeamSlots(slots) {
+    const out = Array.from({ length: TEAM_SLOT_COUNT }, (_, i) => {
+      const v = slots && slots[i] != null ? Number(slots[i]) : null;
+      return Number.isFinite(v) && v > 0 ? v : null;
+    });
+    return out;
+  }
+
+  function loadTeamsState() {
+    if (teamsStateCache) return teamsStateCache;
+    try {
+      const raw = localStorage.getItem(TEAMS_STORAGE_KEY);
+      if (!raw) {
+        teamsStateCache = defaultTeamsState();
+        return teamsStateCache;
+      }
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object') throw new Error('bad teams state');
+      teamsStateCache = {
+        version: 1,
+        sets: Array.isArray(parsed.sets) ? parsed.sets : [],
+        teams: parsed.teams && typeof parsed.teams === 'object' ? parsed.teams : {},
+      };
+    } catch (e) {
+      teamsStateCache = defaultTeamsState();
+    }
+    return teamsStateCache;
+  }
+
+  function saveTeamsState(state) {
+    teamsStateCache = state || defaultTeamsState();
+    try {
+      localStorage.setItem(TEAMS_STORAGE_KEY, JSON.stringify(teamsStateCache));
+    } catch (e) {
+      /* ignore quota */
+    }
+  }
+
+  function createEmptyTeam(name) {
+    const id = newTeamsId('team');
+    const team = {
+      id,
+      name: String(name || 'Team').trim() || 'Team',
+      leaderUnitId: null,
+      slots: normalizeTeamSlots([]),
+      shareInProfile: false,
+    };
+    return team;
+  }
+
+  function createTeamSet(name) {
+    const state = loadTeamsState();
+    const setId = newTeamsId('set');
+    const teamIds = [];
+    for (let i = 0; i < SET_TEAM_COUNT; i++) {
+      const team = createEmptyTeam(`Team ${i + 1}`);
+      state.teams[team.id] = team;
+      teamIds.push(team.id);
+    }
+    const set = { id: setId, name: String(name || 'New set').trim() || 'New set', teamIds };
+    state.sets.push(set);
+    saveTeamsState(state);
+    teamsActiveSetId = setId;
+    teamsActiveTeamId = teamIds[0] || null;
+    return set;
+  }
+
+  function getTeamById(teamId) {
+    const state = loadTeamsState();
+    return teamId && state.teams[teamId] ? state.teams[teamId] : null;
+  }
+
+  function getTeamSetById(setId) {
+    const state = loadTeamsState();
+    return state.sets.find((s) => s.id === setId) || null;
+  }
+
+  function updateTeam(teamId, patch) {
+    const state = loadTeamsState();
+    const team = state.teams[teamId];
+    if (!team) return null;
+    if (patch.name != null) team.name = String(patch.name).trim() || team.name;
+    if (patch.leaderUnitId !== undefined) {
+      const lid = patch.leaderUnitId != null ? Number(patch.leaderUnitId) : null;
+      team.leaderUnitId = Number.isFinite(lid) && lid > 0 ? lid : null;
+    }
+    if (patch.slots) team.slots = normalizeTeamSlots(patch.slots);
+    if (patch.shareInProfile != null) team.shareInProfile = !!patch.shareInProfile;
+    saveTeamsState(state);
+    return team;
+  }
+
+  function renameTeamSet(setId, name) {
+    const state = loadTeamsState();
+    const set = state.sets.find((s) => s.id === setId);
+    if (!set) return null;
+    set.name = String(name || '').trim() || set.name;
+    saveTeamsState(state);
+    return set;
+  }
+
+  function exportTeamsForShare() {
+    const state = loadTeamsState();
+    const sets = [];
+    for (const set of state.sets) {
+      const teams = [];
+      for (const tid of set.teamIds || []) {
+        const team = state.teams[tid];
+        if (!team || !team.shareInProfile) continue;
+        teams.push({
+          name: team.name,
+          leader_unit_id: team.leaderUnitId,
+          unit_ids: team.slots,
+        });
+      }
+      if (teams.length) sets.push({ name: set.name, teams });
+    }
+    return sets.length ? { sets } : null;
+  }
+
+  function setTeamsShareViewPayload(payload) {
+    teamsShareViewPayload = payload && payload.sets ? payload : null;
+  }
+
+  function getTeamsShareViewPayload() {
+    return teamsShareViewPayload;
+  }
+
+  function getTeamsActiveSetId() {
+    return teamsActiveSetId;
+  }
+
+  function setTeamsActiveSetId(id) {
+    teamsActiveSetId = id;
+  }
+
+  function getTeamsActiveTeamId() {
+    return teamsActiveTeamId;
+  }
+
+  function setTeamsActiveTeamId(id) {
+    teamsActiveTeamId = id;
+  }
+
+  let monstersHubTabsBound = false;
+
+  function normalizeMonstersSubtabId(id) {
+    return MONSTERS_SUBTAB_IDS.includes(id) ? id : 'roster';
+  }
+
+  function showMonstersSubtab(subId, options) {
+    const id = normalizeMonstersSubtabId(subId);
+    try {
+      sessionStorage.setItem(MONSTERS_SUBTAB_STORAGE_KEY, id);
+    } catch (e) { /* ignore */ }
+
+    document.querySelectorAll('.monsters-hub-tab').forEach((btn) => {
+      const on = btn.dataset.monstersHub === id;
+      btn.classList.toggle('is-active', on);
+      btn.setAttribute('aria-selected', on ? 'true' : 'false');
+      btn.tabIndex = on ? 0 : -1;
+    });
+
+    document.querySelectorAll('.monsters-hub-pane').forEach((pane) => {
+      const on = pane.dataset.monstersPane === id;
+      pane.classList.toggle('is-active', on);
+      pane.classList.toggle('hidden', !on);
+      if (on) pane.removeAttribute('hidden');
+      else pane.setAttribute('hidden', '');
+    });
+
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const lead = document.getElementById('lbl-monsters-lead');
+    if (lead) {
+      lead.textContent =
+        id === 'teams'
+          ? t.monstersTeamsLead || 'Build named teams and group them into sets (e.g. Arena Offence).'
+          : t.monstersLead || '';
+    }
+
+    if (id === 'roster') {
+      void renderMonstersPanel();
+    } else if (id === 'teams' && typeof renderTeamsPanel === 'function') {
+      renderTeamsPanel();
+    }
+  }
+
+  function initMonstersHubTabs() {
+    const nav = document.getElementById('monsters-hub-tabs');
+    if (!nav || monstersHubTabsBound) return;
+    monstersHubTabsBound = true;
+    nav.querySelectorAll('.monsters-hub-tab').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const sub = btn.dataset.monstersHub;
+        if (!sub) return;
+        showMainTab('monsters', { monstersSubtab: sub, writeHash: true });
+      });
+    });
+  }
+
+  function monstersSubtabFromHashSegment(segment) {
+    const s = String(segment || '').trim().toLowerCase();
+    if (s === 'team' || s === 'teams') return 'teams';
+    if (s === 'roster' || s === 'list') return 'roster';
+    return MONSTERS_SUBTAB_IDS.includes(s) ? s : null;
+  }
+
+  let teamsUiBound = false;
+
+  function teamUnitLabel(unitId) {
+    const id = Number(unitId);
+    if (!Number.isFinite(id) || id <= 0) return '—';
+    const u =
+      (monstersEnrichedCache || []).find((x) => x.unitId === id) ||
+      (allUnits || []).find((x) => x.unitId === id);
+    if (!u) return `#${id}`;
+    return u.displayName || `#${u.masterId}`;
+  }
+
+  function buildTeamsUnitOptions(selectedId) {
+    const units = monstersEnrichedCache.length
+      ? monstersEnrichedCache
+      : (allUnits || []).map((u) => ({
+          unitId: u.unitId,
+          displayName: `#${u.masterId}`,
+          masterId: u.masterId,
+        }));
+    const opts = ['<option value="">—</option>'];
+    for (const u of units) {
+      const sel = Number(selectedId) === u.unitId ? ' selected' : '';
+      opts.push(
+        `<option value="${escapeHtml(String(u.unitId))}"${sel}>${escapeHtml(u.displayName || String(u.unitId))}</option>`,
+      );
+    }
+    return opts.join('');
+  }
+
+  function renderTeamsSetList(state, t) {
+    const list = document.getElementById('teams-set-list');
+    if (!list) return;
+    if (!state.sets.length) {
+      list.innerHTML = `<li class="teams-set-list__empty">${escapeHtml(t.teamsNoSets || 'No team sets yet.')}</li>`;
+      return;
+    }
+    const activeId = getTeamsActiveSetId();
+    list.innerHTML = state.sets
+      .map((set) => {
+        const on = set.id === activeId;
+        return `<li><button type="button" class="teams-set-list__btn${on ? ' is-active' : ''}" data-teams-set-id="${escapeHtml(set.id)}">${escapeHtml(set.name)}</button></li>`;
+      })
+      .join('');
+  }
+
+  function renderTeamsSlotRow(set, state, t) {
+    const row = document.getElementById('teams-slot-row');
+    if (!row || !set) {
+      if (row) row.innerHTML = '';
+      return;
+    }
+    const activeTeamId = getTeamsActiveTeamId();
+    row.innerHTML = (set.teamIds || [])
+      .map((tid, idx) => {
+        const team = state.teams[tid];
+        if (!team) return '';
+        const on = tid === activeTeamId;
+        const leader =
+          team.leaderUnitId != null ? teamUnitLabel(team.leaderUnitId) : t.teamsNoLeader || 'No leader';
+        const filled = (team.slots || []).filter((s) => s != null).length;
+        return `<button type="button" class="teams-slot-card${on ? ' is-active' : ''}" data-teams-team-id="${escapeHtml(tid)}" aria-pressed="${on}">
+          <span class="teams-slot-card__idx">${idx + 1}</span>
+          <span class="teams-slot-card__name">${escapeHtml(team.name)}</span>
+          <span class="teams-slot-card__meta">${escapeHtml(leader)} · ${filled}/${TEAM_SLOT_COUNT}</span>
+          ${team.shareInProfile ? '<span class="teams-slot-card__share" title="Shared">⎘</span>' : ''}
+        </button>`;
+      })
+      .join('');
+  }
+
+  function renderTeamsEditor(team, t) {
+    const nameInput = document.getElementById('teams-team-name');
+    const leaderSelect = document.getElementById('teams-leader-select');
+    const slotsWrap = document.getElementById('teams-monster-slots');
+    const shareCb = document.getElementById('teams-share-public');
+    const saveBtn = document.getElementById('teams-save-team');
+    if (!team) {
+      if (nameInput) nameInput.value = '';
+      if (leaderSelect) leaderSelect.innerHTML = '<option value="">—</option>';
+      if (slotsWrap) slotsWrap.innerHTML = '';
+      if (shareCb) shareCb.checked = false;
+      if (saveBtn) saveBtn.disabled = true;
+      return;
+    }
+    if (nameInput) nameInput.value = team.name || '';
+    if (shareCb) shareCb.checked = !!team.shareInProfile;
+    if (saveBtn) saveBtn.disabled = false;
+    if (leaderSelect) {
+      leaderSelect.innerHTML = buildTeamsUnitOptions(team.leaderUnitId);
+    }
+    if (slotsWrap) {
+      slotsWrap.innerHTML = (team.slots || [])
+        .map(
+          (slotId, i) => `<label class="teams-slot-field">
+            <span class="teams-slot-field__label">${escapeHtml((t.teamsSlotLabel || 'Slot {n}').replace('{n}', String(i + 1)))}</span>
+            <select class="teams-slot-select" data-slot-idx="${i}">${buildTeamsUnitOptions(slotId)}</select>
+          </label>`,
+        )
+        .join('');
+    }
+  }
+
+  function renderTeamsPanel() {
+    const shell = document.getElementById('teams-shell');
+    if (!shell) return;
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const ro = typeof isShareReadOnly === 'function' && isShareReadOnly();
+    const sharePayload = getTeamsShareViewPayload();
+    const layout = shell.querySelector('.teams-layout');
+    const shareView = document.getElementById('teams-share-view');
+
+    if (ro && sharePayload && sharePayload.sets) {
+      renderTeamsShareView(sharePayload, t);
+      return;
+    }
+
+    if (layout) layout.hidden = false;
+    if (shareView) shareView.hidden = true;
+
+    const state = loadTeamsState();
+    if (!state.sets.length) {
+      createTeamSet(t.teamsDefaultSetName || 'Arena Offence');
+    }
+    const fresh = loadTeamsState();
+    if (!getTeamsActiveSetId() && fresh.sets[0]) {
+      setTeamsActiveSetId(fresh.sets[0].id);
+      setTeamsActiveTeamId(fresh.sets[0].teamIds[0] || null);
+    }
+    const set = getTeamSetById(getTeamsActiveSetId()) || fresh.sets[0];
+    if (set && !getTeamsActiveTeamId()) setTeamsActiveTeamId(set.teamIds[0] || null);
+
+    const setNameInput = document.getElementById('teams-set-name');
+    if (setNameInput && set) setNameInput.value = set.name;
+
+    renderTeamsSetList(fresh, t);
+    renderTeamsSlotRow(set, fresh, t);
+    renderTeamsEditor(getTeamById(getTeamsActiveTeamId()), t);
+
+    shell.querySelectorAll('[data-teams-readonly-hide]').forEach((el) => {
+      el.hidden = ro;
+    });
+  }
+
+  function renderTeamsShareView(payload, t) {
+    const shell = document.getElementById('teams-shell');
+    if (!shell) return;
+    const layout = shell.querySelector('.teams-layout');
+    if (layout) layout.hidden = true;
+    let view = document.getElementById('teams-share-view');
+    if (!view) {
+      view = document.createElement('div');
+      view.id = 'teams-share-view';
+      view.className = 'teams-share-view-wrap';
+      shell.appendChild(view);
+    }
+    view.hidden = false;
+    const blocks = (payload.sets || [])
+      .map((set) => {
+        const teams = (set.teams || [])
+          .map((team) => {
+            const units = (team.unit_ids || [])
+              .map((uid) => escapeHtml(teamUnitLabel(uid)))
+              .join(', ');
+            const leader =
+              team.leader_unit_id != null
+                ? escapeHtml(teamUnitLabel(team.leader_unit_id))
+                : '—';
+            return `<li class="teams-share-team"><strong>${escapeHtml(team.name || 'Team')}</strong> — ${escapeHtml(t.teamsLeader || 'Leader')}: ${leader}<br><span class="teams-share-team__units">${units || '—'}</span></li>`;
+          })
+          .join('');
+        return `<section class="teams-share-set"><h4>${escapeHtml(set.name || 'Set')}</h4><ul>${teams}</ul></section>`;
+      })
+      .join('');
+    view.innerHTML = `<div class="teams-share-view">
+      <h3 class="teams-share-view__title">${escapeHtml(t.teamsShareViewTitle || 'Shared teams')}</h3>
+      ${blocks || `<p>${escapeHtml(t.teamsShareViewEmpty || 'No public teams in this profile.')}</p>`}
+    </div>`;
+  }
+
+  function bindTeamsUi() {
+    if (teamsUiBound) return;
+    teamsUiBound = true;
+
+    document.getElementById('teams-add-set')?.addEventListener('click', () => {
+      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+      const name = window.prompt(t.teamsNewSetPrompt || 'Set name', t.teamsDefaultSetName || 'New set');
+      if (name == null) return;
+      createTeamSet(name);
+      renderTeamsPanel();
+    });
+
+    document.getElementById('teams-set-list')?.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-teams-set-id]');
+      if (!btn) return;
+      setTeamsActiveSetId(btn.dataset.teamsSetId);
+      const set = getTeamSetById(getTeamsActiveSetId());
+      setTeamsActiveTeamId(set && set.teamIds[0] ? set.teamIds[0] : null);
+      renderTeamsPanel();
+    });
+
+    document.getElementById('teams-slot-row')?.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-teams-team-id]');
+      if (!btn) return;
+      setTeamsActiveTeamId(btn.dataset.teamsTeamId);
+      renderTeamsPanel();
+    });
+
+    document.getElementById('teams-set-name')?.addEventListener('change', (e) => {
+      const setId = getTeamsActiveSetId();
+      if (!setId) return;
+      renameTeamSet(setId, e.target.value);
+      renderTeamsPanel();
+    });
+
+    document.getElementById('teams-save-team')?.addEventListener('click', () => {
+      const teamId = getTeamsActiveTeamId();
+      if (!teamId) return;
+      const name = document.getElementById('teams-team-name')?.value;
+      const leaderUnitId = document.getElementById('teams-leader-select')?.value;
+      const shareInProfile = document.getElementById('teams-share-public')?.checked === true;
+      const slots = [];
+      document.querySelectorAll('#teams-monster-slots .teams-slot-select').forEach((sel) => {
+        slots.push(sel.value ? Number(sel.value) : null);
+      });
+      updateTeam(teamId, {
+        name,
+        leaderUnitId: leaderUnitId ? Number(leaderUnitId) : null,
+        slots,
+        shareInProfile,
+      });
+      renderTeamsPanel();
+    });
+  }
+
+  function initTeamsPanel() {
+    bindTeamsUi();
+    renderTeamsPanel();
+  }
 
   function fmtRuneStatVal(type, val, slotNo) {
     const n = Number(val);
@@ -6963,7 +7710,9 @@
     ];
     for (const id of ids) {
       const el = document.getElementById(id);
-      if (el) el.value = '';
+      if (!el) continue;
+      if (id === 'monsters-filter-location') el.value = 'all';
+      else el.value = '';
     }
     const sixBtn = document.getElementById('monsters-filter-full-six');
     if (sixBtn) {
@@ -7026,17 +7775,30 @@
   }
 
   function syncMonstersShowLevelButton(minLevel36Only, t) {
+    const on = !!minLevel36Only;
+    const sel = document.getElementById('monsters-filter-level');
+    if (sel) sel.value = on ? '35' : '';
     const btn = document.getElementById('monsters-filter-min-level');
     const lbl = document.getElementById('lbl-monsters-filter-min-level-btn');
-    if (!btn) return;
-    const on = !!minLevel36Only;
-    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
-    btn.classList.toggle('monsters-toolbar-btn--active', on);
+    if (btn) {
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      btn.classList.toggle('monsters-toolbar-btn--active', on);
+    }
     if (lbl) {
       lbl.textContent = on
         ? t.monstersFilterMinLevelOn || 'Only Lv 35+'
         : t.monstersFilterMinLevelOff || 'All levels';
     }
+  }
+
+  function selectAllVisibleMonsters() {
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    for (const id of monstersVisibleUnitIds) monstersBulkSelected.add(id);
+    writeMonstersBulkSelected(monstersBulkSelected);
+    syncMonstersBulkBar(t);
+    const grid = document.getElementById('monsters-grid');
+    if (typeof syncBulkCardStates === 'function') syncBulkCardStates(grid);
+    syncMonstersSelectAllState();
   }
 
   function syncMonstersSelectAllState() {
@@ -7571,7 +8333,6 @@
         <button type="button" class="monsters-tag-btn monsters-tag-btn--sm${u.favorite ? ' monsters-tag-btn--on' : ''}" data-unit-tag="favorite" data-unit-id="${uid}" aria-pressed="${u.favorite}" title="${escapeHtml(t.monstersFavorite || 'Favorite')}">★</button>
         <button type="button" class="monsters-tag-btn monsters-tag-btn--sm${u.food ? ' monsters-tag-btn--on' : ''}" data-unit-tag="food" data-unit-id="${uid}" aria-pressed="${u.food}" title="${escapeHtml(t.monstersFood || 'Food')}">🍖</button>
         <button type="button" class="monsters-tag-btn monsters-tag-btn--sm${storageOn ? ' monsters-tag-btn--on' : ''}${u.inStorage ? ' monsters-tag-btn--swex' : ''}" data-unit-tag="storageMark" data-unit-id="${uid}" aria-pressed="${storageOn}" title="${escapeHtml(storageTitle)}"${storageDisabled}>▣</button>
-        ${buildLocationIconHtml(u, t)}
       </div>`;
   }
 
@@ -7587,7 +8348,6 @@
         <button type="button" class="monsters-tag-btn monsters-tag-btn--sm${u.favorite ? ' monsters-tag-btn--on' : ''}" data-unit-tag="favorite" data-unit-id="${uid}" aria-pressed="${u.favorite}" title="${escapeHtml(t.monstersFavorite || 'Favorite')}">★</button>
         <button type="button" class="monsters-tag-btn monsters-tag-btn--sm${u.food ? ' monsters-tag-btn--on' : ''}" data-unit-tag="food" data-unit-id="${uid}" aria-pressed="${u.food}" title="${escapeHtml(t.monstersFood || 'Food')}">🍖</button>
         <button type="button" class="monsters-tag-btn monsters-tag-btn--sm${storageOn ? ' monsters-tag-btn--on' : ''}${u.inStorage ? ' monsters-tag-btn--swex' : ''}" data-unit-tag="storageMark" data-unit-id="${uid}" aria-pressed="${storageOn}" title="${escapeHtml(storageTitle)}"${storageDisabled}>▣</button>
-        ${buildLocationIconHtml(u, t)}
       </div>
     </div>`;
   }
@@ -9086,28 +9846,125 @@
     return n;
   }
 
+  function monstersFilterChipDefs(f, t) {
+    const chips = [];
+    const q = (f.q || '').trim();
+    if (q) chips.push({ key: 'q', label: `"${q}"` });
+    if (f.element) chips.push({ key: 'element', label: f.element });
+    if (f.minLevel36Only) chips.push({ key: 'minLevel36Only', label: t.monstersFilterLevel35 || 'Lv 35+' });
+    if (f.location && f.location !== 'all') {
+      const locMap = { active: t.monstersFilterLocActive || 'In use', storage: t.monstersFilterLocStorage || 'Storage' };
+      chips.push({ key: 'location', label: locMap[f.location] || f.location });
+    }
+    if (f.fullSixOnly) chips.push({ key: 'fullSixOnly', label: t.monstersFilterSixOnly || '6/6 runes' });
+    if (f.skillFilter) chips.push({ key: 'skillFilter', label: f.skillFilter });
+    if (f.runeFilter) chips.push({ key: 'runeFilter', label: f.runeFilter });
+    if (f.runeSet) chips.push({ key: 'runeSet', label: f.runeSet });
+    if (f.tagFilter) chips.push({ key: 'tagFilter', label: f.tagFilter });
+    if (f.roleFilter) chips.push({ key: 'roleFilter', label: f.roleFilter });
+    if (f.markFilter) {
+      const markMap = { favorite: '★', food: '🍖' };
+      chips.push({ key: 'markFilter', label: markMap[f.markFilter] || f.markFilter });
+    }
+    return chips;
+  }
+
+  function clearMonstersFilterChip(key) {
+    switch (key) {
+      case 'q':
+        resetMonstersSearchQuery();
+        break;
+      case 'element': {
+        const el = document.getElementById('monsters-filter-element');
+        if (el) el.value = '';
+        break;
+      }
+      case 'minLevel36Only': {
+        const lvl = document.getElementById('monsters-filter-level');
+        if (lvl) lvl.value = '';
+        const btn = document.getElementById('monsters-filter-min-level');
+        if (btn) btn.setAttribute('aria-pressed', 'false');
+        break;
+      }
+      case 'location': {
+        const loc = document.getElementById('monsters-filter-location');
+        if (loc) loc.value = 'all';
+        break;
+      }
+      case 'fullSixOnly': {
+        const six = document.getElementById('monsters-filter-full-six');
+        if (six) {
+          six.setAttribute('aria-pressed', 'false');
+          six.classList.remove('monsters-toolbar-btn--active');
+        }
+        break;
+      }
+      case 'skillFilter':
+        document.getElementById('monsters-filter-skill').value = '';
+        break;
+      case 'runeFilter':
+        document.getElementById('monsters-filter-rune').value = '';
+        break;
+      case 'runeSet':
+        document.getElementById('monsters-filter-rune-set').value = '';
+        break;
+      case 'tagFilter':
+        document.getElementById('monsters-filter-tag').value = '';
+        break;
+      case 'roleFilter':
+        document.getElementById('monsters-filter-role').value = '';
+        break;
+      case 'markFilter':
+        document.getElementById('monsters-filter-mark').value = '';
+        break;
+      default:
+        break;
+    }
+  }
+
+  function renderMonstersActiveFilterChips() {
+    const row = document.getElementById('monsters-active-filters');
+    const host = document.getElementById('monsters-filter-chips');
+    if (!row || !host) return;
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const f = readMonstersFiltersFromDom();
+    const chips = monstersFilterChipDefs(f, t);
+    if (!chips.length) {
+      host.innerHTML = '';
+      row.hidden = true;
+      return;
+    }
+    row.hidden = false;
+    host.innerHTML = chips
+      .map(
+        (c) =>
+          `<span class="monsters-filter-chip">${escapeHtml(c.label)}<button type="button" class="monsters-filter-chip__remove" data-filter-chip-remove="${escapeHtml(c.key)}" aria-label="Remove">✕</button></span>`,
+      )
+      .join('');
+  }
+
   function updateMonstersFilterSummary() {
     const f = readMonstersFiltersFromDom();
     const n = countMonstersActiveFilters(f);
-    const det = document.getElementById('monsters-filters-details');
-    const sum = document.getElementById('lbl-monsters-filters-toggle');
     const countEl = document.getElementById('monsters-filters-active-count');
+    const moreBtn = document.getElementById('monsters-more-filters-btn');
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-    const base = t.monstersFiltersToggle || 'Filters';
-    if (sum) sum.textContent = base;
-    const activeTpl = t.monstersFiltersActive || '{n} active';
+    const activeTpl = t.monstersFiltersActive || '{n}';
     if (countEl) {
       countEl.textContent = n ? activeTpl.replace(/\{n\}/g, String(n)) : '';
       countEl.hidden = !n;
     }
-    if (det) det.classList.toggle('monsters-toolbar__filters--active', n > 0);
+    if (moreBtn) moreBtn.classList.toggle('monsters-toolbar-btn--filters-active', n > 0);
+    renderMonstersActiveFilterChips();
   }
 
   function readMonstersFiltersFromDom() {
     const sixBtn = document.getElementById('monsters-filter-full-six');
     const lvlBtn = document.getElementById('monsters-filter-min-level');
+    const lvlSel = document.getElementById('monsters-filter-level');
     const fullSixOnly = sixBtn?.getAttribute('aria-pressed') === 'true';
-    const minLevel36Only = lvlBtn?.getAttribute('aria-pressed') === 'true';
+    const minLevel36Only =
+      lvlSel?.value === '35' || lvlBtn?.getAttribute('aria-pressed') === 'true';
     return {
       q: document.getElementById('monsters-filter-q')?.value || '',
       element: document.getElementById('monsters-filter-element')?.value || '',
@@ -9132,6 +9989,7 @@
     };
     document.getElementById('monsters-filter-q')?.addEventListener('input', onFilter);
     document.getElementById('monsters-filter-element')?.addEventListener('change', onFilter);
+    document.getElementById('monsters-filter-level')?.addEventListener('change', onFilter);
     document.getElementById('monsters-filter-location')?.addEventListener('change', onFilter);
     document.getElementById('monsters-filter-sort')?.addEventListener('change', onFilter);
     document.getElementById('monsters-filter-skill')?.addEventListener('change', onFilter);
@@ -9201,9 +10059,91 @@
       syncMonstersShowLevelButton(next, t);
       onFilter();
     });
-    document.getElementById('monsters-toolbar-clear')?.addEventListener('click', () => {
+    document.getElementById('monsters-filter-clear-all')?.addEventListener('click', () => {
       const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
       resetMonstersToolbarFilters(t);
+      renderMonstersPanel();
+    });
+    document.getElementById('monsters-filter-chips')?.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-filter-chip-remove]');
+      if (!btn) return;
+      clearMonstersFilterChip(btn.dataset.filterChipRemove);
+      writeMonstersFilters(readMonstersFiltersFromDom());
+      updateMonstersFilterSummary();
+      renderMonstersPanel();
+    });
+    function openMonstersFiltersDrawer() {
+      const dlg = document.getElementById('monsters-filters-drawer');
+      if (!dlg) return;
+      if (typeof dlg.showModal === 'function') {
+        try {
+          dlg.showModal();
+        } catch (e) {
+          dlg.setAttribute('open', '');
+        }
+      } else {
+        dlg.setAttribute('open', '');
+      }
+    }
+
+    function closeMonstersFiltersDrawer() {
+      const dlg = document.getElementById('monsters-filters-drawer');
+      if (!dlg) return;
+      if (dlg.open && typeof dlg.close === 'function') dlg.close();
+      else dlg.removeAttribute('open');
+    }
+
+    document.getElementById('monsters-more-filters-btn')?.addEventListener('click', () => {
+      openMonstersFiltersDrawer();
+    });
+    document.getElementById('monsters-filters-drawer-close')?.addEventListener('click', () => {
+      closeMonstersFiltersDrawer();
+    });
+    document.getElementById('monsters-filters-drawer')?.addEventListener('close', () => {
+      const f = readMonstersFiltersFromDom();
+      writeMonstersFilters(f);
+      updateMonstersFilterSummary();
+      renderMonstersPanel();
+    });
+    document.getElementById('monsters-filters-drawer-reset')?.addEventListener('click', () => {
+      clearMonstersPanelFilters();
+      writeMonstersFilters(readMonstersFiltersFromDom());
+      updateMonstersFilterSummary();
+      renderMonstersPanel();
+    });
+    document.getElementById('monsters-select-all-visible')?.addEventListener('click', () => {
+      if (typeof selectAllVisibleMonsters === 'function') selectAllVisibleMonsters();
+    });
+    document.getElementById('monsters-bulk-tag-toggle')?.addEventListener('click', () => {
+      const menu = document.getElementById('monsters-bulk-tag-menu');
+      if (!menu) return;
+      const tags = typeof readTagsRegistry === 'function' ? readTagsRegistry() : [];
+      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+      if (!tags.length) {
+        const val = window.prompt(t.monstersBulkTagPrompt || 'Tag name');
+        if (val && monstersBulkSelected.size) {
+          bulkAddCustomTag([...monstersBulkSelected], val);
+          registerCustomTag(val);
+          populateMonstersTagFilter();
+          renderMonstersPanel();
+        }
+        return;
+      }
+      menu.innerHTML = tags
+        .map(
+          (tag) =>
+            `<button type="button" class="monsters-selection-tag__option" data-bulk-tag="${escapeHtml(tag)}">${escapeHtml(tag)}</button>`,
+        )
+        .join('');
+      const open = menu.hidden;
+      menu.hidden = !open;
+      document.getElementById('monsters-bulk-tag-toggle')?.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    document.getElementById('monsters-bulk-tag-menu')?.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-bulk-tag]');
+      if (!btn || !monstersBulkSelected.size) return;
+      bulkAddCustomTag([...monstersBulkSelected], btn.dataset.bulkTag);
+      document.getElementById('monsters-bulk-tag-menu').hidden = true;
       renderMonstersPanel();
     });
     document.getElementById('monsters-view-cards')?.addEventListener('click', () => {
@@ -9227,5 +10167,7 @@
 
   bindMonstersToolbar();
   bindMonstersGridDelegation();
+  initMonstersHubTabs();
+  initTeamsPanel();
 
 })();

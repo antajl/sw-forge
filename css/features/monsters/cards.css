@@ -376,6 +376,15 @@
   pointer-events: none;
 }
 
+.monsters-card--grid .monsters-card__actions {
+  top: 30px;
+  left: 4px;
+  right: auto;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+}
+
 .monsters-card__actions .monsters-tag-btn {
   opacity: 0;
   pointer-events: none;

@@ -222,11 +222,16 @@
   const MAIN_TAB_IDS = ['runes', 'monsters', 'guide', 'changelog', 'app-settings'];
   const RUNES_SUBTAB_IDS = ['dashboard', 'runetable', 'settings'];
   const RUNES_SUBTAB_STORAGE_KEY = 'swrm_runes_subtab_v1';
+  const MONSTERS_SUBTAB_IDS = ['roster', 'teams'];
+  const MONSTERS_SUBTAB_STORAGE_KEY = 'swrm_monsters_subtab_v1';
   let runesHubTabsBound = false;
 
   function normalizeMainTabRequest(tabId) {
     if (tabId === 'dashboard' || tabId === 'runetable' || tabId === 'settings') {
       return { main: 'runes', sub: tabId };
+    }
+    if (tabId === 'roster' || tabId === 'teams') {
+      return { main: 'monsters', sub: tabId };
     }
     if (MAIN_TAB_IDS.includes(tabId)) return { main: tabId, sub: null };
     return { main: 'runes', sub: 'dashboard' };
@@ -242,7 +247,7 @@
 
   function splitMainHash() {
     const raw = (window.location.hash || '').replace(/^#/, '').trim();
-    if (!raw) return { tab: null, runesSubtab: null, query: '' };
+    if (!raw) return { tab: null, runesSubtab: null, monstersSubtab: null, query: '' };
     const qm = raw.indexOf('?');
     const tabPart = (qm === -1 ? raw : raw.slice(0, qm)).trim();
     const query = qm === -1 ? '' : raw.slice(qm + 1);
@@ -250,19 +255,36 @@
     if (h.startsWith('tab-')) h = h.slice(4);
     if (h.startsWith('runes/')) {
       const sub = runesSubtabFromHashSegment(h.slice(6).split('/')[0]);
-      if (sub) return { tab: 'runes', runesSubtab: sub, query };
+      if (sub) return { tab: 'runes', runesSubtab: sub, monstersSubtab: null, query };
+    }
+    if (h.startsWith('monsters/')) {
+      const sub = monstersSubtabFromHashSegment(h.slice(9).split('/')[0]);
+      if (sub) return { tab: 'monsters', runesSubtab: null, monstersSubtab: sub, query };
     }
     if (h === 'dashboard' || h === 'runetable' || h === 'settings') {
-      return { tab: 'runes', runesSubtab: h, query };
+      return { tab: 'runes', runesSubtab: h, monstersSubtab: null, query };
     }
-    if (MAIN_TAB_IDS.includes(h)) return { tab: h, runesSubtab: null, query };
-    return { tab: null, runesSubtab: null, query };
+    if (h === 'roster' || h === 'teams') {
+      return { tab: 'monsters', runesSubtab: null, monstersSubtab: h, query };
+    }
+    if (MAIN_TAB_IDS.includes(h)) return { tab: h, runesSubtab: null, monstersSubtab: null, query };
+    return { tab: null, runesSubtab: null, monstersSubtab: null, query };
   }
 
   function mainTabIdFromHash() {
-    const { tab, runesSubtab } = splitMainHash();
+    const { tab, runesSubtab, monstersSubtab } = splitMainHash();
     if (tab === 'runes' && runesSubtab) return runesSubtab;
+    if (tab === 'monsters' && monstersSubtab) return monstersSubtab;
     return tab;
+  }
+
+  function readStoredMonstersSubtab() {
+    try {
+      const v = sessionStorage.getItem(MONSTERS_SUBTAB_STORAGE_KEY);
+      return MONSTERS_SUBTAB_IDS.includes(v) ? v : 'roster';
+    } catch (e) {
+      return 'roster';
+    }
   }
 
   function readStoredRunesSubtab() {
@@ -383,9 +405,17 @@
       renderDbSlots();
     }
     if (main === 'monsters') {
+      initMonstersHubTabs();
+      const monstersSub =
+        sub ||
+        (opts.monstersSubtab && MONSTERS_SUBTAB_IDS.includes(opts.monstersSubtab)
+          ? opts.monstersSubtab
+          : null) ||
+        hashParts.monstersSubtab ||
+        readStoredMonstersSubtab();
+      showMonstersSubtab(monstersSub, opts);
       const monstersRoot = document.getElementById('tab-monsters');
       if (monstersRoot) monstersRoot.scrollTop = 0;
-      void renderMonstersPanel();
     }
 
     if (writeHash) {
@@ -396,6 +426,15 @@
           if (runesSub === 'dashboard') url = base;
           else if (runesSub === 'runetable') url = `${base}#runetable${buildRuneTableQuerySuffix()}`;
           else url = `${base}#${runesSub}`;
+        } else if (main === 'monsters') {
+          const monstersSub =
+            sub ||
+            (opts.monstersSubtab && MONSTERS_SUBTAB_IDS.includes(opts.monstersSubtab)
+              ? opts.monstersSubtab
+              : null) ||
+            hashParts.monstersSubtab ||
+            readStoredMonstersSubtab();
+          url = monstersSub === 'roster' ? `${base}#monsters` : `${base}#monsters/${monstersSub}`;
         } else url = `${base}#${main}`;
         if (pushHistory) history.pushState(null, '', url);
         else history.replaceState(null, '', url);

@@ -503,9 +503,45 @@ body.share-readonly .monsters-detail__tag-remove {
   opacity: 0.55;
 }
 
-body.share-readonly #share-profile-btn,
 body.share-readonly #btn-save-settings {
   display: none;
+}
+
+body.share-readonly .share-split {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.share-toolbar {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+
+.share-toolbar--inline {
+  margin-left: 4px;
+}
+
+.share-toolbar--compact {
+  margin-left: 8px;
+  padding-left: 8px;
+  border-left: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.12));
+}
+
+.share-toolbar__opt {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.share-toolbar__opt-lbl {
+  max-width: 9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .share-view-banner.demo-dataset-banner {

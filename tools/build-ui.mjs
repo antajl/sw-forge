@@ -42,6 +42,9 @@ const CHUNKS = [
 /** Concatenated before monsters/bootstrap.js (same IIFE scope) */
 const MONSTER_PARTS = [
   'monsters/monsters-state.js',
+  'monsters/teams-storage.js',
+  'monsters/monsters-hub.js',
+  'monsters/teams-ui.js',
   'monsters/monsters-storage.js',
   'monsters/monsters-bulk.js',
   'monsters/monsters-filters.js',

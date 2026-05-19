@@ -163,7 +163,35 @@
     };
     if (typeof exportTeamsForShare === 'function') {
       const teams = exportTeamsForShare();
-      if (teams) payload.teams = teams;
+      if (teams) {
+        payload.teams = teams;
+        const included = new Set(units.map((u) => String(u.unit_id)));
+        const byId = new Map(
+          (json.unit_list || []).map((u) => [String(u.unit_id), u]),
+        );
+        for (const set of teams.sets || []) {
+          for (const team of set.teams || []) {
+            for (const uid of team.unit_ids || []) {
+              if (uid == null || uid === '') continue;
+              const key = String(uid);
+              if (included.has(key)) continue;
+              const src = byId.get(key);
+              if (!src) continue;
+              included.add(key);
+              units.push({
+                unit_master_id: src.unit_master_id,
+                unit_id: src.unit_id,
+                class: src.class,
+                attribute: src.attribute,
+                unit_level: src.unit_level,
+                rank: src.rank,
+                runes: (src.runes || []).map((raw) => raw),
+              });
+            }
+          }
+        }
+        payload.unit_list = units;
+      }
     }
     return payload;
   }
@@ -184,17 +212,38 @@
       const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
       throw new Error(t.shareNoContent || 'Nothing to share for this export mode');
     }
+    const payload = {
+      wizard_name: data.wizard_name,
+      data: JSON.stringify(data),
+      expires_at: shareExpiryUnix(),
+    };
+    const bodyStr = JSON.stringify(payload);
+    if (bodyStr.length > 900_000) {
+      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+      throw new Error(
+        t.sharePayloadTooLarge ||
+          'Export is too large to share. Try a smaller share mode (e.g. equipped only).',
+      );
+    }
     const res = await fetch(`${api}/share`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        wizard_name: data.wizard_name,
-        data: JSON.stringify(data),
-        expires_at: shareExpiryUnix(),
-      }),
+      body: bodyStr,
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const body = await res.json();
+    let body = null;
+    try {
+      body = await res.json();
+    } catch (e) {
+      body = null;
+    }
+    if (!res.ok) {
+      const detail =
+        (body && (body.message || body.error)) ||
+        (res.status === 500
+          ? 'Server error — share database may be unavailable'
+          : `HTTP ${res.status}`);
+      throw new Error(detail);
+    }
     if (!body || !body.id) throw new Error('Invalid response');
     return String(body.id);
   }

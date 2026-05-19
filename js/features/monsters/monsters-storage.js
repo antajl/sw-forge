@@ -18,7 +18,7 @@
       location: 'all',
       sort: 'name',
       fullSixOnly: false,
-      minLevel36Only: false,
+      minLevelMin: 0,
       skillFilter: '',
       runeFilter: '',
       runeSet: '',
@@ -36,7 +36,12 @@
         location: o.location != null ? String(o.location) : 'all',
         sort: o.sort != null ? String(o.sort) : 'name',
         fullSixOnly: !!o.fullSixOnly,
-        minLevel36Only: !!o.minLevel36Only,
+        minLevelMin:
+          o.minLevelMin != null && Number.isFinite(Number(o.minLevelMin))
+            ? Math.max(0, Math.min(40, Math.round(Number(o.minLevelMin))))
+            : o.minLevel36Only
+              ? 35
+              : 0,
         skillFilter: o.skillFilter != null ? String(o.skillFilter) : '',
         runeFilter: o.runeFilter != null ? String(o.runeFilter) : '',
         runeSet: o.runeSet != null ? String(o.runeSet) : '',

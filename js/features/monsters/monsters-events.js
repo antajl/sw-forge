@@ -161,7 +161,7 @@
     }
     syncMonstersBulkBar(t);
     syncMonstersShowAllButton(readMonstersFilters().fullSixOnly, t);
-    syncMonstersShowLevelButton(!!readMonstersFilters().minLevel36Only, t);
+    syncMonstersMinLevelInput(readMonstersFilters().minLevelMin, t);
     updateMonstersFilterSummary();
     const bulkMarksLbl = document.getElementById('lbl-monsters-bulk-marks');
     if (bulkMarksLbl) bulkMarksLbl.textContent = t.monstersBulkMarksGroup || 'Bulk marks';
@@ -253,7 +253,7 @@
     if (f.roleFilter) n += 1;
     if (f.markFilter) n += 1;
     if (f.fullSixOnly) n += 1;
-    if (f.minLevel36Only) n += 1;
+    if (f.minLevelMin > 0) n += 1;
     return n;
   }
 
@@ -262,7 +262,10 @@
     const q = (f.q || '').trim();
     if (q) chips.push({ key: 'q', label: `"${q}"` });
     if (f.element) chips.push({ key: 'element', label: f.element });
-    if (f.minLevel36Only) chips.push({ key: 'minLevel36Only', label: t.monstersFilterLevel35 || 'Lv 35+' });
+    if (f.minLevelMin > 0) {
+      const tpl = t.monstersFilterMinLevelChip || 'Lv {n}+';
+      chips.push({ key: 'minLevelMin', label: tpl.replace(/\{n\}/g, String(f.minLevelMin)) });
+    }
     if (f.location && f.location !== 'all') {
       const locMap = { active: t.monstersFilterLocActive || 'In use', storage: t.monstersFilterLocStorage || 'Storage' };
       chips.push({ key: 'location', label: locMap[f.location] || f.location });
@@ -290,11 +293,9 @@
         if (el) el.value = '';
         break;
       }
-      case 'minLevel36Only': {
-        const lvl = document.getElementById('monsters-filter-level');
+      case 'minLevelMin': {
+        const lvl = document.getElementById('monsters-filter-min-level');
         if (lvl) lvl.value = '';
-        const btn = document.getElementById('monsters-filter-min-level');
-        if (btn) btn.setAttribute('aria-pressed', 'false');
         break;
       }
       case 'location': {
@@ -371,11 +372,12 @@
 
   function readMonstersFiltersFromDom() {
     const sixBtn = document.getElementById('monsters-filter-full-six');
-    const lvlBtn = document.getElementById('monsters-filter-min-level');
-    const lvlSel = document.getElementById('monsters-filter-level');
+    const lvlInp = document.getElementById('monsters-filter-min-level');
     const fullSixOnly = sixBtn?.getAttribute('aria-pressed') === 'true';
-    const minLevel36Only =
-      lvlSel?.value === '35' || lvlBtn?.getAttribute('aria-pressed') === 'true';
+    const rawLvl = lvlInp?.value != null ? String(lvlInp.value).trim() : '';
+    const parsed = rawLvl === '' ? 0 : Math.round(Number(rawLvl));
+    const minLevelMin =
+      Number.isFinite(parsed) && parsed > 0 ? Math.max(1, Math.min(40, parsed)) : 0;
     return {
       q: document.getElementById('monsters-filter-q')?.value || '',
       element: document.getElementById('monsters-filter-element')?.value || '',
@@ -388,7 +390,7 @@
       roleFilter: document.getElementById('monsters-filter-role')?.value || '',
       markFilter: document.getElementById('monsters-filter-mark')?.value || '',
       fullSixOnly,
-      minLevel36Only,
+      minLevelMin,
     };
   }
 
@@ -400,7 +402,8 @@
     };
     document.getElementById('monsters-filter-q')?.addEventListener('input', onFilter);
     document.getElementById('monsters-filter-element')?.addEventListener('change', onFilter);
-    document.getElementById('monsters-filter-level')?.addEventListener('change', onFilter);
+    document.getElementById('monsters-filter-min-level')?.addEventListener('input', onFilter);
+    document.getElementById('monsters-filter-min-level')?.addEventListener('change', onFilter);
     document.getElementById('monsters-filter-location')?.addEventListener('change', onFilter);
     document.getElementById('monsters-filter-sort')?.addEventListener('change', onFilter);
     document.getElementById('monsters-filter-skill')?.addEventListener('change', onFilter);
@@ -458,16 +461,6 @@
       btn.classList.toggle('monsters-toolbar-btn--active', next);
       const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
       syncMonstersShowAllButton(!next, t);
-      onFilter();
-    });
-    document.getElementById('monsters-filter-min-level')?.addEventListener('click', () => {
-      const btn = document.getElementById('monsters-filter-min-level');
-      if (!btn) return;
-      const next = btn.getAttribute('aria-pressed') !== 'true';
-      btn.setAttribute('aria-pressed', next ? 'true' : 'false');
-      btn.classList.toggle('monsters-toolbar-btn--active', next);
-      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-      syncMonstersShowLevelButton(next, t);
       onFilter();
     });
     document.getElementById('monsters-filter-clear-all')?.addEventListener('click', () => {
@@ -570,7 +563,7 @@
     syncMonstersViewToggle(readMonstersView());
     const t0 = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     syncMonstersShowAllButton(readMonstersFilters().fullSixOnly, t0);
-    syncMonstersShowLevelButton(!!readMonstersFilters().minLevel36Only, t0);
+    syncMonstersMinLevelInput(readMonstersFilters().minLevelMin, t0);
     updateMonstersFilterSummary();
     bindMonstersDetailFloat();
     bindMonstersGridDelegation();

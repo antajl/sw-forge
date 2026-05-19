@@ -6371,7 +6371,35 @@
     };
     if (typeof exportTeamsForShare === 'function') {
       const teams = exportTeamsForShare();
-      if (teams) payload.teams = teams;
+      if (teams) {
+        payload.teams = teams;
+        const included = new Set(units.map((u) => String(u.unit_id)));
+        const byId = new Map(
+          (json.unit_list || []).map((u) => [String(u.unit_id), u]),
+        );
+        for (const set of teams.sets || []) {
+          for (const team of set.teams || []) {
+            for (const uid of team.unit_ids || []) {
+              if (uid == null || uid === '') continue;
+              const key = String(uid);
+              if (included.has(key)) continue;
+              const src = byId.get(key);
+              if (!src) continue;
+              included.add(key);
+              units.push({
+                unit_master_id: src.unit_master_id,
+                unit_id: src.unit_id,
+                class: src.class,
+                attribute: src.attribute,
+                unit_level: src.unit_level,
+                rank: src.rank,
+                runes: (src.runes || []).map((raw) => raw),
+              });
+            }
+          }
+        }
+        payload.unit_list = units;
+      }
     }
     return payload;
   }
@@ -6392,17 +6420,38 @@
       const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
       throw new Error(t.shareNoContent || 'Nothing to share for this export mode');
     }
+    const payload = {
+      wizard_name: data.wizard_name,
+      data: JSON.stringify(data),
+      expires_at: shareExpiryUnix(),
+    };
+    const bodyStr = JSON.stringify(payload);
+    if (bodyStr.length > 900_000) {
+      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+      throw new Error(
+        t.sharePayloadTooLarge ||
+          'Export is too large to share. Try a smaller share mode (e.g. equipped only).',
+      );
+    }
     const res = await fetch(`${api}/share`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        wizard_name: data.wizard_name,
-        data: JSON.stringify(data),
-        expires_at: shareExpiryUnix(),
-      }),
+      body: bodyStr,
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const body = await res.json();
+    let body = null;
+    try {
+      body = await res.json();
+    } catch (e) {
+      body = null;
+    }
+    if (!res.ok) {
+      const detail =
+        (body && (body.message || body.error)) ||
+        (res.status === 500
+          ? 'Server error — share database may be unavailable'
+          : `HTTP ${res.status}`);
+      throw new Error(detail);
+    }
     if (!body || !body.id) throw new Error('Invalid response');
     return String(body.id);
   }
@@ -6725,13 +6774,14 @@
   let monstersDetailTab = 'info';
   let monstersRuneFocusState = null;
 
-  const TEAMS_STORAGE_KEY = 'swrm_teams_v1';
-  const TEAM_SLOT_COUNT = 5;
-  const SET_TEAM_COUNT = 5;
+  const TEAMS_STORAGE_KEY = 'swrm_teams_v2';
+  const TEAMS_STORAGE_KEY_LEGACY = 'swrm_teams_v1';
+  const TEAM_SIZE_MIN = 3;
+  const TEAM_SIZE_MAX = 6;
+  const TEAM_SIZE_DEFAULT = 5;
 
   let teamsStateCache = null;
   let teamsActiveSetId = null;
-  let teamsActiveTeamId = null;
   let teamsShareViewPayload = null;
 
   function newTeamsId(prefix) {
@@ -6739,32 +6789,77 @@
   }
 
   function defaultTeamsState() {
-    return { version: 1, sets: [], teams: {} };
+    return { version: 2, sets: [], teams: {} };
   }
 
-  function normalizeTeamSlots(slots) {
-    const out = Array.from({ length: TEAM_SLOT_COUNT }, (_, i) => {
+  function clampTeamSize(n) {
+    const v = Number(n);
+    if (!Number.isFinite(v)) return TEAM_SIZE_DEFAULT;
+    return Math.min(TEAM_SIZE_MAX, Math.max(TEAM_SIZE_MIN, Math.round(v)));
+  }
+
+  function normalizeTeamSlots(slots, size) {
+    const n = clampTeamSize(size);
+    const out = Array.from({ length: n }, (_, i) => {
       const v = slots && slots[i] != null ? Number(slots[i]) : null;
       return Number.isFinite(v) && v > 0 ? v : null;
     });
     return out;
   }
 
+  function migrateLegacyState(parsed) {
+    const state = defaultTeamsState();
+    if (!parsed || typeof parsed !== 'object') return state;
+    const teams = parsed.teams && typeof parsed.teams === 'object' ? parsed.teams : {};
+    for (const [id, team] of Object.entries(teams)) {
+      if (!team || typeof team !== 'object') continue;
+      const size = clampTeamSize((team.slots || []).length || TEAM_SIZE_DEFAULT);
+      state.teams[id] = {
+        id,
+        name: String(team.name || 'Team').trim() || 'Team',
+        notes: '',
+        tags: [],
+        size,
+        leaderUnitId:
+          team.leaderUnitId != null && Number.isFinite(Number(team.leaderUnitId))
+            ? Number(team.leaderUnitId)
+            : null,
+        slots: normalizeTeamSlots(team.slots, size),
+        shareInProfile: !!team.shareInProfile,
+      };
+    }
+    for (const set of parsed.sets || []) {
+      if (!set || !set.id) continue;
+      state.sets.push({
+        id: set.id,
+        name: String(set.name || 'Set').trim() || 'Set',
+        collapsed: false,
+        teamIds: Array.isArray(set.teamIds) ? set.teamIds.filter((tid) => state.teams[tid]) : [],
+      });
+    }
+    return state;
+  }
+
   function loadTeamsState() {
     if (teamsStateCache) return teamsStateCache;
     try {
-      const raw = localStorage.getItem(TEAMS_STORAGE_KEY);
+      let raw = localStorage.getItem(TEAMS_STORAGE_KEY);
+      if (!raw) raw = localStorage.getItem(TEAMS_STORAGE_KEY_LEGACY);
       if (!raw) {
         teamsStateCache = defaultTeamsState();
         return teamsStateCache;
       }
       const parsed = JSON.parse(raw);
-      if (!parsed || typeof parsed !== 'object') throw new Error('bad teams state');
-      teamsStateCache = {
-        version: 1,
-        sets: Array.isArray(parsed.sets) ? parsed.sets : [],
-        teams: parsed.teams && typeof parsed.teams === 'object' ? parsed.teams : {},
-      };
+      if (parsed && parsed.version === 2) {
+        teamsStateCache = {
+          version: 2,
+          sets: Array.isArray(parsed.sets) ? parsed.sets : [],
+          teams: parsed.teams && typeof parsed.teams === 'object' ? parsed.teams : {},
+        };
+      } else {
+        teamsStateCache = migrateLegacyState(parsed);
+        saveTeamsState(teamsStateCache);
+      }
     } catch (e) {
       teamsStateCache = defaultTeamsState();
     }
@@ -6773,6 +6868,7 @@
 
   function saveTeamsState(state) {
     teamsStateCache = state || defaultTeamsState();
+    teamsStateCache.version = 2;
     try {
       localStorage.setItem(TEAMS_STORAGE_KEY, JSON.stringify(teamsStateCache));
     } catch (e) {
@@ -6780,33 +6876,106 @@
     }
   }
 
-  function createEmptyTeam(name) {
+  function createEmptyTeam(name, size) {
     const id = newTeamsId('team');
-    const team = {
+    const n = clampTeamSize(size);
+    return {
       id,
-      name: String(name || 'Team').trim() || 'Team',
+      name: String(name || '').trim() || '',
+      notes: '',
+      tags: [],
+      size: n,
       leaderUnitId: null,
-      slots: normalizeTeamSlots([]),
+      slots: normalizeTeamSlots([], n),
       shareInProfile: false,
     };
-    return team;
   }
 
   function createTeamSet(name) {
     const state = loadTeamsState();
     const setId = newTeamsId('set');
-    const teamIds = [];
-    for (let i = 0; i < SET_TEAM_COUNT; i++) {
-      const team = createEmptyTeam(`Team ${i + 1}`);
-      state.teams[team.id] = team;
-      teamIds.push(team.id);
-    }
-    const set = { id: setId, name: String(name || 'New set').trim() || 'New set', teamIds };
+    const set = {
+      id: setId,
+      name: String(name || 'New set').trim() || 'New set',
+      collapsed: false,
+      teamIds: [],
+    };
     state.sets.push(set);
     saveTeamsState(state);
     teamsActiveSetId = setId;
-    teamsActiveTeamId = teamIds[0] || null;
     return set;
+  }
+
+  function createTeamInSet(setId, name, size) {
+    const state = loadTeamsState();
+    const set = state.sets.find((s) => s.id === setId);
+    if (!set) return null;
+    const team = createEmptyTeam(name, size);
+    state.teams[team.id] = team;
+    set.teamIds.push(team.id);
+    saveTeamsState(state);
+    return team;
+  }
+
+  function deleteTeam(teamId) {
+    const state = loadTeamsState();
+    if (!state.teams[teamId]) return false;
+    delete state.teams[teamId];
+    for (const set of state.sets) {
+      set.teamIds = (set.teamIds || []).filter((id) => id !== teamId);
+    }
+    saveTeamsState(state);
+    return true;
+  }
+
+  function duplicateTeam(teamId) {
+    const state = loadTeamsState();
+    const src = state.teams[teamId];
+    if (!src) return null;
+    const set = state.sets.find((s) => (s.teamIds || []).includes(teamId));
+    const copy = createEmptyTeam((src.name || 'Team') + ' (copy)', src.size);
+    copy.notes = src.notes || '';
+    copy.tags = [...(src.tags || [])];
+    copy.leaderUnitId = src.leaderUnitId;
+    copy.slots = normalizeTeamSlots(src.slots, src.size);
+    copy.shareInProfile = false;
+    state.teams[copy.id] = copy;
+    if (set) {
+      const idx = set.teamIds.indexOf(teamId);
+      if (idx >= 0) set.teamIds.splice(idx + 1, 0, copy.id);
+      else set.teamIds.push(copy.id);
+    }
+    saveTeamsState(state);
+    return copy;
+  }
+
+  function reorderTeamsInSet(setId, teamIds) {
+    const state = loadTeamsState();
+    const set = state.sets.find((s) => s.id === setId);
+    if (!set) return;
+    set.teamIds = teamIds.filter((id) => state.teams[id]);
+    saveTeamsState(state);
+  }
+
+  function toggleSetCollapsed(setId) {
+    const state = loadTeamsState();
+    const set = state.sets.find((s) => s.id === setId);
+    if (!set) return;
+    set.collapsed = !set.collapsed;
+    saveTeamsState(state);
+  }
+
+  function deleteTeamSet(setId) {
+    const state = loadTeamsState();
+    const set = state.sets.find((s) => s.id === setId);
+    if (!set) return false;
+    for (const tid of set.teamIds || []) {
+      delete state.teams[tid];
+    }
+    state.sets = state.sets.filter((s) => s.id !== setId);
+    saveTeamsState(state);
+    if (teamsActiveSetId === setId) teamsActiveSetId = state.sets[0]?.id || null;
+    return true;
   }
 
   function getTeamById(teamId) {
@@ -6819,16 +6988,38 @@
     return state.sets.find((s) => s.id === setId) || null;
   }
 
+  function orderSlotsWithLeaderFirst(slots, leaderUnitId) {
+    if (!Array.isArray(slots) || leaderUnitId == null) return slots;
+    const leader = Number(leaderUnitId);
+    if (!Number.isFinite(leader) || leader <= 0) return slots;
+    const out = slots.map((s) => (s != null && s !== '' ? Number(s) : null));
+    const idx = out.findIndex((s) => s === leader);
+    if (idx <= 0) return out;
+    const copy = [...out];
+    copy.splice(idx, 1);
+    copy.unshift(leader);
+    return copy;
+  }
+
   function updateTeam(teamId, patch) {
     const state = loadTeamsState();
     const team = state.teams[teamId];
     if (!team) return null;
-    if (patch.name != null) team.name = String(patch.name).trim() || team.name;
+    if (patch.name != null) team.name = String(patch.name).trim();
+    if (patch.notes != null) team.notes = String(patch.notes).trim();
+    if (patch.tags != null) team.tags = Array.isArray(patch.tags) ? patch.tags.map(String) : [];
+    if (patch.size != null) {
+      team.size = clampTeamSize(patch.size);
+      team.slots = normalizeTeamSlots(team.slots, team.size);
+    }
     if (patch.leaderUnitId !== undefined) {
       const lid = patch.leaderUnitId != null ? Number(patch.leaderUnitId) : null;
       team.leaderUnitId = Number.isFinite(lid) && lid > 0 ? lid : null;
     }
-    if (patch.slots) team.slots = normalizeTeamSlots(patch.slots);
+    if (patch.slots) team.slots = normalizeTeamSlots(patch.slots, team.size);
+    if (team.leaderUnitId && team.slots) {
+      team.slots = orderSlotsWithLeaderFirst(team.slots, team.leaderUnitId);
+    }
     if (patch.shareInProfile != null) team.shareInProfile = !!patch.shareInProfile;
     saveTeamsState(state);
     return team;
@@ -6844,6 +7035,7 @@
   }
 
   function exportTeamsForShare() {
+    teamsStateCache = null;
     const state = loadTeamsState();
     const sets = [];
     for (const set of state.sets) {
@@ -6853,8 +7045,15 @@
         if (!team || !team.shareInProfile) continue;
         teams.push({
           name: team.name,
+          notes: team.notes,
+          tags: team.tags,
           leader_unit_id: team.leaderUnitId,
           unit_ids: team.slots,
+          master_ids: team.slots.map((uid) => {
+            if (uid == null) return null;
+            const u = (allUnits || []).find((x) => Number(x.unitId) === Number(uid));
+            return u ? Number(u.masterId) : null;
+          }),
         });
       }
       if (teams.length) sets.push({ name: set.name, teams });
@@ -6876,14 +7075,6 @@
 
   function setTeamsActiveSetId(id) {
     teamsActiveSetId = id;
-  }
-
-  function getTeamsActiveTeamId() {
-    return teamsActiveTeamId;
-  }
-
-  function setTeamsActiveTeamId(id) {
-    teamsActiveTeamId = id;
   }
 
   let monstersHubTabsBound = false;
@@ -6950,15 +7141,44 @@
   }
 
   let teamsUiBound = false;
+  let teamsEditingTeamId = null;
+
+  function teamUnitRecord(unitId) {
+    const id = Number(unitId);
+    if (!Number.isFinite(id) || id <= 0) return null;
+    return (
+      (monstersEnrichedCache || []).find((x) => x.unitId === id) ||
+      (allUnits || []).find((x) => x.unitId === id) ||
+      null
+    );
+  }
 
   function teamUnitLabel(unitId) {
-    const id = Number(unitId);
-    if (!Number.isFinite(id) || id <= 0) return '—';
-    const u =
-      (monstersEnrichedCache || []).find((x) => x.unitId === id) ||
-      (allUnits || []).find((x) => x.unitId === id);
-    if (!u) return `#${id}`;
+    const u = teamUnitRecord(unitId);
+    if (!u) return `#${unitId}`;
     return u.displayName || `#${u.masterId}`;
+  }
+
+  function teamUnitPortrait(unitId, masterIdFallback) {
+    const u = teamUnitRecord(unitId);
+    const db = window.SWRM_MONSTER_DB;
+    if (!db) return '';
+    const masterId = u?.masterId ?? masterIdFallback;
+    const file =
+      (u && u.imageFilename) ||
+      (masterId && typeof db.imageFilename === 'function' ? db.imageFilename(masterId) : '');
+    if (!file) return '';
+    if (typeof db.portraitUrl === 'function') return db.portraitUrl(file);
+    if (typeof db.monsterImageUrl === 'function') return db.monsterImageUrl(file);
+    return '';
+  }
+
+  function teamRuneStatus(unitId) {
+    const u = teamUnitRecord(unitId);
+    if (!u) return 'missing';
+    if (u.hasFullRunes) return 'ready';
+    if (u.equippedCount > 0) return 'partial';
+    return 'unruned';
   }
 
   function buildTeamsUnitOptions(selectedId) {
@@ -6979,77 +7199,195 @@
     return opts.join('');
   }
 
+  function buildTeamSlotIcons(team, t) {
+    const slots = team.slots || [];
+    const masterIds = team.masterIds || [];
+    const size = slots.length;
+    const cells = slots
+      .map((uid, i) => {
+        const leader = team.leaderUnitId != null && Number(team.leaderUnitId) === Number(uid);
+        const missing = uid && !teamUnitRecord(uid) && !masterIds[i];
+        const runeSt = uid ? teamRuneStatus(uid) : '';
+        const url = uid ? teamUnitPortrait(uid, masterIds[i]) : '';
+        const inner = url
+          ? `<img src="${escapeHtml(url)}" alt="" width="40" height="40" loading="lazy" decoding="async" />`
+          : '<span class="team-card__slot-empty">+</span>';
+        return `<div class="team-card__slot${leader ? ' team-card__slot--leader' : ''}${missing ? ' team-card__slot--missing' : ''}" data-slot-idx="${i}" title="${uid ? escapeHtml(teamUnitLabel(uid)) : ''}">
+          ${leader ? '<span class="team-card__crown" aria-hidden="true">👑</span>' : ''}
+          ${inner}
+          ${runeSt === 'ready' ? '<span class="team-card__rune-ok" title="6/6 runes">✓</span>' : ''}
+        </div>`;
+      })
+      .join('');
+    return `<div class="team-card__slots team-card__slots--n${size}">${cells}</div>`;
+  }
+
+  function buildShareTeamFromPayload(team) {
+    const unitIds = Array.isArray(team.unit_ids) ? team.unit_ids : [];
+    const masterIds = Array.isArray(team.master_ids) ? team.master_ids : [];
+    const size = Math.max(unitIds.length, TEAM_SIZE_DEFAULT);
+    return {
+      id: 'share',
+      name: team.name || 'Team',
+      notes: team.notes || '',
+      tags: team.tags || [],
+      size,
+      leaderUnitId: team.leader_unit_id != null ? Number(team.leader_unit_id) : null,
+      slots: unitIds,
+      masterIds,
+    };
+  }
+
+  function buildTeamCardHtml(team, t, opts) {
+    const ro = !!(opts && opts.readOnly);
+    const tags = (team.tags || [])
+      .map((tag) => `<span class="team-card__tag">${escapeHtml(tag)}</span>`)
+      .join('');
+    const notes = team.notes
+      ? `<p class="team-card__notes">${escapeHtml(team.notes)}</p>`
+      : '';
+    const name = team.name || t.teamsUntitled || 'New Team';
+    const publicBadge =
+      team.shareInProfile && !ro
+        ? `<span class="team-card__public" title="${escapeHtml(t.teamsSharePublic || 'Public in profile')}">◉</span>`
+        : '';
+    const actions = ro
+      ? ''
+      : `<div class="team-card__actions">
+          <button type="button" class="team-card__action" data-team-action="edit" data-team-id="${escapeHtml(team.id)}">${escapeHtml(t.teamsEdit || 'Edit')}</button>
+          <button type="button" class="team-card__action" data-team-action="duplicate" data-team-id="${escapeHtml(team.id)}">${escapeHtml(t.teamsDuplicate || 'Duplicate')}</button>
+          <button type="button" class="team-card__action" data-team-action="share" data-team-id="${escapeHtml(team.id)}">${escapeHtml(t.teamsShare || 'Share')}</button>
+          <button type="button" class="team-card__action team-card__action--danger" data-team-action="delete" data-team-id="${escapeHtml(team.id)}">${escapeHtml(t.teamsDelete || 'Delete')}</button>
+        </div>`;
+    return `<article class="team-card${ro ? ' team-card--readonly' : ''}" data-teams-team-id="${escapeHtml(team.id)}"${ro ? '' : ' draggable="true"'}>
+      <header class="team-card__head">
+        <h4 class="team-card__title">${escapeHtml(name)}${publicBadge}</h4>
+        ${actions}
+      </header>
+      ${buildTeamSlotIcons(team, t)}
+      ${tags ? `<div class="team-card__tags">${tags}</div>` : ''}
+      ${notes}
+    </article>`;
+  }
+
   function renderTeamsSetList(state, t) {
     const list = document.getElementById('teams-set-list');
     if (!list) return;
     if (!state.sets.length) {
-      list.innerHTML = `<li class="teams-set-list__empty">${escapeHtml(t.teamsNoSets || 'No team sets yet.')}</li>`;
+      list.innerHTML = `<li class="teams-set-list__empty">${escapeHtml(t.teamsNoSets || 'No team sets yet. Create one to get started.')}</li>`;
       return;
     }
     const activeId = getTeamsActiveSetId();
     list.innerHTML = state.sets
       .map((set) => {
         const on = set.id === activeId;
-        return `<li><button type="button" class="teams-set-list__btn${on ? ' is-active' : ''}" data-teams-set-id="${escapeHtml(set.id)}">${escapeHtml(set.name)}</button></li>`;
+        const collapsed = !!set.collapsed;
+        const count = (set.teamIds || []).length;
+        return `<li class="teams-set-tree__item">
+          <div class="teams-set-tree__row${on ? ' is-active' : ''}">
+            <button type="button" class="teams-set-tree__toggle" data-teams-set-collapse="${escapeHtml(set.id)}" aria-expanded="${collapsed ? 'false' : 'true'}">${collapsed ? '▶' : '▼'}</button>
+            <button type="button" class="teams-set-tree__btn" data-teams-set-id="${escapeHtml(set.id)}">
+              <span class="teams-set-tree__name">${escapeHtml(set.name)}</span>
+              <span class="teams-set-tree__count">${count}</span>
+            </button>
+          </div>
+        </li>`;
       })
       .join('');
   }
 
-  function renderTeamsSlotRow(set, state, t) {
-    const row = document.getElementById('teams-slot-row');
-    if (!row || !set) {
-      if (row) row.innerHTML = '';
+  function renderTeamsCardGrid(set, state, t) {
+    const grid = document.getElementById('teams-card-grid');
+    if (!grid) return;
+    if (!set) {
+      grid.innerHTML = `<p class="teams-main__empty">${escapeHtml(t.teamsPickSet || 'Select or create a team set.')}</p>`;
       return;
     }
-    const activeTeamId = getTeamsActiveTeamId();
-    row.innerHTML = (set.teamIds || [])
-      .map((tid, idx) => {
-        const team = state.teams[tid];
-        if (!team) return '';
-        const on = tid === activeTeamId;
-        const leader =
-          team.leaderUnitId != null ? teamUnitLabel(team.leaderUnitId) : t.teamsNoLeader || 'No leader';
-        const filled = (team.slots || []).filter((s) => s != null).length;
-        return `<button type="button" class="teams-slot-card${on ? ' is-active' : ''}" data-teams-team-id="${escapeHtml(tid)}" aria-pressed="${on}">
-          <span class="teams-slot-card__idx">${idx + 1}</span>
-          <span class="teams-slot-card__name">${escapeHtml(team.name)}</span>
-          <span class="teams-slot-card__meta">${escapeHtml(leader)} · ${filled}/${TEAM_SLOT_COUNT}</span>
-          ${team.shareInProfile ? '<span class="teams-slot-card__share" title="Shared">⎘</span>' : ''}
-        </button>`;
-      })
-      .join('');
+    const teams = (set.teamIds || []).map((id) => state.teams[id]).filter(Boolean);
+    if (!teams.length) {
+      grid.innerHTML = `<div class="teams-main__empty">
+        <p>${escapeHtml(t.teamsNoTeams || 'No teams in this set yet.')}</p>
+        <button type="button" class="btn-primary" id="teams-create-team-inline">${escapeHtml(t.teamsCreateTeam || '+ Create Team')}</button>
+      </div>`;
+      return;
+    }
+    grid.innerHTML = teams.map((team) => buildTeamCardHtml(team, t)).join('');
   }
 
-  function renderTeamsEditor(team, t) {
+  function openTeamsEditor(teamId) {
+    const dlg = document.getElementById('teams-editor-dialog');
+    const team = getTeamById(teamId);
+    if (!dlg || !team) return;
+    teamsEditingTeamId = teamId;
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const nameInput = document.getElementById('teams-team-name');
-    const leaderSelect = document.getElementById('teams-leader-select');
-    const slotsWrap = document.getElementById('teams-monster-slots');
+    const notesInput = document.getElementById('teams-team-notes');
+    const tagsInput = document.getElementById('teams-team-tags');
+    const sizeSelect = document.getElementById('teams-team-size');
     const shareCb = document.getElementById('teams-share-public');
-    const saveBtn = document.getElementById('teams-save-team');
-    if (!team) {
-      if (nameInput) nameInput.value = '';
-      if (leaderSelect) leaderSelect.innerHTML = '<option value="">—</option>';
-      if (slotsWrap) slotsWrap.innerHTML = '';
-      if (shareCb) shareCb.checked = false;
-      if (saveBtn) saveBtn.disabled = true;
-      return;
+    if (nameInput) {
+      nameInput.value = team.name || '';
+      nameInput.placeholder = t.teamsNamePlaceholder || 'e.g. Arena Offence';
     }
-    if (nameInput) nameInput.value = team.name || '';
+    if (notesInput) notesInput.value = team.notes || '';
+    if (tagsInput) tagsInput.value = (team.tags || []).join(', ');
+    if (sizeSelect) sizeSelect.value = String(team.size || TEAM_SIZE_DEFAULT);
     if (shareCb) shareCb.checked = !!team.shareInProfile;
-    if (saveBtn) saveBtn.disabled = false;
-    if (leaderSelect) {
-      leaderSelect.innerHTML = buildTeamsUnitOptions(team.leaderUnitId);
-    }
-    if (slotsWrap) {
-      slotsWrap.innerHTML = (team.slots || [])
-        .map(
-          (slotId, i) => `<label class="teams-slot-field">
-            <span class="teams-slot-field__label">${escapeHtml((t.teamsSlotLabel || 'Slot {n}').replace('{n}', String(i + 1)))}</span>
+    renderEditorSlots(team, t);
+    if (typeof dlg.showModal === 'function') dlg.showModal();
+    else dlg.setAttribute('open', '');
+  }
+
+  function closeTeamsEditor() {
+    const dlg = document.getElementById('teams-editor-dialog');
+    teamsEditingTeamId = null;
+    if (dlg && dlg.open && typeof dlg.close === 'function') dlg.close();
+    else if (dlg) dlg.removeAttribute('open');
+  }
+
+  function renderEditorSlots(team, t) {
+    const wrap = document.getElementById('teams-monster-slots');
+    if (!wrap || !team) return;
+    wrap.innerHTML = (team.slots || [])
+      .map((slotId, i) => {
+        const leader = team.leaderUnitId != null && Number(team.leaderUnitId) === Number(slotId);
+        return `<div class="teams-editor-slot${leader ? ' teams-editor-slot--leader' : ''}" data-slot-idx="${i}">
+          <label class="teams-editor-slot__label">
+            <span>${escapeHtml((t.teamsSlotLabel || 'Slot {n}').replace('{n}', String(i + 1)))}</span>
             <select class="teams-slot-select" data-slot-idx="${i}">${buildTeamsUnitOptions(slotId)}</select>
-          </label>`,
-        )
-        .join('');
-    }
+          </label>
+          <button type="button" class="teams-editor-slot__leader" data-set-leader="${i}" title="${escapeHtml(t.teamsSetLeader || 'Set leader')}">👑</button>
+        </div>`;
+      })
+      .join('');
+  }
+
+  function saveTeamsEditorFromDom() {
+    const teamId = teamsEditingTeamId;
+    if (!teamId) return;
+    const name = document.getElementById('teams-team-name')?.value;
+    const notes = document.getElementById('teams-team-notes')?.value;
+    const tagsRaw = document.getElementById('teams-team-tags')?.value || '';
+    const size = document.getElementById('teams-team-size')?.value;
+    const shareInProfile = document.getElementById('teams-share-public')?.checked === true;
+    const slots = [];
+    document.querySelectorAll('#teams-monster-slots .teams-slot-select').forEach((sel) => {
+      slots.push(sel.value ? Number(sel.value) : null);
+    });
+    let leaderUnitId = getTeamById(teamId)?.leaderUnitId ?? null;
+    const leaderBtn = document.querySelector('#teams-monster-slots .teams-editor-slot--leader .teams-slot-select');
+    if (leaderBtn && leaderBtn.value) leaderUnitId = Number(leaderBtn.value);
+    updateTeam(teamId, {
+      name,
+      notes,
+      tags: tagsRaw.split(/[,;]+/).map((x) => x.trim()).filter(Boolean),
+      size,
+      slots,
+      leaderUnitId,
+      shareInProfile,
+    });
+    closeTeamsEditor();
+    renderTeamsPanel();
   }
 
   function renderTeamsPanel() {
@@ -7061,39 +7399,51 @@
     const layout = shell.querySelector('.teams-layout');
     const shareView = document.getElementById('teams-share-view');
 
-    if (ro && sharePayload && sharePayload.sets) {
-      renderTeamsShareView(sharePayload, t);
+    if (ro) {
+      shell.classList.add('teams-shell--share-only');
+      if (layout) {
+        layout.hidden = true;
+        layout.setAttribute('aria-hidden', 'true');
+      }
+      const dlg = document.getElementById('teams-editor-dialog');
+      if (dlg?.open && typeof dlg.close === 'function') dlg.close();
+      renderTeamsShareView(sharePayload || { sets: [] }, t);
       return;
     }
 
-    if (layout) layout.hidden = false;
-    if (shareView) shareView.hidden = true;
+    shell.classList.remove('teams-shell--share-only');
+    if (layout) {
+      layout.hidden = false;
+      layout.removeAttribute('aria-hidden');
+    }
+    if (shareView) {
+      shareView.hidden = true;
+      shareView.innerHTML = '';
+    }
 
     const state = loadTeamsState();
-    if (!state.sets.length) {
-      createTeamSet(t.teamsDefaultSetName || 'Arena Offence');
-    }
-    const fresh = loadTeamsState();
-    if (!getTeamsActiveSetId() && fresh.sets[0]) {
-      setTeamsActiveSetId(fresh.sets[0].id);
-      setTeamsActiveTeamId(fresh.sets[0].teamIds[0] || null);
-    }
-    const set = getTeamSetById(getTeamsActiveSetId()) || fresh.sets[0];
-    if (set && !getTeamsActiveTeamId()) setTeamsActiveTeamId(set.teamIds[0] || null);
+    if (!getTeamsActiveSetId() && state.sets[0]) setTeamsActiveSetId(state.sets[0].id);
 
+    const set = getTeamSetById(getTeamsActiveSetId()) || null;
     const setNameInput = document.getElementById('teams-set-name');
-    if (setNameInput && set) setNameInput.value = set.name;
+    if (setNameInput) {
+      setNameInput.value = set ? set.name : '';
+      setNameInput.placeholder = t.teamsSetNamePlaceholder || 'e.g. Arena';
+      setNameInput.disabled = !set;
+    }
 
-    renderTeamsSetList(fresh, t);
-    renderTeamsSlotRow(set, fresh, t);
-    renderTeamsEditor(getTeamById(getTeamsActiveTeamId()), t);
+    const createBtn = document.getElementById('teams-create-team');
+    if (createBtn) createBtn.disabled = !set;
+
+    renderTeamsSetList(state, t);
+    renderTeamsCardGrid(set, state, t);
 
     shell.querySelectorAll('[data-teams-readonly-hide]').forEach((el) => {
       el.hidden = ro;
     });
   }
 
-  function renderTeamsShareView(payload, t) {
+  async function renderTeamsShareView(payload, t) {
     const shell = document.getElementById('teams-shell');
     if (!shell) return;
     const layout = shell.querySelector('.teams-layout');
@@ -7106,26 +7456,43 @@
       shell.appendChild(view);
     }
     view.hidden = false;
+
+    const db = window.SWRM_MONSTER_DB;
+    if (db && typeof db.loadMonsterIndex === 'function') {
+      try {
+        await db.loadMonsterIndex();
+      } catch (e) { /* ignore */ }
+    }
+    if (!monstersEnrichedCache.length && allUnits.length) {
+      monstersEnrichedCache = allUnits.map((u) => {
+        const meta = db ? db.lookupMonster(u.masterId) : null;
+        return {
+          ...u,
+          displayName: db ? db.monsterDisplayName(u.masterId) : `#${u.masterId}`,
+          imageFilename: meta && meta.image_filename ? meta.image_filename : '',
+        };
+      });
+    }
+
     const blocks = (payload.sets || [])
       .map((set) => {
         const teams = (set.teams || [])
-          .map((team) => {
-            const units = (team.unit_ids || [])
-              .map((uid) => escapeHtml(teamUnitLabel(uid)))
-              .join(', ');
-            const leader =
-              team.leader_unit_id != null
-                ? escapeHtml(teamUnitLabel(team.leader_unit_id))
-                : '—';
-            return `<li class="teams-share-team"><strong>${escapeHtml(team.name || 'Team')}</strong> — ${escapeHtml(t.teamsLeader || 'Leader')}: ${leader}<br><span class="teams-share-team__units">${units || '—'}</span></li>`;
-          })
+          .map((raw) => buildTeamCardHtml(buildShareTeamFromPayload(raw), t, { readOnly: true }))
           .join('');
-        return `<section class="teams-share-set"><h4>${escapeHtml(set.name || 'Set')}</h4><ul>${teams}</ul></section>`;
+        const count = (set.teams || []).length;
+        return `<section class="teams-share-set-panel">
+          <header class="teams-share-set-panel__head">
+            <span class="teams-share-set-panel__icon" aria-hidden="true">📁</span>
+            <h4 class="teams-share-set-panel__title">${escapeHtml(set.name || 'Set')}</h4>
+            <span class="teams-share-set-panel__count">${count}</span>
+          </header>
+          <div class="teams-share-set-panel__grid">${teams}</div>
+        </section>`;
       })
       .join('');
     view.innerHTML = `<div class="teams-share-view">
       <h3 class="teams-share-view__title">${escapeHtml(t.teamsShareViewTitle || 'Shared teams')}</h3>
-      ${blocks || `<p>${escapeHtml(t.teamsShareViewEmpty || 'No public teams in this profile.')}</p>`}
+      ${blocks || `<p class="teams-share-view__empty">${escapeHtml(t.teamsShareViewEmpty || 'No public teams in this profile.')}</p>`}
     </div>`;
   }
 
@@ -7133,27 +7500,63 @@
     if (teamsUiBound) return;
     teamsUiBound = true;
 
+    const createTeamHandler = () => {
+      const setId = getTeamsActiveSetId();
+      if (!setId) return;
+      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+      createTeamInSet(setId, '', TEAM_SIZE_DEFAULT);
+      const set = getTeamSetById(setId);
+      const tid = set && set.teamIds.length ? set.teamIds[set.teamIds.length - 1] : null;
+      renderTeamsPanel();
+      if (tid) openTeamsEditor(tid);
+    };
+
     document.getElementById('teams-add-set')?.addEventListener('click', () => {
       const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-      const name = window.prompt(t.teamsNewSetPrompt || 'Set name', t.teamsDefaultSetName || 'New set');
+      const name = window.prompt(t.teamsNewSetPrompt || 'Set name', '');
       if (name == null) return;
-      createTeamSet(name);
+      createTeamSet(name || t.teamsDefaultSetName || 'Arena');
       renderTeamsPanel();
+    });
+
+    document.getElementById('teams-create-team')?.addEventListener('click', createTeamHandler);
+    document.getElementById('teams-card-grid')?.addEventListener('click', (e) => {
+      if (e.target.id === 'teams-create-team-inline') {
+        createTeamHandler();
+        return;
+      }
+      const actionBtn = e.target.closest('[data-team-action]');
+      if (!actionBtn) return;
+      const action = actionBtn.dataset.teamAction;
+      const teamId = actionBtn.dataset.teamId;
+      if (action === 'edit') openTeamsEditor(teamId);
+      else if (action === 'duplicate') {
+        duplicateTeam(teamId);
+        renderTeamsPanel();
+      } else if (action === 'delete') {
+        if (window.confirm((TRANSLATIONS[currentLang] || TRANSLATIONS.en).teamsDeleteConfirm || 'Delete this team?')) {
+          deleteTeam(teamId);
+          renderTeamsPanel();
+        }
+      } else if (action === 'share') {
+        const team = getTeamById(teamId);
+        if (team) {
+          updateTeam(teamId, { shareInProfile: true });
+          if (typeof triggerShareProfile === 'function') void triggerShareProfile();
+        }
+      }
     });
 
     document.getElementById('teams-set-list')?.addEventListener('click', (e) => {
+      const collapse = e.target.closest('[data-teams-set-collapse]');
+      if (collapse) {
+        toggleSetCollapsed(collapse.dataset.teamsSetCollapse);
+        renderTeamsPanel();
+        return;
+      }
       const btn = e.target.closest('[data-teams-set-id]');
       if (!btn) return;
       setTeamsActiveSetId(btn.dataset.teamsSetId);
-      const set = getTeamSetById(getTeamsActiveSetId());
-      setTeamsActiveTeamId(set && set.teamIds[0] ? set.teamIds[0] : null);
-      renderTeamsPanel();
-    });
-
-    document.getElementById('teams-slot-row')?.addEventListener('click', (e) => {
-      const btn = e.target.closest('[data-teams-team-id]');
-      if (!btn) return;
-      setTeamsActiveTeamId(btn.dataset.teamsTeamId);
       renderTeamsPanel();
     });
 
@@ -7164,24 +7567,70 @@
       renderTeamsPanel();
     });
 
-    document.getElementById('teams-save-team')?.addEventListener('click', () => {
-      const teamId = getTeamsActiveTeamId();
-      if (!teamId) return;
-      const name = document.getElementById('teams-team-name')?.value;
-      const leaderUnitId = document.getElementById('teams-leader-select')?.value;
-      const shareInProfile = document.getElementById('teams-share-public')?.checked === true;
-      const slots = [];
-      document.querySelectorAll('#teams-monster-slots .teams-slot-select').forEach((sel) => {
-        slots.push(sel.value ? Number(sel.value) : null);
-      });
-      updateTeam(teamId, {
-        name,
-        leaderUnitId: leaderUnitId ? Number(leaderUnitId) : null,
-        slots,
-        shareInProfile,
-      });
-      renderTeamsPanel();
+    document.getElementById('teams-editor-dialog')?.addEventListener('close', () => {
+      teamsEditingTeamId = null;
     });
+
+    document.getElementById('teams-editor-save')?.addEventListener('click', () => {
+      saveTeamsEditorFromDom();
+    });
+
+    const closeEditor = () => closeTeamsEditor();
+    document.getElementById('teams-editor-cancel')?.addEventListener('click', closeEditor);
+    document.getElementById('teams-editor-cancel-foot')?.addEventListener('click', closeEditor);
+
+    document.getElementById('teams-team-size')?.addEventListener('change', () => {
+      const teamId = teamsEditingTeamId;
+      if (!teamId) return;
+      const size = document.getElementById('teams-team-size')?.value;
+      const team = getTeamById(teamId);
+      if (!team) return;
+      updateTeam(teamId, { size, slots: team.slots });
+      renderEditorSlots(getTeamById(teamId), TRANSLATIONS[currentLang] || TRANSLATIONS.en);
+    });
+
+    document.getElementById('teams-monster-slots')?.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-set-leader]');
+      if (!btn || !teamsEditingTeamId) return;
+      const idx = Number(btn.dataset.setLeader);
+      const sel = document.querySelector(`#teams-monster-slots .teams-slot-select[data-slot-idx="${idx}"]`);
+      const val = sel?.value;
+      if (!val) return;
+      document.querySelectorAll('.teams-editor-slot').forEach((el) => el.classList.remove('teams-editor-slot--leader'));
+      btn.closest('.teams-editor-slot')?.classList.add('teams-editor-slot--leader');
+    });
+
+    const grid = document.getElementById('teams-card-grid');
+    if (grid) {
+      let dragTeamId = null;
+      grid.addEventListener('dragstart', (e) => {
+        const card = e.target.closest('.team-card');
+        if (!card) return;
+        dragTeamId = card.dataset.teamsTeamId;
+        e.dataTransfer?.setData('text/plain', dragTeamId);
+      });
+      grid.addEventListener('dragover', (e) => {
+        if (!dragTeamId) return;
+        e.preventDefault();
+      });
+      grid.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const target = e.target.closest('.team-card');
+        const setId = getTeamsActiveSetId();
+        const set = getTeamSetById(setId);
+        if (!target || !set || !dragTeamId) return;
+        const targetId = target.dataset.teamsTeamId;
+        const ids = [...set.teamIds];
+        const from = ids.indexOf(dragTeamId);
+        const to = ids.indexOf(targetId);
+        if (from < 0 || to < 0) return;
+        ids.splice(from, 1);
+        ids.splice(to, 0, dragTeamId);
+        reorderTeamsInSet(setId, ids);
+        dragTeamId = null;
+        renderTeamsPanel();
+      });
+    }
   }
 
   function initTeamsPanel() {
@@ -7208,7 +7657,7 @@
       location: 'all',
       sort: 'name',
       fullSixOnly: false,
-      minLevel36Only: false,
+      minLevelMin: 0,
       skillFilter: '',
       runeFilter: '',
       runeSet: '',
@@ -7226,7 +7675,12 @@
         location: o.location != null ? String(o.location) : 'all',
         sort: o.sort != null ? String(o.sort) : 'name',
         fullSixOnly: !!o.fullSixOnly,
-        minLevel36Only: !!o.minLevel36Only,
+        minLevelMin:
+          o.minLevelMin != null && Number.isFinite(Number(o.minLevelMin))
+            ? Math.max(0, Math.min(40, Math.round(Number(o.minLevelMin))))
+            : o.minLevel36Only
+              ? 35
+              : 0,
         skillFilter: o.skillFilter != null ? String(o.skillFilter) : '',
         runeFilter: o.runeFilter != null ? String(o.runeFilter) : '',
         runeSet: o.runeSet != null ? String(o.runeSet) : '',
@@ -7535,7 +7989,7 @@
     const el = filters.element || '';
     const loc = filters.location || 'all';
     const fullSixOnly = !!filters.fullSixOnly;
-    const minLevel36Only = !!filters.minLevel36Only;
+    const minLevelMin = Number(filters.minLevelMin) || 0;
     const skillFilter = filters.skillFilter || '';
     const runeFilter = filters.runeFilter || '';
     const runeSet = filters.runeSet || '';
@@ -7545,7 +7999,7 @@
     return units.filter((u) => {
       if (isTechnicalFodderMonster(u)) return false;
       if (fullSixOnly && !u.hasFullRunes) return false;
-      if (minLevel36Only && (Number(u.level) || 0) <= 35) return false;
+      if (minLevelMin > 0 && (Number(u.level) || 0) < minLevelMin) return false;
       if (el && u.metaElement !== el) return false;
       if (loc === 'active' && u.inStorage) return false;
       if (loc === 'storage' && !u.inStorage) return false;
@@ -7719,11 +8173,8 @@
       sixBtn.setAttribute('aria-pressed', 'false');
       sixBtn.classList.remove('monsters-toolbar-btn--active');
     }
-    const lvlBtn = document.getElementById('monsters-filter-min-level');
-    if (lvlBtn) {
-      lvlBtn.setAttribute('aria-pressed', 'false');
-      lvlBtn.classList.remove('monsters-toolbar-btn--active');
-    }
+    const lvlInp = document.getElementById('monsters-filter-min-level');
+    if (lvlInp) lvlInp.value = '';
   }
 
   /** Reset search, element, location, advanced filters, level / 6-6 toggles; then persist from DOM. */
@@ -7736,7 +8187,7 @@
     if (locSel) locSel.value = 'all';
     if (t) {
       syncMonstersShowAllButton(false, t);
-      syncMonstersShowLevelButton(false, t);
+      syncMonstersMinLevelInput(0, t);
     }
     writeMonstersFilters(readMonstersFiltersFromDom());
     updateMonstersFilterSummary();
@@ -7774,21 +8225,12 @@
     grid.classList.add('monsters-grid--empty-state');
   }
 
-  function syncMonstersShowLevelButton(minLevel36Only, t) {
-    const on = !!minLevel36Only;
-    const sel = document.getElementById('monsters-filter-level');
-    if (sel) sel.value = on ? '35' : '';
-    const btn = document.getElementById('monsters-filter-min-level');
-    const lbl = document.getElementById('lbl-monsters-filter-min-level-btn');
-    if (btn) {
-      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
-      btn.classList.toggle('monsters-toolbar-btn--active', on);
-    }
-    if (lbl) {
-      lbl.textContent = on
-        ? t.monstersFilterMinLevelOn || 'Only Lv 35+'
-        : t.monstersFilterMinLevelOff || 'All levels';
-    }
+  function syncMonstersMinLevelInput(minLevelMin, t) {
+    const n = Number(minLevelMin) || 0;
+    const inp = document.getElementById('monsters-filter-min-level');
+    if (inp) inp.value = n > 0 ? String(n) : '';
+    const lbl = document.getElementById('lbl-monsters-filter-min-level');
+    if (lbl) lbl.textContent = t.monstersFilterMinLevel || 'Min level';
   }
 
   function selectAllVisibleMonsters() {
@@ -7841,7 +8283,9 @@
     const gridHead = document.getElementById('monsters-grid-head');
     const sortField = document.querySelector('.monsters-toolbar__field--sort');
     if (sortField) sortField.hidden = view === 'table';
+    const rosterMeta = document.querySelector('.monsters-roster-meta');
     if (gridHead) gridHead.hidden = view !== 'cards';
+    if (rosterMeta) rosterMeta.classList.toggle('monsters-roster-meta--table', view === 'table');
     if (grid) {
       grid.classList.toggle('monsters-grid--table', view === 'table');
       grid.classList.toggle('monsters-grid--cards', view === 'cards');
@@ -7878,14 +8322,11 @@
     const layout = document.getElementById('monsters-layout');
     const aside = document.getElementById('monsters-detail');
     const pinned = monstersDetailPinnedUnitId != null;
-    if (layout) layout.classList.toggle('monsters-layout--pinned', pinned);
+    if (layout) layout.classList.remove('monsters-layout--pinned');
     if (!aside) return;
-    aside.classList.toggle('monsters-detail--float', !pinned);
-    aside.classList.toggle('monsters-detail--pinned', pinned);
-    if (pinned) {
-      aside.style.removeProperty('left');
-      aside.style.removeProperty('top');
-    }
+    aside.classList.add('monsters-detail--float');
+    aside.classList.remove('monsters-detail--pinned');
+    aside.classList.toggle('monsters-detail--locked', pinned);
   }
 
   function hideMonstersDetailFloat() {
@@ -7932,14 +8373,119 @@
     aside.addEventListener('mouseenter', cancelMonstersDetailHide);
     aside.addEventListener('mouseleave', scheduleMonstersDetailHide);
     const reposition = () => {
-      const uid = monstersDetailHoverUnitId;
-      const card = uid
-        ? document.querySelector(`.monsters-card[data-unit-id="${String(uid).replace(/"/g, '\\"')}"]`)
-        : null;
+      const uid = monstersDetailPinnedUnitId || monstersDetailHoverUnitId;
+      if (!uid) return;
+      const esc = String(uid).replace(/"/g, '\\"');
+      const card =
+        document.querySelector(`.monsters-card[data-unit-id="${esc}"]`) ||
+        document.querySelector(`.monsters-table__row[data-unit-id="${esc}"]`);
       if (card && !aside.hidden) positionMonstersDetailFloat(card);
     };
     window.addEventListener('scroll', reposition, true);
     window.addEventListener('resize', reposition);
+  }
+
+//
+// SWEX does not ship reliable final combat totals on units; we derive Total from:
+//   1) Base at unit level — SWARFARM monster base/max stats scaled to u.level
+//   2) All equipped runes — main (slot 1/3/5 flat, 2/4/6 %), innate, substats (+ grind)
+//
+// Per stat key (hp, atk, def, spd, critRate, critDmg, res, acc):
+//   flat  = sum of flat bonuses from runes
+//   pct   = sum of % bonuses from runes (each % applies to base only, not to flat)
+//   total = round(base + flat + base * pct / 100)
+//
+// +Runes column in UI = total − base. Not included: artifacts, glory towers, leader/passive buffs.
+  const PCT_STAT_TYPES = new Set([2, 4, 6, 9, 10, 11, 12]);
+  function statKeyForTypeId(typeId) {
+    const id = Number(typeId);
+    if (id === 1 || id === 2) return 'hp';
+    if (id === 3 || id === 4) return 'atk';
+    if (id === 5 || id === 6) return 'def';
+    if (id === 8) return 'spd';
+    if (id === 9) return 'critRate';
+    if (id === 10) return 'critDmg';
+    if (id === 11) return 'res';
+    if (id === 12) return 'acc';
+    return null;
+  }
+
+  function isPercentBonus(typeId, slotNo) {
+    const id = Number(typeId);
+    const slot = Number(slotNo);
+    if (Number.isFinite(slot) && slot >= 1 && slot <= 6) {
+      if (window.SWRM && typeof window.SWRM.isMainStatFlat === 'function') {
+        return !window.SWRM.isMainStatFlat(slot, id);
+      }
+      return slot === 2 || slot === 4 || slot === 6;
+    }
+    return PCT_STAT_TYPES.has(id);
+  }
+
+  function subVal(sub) {
+    if (window.SWRM && typeof window.SWRM.subRuneValue === 'function') {
+      return window.SWRM.subRuneValue(sub);
+    }
+    return (Number(sub?.val) || 0) + (Number(sub?.grind) || 0);
+  }
+
+  /** Collect flat / % bonuses for one stat key from all runes. */
+  function sumRuneBonusesForKey(statKey, runesArray) {
+    let flat = 0;
+    let pct = 0;
+    for (const rune of runesArray || []) {
+      if (!rune) continue;
+      const add = (typeId, value, slotNo) => {
+        const key = statKeyForTypeId(typeId);
+        const v = Number(value);
+        if (key !== statKey || !Number.isFinite(v) || v === 0) return;
+        if (isPercentBonus(typeId, slotNo)) pct += v;
+        else flat += v;
+      };
+      if (rune.mainType != null && rune.mainVal != null) {
+        add(rune.mainType, rune.mainVal, rune.slot);
+      }
+      if (rune.innate_type && rune.innate_val) {
+        add(rune.innate_type, rune.innate_val, null);
+      }
+      for (const s of rune.substats || []) {
+        if (s && s.source === 'innate') continue;
+        add(s.type, subVal(s), null);
+      }
+    }
+    return { flat, pct };
+  }
+
+  /**
+   * Total stat from base + runes (flat first, then % of base).
+   * @param {number} base
+   * @param {object[]} runesArray parsed runes
+   * @param {string} statKey hp|atk|def|spd|critRate|critDmg|res|acc
+   */
+  function calculateTotalStatForKey(base, runesArray, statKey) {
+    const b = Number(base);
+    const baseNum = Number.isFinite(b) ? b : 0;
+    const { flat, pct } = sumRuneBonusesForKey(statKey, runesArray);
+    let total = baseNum;
+    total += flat;
+    if (pct) total += baseNum * (pct / 100);
+    return Math.round(total);
+  }
+
+  function getUnitEquippedRunes(u) {
+    if (!u || !Array.isArray(u.runeSlots)) return [];
+    return u.runeSlots.map((s) => s && s.rune).filter(Boolean);
+  }
+
+  function calculateMonsterStatTotals(baseStats, unit) {
+    const runes = getUnitEquippedRunes(unit);
+    const keys = ['hp', 'atk', 'def', 'spd', 'critRate', 'critDmg', 'res', 'acc'];
+    const totals = {};
+    for (const key of keys) {
+      const b = baseStats && Number.isFinite(Number(baseStats[key])) ? Number(baseStats[key]) : 0;
+      totals[key] = calculateTotalStatForKey(b, runes, key);
+    }
+    return totals;
   }
 
   function formatMonsterRuneTooltip(r, t, slotNo) {
@@ -8138,7 +8684,10 @@
       return `<p class="monsters-detail__muted">${escapeHtml(t.monstersNoStats || 'No stat data in SWEX.')}</p>`;
     }
     const base = u.baseStats || null;
-    const lblBase = t.monstersStatBase || 'Base';
+    const computed =
+      base && typeof calculateMonsterStatTotals === 'function'
+        ? calculateMonsterStatTotals(base, u)
+        : null;
     const lblRune = t.monstersStatRunes || '+Runes';
     const lblTot = t.monstersStatTotal || 'Total';
     const coreKeys = [
@@ -8155,34 +8704,34 @@
     ];
     const coreHead = `<div class="monsters-detail__stats-head monsters-detail__stats-head--core">
       <span class="monsters-detail__stat-k"></span>
-      <span>${escapeHtml(lblBase)}</span>
-      <span class="monsters-detail__stat-rune-h">${escapeHtml(lblRune)}</span>
-      <span>${escapeHtml(lblTot)}</span>
+      <span class="monsters-detail__stat-h">${escapeHtml(lblTot)}</span>
+      <span class="monsters-detail__stat-h monsters-detail__stat-h--bonus">${escapeHtml(lblRune)}</span>
     </div>`;
-    const coreBody = coreKeys
-      .map(([label, key]) => {
-        const total = Number(s[key]);
-        const b = base ? Number(base[key]) : NaN;
-        const baseStr = Number.isFinite(b) ? String(Math.round(b)) : '—';
-        const { total: totStr, rune: runeStr } = formatStatRuneDelta(total, b, false);
-        return `<div class="monsters-detail__stat-row monsters-detail__stat-row--core">
+    function statRow(label, key, isPct) {
+      const b = base ? Number(base[key]) : NaN;
+      const total =
+        computed && Number.isFinite(computed[key]) ? computed[key] : NaN;
+      const totStr = Number.isFinite(total)
+        ? isPct
+          ? `${Math.round(total)}%`
+          : String(Math.round(total))
+        : '—';
+      let bonusHtml =
+        '<span class="monsters-detail__stat-num monsters-detail__stat-num--empty" aria-hidden="true"></span>';
+      if (Number.isFinite(b) && Number.isFinite(total)) {
+        const { rune: runeStr } = formatStatRuneDelta(total, b, isPct);
+        bonusHtml = `<span class="monsters-detail__stat-num monsters-detail__stat-num--rune">${escapeHtml(runeStr)}</span>`;
+      } else if (computed) {
+        bonusHtml = '<span class="monsters-detail__stat-num monsters-detail__stat-num--rune">—</span>';
+      }
+      return `<div class="monsters-detail__stat-row monsters-detail__stat-row--core">
           <span class="monsters-detail__stat-k">${escapeHtml(label)}</span>
-          <span class="monsters-detail__stat-num">${escapeHtml(baseStr)}</span>
-          <span class="monsters-detail__stat-num monsters-detail__stat-num--rune">${escapeHtml(runeStr)}</span>
           <span class="monsters-detail__stat-num monsters-detail__stat-num--total">${escapeHtml(totStr)}</span>
+          ${bonusHtml}
         </div>`;
-      })
-      .join('');
-    const pctBody = pctKeys
-      .map(([label, key]) => {
-        const total = Number(s[key]);
-        const totStr = Number.isFinite(total) ? `${Math.round(total)}%` : '—';
-        return `<div class="monsters-detail__stat-row monsters-detail__stat-row--pct">
-            <span class="monsters-detail__stat-k">${escapeHtml(label)}</span>
-            <span class="monsters-detail__stat-num monsters-detail__stat-num--total">${escapeHtml(totStr)}</span>
-          </div>`;
-      })
-      .join('');
+    }
+    const coreBody = coreKeys.map(([label, key]) => statRow(label, key, false)).join('');
+    const pctBody = pctKeys.map(([label, key]) => statRow(label, key, true)).join('');
     const loading =
       !base && window.SWRM_MONSTER_DB
         ? `<p class="monsters-detail__muted monsters-detail__stats-loading">${escapeHtml(t.monstersStatsLoading || 'Loading base stats…')}</p>`
@@ -8329,11 +8878,9 @@
       ? t.monstersStorageSwex || t.monstersLocationStorage || 'Storage (SWEX)'
       : t.monstersStorageMark || 'Storage tag';
     const storageDisabled = u.inStorage ? ' disabled' : '';
-    return `<div class="monsters-card__actions">
-        <button type="button" class="monsters-tag-btn monsters-tag-btn--sm${u.favorite ? ' monsters-tag-btn--on' : ''}" data-unit-tag="favorite" data-unit-id="${uid}" aria-pressed="${u.favorite}" title="${escapeHtml(t.monstersFavorite || 'Favorite')}">★</button>
-        <button type="button" class="monsters-tag-btn monsters-tag-btn--sm${u.food ? ' monsters-tag-btn--on' : ''}" data-unit-tag="food" data-unit-id="${uid}" aria-pressed="${u.food}" title="${escapeHtml(t.monstersFood || 'Food')}">🍖</button>
-        <button type="button" class="monsters-tag-btn monsters-tag-btn--sm${storageOn ? ' monsters-tag-btn--on' : ''}${u.inStorage ? ' monsters-tag-btn--swex' : ''}" data-unit-tag="storageMark" data-unit-id="${uid}" aria-pressed="${storageOn}" title="${escapeHtml(storageTitle)}"${storageDisabled}>▣</button>
-      </div>`;
+    return `<button type="button" class="monsters-mark-btn${u.favorite ? ' monsters-mark-btn--on monsters-mark-btn--favorite' : ''}" data-unit-tag="favorite" data-unit-id="${uid}" aria-pressed="${u.favorite}" title="${escapeHtml(t.monstersFavorite || 'Favorite')}">★</button>
+        <button type="button" class="monsters-mark-btn${u.food ? ' monsters-mark-btn--on monsters-mark-btn--food' : ''}" data-unit-tag="food" data-unit-id="${uid}" aria-pressed="${u.food}" title="${escapeHtml(t.monstersFood || 'Food')}">🍖</button>
+        <button type="button" class="monsters-mark-btn${storageOn ? ' monsters-mark-btn--on monsters-mark-btn--storage' : ''}${u.inStorage ? ' monsters-mark-btn--swex' : ''}" data-unit-tag="storageMark" data-unit-id="${uid}" aria-pressed="${storageOn}" title="${escapeHtml(storageTitle)}"${storageDisabled}>▣</button>`;
   }
 
   function buildListRowMetaHtml(u, t) {
@@ -8460,7 +9007,16 @@
     const overlay = label
       ? '<span class="monsters-detail__skill-lv-overlay">' + escapeHtml(label) + '</span>'
       : '';
-    return '<div class="monsters-detail__skill-tile">' + img + overlay + '</div>';
+    return (
+      '<div class="monsters-detail__skill-tile monsters-detail__skill-tile--tip" data-skill-id="' +
+      escapeHtml(String(s.skillId)) +
+      '" data-skill-level="' +
+      escapeHtml(String(s.level)) +
+      '">' +
+      img +
+      overlay +
+      '</div>'
+    );
   }
 
   function resolveLeaderSkillTile(leaderSkill) {
@@ -8511,6 +9067,43 @@
     const tip = formatLeaderSkillTooltip(leaderSkill, t);
     setSwrmFloatTipTarget(tile, tip);
     tile.setAttribute('aria-label', tip);
+  }
+
+  function bindMonsterDetailSkillTips(root, skillRows) {
+    if (!root || typeof setSwrmFloatTipTarget !== 'function') return;
+    const rows = skillRows || [];
+    const tiles = root.querySelectorAll(
+      '.monsters-detail__skills-main .monsters-detail__skill-tile--tip',
+    );
+    tiles.forEach((tile, i) => {
+      const row = rows[i];
+      const skillId = row?.skillId ?? Number(tile.getAttribute('data-skill-id'));
+      const level = row?.level ?? Number(tile.getAttribute('data-skill-level'));
+      if (!skillId) return;
+      tile.style.cursor = 'help';
+      const applyTip = async () => {
+        const db = window.SWRM_SKILL_DB;
+        if (!db || typeof db.fetchSkillMeta !== 'function') return;
+        let text =
+          typeof db.formatSkillTooltip === 'function'
+            ? db.formatSkillTooltip(skillId, level)
+            : '';
+        const placeholder = text && /^Skill \d+/.test(text);
+        if (!text || placeholder) {
+          await db.fetchSkillMeta(skillId);
+          text =
+            typeof db.formatSkillTooltip === 'function'
+              ? db.formatSkillTooltip(skillId, level)
+              : '';
+        }
+        if (text) {
+          setSwrmFloatTipTarget(tile, text);
+          tile.setAttribute('aria-label', text);
+        }
+      };
+      tile.addEventListener('mouseenter', applyTip);
+      tile.addEventListener('focus', applyTip);
+    });
   }
 
   function formatLeaderSkillTitleBody(leaderSkill, t) {
@@ -8801,11 +9394,14 @@
     if (typeof bindMonsterDetailLeaderTips === 'function') {
       bindMonsterDetailLeaderTips(body, leaderSkill, t);
     }
+    if (typeof bindMonsterDetailSkillTips === 'function') {
+      bindMonsterDetailSkillTips(body, skillRows);
+    }
 
     body.querySelector('[data-open-runes-all]')?.addEventListener('click', () => openMonsterRunesInTable(u));
     body.querySelector('[data-unpin-detail]')?.addEventListener('click', () => unpinMonsterDetail());
 
-    if (!pinned && anchorEl) positionMonstersDetailFloat(anchorEl);
+    if (anchorEl) positionMonstersDetailFloat(anchorEl);
 
     if (db && typeof db.fetchMonsterMetaForDetail === 'function') {
       db.fetchMonsterMetaForDetail(u.masterId).then((row) => {
@@ -8840,6 +9436,10 @@
           if (typeof hydrateMonsterSkillIcons === 'function') hydrateMonsterSkillIcons(body);
           if (typeof bindMonsterDetailLeaderTips === 'function') {
             bindMonsterDetailLeaderTips(body, row.leader_skill || null, t);
+          }
+          if (typeof bindMonsterDetailSkillTips === 'function') {
+            const rows = skillDb ? skillDb.enrichUnitSkillsForDetail(u.skills) : skillRows;
+            bindMonsterDetailSkillTips(body, rows);
           }
         }
 
@@ -8948,7 +9548,13 @@
       const uid = card.getAttribute('data-unit-id');
       if (!uid) return;
 
-      if (e.target.closest('a')) return;
+      if (e.target.closest('[data-unpin-detail]')) {
+        e.preventDefault();
+        e.stopPropagation();
+        unpinMonsterDetail();
+        return;
+      }
+      if (e.target.closest('a, button, input, .monsters-mark-btn, .monsters-card__bulk-btn')) return;
       if (e.target.closest('[data-tag-input]')) return;
       if (e.target.closest('.monsters-tag-btn')) return;
 
@@ -9054,11 +9660,18 @@
     const bulkSel = monstersBulkSelected.has(String(u.unitId));
     const starsBadge = buildMonsterStarsBadge(u);
     const ro = typeof isShareReadOnly === 'function' && isShareReadOnly();
-    const actionsHtml = ro ? '' : buildCardActionsHtml(u, t);
+    const marksHtml =
+      view !== 'table' && !ro
+        ? `<span class="monsters-card__name-marks">${buildCardActionsHtml(u, t)}</span>`
+        : '';
+    const pinClose =
+      pinned && !ro
+        ? `<button type="button" class="monsters-card__pin-close" data-unpin-detail="1" title="${escapeHtml(t.monstersDetailUnpin || 'Close')}">×</button>`
+        : '';
     return `<article class="monsters-card monsters-card--grid${u.favorite ? ' monsters-card--favorite' : ''}${u.food ? ' monsters-card--food' : ''}${bulkSel ? ' monsters-card--bulk-on' : ''}${pinned ? ' monsters-card--pinned' : ''}${hover ? ' monsters-card--hover' : ''}${elCls ? ` monsters-card--${elCls}` : ''}" data-unit-id="${escapeHtml(String(u.unitId))}" data-master-id="${u.masterId}" tabindex="0">
+          ${pinClose}
           <div class="monsters-card__bar monsters-card__bar--${elCls}" aria-hidden="true"></div>
           ${ro ? '' : buildMonsterBulkToggleHtml(u)}
-          ${actionsHtml}
           <div class="monsters-card__hero">
             ${starsBadge}
             <img class="monsters-card__img" alt="" width="120" height="120" data-img-file="${escapeHtml(u.imageFilename || '')}" loading="lazy" decoding="async" />
@@ -9066,7 +9679,9 @@
             ${buildMonsterLevelBadge(u, t)}
           </div>
           <div class="monsters-card__meta">
-            <p class="monsters-card__name">${nameInner}</p>
+            <p class="monsters-card__name">
+              <span class="monsters-card__name-text">${nameInner}</span>${marksHtml}
+            </p>
           </div>
           ${runeCells}
         </article>`;
@@ -9521,7 +10136,7 @@
     if (roleSel && roleSel.value !== (filters.roleFilter || '')) roleSel.value = filters.roleFilter || '';
     if (markSel && markSel.value !== (filters.markFilter || '')) markSel.value = filters.markFilter || '';
     syncMonstersShowAllButton(!!filters.fullSixOnly, t);
-    syncMonstersShowLevelButton(!!filters.minLevel36Only, t);
+    syncMonstersMinLevelInput(filters.minLevelMin, t);
 
     const view = readMonstersView();
     const filtered = filterMonstersList(enriched, filters);
@@ -9577,8 +10192,12 @@
     syncBulkCardStates(grid);
 
     if (monstersDetailPinnedUnitId) {
+      const esc = String(monstersDetailPinnedUnitId).replace(/"/g, '\\"');
+      const pinCard =
+        document.querySelector(`.monsters-card[data-unit-id="${esc}"]`) ||
+        document.querySelector(`.monsters-table__row[data-unit-id="${esc}"]`);
       const pu = enriched.find((x) => String(x.unitId) === String(monstersDetailPinnedUnitId));
-      if (pu) renderMonstersDetail(pu, t, null);
+      if (pu) renderMonstersDetail(pu, t, pinCard);
     } else if (monstersDetailHoverUnitId) {
       const hoverCard = document.querySelector(
         `.monsters-card[data-unit-id="${String(monstersDetailHoverUnitId).replace(/"/g, '\\"')}"]`,
@@ -9750,7 +10369,7 @@
     }
     syncMonstersBulkBar(t);
     syncMonstersShowAllButton(readMonstersFilters().fullSixOnly, t);
-    syncMonstersShowLevelButton(!!readMonstersFilters().minLevel36Only, t);
+    syncMonstersMinLevelInput(readMonstersFilters().minLevelMin, t);
     updateMonstersFilterSummary();
     const bulkMarksLbl = document.getElementById('lbl-monsters-bulk-marks');
     if (bulkMarksLbl) bulkMarksLbl.textContent = t.monstersBulkMarksGroup || 'Bulk marks';
@@ -9842,7 +10461,7 @@
     if (f.roleFilter) n += 1;
     if (f.markFilter) n += 1;
     if (f.fullSixOnly) n += 1;
-    if (f.minLevel36Only) n += 1;
+    if (f.minLevelMin > 0) n += 1;
     return n;
   }
 
@@ -9851,7 +10470,10 @@
     const q = (f.q || '').trim();
     if (q) chips.push({ key: 'q', label: `"${q}"` });
     if (f.element) chips.push({ key: 'element', label: f.element });
-    if (f.minLevel36Only) chips.push({ key: 'minLevel36Only', label: t.monstersFilterLevel35 || 'Lv 35+' });
+    if (f.minLevelMin > 0) {
+      const tpl = t.monstersFilterMinLevelChip || 'Lv {n}+';
+      chips.push({ key: 'minLevelMin', label: tpl.replace(/\{n\}/g, String(f.minLevelMin)) });
+    }
     if (f.location && f.location !== 'all') {
       const locMap = { active: t.monstersFilterLocActive || 'In use', storage: t.monstersFilterLocStorage || 'Storage' };
       chips.push({ key: 'location', label: locMap[f.location] || f.location });
@@ -9879,11 +10501,9 @@
         if (el) el.value = '';
         break;
       }
-      case 'minLevel36Only': {
-        const lvl = document.getElementById('monsters-filter-level');
+      case 'minLevelMin': {
+        const lvl = document.getElementById('monsters-filter-min-level');
         if (lvl) lvl.value = '';
-        const btn = document.getElementById('monsters-filter-min-level');
-        if (btn) btn.setAttribute('aria-pressed', 'false');
         break;
       }
       case 'location': {
@@ -9960,11 +10580,12 @@
 
   function readMonstersFiltersFromDom() {
     const sixBtn = document.getElementById('monsters-filter-full-six');
-    const lvlBtn = document.getElementById('monsters-filter-min-level');
-    const lvlSel = document.getElementById('monsters-filter-level');
+    const lvlInp = document.getElementById('monsters-filter-min-level');
     const fullSixOnly = sixBtn?.getAttribute('aria-pressed') === 'true';
-    const minLevel36Only =
-      lvlSel?.value === '35' || lvlBtn?.getAttribute('aria-pressed') === 'true';
+    const rawLvl = lvlInp?.value != null ? String(lvlInp.value).trim() : '';
+    const parsed = rawLvl === '' ? 0 : Math.round(Number(rawLvl));
+    const minLevelMin =
+      Number.isFinite(parsed) && parsed > 0 ? Math.max(1, Math.min(40, parsed)) : 0;
     return {
       q: document.getElementById('monsters-filter-q')?.value || '',
       element: document.getElementById('monsters-filter-element')?.value || '',
@@ -9977,7 +10598,7 @@
       roleFilter: document.getElementById('monsters-filter-role')?.value || '',
       markFilter: document.getElementById('monsters-filter-mark')?.value || '',
       fullSixOnly,
-      minLevel36Only,
+      minLevelMin,
     };
   }
 
@@ -9989,7 +10610,8 @@
     };
     document.getElementById('monsters-filter-q')?.addEventListener('input', onFilter);
     document.getElementById('monsters-filter-element')?.addEventListener('change', onFilter);
-    document.getElementById('monsters-filter-level')?.addEventListener('change', onFilter);
+    document.getElementById('monsters-filter-min-level')?.addEventListener('input', onFilter);
+    document.getElementById('monsters-filter-min-level')?.addEventListener('change', onFilter);
     document.getElementById('monsters-filter-location')?.addEventListener('change', onFilter);
     document.getElementById('monsters-filter-sort')?.addEventListener('change', onFilter);
     document.getElementById('monsters-filter-skill')?.addEventListener('change', onFilter);
@@ -10047,16 +10669,6 @@
       btn.classList.toggle('monsters-toolbar-btn--active', next);
       const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
       syncMonstersShowAllButton(!next, t);
-      onFilter();
-    });
-    document.getElementById('monsters-filter-min-level')?.addEventListener('click', () => {
-      const btn = document.getElementById('monsters-filter-min-level');
-      if (!btn) return;
-      const next = btn.getAttribute('aria-pressed') !== 'true';
-      btn.setAttribute('aria-pressed', next ? 'true' : 'false');
-      btn.classList.toggle('monsters-toolbar-btn--active', next);
-      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-      syncMonstersShowLevelButton(next, t);
       onFilter();
     });
     document.getElementById('monsters-filter-clear-all')?.addEventListener('click', () => {
@@ -10159,7 +10771,7 @@
     syncMonstersViewToggle(readMonstersView());
     const t0 = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     syncMonstersShowAllButton(readMonstersFilters().fullSixOnly, t0);
-    syncMonstersShowLevelButton(!!readMonstersFilters().minLevel36Only, t0);
+    syncMonstersMinLevelInput(readMonstersFilters().minLevelMin, t0);
     updateMonstersFilterSummary();
     bindMonstersDetailFloat();
     bindMonstersGridDelegation();

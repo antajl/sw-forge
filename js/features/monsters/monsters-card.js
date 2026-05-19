@@ -96,11 +96,18 @@
     const bulkSel = monstersBulkSelected.has(String(u.unitId));
     const starsBadge = buildMonsterStarsBadge(u);
     const ro = typeof isShareReadOnly === 'function' && isShareReadOnly();
-    const actionsHtml = ro ? '' : buildCardActionsHtml(u, t);
+    const marksHtml =
+      view !== 'table' && !ro
+        ? `<span class="monsters-card__name-marks">${buildCardActionsHtml(u, t)}</span>`
+        : '';
+    const pinClose =
+      pinned && !ro
+        ? `<button type="button" class="monsters-card__pin-close" data-unpin-detail="1" title="${escapeHtml(t.monstersDetailUnpin || 'Close')}">×</button>`
+        : '';
     return `<article class="monsters-card monsters-card--grid${u.favorite ? ' monsters-card--favorite' : ''}${u.food ? ' monsters-card--food' : ''}${bulkSel ? ' monsters-card--bulk-on' : ''}${pinned ? ' monsters-card--pinned' : ''}${hover ? ' monsters-card--hover' : ''}${elCls ? ` monsters-card--${elCls}` : ''}" data-unit-id="${escapeHtml(String(u.unitId))}" data-master-id="${u.masterId}" tabindex="0">
+          ${pinClose}
           <div class="monsters-card__bar monsters-card__bar--${elCls}" aria-hidden="true"></div>
           ${ro ? '' : buildMonsterBulkToggleHtml(u)}
-          ${actionsHtml}
           <div class="monsters-card__hero">
             ${starsBadge}
             <img class="monsters-card__img" alt="" width="120" height="120" data-img-file="${escapeHtml(u.imageFilename || '')}" loading="lazy" decoding="async" />
@@ -108,7 +115,9 @@
             ${buildMonsterLevelBadge(u, t)}
           </div>
           <div class="monsters-card__meta">
-            <p class="monsters-card__name">${nameInner}</p>
+            <p class="monsters-card__name">
+              <span class="monsters-card__name-text">${nameInner}</span>${marksHtml}
+            </p>
           </div>
           ${runeCells}
         </article>`;

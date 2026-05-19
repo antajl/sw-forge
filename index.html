@@ -689,12 +689,8 @@
     <!-- MONSTERS TAB -->
     <section id="tab-monsters" class="tab-content hidden">
       <div class="monsters-shell">
-        <header class="monsters-head">
-          <h2 class="rules-page-title" id="lbl-monsters-title">Monsters</h2>
-          <p class="monsters-lead" id="lbl-monsters-lead">Six-star monsters from your SWEX export. Rune slots 1–6 shown on each card.</p>
-          <div class="monsters-stats" id="monsters-stats" aria-live="polite"></div>
-        </header>
-        <nav class="rules-subtabs monsters-hub-tabs" id="monsters-hub-tabs" role="tablist" aria-labelledby="lbl-monsters-title">
+        <div id="monsters-stats" hidden aria-live="polite" class="visually-hidden"></div>
+        <nav class="rules-subtabs monsters-hub-tabs" id="monsters-hub-tabs" role="tablist" aria-label="Monsters">
           <button type="button" role="tab" class="rules-subtab monsters-hub-tab is-active" id="monsters-hub-tab-roster"
             data-monsters-hub="roster" aria-selected="true" aria-controls="tab-monsters-roster" tabindex="0">
             <span class="rules-subtab__label" id="lbl-monsters-hub-roster">Roster</span>
@@ -707,40 +703,64 @@
         <div id="tab-monsters-teams" class="monsters-hub-pane" data-monsters-pane="teams" role="tabpanel" aria-labelledby="monsters-hub-tab-teams" hidden>
           <div class="teams-shell" id="teams-shell">
             <div class="teams-layout">
-              <aside class="teams-sets" data-teams-readonly-hide>
-                <header class="teams-sets__head">
-                  <h3 class="teams-sets__title" id="lbl-teams-sets-title">Team sets</h3>
+              <aside class="teams-sidebar" data-teams-readonly-hide>
+                <header class="teams-sidebar__head">
+                  <h3 class="teams-sidebar__title" id="lbl-teams-sets-title">Team sets</h3>
                   <button type="button" class="monsters-toolbar-btn monsters-toolbar-btn--sm" id="teams-add-set">+ Set</button>
                 </header>
-                <ul class="teams-set-list" id="teams-set-list"></ul>
+                <ul class="teams-set-list teams-set-tree" id="teams-set-list"></ul>
               </aside>
               <section class="teams-main">
-                <header class="teams-set-head">
-                  <label class="teams-set-head__name">
+                <header class="teams-main__head">
+                  <label class="teams-main__set-name">
                     <span id="lbl-teams-set-name">Set name</span>
-                    <input type="text" id="teams-set-name" maxlength="48" autocomplete="off" spellcheck="false" data-teams-readonly-hide />
+                    <input type="text" id="teams-set-name" maxlength="48" autocomplete="off" spellcheck="false" data-teams-readonly-hide placeholder="e.g. Arena" />
                   </label>
-                  <p class="teams-set-head__hint" id="lbl-teams-set-hint">5 teams per set</p>
+                  <button type="button" class="btn-primary" id="teams-create-team" data-teams-readonly-hide>+ Create Team</button>
                 </header>
-                <div class="teams-slot-row" id="teams-slot-row" role="list"></div>
+                <div class="teams-card-grid" id="teams-card-grid" role="list"></div>
               </section>
-              <aside class="teams-editor" data-teams-readonly-hide>
-                <h3 class="teams-editor__title" id="lbl-teams-editor-title">Edit team</h3>
-                <label class="teams-editor__field">
-                  <span id="lbl-teams-team-name">Team name</span>
-                  <input type="text" id="teams-team-name" maxlength="48" autocomplete="off" spellcheck="false" />
-                </label>
-                <label class="teams-editor__field">
-                  <span id="lbl-teams-leader">Leader</span>
-                  <select id="teams-leader-select"></select>
-                </label>
-                <div class="teams-monster-slots" id="teams-monster-slots"></div>
-                <label class="teams-editor__share">
-                  <input type="checkbox" id="teams-share-public" />
-                  <span id="lbl-teams-share-public">Show in share link</span>
-                </label>
-                <button type="button" class="btn-primary" id="teams-save-team">Save team</button>
-              </aside>
+            </div>
+            <dialog id="teams-editor-dialog" class="teams-editor-dialog" data-teams-readonly-hide>
+              <form method="dialog" class="teams-editor-dialog__form">
+                <header class="teams-editor-dialog__head">
+                  <h3 class="teams-editor-dialog__title" id="lbl-teams-editor-title">Edit team</h3>
+                  <button type="button" class="teams-editor-dialog__close" id="teams-editor-cancel" aria-label="Close">✕</button>
+                </header>
+                <div class="teams-editor-dialog__body">
+                  <label class="teams-editor__field">
+                    <span id="lbl-teams-team-name">Team name</span>
+                    <input type="text" id="teams-team-name" maxlength="48" autocomplete="off" spellcheck="false" placeholder="e.g. Arena Offence" />
+                  </label>
+                  <label class="teams-editor__field">
+                    <span id="lbl-teams-team-size">Team size</span>
+                    <select id="teams-team-size">
+                      <option value="3">3</option>
+                      <option value="4">4</option>
+                      <option value="5" selected>5</option>
+                      <option value="6">6</option>
+                    </select>
+                  </label>
+                  <div class="teams-monster-slots" id="teams-monster-slots"></div>
+                  <label class="teams-editor__field">
+                    <span id="lbl-teams-team-tags">Tags</span>
+                    <input type="text" id="teams-team-tags" maxlength="120" autocomplete="off" spellcheck="false" placeholder="AO, Fast, Speed Lead" />
+                  </label>
+                  <label class="teams-editor__field">
+                    <span id="lbl-teams-team-notes">Notes</span>
+                    <textarea id="teams-team-notes" rows="3" maxlength="500" placeholder="Strategy notes…"></textarea>
+                  </label>
+                  <label class="teams-editor__share">
+                    <input type="checkbox" id="teams-share-public" />
+                    <span id="lbl-teams-share-public">Show in share link</span>
+                  </label>
+                </div>
+                <footer class="teams-editor-dialog__foot">
+                  <button type="button" class="btn-ghost" id="teams-editor-cancel-foot">Cancel</button>
+                  <button type="button" class="btn-primary" id="teams-editor-save">Save team</button>
+                </footer>
+              </form>
+            </dialog>
             </div>
           </div>
         </div>
@@ -752,6 +772,16 @@
         <div class="monsters-toolbar monsters-toolbar--v2">
           <div class="monsters-toolbar-main">
             <div class="monsters-toolbar-main__left">
+              <div class="monsters-view-toggle" role="group" aria-label="View">
+                <button type="button" id="monsters-view-cards" class="monsters-view-btn monsters-view-btn--active" aria-pressed="true" title="Cards">
+                  <svg class="monsters-toolbar-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg>
+                  <span class="sr-only" id="lbl-monsters-view-cards">Cards</span>
+                </button>
+                <button type="button" id="monsters-view-table" class="monsters-view-btn" aria-pressed="false" title="Table">
+                  <svg class="monsters-toolbar-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="16" width="18" height="4" rx="1"/></svg>
+                  <span class="sr-only" id="lbl-monsters-view-table">Table</span>
+                </button>
+              </div>
               <label class="monsters-search monsters-toolbar__field monsters-toolbar__field--search">
                 <span class="visually-hidden" id="lbl-monsters-filter-q">Search</span>
                 <input type="search" id="monsters-filter-q" autocomplete="off" spellcheck="false" placeholder="Search monsters…" aria-labelledby="lbl-monsters-filter-q" />
@@ -768,25 +798,11 @@
                 </select>
               </label>
               <label class="monsters-toolbar__field monsters-toolbar__field--level">
-                <span class="monsters-toolbar__field-label" id="lbl-monsters-filter-min-level">Level</span>
-                <select id="monsters-filter-level" aria-labelledby="lbl-monsters-filter-min-level">
-                  <option value="">All levels</option>
-                  <option value="35">Lv 35+</option>
-                </select>
+                <span class="monsters-toolbar__field-label" id="lbl-monsters-filter-min-level">Min level</span>
+                <input type="number" id="monsters-filter-min-level" min="1" max="40" step="1" inputmode="numeric" placeholder="All" aria-labelledby="lbl-monsters-filter-min-level" />
               </label>
-              <button type="button" id="monsters-filter-min-level" class="visually-hidden" aria-hidden="true" tabindex="-1"></button>
             </div>
             <div class="monsters-toolbar-main__right">
-              <div class="monsters-view-toggle" role="group" aria-label="View">
-                <button type="button" id="monsters-view-cards" class="monsters-view-btn monsters-view-btn--active" aria-pressed="true" title="Cards">
-                  <svg class="monsters-toolbar-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg>
-                  <span class="sr-only" id="lbl-monsters-view-cards">Cards</span>
-                </button>
-                <button type="button" id="monsters-view-table" class="monsters-view-btn" aria-pressed="false" title="Table">
-                  <svg class="monsters-toolbar-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="16" width="18" height="4" rx="1"/></svg>
-                  <span class="sr-only" id="lbl-monsters-view-table">Table</span>
-                </button>
-              </div>
               <label class="monsters-toolbar__field monsters-toolbar__field--sort">
                 <span class="monsters-toolbar__field-label" id="lbl-monsters-filter-sort">Sort by</span>
                 <select id="monsters-filter-sort" aria-labelledby="lbl-monsters-filter-sort">
@@ -826,8 +842,7 @@
             <div class="monsters-active-filters__chips" id="monsters-filter-chips" aria-live="polite"></div>
             <button type="button" class="monsters-active-filters__clear" id="monsters-filter-clear-all">Clear all</button>
           </div>
-          <div class="monsters-chips monsters-chips--stats" id="monsters-chips" aria-live="polite"></div>
-        </div>
+</div>
         </div>
 
         <dialog id="monsters-filters-drawer" class="monsters-filters-drawer">
@@ -926,11 +941,14 @@
             <button type="button" id="monsters-bulk-clear" class="monsters-selection-btn monsters-selection-btn--ghost">Deselect all</button>
           </div>
         </div>
-        <div class="monsters-grid-head" id="monsters-grid-head" hidden>
-          <label class="monsters-grid-head__select">
-            <input type="checkbox" id="monsters-grid-select-all" class="monsters-table__bulk-cb monsters-table__bulk-cb--all" />
-            <span id="lbl-monsters-grid-select-all">Select all visible</span>
-          </label>
+        <div class="monsters-roster-meta">
+          <div class="monsters-chips monsters-chips--stats" id="monsters-chips" aria-live="polite"></div>
+          <div class="monsters-grid-head" id="monsters-grid-head" hidden>
+            <label class="monsters-grid-head__select">
+              <input type="checkbox" id="monsters-grid-select-all" class="monsters-table__bulk-cb monsters-table__bulk-cb--all" />
+              <span id="lbl-monsters-grid-select-all">Select all visible</span>
+            </label>
+          </div>
         </div>
         <div id="monsters-grid" class="monsters-grid monsters-grid--cards"></div>
           <aside id="monsters-detail" class="monsters-detail monsters-detail--float" aria-labelledby="monsters-detail-title" hidden>

@@ -64,8 +64,13 @@
   border-left: 1px solid var(--border2);
 }
 
-.monsters-detail__skill-tile--leader {
+.monsters-detail__skill-tile--leader,
+.monsters-detail__skill-tile--tip {
   cursor: help;
+}
+
+.monsters-detail.monsters-detail--locked {
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--border2));
 }
 
 .monsters-detail__leader-name {
@@ -650,11 +655,7 @@
 
 .monsters-detail__stats-head--core,
 .monsters-detail__stat-row--core {
-  grid-template-columns: 4.5rem 1fr 1fr 1fr;
-}
-
-.monsters-detail__stat-row--pct {
-  grid-template-columns: 4.5rem 1fr;
+  grid-template-columns: 4.5rem 1fr 1fr;
 }
 
 .monsters-detail__stats-head {
@@ -664,19 +665,33 @@
   letter-spacing: 0.04em;
 }
 
-.monsters-detail__stat-rune-h {
+.monsters-detail__stat-h {
+  text-align: center;
+}
+
+.monsters-detail__stat-h--bonus {
   color: color-mix(in srgb, var(--success, #2d8a5c) 85%, var(--text-dim));
 }
 
 .monsters-detail__stat-num--rune {
   color: var(--success, #2d8a5c);
   font-weight: 600;
+  text-align: center;
+}
+
+.monsters-detail__stat-num--total {
+  text-align: center;
+  font-weight: 600;
 }
 
 .monsters-detail__stat-num {
   font-family: var(--font-mono);
   font-size: 0.72rem;
-  text-align: right;
+  text-align: center;
+}
+
+.monsters-detail__stat-num--empty {
+  visibility: hidden;
 }
 
 .monsters-detail__stat-v {

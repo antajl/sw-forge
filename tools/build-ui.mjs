@@ -48,6 +48,7 @@ const MONSTER_PARTS = [
   'monsters/monsters-storage.js',
   'monsters/monsters-bulk.js',
   'monsters/monsters-filters.js',
+  'monsters/monsters-stats-calc.js',
   'monsters/monsters-runes.js',
   'monsters/monsters-detail.js',
   'monsters/monsters-card.js',

@@ -6,6 +6,8 @@
   let byCom2usId = new Map();
   /** @type {Map<number, string>} */
   let iconByCom2usId = new Map();
+  /** @type {Map<number, { name: string, description: string }>} */
+  let metaByCom2usId = new Map();
   let loadPromise = null;
   let loaded = false;
   let lastLoadCount = 0;
@@ -93,24 +95,83 @@
     return v != null && Number.isFinite(v) ? v : null;
   }
 
+  function stripSkillHtml(text) {
+    return String(text || '')
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function ingestSkillApiRow(s) {
+    if (!s || s.com2us_id == null) return;
+    const id = Number(s.com2us_id);
+    if (!Number.isFinite(id)) return;
+    if (s.max_level != null) {
+      const max = Number(s.max_level);
+      if (Number.isFinite(max) && max > 0) byCom2usId.set(id, max);
+    }
+    if (s.icon_filename) iconByCom2usId.set(id, String(s.icon_filename));
+    metaByCom2usId.set(id, {
+      name: stripSkillHtml(s.name || s.name_en || ''),
+      description: stripSkillHtml(s.description || s.description_en || ''),
+    });
+  }
+
+  function skillApiUrl(com2usId) {
+    const path = `api/v2/skills/?com2us_id=${encodeURIComponent(com2usId)}`;
+    const api = typeof SWRM_API === 'string' ? SWRM_API.replace(/\/$/, '') : '';
+    if (api) return `${api}/swarfarm/${path}`;
+    return `https://swarfarm.com/${path}`;
+  }
+
+  async function fetchSkillMeta(skillId) {
+    const id = Number(skillId);
+    if (!Number.isFinite(id)) return null;
+    const cached = metaByCom2usId.get(id);
+    if (cached && cached.description) return cached;
+    try {
+      const res = await fetch(skillApiUrl(id));
+      if (!res.ok) return null;
+      const data = await res.json();
+      const s = data.results && data.results[0];
+      if (!s) return null;
+      ingestSkillApiRow(s);
+      return metaByCom2usId.get(id) || null;
+    } catch (e) {
+      return null;
+    }
+  }
+
   async function fetchSkillMaxLevel(skillId) {
     const id = Number(skillId);
     if (!Number.isFinite(id)) return null;
-    if (byCom2usId.has(id)) return byCom2usId.get(id);
+    if (byCom2usId.has(id) && metaByCom2usId.get(id)?.description) return byCom2usId.get(id);
     try {
-      const res = await fetch(`https://swarfarm.com/api/v2/skills/?com2us_id=${id}`);
+      const res = await fetch(skillApiUrl(id));
       if (!res.ok) return null;
       const data = await res.json();
       const s = data.results && data.results[0];
       if (!s || s.max_level == null) return null;
+      ingestSkillApiRow(s);
       const max = Number(s.max_level);
-      if (Number.isFinite(max) && max > 0) {
-        byCom2usId.set(id, max);
-        if (s.icon_filename) iconByCom2usId.set(id, String(s.icon_filename));
-        return max;
-      }
-    } catch (e) { /* ignore */ }
-    return null;
+      return Number.isFinite(max) && max > 0 ? max : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function formatSkillTooltip(skillId, level) {
+    const id = Number(skillId);
+    const m = metaByCom2usId.get(id);
+    const lv = Number.isFinite(Number(level)) ? Number(level) : null;
+    if (m?.description) {
+      const head = m.name ? `${m.name}\n` : '';
+      const lvLine = lv != null ? `\nLv ${lv}` : '';
+      return `${head}${m.description}${lvLine}`.trim();
+    }
+    if (m?.name) return m.name;
+    return lv != null ? `Skill ${id} (Lv ${lv})` : '';
   }
 
   async function hydrateSkillMaxLevels(skillIds) {
@@ -248,6 +309,8 @@
     loadSkillIndex,
     hydrateSkillMaxLevels,
     fetchSkillMaxLevel,
+    fetchSkillMeta,
+    formatSkillTooltip,
     skillIconUrl,
     ensureSkillIcon,
     maxLevel,

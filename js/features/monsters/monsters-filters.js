@@ -45,7 +45,7 @@
     const el = filters.element || '';
     const loc = filters.location || 'all';
     const fullSixOnly = !!filters.fullSixOnly;
-    const minLevel36Only = !!filters.minLevel36Only;
+    const minLevelMin = Number(filters.minLevelMin) || 0;
     const skillFilter = filters.skillFilter || '';
     const runeFilter = filters.runeFilter || '';
     const runeSet = filters.runeSet || '';
@@ -55,7 +55,7 @@
     return units.filter((u) => {
       if (isTechnicalFodderMonster(u)) return false;
       if (fullSixOnly && !u.hasFullRunes) return false;
-      if (minLevel36Only && (Number(u.level) || 0) <= 35) return false;
+      if (minLevelMin > 0 && (Number(u.level) || 0) < minLevelMin) return false;
       if (el && u.metaElement !== el) return false;
       if (loc === 'active' && u.inStorage) return false;
       if (loc === 'storage' && !u.inStorage) return false;
@@ -229,11 +229,8 @@
       sixBtn.setAttribute('aria-pressed', 'false');
       sixBtn.classList.remove('monsters-toolbar-btn--active');
     }
-    const lvlBtn = document.getElementById('monsters-filter-min-level');
-    if (lvlBtn) {
-      lvlBtn.setAttribute('aria-pressed', 'false');
-      lvlBtn.classList.remove('monsters-toolbar-btn--active');
-    }
+    const lvlInp = document.getElementById('monsters-filter-min-level');
+    if (lvlInp) lvlInp.value = '';
   }
 
   /** Reset search, element, location, advanced filters, level / 6-6 toggles; then persist from DOM. */
@@ -246,7 +243,7 @@
     if (locSel) locSel.value = 'all';
     if (t) {
       syncMonstersShowAllButton(false, t);
-      syncMonstersShowLevelButton(false, t);
+      syncMonstersMinLevelInput(0, t);
     }
     writeMonstersFilters(readMonstersFiltersFromDom());
     updateMonstersFilterSummary();
@@ -284,21 +281,12 @@
     grid.classList.add('monsters-grid--empty-state');
   }
 
-  function syncMonstersShowLevelButton(minLevel36Only, t) {
-    const on = !!minLevel36Only;
-    const sel = document.getElementById('monsters-filter-level');
-    if (sel) sel.value = on ? '35' : '';
-    const btn = document.getElementById('monsters-filter-min-level');
-    const lbl = document.getElementById('lbl-monsters-filter-min-level-btn');
-    if (btn) {
-      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
-      btn.classList.toggle('monsters-toolbar-btn--active', on);
-    }
-    if (lbl) {
-      lbl.textContent = on
-        ? t.monstersFilterMinLevelOn || 'Only Lv 35+'
-        : t.monstersFilterMinLevelOff || 'All levels';
-    }
+  function syncMonstersMinLevelInput(minLevelMin, t) {
+    const n = Number(minLevelMin) || 0;
+    const inp = document.getElementById('monsters-filter-min-level');
+    if (inp) inp.value = n > 0 ? String(n) : '';
+    const lbl = document.getElementById('lbl-monsters-filter-min-level');
+    if (lbl) lbl.textContent = t.monstersFilterMinLevel || 'Min level';
   }
 
   function selectAllVisibleMonsters() {
@@ -351,7 +339,9 @@
     const gridHead = document.getElementById('monsters-grid-head');
     const sortField = document.querySelector('.monsters-toolbar__field--sort');
     if (sortField) sortField.hidden = view === 'table';
+    const rosterMeta = document.querySelector('.monsters-roster-meta');
     if (gridHead) gridHead.hidden = view !== 'cards';
+    if (rosterMeta) rosterMeta.classList.toggle('monsters-roster-meta--table', view === 'table');
     if (grid) {
       grid.classList.toggle('monsters-grid--table', view === 'table');
       grid.classList.toggle('monsters-grid--cards', view === 'cards');
@@ -388,14 +378,11 @@
     const layout = document.getElementById('monsters-layout');
     const aside = document.getElementById('monsters-detail');
     const pinned = monstersDetailPinnedUnitId != null;
-    if (layout) layout.classList.toggle('monsters-layout--pinned', pinned);
+    if (layout) layout.classList.remove('monsters-layout--pinned');
     if (!aside) return;
-    aside.classList.toggle('monsters-detail--float', !pinned);
-    aside.classList.toggle('monsters-detail--pinned', pinned);
-    if (pinned) {
-      aside.style.removeProperty('left');
-      aside.style.removeProperty('top');
-    }
+    aside.classList.add('monsters-detail--float');
+    aside.classList.remove('monsters-detail--pinned');
+    aside.classList.toggle('monsters-detail--locked', pinned);
   }
 
   function hideMonstersDetailFloat() {
@@ -442,10 +429,12 @@
     aside.addEventListener('mouseenter', cancelMonstersDetailHide);
     aside.addEventListener('mouseleave', scheduleMonstersDetailHide);
     const reposition = () => {
-      const uid = monstersDetailHoverUnitId;
-      const card = uid
-        ? document.querySelector(`.monsters-card[data-unit-id="${String(uid).replace(/"/g, '\\"')}"]`)
-        : null;
+      const uid = monstersDetailPinnedUnitId || monstersDetailHoverUnitId;
+      if (!uid) return;
+      const esc = String(uid).replace(/"/g, '\\"');
+      const card =
+        document.querySelector(`.monsters-card[data-unit-id="${esc}"]`) ||
+        document.querySelector(`.monsters-table__row[data-unit-id="${esc}"]`);
       if (card && !aside.hidden) positionMonstersDetailFloat(card);
     };
     window.addEventListener('scroll', reposition, true);

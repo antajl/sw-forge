@@ -1,0 +1,390 @@
+/* Teams builder v2 */
+.teams-layout {
+  grid-template-columns: minmax(11rem, 16rem) 1fr;
+}
+
+.teams-sidebar {
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 12px;
+  background: var(--surface);
+}
+
+.teams-sidebar__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.teams-sidebar__title {
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.teams-set-tree__row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.teams-set-tree__toggle {
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 4px;
+  font-size: 0.7rem;
+}
+
+.teams-set-tree__btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-hi);
+  padding: 8px 10px;
+  cursor: pointer;
+  font-size: 0.84rem;
+}
+
+.teams-set-tree__row.is-active .teams-set-tree__btn,
+.teams-set-tree__btn:hover {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border2));
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+}
+
+.teams-set-tree__count {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+
+.teams-main__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.teams-main__set-name {
+  flex: 1 1 14rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.8rem;
+}
+
+.teams-main__set-name input {
+  min-height: 34px;
+}
+
+.teams-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  gap: 12px;
+}
+
+.teams-main__empty {
+  padding: 24px;
+  text-align: center;
+  border: 1px dashed var(--border2);
+  border-radius: 12px;
+  color: var(--text-dim);
+}
+
+.team-card {
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 12px;
+  background: color-mix(in srgb, var(--bg3) 70%, var(--surface));
+  cursor: grab;
+}
+
+.team-card__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.team-card__title {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.team-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.team-card__action {
+  border: 1px solid var(--border2);
+  background: var(--surface);
+  color: var(--text-hi);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 0.68rem;
+  cursor: pointer;
+}
+
+.team-card__action--danger {
+  color: #f08080;
+}
+
+.team-card__slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.team-card__slots--n6 {
+  max-width: 100%;
+}
+
+.team-card__slot {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  border: 1px solid var(--border2);
+  background: var(--bg2);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.team-card__slot--leader {
+  box-shadow: 0 0 0 2px color-mix(in srgb, #f0c040 55%, transparent);
+}
+
+.team-card__slot--missing {
+  opacity: 0.45;
+  filter: grayscale(0.8);
+}
+
+.team-card__slot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.team-card__slot-empty {
+  font-size: 1.1rem;
+  color: var(--text-dim);
+}
+
+.team-card__crown {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  font-size: 0.65rem;
+  z-index: 2;
+}
+
+.team-card__rune-ok {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  font-size: 0.55rem;
+  color: #6fcf97;
+}
+
+.team-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.team-card__tag {
+  font-size: 0.65rem;
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--border2);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+}
+
+.team-card__notes {
+  margin: 8px 0 0;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  line-height: 1.35;
+}
+
+.teams-editor-dialog {
+  margin: auto;
+  padding: 0;
+  border: none;
+  max-width: min(28rem, 94vw);
+  width: min(28rem, 94vw);
+  border-radius: 12px;
+  background: var(--bg2);
+  color: var(--text-hi);
+}
+
+.teams-editor-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.teams-editor-dialog__form {
+  display: flex;
+  flex-direction: column;
+  max-height: min(90vh, 720px);
+}
+
+.teams-editor-dialog__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border2);
+}
+
+.teams-editor-dialog__title {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.teams-editor-dialog__close {
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 1.1rem;
+}
+
+.teams-editor-dialog__body {
+  overflow: auto;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.teams-editor-dialog__foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border2);
+}
+
+.teams-editor-slot {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.teams-editor-slot--leader {
+  outline: 1px solid color-mix(in srgb, #f0c040 50%, transparent);
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.teams-editor-slot__leader {
+  border: 1px solid var(--border2);
+  background: var(--surface);
+  border-radius: 6px;
+  padding: 6px 8px;
+  cursor: pointer;
+}
+
+.teams-editor__field textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 4rem;
+}
+
+.team-card--readonly {
+  cursor: default;
+}
+
+.team-card--readonly .team-card__actions {
+  display: none;
+}
+
+.team-card__public {
+  margin-left: 6px;
+  font-size: 0.72rem;
+  color: var(--accent);
+}
+
+.teams-shell--share-only .teams-layout,
+.teams-shell--share-only .teams-editor-dialog {
+  display: none !important;
+}
+
+.teams-share-view-wrap {
+  padding: 4px 0 20px;
+}
+
+.teams-share-view__title {
+  margin: 0 0 16px;
+  font-size: 1.05rem;
+}
+
+.teams-share-view__empty {
+  color: var(--text-dim);
+  margin: 0;
+}
+
+.teams-share-set-panel {
+  margin-bottom: 18px;
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface) 92%, var(--bg2) 8%);
+  overflow: hidden;
+}
+
+.teams-share-set-panel__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border2);
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+}
+
+.teams-share-set-panel__icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.teams-share-set-panel__title {
+  margin: 0;
+  flex: 1;
+  font-size: 0.95rem;
+}
+
+.teams-share-set-panel__count {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  min-width: 1.5rem;
+  text-align: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--bg3);
+}
+
+.teams-share-set-panel__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+  padding: 12px;
+}
+
+@media (max-width: 900px) {
+  .teams-layout {
+    grid-template-columns: 1fr;
+  }
+}

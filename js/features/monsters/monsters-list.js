@@ -97,7 +97,7 @@
     if (roleSel && roleSel.value !== (filters.roleFilter || '')) roleSel.value = filters.roleFilter || '';
     if (markSel && markSel.value !== (filters.markFilter || '')) markSel.value = filters.markFilter || '';
     syncMonstersShowAllButton(!!filters.fullSixOnly, t);
-    syncMonstersShowLevelButton(!!filters.minLevel36Only, t);
+    syncMonstersMinLevelInput(filters.minLevelMin, t);
 
     const view = readMonstersView();
     const filtered = filterMonstersList(enriched, filters);
@@ -153,8 +153,12 @@
     syncBulkCardStates(grid);
 
     if (monstersDetailPinnedUnitId) {
+      const esc = String(monstersDetailPinnedUnitId).replace(/"/g, '\\"');
+      const pinCard =
+        document.querySelector(`.monsters-card[data-unit-id="${esc}"]`) ||
+        document.querySelector(`.monsters-table__row[data-unit-id="${esc}"]`);
       const pu = enriched.find((x) => String(x.unitId) === String(monstersDetailPinnedUnitId));
-      if (pu) renderMonstersDetail(pu, t, null);
+      if (pu) renderMonstersDetail(pu, t, pinCard);
     } else if (monstersDetailHoverUnitId) {
       const hoverCard = document.querySelector(
         `.monsters-card[data-unit-id="${String(monstersDetailHoverUnitId).replace(/"/g, '\\"')}"]`,

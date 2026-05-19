@@ -21,13 +21,19 @@ cd worker
 npx wrangler d1 execute swf-db --remote --file=./schema.sql
 ```
 
-**Already have `shares` but errors like `no such column: expires_at`:** your table was created with fewer columns. Run the migration once:
+**Already have `shares` but errors like `no such column: wizard_name` or `expires_at`:** your table was created with fewer columns. Run the migration once:
 
 ```bash
 npx wrangler d1 execute swf-db --remote --file=./migrate-shares-columns.sql
 ```
 
-If SQLite reports `duplicate column name: created_at`, edit the migration file and remove the `ALTER TABLE ... created_at` line, then run again (only `expires_at` was missing).
+If SQLite reports `duplicate column name: expires_at`, `expires_at` is already there — run only the wizard name migration:
+
+```bash
+npx wrangler d1 execute swf-db --remote --file=./migrate-shares-wizard-name.sql
+```
+
+If SQLite reports `duplicate column name: wizard_name`, you are done; retry Share in the app.
 
 ## Deploy
 

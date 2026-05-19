@@ -107,11 +107,14 @@
     if (typeof bindMonsterDetailLeaderTips === 'function') {
       bindMonsterDetailLeaderTips(body, leaderSkill, t);
     }
+    if (typeof bindMonsterDetailSkillTips === 'function') {
+      bindMonsterDetailSkillTips(body, skillRows);
+    }
 
     body.querySelector('[data-open-runes-all]')?.addEventListener('click', () => openMonsterRunesInTable(u));
     body.querySelector('[data-unpin-detail]')?.addEventListener('click', () => unpinMonsterDetail());
 
-    if (!pinned && anchorEl) positionMonstersDetailFloat(anchorEl);
+    if (anchorEl) positionMonstersDetailFloat(anchorEl);
 
     if (db && typeof db.fetchMonsterMetaForDetail === 'function') {
       db.fetchMonsterMetaForDetail(u.masterId).then((row) => {
@@ -146,6 +149,10 @@
           if (typeof hydrateMonsterSkillIcons === 'function') hydrateMonsterSkillIcons(body);
           if (typeof bindMonsterDetailLeaderTips === 'function') {
             bindMonsterDetailLeaderTips(body, row.leader_skill || null, t);
+          }
+          if (typeof bindMonsterDetailSkillTips === 'function') {
+            const rows = skillDb ? skillDb.enrichUnitSkillsForDetail(u.skills) : skillRows;
+            bindMonsterDetailSkillTips(body, rows);
           }
         }
 
@@ -254,7 +261,13 @@
       const uid = card.getAttribute('data-unit-id');
       if (!uid) return;
 
-      if (e.target.closest('a')) return;
+      if (e.target.closest('[data-unpin-detail]')) {
+        e.preventDefault();
+        e.stopPropagation();
+        unpinMonsterDetail();
+        return;
+      }
+      if (e.target.closest('a, button, input, .monsters-mark-btn, .monsters-card__bulk-btn')) return;
       if (e.target.closest('[data-tag-input]')) return;
       if (e.target.closest('.monsters-tag-btn')) return;
 

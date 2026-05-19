@@ -32,6 +32,9 @@ function newShareId() {
 }
 
 async function handleSharePost(request, env) {
+  if (!env.DB) {
+    return json({ error: 'Database not configured', message: 'D1 binding missing on worker' }, 503);
+  }
   let body;
   try {
     body = await request.json();
@@ -43,8 +46,26 @@ async function handleSharePost(request, env) {
   const expiresAt = Number(body.expires_at) || 0;
   if (!data) return json({ error: 'Missing data' }, 400);
 
-  const id = newShareId();
   const createdAt = Math.floor(Date.now() / 1000);
+  let id = newShareId();
+
+  if (wizardName) {
+    const existing = await env.DB.prepare(
+      `SELECT id FROM shares WHERE wizard_name = ? ORDER BY created_at DESC LIMIT 1`,
+    )
+      .bind(wizardName)
+      .first();
+    if (existing && existing.id) {
+      id = existing.id;
+      await env.DB.prepare(
+        `UPDATE shares SET data = ?, expires_at = ?, created_at = ? WHERE id = ?`,
+      )
+        .bind(data, expiresAt, createdAt, id)
+        .run();
+      return json({ id, replaced: true });
+    }
+  }
+
   await env.DB.prepare(
     `INSERT INTO shares (id, wizard_name, data, expires_at, created_at)
      VALUES (?, ?, ?, ?, ?)`,

@@ -195,7 +195,10 @@
       return `<p class="monsters-detail__muted">${escapeHtml(t.monstersNoStats || 'No stat data in SWEX.')}</p>`;
     }
     const base = u.baseStats || null;
-    const lblBase = t.monstersStatBase || 'Base';
+    const computed =
+      base && typeof calculateMonsterStatTotals === 'function'
+        ? calculateMonsterStatTotals(base, u)
+        : null;
     const lblRune = t.monstersStatRunes || '+Runes';
     const lblTot = t.monstersStatTotal || 'Total';
     const coreKeys = [
@@ -212,34 +215,34 @@
     ];
     const coreHead = `<div class="monsters-detail__stats-head monsters-detail__stats-head--core">
       <span class="monsters-detail__stat-k"></span>
-      <span>${escapeHtml(lblBase)}</span>
-      <span class="monsters-detail__stat-rune-h">${escapeHtml(lblRune)}</span>
-      <span>${escapeHtml(lblTot)}</span>
+      <span class="monsters-detail__stat-h">${escapeHtml(lblTot)}</span>
+      <span class="monsters-detail__stat-h monsters-detail__stat-h--bonus">${escapeHtml(lblRune)}</span>
     </div>`;
-    const coreBody = coreKeys
-      .map(([label, key]) => {
-        const total = Number(s[key]);
-        const b = base ? Number(base[key]) : NaN;
-        const baseStr = Number.isFinite(b) ? String(Math.round(b)) : '—';
-        const { total: totStr, rune: runeStr } = formatStatRuneDelta(total, b, false);
-        return `<div class="monsters-detail__stat-row monsters-detail__stat-row--core">
+    function statRow(label, key, isPct) {
+      const b = base ? Number(base[key]) : NaN;
+      const total =
+        computed && Number.isFinite(computed[key]) ? computed[key] : NaN;
+      const totStr = Number.isFinite(total)
+        ? isPct
+          ? `${Math.round(total)}%`
+          : String(Math.round(total))
+        : '—';
+      let bonusHtml =
+        '<span class="monsters-detail__stat-num monsters-detail__stat-num--empty" aria-hidden="true"></span>';
+      if (Number.isFinite(b) && Number.isFinite(total)) {
+        const { rune: runeStr } = formatStatRuneDelta(total, b, isPct);
+        bonusHtml = `<span class="monsters-detail__stat-num monsters-detail__stat-num--rune">${escapeHtml(runeStr)}</span>`;
+      } else if (computed) {
+        bonusHtml = '<span class="monsters-detail__stat-num monsters-detail__stat-num--rune">—</span>';
+      }
+      return `<div class="monsters-detail__stat-row monsters-detail__stat-row--core">
           <span class="monsters-detail__stat-k">${escapeHtml(label)}</span>
-          <span class="monsters-detail__stat-num">${escapeHtml(baseStr)}</span>
-          <span class="monsters-detail__stat-num monsters-detail__stat-num--rune">${escapeHtml(runeStr)}</span>
           <span class="monsters-detail__stat-num monsters-detail__stat-num--total">${escapeHtml(totStr)}</span>
+          ${bonusHtml}
         </div>`;
-      })
-      .join('');
-    const pctBody = pctKeys
-      .map(([label, key]) => {
-        const total = Number(s[key]);
-        const totStr = Number.isFinite(total) ? `${Math.round(total)}%` : '—';
-        return `<div class="monsters-detail__stat-row monsters-detail__stat-row--pct">
-            <span class="monsters-detail__stat-k">${escapeHtml(label)}</span>
-            <span class="monsters-detail__stat-num monsters-detail__stat-num--total">${escapeHtml(totStr)}</span>
-          </div>`;
-      })
-      .join('');
+    }
+    const coreBody = coreKeys.map(([label, key]) => statRow(label, key, false)).join('');
+    const pctBody = pctKeys.map(([label, key]) => statRow(label, key, true)).join('');
     const loading =
       !base && window.SWRM_MONSTER_DB
         ? `<p class="monsters-detail__muted monsters-detail__stats-loading">${escapeHtml(t.monstersStatsLoading || 'Loading base stats…')}</p>`
@@ -386,11 +389,9 @@
       ? t.monstersStorageSwex || t.monstersLocationStorage || 'Storage (SWEX)'
       : t.monstersStorageMark || 'Storage tag';
     const storageDisabled = u.inStorage ? ' disabled' : '';
-    return `<div class="monsters-card__actions">
-        <button type="button" class="monsters-tag-btn monsters-tag-btn--sm${u.favorite ? ' monsters-tag-btn--on' : ''}" data-unit-tag="favorite" data-unit-id="${uid}" aria-pressed="${u.favorite}" title="${escapeHtml(t.monstersFavorite || 'Favorite')}">★</button>
-        <button type="button" class="monsters-tag-btn monsters-tag-btn--sm${u.food ? ' monsters-tag-btn--on' : ''}" data-unit-tag="food" data-unit-id="${uid}" aria-pressed="${u.food}" title="${escapeHtml(t.monstersFood || 'Food')}">🍖</button>
-        <button type="button" class="monsters-tag-btn monsters-tag-btn--sm${storageOn ? ' monsters-tag-btn--on' : ''}${u.inStorage ? ' monsters-tag-btn--swex' : ''}" data-unit-tag="storageMark" data-unit-id="${uid}" aria-pressed="${storageOn}" title="${escapeHtml(storageTitle)}"${storageDisabled}>▣</button>
-      </div>`;
+    return `<button type="button" class="monsters-mark-btn${u.favorite ? ' monsters-mark-btn--on monsters-mark-btn--favorite' : ''}" data-unit-tag="favorite" data-unit-id="${uid}" aria-pressed="${u.favorite}" title="${escapeHtml(t.monstersFavorite || 'Favorite')}">★</button>
+        <button type="button" class="monsters-mark-btn${u.food ? ' monsters-mark-btn--on monsters-mark-btn--food' : ''}" data-unit-tag="food" data-unit-id="${uid}" aria-pressed="${u.food}" title="${escapeHtml(t.monstersFood || 'Food')}">🍖</button>
+        <button type="button" class="monsters-mark-btn${storageOn ? ' monsters-mark-btn--on monsters-mark-btn--storage' : ''}${u.inStorage ? ' monsters-mark-btn--swex' : ''}" data-unit-tag="storageMark" data-unit-id="${uid}" aria-pressed="${storageOn}" title="${escapeHtml(storageTitle)}"${storageDisabled}>▣</button>`;
   }
 
   function buildListRowMetaHtml(u, t) {
@@ -517,7 +518,16 @@
     const overlay = label
       ? '<span class="monsters-detail__skill-lv-overlay">' + escapeHtml(label) + '</span>'
       : '';
-    return '<div class="monsters-detail__skill-tile">' + img + overlay + '</div>';
+    return (
+      '<div class="monsters-detail__skill-tile monsters-detail__skill-tile--tip" data-skill-id="' +
+      escapeHtml(String(s.skillId)) +
+      '" data-skill-level="' +
+      escapeHtml(String(s.level)) +
+      '">' +
+      img +
+      overlay +
+      '</div>'
+    );
   }
 
   function resolveLeaderSkillTile(leaderSkill) {
@@ -568,6 +578,43 @@
     const tip = formatLeaderSkillTooltip(leaderSkill, t);
     setSwrmFloatTipTarget(tile, tip);
     tile.setAttribute('aria-label', tip);
+  }
+
+  function bindMonsterDetailSkillTips(root, skillRows) {
+    if (!root || typeof setSwrmFloatTipTarget !== 'function') return;
+    const rows = skillRows || [];
+    const tiles = root.querySelectorAll(
+      '.monsters-detail__skills-main .monsters-detail__skill-tile--tip',
+    );
+    tiles.forEach((tile, i) => {
+      const row = rows[i];
+      const skillId = row?.skillId ?? Number(tile.getAttribute('data-skill-id'));
+      const level = row?.level ?? Number(tile.getAttribute('data-skill-level'));
+      if (!skillId) return;
+      tile.style.cursor = 'help';
+      const applyTip = async () => {
+        const db = window.SWRM_SKILL_DB;
+        if (!db || typeof db.fetchSkillMeta !== 'function') return;
+        let text =
+          typeof db.formatSkillTooltip === 'function'
+            ? db.formatSkillTooltip(skillId, level)
+            : '';
+        const placeholder = text && /^Skill \d+/.test(text);
+        if (!text || placeholder) {
+          await db.fetchSkillMeta(skillId);
+          text =
+            typeof db.formatSkillTooltip === 'function'
+              ? db.formatSkillTooltip(skillId, level)
+              : '';
+        }
+        if (text) {
+          setSwrmFloatTipTarget(tile, text);
+          tile.setAttribute('aria-label', text);
+        }
+      };
+      tile.addEventListener('mouseenter', applyTip);
+      tile.addEventListener('focus', applyTip);
+    });
   }
 
   function formatLeaderSkillTitleBody(leaderSkill, t) {

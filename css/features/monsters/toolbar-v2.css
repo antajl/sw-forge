@@ -24,6 +24,11 @@
   min-width: 0;
 }
 
+.monsters-toolbar-main__left .monsters-view-toggle {
+  flex: 0 0 auto;
+  align-self: flex-end;
+}
+
 .monsters-toolbar-main__right {
   flex: 0 1 auto;
   display: flex;
@@ -46,15 +51,43 @@
 
 .monsters-toolbar__field--element select,
 .monsters-toolbar__field--level select,
+.monsters-toolbar__field--level input,
 .monsters-toolbar__field--sort select {
   min-height: 34px;
+}
+
+.monsters-toolbar__field--level input {
+  width: 4.2rem;
+  padding: 4px 6px;
+  text-align: center;
 }
 
 .monsters-chips--stats {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  padding: 2px 0 4px;
+  padding: 0;
+  margin-bottom: 0;
+}
+
+.monsters-roster-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0 0 8px;
+}
+
+.monsters-roster-meta .monsters-grid-head {
+  margin: 0;
+  padding: 4px 10px;
+}
+
+.monsters-grid-head[hidden] {
+  display: none !important;
+}
+
+.monsters-roster-meta--table .monsters-grid-head {
+  display: none !important;
 }
 
 .monsters-toolbar-btn--filters {

@@ -462,3 +462,43 @@ main {
 }
 
 .upload-btn.hidden { display: none; }
+
+/* Share profile (read-only view) */
+.share-view-banner {
+  width: 100%;
+  border-bottom: 1px solid var(--border2);
+  background: color-mix(in srgb, var(--accent) 12%, var(--bg2));
+}
+
+.share-view-banner__inner {
+  max-width: var(--app-content-max);
+  margin: 0 auto;
+  padding: 8px 14px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+}
+
+.share-view-banner__text {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-hi);
+}
+
+.share-profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin-bottom: 1.25rem;
+}
+
+.share-profile-opt {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}

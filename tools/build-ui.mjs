@@ -15,6 +15,7 @@ const CHUNKS = [
   'shell/bootstrap.js',
   'shell/theme-nav.js',
   'shell/i18n-bindings.js',
+  'shell/mobile-nav.js',
   'shell/main-tabs.js',
   'runes/stage-filters.js',
   'runes/upload.js',
@@ -33,6 +34,7 @@ const CHUNKS = [
   'rules/constants-ui.js',
   'rules/bootstrap.js',
   'app/settings-ui.js',
+  'app/share.js',
   'app/changelog.js',
   'monsters/bootstrap.js',
 ];

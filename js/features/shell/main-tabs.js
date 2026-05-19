@@ -1,5 +1,7 @@
 // js/features/shell/main-tabs.js — top-level tab switching
   // ===================== TABS =====================
+  initHeaderMobileNav();
+
   document.querySelectorAll('.tab').forEach((btn) => {
     btn.addEventListener('click', () => {
       showMainTab(btn.dataset.tab, { writeHash: true });

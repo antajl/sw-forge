@@ -62,6 +62,9 @@ const APP_VERSION = '1.2.17';
  */
 const DEBUG_BYPASS_EFFICIENCY_GATES = false;
 
+/** Cloudflare Worker API (Share Profile, Leaderboard). */
+const SWRM_API = 'https://sw-backend.antajltube.workers.dev';
+
 
 // Slot mains (odd slots) — after i18n in monolith, kept here for load order with thresholds.
 const SLOT_MAIN_FIXED = {

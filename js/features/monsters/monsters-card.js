@@ -8,14 +8,37 @@
     return `<img class="${className}" src="${escapeHtml(url)}" alt="" width="16" height="16" loading="lazy" decoding="async" referrerpolicy="no-referrer" />`;
   }
 
-  function buildMonsterStarsBadge(u) {
-    const n =
-      u.meta && u.meta.natural_stars != null
-        ? Number(u.meta.natural_stars)
-        : Number(u.stars) || 0;
+  function monsterUnitNatStars(u) {
+    const n = u.unitClass != null ? Number(u.unitClass) : Number(u.stars) || 0;
+    return Math.min(6, Math.max(0, n));
+  }
+
+  function monsterUnitRankStars(u) {
+    const n = u.unitRank != null ? Number(u.unitRank) : Number(u.stars) || 0;
+    return Math.min(6, Math.max(0, n));
+  }
+
+  function monsterUnitIsAwakened(u) {
+    const rank = monsterUnitRankStars(u);
+    if (rank !== 6) return false;
+    const maxLvl = u.maxLevel != null ? Number(u.maxLevel) : 40;
+    const lvl = Number(u.level) || 0;
+    return maxLvl === 40 && lvl >= 40;
+  }
+
+  function buildMonsterNatBadge(u) {
+    const n = monsterUnitNatStars(u);
     if (!n) return '';
-    const filled = '★'.repeat(Math.min(6, Math.max(0, n)));
-    return `<span class="monsters-card__stars" aria-label="${n}★">${filled}</span>`;
+    return `<span class="monsters-card__nat monsters-card__nat--${n}" title="nat${n}">nat${n}</span>`;
+  }
+
+  function buildMonsterStarsBadge(u) {
+    const n = monsterUnitRankStars(u);
+    if (!n) return '';
+    const filled = '★'.repeat(n);
+    const awakened = monsterUnitIsAwakened(u);
+    const cls = awakened ? ' monsters-card__stars--awakened' : '';
+    return `<span class="monsters-card__stars${cls}" aria-label="${n}★">${filled}</span>`;
   }
 
   function buildMonsterCardHtml(u, db, t, view) {
@@ -26,12 +49,10 @@
     const nameInner = bestiaryHref
       ? `<a href="${escapeHtml(bestiaryHref)}" target="_blank" rel="noopener noreferrer">${escapeHtml(u.displayName)}</a>`
       : escapeHtml(u.displayName);
-    const natLbl = t.monstersNatShort || 'nat';
     const lvlLbl = t.monstersLevelShort || 'Lv';
     const subBits = [
       u.metaElement ? escapeHtml(u.metaElement) : '',
       u.metaArchetype ? escapeHtml(u.metaArchetype) : '',
-      u.meta && u.meta.natural_stars != null ? `${natLbl} ${u.meta.natural_stars}` : '',
       `${lvlLbl} ${u.level}`,
     ].filter(Boolean);
     const runeCells = buildRuneBlockHtml(u, db, t, view);
@@ -42,12 +63,14 @@
     const listMetaHtml = isList ? buildListRowMetaHtml(u, t) : '';
     const locHtml = !isList && u.inStorage ? buildLocationIconHtml(u, t) : '';
     const actionsHtml = isList ? '' : buildCardActionsHtml(u, t);
+    const natBadge = !isList ? buildMonsterNatBadge(u) : '';
     const starsBadge = !isList ? buildMonsterStarsBadge(u) : '';
     return `<article class="monsters-card${listCls}${u.favorite ? ' monsters-card--favorite' : ''}${u.food ? ' monsters-card--food' : ''}${u.inStorage ? ' monsters-card--storage' : ''}${bulkSel ? ' monsters-card--bulk-on' : ''}${selected ? ' monsters-card--selected' : ''}${hover ? ' monsters-card--hover' : ''}${elCls ? ` monsters-card--${elCls}` : ''}" data-unit-id="${escapeHtml(String(u.unitId))}" data-master-id="${u.masterId}" tabindex="0">
           <div class="monsters-card__bar monsters-card__bar--${elCls}" aria-hidden="true"></div>
           ${actionsHtml}
           <div class="monsters-card__top">
 <div class="monsters-card__img-wrap">
+              ${natBadge}
               ${starsBadge}
               <img class="monsters-card__img" alt="" width="48" height="48" data-img-file="${escapeHtml(u.imageFilename || '')}" loading="lazy" decoding="async" />
             </div>

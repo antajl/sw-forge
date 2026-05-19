@@ -339,11 +339,17 @@
    * @param {string} tabId
    * @param {{ writeHash?: boolean, pushHistory?: boolean, runesSubtab?: string, keepTab?: boolean }} [options]
    */
+  let showMainTabLastMain = null;
+
   function showMainTab(tabId, options) {
     const opts = options || {};
     const writeHash = opts.writeHash === true;
     const pushHistory = opts.pushHistory === true;
     const { main, sub } = normalizeMainTabRequest(tabId);
+    if (showMainTabLastMain === 'monsters' && main !== 'monsters' && typeof clearAllMonstersSelection === 'function') {
+      clearAllMonstersSelection();
+    }
+    showMainTabLastMain = main;
     const hashParts = splitMainHash();
     const runesSub =
       sub ||

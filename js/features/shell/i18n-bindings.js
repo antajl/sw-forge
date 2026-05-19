@@ -425,6 +425,15 @@
     
     updateHeaderThemeA11y(t);
 
+    const shareTitle = document.getElementById('share-profile-title');
+    if (shareTitle) shareTitle.textContent = t.shareProfileTitle || 'Share Profile';
+    const shareDesc = document.getElementById('share-profile-desc');
+    if (shareDesc) shareDesc.textContent = t.shareProfileDesc || '';
+    const shareFullLbl = document.getElementById('lbl-share-full-inventory');
+    if (shareFullLbl) shareFullLbl.textContent = t.shareFullInventory || '';
+    const shareBtn = document.getElementById('share-profile-btn');
+    if (shareBtn) shareBtn.textContent = t.shareProfileBtn || 'Share';
+
     // Update database slots title and description in app settings tab
     const dbSlotsTitle = document.getElementById('db-slots-title');
     if (dbSlotsTitle) dbSlotsTitle.textContent = t.dbSlotsTitle;

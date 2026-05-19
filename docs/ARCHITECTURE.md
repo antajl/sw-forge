@@ -1,6 +1,6 @@
 # Architecture
 
-SW Rune Master is a static browser app. GitHub Pages serves `index.html`, CSS, data JSON, and plain script files. There is no runtime bundler requirement.
+SW Forge is a static browser app. Cloudflare Pages serves `index.html`, CSS, data JSON, and plain script files. There is no runtime bundler requirement.
 
 **Source of truth for paths and workflow:** `docs/PROJECT-CONTEXT.md`
 

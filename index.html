@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SW Rune Master</title>
+  <title>SW Forge</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" sizes="any" />
   <!-- Inline: SVGs have a huge default intrinsic size before css/style.css loads (e.g. live reload). -->
   <style>
@@ -26,11 +26,17 @@
     <div class="header-shell">
       <div class="header-row header-row--nav">
         <div class="header-brand">
-          <a class="logo" href="./" id="site-logo-link" aria-label="SW Rune Master">
+          <a class="logo" href="./" id="site-logo-link" aria-label="SW Forge">
             <img class="logo__img" src="assets/logo.svg" width="196" height="36" alt="" decoding="async" />
           </a>
         </div>
-        <div class="tabs-scroll" aria-label="Main navigation">
+        <button type="button" class="header-nav-toggle" id="header-nav-toggle" aria-expanded="false" aria-controls="main-tabs-panel" title="Menu">
+          <svg class="header-nav-toggle__icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false">
+            <path d="M4 7h16M4 12h16M4 17h16" />
+          </svg>
+          <span class="sr-only" id="lbl-header-nav-toggle">Menu</span>
+        </button>
+        <div class="tabs-scroll" id="main-tabs-panel" aria-label="Main navigation">
           <nav class="tabs">
             <button type="button" class="tab active" data-tab="runes" title="Runes">
               <span class="tab__icon" aria-hidden="true">
@@ -427,13 +433,13 @@
             <table id="rune-table">
               <thead>
                 <tr>
-                  <th data-sort="grade" class="th-has-filter col-grade col-pin">
+                  <th data-sort="grade" class="th-has-filter col-grade">
                     <span class="th-text" data-filter="grade">Grade</span>
                     <select id="filter-grade" class="th-filter">
                       <option value="">All</option>
                     </select>
                   </th>
-                  <th data-sort="set" class="th-has-filter col-set col-pin col-text">
+                  <th data-sort="set" class="th-has-filter col-set col-text">
                     <span class="th-text" data-filter="set">Set</span>
                     <select id="filter-set" class="th-filter">
                       <option value="">All</option>
@@ -684,10 +690,6 @@
             <button type="button" id="monsters-view-list" class="monsters-view-btn" aria-pressed="false" title="List">
               <svg class="monsters-toolbar-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg>
               <span class="sr-only" id="lbl-monsters-view-list">List</span>
-            </button>
-            <button type="button" id="monsters-view-table" class="monsters-view-btn" aria-pressed="false" title="Table">
-              <svg class="monsters-toolbar-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="16" width="18" height="4" rx="1"/></svg>
-              <span class="sr-only" id="lbl-monsters-view-table">Table</span>
             </button>
           </div>
           <span class="monsters-toolbar__sep" aria-hidden="true"></span>
@@ -1138,6 +1140,16 @@
             </label>
           </div>
           
+          <h3 id="share-profile-title">Share Profile</h3>
+          <p id="share-profile-desc" class="settings-desc">Create a read-only link to your equipped monsters (or full inventory).</p>
+          <div class="share-profile-actions">
+            <label class="share-profile-opt">
+              <input type="checkbox" id="share-full-inventory" />
+              <span id="lbl-share-full-inventory">Include full inventory</span>
+            </label>
+            <button type="button" class="btn-primary" id="share-profile-btn">Share</button>
+          </div>
+
           <h3 id="db-slots-title">Database Slots</h3>
           <p id="db-slots-desc" class="settings-desc">Store up to 4 different JSON databases and switch between them instantly.</p>
           <div id="db-slots-wrap"></div>

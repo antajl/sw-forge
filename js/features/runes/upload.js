@@ -237,10 +237,12 @@
         return false;
       }
       const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en || {};
-      const label = t.demoDatasetSlotLabel || 'Example SWEX export';
-      await persistSwexPayloadToSlots(jsonText, label, json);
+      const label = t.demoDatasetSlotLabel || 'Demo';
+      allRunes = parseSWEX(json);
+      rebuildUnitsFromSwex(json);
+      reprocess();
       markUsingDemoDataset(true);
-      uiAfterSuccessfulRuneRestore({ name: label, id: 1 }, { keepTab: options.keepTab === true });
+      uiAfterSuccessfulRuneRestore({ name: label }, { keepTab: options.keepTab === true });
       applyDemoBannerTextFromTranslations();
       syncDemoBannerVisibility();
       return true;

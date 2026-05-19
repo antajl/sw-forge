@@ -159,6 +159,14 @@
     initGuideSubtabs();
     showMainTab(mainTabIdFromHash() || 'runes');
 
+    if (typeof initShareProfile === 'function') {
+      const openedShare = await initShareProfile();
+      if (openedShare) {
+        renderDbSlots();
+        return;
+      }
+    }
+
     const savedRunes = localStorage.getItem('loadedRunes');
 
     try {

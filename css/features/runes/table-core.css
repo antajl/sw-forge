@@ -67,13 +67,6 @@ thead tr {
 #rune-table thead th.th-has-filter {
   z-index: 22;
 }
-#rune-table thead th.col-pin {
-  z-index: 24;
-}
-#rune-table thead th.col-pin.col-set {
-  z-index: 23;
-}
-
 th {
   font-family: var(--font-head); font-size: 0.75rem; font-weight: 700;
   letter-spacing: 0.04em; text-transform: none; color: var(--text-dim);
@@ -160,41 +153,12 @@ td {
   background: var(--rt-row-bg-even);
 }
 
-/* Sticky Grade + Set when scrolling horizontally */
-#rune-table th.col-pin,
-#rune-table td.col-pin {
-  position: sticky;
-}
-#rune-table th.col-pin.col-grade,
-#rune-table td.col-pin.col-grade {
-  left: 0;
-}
-#rune-table th.col-pin.col-set,
-#rune-table td.col-pin.col-set {
-  left: var(--rt-grade-w);
-  box-shadow: 4px 0 10px -6px rgba(0, 0, 0, 0.45);
-}
-#rune-table thead th.col-pin {
-  background: var(--bg3);
-}
-#rune-table tbody td.col-pin {
-  background: var(--rt-row-bg);
-}
-#rune-table tbody tr:nth-child(even) td.col-pin {
-  background: var(--rt-row-bg-even);
-}
-#rune-table tbody tr:hover td.col-pin,
 #rune-table tbody tr:hover td.col-sub {
   background: var(--rt-row-bg-hover);
 }
 
 .light-theme #rune-table {
   --rt-row-bg-even: color-mix(in srgb, var(--surface) 68%, var(--bg2));
-}
-
-.light-theme #rune-table th.col-pin.col-set,
-.light-theme #rune-table td.col-pin.col-set {
-  box-shadow: 4px 0 14px -8px rgba(0, 0, 0, 0.14);
 }
 
 .target-col-cell { display: none; }

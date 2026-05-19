@@ -749,40 +749,22 @@ html[lang="ru"] .stage-metric-name {
   align-items: center;
 }
 
-.stage-select-wrap::before {
-  content: '';
-  position: absolute;
-  left: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--border2);
-  pointer-events: none;
-  z-index: 1;
+.stage-select-wrap--early #stage-select,
+.stage-select-wrap--early select {
+  border-color: color-mix(in srgb, var(--stage-early) 55%, var(--border2));
+  background-color: color-mix(in srgb, var(--stage-early) 14%, var(--bg3));
 }
 
-.stage-select-wrap--early::before {
-  background: var(--stage-early);
+.stage-select-wrap--mid #stage-select,
+.stage-select-wrap--mid select {
+  border-color: color-mix(in srgb, var(--stage-mid) 55%, var(--border2));
+  background-color: color-mix(in srgb, var(--stage-mid) 14%, var(--bg3));
 }
 
-.stage-select-wrap--mid::before {
-  background: var(--stage-mid);
-}
-
-.stage-select-wrap--late::before {
-  background: var(--stage-late);
-}
-
-.dashboard-stage-wrap .stage-select-wrap {
-  padding-left: 22px;
-}
-
-.dashboard-stage-wrap .stage-select-wrap::before {
-  width: 13px;
-  height: 13px;
-  left: 1px;
+.stage-select-wrap--late #stage-select,
+.stage-select-wrap--late select {
+  border-color: color-mix(in srgb, var(--stage-late) 55%, var(--border2));
+  background-color: color-mix(in srgb, var(--stage-late) 14%, var(--bg3));
 }
 
 .dashboard-stage-wrap #stage-select,

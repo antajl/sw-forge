@@ -1,10 +1,10 @@
-# SW Rune Master
+# SW Forge
 
-A **browser-only** rune analyzer for **Summoners War**. Load your **[SWEX](https://github.com/Xzandro/sw-exporter/releases/latest)** JSON export and get **verdicts**, **role fits**, **dashboard stats**, and tunable **rules** — no server upload, no SWOP/CSV step for the main workflow.
+A **browser-only** rune analyzer for **Summoners War**. Load your **[SWEX](https://github.com/Xzandro/sw-exporter/releases/latest)** JSON export and get **verdicts**, **role fits**, **dashboard stats**, and tunable **rules** — no server upload for the main workflow, no SWOP/CSV step.
 
 The project grew out of a **[community-driven Google Sheet](#google-sheet-alternative)** with the same pipeline mindset (pre-checks → scouting → archetypes → grind/gem/reapp). **This web app is now the primary surface**; the sheet remains a supported alternative if you prefer spreadsheets.
 
-**Live site:** https://antajl.github.io/sw-rune-master/
+**Live site:** https://sw-forge.pages.dev
 
 ---
 
@@ -91,7 +91,7 @@ On top of roles:
 ## Quick start
 
 1. Export your account with **SWEX** (JSON).
-2. Open the **[live site](https://antajl.github.io/sw-rune-master/)** and choose **Load JSON**.
+2. Open the **[live site](https://sw-forge.pages.dev)** and choose **Load JSON**.
 3. Set **Early / Mid / Late** if you want to override the suggestion from Depth v2.
 4. Use **Dashboard** for overview, **Rune Table** for row-level review, **Rune Rules** to tune logic.
 
@@ -114,9 +114,24 @@ npm run build:ui
 npm run watch:ui
 ```
 
+1. Edit files in `js/features/**` or `css/**`
+2. Run `npm run build:ui`
+3. `git push` to `main` → Cloudflare Pages deploys automatically (~1 min)
+4. Verify at https://sw-forge.pages.dev
+
 See **`docs/PROJECT-CONTEXT.md`** (source of truth) and `docs/ARCHITECTURE.md` for the feature-to-file map and script load order.
 
-**Layout:** `js/core/`, `js/data/`, `js/features/`, `css/foundation/`, `css/features/`. After pulling structural changes, run `MIGRATE.cmd` once (or `node tools/migrate-structure.mjs` then `npm run build:ui`). Demo data: `data/demo.json`.
+**Layout:** `js/core/`, `js/data/`, `js/features/`, `css/foundation/`, `css/features/`. Demo data: `data/demo.json`.
+
+---
+
+## Roadmap
+
+| Feature | Status |
+|---------|--------|
+| **Share Profile** | Share a read-only link to equipped runes (or full inventory) via Cloudflare Worker + D1 |
+| **Rune Efficiency Leaderboard** | Anonymous percentile ranking among SW Forge users |
+| **Grind Optimizer** | Client-side devilmon / grind candidate suggestions from loaded SWEX |
 
 ---
 

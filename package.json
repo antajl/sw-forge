@@ -1,5 +1,5 @@
 {
-  "name": "sw-rune-master",
+  "name": "sw-forge",
   "private": true,
   "scripts": {
     "build:ui": "node tools/build-ui.mjs",

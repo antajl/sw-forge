@@ -205,8 +205,8 @@
     };
 
     return `<tr>
-      <td class="col-grade col-pin">${grade}</td>
-      <td class="col-set col-pin col-text">${tableStatLine(highlightSearchInPlain(r.setName, tableSearchHighlight), { set: true })}</td>
+      <td class="col-grade">${grade}</td>
+      <td class="col-set col-text">${tableStatLine(highlightSearchInPlain(r.setName, tableSearchHighlight), { set: true })}</td>
       <td class="col-num td-num-plain">${highlightSearchInPlain(String(r.level), tableSearchHighlight)}</td>
       <td class="col-num td-num-plain">${highlightSearchInPlain(String(r.slot), tableSearchHighlight)}</td>
       <td class="col-text">${tableStatLine(mainInner)}</td>

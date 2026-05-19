@@ -414,11 +414,17 @@
    * @param {string} tabId
    * @param {{ writeHash?: boolean, pushHistory?: boolean, runesSubtab?: string, keepTab?: boolean }} [options]
    */
+  let showMainTabLastMain = null;
+
   function showMainTab(tabId, options) {
     const opts = options || {};
     const writeHash = opts.writeHash === true;
     const pushHistory = opts.pushHistory === true;
     const { main, sub } = normalizeMainTabRequest(tabId);
+    if (showMainTabLastMain === 'monsters' && main !== 'monsters' && typeof clearAllMonstersSelection === 'function') {
+      clearAllMonstersSelection();
+    }
+    showMainTabLastMain = main;
     const hashParts = splitMainHash();
     const runesSub =
       sub ||
@@ -896,6 +902,15 @@
     
     updateHeaderThemeA11y(t);
 
+    const shareTitle = document.getElementById('share-profile-title');
+    if (shareTitle) shareTitle.textContent = t.shareProfileTitle || 'Share Profile';
+    const shareDesc = document.getElementById('share-profile-desc');
+    if (shareDesc) shareDesc.textContent = t.shareProfileDesc || '';
+    const shareFullLbl = document.getElementById('lbl-share-full-inventory');
+    if (shareFullLbl) shareFullLbl.textContent = t.shareFullInventory || '';
+    const shareBtn = document.getElementById('share-profile-btn');
+    if (shareBtn) shareBtn.textContent = t.shareProfileBtn || 'Share';
+
     // Update database slots title and description in app settings tab
     const dbSlotsTitle = document.getElementById('db-slots-title');
     if (dbSlotsTitle) dbSlotsTitle.textContent = t.dbSlotsTitle;
@@ -914,7 +929,44 @@
     }
   }
 
+  function closeHeaderNavMenu() {
+    const row = document.querySelector('.header-row--nav');
+    const toggle = document.getElementById('header-nav-toggle');
+    if (row) row.classList.remove('is-nav-open');
+    if (toggle) toggle.setAttribute('aria-expanded', 'false');
+  }
+
+  function initHeaderMobileNav() {
+    const toggle = document.getElementById('header-nav-toggle');
+    const row = document.querySelector('.header-row--nav');
+    const panel = document.getElementById('main-tabs-panel');
+    if (!toggle || !row || !panel) return;
+
+    toggle.addEventListener('click', () => {
+      const open = row.classList.toggle('is-nav-open');
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+
+    panel.querySelectorAll('.tab').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        if (window.matchMedia('(max-width: 720px)').matches) closeHeaderNavMenu();
+      });
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!row.classList.contains('is-nav-open')) return;
+      if (row.contains(e.target) || toggle.contains(e.target)) return;
+      closeHeaderNavMenu();
+    });
+
+    window.addEventListener('resize', () => {
+      if (window.matchMedia('(min-width: 721px)').matches) closeHeaderNavMenu();
+    });
+  }
+
   // ===================== TABS =====================
+  initHeaderMobileNav();
+
   document.querySelectorAll('.tab').forEach((btn) => {
     btn.addEventListener('click', () => {
       showMainTab(btn.dataset.tab, { writeHash: true });
@@ -1491,10 +1543,12 @@
         return false;
       }
       const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en || {};
-      const label = t.demoDatasetSlotLabel || 'Example SWEX export';
-      await persistSwexPayloadToSlots(jsonText, label, json);
+      const label = t.demoDatasetSlotLabel || 'Demo';
+      allRunes = parseSWEX(json);
+      rebuildUnitsFromSwex(json);
+      reprocess();
       markUsingDemoDataset(true);
-      uiAfterSuccessfulRuneRestore({ name: label, id: 1 }, { keepTab: options.keepTab === true });
+      uiAfterSuccessfulRuneRestore({ name: label }, { keepTab: options.keepTab === true });
       applyDemoBannerTextFromTranslations();
       syncDemoBannerVisibility();
       return true;
@@ -3078,8 +3132,10 @@
       eliteAvgUncapped = sumE / eliteK;
     }
 
-    const spdNorm = Math.min(spdDepthCount / CFG.spdDepthCap, 1);
-    const plus15Norm = Math.min(plus15DepthCount / CFG.plus15DepthCap, 1);
+    const spdCap = Math.max(spdDepthCount, 1);
+    const plus15Cap = Math.max(plus15DepthCount, 1);
+    const spdNorm = Math.min(spdDepthCount / spdCap, 1);
+    const plus15Norm = Math.min(plus15DepthCount / plus15Cap, 1);
     const eliteEffExcess = Math.max(0, eliteAvgUncapped - CFG.eliteEffBaseline);
     const eliteNorm = Math.min(eliteEffExcess / CFG.eliteEffSpan, 1);
 
@@ -4085,8 +4141,8 @@
     };
 
     return `<tr>
-      <td class="col-grade col-pin">${grade}</td>
-      <td class="col-set col-pin col-text">${tableStatLine(highlightSearchInPlain(r.setName, tableSearchHighlight), { set: true })}</td>
+      <td class="col-grade">${grade}</td>
+      <td class="col-set col-text">${tableStatLine(highlightSearchInPlain(r.setName, tableSearchHighlight), { set: true })}</td>
       <td class="col-num td-num-plain">${highlightSearchInPlain(String(r.level), tableSearchHighlight)}</td>
       <td class="col-num td-num-plain">${highlightSearchInPlain(String(r.slot), tableSearchHighlight)}</td>
       <td class="col-text">${tableStatLine(mainInner)}</td>
@@ -5586,6 +5642,14 @@
     initGuideSubtabs();
     showMainTab(mainTabIdFromHash() || 'runes');
 
+    if (typeof initShareProfile === 'function') {
+      const openedShare = await initShareProfile();
+      if (openedShare) {
+        renderDbSlots();
+        return;
+      }
+    }
+
     const savedRunes = localStorage.getItem('loadedRunes');
 
     try {
@@ -6060,6 +6124,184 @@
       renderDbSlots();
     }
   });
+
+  const SHARE_QUERY_KEY = 's';
+  const SHARE_EXPIRY_DAYS = 90;
+  let shareReadOnly = false;
+  let shareViewWizardName = '';
+
+  function shareExpiryUnix() {
+    return Math.floor(Date.now() / 1000) + SHARE_EXPIRY_DAYS * 24 * 60 * 60;
+  }
+
+  function buildShareSlimPayload(fullInventory) {
+    const json = activeSwexJson;
+    if (!json || !Array.isArray(json.unit_list)) return null;
+    const runeById = new Map();
+    for (const r of allRunes || []) {
+      if (r && r.id != null) runeById.set(Number(r.id), r);
+    }
+    const units = json.unit_list
+      .filter((u) => u && u.unit_master_id != null)
+      .filter((u) => fullInventory || (Array.isArray(u.runes) && u.runes.length > 0))
+      .map((u) => {
+        const runes = (u.runes || []).map((raw) => {
+          const rid = raw.rune_id != null ? Number(raw.rune_id) : null;
+          const parsed = rid != null && runeById.has(rid) ? runeById.get(rid) : null;
+          if (parsed) {
+            return {
+              rune_id: rid,
+              slot_no: parsed.slot,
+              set_id: parsed.setId,
+              upgrade_curr: parsed.level,
+              pri_eff: [parsed.mainType, parsed.mainVal],
+              sec_eff: (parsed.substats || []).map((s) => [
+                s.type,
+                s.val,
+                s.enchanted ? 1 : 0,
+                s.grind || 0,
+              ]),
+            };
+          }
+          return raw;
+        });
+        return {
+          unit_master_id: u.unit_master_id,
+          class: u.class,
+          attribute: u.attribute,
+          unit_level: u.unit_level,
+          rank: u.rank,
+          runes,
+        };
+      });
+    const wizardName =
+      (json.wizard_info && (json.wizard_info.wizard_name || json.wizard_info.name)) ||
+      localStorage.getItem('loadedRunesName') ||
+      '';
+    return { wizard_name: String(wizardName || '').trim(), unit_list: units };
+  }
+
+  async function postShareProfile(fullInventory) {
+    const api = typeof SWRM_API === 'string' ? SWRM_API : '';
+    if (!api) throw new Error('API not configured');
+    const data = buildShareSlimPayload(fullInventory);
+    if (!data || !data.unit_list.length) throw new Error('No units to share');
+    const res = await fetch(`${api}/share`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        wizard_name: data.wizard_name,
+        data: JSON.stringify(data),
+        expires_at: shareExpiryUnix(),
+      }),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const body = await res.json();
+    if (!body || !body.id) throw new Error('Invalid response');
+    return String(body.id);
+  }
+
+  function sharePageUrl(shareId) {
+    const base = `${window.location.origin}${window.location.pathname}`;
+    return `${base}?${SHARE_QUERY_KEY}=${encodeURIComponent(shareId)}`;
+  }
+
+  async function copyShareLink(fullInventory) {
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const id = await postShareProfile(fullInventory);
+    const url = sharePageUrl(id);
+    await navigator.clipboard.writeText(url);
+    if (typeof showToast === 'function') {
+      showToast(t.shareLinkCopied || 'Link copied!', 'success');
+    }
+  }
+
+  function renderShareViewBanner() {
+    let bar = document.getElementById('share-view-banner');
+    if (!shareReadOnly) {
+      if (bar) bar.remove();
+      return;
+    }
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    if (!bar) {
+      bar = document.createElement('aside');
+      bar.id = 'share-view-banner';
+      bar.className = 'share-view-banner';
+      const chrome = document.querySelector('.site-chrome-sticky');
+      if (chrome) chrome.insertAdjacentElement('afterend', bar);
+      else document.body.prepend(bar);
+    }
+    const name = escapeHtml(shareViewWizardName || t.shareUnknownWizard || 'another player');
+    const tpl = t.shareViewingBanner || 'You are viewing {name}\'s profile (read-only).';
+    bar.innerHTML = `<div class="share-view-banner__inner">
+      <p class="share-view-banner__text">${tpl.replace(/\{name\}/g, name)}</p>
+      <button type="button" class="btn-secondary btn-sm" id="share-view-exit-btn">${escapeHtml(t.shareLoadOwn || 'Load your SWEX')}</button>
+    </div>`;
+    bar.querySelector('#share-view-exit-btn')?.addEventListener('click', () => {
+      try {
+        const u = new URL(window.location.href);
+        u.searchParams.delete(SHARE_QUERY_KEY);
+        window.location.href = u.pathname + u.hash;
+      } catch (e) {
+        window.location.href = window.location.pathname;
+      }
+    });
+  }
+
+  async function tryOpenShareFromUrl() {
+    let shareId = '';
+    try {
+      shareId = new URL(window.location.href).searchParams.get(SHARE_QUERY_KEY) || '';
+    } catch (e) { /* ignore */ }
+    if (!shareId) return false;
+    const api = typeof SWRM_API === 'string' ? SWRM_API : '';
+    if (!api) return false;
+    try {
+      const res = await fetch(`${api}/share?id=${encodeURIComponent(shareId)}`);
+      if (!res.ok) return false;
+      const body = await res.json();
+      const raw = body && body.data != null ? body.data : null;
+      const text = typeof raw === 'string' ? raw : JSON.stringify(raw);
+      const parsed = JSON.parse(text);
+      const wrapped = {
+        wizard_info: { wizard_name: body.wizard_name || parsed.wizard_name || '' },
+        unit_list: parsed.unit_list || [],
+        runes: [],
+      };
+      if (!tryHydrateRunesFromJsonText(JSON.stringify(wrapped))) return false;
+      shareReadOnly = true;
+      shareViewWizardName = body.wizard_name || parsed.wizard_name || '';
+      renderShareViewBanner();
+      if (typeof uiAfterSuccessfulRuneRestore === 'function') {
+        uiAfterSuccessfulRuneRestore({ name: shareViewWizardName }, { keepTab: true });
+      }
+      return true;
+    } catch (e) {
+      console.warn('Share load failed', e);
+      return false;
+    }
+  }
+
+  function bindShareProfileUi() {
+    document.getElementById('share-profile-btn')?.addEventListener('click', async () => {
+      const full = document.getElementById('share-full-inventory')?.checked === true;
+      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+      try {
+        await copyShareLink(full);
+      } catch (e) {
+        if (typeof showToast === 'function') {
+          showToast((t.shareFailed || 'Share failed') + (e.message ? `: ${e.message}` : ''), 'error');
+        }
+      }
+    });
+  }
+
+  async function initShareProfile() {
+    bindShareProfileUi();
+    const opened = await tryOpenShareFromUrl();
+    if (!opened) renderShareViewBanner();
+    return opened;
+  }
 
   // ===================== CHANGELOG (STATIC, ship-time only) =====================
   function escapeChangelogText(s) {
@@ -6599,7 +6841,8 @@
   function readMonstersView() {
     try {
       const v = localStorage.getItem(MONSTERS_VIEW_KEY);
-      if (v === 'list' || v === 'table') return v;
+      if (v === 'list') return 'list';
+      if (v === 'table') return 'cards';
       return 'cards';
     } catch (e) {
       return 'cards';
@@ -6608,7 +6851,7 @@
 
   function writeMonstersView(view) {
     try {
-      const v = view === 'list' || view === 'table' ? view : 'cards';
+      const v = view === 'list' ? 'list' : 'cards';
       localStorage.setItem(MONSTERS_VIEW_KEY, v);
     } catch (e) { /* ignore */ }
   }
@@ -6695,12 +6938,10 @@
     const grid = document.getElementById('monsters-grid');
     if (grid) {
       grid.classList.toggle('monsters-grid--list', view === 'list');
-      grid.classList.toggle('monsters-grid--table', view === 'table');
       grid.classList.toggle('monsters-grid--cards', view === 'cards');
     }
     const btnCards = document.getElementById('monsters-view-cards');
     const btnList = document.getElementById('monsters-view-list');
-    const btnTable = document.getElementById('monsters-view-table');
     if (btnCards) {
       btnCards.classList.toggle('monsters-view-btn--active', view === 'cards');
       btnCards.setAttribute('aria-pressed', view === 'cards' ? 'true' : 'false');
@@ -6708,10 +6949,6 @@
     if (btnList) {
       btnList.classList.toggle('monsters-view-btn--active', view === 'list');
       btnList.setAttribute('aria-pressed', view === 'list' ? 'true' : 'false');
-    }
-    if (btnTable) {
-      btnTable.classList.toggle('monsters-view-btn--active', view === 'table');
-      btnTable.setAttribute('aria-pressed', view === 'table' ? 'true' : 'false');
     }
   }
 
@@ -7570,14 +7807,37 @@
     return `<img class="${className}" src="${escapeHtml(url)}" alt="" width="16" height="16" loading="lazy" decoding="async" referrerpolicy="no-referrer" />`;
   }
 
-  function buildMonsterStarsBadge(u) {
-    const n =
-      u.meta && u.meta.natural_stars != null
-        ? Number(u.meta.natural_stars)
-        : Number(u.stars) || 0;
+  function monsterUnitNatStars(u) {
+    const n = u.unitClass != null ? Number(u.unitClass) : Number(u.stars) || 0;
+    return Math.min(6, Math.max(0, n));
+  }
+
+  function monsterUnitRankStars(u) {
+    const n = u.unitRank != null ? Number(u.unitRank) : Number(u.stars) || 0;
+    return Math.min(6, Math.max(0, n));
+  }
+
+  function monsterUnitIsAwakened(u) {
+    const rank = monsterUnitRankStars(u);
+    if (rank !== 6) return false;
+    const maxLvl = u.maxLevel != null ? Number(u.maxLevel) : 40;
+    const lvl = Number(u.level) || 0;
+    return maxLvl === 40 && lvl >= 40;
+  }
+
+  function buildMonsterNatBadge(u) {
+    const n = monsterUnitNatStars(u);
     if (!n) return '';
-    const filled = '★'.repeat(Math.min(6, Math.max(0, n)));
-    return `<span class="monsters-card__stars" aria-label="${n}★">${filled}</span>`;
+    return `<span class="monsters-card__nat monsters-card__nat--${n}" title="nat${n}">nat${n}</span>`;
+  }
+
+  function buildMonsterStarsBadge(u) {
+    const n = monsterUnitRankStars(u);
+    if (!n) return '';
+    const filled = '★'.repeat(n);
+    const awakened = monsterUnitIsAwakened(u);
+    const cls = awakened ? ' monsters-card__stars--awakened' : '';
+    return `<span class="monsters-card__stars${cls}" aria-label="${n}★">${filled}</span>`;
   }
 
   function buildMonsterCardHtml(u, db, t, view) {
@@ -7588,12 +7848,10 @@
     const nameInner = bestiaryHref
       ? `<a href="${escapeHtml(bestiaryHref)}" target="_blank" rel="noopener noreferrer">${escapeHtml(u.displayName)}</a>`
       : escapeHtml(u.displayName);
-    const natLbl = t.monstersNatShort || 'nat';
     const lvlLbl = t.monstersLevelShort || 'Lv';
     const subBits = [
       u.metaElement ? escapeHtml(u.metaElement) : '',
       u.metaArchetype ? escapeHtml(u.metaArchetype) : '',
-      u.meta && u.meta.natural_stars != null ? `${natLbl} ${u.meta.natural_stars}` : '',
       `${lvlLbl} ${u.level}`,
     ].filter(Boolean);
     const runeCells = buildRuneBlockHtml(u, db, t, view);
@@ -7604,12 +7862,14 @@
     const listMetaHtml = isList ? buildListRowMetaHtml(u, t) : '';
     const locHtml = !isList && u.inStorage ? buildLocationIconHtml(u, t) : '';
     const actionsHtml = isList ? '' : buildCardActionsHtml(u, t);
+    const natBadge = !isList ? buildMonsterNatBadge(u) : '';
     const starsBadge = !isList ? buildMonsterStarsBadge(u) : '';
     return `<article class="monsters-card${listCls}${u.favorite ? ' monsters-card--favorite' : ''}${u.food ? ' monsters-card--food' : ''}${u.inStorage ? ' monsters-card--storage' : ''}${bulkSel ? ' monsters-card--bulk-on' : ''}${selected ? ' monsters-card--selected' : ''}${hover ? ' monsters-card--hover' : ''}${elCls ? ` monsters-card--${elCls}` : ''}" data-unit-id="${escapeHtml(String(u.unitId))}" data-master-id="${u.masterId}" tabindex="0">
           <div class="monsters-card__bar monsters-card__bar--${elCls}" aria-hidden="true"></div>
           ${actionsHtml}
           <div class="monsters-card__top">
 <div class="monsters-card__img-wrap">
+              ${natBadge}
               ${starsBadge}
               <img class="monsters-card__img" alt="" width="48" height="48" data-img-file="${escapeHtml(u.imageFilename || '')}" loading="lazy" decoding="async" />
             </div>
@@ -7884,16 +8144,11 @@
     const view = readMonstersView();
     syncMonstersViewToggle(view);
 
-    if (view === 'table') {
-      grid.innerHTML = buildMonsterTableHtml(visible, t);
-      bindMonsterTableRows(grid, t);
-    } else {
-      grid.innerHTML = visible.map((u) => buildMonsterCardHtml(u, db, t, view)).join('');
-      grid.querySelectorAll('.monsters-card__img[data-img-file]').forEach((img) => {
-        const file = img.getAttribute('data-img-file');
-        if (file) bindMonsterPortrait(img, file);
-      });
-    }
+    grid.innerHTML = visible.map((u) => buildMonsterCardHtml(u, db, t, view)).join('');
+    grid.querySelectorAll('.monsters-card__img[data-img-file]').forEach((img) => {
+      const file = img.getAttribute('data-img-file');
+      if (file) bindMonsterPortrait(img, file);
+    });
 
     grid.querySelectorAll('.monsters-card').forEach((card) => {
       const uid = card.getAttribute('data-unit-id');
@@ -8302,11 +8557,6 @@
     document.getElementById('monsters-view-list')?.addEventListener('click', () => {
       writeMonstersView('list');
       syncMonstersViewToggle('list');
-      renderMonstersPanel();
-    });
-    document.getElementById('monsters-view-table')?.addEventListener('click', () => {
-      writeMonstersView('table');
-      syncMonstersViewToggle('table');
       renderMonstersPanel();
     });
     syncMonstersViewToggle(readMonstersView());

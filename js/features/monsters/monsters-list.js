@@ -127,16 +127,11 @@
     const view = readMonstersView();
     syncMonstersViewToggle(view);
 
-    if (view === 'table') {
-      grid.innerHTML = buildMonsterTableHtml(visible, t);
-      bindMonsterTableRows(grid, t);
-    } else {
-      grid.innerHTML = visible.map((u) => buildMonsterCardHtml(u, db, t, view)).join('');
-      grid.querySelectorAll('.monsters-card__img[data-img-file]').forEach((img) => {
-        const file = img.getAttribute('data-img-file');
-        if (file) bindMonsterPortrait(img, file);
-      });
-    }
+    grid.innerHTML = visible.map((u) => buildMonsterCardHtml(u, db, t, view)).join('');
+    grid.querySelectorAll('.monsters-card__img[data-img-file]').forEach((img) => {
+      const file = img.getAttribute('data-img-file');
+      if (file) bindMonsterPortrait(img, file);
+    });
 
     grid.querySelectorAll('.monsters-card').forEach((card) => {
       const uid = card.getAttribute('data-unit-id');

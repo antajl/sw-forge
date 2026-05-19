@@ -313,6 +313,17 @@
     return rows;
   }
 
+  /** Max level for a star tier (SWEX unit; fallback when max_level is absent). */
+  function unitMaxLevelForRank(rankStars) {
+    const r = Number(rankStars) || 0;
+    if (r >= 6) return 40;
+    if (r >= 5) return 35;
+    if (r >= 4) return 30;
+    if (r >= 3) return 25;
+    if (r >= 2) return 20;
+    return 15;
+  }
+
   /** SWEX unit `class` → display stars (handles ancient +10). */
   function unitDisplayStars(classVal) {
     const n = Number(classVal);
@@ -371,8 +382,17 @@
     const out = [];
     for (const u of units) {
       if (!u || u.unit_master_id == null) continue;
-      const stars = unitDisplayStars(u.class);
-      if (o.sixStarOnly && stars !== 6) continue;
+      const unitClass = unitDisplayStars(u.class);
+      const unitRank =
+        u.rank != null && Number.isFinite(Number(u.rank))
+          ? unitDisplayStars(Number(u.rank))
+          : unitClass;
+      const maxLevelRaw = Number(u.max_level);
+      const maxLevel = Number.isFinite(maxLevelRaw) && maxLevelRaw > 0
+        ? maxLevelRaw
+        : unitMaxLevelForRank(unitRank);
+      const stars = unitRank;
+      if (o.sixStarOnly && unitRank !== 6) continue;
       const runeSlots = unitRuneSlots(u, runeById);
       const equippedCount = countEquippedRuneSlots(runeSlots);
       const skills = [];
@@ -388,6 +408,9 @@
         unitId: u.unit_id,
         masterId: Number(u.unit_master_id),
         level: Number(u.unit_level) || 0,
+        unitClass,
+        unitRank,
+        maxLevel,
         stars,
         islandId: Number(u.island_id) || 0,
         inStorage: unitInStorage(u),
@@ -417,6 +440,7 @@
   window.SWRM.parseSWEX  = parseSWEX;
   window.SWRM.parseUnits = parseUnits;
   window.SWRM.unitDisplayStars = unitDisplayStars;
+  window.SWRM.unitMaxLevelForRank = unitMaxLevelForRank;
   window.SWRM.unitInStorage = unitInStorage;
   window.SWRM.unitRuneSlots = unitRuneSlots;
   window.SWRM.countEquippedRuneSlots = countEquippedRuneSlots;

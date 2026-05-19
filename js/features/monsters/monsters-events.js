@@ -379,11 +379,6 @@
       syncMonstersViewToggle('list');
       renderMonstersPanel();
     });
-    document.getElementById('monsters-view-table')?.addEventListener('click', () => {
-      writeMonstersView('table');
-      syncMonstersViewToggle('table');
-      renderMonstersPanel();
-    });
     syncMonstersViewToggle(readMonstersView());
     const t0 = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     syncMonstersShowAllButton(readMonstersFilters().fullSixOnly, t0);

@@ -4,6 +4,8 @@
 
   /** @type {Map<number, number>} */
   let byCom2usId = new Map();
+  /** @type {Map<number, string>} */
+  let iconByCom2usId = new Map();
   let loadPromise = null;
   let loaded = false;
   let lastLoadCount = 0;
@@ -90,6 +92,7 @@
       const max = Number(s.max_level);
       if (Number.isFinite(max) && max > 0) {
         byCom2usId.set(id, max);
+        if (s.icon_filename) iconByCom2usId.set(id, String(s.icon_filename));
         return max;
       }
     } catch (e) { /* ignore */ }
@@ -166,6 +169,22 @@
     return { skills: displayable, skillUpsNeeded, skillsMaxed: allMaxed, skillsKnown };
   }
 
+  function skillIconUrl(skillId) {
+    const id = Number(skillId);
+    if (!Number.isFinite(id) || id <= 0) return '';
+    const fn = iconByCom2usId.get(id);
+    if (!fn) return '';
+    return `https://swarfarm.com/static/herders/images/skills/${fn}`;
+  }
+
+  async function ensureSkillIcon(skillId) {
+    const id = Number(skillId);
+    if (!Number.isFinite(id) || id <= 0) return '';
+    if (iconByCom2usId.has(id)) return skillIconUrl(id);
+    await fetchSkillMaxLevel(id);
+    return skillIconUrl(id);
+  }
+
   function formatSkillLevel(s, t) {
     const lv = Number(s.level);
     const maxLv = s.maxLevel;
@@ -181,6 +200,8 @@
     loadSkillIndex,
     hydrateSkillMaxLevels,
     fetchSkillMaxLevel,
+    skillIconUrl,
+    ensureSkillIcon,
     maxLevel,
     isUpgradeableSkill,
     enrichUnitSkills,

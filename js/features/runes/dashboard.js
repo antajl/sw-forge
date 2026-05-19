@@ -23,7 +23,8 @@
     return played;
   }
 
-  function scheduleDashboardChartReplay() {
+  function scheduleDashboardChartReplay(options) {
+    const fromZero = !!(options && options.fromZero);
     rafTwice(() => {
       const hub = document.getElementById('tab-runes');
       if (hub && hub.classList.contains('hidden')) return;
@@ -32,6 +33,12 @@
         dashPane &&
         (dashPane.hidden || !dashPane.classList.contains('is-active'))
       ) {
+        return;
+      }
+      if (fromZero) {
+        if (typeof renderDashboard === 'function' && typeof getVisibleRunes === 'function') {
+          renderDashboard(getVisibleRunes(), { animateCharts: true, fromZero: true });
+        }
         return;
       }
       if (!replayDashboardDistributionAnimations()) {
@@ -44,6 +51,7 @@
 
   function renderDashboard(runes, opts) {
     const animateCharts = !!(opts && opts.animateCharts);
+    const chartFromZero = !!(opts && opts.fromZero);
     // Account progression: full export rune list, absolute counts + top-N eff (not affected by preset / Min Lvl).
     const metrics = analyzeGameStage(allRunes);
     const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
@@ -255,9 +263,10 @@
     const verdictChartEl = document.getElementById('verdict-chart');
     if (verdictChartEl) {
       oldRectsVerdict = animateCharts ? snapshotKeyedRowRects(verdictChartEl, 'data-dash-verdict') : null;
-      const prevVerdictW = animateCharts
-        ? snapshotRowBarWidthMap(verdictChartEl, 'data-dash-verdict')
-        : new Map();
+      const prevVerdictW =
+        animateCharts && !chartFromZero
+          ? snapshotRowBarWidthMap(verdictChartEl, 'data-dash-verdict')
+          : new Map();
       verdictChartEl.innerHTML = '';
       const vRows = [];
       DASH_VERDICT_SEG_ORDER.forEach((v) => {
@@ -301,7 +310,8 @@
     const roleEl = document.getElementById('role-chart');
     if (roleEl) {
       oldRectsRoles = animateCharts ? snapshotKeyedRowRects(roleEl, 'data-dash-role') : null;
-      const prevRoleW = animateCharts ? snapshotRowBarWidthMap(roleEl, 'data-dash-role') : new Map();
+      const prevRoleW =
+        animateCharts && !chartFromZero ? snapshotRowBarWidthMap(roleEl, 'data-dash-role') : new Map();
       roleEl.innerHTML = '';
       const sortedRoles = Object.keys(roleCounts).sort((a, b) => (roleCounts[b] || 0) - (roleCounts[a] || 0));
       const roleScale = dashChartScaleMax(sortedRoles.map((rr) => roleCounts[rr] || 0));
@@ -332,7 +342,8 @@
     const setEl = document.getElementById('set-chart');
     if (setEl) {
       oldRectsSets = animateCharts ? snapshotKeyedRowRects(setEl, 'data-dash-set') : null;
-      const prevSetW = animateCharts ? snapshotRowBarWidthMap(setEl, 'data-dash-set') : new Map();
+      const prevSetW =
+        animateCharts && !chartFromZero ? snapshotRowBarWidthMap(setEl, 'data-dash-set') : new Map();
       setEl.innerHTML = '';
       const setScale = dashChartScaleMax(setOrder.map((nm) => setCounts[nm] || 0));
       setBarTargets = new Map();
@@ -382,7 +393,8 @@
     renderTopSpdPanel(runes, spdPick, tloc, { animate: false });
 
     const effEl = document.getElementById('eff-chart');
-    const prevEffHeights = animateCharts && effEl ? snapshotEffBarHeights(effEl) : null;
+    const prevEffHeights =
+      animateCharts && effEl && !chartFromZero ? snapshotEffBarHeights(effEl) : null;
     if (effEl) effEl.innerHTML = '';
     const maxBucket = Math.max(...effBuckets, 1);
     const medEff = medianEff;

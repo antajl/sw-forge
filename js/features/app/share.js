@@ -23,11 +23,27 @@
           const rid = raw.rune_id != null ? Number(raw.rune_id) : null;
           const parsed = rid != null && runeById.has(rid) ? runeById.get(rid) : null;
           if (parsed) {
+            const raw = parsed._raw;
+            if (raw && typeof raw === 'object') {
+              return {
+                rune_id: rid,
+                slot_no: raw.slot_no ?? parsed.slot,
+                set_id: raw.set_id ?? parsed.setId,
+                upgrade_curr: raw.upgrade_curr ?? parsed.level,
+                extra: raw.extra,
+                class: raw.class,
+                rank: raw.rank,
+                pri_eff: raw.pri_eff ?? [parsed.mainType, parsed.mainVal],
+                prefix_eff: raw.prefix_eff,
+                sec_eff: raw.sec_eff,
+              };
+            }
             return {
               rune_id: rid,
               slot_no: parsed.slot,
               set_id: parsed.setId,
               upgrade_curr: parsed.level,
+              extra: parsed.grade,
               pri_eff: [parsed.mainType, parsed.mainVal],
               sec_eff: (parsed.substats || []).map((s) => [
                 s.type,
@@ -130,6 +146,7 @@
     if (!shareId) return false;
     const api = typeof SWRM_API === 'string' ? SWRM_API : '';
     if (!api) return false;
+    const t0 = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     try {
       const res = await fetch(`${api}/share?id=${encodeURIComponent(shareId)}`);
       if (!res.ok) return false;
@@ -144,15 +161,42 @@
       };
       if (!tryHydrateRunesFromJsonText(JSON.stringify(wrapped))) return false;
       shareReadOnly = true;
-      shareViewWizardName = body.wizard_name || parsed.wizard_name || '';
+      shareViewWizardName = String(body.wizard_name || parsed.wizard_name || '').trim();
+      applyShareReadOnlyUi();
       renderShareViewBanner();
       if (typeof uiAfterSuccessfulRuneRestore === 'function') {
         uiAfterSuccessfulRuneRestore({ name: shareViewWizardName }, { keepTab: true });
       }
+      if (typeof renderDashboard === 'function' && typeof getVisibleRunes === 'function') {
+        renderDashboard(getVisibleRunes(), { animateCharts: false });
+      }
+      if (typeof renderMonstersPanel === 'function') renderMonstersPanel();
       return true;
     } catch (e) {
       console.warn('Share load failed', e);
       return false;
+    }
+  }
+
+  function isShareReadOnly() {
+    return shareReadOnly;
+  }
+
+  function applyShareReadOnlyUi() {
+    document.body.classList.toggle('share-readonly', shareReadOnly);
+    const shareBtn = document.getElementById('share-profile-btn');
+    const shareFull = document.getElementById('share-full-inventory');
+    if (shareBtn) shareBtn.disabled = shareReadOnly;
+    if (shareFull) shareFull.disabled = shareReadOnly;
+    document.querySelectorAll('.db-slot-btn, #btn-upload-slot, #btn-demo-load').forEach((el) => {
+      if (el) el.disabled = shareReadOnly;
+    });
+    const rulesRoot = document.getElementById('tab-settings');
+    if (rulesRoot) {
+      rulesRoot.querySelectorAll('input, select, textarea, button').forEach((el) => {
+        if (el.id === 'share-view-exit-btn') return;
+        el.disabled = shareReadOnly;
+      });
     }
   }
 
@@ -173,6 +217,10 @@
   async function initShareProfile() {
     bindShareProfileUi();
     const opened = await tryOpenShareFromUrl();
-    if (!opened) renderShareViewBanner();
+    if (!opened) {
+      shareReadOnly = false;
+      applyShareReadOnlyUi();
+      renderShareViewBanner();
+    }
     return opened;
   }

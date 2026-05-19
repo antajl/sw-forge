@@ -39,29 +39,31 @@
       u.metaElement ? escapeHtml(u.metaElement) : '',
       u.metaArchetype ? escapeHtml(u.metaArchetype) : '',
     ].filter(Boolean);
+    const rankStars = typeof buildMonsterStarsBadge === 'function' ? buildMonsterStarsBadge(u) : '';
+    const starsDetailCls = rankStars.includes('monsters-card__stars--awakened')
+      ? ' monsters-detail__stars--awakened'
+      : '';
+    const starsOnPortrait = rankStars
+      ? rankStars.replace('monsters-card__stars', `monsters-detail__stars${starsDetailCls}`)
+      : '';
     const natLine =
       natStars !== ''
-        ? `<p class="monsters-detail__nat">${escapeHtml(natLbl)} <strong>${escapeHtml(String(natStars))}</strong></p>`
+        ? `<span class="monsters-detail__nat-pill">${escapeHtml(natLbl)} <strong>${escapeHtml(String(natStars))}</strong></span>`
         : '';
-    const roleLine = u.metaArchetype
-      ? `<p class="monsters-detail__role">${escapeHtml(u.metaArchetype)}</p>`
-      : '';
 
     body.innerHTML = `
       <header class="monsters-detail__head">
         <div class="monsters-detail__portrait-wrap monsters-detail__portrait-wrap--${elCls}">
           <img class="monsters-detail__portrait" alt="" width="96" height="96" data-img-file="${escapeHtml(u.imageFilename || '')}" loading="lazy" decoding="async" />
+          ${starsOnPortrait}
         </div>
         <div class="monsters-detail__head-text">
           <h3 class="monsters-detail__title" id="monsters-detail-title">${bestiaryHref ? `<a href="${escapeHtml(bestiaryHref)}" target="_blank" rel="noopener noreferrer">${escapeHtml(u.displayName)}</a>` : escapeHtml(u.displayName)}</h3>
-          <p class="monsters-detail__sub">${subBits.join(' · ')}</p>
+          <p class="monsters-detail__meta-line">${[natLine, subBits.join(' · '), `${escapeHtml(lvlLbl)} <strong>${u.level}</strong>`].filter(Boolean).join(' · ')}${u.inStorage ? ` · <span class="monsters-detail__storage">${escapeHtml(storageLbl)}</span>` : ''}</p>
           <button type="button" class="btn-secondary btn-sm monsters-detail__open-runes" data-open-runes-all="1">${escapeHtml(t.monstersOpenRunes || 'Open runes in table')}</button>
         </div>
       </header>
       <div class="monsters-detail__scroll">
-        ${natLine}
-        <p class="monsters-detail__level">${escapeHtml(lvlLbl)} <strong>${u.level}</strong>${u.inStorage ? ` · <span class="monsters-detail__storage">${escapeHtml(storageLbl)}</span>` : ''}</p>
-        ${roleLine}
         ${statsBlock}
         <section class="monsters-detail__section">
           <h4 class="monsters-detail__section-title">${escapeHtml(t.monstersDetailTabSkills || 'Skills')}</h4>
@@ -77,6 +79,7 @@
 
     const img = body.querySelector('.monsters-detail__portrait[data-img-file]');
     if (img && u.imageFilename) bindMonsterPortrait(img, u.imageFilename);
+    if (typeof hydrateMonsterSkillIcons === 'function') hydrateMonsterSkillIcons(body);
 
     body.querySelector('[data-open-runes-all]')?.addEventListener('click', () => openMonsterRunesInTable(u));
 

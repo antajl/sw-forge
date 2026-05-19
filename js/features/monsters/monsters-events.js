@@ -193,8 +193,8 @@
     if (lblCards) lblCards.title = t.monstersViewCards || 'Cards';
     const btnCards = document.getElementById('monsters-view-cards');
     if (btnCards) btnCards.title = t.monstersViewCards || 'Cards';
-    const btnList = document.getElementById('monsters-view-list');
-    if (btnList) btnList.title = t.monstersViewList || 'List';
+    const btnTable = document.getElementById('monsters-view-table');
+    if (btnTable) btnTable.title = t.monstersViewTable || 'Table';
     const clearMonster = document.getElementById('btn-rune-table-clear-monster-filter');
     if (clearMonster) clearMonster.textContent = t.runeTableMonsterFilterClear || 'Clear';
     const emptyClear = document.getElementById('monsters-empty-clear-filters');
@@ -374,9 +374,9 @@
       syncMonstersViewToggle('cards');
       renderMonstersPanel();
     });
-    document.getElementById('monsters-view-list')?.addEventListener('click', () => {
-      writeMonstersView('list');
-      syncMonstersViewToggle('list');
+    document.getElementById('monsters-view-table')?.addEventListener('click', () => {
+      writeMonstersView('table');
+      syncMonstersViewToggle('table');
       renderMonstersPanel();
     });
     syncMonstersViewToggle(readMonstersView());

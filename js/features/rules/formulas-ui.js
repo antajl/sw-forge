@@ -118,7 +118,7 @@
             typeof window.SWRM.readFormulaMinStat === 'function'
               ? window.SWRM.readFormulaMinStat(formulaCfg.minStats, slotType, stage)
               : formulaCfg.minStats?.[slotType]?.[stage] || 1;
-          html += `<input type="number" data-formula="${formulaName}" data-field="minStats" data-slot="${slotType}" data-stage="${stage}" value="${value}" min="0" max="4" style="padding:4px 8px;font-size:0.8rem;width:60px">`;
+          html += `<input type="number" data-formula="${formulaName}" data-field="minStats" data-slot="${slotType}" data-stage="${stage}" value="${value}" min="0" max="4" step="1" style="padding:4px 8px;font-size:0.8rem;width:60px">`;
         }
       }
       html += `</div></div>`;

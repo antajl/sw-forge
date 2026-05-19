@@ -157,9 +157,27 @@
   }
 
   function swarfarmSkillIconUrl(skillId) {
-    const id = Number(skillId);
-    if (!Number.isFinite(id) || id <= 0) return '';
-    return `https://swarfarm.com/static/herders/images/skills/skill_${id}.png`;
+    const db = window.SWRM_SKILL_DB;
+    if (db && typeof db.skillIconUrl === 'function') {
+      const url = db.skillIconUrl(skillId);
+      if (url) return url;
+    }
+    return '';
+  }
+
+  function hydrateMonsterSkillIcons(container) {
+    const db = window.SWRM_SKILL_DB;
+    if (!db || typeof db.ensureSkillIcon !== 'function' || !container) return;
+    container.querySelectorAll('.monsters-detail__skill-img[data-skill-id]').forEach((img) => {
+      const id = Number(img.getAttribute('data-skill-id'));
+      if (!Number.isFinite(id)) return;
+      db.ensureSkillIcon(id).then((url) => {
+        if (url && img.isConnected) {
+          img.src = url;
+          img.hidden = false;
+        }
+      });
+    });
   }
 
   function buildMonsterDetailStatsBlock(u, t) {
@@ -458,7 +476,9 @@
           ? '<img class="monsters-detail__skill-img" src="' +
             escapeHtml(url) +
             '" alt="" width="40" height="40" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.hidden=true" />'
-          : '';
+          : '<img class="monsters-detail__skill-img" hidden data-skill-id="' +
+            escapeHtml(String(s.skillId)) +
+            '" alt="" width="40" height="40" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.hidden=true" />';
         return (
           '<div class="monsters-detail__skill-tile">' +
           img +

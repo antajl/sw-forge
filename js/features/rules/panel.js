@@ -185,7 +185,7 @@
               : roleCfg.minStats?.[slotType]?.[stage] || 1)
             : (roleCfg.minStats?.[stage] || 1);
           const dataAttr = isFormula ? `data-formula="${roleName}" data-field="minStats" data-slot="${slotType}" data-stage="${stage}"` : `data-role="${roleName}" data-field="minStats" data-slot="${slotType}" data-stage="${stage}"`;
-          html += `<input type="number" ${dataAttr} value="${value}" min="0" max="4" style="padding:4px 8px;font-size:0.8rem;width:60px">`;
+          html += `<input type="number" ${dataAttr} value="${value}" min="0" max="4" step="1" style="padding:4px 8px;font-size:0.8rem;width:60px">`;
         }
       }
       html += `</div></div>`;

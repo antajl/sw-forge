@@ -36,6 +36,7 @@
 }
 
 .monsters-detail__portrait-wrap {
+  position: relative;
   flex: 0 0 96px;
   width: 96px;
   height: 96px;
@@ -78,10 +79,21 @@
   color: var(--accent);
 }
 
-.monsters-detail__sub {
+.monsters-detail__sub,
+.monsters-detail__meta-line {
   margin: 0 0 8px;
   font-size: 0.72rem;
   color: var(--text-dim);
+  line-height: 1.35;
+}
+
+.monsters-detail__nat-pill {
+  font-weight: 600;
+  color: var(--text-hi);
+}
+
+.monsters-detail__nat-pill strong {
+  color: var(--accent);
 }
 
 .monsters-detail__tags {

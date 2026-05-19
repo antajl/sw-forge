@@ -385,7 +385,8 @@
     }
 
     if (id === 'dashboard' && typeof scheduleDashboardChartReplay === 'function') {
-      scheduleDashboardChartReplay();
+      const fromZero = showMainTabLastMain === 'monsters';
+      scheduleDashboardChartReplay({ fromZero });
     }
 
     if (id === 'runetable') {
@@ -3457,7 +3458,8 @@
     return played;
   }
 
-  function scheduleDashboardChartReplay() {
+  function scheduleDashboardChartReplay(options) {
+    const fromZero = !!(options && options.fromZero);
     rafTwice(() => {
       const hub = document.getElementById('tab-runes');
       if (hub && hub.classList.contains('hidden')) return;
@@ -3466,6 +3468,12 @@
         dashPane &&
         (dashPane.hidden || !dashPane.classList.contains('is-active'))
       ) {
+        return;
+      }
+      if (fromZero) {
+        if (typeof renderDashboard === 'function' && typeof getVisibleRunes === 'function') {
+          renderDashboard(getVisibleRunes(), { animateCharts: true, fromZero: true });
+        }
         return;
       }
       if (!replayDashboardDistributionAnimations()) {
@@ -3478,6 +3486,7 @@
 
   function renderDashboard(runes, opts) {
     const animateCharts = !!(opts && opts.animateCharts);
+    const chartFromZero = !!(opts && opts.fromZero);
     // Account progression: full export rune list, absolute counts + top-N eff (not affected by preset / Min Lvl).
     const metrics = analyzeGameStage(allRunes);
     const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
@@ -3689,9 +3698,10 @@
     const verdictChartEl = document.getElementById('verdict-chart');
     if (verdictChartEl) {
       oldRectsVerdict = animateCharts ? snapshotKeyedRowRects(verdictChartEl, 'data-dash-verdict') : null;
-      const prevVerdictW = animateCharts
-        ? snapshotRowBarWidthMap(verdictChartEl, 'data-dash-verdict')
-        : new Map();
+      const prevVerdictW =
+        animateCharts && !chartFromZero
+          ? snapshotRowBarWidthMap(verdictChartEl, 'data-dash-verdict')
+          : new Map();
       verdictChartEl.innerHTML = '';
       const vRows = [];
       DASH_VERDICT_SEG_ORDER.forEach((v) => {
@@ -3735,7 +3745,8 @@
     const roleEl = document.getElementById('role-chart');
     if (roleEl) {
       oldRectsRoles = animateCharts ? snapshotKeyedRowRects(roleEl, 'data-dash-role') : null;
-      const prevRoleW = animateCharts ? snapshotRowBarWidthMap(roleEl, 'data-dash-role') : new Map();
+      const prevRoleW =
+        animateCharts && !chartFromZero ? snapshotRowBarWidthMap(roleEl, 'data-dash-role') : new Map();
       roleEl.innerHTML = '';
       const sortedRoles = Object.keys(roleCounts).sort((a, b) => (roleCounts[b] || 0) - (roleCounts[a] || 0));
       const roleScale = dashChartScaleMax(sortedRoles.map((rr) => roleCounts[rr] || 0));
@@ -3766,7 +3777,8 @@
     const setEl = document.getElementById('set-chart');
     if (setEl) {
       oldRectsSets = animateCharts ? snapshotKeyedRowRects(setEl, 'data-dash-set') : null;
-      const prevSetW = animateCharts ? snapshotRowBarWidthMap(setEl, 'data-dash-set') : new Map();
+      const prevSetW =
+        animateCharts && !chartFromZero ? snapshotRowBarWidthMap(setEl, 'data-dash-set') : new Map();
       setEl.innerHTML = '';
       const setScale = dashChartScaleMax(setOrder.map((nm) => setCounts[nm] || 0));
       setBarTargets = new Map();
@@ -3816,7 +3828,8 @@
     renderTopSpdPanel(runes, spdPick, tloc, { animate: false });
 
     const effEl = document.getElementById('eff-chart');
-    const prevEffHeights = animateCharts && effEl ? snapshotEffBarHeights(effEl) : null;
+    const prevEffHeights =
+      animateCharts && effEl && !chartFromZero ? snapshotEffBarHeights(effEl) : null;
     if (effEl) effEl.innerHTML = '';
     const maxBucket = Math.max(...effBuckets, 1);
     const medEff = medianEff;
@@ -4852,7 +4865,7 @@
             typeof window.SWRM.readFormulaMinStat === 'function'
               ? window.SWRM.readFormulaMinStat(formulaCfg.minStats, slotType, stage)
               : formulaCfg.minStats?.[slotType]?.[stage] || 1;
-          html += `<input type="number" data-formula="${formulaName}" data-field="minStats" data-slot="${slotType}" data-stage="${stage}" value="${value}" min="0" max="4" style="padding:4px 8px;font-size:0.8rem;width:60px">`;
+          html += `<input type="number" data-formula="${formulaName}" data-field="minStats" data-slot="${slotType}" data-stage="${stage}" value="${value}" min="0" max="4" step="1" style="padding:4px 8px;font-size:0.8rem;width:60px">`;
         }
       }
       html += `</div></div>`;
@@ -5181,7 +5194,7 @@
               : roleCfg.minStats?.[slotType]?.[stage] || 1)
             : (roleCfg.minStats?.[stage] || 1);
           const dataAttr = isFormula ? `data-formula="${roleName}" data-field="minStats" data-slot="${slotType}" data-stage="${stage}"` : `data-role="${roleName}" data-field="minStats" data-slot="${slotType}" data-stage="${stage}"`;
-          html += `<input type="number" ${dataAttr} value="${value}" min="0" max="4" style="padding:4px 8px;font-size:0.8rem;width:60px">`;
+          html += `<input type="number" ${dataAttr} value="${value}" min="0" max="4" step="1" style="padding:4px 8px;font-size:0.8rem;width:60px">`;
         }
       }
       html += `</div></div>`;
@@ -5467,7 +5480,7 @@
         const val = row[f];
         const isPct = percentFields.has(f);
         const displayVal = isPct ? statConstantDecimalToPercentInput(val) : (val != null && val !== '' ? String(val) : '');
-        const step = isPct ? '0.1' : '0.01';
+        const step = isPct ? '0.1' : '1';
         const unit = isPct ? 'percent' : 'raw';
         const tdCls = isPct ? ' sc-td--pct' : '';
         const suffix = isPct ? '<span class="sc-inp-suffix" aria-hidden="true">%</span>' : '';
@@ -6149,11 +6162,27 @@
           const rid = raw.rune_id != null ? Number(raw.rune_id) : null;
           const parsed = rid != null && runeById.has(rid) ? runeById.get(rid) : null;
           if (parsed) {
+            const raw = parsed._raw;
+            if (raw && typeof raw === 'object') {
+              return {
+                rune_id: rid,
+                slot_no: raw.slot_no ?? parsed.slot,
+                set_id: raw.set_id ?? parsed.setId,
+                upgrade_curr: raw.upgrade_curr ?? parsed.level,
+                extra: raw.extra,
+                class: raw.class,
+                rank: raw.rank,
+                pri_eff: raw.pri_eff ?? [parsed.mainType, parsed.mainVal],
+                prefix_eff: raw.prefix_eff,
+                sec_eff: raw.sec_eff,
+              };
+            }
             return {
               rune_id: rid,
               slot_no: parsed.slot,
               set_id: parsed.setId,
               upgrade_curr: parsed.level,
+              extra: parsed.grade,
               pri_eff: [parsed.mainType, parsed.mainVal],
               sec_eff: (parsed.substats || []).map((s) => [
                 s.type,
@@ -6256,6 +6285,7 @@
     if (!shareId) return false;
     const api = typeof SWRM_API === 'string' ? SWRM_API : '';
     if (!api) return false;
+    const t0 = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     try {
       const res = await fetch(`${api}/share?id=${encodeURIComponent(shareId)}`);
       if (!res.ok) return false;
@@ -6270,15 +6300,42 @@
       };
       if (!tryHydrateRunesFromJsonText(JSON.stringify(wrapped))) return false;
       shareReadOnly = true;
-      shareViewWizardName = body.wizard_name || parsed.wizard_name || '';
+      shareViewWizardName = String(body.wizard_name || parsed.wizard_name || '').trim();
+      applyShareReadOnlyUi();
       renderShareViewBanner();
       if (typeof uiAfterSuccessfulRuneRestore === 'function') {
         uiAfterSuccessfulRuneRestore({ name: shareViewWizardName }, { keepTab: true });
       }
+      if (typeof renderDashboard === 'function' && typeof getVisibleRunes === 'function') {
+        renderDashboard(getVisibleRunes(), { animateCharts: false });
+      }
+      if (typeof renderMonstersPanel === 'function') renderMonstersPanel();
       return true;
     } catch (e) {
       console.warn('Share load failed', e);
       return false;
+    }
+  }
+
+  function isShareReadOnly() {
+    return shareReadOnly;
+  }
+
+  function applyShareReadOnlyUi() {
+    document.body.classList.toggle('share-readonly', shareReadOnly);
+    const shareBtn = document.getElementById('share-profile-btn');
+    const shareFull = document.getElementById('share-full-inventory');
+    if (shareBtn) shareBtn.disabled = shareReadOnly;
+    if (shareFull) shareFull.disabled = shareReadOnly;
+    document.querySelectorAll('.db-slot-btn, #btn-upload-slot, #btn-demo-load').forEach((el) => {
+      if (el) el.disabled = shareReadOnly;
+    });
+    const rulesRoot = document.getElementById('tab-settings');
+    if (rulesRoot) {
+      rulesRoot.querySelectorAll('input, select, textarea, button').forEach((el) => {
+        if (el.id === 'share-view-exit-btn') return;
+        el.disabled = shareReadOnly;
+      });
     }
   }
 
@@ -6299,7 +6356,11 @@
   async function initShareProfile() {
     bindShareProfileUi();
     const opened = await tryOpenShareFromUrl();
-    if (!opened) renderShareViewBanner();
+    if (!opened) {
+      shareReadOnly = false;
+      applyShareReadOnlyUi();
+      renderShareViewBanner();
+    }
     return opened;
   }
 
@@ -6841,8 +6902,8 @@
   function readMonstersView() {
     try {
       const v = localStorage.getItem(MONSTERS_VIEW_KEY);
-      if (v === 'list') return 'list';
-      if (v === 'table') return 'cards';
+      if (v === 'table') return 'table';
+      if (v === 'list') return 'cards';
       return 'cards';
     } catch (e) {
       return 'cards';
@@ -6851,7 +6912,7 @@
 
   function writeMonstersView(view) {
     try {
-      const v = view === 'list' ? 'list' : 'cards';
+      const v = view === 'table' ? 'table' : 'cards';
       localStorage.setItem(MONSTERS_VIEW_KEY, v);
     } catch (e) { /* ignore */ }
   }
@@ -6937,18 +6998,18 @@
   function syncMonstersViewToggle(view) {
     const grid = document.getElementById('monsters-grid');
     if (grid) {
-      grid.classList.toggle('monsters-grid--list', view === 'list');
+      grid.classList.toggle('monsters-grid--table', view === 'table');
       grid.classList.toggle('monsters-grid--cards', view === 'cards');
     }
     const btnCards = document.getElementById('monsters-view-cards');
-    const btnList = document.getElementById('monsters-view-list');
+    const btnTable = document.getElementById('monsters-view-table');
     if (btnCards) {
       btnCards.classList.toggle('monsters-view-btn--active', view === 'cards');
       btnCards.setAttribute('aria-pressed', view === 'cards' ? 'true' : 'false');
     }
-    if (btnList) {
-      btnList.classList.toggle('monsters-view-btn--active', view === 'list');
-      btnList.setAttribute('aria-pressed', view === 'list' ? 'true' : 'false');
+    if (btnTable) {
+      btnTable.classList.toggle('monsters-view-btn--active', view === 'table');
+      btnTable.setAttribute('aria-pressed', view === 'table' ? 'true' : 'false');
     }
   }
 
@@ -7180,9 +7241,27 @@
   }
 
   function swarfarmSkillIconUrl(skillId) {
-    const id = Number(skillId);
-    if (!Number.isFinite(id) || id <= 0) return '';
-    return `https://swarfarm.com/static/herders/images/skills/skill_${id}.png`;
+    const db = window.SWRM_SKILL_DB;
+    if (db && typeof db.skillIconUrl === 'function') {
+      const url = db.skillIconUrl(skillId);
+      if (url) return url;
+    }
+    return '';
+  }
+
+  function hydrateMonsterSkillIcons(container) {
+    const db = window.SWRM_SKILL_DB;
+    if (!db || typeof db.ensureSkillIcon !== 'function' || !container) return;
+    container.querySelectorAll('.monsters-detail__skill-img[data-skill-id]').forEach((img) => {
+      const id = Number(img.getAttribute('data-skill-id'));
+      if (!Number.isFinite(id)) return;
+      db.ensureSkillIcon(id).then((url) => {
+        if (url && img.isConnected) {
+          img.src = url;
+          img.hidden = false;
+        }
+      });
+    });
   }
 
   function buildMonsterDetailStatsBlock(u, t) {
@@ -7481,7 +7560,9 @@
           ? '<img class="monsters-detail__skill-img" src="' +
             escapeHtml(url) +
             '" alt="" width="40" height="40" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.hidden=true" />'
-          : '';
+          : '<img class="monsters-detail__skill-img" hidden data-skill-id="' +
+            escapeHtml(String(s.skillId)) +
+            '" alt="" width="40" height="40" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.hidden=true" />';
         return (
           '<div class="monsters-detail__skill-tile">' +
           img +
@@ -7655,29 +7736,31 @@
       u.metaElement ? escapeHtml(u.metaElement) : '',
       u.metaArchetype ? escapeHtml(u.metaArchetype) : '',
     ].filter(Boolean);
+    const rankStars = typeof buildMonsterStarsBadge === 'function' ? buildMonsterStarsBadge(u) : '';
+    const starsDetailCls = rankStars.includes('monsters-card__stars--awakened')
+      ? ' monsters-detail__stars--awakened'
+      : '';
+    const starsOnPortrait = rankStars
+      ? rankStars.replace('monsters-card__stars', `monsters-detail__stars${starsDetailCls}`)
+      : '';
     const natLine =
       natStars !== ''
-        ? `<p class="monsters-detail__nat">${escapeHtml(natLbl)} <strong>${escapeHtml(String(natStars))}</strong></p>`
+        ? `<span class="monsters-detail__nat-pill">${escapeHtml(natLbl)} <strong>${escapeHtml(String(natStars))}</strong></span>`
         : '';
-    const roleLine = u.metaArchetype
-      ? `<p class="monsters-detail__role">${escapeHtml(u.metaArchetype)}</p>`
-      : '';
 
     body.innerHTML = `
       <header class="monsters-detail__head">
         <div class="monsters-detail__portrait-wrap monsters-detail__portrait-wrap--${elCls}">
           <img class="monsters-detail__portrait" alt="" width="96" height="96" data-img-file="${escapeHtml(u.imageFilename || '')}" loading="lazy" decoding="async" />
+          ${starsOnPortrait}
         </div>
         <div class="monsters-detail__head-text">
           <h3 class="monsters-detail__title" id="monsters-detail-title">${bestiaryHref ? `<a href="${escapeHtml(bestiaryHref)}" target="_blank" rel="noopener noreferrer">${escapeHtml(u.displayName)}</a>` : escapeHtml(u.displayName)}</h3>
-          <p class="monsters-detail__sub">${subBits.join(' · ')}</p>
+          <p class="monsters-detail__meta-line">${[natLine, subBits.join(' · '), `${escapeHtml(lvlLbl)} <strong>${u.level}</strong>`].filter(Boolean).join(' · ')}${u.inStorage ? ` · <span class="monsters-detail__storage">${escapeHtml(storageLbl)}</span>` : ''}</p>
           <button type="button" class="btn-secondary btn-sm monsters-detail__open-runes" data-open-runes-all="1">${escapeHtml(t.monstersOpenRunes || 'Open runes in table')}</button>
         </div>
       </header>
       <div class="monsters-detail__scroll">
-        ${natLine}
-        <p class="monsters-detail__level">${escapeHtml(lvlLbl)} <strong>${u.level}</strong>${u.inStorage ? ` · <span class="monsters-detail__storage">${escapeHtml(storageLbl)}</span>` : ''}</p>
-        ${roleLine}
         ${statsBlock}
         <section class="monsters-detail__section">
           <h4 class="monsters-detail__section-title">${escapeHtml(t.monstersDetailTabSkills || 'Skills')}</h4>
@@ -7693,6 +7776,7 @@
 
     const img = body.querySelector('.monsters-detail__portrait[data-img-file]');
     if (img && u.imageFilename) bindMonsterPortrait(img, u.imageFilename);
+    if (typeof hydrateMonsterSkillIcons === 'function') hydrateMonsterSkillIcons(body);
 
     body.querySelector('[data-open-runes-all]')?.addEventListener('click', () => openMonsterRunesInTable(u));
 
@@ -7825,12 +7909,6 @@
     return maxLvl === 40 && lvl >= 40;
   }
 
-  function buildMonsterNatBadge(u) {
-    const n = monsterUnitNatStars(u);
-    if (!n) return '';
-    return `<span class="monsters-card__nat monsters-card__nat--${n}" title="nat${n}">nat${n}</span>`;
-  }
-
   function buildMonsterStarsBadge(u) {
     const n = monsterUnitRankStars(u);
     if (!n) return '';
@@ -7849,38 +7927,30 @@
       ? `<a href="${escapeHtml(bestiaryHref)}" target="_blank" rel="noopener noreferrer">${escapeHtml(u.displayName)}</a>`
       : escapeHtml(u.displayName);
     const lvlLbl = t.monstersLevelShort || 'Lv';
+    const natN = monsterUnitNatStars(u);
     const subBits = [
+      natN ? `nat${natN}` : '',
       u.metaElement ? escapeHtml(u.metaElement) : '',
       u.metaArchetype ? escapeHtml(u.metaArchetype) : '',
       `${lvlLbl} ${u.level}`,
     ].filter(Boolean);
     const runeCells = buildRuneBlockHtml(u, db, t, view);
-    const listCls = view === 'list' ? ' monsters-card--list' : '';
     const bulkSel = monstersBulkSelected.has(String(u.unitId));
-    const isList = view === 'list';
-    const listInfoHtml = isList ? buildListRowInfoHtml(u, t) : '';
-    const listMetaHtml = isList ? buildListRowMetaHtml(u, t) : '';
-    const locHtml = !isList && u.inStorage ? buildLocationIconHtml(u, t) : '';
-    const actionsHtml = isList ? '' : buildCardActionsHtml(u, t);
-    const natBadge = !isList ? buildMonsterNatBadge(u) : '';
-    const starsBadge = !isList ? buildMonsterStarsBadge(u) : '';
-    return `<article class="monsters-card${listCls}${u.favorite ? ' monsters-card--favorite' : ''}${u.food ? ' monsters-card--food' : ''}${u.inStorage ? ' monsters-card--storage' : ''}${bulkSel ? ' monsters-card--bulk-on' : ''}${selected ? ' monsters-card--selected' : ''}${hover ? ' monsters-card--hover' : ''}${elCls ? ` monsters-card--${elCls}` : ''}" data-unit-id="${escapeHtml(String(u.unitId))}" data-master-id="${u.masterId}" tabindex="0">
+    const starsBadge = buildMonsterStarsBadge(u);
+    const locHtml = u.inStorage ? buildLocationIconHtml(u, t) : '';
+    const actionsHtml = buildCardActionsHtml(u, t);
+    return `<article class="monsters-card monsters-card--grid${u.favorite ? ' monsters-card--favorite' : ''}${u.food ? ' monsters-card--food' : ''}${u.inStorage ? ' monsters-card--storage' : ''}${bulkSel ? ' monsters-card--bulk-on' : ''}${selected ? ' monsters-card--selected' : ''}${hover ? ' monsters-card--hover' : ''}${elCls ? ` monsters-card--${elCls}` : ''}" data-unit-id="${escapeHtml(String(u.unitId))}" data-master-id="${u.masterId}" tabindex="0">
           <div class="monsters-card__bar monsters-card__bar--${elCls}" aria-hidden="true"></div>
           ${actionsHtml}
-          <div class="monsters-card__top">
-<div class="monsters-card__img-wrap">
-              ${natBadge}
-              ${starsBadge}
-              <img class="monsters-card__img" alt="" width="48" height="48" data-img-file="${escapeHtml(u.imageFilename || '')}" loading="lazy" decoding="async" />
-            </div>
-            <div class="monsters-card__meta">
-              <p class="monsters-card__name">${locHtml}${nameInner}</p>
-              <p class="monsters-card__sub">${subBits.join(' · ')}</p>
-            </div>
+          <div class="monsters-card__hero">
+            ${starsBadge}
+            <img class="monsters-card__img" alt="" width="120" height="120" data-img-file="${escapeHtml(u.imageFilename || '')}" loading="lazy" decoding="async" />
           </div>
-          ${listInfoHtml}
+          <div class="monsters-card__meta">
+            <p class="monsters-card__name">${locHtml}${nameInner}</p>
+            <p class="monsters-card__sub">${subBits.join(' · ')}</p>
+          </div>
           ${runeCells}
-          ${listMetaHtml}
         </article>`;
   }
 
@@ -8144,11 +8214,16 @@
     const view = readMonstersView();
     syncMonstersViewToggle(view);
 
-    grid.innerHTML = visible.map((u) => buildMonsterCardHtml(u, db, t, view)).join('');
-    grid.querySelectorAll('.monsters-card__img[data-img-file]').forEach((img) => {
-      const file = img.getAttribute('data-img-file');
-      if (file) bindMonsterPortrait(img, file);
-    });
+    if (view === 'table') {
+      grid.innerHTML = buildMonsterTableHtml(visible, t);
+      bindMonsterTableRows(grid, t);
+    } else {
+      grid.innerHTML = visible.map((u) => buildMonsterCardHtml(u, db, t, view)).join('');
+      grid.querySelectorAll('.monsters-card__img[data-img-file]').forEach((img) => {
+        const file = img.getAttribute('data-img-file');
+        if (file) bindMonsterPortrait(img, file);
+      });
+    }
 
     grid.querySelectorAll('.monsters-card').forEach((card) => {
       const uid = card.getAttribute('data-unit-id');
@@ -8373,8 +8448,8 @@
     if (lblCards) lblCards.title = t.monstersViewCards || 'Cards';
     const btnCards = document.getElementById('monsters-view-cards');
     if (btnCards) btnCards.title = t.monstersViewCards || 'Cards';
-    const btnList = document.getElementById('monsters-view-list');
-    if (btnList) btnList.title = t.monstersViewList || 'List';
+    const btnTable = document.getElementById('monsters-view-table');
+    if (btnTable) btnTable.title = t.monstersViewTable || 'Table';
     const clearMonster = document.getElementById('btn-rune-table-clear-monster-filter');
     if (clearMonster) clearMonster.textContent = t.runeTableMonsterFilterClear || 'Clear';
     const emptyClear = document.getElementById('monsters-empty-clear-filters');
@@ -8554,9 +8629,9 @@
       syncMonstersViewToggle('cards');
       renderMonstersPanel();
     });
-    document.getElementById('monsters-view-list')?.addEventListener('click', () => {
-      writeMonstersView('list');
-      syncMonstersViewToggle('list');
+    document.getElementById('monsters-view-table')?.addEventListener('click', () => {
+      writeMonstersView('table');
+      syncMonstersViewToggle('table');
       renderMonstersPanel();
     });
     syncMonstersViewToggle(readMonstersView());

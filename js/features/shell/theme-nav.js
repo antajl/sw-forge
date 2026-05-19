@@ -310,7 +310,8 @@
     }
 
     if (id === 'dashboard' && typeof scheduleDashboardChartReplay === 'function') {
-      scheduleDashboardChartReplay();
+      const fromZero = showMainTabLastMain === 'monsters';
+      scheduleDashboardChartReplay({ fromZero });
     }
 
     if (id === 'runetable') {

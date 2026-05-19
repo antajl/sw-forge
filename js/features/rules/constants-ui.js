@@ -158,7 +158,7 @@
         const val = row[f];
         const isPct = percentFields.has(f);
         const displayVal = isPct ? statConstantDecimalToPercentInput(val) : (val != null && val !== '' ? String(val) : '');
-        const step = isPct ? '0.1' : '0.01';
+        const step = isPct ? '0.1' : '1';
         const unit = isPct ? 'percent' : 'raw';
         const tdCls = isPct ? ' sc-td--pct' : '';
         const suffix = isPct ? '<span class="sc-inp-suffix" aria-hidden="true">%</span>' : '';

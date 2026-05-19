@@ -487,6 +487,21 @@ main {
   color: var(--text-hi);
 }
 
+body.share-readonly #tab-settings input,
+body.share-readonly #tab-settings select,
+body.share-readonly #tab-settings textarea,
+body.share-readonly #tab-settings button:not(#share-view-exit-btn),
+body.share-readonly .share-profile-actions,
+body.share-readonly #btn-upload-slot,
+body.share-readonly .db-slot-btn {
+  pointer-events: none;
+  opacity: 0.55;
+}
+
+body.share-readonly #share-profile-btn {
+  display: none;
+}
+
 .share-profile-actions {
   display: flex;
   flex-wrap: wrap;

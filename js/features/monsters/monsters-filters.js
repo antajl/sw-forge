@@ -168,8 +168,8 @@
   function readMonstersView() {
     try {
       const v = localStorage.getItem(MONSTERS_VIEW_KEY);
-      if (v === 'list') return 'list';
-      if (v === 'table') return 'cards';
+      if (v === 'table') return 'table';
+      if (v === 'list') return 'cards';
       return 'cards';
     } catch (e) {
       return 'cards';
@@ -178,7 +178,7 @@
 
   function writeMonstersView(view) {
     try {
-      const v = view === 'list' ? 'list' : 'cards';
+      const v = view === 'table' ? 'table' : 'cards';
       localStorage.setItem(MONSTERS_VIEW_KEY, v);
     } catch (e) { /* ignore */ }
   }
@@ -264,18 +264,18 @@
   function syncMonstersViewToggle(view) {
     const grid = document.getElementById('monsters-grid');
     if (grid) {
-      grid.classList.toggle('monsters-grid--list', view === 'list');
+      grid.classList.toggle('monsters-grid--table', view === 'table');
       grid.classList.toggle('monsters-grid--cards', view === 'cards');
     }
     const btnCards = document.getElementById('monsters-view-cards');
-    const btnList = document.getElementById('monsters-view-list');
+    const btnTable = document.getElementById('monsters-view-table');
     if (btnCards) {
       btnCards.classList.toggle('monsters-view-btn--active', view === 'cards');
       btnCards.setAttribute('aria-pressed', view === 'cards' ? 'true' : 'false');
     }
-    if (btnList) {
-      btnList.classList.toggle('monsters-view-btn--active', view === 'list');
-      btnList.setAttribute('aria-pressed', view === 'list' ? 'true' : 'false');
+    if (btnTable) {
+      btnTable.classList.toggle('monsters-view-btn--active', view === 'table');
+      btnTable.setAttribute('aria-pressed', view === 'table' ? 'true' : 'false');
     }
   }
 

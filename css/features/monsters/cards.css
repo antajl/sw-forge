@@ -1,7 +1,12 @@
 /* Split from css/monsters.css */
 .monsters-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: 10px;
+}
+
+.monsters-grid--cards {
+  grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
   gap: 12px;
 }
 
@@ -467,41 +472,93 @@
   opacity: 0.82;
 }
 
-.monsters-card__nat {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  z-index: 2;
-  font-family: var(--font-mono);
-  font-size: 0.48rem;
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: 0.02em;
-  text-transform: lowercase;
-  padding: 1px 3px;
-  border-radius: 3px;
-  color: var(--text-hi);
-  background: color-mix(in srgb, var(--bg) 72%, var(--bg3));
-  border: 1px solid var(--border2);
-  pointer-events: none;
+.monsters-card--grid {
+  padding: 0;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.monsters-card--grid .monsters-card__bar {
+  top: 0;
+  bottom: 0;
+  border-radius: 0;
+}
+
+.monsters-card--grid .monsters-card__hero {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  background: var(--bg3);
+  overflow: hidden;
+}
+
+.monsters-card--grid .monsters-card__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+
+.monsters-card--grid .monsters-card__meta {
+  padding: 6px 8px 8px;
+  margin-bottom: 0;
+}
+
+.monsters-card--grid .monsters-card__name {
+  font-size: 0.78rem;
+  line-height: 1.2;
+}
+
+.monsters-card--grid .monsters-card__sub {
+  font-size: 0.62rem;
+  margin-top: 2px;
 }
 
 .monsters-card__stars {
   position: absolute;
-  left: 2px;
-  bottom: 1px;
+  left: 4px;
+  bottom: 4px;
   z-index: 2;
-  font-size: 0.52rem;
+  font-size: 0.62rem;
   line-height: 1;
-  letter-spacing: -0.06em;
+  letter-spacing: -0.04em;
   color: #f0c040;
-  text-shadow: 0 0 3px var(--bg), 0 1px 2px rgba(0, 0, 0, 0.65);
+  -webkit-text-stroke: 1px #000;
+  paint-order: stroke fill;
+  text-shadow:
+    0 0 2px #000,
+    0 1px 0 #000,
+    1px 0 0 #000,
+    -1px 0 0 #000;
   pointer-events: none;
 }
 
 .monsters-card__stars--awakened {
   color: #f06eb0;
-  text-shadow: 0 0 4px color-mix(in srgb, #f06eb0 45%, var(--bg)), 0 1px 2px rgba(0, 0, 0, 0.65);
+}
+
+.monsters-detail__stars {
+  position: absolute;
+  left: 4px;
+  bottom: 4px;
+  z-index: 2;
+  font-size: 0.72rem;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: #f0c040;
+  -webkit-text-stroke: 1px #000;
+  paint-order: stroke fill;
+  text-shadow:
+    0 0 2px #000,
+    0 1px 0 #000,
+    1px 0 0 #000,
+    -1px 0 0 #000;
+  pointer-events: none;
+}
+
+.monsters-detail__stars--awakened {
+  color: #f06eb0;
 }
 
 .monsters-card__top {

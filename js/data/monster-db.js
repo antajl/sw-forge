@@ -45,8 +45,16 @@
   /** Proxy SWARFARM static assets through our Worker when available. */
   function swarfarmAssetUrl(relativePath) {
     const rel = String(relativePath || '').replace(/^\//, '');
+    const direct = `https://swarfarm.com/${rel}`;
+    const useProxy =
+      typeof SWRM_SWARFARM_PROXY_STATIC === 'boolean' && SWRM_SWARFARM_PROXY_STATIC === true;
     const api = typeof window !== 'undefined' && typeof SWRM_API === 'string' ? SWRM_API : '';
-    if (api) return `${api}/swarfarm/${rel}`;
+    if (useProxy && api) return `${api}/swarfarm/${rel}`;
+    return direct;
+  }
+
+  function swarfarmDirectUrl(relativePath) {
+    const rel = String(relativePath || '').replace(/^\//, '');
     return `https://swarfarm.com/${rel}`;
   }
 
@@ -59,8 +67,8 @@
   function isMonsterAwakened(masterId, metaRow) {
     const row = metaRow || lookupMonster(masterId);
     if (!row) return false;
+    if (row.awakened === true || row.is_awakened === true) return true;
     if (row.awaken_level != null && Number(row.awaken_level) > 0) return true;
-    if (row.is_awakened === true) return true;
     return false;
   }
 
@@ -97,6 +105,7 @@
       image_filename: m.image_filename,
       bestiary_slug: m.bestiary_slug,
       awaken_level: m.awaken_level != null ? Number(m.awaken_level) : 0,
+      awakened: m.awakened === true || (m.awaken_level != null && Number(m.awaken_level) > 0),
       base_hp: m.base_hp,
       base_attack: m.base_attack,
       base_defense: m.base_defense,
@@ -205,8 +214,18 @@
     const id = Number(masterId);
     if (!Number.isFinite(id)) return null;
     const force = options && options.force === true;
+    const detail = options && options.detail === true;
     const cached = byCom2usId.get(id);
-    if (cached && cached.max_lvl_hp != null && !force) return cached;
+    if (
+      cached &&
+      !force &&
+      !detail &&
+      cached.archetype &&
+      cached.max_lvl_hp != null &&
+      cached.awaken_level != null
+    ) {
+      return cached;
+    }
     try {
       const url = `https://swarfarm.com/api/v2/monsters/?com2us_id=${id}`;
       const res = await fetch(url);
@@ -228,38 +247,25 @@
     return monsterBaseStatsAtLevel(row, level);
   }
 
-  async function hydrateMonsterMeta(masterIds) {
-    await loadMonsterIndex();
-    if (byCom2usId.size === 0) {
-      await loadMonsterIndex({ force: true });
-    }
-    const uniq = [...new Set((masterIds || []).map(Number).filter(Number.isFinite))];
-    const missing = uniq.filter((id) => !byCom2usId.has(id));
-    const needsArchetype = uniq.filter((id) => {
-      const row = byCom2usId.get(id);
-      return (
-        !row ||
-        !row.archetype ||
-        row.max_lvl_hp == null ||
-        row.leader_skill === undefined
-      );
-    });
-    const batch = 8;
-    for (let i = 0; i < missing.length; i += batch) {
-      const slice = missing.slice(i, i + batch);
-      await Promise.all(slice.map((id) => fetchMonsterMeta(id)));
-    }
-    for (let i = 0; i < needsArchetype.length; i += batch) {
-      const slice = needsArchetype.slice(i, i + batch);
-      await Promise.all(slice.map((id) => fetchMonsterMeta(id)));
-    }
+  /** Detail panel only — never call for full roster (blocks UI). */
+  async function fetchMonsterMetaForDetail(masterId) {
+    return fetchMonsterMeta(masterId, { detail: true });
+  }
+
+  function mergeMonsterMetaIntoCache(masterId, row) {
+    if (!row) return;
+    const id = Number(masterId);
+    const prev = byCom2usId.get(id);
+    byCom2usId.set(id, prev ? { ...prev, ...row } : row);
   }
 
   window.SWRM_MONSTER_DB = {
     loadMonsterIndex,
-    hydrateMonsterMeta,
+    fetchMonsterMetaForDetail,
+    mergeMonsterMetaIntoCache,
     fetchMonsterMeta,
     ensureMonsterBaseStats,
+    swarfarmDirectUrl,
     lookupMonster,
     monsterDisplayName,
     monsterArchetype,

@@ -32,20 +32,10 @@
         if (db.indexCount() === 0) await db.loadMonsterIndex({ force: true });
       } catch (e) { /* ignore */ }
     }
-    if (db && typeof db.hydrateMonsterMeta === 'function') {
-      await db.hydrateMonsterMeta(allUnits.map((x) => x.masterId));
-    }
-    const skillIds = [];
-    for (const unit of allUnits) {
-      for (const s of unit.skills || []) {
-        if (s && s.skillId != null) skillIds.push(s.skillId);
-      }
-    }
     if (skillDb && typeof skillDb.loadSkillIndex === 'function') {
       try {
         await skillDb.loadSkillIndex();
         if (skillDb.indexCount() === 0) await skillDb.loadSkillIndex({ force: true });
-        if (skillIds.length) await skillDb.hydrateSkillMaxLevels(skillIds);
       } catch (e) { /* ignore */ }
     }
 

@@ -98,33 +98,35 @@
 
     if (!pinned && anchorEl) positionMonstersDetailFloat(anchorEl);
 
-    if (db && typeof db.ensureMonsterBaseStats === 'function') {
-      db.ensureMonsterBaseStats(u.masterId, u.level).then((base) => {
-        if (!base) return;
-        const host = body.querySelector('[data-detail-stats]');
-        if (!host || !body.isConnected) return;
+    if (db && typeof db.fetchMonsterMetaForDetail === 'function') {
+      db.fetchMonsterMetaForDetail(u.masterId).then((row) => {
+        if (!row || !body.isConnected) return;
+        db.mergeMonsterMetaIntoCache(u.masterId, row);
         const cur = monstersEnrichedCache.find((x) => String(x.unitId) === String(u.unitId));
-        if (!cur) return;
-        host.innerHTML = buildMonsterDetailStatsBlock({ ...cur, baseStats: base }, t);
-      });
-    }
+        if (cur) cur.meta = { ...(cur.meta || {}), ...row };
 
-    if (db && typeof db.fetchMonsterMeta === 'function' && (!meta || meta.leader_skill === undefined)) {
-      db.fetchMonsterMeta(u.masterId).then((row) => {
-        if (!row || !row.leader_skill) return;
-        const host = body.querySelector('.monsters-detail__section');
-        const cur = monstersEnrichedCache.find((x) => String(x.unitId) === String(u.unitId));
-        if (!cur || !host || !body.isConnected) return;
-        const merged = { ...cur, meta: { ...(cur.meta || {}), ...row } };
-        const block = buildMonsterDetailSkillsBlock(
-          skillDb ? skillDb.enrichUnitSkillsForDetail(cur.skills) : skillRows,
-          t,
-          skillDb,
-          row.leader_skill,
-        );
+        const base =
+          db.monsterBaseStatsAtLevel && typeof db.monsterBaseStatsAtLevel === 'function'
+            ? db.monsterBaseStatsAtLevel(row, u.level)
+            : null;
+        const statsHost = body.querySelector('[data-detail-stats]');
+        if (statsHost && base) {
+          statsHost.innerHTML = buildMonsterDetailStatsBlock({ ...u, meta: row, baseStats: base }, t);
+        }
+
         const skillsSec = body.querySelector('.monsters-detail__section');
-        if (skillsSec) skillsSec.innerHTML = `<h4 class="monsters-detail__section-title">${escapeHtml(t.monstersDetailTabSkills || 'Skills')}</h4>${block}`;
-        if (typeof hydrateMonsterSkillIcons === 'function') hydrateMonsterSkillIcons(body);
+        if (skillsSec) {
+          const block = buildMonsterDetailSkillsBlock(
+            skillDb ? skillDb.enrichUnitSkillsForDetail(u.skills) : skillRows,
+            t,
+            skillDb,
+            row.leader_skill || null,
+          );
+          skillsSec.innerHTML = `<h4 class="monsters-detail__section-title">${escapeHtml(t.monstersDetailTabSkills || 'Skills')}</h4>${block}`;
+          if (typeof hydrateMonsterSkillIcons === 'function') hydrateMonsterSkillIcons(body);
+        }
+
+        syncMonsterRowHighlight(u.unitId);
       });
     }
   }

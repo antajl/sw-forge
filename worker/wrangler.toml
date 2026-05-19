@@ -1,0 +1,8 @@
+name = "sw-backend"
+main = "src/index.js"
+compatibility_date = "2024-08-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "swf-db"
+database_id = "7153441f-0dfa-4a15-842a-247dc38c78d0"

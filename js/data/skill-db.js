@@ -189,9 +189,12 @@
     const fn = iconByCom2usId.get(id);
     if (!fn) return '';
     const rel = `static/herders/images/skills/${fn}`;
+    const direct = `https://swarfarm.com/${rel}`;
+    const useProxy =
+      typeof SWRM_SWARFARM_PROXY_STATIC === 'boolean' && SWRM_SWARFARM_PROXY_STATIC === true;
     const api = typeof SWRM_API === 'string' ? SWRM_API : '';
-    if (api) return `${api}/swarfarm/${rel}`;
-    return `https://swarfarm.com/${rel}`;
+    if (useProxy && api) return `${api}/swarfarm/${rel}`;
+    return direct;
   }
 
   async function ensureSkillIcon(skillId) {

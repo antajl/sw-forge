@@ -56,7 +56,14 @@
     if (!el) return '';
     const url = db && typeof db.elementIconUrl === 'function' ? db.elementIconUrl(u.metaElement) : '';
     if (url) {
-      return `<img class="monsters-card__element-img" src="${escapeHtml(url)}" alt="${escapeHtml(u.metaElement)}" width="24" height="24" loading="lazy" decoding="async" referrerpolicy="no-referrer" />`;
+      const fallback =
+        db && typeof db.swarfarmDirectUrl === 'function'
+          ? db.swarfarmDirectUrl(`static/herders/images/elements/${elementClass(u.metaElement)}.png`)
+          : '';
+      const onerr = fallback
+        ? ` onerror="if(this.dataset.fb){this.onerror=null;this.src=this.dataset.fb}" data-fb="${escapeHtml(fallback)}"`
+        : '';
+      return `<img class="monsters-card__element-img" src="${escapeHtml(url)}" alt="${escapeHtml(u.metaElement)}" width="24" height="24" loading="lazy" decoding="async" referrerpolicy="no-referrer"${onerr} />`;
     }
     const letter = String(u.metaElement || '?').charAt(0).toUpperCase();
     return `<span class="monsters-card__element monsters-card__element--${el}" title="${escapeHtml(u.metaElement)}">${escapeHtml(letter)}</span>`;

@@ -64,6 +64,8 @@ const DEBUG_BYPASS_EFFICIENCY_GATES = false;
 
 /** Cloudflare Worker API (Share Profile, Leaderboard). */
 const SWRM_API = 'https://sw-backend.antajltube.workers.dev';
+/** Set true after Worker exposes GET /swarfarm/* (static proxy). Until then, images use swarfarm.com directly. */
+const SWRM_SWARFARM_PROXY_STATIC = false;
 
 
 // Slot mains (odd slots) — after i18n in monolith, kept here for load order with thresholds.

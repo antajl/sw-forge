@@ -7879,33 +7879,35 @@
 
     if (!pinned && anchorEl) positionMonstersDetailFloat(anchorEl);
 
-    if (db && typeof db.ensureMonsterBaseStats === 'function') {
-      db.ensureMonsterBaseStats(u.masterId, u.level).then((base) => {
-        if (!base) return;
-        const host = body.querySelector('[data-detail-stats]');
-        if (!host || !body.isConnected) return;
+    if (db && typeof db.fetchMonsterMetaForDetail === 'function') {
+      db.fetchMonsterMetaForDetail(u.masterId).then((row) => {
+        if (!row || !body.isConnected) return;
+        db.mergeMonsterMetaIntoCache(u.masterId, row);
         const cur = monstersEnrichedCache.find((x) => String(x.unitId) === String(u.unitId));
-        if (!cur) return;
-        host.innerHTML = buildMonsterDetailStatsBlock({ ...cur, baseStats: base }, t);
-      });
-    }
+        if (cur) cur.meta = { ...(cur.meta || {}), ...row };
 
-    if (db && typeof db.fetchMonsterMeta === 'function' && (!meta || meta.leader_skill === undefined)) {
-      db.fetchMonsterMeta(u.masterId).then((row) => {
-        if (!row || !row.leader_skill) return;
-        const host = body.querySelector('.monsters-detail__section');
-        const cur = monstersEnrichedCache.find((x) => String(x.unitId) === String(u.unitId));
-        if (!cur || !host || !body.isConnected) return;
-        const merged = { ...cur, meta: { ...(cur.meta || {}), ...row } };
-        const block = buildMonsterDetailSkillsBlock(
-          skillDb ? skillDb.enrichUnitSkillsForDetail(cur.skills) : skillRows,
-          t,
-          skillDb,
-          row.leader_skill,
-        );
+        const base =
+          db.monsterBaseStatsAtLevel && typeof db.monsterBaseStatsAtLevel === 'function'
+            ? db.monsterBaseStatsAtLevel(row, u.level)
+            : null;
+        const statsHost = body.querySelector('[data-detail-stats]');
+        if (statsHost && base) {
+          statsHost.innerHTML = buildMonsterDetailStatsBlock({ ...u, meta: row, baseStats: base }, t);
+        }
+
         const skillsSec = body.querySelector('.monsters-detail__section');
-        if (skillsSec) skillsSec.innerHTML = `<h4 class="monsters-detail__section-title">${escapeHtml(t.monstersDetailTabSkills || 'Skills')}</h4>${block}`;
-        if (typeof hydrateMonsterSkillIcons === 'function') hydrateMonsterSkillIcons(body);
+        if (skillsSec) {
+          const block = buildMonsterDetailSkillsBlock(
+            skillDb ? skillDb.enrichUnitSkillsForDetail(u.skills) : skillRows,
+            t,
+            skillDb,
+            row.leader_skill || null,
+          );
+          skillsSec.innerHTML = `<h4 class="monsters-detail__section-title">${escapeHtml(t.monstersDetailTabSkills || 'Skills')}</h4>${block}`;
+          if (typeof hydrateMonsterSkillIcons === 'function') hydrateMonsterSkillIcons(body);
+        }
+
+        syncMonsterRowHighlight(u.unitId);
       });
     }
   }
@@ -8073,7 +8075,14 @@
     if (!el) return '';
     const url = db && typeof db.elementIconUrl === 'function' ? db.elementIconUrl(u.metaElement) : '';
     if (url) {
-      return `<img class="monsters-card__element-img" src="${escapeHtml(url)}" alt="${escapeHtml(u.metaElement)}" width="24" height="24" loading="lazy" decoding="async" referrerpolicy="no-referrer" />`;
+      const fallback =
+        db && typeof db.swarfarmDirectUrl === 'function'
+          ? db.swarfarmDirectUrl(`static/herders/images/elements/${elementClass(u.metaElement)}.png`)
+          : '';
+      const onerr = fallback
+        ? ` onerror="if(this.dataset.fb){this.onerror=null;this.src=this.dataset.fb}" data-fb="${escapeHtml(fallback)}"`
+        : '';
+      return `<img class="monsters-card__element-img" src="${escapeHtml(url)}" alt="${escapeHtml(u.metaElement)}" width="24" height="24" loading="lazy" decoding="async" referrerpolicy="no-referrer"${onerr} />`;
     }
     const letter = String(u.metaElement || '?').charAt(0).toUpperCase();
     return `<span class="monsters-card__element monsters-card__element--${el}" title="${escapeHtml(u.metaElement)}">${escapeHtml(letter)}</span>`;
@@ -8448,20 +8457,10 @@
         if (db.indexCount() === 0) await db.loadMonsterIndex({ force: true });
       } catch (e) { /* ignore */ }
     }
-    if (db && typeof db.hydrateMonsterMeta === 'function') {
-      await db.hydrateMonsterMeta(allUnits.map((x) => x.masterId));
-    }
-    const skillIds = [];
-    for (const unit of allUnits) {
-      for (const s of unit.skills || []) {
-        if (s && s.skillId != null) skillIds.push(s.skillId);
-      }
-    }
     if (skillDb && typeof skillDb.loadSkillIndex === 'function') {
       try {
         await skillDb.loadSkillIndex();
         if (skillDb.indexCount() === 0) await skillDb.loadSkillIndex({ force: true });
-        if (skillIds.length) await skillDb.hydrateSkillMaxLevels(skillIds);
       } catch (e) { /* ignore */ }
     }
 

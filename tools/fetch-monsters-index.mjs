@@ -66,6 +66,7 @@ function slimMonster(m) {
     image_filename: m.image_filename,
     bestiary_slug: m.bestiary_slug,
     awaken_level: m.awaken_level != null ? Number(m.awaken_level) : 0,
+    awakened: m.awakened === true || (m.awaken_level != null && Number(m.awaken_level) > 0),
     base_hp: m.base_hp,
     base_attack: m.base_attack,
     base_defense: m.base_defense,

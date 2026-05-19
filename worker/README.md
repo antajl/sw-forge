@@ -8,13 +8,32 @@
 | `GET` | `/share?id=…` | Load profile |
 | `GET` | `/swarfarm/*` | Proxy to `https://swarfarm.com/*` with CORS |
 
+## Wrangler on Windows
+
+Use `npx wrangler` (or install globally: `npm i -g wrangler` and restart the terminal).
+
+## D1 schema
+
+**New database:** table does not exist yet:
+
+```bash
+cd worker
+npx wrangler d1 execute swf-db --remote --file=./schema.sql
+```
+
+**Already have `shares` but errors like `no such column: expires_at`:** your table was created with fewer columns. Run the migration once:
+
+```bash
+npx wrangler d1 execute swf-db --remote --file=./migrate-shares-columns.sql
+```
+
+If SQLite reports `duplicate column name: created_at`, edit the migration file and remove the `ALTER TABLE ... created_at` line, then run again (only `expires_at` was missing).
+
 ## Deploy
 
 ```bash
 cd worker
-npm i -g wrangler   # or use npx wrangler
-wrangler d1 execute swf-db --remote --file=./schema.sql   # once, if table missing
-wrangler deploy
+npx wrangler deploy
 ```
 
 After deploy, in `js/core/meta.js` set:

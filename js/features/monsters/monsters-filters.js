@@ -263,6 +263,8 @@
 
   function syncMonstersViewToggle(view) {
     const grid = document.getElementById('monsters-grid');
+    const sortField = document.querySelector('.monsters-toolbar__field--sort');
+    if (sortField) sortField.hidden = view === 'table';
     if (grid) {
       grid.classList.toggle('monsters-grid--table', view === 'table');
       grid.classList.toggle('monsters-grid--cards', view === 'cards');
@@ -287,6 +289,7 @@
   }
 
   function scheduleMonstersDetailHide() {
+    if (monstersDetailPinnedUnitId != null) return;
     cancelMonstersDetailHide();
     monstersDetailHideTimer = setTimeout(() => {
       monstersDetailHideTimer = null;
@@ -294,7 +297,22 @@
     }, 140);
   }
 
+  function syncMonstersDetailPinnedLayout() {
+    const layout = document.getElementById('monsters-layout');
+    const aside = document.getElementById('monsters-detail');
+    const pinned = monstersDetailPinnedUnitId != null;
+    if (layout) layout.classList.toggle('monsters-layout--pinned', pinned);
+    if (!aside) return;
+    aside.classList.toggle('monsters-detail--float', !pinned);
+    aside.classList.toggle('monsters-detail--pinned', pinned);
+    if (pinned) {
+      aside.style.removeProperty('left');
+      aside.style.removeProperty('top');
+    }
+  }
+
   function hideMonstersDetailFloat() {
+    if (monstersDetailPinnedUnitId != null) return;
     const aside = document.getElementById('monsters-detail');
     if (aside) {
       aside.hidden = true;
@@ -303,9 +321,7 @@
       aside.style.removeProperty('top');
     }
     monstersDetailHoverUnitId = null;
-    document.querySelectorAll('.monsters-card--hover').forEach((c) => {
-      c.classList.remove('monsters-card--hover');
-    });
+    syncMonsterRowHighlight(null);
   }
 
   function positionMonstersDetailFloat(anchorEl) {

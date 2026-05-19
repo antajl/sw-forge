@@ -1,5 +1,5 @@
 /**
- * Fetch SWARFARM /api/v2/skills/ → data/skills-index.json (com2us_id → max_level)
+ * Fetch SWARFARM /api/v2/skills/ → data/skills-index.json (com2us_id → max_level, icon)
  *
  * Run: node tools/fetch-skills-index.mjs
  * Resume: node tools/fetch-skills-index.mjs --resume
@@ -52,41 +52,46 @@ async function fetchJson(url) {
 }
 
 function loadPartial() {
-  if (!resume || !fs.existsSync(outPath)) return { byId: {}, nextUrl: null };
+  if (!resume || !fs.existsSync(outPath)) return { byId: {}, byIcon: {}, nextUrl: null };
   try {
     const data = JSON.parse(fs.readFileSync(outPath, 'utf8'));
     const byId = data.byId && typeof data.byId === 'object' ? data.byId : {};
+    const byIcon = data.byIcon && typeof data.byIcon === 'object' ? data.byIcon : {};
     const nextUrl = data._nextUrl || null;
     console.log(`Resume: ${Object.keys(byId).length} skills on disk`);
-    return { byId, nextUrl };
+    return { byId, byIcon, nextUrl };
   } catch (e) {
     console.warn('Resume read failed:', e.message);
-    return { byId: {}, nextUrl: null };
+    return { byId: {}, byIcon: {}, nextUrl: null };
   }
 }
 
-function savePartial(byId, nextUrl, complete) {
+function savePartial(byId, byIcon, nextUrl, complete) {
   const payload = {
     generatedAt: new Date().toISOString(),
     count: Object.keys(byId).length,
     complete: !!complete,
     byId,
+    byIcon,
     _nextUrl: nextUrl || null,
   };
   fs.writeFileSync(outPath, JSON.stringify(payload));
 }
 
+function ingestSkill(s, byId, byIcon) {
+  if (!s || s.com2us_id == null || s.max_level == null) return;
+  const id = String(s.com2us_id);
+  byId[id] = Number(s.max_level);
+  if (s.icon_filename) byIcon[id] = String(s.icon_filename);
+}
+
 async function main() {
-  let { byId, nextUrl } = loadPartial();
+  let { byId, byIcon, nextUrl } = loadPartial();
   if (!nextUrl) {
     const first = await fetchJson(`https://swarfarm.com/api/v2/skills/?limit=${PAGE_SIZE}`);
-    for (const s of first.results || []) {
-      if (s && s.com2us_id != null && s.max_level != null) {
-        byId[String(s.com2us_id)] = Number(s.max_level);
-      }
-    }
+    for (const s of first.results || []) ingestSkill(s, byId, byIcon);
     nextUrl = first.next;
-    savePartial(byId, nextUrl, false);
+    savePartial(byId, byIcon, nextUrl, false);
     console.log(`Page 1 — ${Object.keys(byId).length} skills`);
     await sleep(PAUSE_MS);
   }
@@ -94,19 +99,15 @@ async function main() {
   let page = 2;
   while (nextUrl) {
     const data = await fetchJson(nextUrl);
-    for (const s of data.results || []) {
-      if (s && s.com2us_id != null && s.max_level != null) {
-        byId[String(s.com2us_id)] = Number(s.max_level);
-      }
-    }
+    for (const s of data.results || []) ingestSkill(s, byId, byIcon);
     nextUrl = data.next;
-    savePartial(byId, nextUrl, !nextUrl);
+    savePartial(byId, byIcon, nextUrl, !nextUrl);
     console.log(`Page ${page} — ${Object.keys(byId).length} skills`);
     page += 1;
     if (nextUrl) await sleep(PAUSE_MS);
   }
 
-  savePartial(byId, null, true);
+  savePartial(byId, byIcon, null, true);
   console.log(`Done: ${Object.keys(byId).length} skills → ${outPath}`);
 }
 

@@ -10,6 +10,7 @@
 
   const RUNE_SET_IMG_BASE = 'https://swarfarm.com/static/herders/images/runes/';
   const DEVILMON_DARK_IMG = 'https://swarfarm.com/static/herders/images/monsters/devilmon_dark.png';
+  const ELEMENT_ICON_BASE = 'static/herders/images/elements/';
 
   /** @type {Map<number, object>} */
   let byCom2usId = new Map();
@@ -39,6 +40,75 @@
   function bestiaryUrl(slug) {
     if (!slug) return 'https://swarfarm.com/bestiary/';
     return `https://swarfarm.com/bestiary/${slug}/`;
+  }
+
+  /** Proxy SWARFARM static assets through our Worker when available. */
+  function swarfarmAssetUrl(relativePath) {
+    const rel = String(relativePath || '').replace(/^\//, '');
+    const api = typeof window !== 'undefined' && typeof SWRM_API === 'string' ? SWRM_API : '';
+    if (api) return `${api}/swarfarm/${rel}`;
+    return `https://swarfarm.com/${rel}`;
+  }
+
+  function elementIconUrl(elementName) {
+    const k = String(elementName || '').trim().toLowerCase();
+    if (!k || !['fire', 'water', 'wind', 'light', 'dark'].includes(k)) return '';
+    return swarfarmAssetUrl(`${ELEMENT_ICON_BASE}${k}.png`);
+  }
+
+  function isMonsterAwakened(masterId, metaRow) {
+    const row = metaRow || lookupMonster(masterId);
+    if (!row) return false;
+    if (row.awaken_level != null && Number(row.awaken_level) > 0) return true;
+    if (row.is_awakened === true) return true;
+    return false;
+  }
+
+  function scaleStat(base, max, level, maxLevel) {
+    const b = Number(base);
+    const m = Number(max);
+    const lv = Number(level);
+    const cap = Number(maxLevel);
+    if (!Number.isFinite(b) || !Number.isFinite(m)) return null;
+    if (!Number.isFinite(lv) || !Number.isFinite(cap) || cap <= 1) return Math.round(m);
+    const t = Math.max(0, Math.min(1, (lv - 1) / (cap - 1)));
+    return Math.round(b + (m - b) * t);
+  }
+
+  function monsterBaseStatsAtLevel(metaRow, level) {
+    if (!metaRow) return null;
+    const maxLvl = Number(metaRow.max_level) || 40;
+    const lv = Number(level) || 1;
+    const hp = scaleStat(metaRow.base_hp, metaRow.max_lvl_hp, lv, maxLvl);
+    const atk = scaleStat(metaRow.base_attack, metaRow.max_lvl_attack, lv, maxLvl);
+    const def = scaleStat(metaRow.base_defense, metaRow.max_lvl_defense, lv, maxLvl);
+    const spd = scaleStat(metaRow.base_speed, metaRow.max_lvl_speed, lv, maxLvl);
+    if (hp == null && atk == null) return null;
+    return { hp: hp ?? 0, atk: atk ?? 0, def: def ?? 0, spd: spd ?? 0 };
+  }
+
+  function slimMonsterFromApi(m) {
+    return {
+      com2us_id: m.com2us_id,
+      name: m.name,
+      element: m.element,
+      archetype: m.archetype || '',
+      natural_stars: m.natural_stars,
+      image_filename: m.image_filename,
+      bestiary_slug: m.bestiary_slug,
+      awaken_level: m.awaken_level != null ? Number(m.awaken_level) : 0,
+      base_hp: m.base_hp,
+      base_attack: m.base_attack,
+      base_defense: m.base_defense,
+      base_speed: m.base_speed,
+      max_lvl_hp: m.max_lvl_hp,
+      max_lvl_attack: m.max_lvl_attack,
+      max_lvl_defense: m.max_lvl_defense,
+      max_lvl_speed: m.max_lvl_speed,
+      max_level: m.max_level,
+      leader_skill: m.leader_skill || null,
+      skills: Array.isArray(m.skills) ? m.skills : [],
+    };
   }
 
   function ingestMonsterList(list, target) {
@@ -130,33 +200,32 @@
     return row && row.archetype ? String(row.archetype) : '';
   }
 
-  /** Fetch single monster from SWARFARM API when not in bundled index. */
-  async function fetchMonsterMeta(masterId) {
+  /** Fetch single monster from SWARFARM API (merges into cache). */
+  async function fetchMonsterMeta(masterId, options) {
     const id = Number(masterId);
     if (!Number.isFinite(id)) return null;
-    if (byCom2usId.has(id)) return byCom2usId.get(id);
+    const force = options && options.force === true;
+    const cached = byCom2usId.get(id);
+    if (cached && cached.max_lvl_hp != null && !force) return cached;
     try {
       const url = `https://swarfarm.com/api/v2/monsters/?com2us_id=${id}`;
       const res = await fetch(url);
-      if (!res.ok) return null;
+      if (!res.ok) return cached || null;
       const data = await res.json();
       const m = data.results && data.results[0];
-      if (!m) return null;
-      const row = {
-        com2us_id: m.com2us_id,
-        name: m.name,
-        element: m.element,
-        archetype: m.archetype || '',
-        natural_stars: m.natural_stars,
-        image_filename: m.image_filename,
-        bestiary_slug: m.bestiary_slug,
-      };
+      if (!m) return cached || null;
+      const row = slimMonsterFromApi(m);
       const prev = byCom2usId.get(id);
       byCom2usId.set(id, prev ? { ...prev, ...row } : row);
       return byCom2usId.get(id);
     } catch (e) {
-      return null;
+      return cached || null;
     }
+  }
+
+  async function ensureMonsterBaseStats(masterId, level) {
+    const row = await fetchMonsterMeta(masterId, { force: false });
+    return monsterBaseStatsAtLevel(row, level);
   }
 
   async function hydrateMonsterMeta(masterIds) {
@@ -168,7 +237,12 @@
     const missing = uniq.filter((id) => !byCom2usId.has(id));
     const needsArchetype = uniq.filter((id) => {
       const row = byCom2usId.get(id);
-      return row && !row.archetype;
+      return (
+        !row ||
+        !row.archetype ||
+        row.max_lvl_hp == null ||
+        row.leader_skill === undefined
+      );
     });
     const batch = 8;
     for (let i = 0; i < missing.length; i += batch) {
@@ -185,6 +259,7 @@
     loadMonsterIndex,
     hydrateMonsterMeta,
     fetchMonsterMeta,
+    ensureMonsterBaseStats,
     lookupMonster,
     monsterDisplayName,
     monsterArchetype,
@@ -192,6 +267,10 @@
     devilmonImageUrl,
     runeSetImageUrl,
     bestiaryUrl,
+    swarfarmAssetUrl,
+    elementIconUrl,
+    isMonsterAwakened,
+    monsterBaseStatsAtLevel,
     IMG_BASES,
     isReady: () => loaded,
     indexCount,

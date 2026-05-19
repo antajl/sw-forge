@@ -429,8 +429,8 @@
     if (shareTitle) shareTitle.textContent = t.shareProfileTitle || 'Share Profile';
     const shareDesc = document.getElementById('share-profile-desc');
     if (shareDesc) shareDesc.textContent = t.shareProfileDesc || '';
-    const shareFullLbl = document.getElementById('lbl-share-full-inventory');
-    if (shareFullLbl) shareFullLbl.textContent = t.shareFullInventory || '';
+    const shareEquippedLbl = document.getElementById('lbl-share-equipped-only');
+    if (shareEquippedLbl) shareEquippedLbl.textContent = t.shareEquippedOnly || '';
     const shareBtn = document.getElementById('share-profile-btn');
     if (shareBtn) shareBtn.textContent = t.shareProfileBtn || 'Share';
 

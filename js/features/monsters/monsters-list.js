@@ -110,7 +110,14 @@
     syncMonstersShowAllButton(!!filters.fullSixOnly, t);
     syncMonstersShowLevelButton(filters.minLevel36Only !== false, t);
 
-    const visible = sortMonstersList(filterMonstersList(enriched, filters), filters.sort);
+    const view = readMonstersView();
+    const filtered = filterMonstersList(enriched, filters);
+    let visible;
+    if (view === 'table') {
+      visible = sortMonstersForTable(filtered);
+    } else {
+      visible = sortMonstersList(filtered, filters.sort);
+    }
     monstersVisibleUnitIds = visible.map((u) => String(u.unitId));
     const sum = computeMonstersSummary(enriched);
     renderMonstersChips(sum, t, indexMissing, skillsIndexMissing);
@@ -124,13 +131,12 @@
 
     if (emptyEl) emptyEl.hidden = true;
 
-    const view = readMonstersView();
     syncMonstersViewToggle(view);
 
     if (view === 'table') {
       grid.innerHTML = buildMonsterTableHtml(visible, t);
       bindMonsterTableRows(grid, t);
-    } else {
+    } else if (view === 'cards') {
       grid.innerHTML = visible.map((u) => buildMonsterCardHtml(u, db, t, view)).join('');
       grid.querySelectorAll('.monsters-card__img[data-img-file]').forEach((img) => {
         const file = img.getAttribute('data-img-file');
@@ -140,25 +146,24 @@
 
     grid.querySelectorAll('.monsters-card').forEach((card) => {
       const uid = card.getAttribute('data-unit-id');
-      card.addEventListener('mouseenter', () => showMonsterDetailForCard(uid, card));
-      card.addEventListener('mouseleave', scheduleMonstersDetailHide);
-      card.addEventListener('focus', () => showMonsterDetailForCard(uid, card));
-      card.addEventListener('blur', scheduleMonstersDetailHide);
-      card.addEventListener('keydown', (e) => {
-        if (e.key !== 'Enter' && e.key !== ' ') return;
-        e.preventDefault();
-        toggleMonstersBulkSelect(uid);
-        const idx = monstersVisibleUnitIds.indexOf(String(uid));
-        monstersBulkLastIndex = idx;
-        writeMonstersBulkSelected(monstersBulkSelected);
-        syncMonstersBulkBar(t);
-        syncBulkCardStates(grid);
+      card.addEventListener('mouseenter', () => {
+        if (monstersDetailPinnedUnitId) return;
+        showMonsterDetailForCard(uid, card);
       });
+      card.addEventListener('mouseleave', scheduleMonstersDetailHide);
+      card.addEventListener('focus', () => {
+        if (monstersDetailPinnedUnitId) return;
+        showMonsterDetailForCard(uid, card);
+      });
+      card.addEventListener('blur', scheduleMonstersDetailHide);
     });
 
     syncBulkCardStates(grid);
 
-    if (monstersDetailHoverUnitId) {
+    if (monstersDetailPinnedUnitId) {
+      const pu = enriched.find((x) => String(x.unitId) === String(monstersDetailPinnedUnitId));
+      if (pu) renderMonstersDetail(pu, t, null);
+    } else if (monstersDetailHoverUnitId) {
       const hoverCard = document.querySelector(
         `.monsters-card[data-unit-id="${String(monstersDetailHoverUnitId).replace(/"/g, '\\"')}"]`,
       );

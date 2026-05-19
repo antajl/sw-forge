@@ -490,16 +490,26 @@ main {
 body.share-readonly #tab-settings input,
 body.share-readonly #tab-settings select,
 body.share-readonly #tab-settings textarea,
-body.share-readonly #tab-settings button:not(#share-view-exit-btn),
+body.share-readonly #tab-settings button:not(.rules-subtab):not(#share-view-exit-btn),
 body.share-readonly .share-profile-actions,
 body.share-readonly #btn-upload-slot,
-body.share-readonly .db-slot-btn {
+body.share-readonly .db-slot-btn,
+body.share-readonly .monsters-card__actions,
+body.share-readonly .monsters-card__bulk-btn,
+body.share-readonly #monsters-bulk-bar,
+body.share-readonly .monsters-detail__tag-add,
+body.share-readonly .monsters-detail__tag-remove {
   pointer-events: none;
   opacity: 0.55;
 }
 
-body.share-readonly #share-profile-btn {
+body.share-readonly #share-profile-btn,
+body.share-readonly #btn-save-settings {
   display: none;
+}
+
+.share-view-banner.demo-dataset-banner {
+  width: 100%;
 }
 
 .share-profile-actions {

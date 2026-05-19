@@ -35,8 +35,106 @@
   letter-spacing: 0.04em;
 }
 
+.monsters-table th.monsters-table__th--sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.monsters-table th.monsters-table__th--sortable:hover {
+  color: var(--text-hi);
+}
+
+.monsters-table__th-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.monsters-table__sort-icon {
+  font-size: 0.55rem;
+  opacity: 0.35;
+  line-height: 1;
+}
+
+.monsters-table__th--sorted .monsters-table__sort-icon {
+  opacity: 1;
+  color: var(--accent);
+}
+
+.monsters-table__row--pinned {
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+}
+
+.monsters-table__element-img {
+  width: 20px;
+  height: 20px;
+  vertical-align: middle;
+  object-fit: contain;
+}
+
+.monsters-table__thumb {
+  max-height: 32px;
+}
+
 .monsters-table__row {
   cursor: pointer;
+}
+
+.monsters-table__row--fire {
+  border-left: 3px solid var(--monsters-el-fire);
+}
+
+.monsters-table__row--water {
+  border-left: 3px solid var(--monsters-el-water);
+}
+
+.monsters-table__row--wind {
+  border-left: 3px solid var(--monsters-el-wind);
+}
+
+.monsters-table__row--light {
+  border-left: 3px solid var(--monsters-el-light);
+}
+
+.monsters-table__row--dark {
+  border-left: 3px solid var(--monsters-el-dark);
+}
+
+.monsters-table__name-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 220px;
+}
+
+.monsters-table__thumb {
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  object-fit: cover;
+  background: var(--bg3);
+}
+
+.monsters-table__stars {
+  display: inline-flex;
+  line-height: 1;
+}
+
+.monsters-table__star {
+  font-size: 0.68rem;
+  margin-left: -0.2em;
+  color: #f0c040;
+  -webkit-text-stroke: 1px #000;
+  paint-order: stroke fill;
+}
+
+.monsters-table__star:first-child {
+  margin-left: 0;
+}
+
+.monsters-table__stars--awakened .monsters-table__star {
+  color: #f06eb0;
 }
 
 .monsters-table__row:hover {

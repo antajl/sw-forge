@@ -23,19 +23,19 @@
           const rid = raw.rune_id != null ? Number(raw.rune_id) : null;
           const parsed = rid != null && runeById.has(rid) ? runeById.get(rid) : null;
           if (parsed) {
-            const raw = parsed._raw;
-            if (raw && typeof raw === 'object') {
+            const rawRune = parsed._raw;
+            if (rawRune && typeof rawRune === 'object') {
               return {
                 rune_id: rid,
-                slot_no: raw.slot_no ?? parsed.slot,
-                set_id: raw.set_id ?? parsed.setId,
-                upgrade_curr: raw.upgrade_curr ?? parsed.level,
-                extra: raw.extra,
-                class: raw.class,
-                rank: raw.rank,
-                pri_eff: raw.pri_eff ?? [parsed.mainType, parsed.mainVal],
-                prefix_eff: raw.prefix_eff,
-                sec_eff: raw.sec_eff,
+                slot_no: rawRune.slot_no ?? parsed.slot,
+                set_id: rawRune.set_id ?? parsed.setId,
+                upgrade_curr: rawRune.upgrade_curr ?? parsed.level,
+                extra: rawRune.extra,
+                class: rawRune.class,
+                rank: rawRune.rank,
+                pri_eff: rawRune.pri_eff ?? [parsed.mainType, parsed.mainVal],
+                prefix_eff: rawRune.prefix_eff,
+                sec_eff: rawRune.sec_eff,
               };
             }
             return {
@@ -116,16 +116,19 @@
     if (!bar) {
       bar = document.createElement('aside');
       bar.id = 'share-view-banner';
-      bar.className = 'share-view-banner';
+      bar.className = 'demo-dataset-banner share-view-banner';
       const chrome = document.querySelector('.site-chrome-sticky');
       if (chrome) chrome.insertAdjacentElement('afterend', bar);
       else document.body.prepend(bar);
     }
     const name = escapeHtml(shareViewWizardName || t.shareUnknownWizard || 'another player');
     const tpl = t.shareViewingBanner || 'You are viewing {name}\'s profile (read-only).';
-    bar.innerHTML = `<div class="share-view-banner__inner">
-      <p class="share-view-banner__text">${tpl.replace(/\{name\}/g, name)}</p>
-      <button type="button" class="btn-secondary btn-sm" id="share-view-exit-btn">${escapeHtml(t.shareLoadOwn || 'Load your SWEX')}</button>
+    bar.innerHTML = `<div class="demo-dataset-banner__inner">
+      <div class="demo-dataset-banner__content">
+        <span class="demo-dataset-banner__badge" aria-hidden="true">VIEW</span>
+        <span class="demo-dataset-banner__text">${tpl.replace(/\{name\}/g, name)}</span>
+        <button type="button" class="btn-ghost demo-dataset-banner__upload-btn" id="share-view-exit-btn">${escapeHtml(t.shareLoadOwn || 'Load your SWEX')}</button>
+      </div>
     </div>`;
     bar.querySelector('#share-view-exit-btn')?.addEventListener('click', () => {
       try {
@@ -146,7 +149,6 @@
     if (!shareId) return false;
     const api = typeof SWRM_API === 'string' ? SWRM_API : '';
     if (!api) return false;
-    const t0 = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     try {
       const res = await fetch(`${api}/share?id=${encodeURIComponent(shareId)}`);
       if (!res.ok) return false;
@@ -185,27 +187,37 @@
   function applyShareReadOnlyUi() {
     document.body.classList.toggle('share-readonly', shareReadOnly);
     const shareBtn = document.getElementById('share-profile-btn');
-    const shareFull = document.getElementById('share-full-inventory');
+    const shareEquipped = document.getElementById('share-equipped-only');
     if (shareBtn) shareBtn.disabled = shareReadOnly;
-    if (shareFull) shareFull.disabled = shareReadOnly;
+    if (shareEquipped) shareEquipped.disabled = shareReadOnly;
     document.querySelectorAll('.db-slot-btn, #btn-upload-slot, #btn-demo-load').forEach((el) => {
       if (el) el.disabled = shareReadOnly;
     });
+    const saveBtn = document.getElementById('btn-save-settings');
+    if (saveBtn) saveBtn.hidden = shareReadOnly;
     const rulesRoot = document.getElementById('tab-settings');
     if (rulesRoot) {
-      rulesRoot.querySelectorAll('input, select, textarea, button').forEach((el) => {
-        if (el.id === 'share-view-exit-btn') return;
+      rulesRoot.querySelectorAll('input, select, textarea').forEach((el) => {
         el.disabled = shareReadOnly;
       });
+      rulesRoot.querySelectorAll('button').forEach((el) => {
+        if (el.classList.contains('rules-subtab')) return;
+        if (el.id === 'share-view-exit-btn') return;
+        el.disabled = shareReadOnly;
+        if (shareReadOnly && el.id === 'btn-save-settings') el.hidden = true;
+      });
     }
+    const bulkBar = document.getElementById('monsters-bulk-bar');
+    if (bulkBar) bulkBar.hidden = shareReadOnly || monstersBulkSelected.size === 0;
   }
 
   function bindShareProfileUi() {
     document.getElementById('share-profile-btn')?.addEventListener('click', async () => {
-      const full = document.getElementById('share-full-inventory')?.checked === true;
+      const equippedOnly = document.getElementById('share-equipped-only')?.checked === true;
+      const fullInventory = !equippedOnly;
       const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
       try {
-        await copyShareLink(full);
+        await copyShareLink(fullInventory);
       } catch (e) {
         if (typeof showToast === 'function') {
           showToast((t.shareFailed || 'Share failed') + (e.message ? `: ${e.message}` : ''), 'error');

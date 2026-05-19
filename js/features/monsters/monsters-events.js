@@ -334,6 +334,7 @@
       clearAllMonstersSelection();
       const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
       syncMonstersBulkBar(t);
+      renderMonstersPanel();
     });
     document.getElementById('monsters-filter-mark')?.addEventListener('change', onFilter);
     document.getElementById('monsters-empty-clear-filters')?.addEventListener('click', () => {

@@ -288,11 +288,7 @@
         const pct = dashChartPct(c, verdictScale).toFixed(1);
         const pctNum = parseFloat(pct);
         verdictBarTargets.set(v, pctNum);
-        const startPct = !animateCharts
-          ? pctNum
-          : prevVerdictW.has(v)
-            ? prevVerdictW.get(v)
-            : 0;
+        const startPct = !animateCharts ? pctNum : chartFromZero ? 0 : prevVerdictW.has(v) ? prevVerdictW.get(v) : 0;
         const lblRaw = verdictUiLabel(tloc, v);
         const lbl = escapeHtml(lblRaw);
         const bg = DASH_VERDICT_SEG_CSS[v] || '#888';
@@ -324,11 +320,7 @@
         const pct = dashChartPct(cnt, roleScale).toFixed(1);
         const pctNum = parseFloat(pct);
         roleBarTargets.set(role, pctNum);
-        const startPct = !animateCharts
-          ? pctNum
-          : prevRoleW.has(role)
-            ? prevRoleW.get(role)
-            : 0;
+        const startPct = !animateCharts ? pctNum : chartFromZero ? 0 : prevRoleW.has(role) ? prevRoleW.get(role) : 0;
         const er = escapeHtml(role);
         roleEl.innerHTML += `
         <div class="chart-row chart-row--clickable" role="button" tabindex="0" data-dash-role="${er}">
@@ -359,11 +351,7 @@
         const pctNum = parseFloat(pct);
         const enc = encodeURIComponent(name);
         setBarTargets.set(enc, pctNum);
-        const startPct = !animateCharts
-          ? pctNum
-          : prevSetW.has(enc)
-            ? prevSetW.get(enc)
-            : 0;
+        const startPct = !animateCharts ? pctNum : chartFromZero ? 0 : prevSetW.has(enc) ? prevSetW.get(enc) : 0;
         const en = escapeHtml(name);
         const encAttr = escapeHtml(enc);
         const titleRaw = openHintSets ? `${name}: ${cnt}. ${openHintSets}` : `${name}: ${cnt}`;
@@ -421,11 +409,7 @@
       for (let i = 0; i < 20; i++) {
         const h = Math.max(4, (effBuckets[i] / maxBucket) * 80);
         effBarTargets[i] = h;
-        const h0 = !animateCharts
-          ? h
-          : prevEffHeights && prevEffHeights[i] != null
-            ? prevEffHeights[i]
-            : 0;
+        const h0 = !animateCharts ? h : chartFromZero ? 0 : prevEffHeights && prevEffHeights[i] != null ? prevEffHeights[i] : 0;
         const label = `${i * 5}-${i * 5 + 4}`;
         const cls = i >= 18 ? 'great' : i >= 14 ? 'good' : '';
         effEl.innerHTML += `

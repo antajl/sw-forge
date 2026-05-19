@@ -19,53 +19,89 @@
   }
 
   function monsterUnitIsAwakened(u) {
-    const rank = monsterUnitRankStars(u);
-    if (rank !== 6) return false;
-    const maxLvl = u.maxLevel != null ? Number(u.maxLevel) : 40;
-    const lvl = Number(u.level) || 0;
-    return maxLvl === 40 && lvl >= 40;
+    const db = window.SWRM_MONSTER_DB;
+    if (db && typeof db.isMonsterAwakened === 'function') {
+      return db.isMonsterAwakened(u.masterId, u.meta);
+    }
+    return false;
   }
 
-  function buildMonsterStarsBadge(u) {
+  function buildMonsterStarsBadge(u, variant) {
     const n = monsterUnitRankStars(u);
     if (!n) return '';
-    const filled = '★'.repeat(n);
     const awakened = monsterUnitIsAwakened(u);
-    const cls = awakened ? ' monsters-card__stars--awakened' : '';
-    return `<span class="monsters-card__stars${cls}" aria-label="${n}★">${filled}</span>`;
+    const rowCls =
+      variant === 'table'
+        ? 'monsters-table__stars'
+        : 'monsters-card__stars-row';
+    const starCls = variant === 'table' ? 'monsters-table__star' : 'monsters-card__star';
+    const awakenCls = awakened
+      ? variant === 'table'
+        ? ' monsters-table__stars--awakened'
+        : ' monsters-card__stars-row--awakened'
+      : '';
+    const stars = Array.from(
+      { length: n },
+      (_, i) => `<span class="${starCls}" style="--star-i:${i}">★</span>`,
+    ).join('');
+    if (variant === 'table') {
+      return `<div class="${rowCls}${awakenCls}" aria-label="${n}★">${stars}</div>`;
+    }
+    return `<div class="${rowCls}${awakenCls} monsters-card__stars-row--overlay" aria-label="${n}★">${stars}</div>`;
+  }
+
+  function buildMonsterElementBadge(u) {
+    const db = window.SWRM_MONSTER_DB;
+    const el = elementClass(u.metaElement);
+    if (!el) return '';
+    const url = db && typeof db.elementIconUrl === 'function' ? db.elementIconUrl(u.metaElement) : '';
+    if (url) {
+      return `<img class="monsters-card__element-img" src="${escapeHtml(url)}" alt="${escapeHtml(u.metaElement)}" width="24" height="24" loading="lazy" decoding="async" referrerpolicy="no-referrer" />`;
+    }
+    const letter = String(u.metaElement || '?').charAt(0).toUpperCase();
+    return `<span class="monsters-card__element monsters-card__element--${el}" title="${escapeHtml(u.metaElement)}">${escapeHtml(letter)}</span>`;
+  }
+
+  function buildMonsterLevelBadge(u, t) {
+    const lbl = t.monstersLevelShort || 'Lv';
+    return `<span class="monsters-card__level">${escapeHtml(lbl)} ${escapeHtml(String(u.level))}</span>`;
+  }
+
+  function buildMonsterBulkToggleHtml(u) {
+    const uid = escapeHtml(String(u.unitId));
+    const on = monstersBulkSelected.has(String(u.unitId));
+    return `<button type="button" class="monsters-card__bulk-btn${on ? ' monsters-card__bulk-btn--on' : ''}" data-bulk-toggle="1" data-unit-id="${uid}" aria-pressed="${on ? 'true' : 'false'}" title="Select for bulk">✓</button>`;
   }
 
   function buildMonsterCardHtml(u, db, t, view) {
     const elCls = elementClass(u.metaElement);
-    const selected = String(u.unitId) === String(monstersSelectedUnitId);
-    const hover = String(u.unitId) === String(monstersDetailHoverUnitId);
+    const pinned = monstersDetailPinnedUnitId != null && String(monstersDetailPinnedUnitId) === String(u.unitId);
+    const hover =
+      !pinned &&
+      monstersDetailHoverUnitId != null &&
+      String(monstersDetailHoverUnitId) === String(u.unitId);
     const bestiaryHref = db && u.bestiarySlug ? db.bestiaryUrl(u.bestiarySlug) : '';
     const nameInner = bestiaryHref
       ? `<a href="${escapeHtml(bestiaryHref)}" target="_blank" rel="noopener noreferrer">${escapeHtml(u.displayName)}</a>`
       : escapeHtml(u.displayName);
-    const lvlLbl = t.monstersLevelShort || 'Lv';
-    const natN = monsterUnitNatStars(u);
-    const subBits = [
-      natN ? `nat${natN}` : '',
-      u.metaElement ? escapeHtml(u.metaElement) : '',
-      u.metaArchetype ? escapeHtml(u.metaArchetype) : '',
-      `${lvlLbl} ${u.level}`,
-    ].filter(Boolean);
     const runeCells = buildRuneBlockHtml(u, db, t, view);
     const bulkSel = monstersBulkSelected.has(String(u.unitId));
     const starsBadge = buildMonsterStarsBadge(u);
     const locHtml = u.inStorage ? buildLocationIconHtml(u, t) : '';
-    const actionsHtml = buildCardActionsHtml(u, t);
-    return `<article class="monsters-card monsters-card--grid${u.favorite ? ' monsters-card--favorite' : ''}${u.food ? ' monsters-card--food' : ''}${u.inStorage ? ' monsters-card--storage' : ''}${bulkSel ? ' monsters-card--bulk-on' : ''}${selected ? ' monsters-card--selected' : ''}${hover ? ' monsters-card--hover' : ''}${elCls ? ` monsters-card--${elCls}` : ''}" data-unit-id="${escapeHtml(String(u.unitId))}" data-master-id="${u.masterId}" tabindex="0">
+    const ro = typeof isShareReadOnly === 'function' && isShareReadOnly();
+    const actionsHtml = ro ? '' : buildCardActionsHtml(u, t);
+    return `<article class="monsters-card monsters-card--grid${u.favorite ? ' monsters-card--favorite' : ''}${u.food ? ' monsters-card--food' : ''}${u.inStorage ? ' monsters-card--storage' : ''}${bulkSel ? ' monsters-card--bulk-on' : ''}${pinned ? ' monsters-card--pinned' : ''}${hover ? ' monsters-card--hover' : ''}${elCls ? ` monsters-card--${elCls}` : ''}" data-unit-id="${escapeHtml(String(u.unitId))}" data-master-id="${u.masterId}" tabindex="0">
           <div class="monsters-card__bar monsters-card__bar--${elCls}" aria-hidden="true"></div>
+          ${ro ? '' : buildMonsterBulkToggleHtml(u)}
           ${actionsHtml}
           <div class="monsters-card__hero">
             ${starsBadge}
             <img class="monsters-card__img" alt="" width="120" height="120" data-img-file="${escapeHtml(u.imageFilename || '')}" loading="lazy" decoding="async" />
+            ${buildMonsterElementBadge(u)}
+            ${buildMonsterLevelBadge(u, t)}
           </div>
           <div class="monsters-card__meta">
             <p class="monsters-card__name">${locHtml}${nameInner}</p>
-            <p class="monsters-card__sub">${subBits.join(' · ')}</p>
           </div>
           ${runeCells}
         </article>`;
@@ -77,21 +113,47 @@
     return installEmbeddedDemoDataset({ keepTab: true });
   }
 
-  function showMonsterDetailForCard(unitId, anchorEl) {
-    monstersDetailHoverUnitId = unitId != null ? String(unitId) : null;
+  function syncMonsterRowHighlight(unitId) {
+    const uid = unitId != null ? String(unitId) : '';
+    const pinned = monstersDetailPinnedUnitId != null;
+    document.querySelectorAll('.monsters-card, .monsters-table__row').forEach((node) => {
+      const id = node.getAttribute('data-unit-id');
+      const on = id === uid;
+      if (node.classList.contains('monsters-card')) {
+        node.classList.toggle('monsters-card--hover', !pinned && on);
+        node.classList.toggle('monsters-card--pinned', pinned && on);
+      } else {
+        node.classList.toggle('monsters-table__row--hover', !pinned && on);
+        node.classList.toggle('monsters-table__row--pinned', pinned && on);
+      }
+    });
+  }
+
+  function showMonsterDetailForCard(unitId, anchorEl, options) {
+    const opts = options || {};
+    const pin = opts.pin === true;
+    if (pin) {
+      monstersDetailPinnedUnitId = unitId != null ? String(unitId) : null;
+    }
+    if (!monstersDetailPinnedUnitId) {
+      monstersDetailHoverUnitId = unitId != null ? String(unitId) : null;
+    } else if (pin) {
+      monstersDetailHoverUnitId = null;
+    }
     const u = monstersEnrichedCache.find((x) => String(x.unitId) === String(unitId));
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     cancelMonstersDetailHide();
-    document.querySelectorAll('.monsters-card').forEach((card) => {
-      card.classList.toggle('monsters-card--hover', card.getAttribute('data-unit-id') === String(unitId));
-    });
-    renderMonstersDetail(u || null, t, anchorEl);
+    syncMonsterRowHighlight(unitId);
+    syncMonstersDetailPinnedLayout();
+    renderMonstersDetail(u || null, t, pin ? null : anchorEl);
   }
 
-  function selectMonsterUnit(unitId, anchorEl) {
-    saveMonstersSelectedUnitId(unitId);
-    document.querySelectorAll('.monsters-card').forEach((card) => {
-      card.classList.toggle('monsters-card--selected', card.getAttribute('data-unit-id') === String(unitId));
-    });
-    showMonsterDetailForCard(unitId, anchorEl);
+  function pinMonsterDetail(unitId, anchorEl) {
+    showMonsterDetailForCard(unitId, anchorEl, { pin: true });
+  }
+
+  function unpinMonsterDetail() {
+    monstersDetailPinnedUnitId = null;
+    syncMonstersDetailPinnedLayout();
+    hideMonstersDetailFloat();
   }

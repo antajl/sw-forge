@@ -46,6 +46,20 @@
           }
         }
         byCom2usId = next;
+        const iconMap = data.byIcon;
+        if (iconMap && typeof iconMap === 'object') {
+          for (const [k, fn] of Object.entries(iconMap)) {
+            const id = Number(k);
+            if (Number.isFinite(id) && fn) iconByCom2usId.set(id, String(fn));
+          }
+        }
+        if (Array.isArray(data.skills)) {
+          for (const row of data.skills) {
+            if (row && row.com2us_id != null && row.icon_filename) {
+              iconByCom2usId.set(Number(row.com2us_id), String(row.icon_filename));
+            }
+          }
+        }
         lastLoadCount = byCom2usId.size;
         loaded = true;
         if (lastLoadCount > 0) {
@@ -174,7 +188,10 @@
     if (!Number.isFinite(id) || id <= 0) return '';
     const fn = iconByCom2usId.get(id);
     if (!fn) return '';
-    return `https://swarfarm.com/static/herders/images/skills/${fn}`;
+    const rel = `static/herders/images/skills/${fn}`;
+    const api = typeof SWRM_API === 'string' ? SWRM_API : '';
+    if (api) return `${api}/swarfarm/${rel}`;
+    return `https://swarfarm.com/${rel}`;
   }
 
   async function ensureSkillIcon(skillId) {
@@ -196,6 +213,34 @@
     return `${lv}/${maxLv}`;
   }
 
+  function enrichUnitSkillsForDetail(skills) {
+    const list = Array.isArray(skills) ? skills : [];
+    return list.map((s, idx) => {
+      const skillId = Number(s.skillId);
+      const level = Number.isFinite(Number(s.level)) ? Number(s.level) : 0;
+      const maxLv = maxLevel(skillId);
+      const hasMax = maxLv != null;
+      const upgradeable = hasMax ? maxLv > 1 : true;
+      const isMaxed = hasMax && level >= maxLv;
+      return {
+        skillId,
+        level,
+        slot: idx + 1,
+        maxLevel: maxLv,
+        hasMax,
+        isMaxed,
+        upgradeable,
+        passive: hasMax && maxLv <= 1,
+      };
+    });
+  }
+
+  function formatSkillLevelDetail(s) {
+    if (!s.upgradeable) return '';
+    if (!s.hasMax) return String(s.level);
+    return `${s.level}/${s.maxLevel}`;
+  }
+
   window.SWRM_SKILL_DB = {
     loadSkillIndex,
     hydrateSkillMaxLevels,
@@ -205,7 +250,9 @@
     maxLevel,
     isUpgradeableSkill,
     enrichUnitSkills,
+    enrichUnitSkillsForDetail,
     formatSkillLevel,
+    formatSkillLevelDetail,
     isReady: () => loaded,
     indexCount: () => byCom2usId.size,
   };

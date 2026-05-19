@@ -57,6 +57,11 @@
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
 }
 
+.monsters-card--pinned {
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--border2));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
 .monsters-card--list {
   display: grid;
   grid-template-columns: 3px 22px minmax(5.5rem, 1fr) auto auto;
@@ -484,12 +489,148 @@
   border-radius: 0;
 }
 
+.monsters-card--grid {
+  position: relative;
+}
+
+.monsters-card--grid .monsters-card__stars-row--overlay {
+  position: absolute;
+  top: 4px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+  padding: 0 4px;
+  line-height: 1;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.monsters-card--grid .monsters-card__star {
+  display: inline-block;
+  font-size: 1.44rem;
+  margin-left: -0.38em;
+  color: #f0c040;
+  -webkit-text-stroke: 1px #000;
+  paint-order: stroke fill;
+  text-shadow:
+    0 0 2px #000,
+    0 1px 0 #000,
+    1px 0 0 #000,
+    -1px 0 0 #000;
+}
+
+.monsters-card--grid .monsters-card__star:first-child {
+  margin-left: 0;
+}
+
+.monsters-card--grid .monsters-card__stars-row--awakened .monsters-card__star {
+  color: #f06eb0;
+}
+
 .monsters-card--grid .monsters-card__hero {
   position: relative;
   width: 100%;
   aspect-ratio: 1;
   background: var(--bg3);
   overflow: hidden;
+}
+
+.monsters-card--grid .monsters-card__element-img {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  z-index: 2;
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.65));
+  pointer-events: none;
+}
+
+.monsters-card--grid .monsters-card__element {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  z-index: 2;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-family: var(--font-head);
+  font-size: 0.62rem;
+  font-weight: 800;
+  line-height: 1;
+  color: #fff;
+  border: 2px solid rgba(0, 0, 0, 0.45);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+
+.monsters-card--grid .monsters-card__element--fire {
+  background: var(--monsters-el-fire);
+}
+
+.monsters-card--grid .monsters-card__element--water {
+  background: var(--monsters-el-water);
+}
+
+.monsters-card--grid .monsters-card__element--wind {
+  background: var(--monsters-el-wind);
+}
+
+.monsters-card--grid .monsters-card__element--light {
+  background: var(--monsters-el-light);
+  color: #1a1a1a;
+}
+
+.monsters-card--grid .monsters-card__element--dark {
+  background: var(--monsters-el-dark);
+}
+
+.monsters-card--grid .monsters-card__level {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  z-index: 2;
+  font-size: 0.58rem;
+  font-weight: 600;
+  color: var(--text-hi);
+  background: color-mix(in srgb, var(--bg) 72%, transparent);
+  padding: 2px 5px;
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.monsters-card--grid .monsters-card__bulk-btn {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  z-index: 4;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border-radius: 4px;
+  border: 1px solid var(--border2);
+  background: color-mix(in srgb, var(--bg) 80%, var(--surface));
+  color: transparent;
+  font-size: 0.7rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.monsters-card--grid .monsters-card__bulk-btn--on {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 22%, var(--surface));
+}
+
+.monsters-card--grid .monsters-card__bulk-btn:hover {
+  border-color: var(--accent);
 }
 
 .monsters-card--grid .monsters-card__img {
@@ -515,28 +656,6 @@
   margin-top: 2px;
 }
 
-.monsters-card__stars {
-  position: absolute;
-  left: 4px;
-  bottom: 4px;
-  z-index: 2;
-  font-size: 0.62rem;
-  line-height: 1;
-  letter-spacing: -0.04em;
-  color: #f0c040;
-  -webkit-text-stroke: 1px #000;
-  paint-order: stroke fill;
-  text-shadow:
-    0 0 2px #000,
-    0 1px 0 #000,
-    1px 0 0 #000,
-    -1px 0 0 #000;
-  pointer-events: none;
-}
-
-.monsters-card__stars--awakened {
-  color: #f06eb0;
-}
 
 .monsters-detail__stars {
   position: absolute;

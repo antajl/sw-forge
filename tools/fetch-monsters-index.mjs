@@ -65,6 +65,16 @@ function slimMonster(m) {
     natural_stars: m.natural_stars,
     image_filename: m.image_filename,
     bestiary_slug: m.bestiary_slug,
+    awaken_level: m.awaken_level != null ? Number(m.awaken_level) : 0,
+    base_hp: m.base_hp,
+    base_attack: m.base_attack,
+    base_defense: m.base_defense,
+    base_speed: m.base_speed,
+    max_lvl_hp: m.max_lvl_hp,
+    max_lvl_attack: m.max_lvl_attack,
+    max_lvl_defense: m.max_lvl_defense,
+    max_lvl_speed: m.max_lvl_speed,
+    max_level: m.max_level,
   };
 }
 

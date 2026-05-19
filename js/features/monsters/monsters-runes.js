@@ -185,32 +185,48 @@
     if (!s) {
       return `<p class="monsters-detail__muted">${escapeHtml(t.monstersNoStats || 'No stat data in SWEX.')}</p>`;
     }
-    const dash = '\u2014';
-    const pct = (v) => `${v}%`;
-    const rows = [
-      [t.monstersStatHp || 'HP', dash, dash, s.hp],
-      [t.monstersStatAtk || 'ATK', dash, dash, s.atk],
-      [t.monstersStatDef || 'DEF', dash, dash, s.def],
-      [t.monstersStatSpd || 'SPD', dash, dash, s.spd],
-      [t.monstersStatCr || 'CRI Rate', dash, dash, pct(s.critRate)],
-      [t.monstersStatCd || 'CRI Dmg', dash, dash, pct(s.critDmg)],
-      [t.monstersStatRes || 'RES', dash, dash, pct(s.res)],
-      [t.monstersStatAcc || 'ACC', dash, dash, pct(s.acc)],
+    const base = u.baseStats || null;
+    const pct = (v) => `${Math.round(Number(v) || 0)}%`;
+    const fmtTriple = (baseVal, totalVal) => {
+      const total = Number(totalVal);
+      if (!Number.isFinite(total)) return '—';
+      const b = Number(baseVal);
+      if (!Number.isFinite(b)) return String(Math.round(total));
+      const runePart = Math.max(0, Math.round(total - b));
+      return `${Math.round(b)} + ${runePart} = ${Math.round(total)}`;
+    };
+    const coreRows = [
+      [t.monstersStatHp || 'HP', 'hp'],
+      [t.monstersStatAtk || 'ATK', 'atk'],
+      [t.monstersStatDef || 'DEF', 'def'],
+      [t.monstersStatSpd || 'SPD', 'spd'],
+    ];
+    const pctRows = [
+      [t.monstersStatCr || 'CRI Rate', 'critRate'],
+      [t.monstersStatCd || 'CRI Dmg', 'critDmg'],
+      [t.monstersStatRes || 'RES', 'res'],
+      [t.monstersStatAcc || 'ACC', 'acc'],
     ];
     const head = `<div class="monsters-detail__stats-head">
-      <span></span><span>${escapeHtml(t.monstersStatBase || 'Base')}</span><span>${escapeHtml(t.monstersStatRunes || '+Runes')}</span><span>${escapeHtml(t.monstersStatTotal || 'Total')}</span>
+      <span></span><span>${escapeHtml(t.monstersStatFormula || 'Base + Runes = Total')}</span>
     </div>`;
-    const body = rows
+    const coreBody = coreRows
       .map(
-        ([label, base, runes, total]) =>
-          `<div class="monsters-detail__stat-row"><span class="monsters-detail__stat-k">${escapeHtml(label)}</span><span>${escapeHtml(String(base))}</span><span>${escapeHtml(String(runes))}</span><span class="monsters-detail__stat-v">${escapeHtml(String(total))}</span></div>`,
+        ([label, key]) =>
+          `<div class="monsters-detail__stat-row"><span class="monsters-detail__stat-k">${escapeHtml(label)}</span><span class="monsters-detail__stat-formula">${escapeHtml(fmtTriple(base ? base[key] : null, s[key]))}</span></div>`,
       )
       .join('');
-    const note = String(t.monstersStatSwexNote || '').trim();
-    const noteHtml = note
-      ? '<p class="monsters-detail__muted monsters-detail__stats-note">' + escapeHtml(note) + '</p>'
-      : '';
-    return '<div class="monsters-detail__stats-grid">' + head + body + '</div>' + noteHtml;
+    const pctBody = pctRows
+      .map(
+        ([label, key]) =>
+          `<div class="monsters-detail__stat-row"><span class="monsters-detail__stat-k">${escapeHtml(label)}</span><span class="monsters-detail__stat-formula">${escapeHtml(pct(s[key]))}</span></div>`,
+      )
+      .join('');
+    const loading =
+      !base && window.SWRM_MONSTER_DB
+        ? `<p class="monsters-detail__muted monsters-detail__stats-loading">${escapeHtml(t.monstersStatsLoading || 'Loading base stats…')}</p>`
+        : '';
+    return '<div class="monsters-detail__stats-grid">' + head + loading + coreBody + pctBody + '</div>';
   }
 
   function buildMonsterStatsHtml(u, t) {
@@ -397,7 +413,8 @@
     const tpl = t.monstersBulkCountTpl || '{n} selected';
     if (countEl) countEl.textContent = n ? tpl.replace(/\{n\}/g, String(n)) : '';
     if (!bar) return;
-    bar.hidden = !n;
+    const ro = typeof isShareReadOnly === 'function' && isShareReadOnly();
+    bar.hidden = ro || !n;
     if (!n) return;
     const ids = [...monstersBulkSelected];
     const syncMarkBtn = (id, key, isOn) => {
@@ -464,31 +481,73 @@
     return `<div class="monsters-rune-icons" aria-label="${escapeHtml(t.monstersRunesLabel || 'Rune sets')}">${inner}</div>`;
   }
 
-  function buildMonsterDetailSkillsBlock(skillRows, t, skillDb) {
-    if (!skillRows || !skillRows.length) {
+  function buildSkillTileHtml(s, skillDb) {
+    const url = swarfarmSkillIconUrl(s.skillId);
+    const label = skillDb && s.upgradeable !== false ? skillDb.formatSkillLevelDetail(s) : '';
+    const img = url
+      ? '<img class="monsters-detail__skill-img" src="' +
+        escapeHtml(url) +
+        '" alt="" width="40" height="40" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.hidden=true" />'
+      : '<img class="monsters-detail__skill-img" hidden data-skill-id="' +
+        escapeHtml(String(s.skillId)) +
+        '" alt="" width="40" height="40" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.hidden=true" />';
+    const overlay = label
+      ? '<span class="monsters-detail__skill-lv-overlay">' + escapeHtml(label) + '</span>'
+      : '';
+    return '<div class="monsters-detail__skill-tile">' + img + overlay + '</div>';
+  }
+
+  function resolveLeaderSkillTile(leaderSkill, skillDb) {
+    if (!leaderSkill) return null;
+    let skillId = null;
+    let iconFilename = null;
+    if (leaderSkill.skill && typeof leaderSkill.skill === 'object') {
+      skillId = leaderSkill.skill.com2us_id || leaderSkill.skill.id;
+      iconFilename = leaderSkill.skill.icon_filename;
+    }
+    if (!skillId && leaderSkill.id != null) skillId = leaderSkill.id;
+    const db = window.SWRM_MONSTER_DB;
+    let url = '';
+    if (iconFilename && db && typeof db.swarfarmAssetUrl === 'function') {
+      url = db.swarfarmAssetUrl(`static/herders/images/skills/${iconFilename}`);
+    } else if (skillId && skillDb && typeof skillDb.skillIconUrl === 'function') {
+      url = skillDb.skillIconUrl(skillId);
+    }
+    return { skillId, url };
+  }
+
+  function buildMonsterDetailSkillsBlock(skillRows, t, skillDb, leaderSkill) {
+    const rows = skillRows || [];
+    const hasLeader = !!(leaderSkill && (leaderSkill.attribute || leaderSkill.skill || leaderSkill.id));
+    if (!rows.length && !hasLeader) {
       return '<p class="monsters-detail__muted">' + escapeHtml(t.monstersNoSkills || 'No skill data.') + '</p>';
     }
-    const tiles = skillRows
-      .map((s) => {
-        const url = swarfarmSkillIconUrl(s.skillId);
-        const label = skillDb ? skillDb.formatSkillLevel(s, t) : String(s.level);
-        const img = url
-          ? '<img class="monsters-detail__skill-img" src="' +
-            escapeHtml(url) +
-            '" alt="" width="40" height="40" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.hidden=true" />'
-          : '<img class="monsters-detail__skill-img" hidden data-skill-id="' +
-            escapeHtml(String(s.skillId)) +
-            '" alt="" width="40" height="40" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.hidden=true" />';
-        return (
-          '<div class="monsters-detail__skill-tile">' +
-          img +
-          '<span class="monsters-detail__skill-lv-overlay">' +
-          escapeHtml(label) +
-          '</span></div>'
-        );
-      })
-      .join('');
-    return '<div class="monsters-detail__skills-row">' + tiles + '</div>';
+    const activeTiles = rows.map((s) => buildSkillTileHtml(s, skillDb)).join('');
+    const mainHtml =
+      '<div class="monsters-detail__skills-main"><div class="monsters-detail__skills-row">' +
+      (activeTiles || '<span class="monsters-detail__muted">—</span>') +
+      '</div></div>';
+    if (!hasLeader) {
+      return '<div class="monsters-detail__skills-layout">' + mainHtml + '</div>';
+    }
+    const leader = resolveLeaderSkillTile(leaderSkill, skillDb);
+    const leaderImg = leader && leader.url
+      ? '<img class="monsters-detail__skill-img" src="' +
+        escapeHtml(leader.url) +
+        '" alt="" width="40" height="40" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.hidden=true" />'
+      : leader && leader.skillId
+        ? '<img class="monsters-detail__skill-img" hidden data-skill-id="' +
+          escapeHtml(String(leader.skillId)) +
+          '" alt="" width="40" height="40" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.hidden=true" />'
+        : '<span class="monsters-detail__skill-img monsters-detail__skill-img--ph" aria-hidden="true"></span>';
+    const leaderLbl = escapeHtml(t.monstersLeaderSkill || 'Leader');
+    const leaderHtml =
+      '<div class="monsters-detail__skills-leader"><div class="monsters-detail__skill-tile monsters-detail__skill-tile--leader">' +
+      leaderImg +
+      '<span class="monsters-detail__skill-leader-lbl">' +
+      leaderLbl +
+      '</span></div></div>';
+    return '<div class="monsters-detail__skills-layout">' + mainHtml + leaderHtml + '</div>';
   }
 
   function buildMonsterDetailRunesStrip(u, db, t) {

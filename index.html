@@ -798,7 +798,7 @@
           </details>
           </div>
         </div>
-        </DIV>
+        </div>
         <div class="monsters-bulk-bar" id="monsters-bulk-bar" hidden>
           <span class="monsters-bulk-bar__count" id="monsters-bulk-count">0 selected</span>
           <span class="monsters-bulk-marks" role="group" aria-labelledby="lbl-monsters-bulk-marks">
@@ -824,11 +824,11 @@
           </div>
         </div>
         <div id="monsters-grid" class="monsters-grid monsters-grid--cards"></div>
+          <aside id="monsters-detail" class="monsters-detail monsters-detail--float" aria-labelledby="monsters-detail-title" hidden>
+            <div class="monsters-detail__body" id="monsters-detail-body" hidden></div>
+          </aside>
           </div>
         </div>
-        <aside id="monsters-detail" class="monsters-detail monsters-detail--float" aria-labelledby="monsters-detail-title" hidden>
-          <div class="monsters-detail__body" id="monsters-detail-body" hidden></div>
-        </aside>
         <p class="monsters-attrib" id="lbl-monsters-attrib"></p>
       </div>
     </section>
@@ -1144,8 +1144,8 @@
           <p id="share-profile-desc" class="settings-desc">Create a read-only link to your equipped monsters (or full inventory).</p>
           <div class="share-profile-actions">
             <label class="share-profile-opt">
-              <input type="checkbox" id="share-full-inventory" />
-              <span id="lbl-share-full-inventory">Include full inventory</span>
+              <input type="checkbox" id="share-equipped-only" />
+              <span id="lbl-share-equipped-only">Equipped runes only</span>
             </label>
             <button type="button" class="btn-primary" id="share-profile-btn">Share</button>
           </div>

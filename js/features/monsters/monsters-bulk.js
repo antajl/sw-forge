@@ -93,5 +93,8 @@
       grid.querySelectorAll('.monsters-card').forEach((card) => {
         card.classList.remove('monsters-card--bulk-on', 'monsters-card--selected', 'monsters-card--hover');
       });
+      grid.querySelectorAll('.monsters-table__row').forEach((row) => {
+        row.classList.remove('monsters-table__row--bulk-on', 'monsters-table__row--selected', 'monsters-table__row--hover');
+      });
     }
   }

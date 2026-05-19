@@ -310,8 +310,7 @@
     }
 
     if (id === 'dashboard' && typeof scheduleDashboardChartReplay === 'function') {
-      const fromZero = showMainTabLastMain === 'monsters';
-      scheduleDashboardChartReplay({ fromZero });
+      scheduleDashboardChartReplay({ fromZero: true });
     }
 
     if (id === 'runetable') {
@@ -347,8 +346,10 @@
     const writeHash = opts.writeHash === true;
     const pushHistory = opts.pushHistory === true;
     const { main, sub } = normalizeMainTabRequest(tabId);
-    if (showMainTabLastMain === 'monsters' && main !== 'monsters' && typeof clearAllMonstersSelection === 'function') {
-      clearAllMonstersSelection();
+    if (showMainTabLastMain === 'monsters' && main !== 'monsters') {
+      if (typeof resetMonstersTableSort === 'function') resetMonstersTableSort();
+      if (typeof unpinMonsterDetail === 'function') unpinMonsterDetail();
+      if (typeof clearAllMonstersSelection === 'function') clearAllMonstersSelection();
     }
     showMainTabLastMain = main;
     const hashParts = splitMainHash();

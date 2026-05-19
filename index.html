@@ -392,7 +392,7 @@
                 </div>
                 <div id="rune-table-monster-filter" class="table-toolbar__monster-filter" hidden>
                   <span id="rune-table-monster-filter-label"></span>
-                  <button type="button" id="btn-rune-table-clear-monster-filter" class="btn-secondary btn-sm">Clear</button>
+                  <button type="button" id="btn-rune-table-clear-monster-filter" class="btn-ghost btn-toolbar btn-toolbar--sm">Clear</button>
                 </div>
                 <div id="rune-table-load-strip" class="table-toolbar__load hidden" aria-live="polite">
                   <div class="table-toolbar__load-inner">
@@ -681,7 +681,8 @@
           <div class="monsters-layout__list">
         <div class="monsters-toolbar-sticky">
         <div class="monsters-toolbar">
-          <div class="monsters-toolbar__row monsters-toolbar__row--main">
+          <div class="monsters-toolbar__bar">
+          <div class="monsters-toolbar__left">
           <div class="monsters-view-toggle" role="group" aria-label="View">
             <button type="button" id="monsters-view-cards" class="monsters-view-btn monsters-view-btn--active" aria-pressed="true" title="Cards">
               <svg class="monsters-toolbar-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg>
@@ -692,7 +693,8 @@
               <span class="sr-only" id="lbl-monsters-view-table">Table</span>
             </button>
           </div>
-          <span class="monsters-toolbar__sep" aria-hidden="true"></span>
+          </div>
+          <div class="monsters-toolbar__center">
           <label class="monsters-search monsters-toolbar__field">
             <span class="monsters-toolbar__field-label" id="lbl-monsters-filter-q">Search</span>
             <input type="search" id="monsters-filter-q" autocomplete="off" spellcheck="false" placeholder="Search name or ID…" aria-labelledby="lbl-monsters-filter-q" />
@@ -708,6 +710,14 @@
               <option value="Dark">Dark</option>
             </select>
           </label>
+          <div class="monsters-toolbar__filter-action monsters-toolbar__filter-action--inline">
+            <span class="monsters-toolbar__field-label" id="lbl-monsters-filter-min-level">Level</span>
+            <button type="button" id="monsters-filter-min-level" class="monsters-toolbar-btn monsters-toolbar-btn--sm" aria-pressed="false">
+              <span id="lbl-monsters-filter-min-level-btn">Only Lv 35+</span>
+            </button>
+          </div>
+          </div>
+          <div class="monsters-toolbar__right">
           <label class="monsters-toolbar__field monsters-toolbar__field--sort">
             <span class="monsters-toolbar__field-label" id="lbl-monsters-filter-sort">Sort</span>
             <select id="monsters-filter-sort" aria-labelledby="lbl-monsters-filter-sort">
@@ -732,12 +742,6 @@
               <option value="storage">Storage</option>
             </select>
           </label>
-          <div class="monsters-toolbar__filter-action">
-            <span class="monsters-toolbar__field-label" id="lbl-monsters-filter-min-level">Level</span>
-            <button type="button" id="monsters-filter-min-level" class="monsters-toolbar-btn monsters-toolbar-btn--block" aria-pressed="true">
-              <span id="lbl-monsters-filter-min-level-btn">Lv 36+</span>
-            </button>
-          </div>
           <div class="monsters-toolbar__filter-action">
             <span class="monsters-toolbar__field-label" id="lbl-monsters-filter-full-six">Runes</span>
             <button type="button" id="monsters-filter-full-six" class="monsters-toolbar-btn monsters-toolbar-btn--block" aria-pressed="false">
@@ -796,6 +800,8 @@
             </div>
             </div>
           </details>
+          <button type="button" id="monsters-toolbar-clear" class="monsters-toolbar-btn monsters-toolbar-btn--sm monsters-toolbar-btn--ghost" title="Clear filters">Clear</button>
+          </div>
           </div>
         </div>
         </div>
@@ -822,6 +828,12 @@
             <button type="button" class="monsters-toolbar-btn" id="monsters-empty-clear-filters">Clear filters</button>
             <button type="button" class="monsters-toolbar-btn" id="monsters-empty-reset-search">Reset search</button>
           </div>
+        </div>
+        <div class="monsters-grid-head" id="monsters-grid-head" hidden>
+          <label class="monsters-grid-head__select">
+            <input type="checkbox" id="monsters-grid-select-all" class="monsters-table__bulk-cb monsters-table__bulk-cb--all" />
+            <span id="lbl-monsters-grid-select-all">Select all visible</span>
+          </label>
         </div>
         <div id="monsters-grid" class="monsters-grid monsters-grid--cards"></div>
           <aside id="monsters-detail" class="monsters-detail monsters-detail--float" aria-labelledby="monsters-detail-title" hidden>

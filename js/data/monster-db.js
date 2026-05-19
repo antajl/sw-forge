@@ -83,6 +83,20 @@
     return Math.round(b + (m - b) * t);
   }
 
+  function swarfarmApiUrl(pathAndQuery) {
+    const rel = String(pathAndQuery || '').replace(/^\//, '');
+    const direct = `https://swarfarm.com/${rel}`;
+    if (
+      typeof SWRM_SWARFARM_PROXY_STATIC === 'boolean' &&
+      SWRM_SWARFARM_PROXY_STATIC &&
+      typeof SWRM_API === 'string' &&
+      SWRM_API
+    ) {
+      return `${SWRM_API}/swarfarm/${rel}`;
+    }
+    return direct;
+  }
+
   function monsterBaseStatsAtLevel(metaRow, level) {
     if (!metaRow) return null;
     const maxLvl = Number(metaRow.max_level) || 40;
@@ -90,9 +104,25 @@
     const hp = scaleStat(metaRow.base_hp, metaRow.max_lvl_hp, lv, maxLvl);
     const atk = scaleStat(metaRow.base_attack, metaRow.max_lvl_attack, lv, maxLvl);
     const def = scaleStat(metaRow.base_defense, metaRow.max_lvl_defense, lv, maxLvl);
-    const spd = scaleStat(metaRow.base_speed, metaRow.max_lvl_speed, lv, maxLvl);
-    if (hp == null && atk == null) return null;
-    return { hp: hp ?? 0, atk: atk ?? 0, def: def ?? 0, spd: spd ?? 0 };
+    const spdFlat = Number(metaRow.base_speed ?? metaRow.speed);
+    const spdScaled = scaleStat(metaRow.base_speed, metaRow.max_lvl_speed, lv, maxLvl);
+    const spd = Number.isFinite(spdScaled)
+      ? spdScaled
+      : Number.isFinite(spdFlat)
+        ? Math.round(spdFlat)
+        : null;
+    if (hp == null && atk == null && def == null && spd == null) return null;
+    return {
+      hp: hp != null ? hp : null,
+      atk: atk != null ? atk : null,
+      def: def != null ? def : null,
+      spd: spd != null ? spd : null,
+    };
+  }
+
+  function hasUsableBaseStats(base) {
+    if (!base || typeof base !== 'object') return false;
+    return ['hp', 'atk', 'def', 'spd'].some((k) => Number.isFinite(Number(base[k])));
   }
 
   function slimMonsterFromApi(m) {
@@ -109,11 +139,12 @@
       base_hp: m.base_hp,
       base_attack: m.base_attack,
       base_defense: m.base_defense,
-      base_speed: m.base_speed,
+      base_speed: m.base_speed != null ? m.base_speed : m.speed,
       max_lvl_hp: m.max_lvl_hp,
       max_lvl_attack: m.max_lvl_attack,
       max_lvl_defense: m.max_lvl_defense,
-      max_lvl_speed: m.max_lvl_speed,
+      max_lvl_speed: m.max_lvl_speed != null ? m.max_lvl_speed : m.speed,
+      speed: m.speed,
       max_level: m.max_level,
       leader_skill: m.leader_skill || null,
       skills: Array.isArray(m.skills) ? m.skills : [],
@@ -216,18 +247,23 @@
     const force = options && options.force === true;
     const detail = options && options.detail === true;
     const cached = byCom2usId.get(id);
+    const cachedHasStats =
+      cached && cached.max_lvl_hp != null && cached.base_hp != null;
     if (
       cached &&
       !force &&
       !detail &&
       cached.archetype &&
-      cached.max_lvl_hp != null &&
+      cachedHasStats &&
       cached.awaken_level != null
     ) {
       return cached;
     }
+    if (cached && !force && detail && cachedHasStats && cached.leader_skill !== undefined) {
+      return cached;
+    }
     try {
-      const url = `https://swarfarm.com/api/v2/monsters/?com2us_id=${id}`;
+      const url = swarfarmApiUrl(`api/v2/monsters/?com2us_id=${id}`);
       const res = await fetch(url);
       if (!res.ok) return cached || null;
       const data = await res.json();
@@ -277,6 +313,8 @@
     elementIconUrl,
     isMonsterAwakened,
     monsterBaseStatsAtLevel,
+    hasUsableBaseStats,
+    swarfarmApiUrl,
     IMG_BASES,
     isReady: () => loaded,
     indexCount,

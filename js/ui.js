@@ -6461,7 +6461,7 @@
       location: 'all',
       sort: 'name',
       fullSixOnly: false,
-      minLevel36Only: true,
+      minLevel36Only: false,
       skillFilter: '',
       runeFilter: '',
       runeSet: '',
@@ -6479,7 +6479,7 @@
         location: o.location != null ? String(o.location) : 'all',
         sort: o.sort != null ? String(o.sort) : 'name',
         fullSixOnly: !!o.fullSixOnly,
-        minLevel36Only: o.minLevel36Only !== false,
+        minLevel36Only: !!o.minLevel36Only,
         skillFilter: o.skillFilter != null ? String(o.skillFilter) : '',
         runeFilter: o.runeFilter != null ? String(o.runeFilter) : '',
         runeSet: o.runeSet != null ? String(o.runeSet) : '',
@@ -6765,6 +6765,16 @@
     return '';
   }
 
+  /** Rainbowmon, elemental Angelmon, Devilmon — excluded from roster views. */
+  function isTechnicalFodderMonster(u) {
+    if (!u) return false;
+    const name = String(u.displayName || '').toLowerCase();
+    if (/\brainbowmon\b/i.test(name)) return true;
+    if (/\bdevilmon\b/i.test(name)) return true;
+    if (/\bangelmon\b/i.test(name)) return true;
+    return false;
+  }
+
   function unitHasRuneSet(u, setName) {
     if (!setName) return true;
     for (const slot of u.runeSlots || []) {
@@ -6778,7 +6788,7 @@
     const el = filters.element || '';
     const loc = filters.location || 'all';
     const fullSixOnly = !!filters.fullSixOnly;
-    const minLevel36Only = filters.minLevel36Only !== false;
+    const minLevel36Only = !!filters.minLevel36Only;
     const skillFilter = filters.skillFilter || '';
     const runeFilter = filters.runeFilter || '';
     const runeSet = filters.runeSet || '';
@@ -6786,6 +6796,7 @@
     const roleFilter = filters.roleFilter || '';
     const markFilter = filters.markFilter || '';
     return units.filter((u) => {
+      if (isTechnicalFodderMonster(u)) return false;
       if (fullSixOnly && !u.hasFullRunes) return false;
       if (minLevel36Only && (Number(u.level) || 0) <= 35) return false;
       if (el && u.metaElement !== el) return false;
@@ -6959,6 +6970,27 @@
       sixBtn.setAttribute('aria-pressed', 'false');
       sixBtn.classList.remove('monsters-toolbar-btn--active');
     }
+    const lvlBtn = document.getElementById('monsters-filter-min-level');
+    if (lvlBtn) {
+      lvlBtn.setAttribute('aria-pressed', 'false');
+      lvlBtn.classList.remove('monsters-toolbar-btn--active');
+    }
+  }
+
+  /** Reset search, element, location, advanced filters, level / 6-6 toggles; then persist from DOM. */
+  function resetMonstersToolbarFilters(t) {
+    clearMonstersPanelFilters();
+    resetMonstersSearchQuery();
+    const elSel = document.getElementById('monsters-filter-element');
+    if (elSel) elSel.value = '';
+    const locSel = document.getElementById('monsters-filter-location');
+    if (locSel) locSel.value = 'all';
+    if (t) {
+      syncMonstersShowAllButton(false, t);
+      syncMonstersShowLevelButton(false, t);
+    }
+    writeMonstersFilters(readMonstersFiltersFromDom());
+    updateMonstersFilterSummary();
   }
 
   function resetMonstersSearchQuery() {
@@ -6994,20 +7026,57 @@
     const btn = document.getElementById('monsters-filter-min-level');
     const lbl = document.getElementById('lbl-monsters-filter-min-level-btn');
     if (!btn) return;
-    const on = minLevel36Only !== false;
+    const on = !!minLevel36Only;
     btn.setAttribute('aria-pressed', on ? 'true' : 'false');
     btn.classList.toggle('monsters-toolbar-btn--active', on);
     if (lbl) {
       lbl.textContent = on
-        ? t.monstersFilterMinLevelOn || 'Lv 36+ only'
+        ? t.monstersFilterMinLevelOn || 'Only Lv 35+'
         : t.monstersFilterMinLevelOff || 'All levels';
     }
   }
 
+  function syncMonstersSelectAllState() {
+    const vis = monstersVisibleUnitIds.length;
+    let n = 0;
+    for (const id of monstersVisibleUnitIds) {
+      if (monstersBulkSelected.has(id)) n += 1;
+    }
+    const state = { checked: vis > 0 && n === vis, indeterminate: n > 0 && n < vis };
+    for (const id of ['monsters-table-select-all', 'monsters-grid-select-all']) {
+      const el = document.getElementById(id);
+      if (!el) continue;
+      el.checked = state.checked;
+      el.indeterminate = state.indeterminate;
+    }
+  }
+
+  function bindMonstersGridSelectAll(t) {
+    const selAll = document.getElementById('monsters-grid-select-all');
+    if (!selAll || selAll.dataset.bound === '1') return;
+    selAll.dataset.bound = '1';
+    const ro = typeof isShareReadOnly === 'function' && isShareReadOnly();
+    if (ro) return;
+    selAll.addEventListener('change', () => {
+      const on = selAll.checked;
+      for (const id of monstersVisibleUnitIds) {
+        if (on) monstersBulkSelected.add(id);
+        else monstersBulkSelected.delete(id);
+      }
+      writeMonstersBulkSelected(monstersBulkSelected);
+      syncMonstersBulkBar(t);
+      const grid = document.getElementById('monsters-grid');
+      if (typeof syncBulkCardStates === 'function') syncBulkCardStates(grid);
+      syncMonstersSelectAllState();
+    });
+  }
+
   function syncMonstersViewToggle(view) {
     const grid = document.getElementById('monsters-grid');
+    const gridHead = document.getElementById('monsters-grid-head');
     const sortField = document.querySelector('.monsters-toolbar__field--sort');
     if (sortField) sortField.hidden = view === 'table';
+    if (gridHead) gridHead.hidden = view !== 'cards';
     if (grid) {
       grid.classList.toggle('monsters-grid--table', view === 'table');
       grid.classList.toggle('monsters-grid--cards', view === 'cards');
@@ -7296,46 +7365,78 @@
     }
     const base = u.baseStats || null;
     const pct = (v) => `${Math.round(Number(v) || 0)}%`;
-    const fmtTriple = (baseVal, totalVal) => {
-      const total = Number(totalVal);
-      if (!Number.isFinite(total)) return '—';
-      const b = Number(baseVal);
-      if (!Number.isFinite(b)) return String(Math.round(total));
-      const runePart = Math.max(0, Math.round(total - b));
-      return `${Math.round(b)} + ${runePart} = ${Math.round(total)}`;
-    };
-    const coreRows = [
+    const lblBase = t.monstersStatBase || 'Base';
+    const lblRune = t.monstersStatRunes || '+Runes';
+    const lblTot = t.monstersStatTotal || 'Total';
+    const lblTotPct = t.monstersStatTotalPct || 'Total %';
+    const coreKeys = [
       [t.monstersStatHp || 'HP', 'hp'],
       [t.monstersStatAtk || 'ATK', 'atk'],
       [t.monstersStatDef || 'DEF', 'def'],
       [t.monstersStatSpd || 'SPD', 'spd'],
     ];
-    const pctRows = [
+    const pctKeys = [
       [t.monstersStatCr || 'CRI Rate', 'critRate'],
       [t.monstersStatCd || 'CRI Dmg', 'critDmg'],
       [t.monstersStatRes || 'RES', 'res'],
       [t.monstersStatAcc || 'ACC', 'acc'],
     ];
-    const head = `<div class="monsters-detail__stats-head">
-      <span></span><span>${escapeHtml(t.monstersStatFormula || 'Base + Runes = Total')}</span>
+    const coreHead = `<div class="monsters-detail__stats-head monsters-detail__stats-head--core">
+      <span class="monsters-detail__stat-k"></span>
+      <span>${escapeHtml(lblBase)}</span>
+      <span class="monsters-detail__stat-rune-h">${escapeHtml(lblRune)}</span>
+      <span>${escapeHtml(lblTot)}</span>
     </div>`;
-    const coreBody = coreRows
-      .map(
-        ([label, key]) =>
-          `<div class="monsters-detail__stat-row"><span class="monsters-detail__stat-k">${escapeHtml(label)}</span><span class="monsters-detail__stat-formula">${escapeHtml(fmtTriple(base ? base[key] : null, s[key]))}</span></div>`,
-      )
+    const coreBody = coreKeys
+      .map(([label, key]) => {
+        const total = Number(s[key]);
+        const b = base ? Number(base[key]) : NaN;
+        const baseStr = Number.isFinite(b) ? String(Math.round(b)) : '—';
+        let runeStr = '—';
+        let totStr = '—';
+        if (Number.isFinite(total)) {
+          totStr = String(Math.round(total));
+          if (Number.isFinite(b)) {
+            const r = Math.max(0, Math.round(total - b));
+            runeStr = r > 0 ? `+${r}` : '0';
+          } else {
+            totStr = String(Math.round(total));
+          }
+        }
+        return `<div class="monsters-detail__stat-row monsters-detail__stat-row--core">
+          <span class="monsters-detail__stat-k">${escapeHtml(label)}</span>
+          <span class="monsters-detail__stat-num">${escapeHtml(baseStr)}</span>
+          <span class="monsters-detail__stat-num monsters-detail__stat-num--rune">${escapeHtml(runeStr)}</span>
+          <span class="monsters-detail__stat-num monsters-detail__stat-num--total">${escapeHtml(totStr)}</span>
+        </div>`;
+      })
       .join('');
-    const pctBody = pctRows
+    const pctHead = `<div class="monsters-detail__stats-head monsters-detail__stats-head--pct">
+      <span class="monsters-detail__stat-k"></span>
+      <span>${escapeHtml(lblTotPct)}</span>
+    </div>`;
+    const pctBody = pctKeys
       .map(
         ([label, key]) =>
-          `<div class="monsters-detail__stat-row"><span class="monsters-detail__stat-k">${escapeHtml(label)}</span><span class="monsters-detail__stat-formula">${escapeHtml(pct(s[key]))}</span></div>`,
+          `<div class="monsters-detail__stat-row monsters-detail__stat-row--pct">
+            <span class="monsters-detail__stat-k">${escapeHtml(label)}</span>
+            <span class="monsters-detail__stat-num monsters-detail__stat-num--total">${escapeHtml(pct(s[key]))}</span>
+          </div>`,
       )
       .join('');
     const loading =
       !base && window.SWRM_MONSTER_DB
         ? `<p class="monsters-detail__muted monsters-detail__stats-loading">${escapeHtml(t.monstersStatsLoading || 'Loading base stats…')}</p>`
         : '';
-    return '<div class="monsters-detail__stats-grid">' + head + loading + coreBody + pctBody + '</div>';
+    return (
+      '<div class="monsters-detail__stats-grid monsters-detail__stats-grid--split">' +
+      coreHead +
+      loading +
+      coreBody +
+      pctHead +
+      pctBody +
+      '</div>'
+    );
   }
 
   function buildMonsterStatsHtml(u, t) {
@@ -7625,6 +7726,34 @@
     return { skillId, url };
   }
 
+  function formatLeaderSkillTitleBody(leaderSkill, t) {
+    if (!leaderSkill) return { title: '', body: '' };
+    const sk = leaderSkill.skill;
+    if (sk && typeof sk === 'object') {
+      const name = String(sk.name || sk.name_en || '').trim();
+      const desc = String(sk.description || sk.description_en || '').trim();
+      return {
+        title: name || (t.monstersLeaderSkill || 'Leader skill'),
+        body: desc,
+      };
+    }
+    const attr = String(leaderSkill.attribute || '').trim();
+    const amt = leaderSkill.amount != null ? String(leaderSkill.amount).trim() : '';
+    const area = String(leaderSkill.area || '').trim();
+    const element = String(leaderSkill.element || '').trim();
+    const bits = [];
+    if (amt && attr) bits.push(`${amt}% ${attr}`);
+    else if (attr) bits.push(attr);
+    if (area) bits.push(area);
+    if (element) bits.push(element);
+    const title =
+      amt && attr
+        ? `${amt}% ${attr}`
+        : attr || (t.monstersLeaderSkill || 'Leader skill');
+    const body = bits.length > 1 ? bits.slice(1).join(' · ') : area && attr ? area : '';
+    return { title, body: body || bits.join(' · ') };
+  }
+
   function buildMonsterDetailSkillsBlock(skillRows, t, skillDb, leaderSkill) {
     const rows = skillRows || [];
     const hasLeader = !!(leaderSkill && (leaderSkill.attribute || leaderSkill.skill || leaderSkill.id));
@@ -7649,13 +7778,23 @@
           escapeHtml(String(leader.skillId)) +
           '" alt="" width="40" height="40" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.hidden=true" />'
         : '<span class="monsters-detail__skill-img monsters-detail__skill-img--ph" aria-hidden="true"></span>';
-    const leaderLbl = escapeHtml(t.monstersLeaderSkill || 'Leader');
+    const lb = formatLeaderSkillTitleBody(leaderSkill, t);
+    const leaderTitle = escapeHtml(lb.title || t.monstersLeaderSkill || 'Leader skill');
+    const leaderDesc = lb.body ? escapeHtml(lb.body) : '';
     const leaderHtml =
-      '<div class="monsters-detail__skills-leader"><div class="monsters-detail__skill-tile monsters-detail__skill-tile--leader">' +
+      '<div class="monsters-detail__skills-leader">' +
+      '<div class="monsters-detail__leader-head">' +
+      '<div class="monsters-detail__skill-tile monsters-detail__skill-tile--leader">' +
       leaderImg +
-      '<span class="monsters-detail__skill-leader-lbl">' +
-      leaderLbl +
-      '</span></div></div>';
+      '</div>' +
+      '<div class="monsters-detail__leader-text">' +
+      '<p class="monsters-detail__leader-name">' +
+      leaderTitle +
+      '</p>' +
+      (leaderDesc
+        ? '<p class="monsters-detail__leader-desc">' + leaderDesc + '</p>'
+        : '') +
+      '</div></div></div>';
     return '<div class="monsters-detail__skills-layout">' + mainHtml + leaderHtml + '</div>';
   }
 
@@ -7807,9 +7946,24 @@
       : Array.isArray(u.skillRows)
         ? u.skillRows
         : [];
-    const leaderSkill = meta && meta.leader_skill ? meta.leader_skill : null;
+    const lookupRow = db && typeof db.lookupMonster === 'function' ? db.lookupMonster(u.masterId) : null;
+    const metaRow = meta || lookupRow;
+    const leaderSkill = metaRow && metaRow.leader_skill ? metaRow.leader_skill : null;
     const skillsBlock = buildMonsterDetailSkillsBlock(skillRows, t, skillDb, leaderSkill);
-    const statsBlock = buildMonsterStatsHtml(u, t);
+    let statsBlock = buildMonsterStatsHtml(u, t);
+    if (db && lookupRow && typeof db.monsterBaseStatsAtLevel === 'function') {
+      const initialBase = db.monsterBaseStatsAtLevel(lookupRow, u.level);
+      if (
+        initialBase &&
+        typeof db.hasUsableBaseStats === 'function' &&
+        db.hasUsableBaseStats(initialBase)
+      ) {
+        statsBlock = buildMonsterDetailStatsBlock(
+          { ...u, meta: metaRow, baseStats: initialBase },
+          t,
+        );
+      }
+    }
     const runesBlock =
       buildRuneSetBonusSummaryHtml(u, t, db) + buildMonsterDetailRunesStrip(u, db, t);
     const natStars =
@@ -7856,7 +8010,7 @@
       </header>
       <div class="monsters-detail__scroll" data-detail-scroll>
         <div data-detail-stats>${statsBlock}</div>
-        <section class="monsters-detail__section">
+        <section class="monsters-detail__section" data-detail-skills>
           <h4 class="monsters-detail__section-title">${escapeHtml(t.monstersDetailTabSkills || 'Skills')}</h4>
           ${skillsBlock}
         </section>
@@ -7891,11 +8045,16 @@
             ? db.monsterBaseStatsAtLevel(row, u.level)
             : null;
         const statsHost = body.querySelector('[data-detail-stats]');
-        if (statsHost && base) {
+        const baseOk =
+          base &&
+          db.hasUsableBaseStats &&
+          typeof db.hasUsableBaseStats === 'function' &&
+          db.hasUsableBaseStats(base);
+        if (statsHost && baseOk) {
           statsHost.innerHTML = buildMonsterDetailStatsBlock({ ...u, meta: row, baseStats: base }, t);
         }
 
-        const skillsSec = body.querySelector('.monsters-detail__section');
+        const skillsSec = body.querySelector('[data-detail-skills]');
         if (skillsSec) {
           const block = buildMonsterDetailSkillsBlock(
             skillDb ? skillDb.enrichUnitSkillsForDetail(u.skills) : skillRows,
@@ -7942,7 +8101,10 @@
       const uid = row.getAttribute('data-unit-id');
       const on = monstersBulkSelected.has(String(uid));
       row.classList.toggle('monsters-table__row--bulk-on', on);
+      const cb = row.querySelector('.monsters-table__bulk-cb:not(.monsters-table__bulk-cb--all)');
+      if (cb) cb.checked = on;
     });
+    if (typeof syncMonstersSelectAllState === 'function') syncMonstersSelectAllState();
   }
 
   function bindMonstersGridDelegation() {
@@ -8114,6 +8276,9 @@
     const bulkSel = monstersBulkSelected.has(String(u.unitId));
     const starsBadge = buildMonsterStarsBadge(u);
     const locHtml = u.inStorage ? buildLocationIconHtml(u, t) : '';
+    const storagePill = u.inStorage
+      ? `<span class="monsters-card__storage-pill" title="${escapeHtml(t.monstersStorageBadge || 'Storage')}">${escapeHtml(t.monstersStorageBadge || 'Storage')}</span>`
+      : '';
     const ro = typeof isShareReadOnly === 'function' && isShareReadOnly();
     const actionsHtml = ro ? '' : buildCardActionsHtml(u, t);
     return `<article class="monsters-card monsters-card--grid${u.favorite ? ' monsters-card--favorite' : ''}${u.food ? ' monsters-card--food' : ''}${u.inStorage ? ' monsters-card--storage' : ''}${bulkSel ? ' monsters-card--bulk-on' : ''}${pinned ? ' monsters-card--pinned' : ''}${hover ? ' monsters-card--hover' : ''}${elCls ? ` monsters-card--${elCls}` : ''}" data-unit-id="${escapeHtml(String(u.unitId))}" data-master-id="${u.masterId}" tabindex="0">
@@ -8121,6 +8286,7 @@
           ${ro ? '' : buildMonsterBulkToggleHtml(u)}
           ${actionsHtml}
           <div class="monsters-card__hero">
+            ${storagePill}
             ${starsBadge}
             <img class="monsters-card__img" alt="" width="120" height="120" data-img-file="${escapeHtml(u.imageFilename || '')}" loading="lazy" decoding="async" />
             ${buildMonsterElementBadge(u)}
@@ -8185,15 +8351,16 @@
   }
 
   const MONSTERS_TABLE_COLS = [
-    { id: 'name', labelKey: 'monstersColName', fallback: 'Name' },
-    { id: 'stars', labelKey: 'monstersColStars', fallback: 'Stars' },
-    { id: 'level', labelKey: 'monstersColLevel', fallback: 'Lv' },
-    { id: 'element', labelKey: 'monstersColElement', fallback: 'Element' },
-    { id: 'role', labelKey: 'monstersColRole', fallback: 'Archetype' },
-    { id: 'runes', labelKey: 'monstersColRunes', fallback: 'Runes' },
-    { id: 'skills', labelKey: 'monstersColDevilmons', fallback: 'Devilmons' },
-    { id: 'marks', labelKey: 'monstersColMarks', fallback: 'Marks' },
-    { id: 'tags', labelKey: 'monstersColTags', fallback: 'Tags' },
+    { id: 'bulk', labelKey: 'monstersColBulk', fallback: '', sortable: false },
+    { id: 'name', labelKey: 'monstersColName', fallback: 'Name', sortable: true },
+    { id: 'stars', labelKey: 'monstersColStars', fallback: 'Stars', sortable: true },
+    { id: 'level', labelKey: 'monstersColLevel', fallback: 'Lv', sortable: true },
+    { id: 'element', labelKey: 'monstersColElement', fallback: 'Element', sortable: true },
+    { id: 'role', labelKey: 'monstersColRole', fallback: 'Archetype', sortable: true },
+    { id: 'runes', labelKey: 'monstersColRunes', fallback: 'Runes', sortable: true },
+    { id: 'skills', labelKey: 'monstersColDevilmons', fallback: 'Devilmons', sortable: true },
+    { id: 'marks', labelKey: 'monstersColMarks', fallback: 'Marks', sortable: true },
+    { id: 'tags', labelKey: 'monstersColTags', fallback: 'Tags', sortable: true },
   ];
 
   function monsterTableCellStars(u) {
@@ -8239,6 +8406,16 @@
 
   function buildMonsterTableHeadHtml(t) {
     return MONSTERS_TABLE_COLS.map((c) => {
+      if (c.id === 'bulk') {
+        const allLbl = escapeHtml(t.monstersTableSelectAll || 'Select all visible');
+        const oneLbl = escapeHtml(t.monstersBulkSelectOne || 'Select');
+        return `<th scope="col" class="monsters-table__th monsters-table__th--bulk" data-col="bulk">
+          <span class="monsters-table__bulk-th-inner">
+            <input type="checkbox" id="monsters-table-select-all" class="monsters-table__bulk-cb monsters-table__bulk-cb--all" title="${allLbl}" aria-label="${allLbl}" />
+            <span class="sr-only">${oneLbl}</span>
+          </span>
+        </th>`;
+      }
       const label = t[c.labelKey] || c.fallback;
       const sorted = monstersTableSort && monstersTableSort.col === c.id;
       const cls = [
@@ -8294,6 +8471,8 @@
           mul * String((a.customTags || []).join(',')).localeCompare(String((b.customTags || []).join(','))) ||
           mul * String(a.displayName).localeCompare(String(b.displayName))
         );
+      case 'bulk':
+        return 0;
       case 'name':
       default:
         return mul * String(a.displayName || '').localeCompare(String(b.displayName || ''));
@@ -8348,8 +8527,12 @@
             : u.skillsMaxed
               ? '✓'
               : '—';
+        const storageBadge = u.inStorage
+          ? `<span class="monsters-table__storage-badge">${escapeHtml(t.monstersStorageBadge || 'Storage')}</span>`
+          : '';
         return `<tr class="monsters-table__row${rowCls ? ` ${rowCls}` : ''}" data-unit-id="${uid}" tabindex="0">
-          <td data-col="name"><div class="monsters-table__name-cell">${monsterTableThumbHtml(u)}<span class="monsters-table__name">${name}</span></div></td>
+          <td data-col="bulk" class="monsters-table__td-bulk"><input type="checkbox" class="monsters-table__bulk-cb" data-unit-id="${uid}" ${bulkSel ? 'checked' : ''} aria-label="${escapeHtml(t.monstersBulkSelectOne || 'Select')}" /></td>
+          <td data-col="name"><div class="monsters-table__name-cell">${monsterTableThumbHtml(u)}<span class="monsters-table__name">${name}</span>${storageBadge}</div></td>
           <td data-col="stars">${monsterTableCellStars(u)}</td>
           <td data-col="level">${u.level}</td>
           <td data-col="element">${monsterTableElementCell(u)}</td>
@@ -8399,6 +8582,9 @@
       row.addEventListener('blur', scheduleMonstersDetailHide);
       row.addEventListener('click', (e) => {
         if (e.target.closest('a')) return;
+        if (e.target.closest('.monsters-table__td-bulk') || e.target.classList.contains('monsters-table__bulk-cb')) {
+          return;
+        }
         e.preventDefault();
         pinMonsterDetail(uid, row);
         if (!ro) {
@@ -8422,6 +8608,46 @@
         pinMonsterDetail(uid, row);
       });
     });
+
+    const syncSelectAllState = () => {
+      if (typeof syncMonstersSelectAllState === 'function') syncMonstersSelectAllState();
+    };
+
+    grid.querySelectorAll('.monsters-table__bulk-cb:not(.monsters-table__bulk-cb--all)').forEach((cb) => {
+      cb.addEventListener('click', (e) => {
+        e.stopPropagation();
+      });
+      cb.addEventListener('change', (e) => {
+        e.stopPropagation();
+        const id = cb.getAttribute('data-unit-id');
+        if (!id) return;
+        const on = cb.checked;
+        if (on) monstersBulkSelected.add(String(id));
+        else monstersBulkSelected.delete(String(id));
+        monstersBulkLastIndex = monstersVisibleUnitIds.indexOf(String(id));
+        writeMonstersBulkSelected(monstersBulkSelected);
+        syncMonstersBulkBar(t);
+        syncBulkCardStates(grid);
+        syncSelectAllState();
+      });
+    });
+
+    const selAll = document.getElementById('monsters-table-select-all');
+    if (selAll && !ro) {
+      selAll.addEventListener('click', (e) => e.stopPropagation());
+      selAll.addEventListener('change', () => {
+        const on = selAll.checked;
+        for (const id of monstersVisibleUnitIds) {
+          if (on) monstersBulkSelected.add(id);
+          else monstersBulkSelected.delete(id);
+        }
+        writeMonstersBulkSelected(monstersBulkSelected);
+        syncMonstersBulkBar(t);
+        syncBulkCardStates(grid);
+        syncSelectAllState();
+      });
+      syncSelectAllState();
+    }
   }
 
   async function renderMonstersPanel() {
@@ -8523,7 +8749,7 @@
     if (roleSel && roleSel.value !== (filters.roleFilter || '')) roleSel.value = filters.roleFilter || '';
     if (markSel && markSel.value !== (filters.markFilter || '')) markSel.value = filters.markFilter || '';
     syncMonstersShowAllButton(!!filters.fullSixOnly, t);
-    syncMonstersShowLevelButton(filters.minLevel36Only !== false, t);
+    syncMonstersShowLevelButton(!!filters.minLevel36Only, t);
 
     const view = readMonstersView();
     const filtered = filterMonstersList(enriched, filters);
@@ -8557,7 +8783,10 @@
         const file = img.getAttribute('data-img-file');
         if (file) bindMonsterPortrait(img, file);
       });
+      bindMonstersGridSelectAll(t);
     }
+
+    if (typeof syncMonstersSelectAllState === 'function') syncMonstersSelectAllState();
 
     grid.querySelectorAll('.monsters-card').forEach((card) => {
       const uid = card.getAttribute('data-unit-id');
@@ -8749,7 +8978,7 @@
     }
     syncMonstersBulkBar(t);
     syncMonstersShowAllButton(readMonstersFilters().fullSixOnly, t);
-    syncMonstersShowLevelButton(readMonstersFilters().minLevel36Only, t);
+    syncMonstersShowLevelButton(!!readMonstersFilters().minLevel36Only, t);
     updateMonstersFilterSummary();
     const bulkMarksLbl = document.getElementById('lbl-monsters-bulk-marks');
     if (bulkMarksLbl) bulkMarksLbl.textContent = t.monstersBulkMarksGroup || 'Bulk marks';
@@ -8783,6 +9012,10 @@
     if (btnCards) btnCards.title = t.monstersViewCards || 'Cards';
     const btnTable = document.getElementById('monsters-view-table');
     if (btnTable) btnTable.title = t.monstersViewTable || 'Table';
+    const lblGridSel = document.getElementById('lbl-monsters-grid-select-all');
+    if (lblGridSel) lblGridSel.textContent = t.monstersTableSelectAll || 'Select all visible';
+    const clrToolbar = document.getElementById('monsters-toolbar-clear');
+    if (clrToolbar) clrToolbar.textContent = t.monstersToolbarClear || 'Clear filters';
     const clearMonster = document.getElementById('btn-rune-table-clear-monster-filter');
     if (clearMonster) clearMonster.textContent = t.runeTableMonsterFilterClear || 'Clear';
     const emptyClear = document.getElementById('monsters-empty-clear-filters');
@@ -8837,6 +9070,7 @@
     if (f.roleFilter) n += 1;
     if (f.markFilter) n += 1;
     if (f.fullSixOnly) n += 1;
+    if (f.minLevel36Only) n += 1;
     return n;
   }
 
@@ -8926,12 +9160,8 @@
     });
     document.getElementById('monsters-filter-mark')?.addEventListener('change', onFilter);
     document.getElementById('monsters-empty-clear-filters')?.addEventListener('click', () => {
-      clearMonstersPanelFilters();
-      const f = readMonstersFiltersFromDom();
-      f.q = document.getElementById('monsters-filter-q')?.value || '';
-      f.element = document.getElementById('monsters-filter-element')?.value || '';
-      writeMonstersFilters(f);
-      updateMonstersFilterSummary();
+      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+      resetMonstersToolbarFilters(t);
       renderMonstersPanel();
     });
     document.getElementById('monsters-empty-reset-search')?.addEventListener('click', () => {
@@ -8958,6 +9188,11 @@
       syncMonstersShowLevelButton(next, t);
       onFilter();
     });
+    document.getElementById('monsters-toolbar-clear')?.addEventListener('click', () => {
+      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+      resetMonstersToolbarFilters(t);
+      renderMonstersPanel();
+    });
     document.getElementById('monsters-view-cards')?.addEventListener('click', () => {
       writeMonstersView('cards');
       syncMonstersViewToggle('cards');
@@ -8971,6 +9206,7 @@
     syncMonstersViewToggle(readMonstersView());
     const t0 = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     syncMonstersShowAllButton(readMonstersFilters().fullSixOnly, t0);
+    syncMonstersShowLevelButton(!!readMonstersFilters().minLevel36Only, t0);
     updateMonstersFilterSummary();
     bindMonstersDetailFloat();
     bindMonstersGridDelegation();

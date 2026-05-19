@@ -26,9 +26,24 @@
       : Array.isArray(u.skillRows)
         ? u.skillRows
         : [];
-    const leaderSkill = meta && meta.leader_skill ? meta.leader_skill : null;
+    const lookupRow = db && typeof db.lookupMonster === 'function' ? db.lookupMonster(u.masterId) : null;
+    const metaRow = meta || lookupRow;
+    const leaderSkill = metaRow && metaRow.leader_skill ? metaRow.leader_skill : null;
     const skillsBlock = buildMonsterDetailSkillsBlock(skillRows, t, skillDb, leaderSkill);
-    const statsBlock = buildMonsterStatsHtml(u, t);
+    let statsBlock = buildMonsterStatsHtml(u, t);
+    if (db && lookupRow && typeof db.monsterBaseStatsAtLevel === 'function') {
+      const initialBase = db.monsterBaseStatsAtLevel(lookupRow, u.level);
+      if (
+        initialBase &&
+        typeof db.hasUsableBaseStats === 'function' &&
+        db.hasUsableBaseStats(initialBase)
+      ) {
+        statsBlock = buildMonsterDetailStatsBlock(
+          { ...u, meta: metaRow, baseStats: initialBase },
+          t,
+        );
+      }
+    }
     const runesBlock =
       buildRuneSetBonusSummaryHtml(u, t, db) + buildMonsterDetailRunesStrip(u, db, t);
     const natStars =
@@ -75,7 +90,7 @@
       </header>
       <div class="monsters-detail__scroll" data-detail-scroll>
         <div data-detail-stats>${statsBlock}</div>
-        <section class="monsters-detail__section">
+        <section class="monsters-detail__section" data-detail-skills>
           <h4 class="monsters-detail__section-title">${escapeHtml(t.monstersDetailTabSkills || 'Skills')}</h4>
           ${skillsBlock}
         </section>
@@ -110,11 +125,16 @@
             ? db.monsterBaseStatsAtLevel(row, u.level)
             : null;
         const statsHost = body.querySelector('[data-detail-stats]');
-        if (statsHost && base) {
+        const baseOk =
+          base &&
+          db.hasUsableBaseStats &&
+          typeof db.hasUsableBaseStats === 'function' &&
+          db.hasUsableBaseStats(base);
+        if (statsHost && baseOk) {
           statsHost.innerHTML = buildMonsterDetailStatsBlock({ ...u, meta: row, baseStats: base }, t);
         }
 
-        const skillsSec = body.querySelector('.monsters-detail__section');
+        const skillsSec = body.querySelector('[data-detail-skills]');
         if (skillsSec) {
           const block = buildMonsterDetailSkillsBlock(
             skillDb ? skillDb.enrichUnitSkillsForDetail(u.skills) : skillRows,
@@ -161,7 +181,10 @@
       const uid = row.getAttribute('data-unit-id');
       const on = monstersBulkSelected.has(String(uid));
       row.classList.toggle('monsters-table__row--bulk-on', on);
+      const cb = row.querySelector('.monsters-table__bulk-cb:not(.monsters-table__bulk-cb--all)');
+      if (cb) cb.checked = on;
     });
+    if (typeof syncMonstersSelectAllState === 'function') syncMonstersSelectAllState();
   }
 
   function bindMonstersGridDelegation() {

@@ -51,6 +51,34 @@
     inset 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
+.monsters-grid-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.monsters-grid-head__select {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-secondary);
+  color: var(--text-dim);
+  cursor: pointer;
+  user-select: none;
+}
+
+.monsters-grid-head__select input {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--accent, #6a9);
+  cursor: pointer;
+}
+
 .monsters-bulk-bar {
   display: flex;
   flex-wrap: wrap;

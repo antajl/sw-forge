@@ -12,6 +12,68 @@
   align-items: flex-end;
 }
 
+.monsters-toolbar__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px 14px;
+  width: 100%;
+}
+
+.monsters-toolbar__left {
+  flex: 0 0 auto;
+}
+
+.monsters-toolbar__center {
+  flex: 1 1 14rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px 12px;
+  min-width: 0;
+  justify-content: center;
+}
+
+.monsters-toolbar__right {
+  flex: 0 1 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px 10px;
+  margin-left: auto;
+}
+
+.monsters-toolbar__center .monsters-search {
+  flex: 1 1 10rem;
+  max-width: 22rem;
+}
+
+.monsters-toolbar__right > .monsters-toolbar__filters {
+  flex: 0 0 auto;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 0;
+}
+
+.monsters-toolbar__right > .monsters-toolbar__filters[open] {
+  flex: 1 1 100%;
+  order: 10;
+  margin-left: 0;
+  margin-top: var(--space-xs);
+}
+
+.monsters-toolbar__right > .monsters-toolbar__filters .monsters-toolbar__filters-summary {
+  min-height: 32px;
+  padding: var(--space-xs) var(--space-md);
+  margin: 0;
+}
+
+.monsters-toolbar__filter-action--inline {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
 .monsters-toolbar__field {
   display: flex;
   flex-direction: column;

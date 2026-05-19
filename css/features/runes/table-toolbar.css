@@ -116,6 +116,16 @@
   font-size: 0.82rem;
   font-weight: 600;
 }
+
+.btn-toolbar--sm {
+  min-height: 28px;
+  padding: 5px 10px;
+  font-size: 0.72rem;
+}
+
+.table-toolbar__monster-filter .btn-ghost.btn-toolbar {
+  flex-shrink: 0;
+}
 .table-toolbar__toggles {
   display: flex;
   flex-wrap: wrap;

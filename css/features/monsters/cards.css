@@ -530,6 +530,23 @@
   color: #f06eb0;
 }
 
+.monsters-card--grid .monsters-card__storage-pill {
+  position: absolute;
+  top: 28px;
+  right: 4px;
+  z-index: 4;
+  font-size: 0.52rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 2px 5px;
+  border-radius: 4px;
+  color: color-mix(in srgb, var(--orange) 92%, var(--text));
+  background: color-mix(in srgb, var(--bg) 75%, transparent);
+  border: 1px solid color-mix(in srgb, var(--orange) 45%, var(--border2));
+  pointer-events: none;
+}
+
 .monsters-card--grid .monsters-card__hero {
   position: relative;
   width: 100%;
@@ -659,9 +676,14 @@
 
 .monsters-detail__stars {
   position: absolute;
-  left: 4px;
-  bottom: 4px;
-  z-index: 2;
+  left: 0;
+  right: 0;
+  top: 4px;
+  bottom: auto;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  z-index: 3;
   font-size: 0.72rem;
   line-height: 1;
   letter-spacing: -0.04em;

@@ -336,10 +336,18 @@
     return n;
   }
 
-  /** Monster Storage Box: SWEX `unit_list[].island_id === 4` (Sky Island id for storage). */
+  /**
+   * Monster Storage in SWEX: classically `island_id === 4` (Sky Island slot for storage).
+   * Some exports also flag storage via `storage_status`, `in_storage`, or `is_storage`.
+   */
   function unitInStorage(unit) {
     if (!unit) return false;
-    return Number(unit.island_id) === 4;
+    if (Number(unit.island_id) === 4) return true;
+    const ss = unit.storage_status;
+    if (ss === 1 || ss === true || ss === '1') return true;
+    if (unit.in_storage === true || unit.in_storage === 1 || unit.in_storage === '1') return true;
+    if (Number(unit.is_storage) === 1) return true;
+    return false;
   }
 
   /**

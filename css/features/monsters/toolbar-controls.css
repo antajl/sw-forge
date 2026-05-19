@@ -58,6 +58,16 @@
   background: color-mix(in srgb, var(--accent) 12%, var(--bg3));
 }
 
+.monsters-toolbar-btn--sm {
+  min-height: 28px;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+}
+
+.monsters-toolbar-btn--ghost {
+  background: transparent;
+}
+
 .monsters-toolbar {
   display: flex;
   flex-direction: column;

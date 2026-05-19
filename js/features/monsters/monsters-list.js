@@ -98,7 +98,7 @@
     if (roleSel && roleSel.value !== (filters.roleFilter || '')) roleSel.value = filters.roleFilter || '';
     if (markSel && markSel.value !== (filters.markFilter || '')) markSel.value = filters.markFilter || '';
     syncMonstersShowAllButton(!!filters.fullSixOnly, t);
-    syncMonstersShowLevelButton(filters.minLevel36Only !== false, t);
+    syncMonstersShowLevelButton(!!filters.minLevel36Only, t);
 
     const view = readMonstersView();
     const filtered = filterMonstersList(enriched, filters);
@@ -132,7 +132,10 @@
         const file = img.getAttribute('data-img-file');
         if (file) bindMonsterPortrait(img, file);
       });
+      bindMonstersGridSelectAll(t);
     }
+
+    if (typeof syncMonstersSelectAllState === 'function') syncMonstersSelectAllState();
 
     grid.querySelectorAll('.monsters-card').forEach((card) => {
       const uid = card.getAttribute('data-unit-id');

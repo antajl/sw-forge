@@ -104,7 +104,40 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  max-width: 220px;
+  max-width: 280px;
+  flex-wrap: wrap;
+}
+
+.monsters-table__th--bulk,
+.monsters-table__td-bulk {
+  width: 38px;
+  text-align: center;
+  padding-left: 6px;
+  padding-right: 6px;
+  vertical-align: middle;
+  white-space: normal;
+}
+
+.monsters-table__bulk-cb {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  accent-color: var(--accent, #6a9);
+}
+
+.monsters-table__storage-badge {
+  display: inline-block;
+  font-size: 0.58rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: color-mix(in srgb, var(--orange) 90%, var(--text));
+  border: 1px solid color-mix(in srgb, var(--orange) 45%, var(--border2));
+  border-radius: 4px;
+  padding: 1px 5px;
+  margin-left: 4px;
+  white-space: nowrap;
+  vertical-align: middle;
 }
 
 .monsters-table__thumb {

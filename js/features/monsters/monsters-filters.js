@@ -22,6 +22,16 @@
     return '';
   }
 
+  /** Rainbowmon, elemental Angelmon, Devilmon — excluded from roster views. */
+  function isTechnicalFodderMonster(u) {
+    if (!u) return false;
+    const name = String(u.displayName || '').toLowerCase();
+    if (/\brainbowmon\b/i.test(name)) return true;
+    if (/\bdevilmon\b/i.test(name)) return true;
+    if (/\bangelmon\b/i.test(name)) return true;
+    return false;
+  }
+
   function unitHasRuneSet(u, setName) {
     if (!setName) return true;
     for (const slot of u.runeSlots || []) {
@@ -35,7 +45,7 @@
     const el = filters.element || '';
     const loc = filters.location || 'all';
     const fullSixOnly = !!filters.fullSixOnly;
-    const minLevel36Only = filters.minLevel36Only !== false;
+    const minLevel36Only = !!filters.minLevel36Only;
     const skillFilter = filters.skillFilter || '';
     const runeFilter = filters.runeFilter || '';
     const runeSet = filters.runeSet || '';
@@ -43,6 +53,7 @@
     const roleFilter = filters.roleFilter || '';
     const markFilter = filters.markFilter || '';
     return units.filter((u) => {
+      if (isTechnicalFodderMonster(u)) return false;
       if (fullSixOnly && !u.hasFullRunes) return false;
       if (minLevel36Only && (Number(u.level) || 0) <= 35) return false;
       if (el && u.metaElement !== el) return false;
@@ -216,6 +227,27 @@
       sixBtn.setAttribute('aria-pressed', 'false');
       sixBtn.classList.remove('monsters-toolbar-btn--active');
     }
+    const lvlBtn = document.getElementById('monsters-filter-min-level');
+    if (lvlBtn) {
+      lvlBtn.setAttribute('aria-pressed', 'false');
+      lvlBtn.classList.remove('monsters-toolbar-btn--active');
+    }
+  }
+
+  /** Reset search, element, location, advanced filters, level / 6-6 toggles; then persist from DOM. */
+  function resetMonstersToolbarFilters(t) {
+    clearMonstersPanelFilters();
+    resetMonstersSearchQuery();
+    const elSel = document.getElementById('monsters-filter-element');
+    if (elSel) elSel.value = '';
+    const locSel = document.getElementById('monsters-filter-location');
+    if (locSel) locSel.value = 'all';
+    if (t) {
+      syncMonstersShowAllButton(false, t);
+      syncMonstersShowLevelButton(false, t);
+    }
+    writeMonstersFilters(readMonstersFiltersFromDom());
+    updateMonstersFilterSummary();
   }
 
   function resetMonstersSearchQuery() {
@@ -251,20 +283,57 @@
     const btn = document.getElementById('monsters-filter-min-level');
     const lbl = document.getElementById('lbl-monsters-filter-min-level-btn');
     if (!btn) return;
-    const on = minLevel36Only !== false;
+    const on = !!minLevel36Only;
     btn.setAttribute('aria-pressed', on ? 'true' : 'false');
     btn.classList.toggle('monsters-toolbar-btn--active', on);
     if (lbl) {
       lbl.textContent = on
-        ? t.monstersFilterMinLevelOn || 'Lv 36+ only'
+        ? t.monstersFilterMinLevelOn || 'Only Lv 35+'
         : t.monstersFilterMinLevelOff || 'All levels';
     }
   }
 
+  function syncMonstersSelectAllState() {
+    const vis = monstersVisibleUnitIds.length;
+    let n = 0;
+    for (const id of monstersVisibleUnitIds) {
+      if (monstersBulkSelected.has(id)) n += 1;
+    }
+    const state = { checked: vis > 0 && n === vis, indeterminate: n > 0 && n < vis };
+    for (const id of ['monsters-table-select-all', 'monsters-grid-select-all']) {
+      const el = document.getElementById(id);
+      if (!el) continue;
+      el.checked = state.checked;
+      el.indeterminate = state.indeterminate;
+    }
+  }
+
+  function bindMonstersGridSelectAll(t) {
+    const selAll = document.getElementById('monsters-grid-select-all');
+    if (!selAll || selAll.dataset.bound === '1') return;
+    selAll.dataset.bound = '1';
+    const ro = typeof isShareReadOnly === 'function' && isShareReadOnly();
+    if (ro) return;
+    selAll.addEventListener('change', () => {
+      const on = selAll.checked;
+      for (const id of monstersVisibleUnitIds) {
+        if (on) monstersBulkSelected.add(id);
+        else monstersBulkSelected.delete(id);
+      }
+      writeMonstersBulkSelected(monstersBulkSelected);
+      syncMonstersBulkBar(t);
+      const grid = document.getElementById('monsters-grid');
+      if (typeof syncBulkCardStates === 'function') syncBulkCardStates(grid);
+      syncMonstersSelectAllState();
+    });
+  }
+
   function syncMonstersViewToggle(view) {
     const grid = document.getElementById('monsters-grid');
+    const gridHead = document.getElementById('monsters-grid-head');
     const sortField = document.querySelector('.monsters-toolbar__field--sort');
     if (sortField) sortField.hidden = view === 'table';
+    if (gridHead) gridHead.hidden = view !== 'cards';
     if (grid) {
       grid.classList.toggle('monsters-grid--table', view === 'table');
       grid.classList.toggle('monsters-grid--cards', view === 'cards');

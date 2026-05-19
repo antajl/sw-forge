@@ -161,7 +161,7 @@
     }
     syncMonstersBulkBar(t);
     syncMonstersShowAllButton(readMonstersFilters().fullSixOnly, t);
-    syncMonstersShowLevelButton(readMonstersFilters().minLevel36Only, t);
+    syncMonstersShowLevelButton(!!readMonstersFilters().minLevel36Only, t);
     updateMonstersFilterSummary();
     const bulkMarksLbl = document.getElementById('lbl-monsters-bulk-marks');
     if (bulkMarksLbl) bulkMarksLbl.textContent = t.monstersBulkMarksGroup || 'Bulk marks';
@@ -195,6 +195,10 @@
     if (btnCards) btnCards.title = t.monstersViewCards || 'Cards';
     const btnTable = document.getElementById('monsters-view-table');
     if (btnTable) btnTable.title = t.monstersViewTable || 'Table';
+    const lblGridSel = document.getElementById('lbl-monsters-grid-select-all');
+    if (lblGridSel) lblGridSel.textContent = t.monstersTableSelectAll || 'Select all visible';
+    const clrToolbar = document.getElementById('monsters-toolbar-clear');
+    if (clrToolbar) clrToolbar.textContent = t.monstersToolbarClear || 'Clear filters';
     const clearMonster = document.getElementById('btn-rune-table-clear-monster-filter');
     if (clearMonster) clearMonster.textContent = t.runeTableMonsterFilterClear || 'Clear';
     const emptyClear = document.getElementById('monsters-empty-clear-filters');
@@ -249,6 +253,7 @@
     if (f.roleFilter) n += 1;
     if (f.markFilter) n += 1;
     if (f.fullSixOnly) n += 1;
+    if (f.minLevel36Only) n += 1;
     return n;
   }
 
@@ -338,12 +343,8 @@
     });
     document.getElementById('monsters-filter-mark')?.addEventListener('change', onFilter);
     document.getElementById('monsters-empty-clear-filters')?.addEventListener('click', () => {
-      clearMonstersPanelFilters();
-      const f = readMonstersFiltersFromDom();
-      f.q = document.getElementById('monsters-filter-q')?.value || '';
-      f.element = document.getElementById('monsters-filter-element')?.value || '';
-      writeMonstersFilters(f);
-      updateMonstersFilterSummary();
+      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+      resetMonstersToolbarFilters(t);
       renderMonstersPanel();
     });
     document.getElementById('monsters-empty-reset-search')?.addEventListener('click', () => {
@@ -370,6 +371,11 @@
       syncMonstersShowLevelButton(next, t);
       onFilter();
     });
+    document.getElementById('monsters-toolbar-clear')?.addEventListener('click', () => {
+      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+      resetMonstersToolbarFilters(t);
+      renderMonstersPanel();
+    });
     document.getElementById('monsters-view-cards')?.addEventListener('click', () => {
       writeMonstersView('cards');
       syncMonstersViewToggle('cards');
@@ -383,6 +389,7 @@
     syncMonstersViewToggle(readMonstersView());
     const t0 = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     syncMonstersShowAllButton(readMonstersFilters().fullSixOnly, t0);
+    syncMonstersShowLevelButton(!!readMonstersFilters().minLevel36Only, t0);
     updateMonstersFilterSummary();
     bindMonstersDetailFloat();
     bindMonstersGridDelegation();

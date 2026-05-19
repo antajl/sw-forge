@@ -95,6 +95,9 @@
     const bulkSel = monstersBulkSelected.has(String(u.unitId));
     const starsBadge = buildMonsterStarsBadge(u);
     const locHtml = u.inStorage ? buildLocationIconHtml(u, t) : '';
+    const storagePill = u.inStorage
+      ? `<span class="monsters-card__storage-pill" title="${escapeHtml(t.monstersStorageBadge || 'Storage')}">${escapeHtml(t.monstersStorageBadge || 'Storage')}</span>`
+      : '';
     const ro = typeof isShareReadOnly === 'function' && isShareReadOnly();
     const actionsHtml = ro ? '' : buildCardActionsHtml(u, t);
     return `<article class="monsters-card monsters-card--grid${u.favorite ? ' monsters-card--favorite' : ''}${u.food ? ' monsters-card--food' : ''}${u.inStorage ? ' monsters-card--storage' : ''}${bulkSel ? ' monsters-card--bulk-on' : ''}${pinned ? ' monsters-card--pinned' : ''}${hover ? ' monsters-card--hover' : ''}${elCls ? ` monsters-card--${elCls}` : ''}" data-unit-id="${escapeHtml(String(u.unitId))}" data-master-id="${u.masterId}" tabindex="0">
@@ -102,6 +105,7 @@
           ${ro ? '' : buildMonsterBulkToggleHtml(u)}
           ${actionsHtml}
           <div class="monsters-card__hero">
+            ${storagePill}
             ${starsBadge}
             <img class="monsters-card__img" alt="" width="120" height="120" data-img-file="${escapeHtml(u.imageFilename || '')}" loading="lazy" decoding="async" />
             ${buildMonsterElementBadge(u)}

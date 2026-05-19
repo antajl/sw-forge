@@ -187,46 +187,78 @@
     }
     const base = u.baseStats || null;
     const pct = (v) => `${Math.round(Number(v) || 0)}%`;
-    const fmtTriple = (baseVal, totalVal) => {
-      const total = Number(totalVal);
-      if (!Number.isFinite(total)) return '—';
-      const b = Number(baseVal);
-      if (!Number.isFinite(b)) return String(Math.round(total));
-      const runePart = Math.max(0, Math.round(total - b));
-      return `${Math.round(b)} + ${runePart} = ${Math.round(total)}`;
-    };
-    const coreRows = [
+    const lblBase = t.monstersStatBase || 'Base';
+    const lblRune = t.monstersStatRunes || '+Runes';
+    const lblTot = t.monstersStatTotal || 'Total';
+    const lblTotPct = t.monstersStatTotalPct || 'Total %';
+    const coreKeys = [
       [t.monstersStatHp || 'HP', 'hp'],
       [t.monstersStatAtk || 'ATK', 'atk'],
       [t.monstersStatDef || 'DEF', 'def'],
       [t.monstersStatSpd || 'SPD', 'spd'],
     ];
-    const pctRows = [
+    const pctKeys = [
       [t.monstersStatCr || 'CRI Rate', 'critRate'],
       [t.monstersStatCd || 'CRI Dmg', 'critDmg'],
       [t.monstersStatRes || 'RES', 'res'],
       [t.monstersStatAcc || 'ACC', 'acc'],
     ];
-    const head = `<div class="monsters-detail__stats-head">
-      <span></span><span>${escapeHtml(t.monstersStatFormula || 'Base + Runes = Total')}</span>
+    const coreHead = `<div class="monsters-detail__stats-head monsters-detail__stats-head--core">
+      <span class="monsters-detail__stat-k"></span>
+      <span>${escapeHtml(lblBase)}</span>
+      <span class="monsters-detail__stat-rune-h">${escapeHtml(lblRune)}</span>
+      <span>${escapeHtml(lblTot)}</span>
     </div>`;
-    const coreBody = coreRows
-      .map(
-        ([label, key]) =>
-          `<div class="monsters-detail__stat-row"><span class="monsters-detail__stat-k">${escapeHtml(label)}</span><span class="monsters-detail__stat-formula">${escapeHtml(fmtTriple(base ? base[key] : null, s[key]))}</span></div>`,
-      )
+    const coreBody = coreKeys
+      .map(([label, key]) => {
+        const total = Number(s[key]);
+        const b = base ? Number(base[key]) : NaN;
+        const baseStr = Number.isFinite(b) ? String(Math.round(b)) : '—';
+        let runeStr = '—';
+        let totStr = '—';
+        if (Number.isFinite(total)) {
+          totStr = String(Math.round(total));
+          if (Number.isFinite(b)) {
+            const r = Math.max(0, Math.round(total - b));
+            runeStr = r > 0 ? `+${r}` : '0';
+          } else {
+            totStr = String(Math.round(total));
+          }
+        }
+        return `<div class="monsters-detail__stat-row monsters-detail__stat-row--core">
+          <span class="monsters-detail__stat-k">${escapeHtml(label)}</span>
+          <span class="monsters-detail__stat-num">${escapeHtml(baseStr)}</span>
+          <span class="monsters-detail__stat-num monsters-detail__stat-num--rune">${escapeHtml(runeStr)}</span>
+          <span class="monsters-detail__stat-num monsters-detail__stat-num--total">${escapeHtml(totStr)}</span>
+        </div>`;
+      })
       .join('');
-    const pctBody = pctRows
+    const pctHead = `<div class="monsters-detail__stats-head monsters-detail__stats-head--pct">
+      <span class="monsters-detail__stat-k"></span>
+      <span>${escapeHtml(lblTotPct)}</span>
+    </div>`;
+    const pctBody = pctKeys
       .map(
         ([label, key]) =>
-          `<div class="monsters-detail__stat-row"><span class="monsters-detail__stat-k">${escapeHtml(label)}</span><span class="monsters-detail__stat-formula">${escapeHtml(pct(s[key]))}</span></div>`,
+          `<div class="monsters-detail__stat-row monsters-detail__stat-row--pct">
+            <span class="monsters-detail__stat-k">${escapeHtml(label)}</span>
+            <span class="monsters-detail__stat-num monsters-detail__stat-num--total">${escapeHtml(pct(s[key]))}</span>
+          </div>`,
       )
       .join('');
     const loading =
       !base && window.SWRM_MONSTER_DB
         ? `<p class="monsters-detail__muted monsters-detail__stats-loading">${escapeHtml(t.monstersStatsLoading || 'Loading base stats…')}</p>`
         : '';
-    return '<div class="monsters-detail__stats-grid">' + head + loading + coreBody + pctBody + '</div>';
+    return (
+      '<div class="monsters-detail__stats-grid monsters-detail__stats-grid--split">' +
+      coreHead +
+      loading +
+      coreBody +
+      pctHead +
+      pctBody +
+      '</div>'
+    );
   }
 
   function buildMonsterStatsHtml(u, t) {
@@ -516,6 +548,34 @@
     return { skillId, url };
   }
 
+  function formatLeaderSkillTitleBody(leaderSkill, t) {
+    if (!leaderSkill) return { title: '', body: '' };
+    const sk = leaderSkill.skill;
+    if (sk && typeof sk === 'object') {
+      const name = String(sk.name || sk.name_en || '').trim();
+      const desc = String(sk.description || sk.description_en || '').trim();
+      return {
+        title: name || (t.monstersLeaderSkill || 'Leader skill'),
+        body: desc,
+      };
+    }
+    const attr = String(leaderSkill.attribute || '').trim();
+    const amt = leaderSkill.amount != null ? String(leaderSkill.amount).trim() : '';
+    const area = String(leaderSkill.area || '').trim();
+    const element = String(leaderSkill.element || '').trim();
+    const bits = [];
+    if (amt && attr) bits.push(`${amt}% ${attr}`);
+    else if (attr) bits.push(attr);
+    if (area) bits.push(area);
+    if (element) bits.push(element);
+    const title =
+      amt && attr
+        ? `${amt}% ${attr}`
+        : attr || (t.monstersLeaderSkill || 'Leader skill');
+    const body = bits.length > 1 ? bits.slice(1).join(' · ') : area && attr ? area : '';
+    return { title, body: body || bits.join(' · ') };
+  }
+
   function buildMonsterDetailSkillsBlock(skillRows, t, skillDb, leaderSkill) {
     const rows = skillRows || [];
     const hasLeader = !!(leaderSkill && (leaderSkill.attribute || leaderSkill.skill || leaderSkill.id));
@@ -540,13 +600,23 @@
           escapeHtml(String(leader.skillId)) +
           '" alt="" width="40" height="40" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.hidden=true" />'
         : '<span class="monsters-detail__skill-img monsters-detail__skill-img--ph" aria-hidden="true"></span>';
-    const leaderLbl = escapeHtml(t.monstersLeaderSkill || 'Leader');
+    const lb = formatLeaderSkillTitleBody(leaderSkill, t);
+    const leaderTitle = escapeHtml(lb.title || t.monstersLeaderSkill || 'Leader skill');
+    const leaderDesc = lb.body ? escapeHtml(lb.body) : '';
     const leaderHtml =
-      '<div class="monsters-detail__skills-leader"><div class="monsters-detail__skill-tile monsters-detail__skill-tile--leader">' +
+      '<div class="monsters-detail__skills-leader">' +
+      '<div class="monsters-detail__leader-head">' +
+      '<div class="monsters-detail__skill-tile monsters-detail__skill-tile--leader">' +
       leaderImg +
-      '<span class="monsters-detail__skill-leader-lbl">' +
-      leaderLbl +
-      '</span></div></div>';
+      '</div>' +
+      '<div class="monsters-detail__leader-text">' +
+      '<p class="monsters-detail__leader-name">' +
+      leaderTitle +
+      '</p>' +
+      (leaderDesc
+        ? '<p class="monsters-detail__leader-desc">' + leaderDesc + '</p>'
+        : '') +
+      '</div></div></div>';
     return '<div class="monsters-detail__skills-layout">' + mainHtml + leaderHtml + '</div>';
   }
 

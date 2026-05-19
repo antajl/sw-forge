@@ -1,14 +1,15 @@
 // js/features/monsters/monsters-table.js — roster table view
   const MONSTERS_TABLE_COLS = [
-    { id: 'name', labelKey: 'monstersColName', fallback: 'Name' },
-    { id: 'stars', labelKey: 'monstersColStars', fallback: 'Stars' },
-    { id: 'level', labelKey: 'monstersColLevel', fallback: 'Lv' },
-    { id: 'element', labelKey: 'monstersColElement', fallback: 'Element' },
-    { id: 'role', labelKey: 'monstersColRole', fallback: 'Archetype' },
-    { id: 'runes', labelKey: 'monstersColRunes', fallback: 'Runes' },
-    { id: 'skills', labelKey: 'monstersColDevilmons', fallback: 'Devilmons' },
-    { id: 'marks', labelKey: 'monstersColMarks', fallback: 'Marks' },
-    { id: 'tags', labelKey: 'monstersColTags', fallback: 'Tags' },
+    { id: 'bulk', labelKey: 'monstersColBulk', fallback: '', sortable: false },
+    { id: 'name', labelKey: 'monstersColName', fallback: 'Name', sortable: true },
+    { id: 'stars', labelKey: 'monstersColStars', fallback: 'Stars', sortable: true },
+    { id: 'level', labelKey: 'monstersColLevel', fallback: 'Lv', sortable: true },
+    { id: 'element', labelKey: 'monstersColElement', fallback: 'Element', sortable: true },
+    { id: 'role', labelKey: 'monstersColRole', fallback: 'Archetype', sortable: true },
+    { id: 'runes', labelKey: 'monstersColRunes', fallback: 'Runes', sortable: true },
+    { id: 'skills', labelKey: 'monstersColDevilmons', fallback: 'Devilmons', sortable: true },
+    { id: 'marks', labelKey: 'monstersColMarks', fallback: 'Marks', sortable: true },
+    { id: 'tags', labelKey: 'monstersColTags', fallback: 'Tags', sortable: true },
   ];
 
   function monsterTableCellStars(u) {
@@ -54,6 +55,16 @@
 
   function buildMonsterTableHeadHtml(t) {
     return MONSTERS_TABLE_COLS.map((c) => {
+      if (c.id === 'bulk') {
+        const allLbl = escapeHtml(t.monstersTableSelectAll || 'Select all visible');
+        const oneLbl = escapeHtml(t.monstersBulkSelectOne || 'Select');
+        return `<th scope="col" class="monsters-table__th monsters-table__th--bulk" data-col="bulk">
+          <span class="monsters-table__bulk-th-inner">
+            <input type="checkbox" id="monsters-table-select-all" class="monsters-table__bulk-cb monsters-table__bulk-cb--all" title="${allLbl}" aria-label="${allLbl}" />
+            <span class="sr-only">${oneLbl}</span>
+          </span>
+        </th>`;
+      }
       const label = t[c.labelKey] || c.fallback;
       const sorted = monstersTableSort && monstersTableSort.col === c.id;
       const cls = [
@@ -109,6 +120,8 @@
           mul * String((a.customTags || []).join(',')).localeCompare(String((b.customTags || []).join(','))) ||
           mul * String(a.displayName).localeCompare(String(b.displayName))
         );
+      case 'bulk':
+        return 0;
       case 'name':
       default:
         return mul * String(a.displayName || '').localeCompare(String(b.displayName || ''));
@@ -163,8 +176,12 @@
             : u.skillsMaxed
               ? '✓'
               : '—';
+        const storageBadge = u.inStorage
+          ? `<span class="monsters-table__storage-badge">${escapeHtml(t.monstersStorageBadge || 'Storage')}</span>`
+          : '';
         return `<tr class="monsters-table__row${rowCls ? ` ${rowCls}` : ''}" data-unit-id="${uid}" tabindex="0">
-          <td data-col="name"><div class="monsters-table__name-cell">${monsterTableThumbHtml(u)}<span class="monsters-table__name">${name}</span></div></td>
+          <td data-col="bulk" class="monsters-table__td-bulk"><input type="checkbox" class="monsters-table__bulk-cb" data-unit-id="${uid}" ${bulkSel ? 'checked' : ''} aria-label="${escapeHtml(t.monstersBulkSelectOne || 'Select')}" /></td>
+          <td data-col="name"><div class="monsters-table__name-cell">${monsterTableThumbHtml(u)}<span class="monsters-table__name">${name}</span>${storageBadge}</div></td>
           <td data-col="stars">${monsterTableCellStars(u)}</td>
           <td data-col="level">${u.level}</td>
           <td data-col="element">${monsterTableElementCell(u)}</td>
@@ -214,6 +231,9 @@
       row.addEventListener('blur', scheduleMonstersDetailHide);
       row.addEventListener('click', (e) => {
         if (e.target.closest('a')) return;
+        if (e.target.closest('.monsters-table__td-bulk') || e.target.classList.contains('monsters-table__bulk-cb')) {
+          return;
+        }
         e.preventDefault();
         pinMonsterDetail(uid, row);
         if (!ro) {
@@ -237,4 +257,44 @@
         pinMonsterDetail(uid, row);
       });
     });
+
+    const syncSelectAllState = () => {
+      if (typeof syncMonstersSelectAllState === 'function') syncMonstersSelectAllState();
+    };
+
+    grid.querySelectorAll('.monsters-table__bulk-cb:not(.monsters-table__bulk-cb--all)').forEach((cb) => {
+      cb.addEventListener('click', (e) => {
+        e.stopPropagation();
+      });
+      cb.addEventListener('change', (e) => {
+        e.stopPropagation();
+        const id = cb.getAttribute('data-unit-id');
+        if (!id) return;
+        const on = cb.checked;
+        if (on) monstersBulkSelected.add(String(id));
+        else monstersBulkSelected.delete(String(id));
+        monstersBulkLastIndex = monstersVisibleUnitIds.indexOf(String(id));
+        writeMonstersBulkSelected(monstersBulkSelected);
+        syncMonstersBulkBar(t);
+        syncBulkCardStates(grid);
+        syncSelectAllState();
+      });
+    });
+
+    const selAll = document.getElementById('monsters-table-select-all');
+    if (selAll && !ro) {
+      selAll.addEventListener('click', (e) => e.stopPropagation());
+      selAll.addEventListener('change', () => {
+        const on = selAll.checked;
+        for (const id of monstersVisibleUnitIds) {
+          if (on) monstersBulkSelected.add(id);
+          else monstersBulkSelected.delete(id);
+        }
+        writeMonstersBulkSelected(monstersBulkSelected);
+        syncMonstersBulkBar(t);
+        syncBulkCardStates(grid);
+        syncSelectAllState();
+      });
+      syncSelectAllState();
+    }
   }

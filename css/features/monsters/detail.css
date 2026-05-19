@@ -22,12 +22,13 @@
 }
 
 .monsters-detail.monsters-detail--pinned {
-  position: fixed;
-  right: 12px;
-  top: 84px;
-  z-index: 45;
-  width: min(360px, calc(100vw - 24px));
-  max-height: min(92vh, calc(100vh - 72px));
+  position: sticky;
+  top: 12px;
+  align-self: flex-start;
+  flex: 0 0 min(360px, 34vw);
+  z-index: 2;
+  width: min(360px, 34vw);
+  max-height: calc(100vh - 24px);
   overflow: auto;
   padding: 14px;
   background: var(--surface);
@@ -59,20 +60,12 @@
 .monsters-detail__skills-leader {
   flex: 0 0 auto;
   min-width: 0;
-  max-width: 12rem;
   padding-left: 12px;
   border-left: 1px solid var(--border2);
 }
 
-.monsters-detail__leader-head {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-}
-
-.monsters-detail__leader-text {
-  flex: 1;
-  min-width: 0;
+.monsters-detail__skill-tile--leader {
+  cursor: help;
 }
 
 .monsters-detail__leader-name {
@@ -113,6 +106,81 @@
   margin-bottom: 14px;
 }
 
+.monsters-detail__head--card {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.monsters-detail__hero {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg3);
+  border: 2px solid var(--border2);
+}
+
+.monsters-detail__hero .monsters-card__stars-row--overlay {
+  position: absolute;
+  top: 4px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+  padding: 0 4px;
+  line-height: 1;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.monsters-detail__hero .monsters-card__star {
+  display: inline-block;
+  font-size: 1.44rem;
+  margin-left: -0.38em;
+  color: #f0c040;
+  -webkit-text-stroke: 1px #000;
+  paint-order: stroke fill;
+  text-shadow:
+    0 0 2px #000,
+    0 1px 0 #000,
+    1px 0 0 #000,
+    -1px 0 0 #000;
+}
+
+.monsters-detail__hero .monsters-card__star:first-child {
+  margin-left: 0;
+}
+
+.monsters-detail__hero .monsters-card__stars-row--awakened .monsters-card__star {
+  color: #f06eb0;
+}
+
+.monsters-detail__hero .monsters-card__element-img,
+.monsters-detail__hero .monsters-card__element {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  z-index: 2;
+}
+
+.monsters-detail__hero .monsters-card__level {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  z-index: 2;
+}
+
+.monsters-detail__hero .monsters-card__storage-pill {
+  position: absolute;
+  top: 28px;
+  right: 4px;
+  z-index: 4;
+}
+
 .monsters-detail__portrait-wrap {
   position: relative;
   flex: 0 0 96px;
@@ -124,11 +192,74 @@
   border: 2px solid var(--border2);
 }
 
+.monsters-detail__portrait-wrap .monsters-card__stars-row--overlay {
+  position: absolute;
+  top: 2px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+  padding: 0 2px;
+  line-height: 1;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.monsters-detail__portrait-wrap .monsters-card__star {
+  display: inline-block;
+  font-size: 1.15rem;
+  margin-left: -0.32em;
+  color: #f0c040;
+  -webkit-text-stroke: 1px #000;
+  paint-order: stroke fill;
+  text-shadow:
+    0 0 2px #000,
+    0 1px 0 #000,
+    1px 0 0 #000,
+    -1px 0 0 #000;
+}
+
+.monsters-detail__portrait-wrap .monsters-card__star:first-child {
+  margin-left: 0;
+}
+
+.monsters-detail__portrait-wrap .monsters-card__stars-row--awakened .monsters-card__star {
+  color: #f06eb0;
+}
+
+.monsters-detail__portrait-wrap .monsters-card__element-img,
+.monsters-detail__portrait-wrap .monsters-card__element {
+  position: absolute;
+  left: 4px;
+  bottom: 4px;
+  z-index: 2;
+  transform: scale(0.88);
+  transform-origin: left bottom;
+}
+
+.monsters-detail__portrait-wrap .monsters-card__level {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  z-index: 2;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
 .monsters-detail__portrait-wrap--fire { border-color: #c44; }
 .monsters-detail__portrait-wrap--water { border-color: #48a; }
 .monsters-detail__portrait-wrap--wind { border-color: #c9a227; }
 .monsters-detail__portrait-wrap--light { border-color: #c5cad3; }
 .monsters-detail__portrait-wrap--dark { border-color: #a6a; }
+
+.monsters-detail__hero .monsters-detail__portrait {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
 
 .monsters-detail__portrait {
   width: 100%;
@@ -522,7 +653,6 @@
   grid-template-columns: 4.5rem 1fr 1fr 1fr;
 }
 
-.monsters-detail__stats-head--pct,
 .monsters-detail__stat-row--pct {
   grid-template-columns: 4.5rem 1fr;
 }

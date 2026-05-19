@@ -342,14 +342,15 @@
       renderMonstersPanel();
     });
     document.getElementById('monsters-filter-mark')?.addEventListener('change', onFilter);
-    document.getElementById('monsters-empty-clear-filters')?.addEventListener('click', () => {
+    document.getElementById('monsters-layout')?.addEventListener('click', (e) => {
       const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-      resetMonstersToolbarFilters(t);
-      renderMonstersPanel();
-    });
-    document.getElementById('monsters-empty-reset-search')?.addEventListener('click', () => {
-      resetMonstersSearchQuery();
-      onFilter();
+      if (e.target && e.target.id === 'monsters-empty-clear-filters') {
+        resetMonstersToolbarFilters(t);
+        renderMonstersPanel();
+      } else if (e.target && e.target.id === 'monsters-empty-reset-search') {
+        resetMonstersSearchQuery();
+        onFilter();
+      }
     });
     document.getElementById('monsters-filter-full-six')?.addEventListener('click', () => {
       const btn = document.getElementById('monsters-filter-full-six');

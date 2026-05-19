@@ -9,8 +9,15 @@
   display: block;
 }
 
+.monsters-layout--pinned {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
 .monsters-layout--pinned .monsters-layout__list {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
 }
 
 .monsters-layout__list {

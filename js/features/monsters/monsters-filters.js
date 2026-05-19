@@ -256,27 +256,30 @@
   }
 
   function renderMonstersEmptyState(mode, t) {
-    const root = document.getElementById('monsters-empty');
-    const titleEl = document.getElementById('monsters-empty-title');
-    const hintEl = document.getElementById('monsters-empty-hint');
-    const actionsEl = document.getElementById('monsters-empty-actions');
-    if (!root || !titleEl) return;
-    if (mode === 'no-data') {
-      titleEl.textContent = t.monstersEmptyNoData || 'Load a SWEX export to see your monsters.';
-      if (hintEl) {
-        hintEl.textContent = '';
-        hintEl.hidden = true;
-      }
-      if (actionsEl) actionsEl.hidden = true;
-    } else {
-      titleEl.textContent = t.monstersEmptyTitle || 'No monsters found';
-      if (hintEl) {
-        hintEl.textContent = t.monstersEmptyFiltered || '';
-        hintEl.hidden = !hintEl.textContent;
-      }
-      if (actionsEl) actionsEl.hidden = false;
-    }
-    root.hidden = false;
+    const grid = document.getElementById('monsters-grid');
+    const gridHead = document.getElementById('monsters-grid-head');
+    if (!grid) return;
+    if (gridHead) gridHead.hidden = true;
+    const title =
+      mode === 'no-data'
+        ? t.monstersEmptyNoData || 'Load a SWEX export to see your monsters.'
+        : t.monstersEmptyTitle || 'No monsters found';
+    const hint = mode === 'filtered' ? t.monstersEmptyFiltered || '' : '';
+    const actions =
+      mode === 'filtered'
+        ? `<div class="monsters-grid__empty-actions">
+            <button type="button" class="monsters-toolbar-btn btn-sm" id="monsters-empty-clear-filters">${escapeHtml(t.monstersEmptyClearFilters || 'Clear filters')}</button>
+            <button type="button" class="monsters-toolbar-btn btn-sm" id="monsters-empty-reset-search">${escapeHtml(t.monstersEmptyResetSearch || 'Reset search')}</button>
+          </div>`
+        : '';
+    grid.innerHTML =
+      '<div class="monsters-grid__empty" role="status">' +
+      `<p class="monsters-grid__empty-title">${escapeHtml(title)}</p>` +
+      (hint ? `<p class="monsters-grid__empty-hint">${escapeHtml(hint)}</p>` : '') +
+      actions +
+      '</div>';
+    grid.classList.remove('monsters-grid--table', 'monsters-grid--cards');
+    grid.classList.add('monsters-grid--empty-state');
   }
 
   function syncMonstersShowLevelButton(minLevel36Only, t) {

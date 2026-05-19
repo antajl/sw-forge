@@ -111,18 +111,58 @@
       : Number.isFinite(spdFlat)
         ? Math.round(spdFlat)
         : null;
-    if (hp == null && atk == null && def == null && spd == null) return null;
+    const critRate = Number(metaRow.crit_rate);
+    const critDmg = Number(metaRow.crit_damage);
+    const res = Number(metaRow.resistance);
+    const acc = Number(metaRow.accuracy);
+    if (
+      hp == null &&
+      atk == null &&
+      def == null &&
+      spd == null &&
+      !Number.isFinite(critRate) &&
+      !Number.isFinite(critDmg) &&
+      !Number.isFinite(res) &&
+      !Number.isFinite(acc)
+    ) {
+      return null;
+    }
     return {
       hp: hp != null ? hp : null,
       atk: atk != null ? atk : null,
       def: def != null ? def : null,
       spd: spd != null ? spd : null,
+      critRate: Number.isFinite(critRate) ? critRate : null,
+      critDmg: Number.isFinite(critDmg) ? critDmg : null,
+      res: Number.isFinite(res) ? res : null,
+      acc: Number.isFinite(acc) ? acc : null,
     };
   }
 
   function hasUsableBaseStats(base) {
     if (!base || typeof base !== 'object') return false;
-    return ['hp', 'atk', 'def', 'spd'].some((k) => Number.isFinite(Number(base[k])));
+    return ['hp', 'atk', 'def', 'spd', 'critRate', 'critDmg', 'res', 'acc'].some((k) =>
+      Number.isFinite(Number(base[k])),
+    );
+  }
+
+  /** SWARFARM leader skill tiles: static/herders/images/skills/leader/leader_skill_{Attr}_{Area}.png */
+  function leaderSkillIconUrl(leaderSkill) {
+    if (!leaderSkill) return '';
+    const attr = String(leaderSkill.attribute || '')
+      .trim()
+      .replace(/\s+/g, '_');
+    if (!attr) return '';
+    const area = String(leaderSkill.area || '').trim();
+    const element = leaderSkill.element ? String(leaderSkill.element).trim() : '';
+    let suffix = '';
+    if (area === 'Element' && element) {
+      suffix = `_${element}`;
+    } else if (area && area !== 'General') {
+      suffix = `_${area}`;
+    }
+    const filename = `leader_skill_${attr}${suffix}.png`;
+    return swarfarmAssetUrl(`static/herders/images/skills/leader/${filename}`);
   }
 
   function slimMonsterFromApi(m) {
@@ -146,6 +186,10 @@
       max_lvl_speed: m.max_lvl_speed != null ? m.max_lvl_speed : m.speed,
       speed: m.speed,
       max_level: m.max_level,
+      crit_rate: m.crit_rate,
+      crit_damage: m.crit_damage,
+      resistance: m.resistance,
+      accuracy: m.accuracy,
       leader_skill: m.leader_skill || null,
       skills: Array.isArray(m.skills) ? m.skills : [],
     };
@@ -314,6 +358,7 @@
     isMonsterAwakened,
     monsterBaseStatsAtLevel,
     hasUsableBaseStats,
+    leaderSkillIconUrl,
     swarfarmApiUrl,
     IMG_BASES,
     isReady: () => loaded,

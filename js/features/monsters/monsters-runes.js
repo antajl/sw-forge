@@ -180,17 +180,24 @@
     });
   }
 
+  function formatStatRuneDelta(total, baseVal, asPct) {
+    if (!Number.isFinite(total)) return { total: '—', rune: '—' };
+    const totStr = asPct ? `${Math.round(total)}%` : String(Math.round(total));
+    if (!Number.isFinite(baseVal)) return { total: totStr, rune: '—' };
+    const delta = Math.round(total - baseVal);
+    const runeStr = delta > 0 ? (asPct ? `+${delta}%` : `+${delta}`) : asPct ? '0%' : '0';
+    return { total: totStr, rune: runeStr };
+  }
+
   function buildMonsterDetailStatsBlock(u, t) {
     const s = u.stats;
     if (!s) {
       return `<p class="monsters-detail__muted">${escapeHtml(t.monstersNoStats || 'No stat data in SWEX.')}</p>`;
     }
     const base = u.baseStats || null;
-    const pct = (v) => `${Math.round(Number(v) || 0)}%`;
     const lblBase = t.monstersStatBase || 'Base';
     const lblRune = t.monstersStatRunes || '+Runes';
     const lblTot = t.monstersStatTotal || 'Total';
-    const lblTotPct = t.monstersStatTotalPct || 'Total %';
     const coreKeys = [
       [t.monstersStatHp || 'HP', 'hp'],
       [t.monstersStatAtk || 'ATK', 'atk'],
@@ -214,17 +221,7 @@
         const total = Number(s[key]);
         const b = base ? Number(base[key]) : NaN;
         const baseStr = Number.isFinite(b) ? String(Math.round(b)) : '—';
-        let runeStr = '—';
-        let totStr = '—';
-        if (Number.isFinite(total)) {
-          totStr = String(Math.round(total));
-          if (Number.isFinite(b)) {
-            const r = Math.max(0, Math.round(total - b));
-            runeStr = r > 0 ? `+${r}` : '0';
-          } else {
-            totStr = String(Math.round(total));
-          }
-        }
+        const { total: totStr, rune: runeStr } = formatStatRuneDelta(total, b, false);
         return `<div class="monsters-detail__stat-row monsters-detail__stat-row--core">
           <span class="monsters-detail__stat-k">${escapeHtml(label)}</span>
           <span class="monsters-detail__stat-num">${escapeHtml(baseStr)}</span>
@@ -233,18 +230,15 @@
         </div>`;
       })
       .join('');
-    const pctHead = `<div class="monsters-detail__stats-head monsters-detail__stats-head--pct">
-      <span class="monsters-detail__stat-k"></span>
-      <span>${escapeHtml(lblTotPct)}</span>
-    </div>`;
     const pctBody = pctKeys
-      .map(
-        ([label, key]) =>
-          `<div class="monsters-detail__stat-row monsters-detail__stat-row--pct">
+      .map(([label, key]) => {
+        const total = Number(s[key]);
+        const totStr = Number.isFinite(total) ? `${Math.round(total)}%` : '—';
+        return `<div class="monsters-detail__stat-row monsters-detail__stat-row--pct">
             <span class="monsters-detail__stat-k">${escapeHtml(label)}</span>
-            <span class="monsters-detail__stat-num monsters-detail__stat-num--total">${escapeHtml(pct(s[key]))}</span>
-          </div>`,
-      )
+            <span class="monsters-detail__stat-num monsters-detail__stat-num--total">${escapeHtml(totStr)}</span>
+          </div>`;
+      })
       .join('');
     const loading =
       !base && window.SWRM_MONSTER_DB
@@ -255,7 +249,6 @@
       coreHead +
       loading +
       coreBody +
-      pctHead +
       pctBody +
       '</div>'
     );
@@ -529,23 +522,54 @@
     return '<div class="monsters-detail__skill-tile">' + img + overlay + '</div>';
   }
 
-  function resolveLeaderSkillTile(leaderSkill, skillDb) {
+  function resolveLeaderSkillTile(leaderSkill) {
     if (!leaderSkill) return null;
-    let skillId = null;
-    let iconFilename = null;
-    if (leaderSkill.skill && typeof leaderSkill.skill === 'object') {
-      skillId = leaderSkill.skill.com2us_id || leaderSkill.skill.id;
-      iconFilename = leaderSkill.skill.icon_filename;
-    }
-    if (!skillId && leaderSkill.id != null) skillId = leaderSkill.id;
     const db = window.SWRM_MONSTER_DB;
-    let url = '';
-    if (iconFilename && db && typeof db.swarfarmAssetUrl === 'function') {
-      url = db.swarfarmAssetUrl(`static/herders/images/skills/${iconFilename}`);
-    } else if (skillId && skillDb && typeof skillDb.skillIconUrl === 'function') {
-      url = skillDb.skillIconUrl(skillId);
+    if (db && typeof db.leaderSkillIconUrl === 'function') {
+      const url = db.leaderSkillIconUrl(leaderSkill);
+      if (url) return { url };
     }
-    return { skillId, url };
+    const sk = leaderSkill.skill;
+    if (sk && sk.icon_filename && db && typeof db.swarfarmAssetUrl === 'function') {
+      return {
+        url: db.swarfarmAssetUrl(`static/herders/images/skills/${sk.icon_filename}`),
+      };
+    }
+    return null;
+  }
+
+  function formatLeaderSkillTooltip(leaderSkill, t) {
+    if (!leaderSkill) return '';
+    const sk = leaderSkill.skill;
+    if (sk && typeof sk === 'object') {
+      const desc = String(sk.description || sk.description_en || '').trim();
+      if (desc) return desc;
+      const name = String(sk.name || sk.name_en || '').trim();
+      if (name) return name;
+    }
+    const attr = String(leaderSkill.attribute || '').trim();
+    const amt = leaderSkill.amount;
+    const area = String(leaderSkill.area || '').trim();
+    const element = leaderSkill.element ? String(leaderSkill.element).trim() : '';
+    let condition = '';
+    if (area === 'Dungeon') condition = 'in the Dungeons ';
+    else if (area === 'Arena') condition = 'in the Arena ';
+    else if (area === 'Guild') condition = 'in Guild Content ';
+    else if (area === 'Element' && element) condition = `with ${element} attribute `;
+    if (attr && amt != null) {
+      return `Increase the ${attr} of ally monsters ${condition}by ${amt}%`;
+    }
+    const lb = formatLeaderSkillTitleBody(leaderSkill, t);
+    return [lb.title, lb.body].filter(Boolean).join(' — ');
+  }
+
+  function bindMonsterDetailLeaderTips(root, leaderSkill, t) {
+    if (!root || !leaderSkill || typeof setSwrmFloatTipTarget !== 'function') return;
+    const tile = root.querySelector('.monsters-detail__skill-tile--leader');
+    if (!tile) return;
+    const tip = formatLeaderSkillTooltip(leaderSkill, t);
+    setSwrmFloatTipTarget(tile, tip);
+    tile.setAttribute('aria-label', tip);
   }
 
   function formatLeaderSkillTitleBody(leaderSkill, t) {
@@ -590,33 +614,20 @@
     if (!hasLeader) {
       return '<div class="monsters-detail__skills-layout">' + mainHtml + '</div>';
     }
-    const leader = resolveLeaderSkillTile(leaderSkill, skillDb);
+    const leader = resolveLeaderSkillTile(leaderSkill);
+    const leaderTip = escapeHtml(formatLeaderSkillTooltip(leaderSkill, t));
     const leaderImg = leader && leader.url
       ? '<img class="monsters-detail__skill-img" src="' +
         escapeHtml(leader.url) +
         '" alt="" width="40" height="40" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.hidden=true" />'
-      : leader && leader.skillId
-        ? '<img class="monsters-detail__skill-img" hidden data-skill-id="' +
-          escapeHtml(String(leader.skillId)) +
-          '" alt="" width="40" height="40" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.hidden=true" />'
-        : '<span class="monsters-detail__skill-img monsters-detail__skill-img--ph" aria-hidden="true"></span>';
-    const lb = formatLeaderSkillTitleBody(leaderSkill, t);
-    const leaderTitle = escapeHtml(lb.title || t.monstersLeaderSkill || 'Leader skill');
-    const leaderDesc = lb.body ? escapeHtml(lb.body) : '';
+      : '<span class="monsters-detail__skill-img monsters-detail__skill-img--ph" aria-hidden="true"></span>';
     const leaderHtml =
       '<div class="monsters-detail__skills-leader">' +
-      '<div class="monsters-detail__leader-head">' +
-      '<div class="monsters-detail__skill-tile monsters-detail__skill-tile--leader">' +
+      '<div class="monsters-detail__skill-tile monsters-detail__skill-tile--leader" title="' +
+      leaderTip +
+      '">' +
       leaderImg +
-      '</div>' +
-      '<div class="monsters-detail__leader-text">' +
-      '<p class="monsters-detail__leader-name">' +
-      leaderTitle +
-      '</p>' +
-      (leaderDesc
-        ? '<p class="monsters-detail__leader-desc">' + leaderDesc + '</p>'
-        : '') +
-      '</div></div></div>';
+      '</div></div>';
     return '<div class="monsters-detail__skills-layout">' + mainHtml + leaderHtml + '</div>';
   }
 

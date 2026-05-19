@@ -47,22 +47,27 @@
   background: var(--monsters-el-dark);
 }
 
+.monsters-detail__hero--fire,
 .monsters-detail__portrait-wrap--fire {
   border-color: color-mix(in srgb, var(--monsters-el-fire) 55%, var(--border2));
 }
 
+.monsters-detail__hero--water,
 .monsters-detail__portrait-wrap--water {
   border-color: color-mix(in srgb, var(--monsters-el-water) 55%, var(--border2));
 }
 
+.monsters-detail__hero--wind,
 .monsters-detail__portrait-wrap--wind {
   border-color: color-mix(in srgb, var(--monsters-el-wind) 55%, var(--border2));
 }
 
+.monsters-detail__hero--light,
 .monsters-detail__portrait-wrap--light {
   border-color: color-mix(in srgb, var(--monsters-el-light) 55%, var(--border2));
 }
 
+.monsters-detail__hero--dark,
 .monsters-detail__portrait-wrap--dark {
   border-color: color-mix(in srgb, var(--monsters-el-dark) 55%, var(--border2));
 }

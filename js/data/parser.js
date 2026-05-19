@@ -336,13 +336,34 @@
     return n;
   }
 
+  /** com2us building_master_id for the Monster Storage building (classic + modern export). */
+  const MONSTER_STORAGE_BUILDING_MASTER_IDS = [3, 25];
+
   /**
-   * Monster Storage in SWEX: classically `island_id === 4` (Sky Island slot for storage).
-   * Some exports also flag storage via `storage_status`, `in_storage`, or `is_storage`.
+   * Collect `building_id` values for Monster Storage from SWEX `building_list`.
+   * Roster units in storage reference one of these IDs on `unit_list[].building_id`.
    */
-  function unitInStorage(unit) {
+  function collectMonsterStorageBuildingIds(json) {
+    const ids = new Set();
+    for (const b of (json && json.building_list) || []) {
+      const mid = Number(b.building_master_id);
+      if (!MONSTER_STORAGE_BUILDING_MASTER_IDS.includes(mid)) continue;
+      const id = Number(b.building_id);
+      if (Number.isFinite(id) && id > 0) ids.add(id);
+    }
+    return ids;
+  }
+
+  /**
+   * Monster in Storage: `building_id` matches a Monster Storage building on the account.
+   * Main roster usually has `building_id` 0 or 1. Fallback flags when `building_list` is missing.
+   */
+  function unitInStorage(unit, storageBuildingIds) {
     if (!unit) return false;
-    if (Number(unit.island_id) === 4) return true;
+    const bid = Number(unit.building_id);
+    if (storageBuildingIds && storageBuildingIds.size > 0) {
+      return storageBuildingIds.has(bid);
+    }
     const ss = unit.storage_status;
     if (ss === 1 || ss === true || ss === '1') return true;
     if (unit.in_storage === true || unit.in_storage === 1 || unit.in_storage === '1') return true;
@@ -387,6 +408,7 @@
     const o = opts || {};
     const units = (json && json.unit_list) || [];
     const runeById = o.runeById || null;
+    const storageBuildingIds = collectMonsterStorageBuildingIds(json);
     const out = [];
     for (const u of units) {
       if (!u || u.unit_master_id == null) continue;
@@ -421,7 +443,8 @@
         maxLevel,
         stars,
         islandId: Number(u.island_id) || 0,
-        inStorage: unitInStorage(u),
+        buildingId: Number(u.building_id) || 0,
+        inStorage: unitInStorage(u, storageBuildingIds),
         stats: {
           hp: Number(u.con) || 0,
           atk: Number(u.atk) || 0,
@@ -449,6 +472,7 @@
   window.SWRM.parseUnits = parseUnits;
   window.SWRM.unitDisplayStars = unitDisplayStars;
   window.SWRM.unitMaxLevelForRank = unitMaxLevelForRank;
+  window.SWRM.collectMonsterStorageBuildingIds = collectMonsterStorageBuildingIds;
   window.SWRM.unitInStorage = unitInStorage;
   window.SWRM.unitRuneSlots = unitRuneSlots;
   window.SWRM.countEquippedRuneSlots = countEquippedRuneSlots;

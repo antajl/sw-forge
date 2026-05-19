@@ -57,15 +57,10 @@
       u.metaArchetype ? escapeHtml(u.metaArchetype) : '',
     ].filter(Boolean);
     const rankStars = typeof buildMonsterStarsBadge === 'function' ? buildMonsterStarsBadge(u) : '';
-    const starsDetailCls = rankStars.includes('monsters-card__stars-row--awakened')
-      ? ' monsters-detail__stars--awakened'
-      : '';
-    const starsOnPortrait = rankStars
-      ? rankStars
-          .replace(/monsters-card__stars-row/g, 'monsters-detail__stars')
-          .replace('monsters-card__star', 'monsters-detail__star')
-          .replace('monsters-card__stars-row--overlay', '')
-      : '';
+    const elementBadge =
+      typeof buildMonsterElementBadge === 'function' ? buildMonsterElementBadge(u) : '';
+    const levelBadge =
+      typeof buildMonsterLevelBadge === 'function' ? buildMonsterLevelBadge(u, t) : '';
     const natLine =
       natStars !== ''
         ? `<span class="monsters-detail__nat-pill">${escapeHtml(natLbl)} <strong>${escapeHtml(String(natStars))}</strong></span>`
@@ -78,8 +73,10 @@
     body.innerHTML = `
       <header class="monsters-detail__head">
         <div class="monsters-detail__portrait-wrap monsters-detail__portrait-wrap--${elCls}">
+          ${rankStars}
           <img class="monsters-detail__portrait" alt="" width="96" height="96" data-img-file="${escapeHtml(u.imageFilename || '')}" loading="lazy" decoding="async" />
-          ${starsOnPortrait}
+          ${elementBadge}
+          ${levelBadge}
         </div>
         <div class="monsters-detail__head-text">
           <h3 class="monsters-detail__title" id="monsters-detail-title">${bestiaryHref ? `<a href="${escapeHtml(bestiaryHref)}" target="_blank" rel="noopener noreferrer">${escapeHtml(u.displayName)}</a>` : escapeHtml(u.displayName)}</h3>
@@ -107,6 +104,9 @@
     const img = body.querySelector('.monsters-detail__portrait[data-img-file]');
     if (img && u.imageFilename) bindMonsterPortrait(img, u.imageFilename);
     if (typeof hydrateMonsterSkillIcons === 'function') hydrateMonsterSkillIcons(body);
+    if (typeof bindMonsterDetailLeaderTips === 'function') {
+      bindMonsterDetailLeaderTips(body, leaderSkill, t);
+    }
 
     body.querySelector('[data-open-runes-all]')?.addEventListener('click', () => openMonsterRunesInTable(u));
     body.querySelector('[data-unpin-detail]')?.addEventListener('click', () => unpinMonsterDetail());
@@ -144,6 +144,9 @@
           );
           skillsSec.innerHTML = `<h4 class="monsters-detail__section-title">${escapeHtml(t.monstersDetailTabSkills || 'Skills')}</h4>${block}`;
           if (typeof hydrateMonsterSkillIcons === 'function') hydrateMonsterSkillIcons(body);
+          if (typeof bindMonsterDetailLeaderTips === 'function') {
+            bindMonsterDetailLeaderTips(body, row.leader_skill || null, t);
+          }
         }
 
         syncMonsterRowHighlight(u.unitId);

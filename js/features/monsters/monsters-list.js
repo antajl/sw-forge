@@ -1,7 +1,6 @@
 // js/features/monsters/monsters-list.js — list rendering
   async function renderMonstersPanel() {
     const grid = document.getElementById('monsters-grid');
-    const emptyEl = document.getElementById('monsters-empty');
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     if (!grid) return;
 
@@ -119,7 +118,7 @@
       return;
     }
 
-    if (emptyEl) emptyEl.hidden = true;
+    grid.classList.remove('monsters-grid--empty-state');
 
     syncMonstersViewToggle(view);
 

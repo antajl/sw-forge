@@ -10,6 +10,36 @@
   gap: 12px;
 }
 
+.monsters-grid--empty-state {
+  display: block;
+  min-height: 4rem;
+}
+
+.monsters-grid__empty {
+  padding: 20px 12px;
+  text-align: center;
+}
+
+.monsters-grid__empty-title {
+  margin: 0 0 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-hi);
+}
+
+.monsters-grid__empty-hint {
+  margin: 0 0 10px;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+
+.monsters-grid__empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
 .monsters-grid--list {
   grid-template-columns: 1fr;
   gap: 2px;
@@ -614,8 +644,8 @@
   right: 6px;
   bottom: 6px;
   z-index: 2;
-  font-size: 0.58rem;
-  font-weight: 600;
+  font-size: 0.72rem;
+  font-weight: 700;
   color: var(--text-hi);
   background: color-mix(in srgb, var(--bg) 72%, transparent);
   padding: 2px 5px;

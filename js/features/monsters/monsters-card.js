@@ -71,7 +71,8 @@
 
   function buildMonsterLevelBadge(u, t) {
     const lbl = t.monstersLevelShort || 'Lv';
-    return `<span class="monsters-card__level">${escapeHtml(lbl)} ${escapeHtml(String(u.level))}</span>`;
+    const lv = escapeHtml(String(u.level));
+    return `<span class="monsters-card__level" aria-label="${escapeHtml(lbl)} ${lv}">${lv}</span>`;
   }
 
   function buildMonsterBulkToggleHtml(u) {
@@ -94,25 +95,20 @@
     const runeCells = buildRuneBlockHtml(u, db, t, view);
     const bulkSel = monstersBulkSelected.has(String(u.unitId));
     const starsBadge = buildMonsterStarsBadge(u);
-    const locHtml = u.inStorage ? buildLocationIconHtml(u, t) : '';
-    const storagePill = u.inStorage
-      ? `<span class="monsters-card__storage-pill" title="${escapeHtml(t.monstersStorageBadge || 'Storage')}">${escapeHtml(t.monstersStorageBadge || 'Storage')}</span>`
-      : '';
     const ro = typeof isShareReadOnly === 'function' && isShareReadOnly();
     const actionsHtml = ro ? '' : buildCardActionsHtml(u, t);
-    return `<article class="monsters-card monsters-card--grid${u.favorite ? ' monsters-card--favorite' : ''}${u.food ? ' monsters-card--food' : ''}${u.inStorage ? ' monsters-card--storage' : ''}${bulkSel ? ' monsters-card--bulk-on' : ''}${pinned ? ' monsters-card--pinned' : ''}${hover ? ' monsters-card--hover' : ''}${elCls ? ` monsters-card--${elCls}` : ''}" data-unit-id="${escapeHtml(String(u.unitId))}" data-master-id="${u.masterId}" tabindex="0">
+    return `<article class="monsters-card monsters-card--grid${u.favorite ? ' monsters-card--favorite' : ''}${u.food ? ' monsters-card--food' : ''}${bulkSel ? ' monsters-card--bulk-on' : ''}${pinned ? ' monsters-card--pinned' : ''}${hover ? ' monsters-card--hover' : ''}${elCls ? ` monsters-card--${elCls}` : ''}" data-unit-id="${escapeHtml(String(u.unitId))}" data-master-id="${u.masterId}" tabindex="0">
           <div class="monsters-card__bar monsters-card__bar--${elCls}" aria-hidden="true"></div>
           ${ro ? '' : buildMonsterBulkToggleHtml(u)}
           ${actionsHtml}
           <div class="monsters-card__hero">
-            ${storagePill}
             ${starsBadge}
             <img class="monsters-card__img" alt="" width="120" height="120" data-img-file="${escapeHtml(u.imageFilename || '')}" loading="lazy" decoding="async" />
             ${buildMonsterElementBadge(u)}
             ${buildMonsterLevelBadge(u, t)}
           </div>
           <div class="monsters-card__meta">
-            <p class="monsters-card__name">${locHtml}${nameInner}</p>
+            <p class="monsters-card__name">${nameInner}</p>
           </div>
           ${runeCells}
         </article>`;

@@ -162,6 +162,7 @@
   }
 
   function handleMonstersUnitTagClick(btn) {
+    if (typeof isShareReadOnly === 'function' && isShareReadOnly()) return;
     const tag = btn.getAttribute('data-unit-tag');
     const uid = btn.getAttribute('data-unit-id');
     if (!tag || !uid) return;

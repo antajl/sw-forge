@@ -3,7 +3,7 @@
 const TRANSLATIONS = {
   en: {
     // Header
-    title: 'SW Rune Master',
+    title: 'SW-Forge',
     donateShort: 'Donate',
     donateTitle: 'Support the project — opens Lava.top payment page',
     donateAria: 'Donate — support the project (external page)',
@@ -14,6 +14,16 @@ const TRANSLATIONS = {
     runesHubDashboard: 'Dashboard',
     runesHubRuneTable: 'Table',
     runesHubRuneRules: 'Rules',
+    runesHubRulesExpertHint: 'Expert',
+    teamsExportDone: 'Teams exported.',
+    teamsExportFailed: 'Export failed',
+    teamsImportDone: 'Teams imported.',
+    teamsImportFailed: 'Import failed — invalid JSON.',
+    teamsImportReplaceConfirm: 'OK = replace all teams. Cancel = merge into existing sets.',
+    dashboardStrictnessLabel: 'Strictness',
+    dashboardPolicyPreview: 'Preset: %(preset)s · Stage: %(stage)s · Strictness %(strict)s/5 · Retry: %(retry)s',
+    rulesThresholdPreviewsShow: 'Show threshold previews',
+    rulesThresholdPreviewsHide: 'Hide threshold previews',
     monsters: 'Monsters',
     runeTable: 'Rune Table',
     monstersTitle: 'Monsters',
@@ -149,6 +159,7 @@ const TRANSLATIONS = {
     monstersFood: 'Food',
     runeTableMonsterFilterTpl: 'Runes on {name}',
     runeTableMonsterFilterClear: 'Clear',
+    runeTableMonsterFilterClearTitle: 'Clear monster filter (show all runes)',
     monstersSwarfarmAttrib:
       'Monster names & icons from <a href="https://swarfarm.com" target="_blank" rel="noopener noreferrer">SWARFARM</a>.',
     runeRules: 'Rune Rules',
@@ -221,6 +232,8 @@ const TRANSLATIONS = {
     teamsNoLeader: 'No leader',
     teamsDefaultSetName: 'Arena Offence',
     teamsNewSetPrompt: 'Set name',
+    teamsDeleteSet: 'Delete set',
+    teamsDeleteSetConfirm: 'Delete this team set and all teams in it?',
     teamsShareViewTitle: 'Shared teams',
     teamsShareViewEmpty: 'No public teams in this profile.',
     shareEquippedOnlyShort: 'Equipped only',
@@ -275,7 +288,7 @@ const TRANSLATIONS = {
     allRoles: 'All Roles',
     allGrades: 'All Grades',
     runes: 'runes',
-    runeTableCountCapped: '{shown} / {total} {runes} in table',
+    runeTableCountCapped: '{shown} / {total}',
     tableResetFilters: 'Reset filters',
     tableShownDetailEmpty: 'No runes match the current filters.',
     tableShownDetailCapped: 'Showing {shown} of {total} matching runes — use Load all above for the full list.',
@@ -328,6 +341,12 @@ const TRANSLATIONS = {
     godRollConstantsDesc:
       'Per stat: God line = Base × (1 + God%). The rescue signal (role filter «God Roll») fires when any sub line (roll + grind) reaches that God line — not the HR grid below.',
     rulesPageTitle: 'Rune Rules',
+    rulesPolicySimpleDashboardNote:
+      'Set game stage and Strictness on the Dashboard (progression bar). This tab is for advanced tuning.',
+    rulesPolicySimpleLead:
+      'Simple mode: use the Dashboard for stage and Strictness. Open Expert here for Constants, role formulas, and verdict rules.',
+    rulesPolicyExpertLead:
+      'Controls how strictly a rune must fit a role. The Sell / Keep / Gem / Grind / Reapp decision tree stays the same.',
     rulesPageLead:
       'Constants define the numeric thresholds; roles map runes to archetypes. Save at the bottom to refresh verdicts on the Dashboard and Rune Table.',
     rulesSectionPreviewsTitle: 'Threshold previews',
@@ -355,16 +374,17 @@ const TRANSLATIONS = {
     previewGradeLegend: 'Legend',
     constantsColStat: 'Stat',
     constantsColHintBase:
-      'Mid-game Hero anchor for this substat (roll + grind). Other columns scale from here.',
+      'Starting point for this stat (Mid, Hero). All thresholds scale from here. Uses roll + grind totals. Example: SPD Base 16 means “Mid Hero line starts at 16”.',
     constantsColHintGod:
-      'God line = Base × (1 + this%/100). Used only for God roll detection.',
+      'God threshold (High Value / God). Formula: God = Base × (1 + God%). Example: Base 16 with +25% → 20.',
     constantsColHintDuo:
-      'Duo line = High Roll × (1 − this%/100). Higher % = stricter Duo pairs.',
+      'Duo threshold (High Value / Duo). Formula: Duo = High Roll × (1 − Duo%). Example: HR 16 with −15% → 14.',
     constantsColHintEarly:
-      'Early HR hero lines use Base × this%/100 (Legend uses grade rules too).',
-    constantsColHintLate: 'Late HR hero lines use Base × this%/100.',
+      'Early-game scaling for High Roll. Formula: Early HR = Base × (1 − Early%). Example: Base 16 with 20% → 13.',
+    constantsColHintLate:
+      'Late-game scaling for High Roll. Formula: Late HR = Base × (1 + Late%). Example: Base 16 with 30% → 21.',
     constantsColHintGrade:
-      'At Mid, Legend HR uses Base × (1 − this%/100); Hero Mid stays exactly Base.',
+      'Legend vs Hero scaling (grade penalty) for High Roll. Formula: Legend Mid HR = Base × (1 − Legend%). Example: Base 16 with 5% → 15.',
     godColBase: 'Base',
     godColMod: 'God (+%)',
     constColDuoMod: 'Duo (−%)',
@@ -539,7 +559,7 @@ const TRANSLATIONS = {
   },
   ru: {
     // Header
-    title: 'SW Rune Master',
+    title: 'SW-Forge',
     donateShort: 'Донат',
     donateTitle: 'Поддержать проект — откроется страница оплаты Lava.top',
     donateAria: 'Донат — поддержать проект (внешняя страница)',
@@ -550,6 +570,16 @@ const TRANSLATIONS = {
     runesHubDashboard: 'Панель',
     runesHubRuneTable: 'Таблица',
     runesHubRuneRules: 'Правила',
+    runesHubRulesExpertHint: 'Эксперт',
+    teamsExportDone: 'Команды экспортированы.',
+    teamsExportFailed: 'Ошибка экспорта',
+    teamsImportDone: 'Команды импортированы.',
+    teamsImportFailed: 'Ошибка импорта — неверный JSON.',
+    teamsImportReplaceConfirm: 'OK — заменить все команды. Отмена — объединить с текущими.',
+    dashboardStrictnessLabel: 'Строгость',
+    dashboardPolicyPreview: 'Пресет: %(preset)s · Этап: %(stage)s · Строгость %(strict)s/5 · Повтор: %(retry)s',
+    rulesThresholdPreviewsShow: 'Показать превью порогов',
+    rulesThresholdPreviewsHide: 'Скрыть превью порогов',
     monsters: 'Монстры',
     runeTable: 'Таблица рун',
     monstersTitle: 'Монстры',
@@ -685,6 +715,7 @@ const TRANSLATIONS = {
     monstersFood: 'Корм',
     runeTableMonsterFilterTpl: 'Руны на {name}',
     runeTableMonsterFilterClear: 'Сбросить',
+    runeTableMonsterFilterClearTitle: 'Сбросить фильтр по монстру (показать все руны)',
     monstersSwarfarmAttrib:
       'Имена и иконки — <a href="https://swarfarm.com" target="_blank" rel="noopener noreferrer">SWARFARM</a>.',
     runeRules: 'Правила',
@@ -758,6 +789,8 @@ const TRANSLATIONS = {
     teamsNoLeader: 'Без лидера',
     teamsDefaultSetName: 'Атака Арены',
     teamsNewSetPrompt: 'Название набора',
+    teamsDeleteSet: 'Удалить набор',
+    teamsDeleteSetConfirm: 'Удалить этот набор и все команды в нём?',
     teamsShareViewTitle: 'Команды игрока',
     teamsShareViewEmpty: 'Нет публичных команд в профиле.',
     shareEquippedOnlyShort: 'Только одетые',
@@ -794,7 +827,7 @@ const TRANSLATIONS = {
     allRoles: 'Все Роли',
     allGrades: 'Все Грейды',
     runes: 'рун',
-    runeTableCountCapped: '{shown} / {total} {runes} в таблице',
+    runeTableCountCapped: '{shown} / {total}',
     tableResetFilters: 'Сбросить фильтры',
     tableShownDetailEmpty: 'Нет рун по текущим фильтрам.',
     tableShownDetailCapped: 'Показано {shown} из {total} подходящих рун — полный список: «Загрузить все» выше.',
@@ -847,6 +880,12 @@ const TRANSLATIONS = {
     godRollConstantsDesc:
       'По стату: линия God = Base × (1 + God%). Спасение (фильтр роли «God Roll») — когда любая строка саба (ролл + гринд) дотягивает до God, а не до сетки HR ниже.',
     rulesPageTitle: 'Правила рун',
+    rulesPolicySimpleDashboardNote:
+      'Этап игры и строгость — на панели (прогресс-бар). Здесь — расширенные настройки.',
+    rulesPolicySimpleLead:
+      'Простой режим: этап и строгость на панели. Expert — Constants, формулы ролей и вердикты.',
+    rulesPolicyExpertLead:
+      'Задаёт, насколько строго руна должна подходить под роль. Дерево Sell / Keep / Gem / Grind / Reapp от этого не меняется.',
     rulesPageLead:
       'Constants задают числовые пороги; роли относят руны к архетипам. Сохраните внизу — пересчитаются вердикты на дашборде и в таблице.',
     rulesSectionPreviewsTitle: 'Превью порогов',
@@ -874,16 +913,17 @@ const TRANSLATIONS = {
     previewGradeLegend: 'Legend',
     constantsColStat: 'Стат',
     constantsColHintBase:
-      'Якорь Mid / Hero для сабстата (ролл + камень). Остальные колонки масштабируют от него.',
+      'Точка отсчёта для стата (Mid, Hero). От неё считаются все пороги. Сумма роллов + гринд. Пример: SPD Base 16 = «линия Mid Hero начинается с 16».',
     constantsColHintGod:
-      'Линия God = Base × (1 + этот%/100). Только для детекта God roll.',
+      'Порог God (High Value / God). Формула: God = Base × (1 + God%). Пример: Base 16 и +25% → 20.',
     constantsColHintDuo:
-      'Линия Duo = High Roll × (1 − этот%/100). Больше % — строже пары.',
+      'Порог Duo (High Value / Duo). Формула: Duo = High Roll × (1 − Duo%). Пример: HR 16 и −15% → 14.',
     constantsColHintEarly:
-      'Early HR по герою: Base × этот%/100 (у Legend ещё правила грейда).',
-    constantsColHintLate: 'Late HR по герою: Base × этот%/100.',
+      'Снижение High Roll для Early. Формула: Early HR = Base × (1 − Early%). Пример: Base 16 и 20% → 13.',
+    constantsColHintLate:
+      'Усиление High Roll для Late. Формула: Late HR = Base × (1 + Late%). Пример: Base 16 и 30% → 21.',
     constantsColHintGrade:
-      'В Mid Legend HR = Base × (1 − этот%/100); Hero Mid ровно Base.',
+      'Разница Legend vs Hero (штраф грейда) для High Roll. Формула: Legend Mid HR = Base × (1 − Legend%). Пример: Base 16 и 5% → 15.',
     godColBase: 'Base',
     godColMod: 'God (+%)',
     constColDuoMod: 'Duo (−%)',
@@ -1212,6 +1252,8 @@ const TRANSLATIONS_FR_PARTIAL = {
   teamsNoLeader: 'Sans chef',
   teamsDefaultSetName: 'Offense Arène',
   teamsNewSetPrompt: 'Nom du dossier',
+  teamsDeleteSet: 'Supprimer le dossier',
+  teamsDeleteSetConfirm: 'Supprimer ce dossier et toutes les équipes qu\'il contient ?',
   teamsShareViewTitle: 'Équipes partagées',
   teamsShareViewEmpty: 'Aucune équipe publique dans ce profil.',
   shareEquippedOnlyShort: 'Équipés seulement',

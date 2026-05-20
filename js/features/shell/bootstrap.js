@@ -55,12 +55,12 @@
   const TOP_SPD_GRID_SLOTS = [1, 3, 4, 5, 6];
   const TOP_SPD_RADAR_VERTICES = TOP_SPD_GRID_SLOTS.length;
   /** SVG viewBox + pentagon layout (larger, centered in host). */
-  const TOP_SPD_RADAR_VB_W = 400;
-  const TOP_SPD_RADAR_VB_H = 380;
+  const TOP_SPD_RADAR_VB_W = 500;
+  const TOP_SPD_RADAR_VB_H = 460;
   const TOP_SPD_RADAR_CX = TOP_SPD_RADAR_VB_W / 2;
-  const TOP_SPD_RADAR_CY = 196;
-  const TOP_SPD_RADAR_R = 104;
-  const TOP_SPD_RADAR_LABEL_OFFSET = 48;
+  const TOP_SPD_RADAR_CY = 232;
+  const TOP_SPD_RADAR_R = 132;
+  const TOP_SPD_RADAR_LABEL_OFFSET = 50;
   const TOP_SPD_SORT_METRIC_KEY = 'swrm_top_spd_sort_metric_v1';
   const TOP_SPD_SORT_DIR_KEY = 'swrm_top_spd_sort_dir_v1';
   const DASH_UNIFIED_DIST_KEY = 'swrm_dashboard_unified_dist_v1';

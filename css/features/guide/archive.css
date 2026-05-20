@@ -1,10 +1,148 @@
-/* Archive (Guide) tab — show one locale body at a time. */
+/* Archive (Guide) tab — one locale at a time (#tab-guide .guide-list must not override visibility). */
 .guide-lang {
   display: none;
 }
 
-html[lang='en'] .guide-lang--en,
-html[lang='ru'] .guide-lang--ru,
-html[lang='fr'] .guide-lang--fr {
-  display: block;
+html[lang='en'] #tab-guide .guide-lang--en,
+html[lang='ru'] #tab-guide .guide-lang--ru,
+html[lang='fr'] #tab-guide .guide-lang--fr {
+  display: grid;
+}
+
+#tab-guide .rules-page-header {
+  margin-bottom: 0.75rem;
+}
+
+#tab-guide .rules-subtabs {
+  margin-bottom: 1rem;
+}
+
+#tab-guide .guide-lang {
+  gap: 0.85rem;
+  max-width: 52rem;
+}
+
+#tab-guide .guide-section {
+  margin: 0;
+  padding: 1rem 1.1rem 1.05rem;
+  border-radius: var(--radius);
+  border: 1px solid color-mix(in srgb, var(--border2) 88%, var(--accent) 12%);
+  background: linear-gradient(
+    155deg,
+    color-mix(in srgb, var(--surface) 94%, var(--accent) 6%) 0%,
+    var(--surface) 72%
+  );
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--text-hi) 4%, transparent);
+}
+
+#tab-guide .guide-section h3 {
+  margin: 0 0 0.65rem;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+#tab-guide .guide-section h3::before {
+  content: '';
+  width: 4px;
+  height: 1.1em;
+  border-radius: 2px;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+#tab-guide .guide-section p {
+  margin: 0 0 0.55rem;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--text-dim);
+}
+
+#tab-guide .guide-section p:last-child {
+  margin-bottom: 0;
+}
+
+#tab-guide .guide-section code {
+  font-size: 0.78em;
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--bg3) 88%, var(--accent) 12%);
+}
+
+/* Changelog tab cards */
+#tab-changelog .changelog-release {
+  margin: 0 0 1rem;
+  padding: 1rem 1.1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border2);
+  background: var(--surface);
+}
+
+#tab-changelog .changelog-release-date {
+  margin: 0 0 0.5rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+#tab-changelog .changelog-bullets {
+  margin: 0;
+  padding-left: 1.15rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+
+#tab-changelog .changelog-bullets li + li {
+  margin-top: 0.35rem;
+}
+
+body.share-readonly #demo-dataset-banner:not(.share-view-banner) {
+  display: none !important;
+}
+
+/* Archive tab — match app content width, spaced cards */
+#tab-guide {
+  max-width: var(--app-content-max);
+  margin: 0 auto;
+  padding: 8px 16px 36px;
+  box-sizing: border-box;
+}
+
+#tab-guide .guide-lang {
+  max-width: none;
+  gap: 1.1rem;
+}
+
+#tab-guide .guide-section {
+  padding: 1.15rem 1.25rem 1.2rem;
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
+}
+
+#tab-guide .guide-section h3::before {
+  margin-right: 2px;
+}
+
+#tab-guide .guide-section p,
+#tab-guide .guide-section li {
+  overflow-wrap: anywhere;
+}
+
+#tab-changelog {
+  max-width: var(--app-content-max);
+  margin: 0 auto;
+  padding: 8px 16px 36px;
+  box-sizing: border-box;
+}
+
+#tab-changelog .changelog-release {
+  margin-bottom: 1.1rem;
+  padding: 1.15rem 1.25rem;
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
 }

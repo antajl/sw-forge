@@ -72,7 +72,7 @@
   }
 
   async function clearAllIndexedDbRunePayloads() {
-    for (const id of [1, 2, 3, 4, 'current-runes']) {
+    for (const id of [1, 2, 3, 4, 'current-runes', '__swrm_embedded_demo__']) {
       try {
         await deleteSlotDataRobust(id);
       } catch (e) {
@@ -130,18 +130,21 @@
     }).join('');
   }
 
-  function processJsonData(jsonText) {
+  async function processJsonData(jsonText) {
     const json = JSON.parse(jsonText);
     allRunes = parseSWEX(json);
     rebuildUnitsFromSwex(json);
     reprocess();
     markUserLoadedRealExport();
+    if (typeof purgeDemoStorage === 'function') await purgeDemoStorage();
+    if (typeof scrubDemoFromUserSlots === 'function') await scrubDemoFromUserSlots();
+    if (typeof removeDemoTeams === 'function') removeDemoTeams();
     syncDemoBannerVisibility();
     document.getElementById('upload-prompt').classList.add('hidden');
   }
 
-  function parseAndLoadJson(jsonText) {
-    processJsonData(jsonText);
+  async function parseAndLoadJson(jsonText) {
+    await processJsonData(jsonText);
     showMainTab('dashboard', { writeHash: true });
   }
 
@@ -220,10 +223,10 @@
             const jsonObj = JSON.parse(text);
             await saveSlotData(slotId, text);
             applySlotSummaryFromJson(slot, file.name, jsonObj);
+            slots.forEach((s) => { s.active = s.id === slotId; });
             saveDbSlots(slots);
+            await processJsonData(text);
             renderDbSlots();
-            markUserLoadedRealExport();
-            syncDemoBannerVisibility();
             console.log('Slot saved and rendered');
           } catch(err) {
             console.error('Error saving to IndexedDB:', err);
@@ -325,7 +328,7 @@
         if (!jsonText) return alert(t.slotEmpty || 'Selected slot is empty');
         slots.forEach(s => { s.active = s.id === slot.id; });
         saveDbSlots(slots);
-        processJsonData(jsonText);
+        await processJsonData(jsonText);
       } catch(err) {
         alert((t.parseError || 'Failed to parse slot JSON: ') + err.message);
       }

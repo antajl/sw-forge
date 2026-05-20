@@ -149,6 +149,15 @@
           attribute: u.attribute,
           unit_level: u.unit_level,
           rank: u.rank,
+          con: u.con,
+          atk: u.atk,
+          def: u.def,
+          spd: u.spd,
+          critical_rate: u.critical_rate,
+          critical_damage: u.critical_damage,
+          resist: u.resist,
+          accuracy: u.accuracy,
+          skills: Array.isArray(u.skills) ? u.skills : [],
           runes,
         };
       });
@@ -325,11 +334,13 @@
     if (!bar) {
       bar = document.createElement('aside');
       bar.id = 'share-view-banner';
-      bar.className = 'demo-dataset-banner share-view-banner';
+      bar.className = 'share-view-banner';
       const chrome = document.querySelector('.site-chrome-sticky');
       if (chrome) chrome.insertAdjacentElement('afterend', bar);
       else document.body.prepend(bar);
     }
+    bar.removeAttribute('hidden');
+    bar.setAttribute('aria-hidden', 'false');
     const name = escapeHtml(shareViewWizardName || t.shareUnknownWizard || 'another player');
     const tpl = t.shareViewingBanner || 'You are viewing {name}\'s profile (read-only).';
     bar.innerHTML = `<div class="demo-dataset-banner__inner">
@@ -385,6 +396,8 @@
         renderDashboard(getVisibleRunes(), { animateCharts: false });
       }
       if (typeof renderMonstersPanel === 'function') renderMonstersPanel();
+      if (typeof renderTeamsPanel === 'function') renderTeamsPanel();
+      applyShareUrlTabFromLocation();
       return true;
     } catch (e) {
       console.warn('Share load failed', e);
@@ -398,11 +411,15 @@
 
   function applyShareReadOnlyUi() {
     document.body.classList.toggle('share-readonly', shareReadOnly);
+    if (typeof syncDemoBannerVisibility === 'function') syncDemoBannerVisibility();
     document.querySelectorAll('.share-split__main, .share-split__caret, .share-profile-trigger').forEach((el) => {
       el.disabled = shareReadOnly;
     });
     document.querySelectorAll('.db-slot-btn, #btn-upload-slot, #btn-demo-load').forEach((el) => {
       if (el) el.disabled = shareReadOnly;
+    });
+    document.querySelectorAll('[data-share-hidden]').forEach((el) => {
+      el.hidden = shareReadOnly;
     });
     const saveBtn = document.getElementById('btn-save-settings');
     if (saveBtn) saveBtn.hidden = shareReadOnly;
@@ -410,6 +427,8 @@
     if (rulesRoot) {
       rulesRoot.querySelectorAll('input, select, textarea').forEach((el) => {
         el.disabled = shareReadOnly;
+        if (shareReadOnly) el.setAttribute('readonly', 'readonly');
+        else el.removeAttribute('readonly');
       });
       rulesRoot.querySelectorAll('button').forEach((el) => {
         if (el.classList.contains('rules-subtab')) return;
@@ -423,6 +442,12 @@
     document.querySelectorAll('[data-teams-readonly-hide]').forEach((el) => {
       el.hidden = shareReadOnly;
     });
+    if (shareReadOnly) {
+      const activeMain = document.querySelector('.tab.active')?.dataset?.tab;
+      if (activeMain === 'guide' || activeMain === 'changelog') {
+        if (typeof showMainTab === 'function') showMainTab('runes', { writeHash: true });
+      }
+    }
   }
 
   function bindShareProfileUi() {

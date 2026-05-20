@@ -33,6 +33,8 @@
     if (hubTable) hubTable.textContent = t.runesHubRuneTable || 'Table';
     const hubRules = document.getElementById('lbl-runes-hub-settings');
     if (hubRules) hubRules.textContent = t.runesHubRuneRules || 'Rules';
+    const hubRulesHint = document.getElementById('lbl-runes-hub-settings-hint');
+    if (hubRulesHint) hubRulesHint.textContent = t.runesHubRulesExpertHint || '';
     const hubNav = document.getElementById('runes-hub-tabs');
     if (hubNav) hubNav.setAttribute('aria-label', t.dashboard || 'Runes');
     setMainNavTabLabel(document.querySelector('[data-tab="guide"]'), t.guide);
@@ -342,6 +344,13 @@
     setSubLbl('lbl-rules-subtab-roles', t.rulesSubtabRoles);
     setSubLbl('lbl-rules-subtab-roles-hint', t.rulesSubtabRolesDesc);
 
+    setSubLbl('policy-simple-lead', t.rulesPolicySimpleLead);
+    setSubLbl('policy-expert-lead', t.rulesPolicyExpertLead);
+    const policyDashNote = document.getElementById('policy-simple-dashboard-note');
+    if (policyDashNote) policyDashNote.textContent = t.rulesPolicySimpleDashboardNote || '';
+
+    if (typeof window.syncPolicySimplePreview === 'function') window.syncPolicySimplePreview();
+
     const h3Const = settingsTab.querySelector('.constants-sheet-heading');
     if (h3Const) h3Const.textContent = t.constantsSheetTitle || '';
     const gemH = settingsTab.querySelector('.gem-meta-heading');
@@ -383,10 +392,6 @@
     const addBtn = document.getElementById('btn-add-role');
     if (addBtn) addBtn.textContent = t.addRole;
 
-    const resetConstBtn = document.getElementById('btn-reset-stat-constants');
-    if (resetConstBtn) resetConstBtn.textContent = t.resetConstantsButton || '';
-    const resetConstHint = document.getElementById('lbl-reset-constants-hint');
-    if (resetConstHint) resetConstHint.textContent = t.resetConstantsHint || '';
     
     // Update reapp labels (only text nodes, keep inputs)
     const reappInputs = [

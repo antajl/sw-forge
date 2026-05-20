@@ -33,6 +33,7 @@ const CHUNKS = [
   'rules/panel.js',
   'rules/constants-ui.js',
   'rules/bootstrap.js',
+  'rules/policy-ui.js',
   'app/settings-ui.js',
   'app/share.js',
   'app/changelog.js',

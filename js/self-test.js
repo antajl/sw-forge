@@ -194,6 +194,55 @@
         }),
         expected: 'Sell',
       },
+      {
+        id: 11,
+        rune: mkRune(11, {
+          setName: 'Energy',
+          gradeStr: 'Hero',
+          slot: 1,
+          mainName: 'HP',
+          level: 6,
+          substats: [
+            { name: 'HP', val: 300 },
+            { name: 'DEF', val: 10 },
+            { name: 'ATK', val: 10 },
+          ],
+        }),
+        expected: 'Upgrade',
+      },
+      {
+        id: 12,
+        rune: mkRune(12, {
+          setName: 'Energy',
+          gradeStr: 'Hero',
+          slot: 1,
+          mainName: 'HP',
+          level: 10,
+          substats: [
+            { name: 'ACC', val: 4 },
+            { name: 'RES', val: 4 },
+            { name: 'HP', val: 50 },
+          ],
+        }),
+        expected: 'Sell',
+      },
+      {
+        id: 13,
+        rune: mkRune(13, {
+          setName: 'Energy',
+          gradeStr: 'Legend',
+          slot: 2,
+          mainName: 'SPD',
+          level: 12,
+          substats: [
+            { name: 'SPD', val: 28 },
+            { name: 'ATK%', val: 20 },
+            { name: 'CRate', val: 20 },
+            { name: 'CDmg', val: 20 },
+          ],
+        }),
+        expected: 'Keep',
+      },
     ];
   }
 

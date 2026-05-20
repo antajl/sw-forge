@@ -199,8 +199,6 @@
     if (lblGridSel) lblGridSel.textContent = t.monstersTableSelectAll || 'Select all visible';
     const clrToolbar = document.getElementById('monsters-toolbar-clear');
     if (clrToolbar) clrToolbar.textContent = t.monstersToolbarClear || 'Clear filters';
-    const clearMonster = document.getElementById('btn-rune-table-clear-monster-filter');
-    if (clearMonster) clearMonster.textContent = t.runeTableMonsterFilterClear || 'Clear';
     const emptyClear = document.getElementById('monsters-empty-clear-filters');
     if (emptyClear) emptyClear.textContent = t.monstersEmptyClearFilters || 'Clear filters';
     const emptySearch = document.getElementById('monsters-empty-reset-search');

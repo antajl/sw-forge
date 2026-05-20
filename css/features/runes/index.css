@@ -1,4 +1,5 @@
 /* features/runes/index.css — entry point for dashboard / runes feature CSS */
+@import url('./typography.css');
 @import url('./hub.css');
 @import url('./stage-advisor.css');
 @import url('./rules.css');

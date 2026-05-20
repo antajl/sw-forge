@@ -61,7 +61,7 @@
     const pot = sumRuneSpdSubsPotential(r);
     const grade = String(r.gradeStr || '').trim();
     let core = `+${spd} SPD`;
-    if (pot > spd) core += ` (→+${pot})`;
+    if (pot > spd) core += ` →+${pot}`;
     return grade ? `${core} · ${grade}` : core;
   }
 
@@ -741,7 +741,9 @@
           const cur = sumRuneSpdSubs(r);
           btn.className =
             pot > cur ? 'top-spd-chip top-spd-chip--has-pot' : 'top-spd-chip';
-          btn.textContent = formatTopSpdChipLabel(r, tloc);
+          const chipLabel = formatTopSpdChipLabel(r, tloc);
+          btn.textContent = chipLabel;
+          btn.title = chipLabel;
           const setNm = selectedSet;
           const sl = slot;
           btn.addEventListener('click', () => {

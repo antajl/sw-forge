@@ -7,6 +7,7 @@
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" sizes="any" />
   <!-- Inline: SVGs have a huge default intrinsic size before css/style.css loads (e.g. live reload). -->
   <style>
+    .logo__img { height: 42px; max-width: min(220px, 48vw); }
     .header-theme-icon, .tab__icon-svg, .tab__icon-mask, .theme-toggle__icon { width: 22px; height: 22px; max-width: 22px; max-height: 22px; display: block; flex-shrink: 0; }
     /* Avoid default link purple (currentColor) until css/style.css loads */
     #header-donate-link .header-donate-heart { color: #d04356; }
@@ -50,7 +51,7 @@
               </span>
               <span class="tab__label" id="lbl-tab-monsters">Monsters</span>
             </button>
-            <button type="button" class="tab" data-tab="guide" title="Archive">
+            <button type="button" class="tab" data-tab="guide" data-share-hidden="1" title="Archive">
               <span class="tab__icon" aria-hidden="true">
                 <svg class="tab__icon-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false">
                   <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
@@ -59,7 +60,7 @@
               </span>
               <span class="tab__label">Archive</span>
             </button>
-            <button type="button" class="tab" data-tab="changelog" title="Changelog">
+            <button type="button" class="tab" data-tab="changelog" data-share-hidden="1" title="Changelog">
               <span class="tab__icon" aria-hidden="true">
                 <svg class="tab__icon-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false">
                   <path d="M12 8v4l3 3" />
@@ -138,6 +139,7 @@
         <button type="button" role="tab" class="rules-subtab runes-hub-tab" id="runes-hub-tab-settings"
           data-runes-hub="settings" aria-selected="false" aria-controls="tab-settings" tabindex="-1">
           <span class="rules-subtab__label" id="lbl-runes-hub-settings">Rules</span>
+          <span class="rules-subtab__hint" id="lbl-runes-hub-settings-hint"></span>
         </button>
       </nav>
 
@@ -163,10 +165,14 @@
                     <option value="Late">Late</option>
                   </select>
                 </div>
+                <div class="dashboard-strictness-inline" id="dashboard-strictness-wrap">
+                  <label class="dashboard-strictness-inline__label" for="dashboard-policy-strictness" id="lbl-dashboard-strictness">Strictness</label>
+                  <input type="range" id="dashboard-policy-strictness" min="1" max="5" step="1" value="3" aria-valuemin="1" aria-valuemax="5" />
+                  <span class="hint dashboard-strictness-inline__hint" id="dashboard-policy-strictness-hint">3/5</span>
+                </div>
               </div>
               <button type="button" class="btn-stage-compact" id="btn-stage-compact" aria-controls="stage-advisor-expanded" aria-expanded="false" title="More"></button>
             </div>
-
             <div id="stage-advisor-expanded-wrap" class="stage-advisor-expanded-wrap" aria-hidden="true">
             <div class="stage-advisor-expanded" id="stage-advisor-expanded">
               <p class="stage-advisor-lead" id="lbl-stage-advisor-lead">
@@ -298,6 +304,7 @@
             <p class="rules-page-lead dash-unified-block-hint" id="lbl-dash-unified-chart-hint"></p>
           </header>
           <nav class="rules-subtabs dash-unified-tabs" role="tablist" id="dash-unified-tabs" aria-label="">
+            <span class="dash-unified-tabs__indicator" aria-hidden="true"></span>
             <button type="button" class="rules-subtab dash-unified-tab is-active" role="tab" id="dash-unified-tab-verdict"
               aria-controls="dash-pane-verdict" aria-selected="true" data-dash-uni="verdict" tabindex="0">
               <span class="rules-subtab__label">Verdict</span>
@@ -390,10 +397,6 @@
                   <label class="visually-hidden" for="search-box" id="lbl-search-box">Search</label>
                   <input type="text" id="search-box" class="table-toolbar__input" placeholder="Search by set, stat, role..." autocomplete="off" />
                 </div>
-                <div id="rune-table-monster-filter" class="table-toolbar__monster-filter" hidden>
-                  <span id="rune-table-monster-filter-label"></span>
-                  <button type="button" id="btn-rune-table-clear-monster-filter" class="btn-ghost btn-toolbar btn-toolbar--sm">Clear</button>
-                </div>
                 <div id="rune-table-load-strip" class="table-toolbar__load hidden" aria-live="polite">
                   <div class="table-toolbar__load-inner">
                     <button type="button" id="btn-rune-table-show-all" class="btn-primary btn-toolbar-primary"></button>
@@ -440,8 +443,7 @@
                   </div>
                 </div>
                 <div class="table-toolbar__count table-count-block">
-                  <span id="table-count" class="table-count">0 runes</span>
-                  <span id="table-count-detail" class="table-count-detail" aria-live="polite"></span>
+                  <span id="table-count" class="table-count" aria-live="polite">0 runes</span>
                 </div>
               </div>
             </div>
@@ -503,14 +505,14 @@
       </div>
       </div>
 
-      <div id="tab-settings" class="runes-hub-pane" data-runes-pane="settings" role="tabpanel" aria-labelledby="runes-hub-tab-settings" hidden>
+      <div id="tab-settings" class="runes-hub-pane rules-mode-expert" data-runes-pane="settings" role="tabpanel" aria-labelledby="runes-hub-tab-settings" hidden>
       <div class="rules-tab-shell">
-        <header class="rules-page-header">
+        <header class="rules-page-header visually-hidden" aria-hidden="true">
           <h2 class="rules-page-title" id="lbl-rules-page-title">Rune Rules</h2>
           <p class="rules-page-lead" id="lbl-rules-page-lead"></p>
         </header>
 
-        <nav class="rules-subtabs" id="rules-subtabs" role="tablist" aria-labelledby="lbl-rules-page-title">
+        <nav class="rules-subtabs" id="rules-subtabs" role="tablist" aria-label="Rune Rules">
           <button type="button" role="tab" class="rules-subtab is-active" id="rules-subtab-engine"
             data-rules-subtab="engine" aria-selected="true" aria-controls="rules-panel-engine" tabindex="0">
             <span class="rules-subtab__label" id="lbl-rules-subtab-engine">Engine</span>
@@ -532,7 +534,7 @@
           class="rules-subpanel is-active" data-rules-subtab="engine">
           <div class="rules-col-stack rules-col-stack--full">
 
-            <section class="rules-card" aria-labelledby="rules-h-constants">
+            <section class="rules-card" id="rules-card-constants" aria-labelledby="rules-h-constants">
               <div class="rules-card__head">
                 <span class="rules-card__step" aria-hidden="true">1</span>
                 <div class="rules-card__head-text">
@@ -542,36 +544,95 @@
               </div>
               <div class="rules-card__body">
                 <div id="stat-constants-wrap"></div>
-                <div class="settings-row constants-reset-row rules-card__row-flush">
-                  <button type="button" class="btn-ghost" id="btn-reset-stat-constants">Reset Constants to defaults</button>
-                  <span class="hint" id="lbl-reset-constants-hint"></span>
+                <div class="constants-previews-block">
+                  <div class="settings-row settings-row--tight constants-previews-block__toggle">
+                    <button type="button" class="btn-ghost" id="btn-toggle-threshold-previews">Show threshold previews</button>
+                    <span class="hint" id="lbl-toggle-threshold-previews-hint">God / High Roll / Duo tables</span>
+                  </div>
+                  <div id="threshold-previews-wrap" class="constants-previews-block__panels" hidden>
+                    <div class="rules-preview-cluster">
+                      <h4 class="engine-preview-heading" id="lbl-god-preview-title">God Roll</h4>
+                      <div class="rules-table-scroll"><div id="god-preview-wrap"></div></div>
+                    </div>
+                    <div class="rules-preview-cluster">
+                      <h4 class="engine-preview-heading" id="lbl-hr-preview-title">High Roll</h4>
+                      <div class="rules-table-scroll"><div id="hr-preview-wrap"></div></div>
+                    </div>
+                    <div class="rules-preview-cluster">
+                      <h4 class="engine-preview-heading" id="lbl-duo-preview-title">Duo Roll</h4>
+                      <div class="rules-table-scroll"><div id="duo-preview-wrap"></div></div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </section>
 
-            <section class="rules-card rules-card--engine" aria-labelledby="lbl-rules-section-previews-title">
+            <section class="rules-card" aria-labelledby="policy-title">
               <div class="rules-card__head">
                 <span class="rules-card__step" aria-hidden="true">2</span>
                 <div class="rules-card__head-text">
-                  <h3 id="lbl-rules-section-previews-title" class="rules-card__title">Threshold previews</h3>
-                  <p id="lbl-rules-section-previews-desc" class="rules-card__desc"></p>
+                  <h3 id="policy-title" class="rules-card__title">Evaluation Policy</h3>
+                  <p id="policy-simple-lead" class="rules-card__desc rules-simple-only"></p>
+                  <p id="policy-expert-lead" class="rules-card__desc rules-expert-only"></p>
                 </div>
               </div>
-              <div class="rules-card__body rules-card__body--previews">
-                <div class="rules-preview-cluster">
-                  <h4 class="engine-preview-heading" id="lbl-god-preview-title">God Roll</h4>
-                  <div class="rules-table-scroll"><div id="god-preview-wrap"></div></div>
+              <div class="rules-card__body rules-card__body--fields">
+                <p class="hint" id="policy-simple-dashboard-note"></p>
+
+                <div id="policy-expert-wrap">
+                <div class="settings-row">
+                  <label for="policy-preset" title="Loads a predefined strictness profile. Use Custom to keep manual tweaks.">Preset</label>
+                  <select id="policy-preset">
+                    <option value="Early Progression">Early Progression</option>
+                    <option value="Mid Progression">Mid Progression</option>
+                    <option value="Late Progression">Late Progression</option>
+                    <option value="Competitive">Competitive</option>
+                    <option value="Custom">Custom</option>
+                  </select>
                 </div>
-                <div class="rules-preview-cluster">
-                  <h4 class="engine-preview-heading" id="lbl-hr-preview-title">High Roll</h4>
-                  <div class="rules-table-scroll"><div id="hr-preview-wrap"></div></div>
+                <div class="settings-row">
+                  <label for="policy-anchor-mode" title="Anchor requirement (High Roll line). Hard = must hit the anchor when the role requires it. Soft = allow near-misses (more forgiving).">Anchor requirement</label>
+                  <select id="policy-anchor-mode">
+                    <option value="hard">Hard</option>
+                    <option value="soft">Soft</option>
+                  </select>
                 </div>
-                <div class="rules-preview-cluster">
-                  <h4 class="engine-preview-heading" id="lbl-duo-preview-title">Duo Roll</h4>
-                  <div class="rules-table-scroll"><div id="duo-preview-wrap"></div></div>
+                <div class="settings-row">
+                  <label for="policy-slotreq-mode" title="Slot requirements. Hard = must satisfy slot-specific required stats. Soft = allow minor misses (more forgiving).">Slot requirements</label>
+                  <select id="policy-slotreq-mode">
+                    <option value="hard">Hard</option>
+                    <option value="soft">Soft</option>
+                  </select>
+                </div>
+                <div class="settings-row">
+                  <label for="policy-minstats-mod" title="How many supporting (Include) substats are required. +1 = stricter, -1 = more forgiving.">Supporting stats strictness</label>
+                  <select id="policy-minstats-mod">
+                    <option value="1">+1 (very strict)</option>
+                    <option value="0">0 (strict)</option>
+                    <option value="-1">-1 (forgiving)</option>
+                  </select>
+                </div>
+                <div class="settings-row">
+                  <label for="policy-min-pressure" title="Quality of stats for the chosen role. Higher = fewer runes qualify. Example: a Swift rune with SPD+HP% but low totals may fail at high values.">Stat quality for role</label>
+                  <select id="policy-min-pressure">
+                    <option value="0.00">0.00 (off)</option>
+                    <option value="0.50">0.50 (easy)</option>
+                    <option value="0.58">0.58 (mid)</option>
+                    <option value="0.66">0.66 (late)</option>
+                    <option value="0.74">0.74 (competitive)</option>
+                  </select>
+                </div>
+                <div class="settings-row">
+                  <label title="If enabled, God/Duo can become the primary role. Recommended OFF: treat them as High Value tags, not a build archetype."><input type="checkbox" id="policy-god-counts" /> God counts as role</label>
+                </div>
+                <div class="settings-row">
+                  <label title="If enabled, God/Duo can become the primary role. Recommended OFF: treat them as High Value tags, not a build archetype."><input type="checkbox" id="policy-duo-counts" /> Duo counts as role</label>
+                </div>
+                <p class="hint" id="policy-summary"></p>
                 </div>
               </div>
             </section>
+
           </div>
         </div>
 
@@ -579,91 +640,91 @@
           class="rules-subpanel" data-rules-subtab="verdict">
           <div class="rules-col-stack rules-col-stack--full">
 
-            <section class="rules-card" aria-labelledby="rules-h-gem">
-              <div class="rules-card__head">
+            <details class="rules-card" open>
+              <summary class="rules-card__head">
                 <span class="rules-card__step" aria-hidden="true">1</span>
                 <div class="rules-card__head-text">
-                  <h3 id="rules-h-gem" class="gem-meta-heading rules-card__title">Gem — bad flat subs</h3>
-                  <p class="gem-meta-desc rules-card__desc"></p>
+                  <h3 id="rules-h-gem" class="gem-meta-heading rules-card__title">Gem suggestions</h3>
+                  <p class="gem-meta-desc rules-card__desc">Suggest when a rune has bad flat substats that are worth replacing.</p>
                 </div>
-              </div>
+              </summary>
               <div class="rules-card__body rules-card__body--fields">
                 <div class="settings-row">
-                  <label><input type="checkbox" id="gem-bad-flat-enabled" checked /> <span id="gem-bad-flat-label">Enable Gem recommendations</span></label>
+                  <label title="If enabled, the analyzer can recommend Gem when a rune has replaceable flat substats."><input type="checkbox" id="gem-bad-flat-enabled" checked /> <span id="gem-bad-flat-label">Enable Gem recommendations</span></label>
                 </div>
                 <p class="hint gem-bad-flat-hint" id="gem-bad-flat-hint"></p>
               </div>
-            </section>
+            </details>
 
-            <section class="rules-card" aria-labelledby="rules-h-reapp">
-              <div class="rules-card__head">
+            <details class="rules-card" open>
+              <summary class="rules-card__head">
                 <span class="rules-card__step" aria-hidden="true">2</span>
                 <div class="rules-card__head-text">
-                  <h3 id="rules-h-grind" class="rules-card__title">Grind Rules</h3>
-                  <p class="rules-card__desc">Grind target is always the Late Game High Roll line for the rune’s grade (same <code>hrThresholds</code> as role anchors). Only SPD, HP%, DEF%, ATK% are considered.</p>
+                  <h3 id="rules-h-grind" class="rules-card__title">Grind suggestions</h3>
+                  <p class="rules-card__desc">Recommend Grind when a key stat is close to the Late-game High Roll line for the rune grade.</p>
                 </div>
-              </div>
+              </summary>
               <div class="rules-card__body rules-card__body--fields">
                 <div class="settings-row">
-                  <label>Grind gap multiplier</label>
+                  <label title="Lower = stricter (fewer Grind verdicts). Rule: threshold − value ≤ gain × gap. Typical range: 0.3–0.5.">Grind gap multiplier</label>
                   <input type="number" id="grind-gap" min="0" max="3" step="0.1" />
-                  <span class="hint">Lower = stricter (fewer Grinds). Condition: threshold − value ≤ gain × gap. Try 0.3–0.5.</span>
+                  <span class="hint">Lower = stricter (fewer Grinds). Try 0.3–0.5.</span>
                 </div>
               </div>
-            </section>
+            </details>
 
-            <section class="rules-card" aria-labelledby="rules-h-reapp">
-              <div class="rules-card__head">
+            <details class="rules-card">
+              <summary class="rules-card__head">
                 <span class="rules-card__step" aria-hidden="true">3</span>
                 <div class="rules-card__head-text">
-                  <h3 id="rules-h-reapp" class="reapp-heading rules-card__title">Reapp Candidate Rules</h3>
-                  <p class="reapp-rules-desc rules-card__desc"></p>
+                  <h3 id="rules-h-reapp" class="reapp-heading rules-card__title">Reapp candidates</h3>
+                  <p class="reapp-rules-desc rules-card__desc">Which runes are worth reappraising (Reapp).</p>
                 </div>
-              </div>
+              </summary>
               <div class="rules-card__body rules-card__body--fields">
                 <div class="settings-row">
-                  <label>Allowed sets (comma)</label>
+                  <label title="Comma-separated set names. Only these sets can be flagged as Reapp candidates.">Allowed sets (comma)</label>
                   <input type="text" id="reapp-sets" placeholder="Violent, Will, Swift" />
                 </div>
                 <div class="settings-row">
-                  <label>Innate stats (comma)</label>
+                  <label title="Comma-separated innate/prefix stats. If a rune has an innate stat from this list, it can qualify.">Innate stats (comma)</label>
                   <input type="text" id="reapp-innate" placeholder="SPD, HP%, ACC" />
                 </div>
                 <div class="settings-row">
-                  <label>Slot 2 mains (comma)</label>
+                  <label title="Comma-separated main stats for slot 2 that can qualify for Reapp.">Slot 2 mains (comma)</label>
                   <input type="text" id="reapp-main2" placeholder="SPD, HP%, ATK%, DEF%" />
                 </div>
                 <div class="settings-row">
-                  <label>Slot 4 mains (comma)</label>
+                  <label title="Comma-separated main stats for slot 4 that can qualify for Reapp.">Slot 4 mains (comma)</label>
                   <input type="text" id="reapp-main4" placeholder="HP%, ATK%, DEF%, CRate, CDmg" />
                 </div>
                 <div class="settings-row">
-                  <label>Slot 6 mains (comma)</label>
+                  <label title="Comma-separated main stats for slot 6 that can qualify for Reapp.">Slot 6 mains (comma)</label>
                   <input type="text" id="reapp-main6" placeholder="HP%, ATK%, DEF%, ACC, RES" />
                 </div>
                 <div class="settings-row">
-                  <label>Max efficiency for Reapp</label>
+                  <label title="Reapp is suggested only if the rune is not already efficient enough.">Max efficiency for Reapp</label>
                   <input type="number" id="reapp-max-eff" min="0" max="100" step="0.5" />
                 </div>
               </div>
-            </section>
+            </details>
           </div>
         </div>
 
         <div id="rules-panel-roles" role="tabpanel" aria-labelledby="rules-subtab-roles"
           class="rules-subpanel rules-subpanel--roles" data-rules-subtab="roles">
-          <section class="rules-card" aria-labelledby="rules-h-roles">
+          <section class="rules-card rules-card--roles-full" aria-labelledby="rules-h-roles">
             <div class="rules-card__head">
               <div class="rules-card__head-text rules-card__head-text--solo">
-                <h3 id="rules-h-roles" class="role-filters-heading rules-card__title">Roles &amp; formulas</h3>
-                <p class="role-filters-desc rules-card__desc"></p>
+                <h3 id="rules-h-roles" class="role-filters-heading rules-card__title">Role formulas (advanced)</h3>
+                <p class="role-filters-desc rules-card__desc">Define what “fits” each role. Most users should not change this.</p>
               </div>
             </div>
             <div class="rules-card__body rules-card__body--roles">
               <div class="settings-row rules-card__add-role">
-                <label for="new-role-name">New role</label>
+                <label for="new-role-name" title="Add a new role formula. Recommended only if you understand how roles are matched.">New role</label>
                 <input type="text" id="new-role-name" placeholder="e.g. Control SPD" />
-                <button type="button" id="btn-add-role" class="btn-ghost">+ Add role</button>
+                <button type="button" id="btn-add-role" class="btn-ghost" title="Creates a new role formula block.">+ Add role</button>
               </div>
               <div class="role-layout">
                 <div class="role-nav">
@@ -706,7 +767,11 @@
               <aside class="teams-sidebar" data-teams-readonly-hide>
                 <header class="teams-sidebar__head">
                   <h3 class="teams-sidebar__title" id="lbl-teams-sets-title">Team sets</h3>
-                  <button type="button" class="monsters-toolbar-btn monsters-toolbar-btn--sm" id="teams-add-set">+ Set</button>
+                  <div class="teams-sidebar__actions" data-teams-readonly-hide>
+                    <button type="button" class="btn-ghost btn-toolbar btn-toolbar--sm" id="teams-export-json">Export</button>
+                    <button type="button" class="btn-ghost btn-toolbar btn-toolbar--sm" id="teams-import-json">Import</button>
+                    <button type="button" class="monsters-toolbar-btn monsters-toolbar-btn--sm" id="teams-add-set">+ Set</button>
+                  </div>
                 </header>
                 <ul class="teams-set-list teams-set-tree" id="teams-set-list"></ul>
               </aside>
@@ -1206,6 +1271,24 @@
           <div class="guide-lang guide-lang--ru guide-list">
             <section class="guide-section" aria-labelledby="guide-h-tips-ru">
               <h3 id="guide-h-tips-ru">Советы, вопросы и прочее</h3>
+              <h4 class="guide-subhead">Быстрый старт (для обычного игрока)</h4>
+              <details>
+                <summary><strong>Как пользоваться анализатором?</strong></summary>
+                <p>1) Выберите <strong>этап игры</strong> (Early / Mid / Late). 2) Нажмите <strong>Analyze</strong>. 3) Смотрите таблицу: <strong>Verdict</strong> — действие, <strong>Target</strong> — понятная причина.</p>
+                <p>Если хочется чуть жёстче/мягче — в Engine → Evaluation Policy оставьте режим <strong>Simple</strong> и подвигайте <strong>Strictness</strong> (1–5).</p>
+              </details>
+              <details>
+                <summary><strong>Что значат Keep / Finish / Gem / Grind / Sell?</strong></summary>
+                <p><strong>Keep</strong> — оставь (есть роль и руна подходит). <strong>Finish</strong> — есть потенциал, стоит докачать до +12/+15 и пересмотреть. <strong>Gem</strong> — есть плоский саб, который лучше заменить. <strong>Grind</strong> — стоит гриндить один из ключевых %/SPD статов. <strong>Sell</strong> — руна не подходит под роли и не даёт хорошей “ценности” через High Value.</p>
+              </details>
+              <details>
+                <summary><strong>Что такое “Universal / High Value”?</strong></summary>
+                <p>Это <strong>универсальная руна</strong>: явная роль не нашлась, но статы слишком хорошие, чтобы сразу продавать. Обычно причина — <strong>God</strong> (очень высокий один стат) или <strong>Duo</strong> (сильная пара статов).</p>
+              </details>
+              <details>
+                <summary><strong>Что такое Fit?</strong></summary>
+                <p><strong>Fit</strong> — “рейтинг подходящести”: насколько статы руны похожи на идеальные для выбранной роли. Это подсказка, а не отдельная “эффективность”.</p>
+              </details>
               <p><strong>Язык:</strong> Вкладка <strong>Приложение</strong> — список <strong>Язык</strong> (English / Русский).</p>
               <p><strong>Тема:</strong> По умолчанию при первом заходе — <strong>тёмная</strong>. Переключатель светлой / тёмной темы — рядом с донатом в шапке.</p>
               <p><strong>Демо-плашка:</strong> При загрузке примера данных — полноширинная полоса сразу под шапкой (липнет вместе с шапкой) с напоминанием загрузить свой SWEX JSON.</p>
@@ -1353,8 +1436,8 @@
   <script src="js/engine/engine-core.js"></script>
   <script src="js/engine/engine-legacy-roles.js"></script>
   <script src="js/engine/engine-gem-reapp-verdict.js"></script>
-  <script src="js/engine/engine-process.js"></script>
   <script src="js/advanced-formulas.js"></script>
+  <script src="js/engine/engine-process.js"></script>
   <script src="js/self-test.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/gsap.min.js"></script>
   <script src="js/swrm-motion.js"></script>

@@ -301,3 +301,92 @@
   function setTeamsActiveSetId(id) {
     teamsActiveSetId = id;
   }
+
+  function exportTeamsStateJson() {
+    teamsStateCache = null;
+    const state = loadTeamsState();
+    return JSON.stringify(state, null, 2);
+  }
+
+  function importTeamsStateFromJson(text, merge) {
+    let parsed;
+    try {
+      parsed = JSON.parse(text);
+    } catch (e) {
+      return { ok: false, error: 'invalid_json' };
+    }
+    let incoming = defaultTeamsState();
+    if (parsed && parsed.version === 2) {
+      incoming = {
+        version: 2,
+        sets: Array.isArray(parsed.sets) ? parsed.sets : [],
+        teams: parsed.teams && typeof parsed.teams === 'object' ? parsed.teams : {},
+      };
+    } else {
+      incoming = migrateLegacyState(parsed);
+    }
+    if (merge) {
+      const cur = loadTeamsState();
+      const teamIdMap = {};
+      for (const [oldId, team] of Object.entries(incoming.teams)) {
+        const copy = { ...team, id: newTeamsId('team') };
+        teamIdMap[oldId] = copy.id;
+        cur.teams[copy.id] = copy;
+      }
+      for (const set of incoming.sets) {
+        const newSetId = newTeamsId('set');
+        cur.sets.push({
+          id: newSetId,
+          name: set.name || 'Imported set',
+          collapsed: !!set.collapsed,
+          teamIds: (set.teamIds || []).map((tid) => teamIdMap[tid]).filter(Boolean),
+        });
+      }
+      saveTeamsState(cur);
+    } else {
+      saveTeamsState(incoming);
+      teamsActiveSetId = incoming.sets[0]?.id || null;
+    }
+    teamsStateCache = null;
+    return { ok: true };
+  }
+
+  /** Remove demo sample team set after user loads their own SWEX. */
+  function removeDemoTeams() {
+    const state = loadTeamsState();
+    const demoSetIds = state.sets
+      .filter((s) => /^demo\s*teams$/i.test(String(s.name || '').trim()))
+      .map((s) => s.id);
+    if (!demoSetIds.length) return false;
+    const teamIds = new Set();
+    for (const sid of demoSetIds) {
+      const set = state.sets.find((x) => x.id === sid);
+      (set?.teamIds || []).forEach((tid) => teamIds.add(tid));
+    }
+    state.sets = state.sets.filter((s) => !demoSetIds.includes(s.id));
+    for (const tid of teamIds) delete state.teams[tid];
+    saveTeamsState(state);
+    teamsStateCache = null;
+    return true;
+  }
+
+  /** Sample teams for demo mode only (when storage is empty). */
+  function seedDemoTeamsIfEmpty() {
+    if (typeof isUsingDemoDataset === 'function' && !isUsingDemoDataset()) return false;
+    const state = loadTeamsState();
+    if (state.sets.length > 0) return false;
+    const units = (allUnits || []).filter((u) => u && u.unitId).slice(0, 10);
+    if (units.length < 3) return false;
+    const set = createTeamSet('Demo teams');
+    const slots = units.slice(0, TEAM_SIZE_DEFAULT).map((u) => u.unitId);
+    const team = createTeamInSet(set.id, 'Example AO', TEAM_SIZE_DEFAULT);
+    if (!team) return false;
+    updateTeam(team.id, {
+      slots,
+      leaderUnitId: slots[0] || null,
+      shareInProfile: true,
+      tags: ['Demo'],
+      notes: 'Sample team from demo roster — edit or replace anytime.',
+    });
+    return true;
+  }

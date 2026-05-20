@@ -1,11 +1,7 @@
 .monsters-toolbar-sticky {
-  position: sticky;
-  top: 70px;
-  z-index: 20;
-  margin-bottom: var(--space-md);
-  padding-bottom: var(--space-xs);
-  background: color-mix(in srgb, var(--bg2) 94%, transparent);
-  backdrop-filter: blur(10px);
+  position: static;
+  margin-bottom: var(--space-sm);
+  padding-bottom: 0;
 }
 
 .monsters-toolbar__row--main {

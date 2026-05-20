@@ -512,6 +512,23 @@ body.share-readonly .share-split {
   pointer-events: none;
 }
 
+body.share-readonly .tab[data-tab='guide'],
+body.share-readonly .tab[data-tab='changelog'] {
+  display: none !important;
+}
+
+body.share-readonly #tab-settings .rules-tab-footer,
+body.share-readonly #tab-settings #btn-reset-settings,
+body.share-readonly #tab-settings #btn-add-role,
+body.share-readonly #tab-settings .rules-card__add-role {
+  display: none !important;
+}
+
+body.share-readonly .monsters-detail__tag-input,
+body.share-readonly .monsters-detail__tag-add {
+  display: none !important;
+}
+
 .share-toolbar {
   display: inline-flex;
   flex-wrap: wrap;

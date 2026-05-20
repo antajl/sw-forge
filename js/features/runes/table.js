@@ -267,10 +267,6 @@
     resetRuneTableFilters();
   });
 
-  document.getElementById('btn-rune-table-clear-monster-filter')?.addEventListener('click', () => {
-    if (typeof clearRuneTableMonsterMasterId === 'function') clearRuneTableMonsterMasterId();
-  });
-
   // Table filters (search debounced separately)
   ['filter-verdict', 'filter-role', 'filter-grade', 'filter-set', 'filter-slot', 'filter-main'].forEach((id) => {
     document.getElementById(id)?.addEventListener('input', () => applyFiltersAndSort(getVisibleRunes()));

@@ -30,12 +30,35 @@ body.light-theme #tab-runes > .runes-hub-tabs.rules-subtabs {
   letter-spacing: 0.04em;
 }
 
+.runes-hub-tabs .rules-subtab__hint {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  line-height: 1.2;
+}
+
 .runes-hub-pane:not(.is-active) {
   display: none;
 }
 
 .runes-hub-pane.is-active {
   display: block;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+#tab-runes {
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+#tab-runes .dashboard-stage-wrap,
+#tab-runes .dash-unified-block,
+#tab-runes .global-filter-card {
+  max-width: 100%;
   min-width: 0;
 }
 

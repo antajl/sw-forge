@@ -2,6 +2,9 @@
   // ===================== STAGE =====================
   document.getElementById('stage-select').addEventListener('change', e => {
     stage = e.target.value;
+    if (typeof window.swrmOnDashboardStageChanged === 'function') {
+      window.swrmOnDashboardStageChanged();
+    }
     if (allRunes.length) reprocess();
   });
 
@@ -22,8 +25,7 @@
     }
 
     stageSelect.value = recommendedStage;
-    stage = recommendedStage;
-    if (allRunes.length) reprocess();
+    stageSelect.dispatchEvent(new Event('change', { bubbles: true }));
 
     const name = stageDisplayName(tloc, recommendedStage);
     showSwrmToast(
@@ -113,6 +115,10 @@
       btn.setAttribute('aria-selected', String(on));
       btn.tabIndex = on ? 0 : -1;
     });
+    const nav = document.getElementById('dash-unified-tabs');
+    if (nav && window.SWRM_MOTION && typeof window.SWRM_MOTION.positionDashUnifiedTabIndicator === 'function') {
+      window.SWRM_MOTION.positionDashUnifiedTabIndicator({ nav, activeKey: active, instant: false });
+    }
   }
 
   function setDashboardUnifiedPaneState(pane, on) {
@@ -188,6 +194,18 @@
     if (host && window.SWRM_MOTION && window.SWRM_MOTION.enabled()) {
       host.classList.add('dash-unified-panes--gsap');
     }
+    const snapDashInd = () => {
+      const nav = document.getElementById('dash-unified-tabs');
+      if (nav && window.SWRM_MOTION && typeof window.SWRM_MOTION.positionDashUnifiedTabIndicator === 'function') {
+        window.SWRM_MOTION.positionDashUnifiedTabIndicator({ nav, activeKey: readDashboardUnifiedTab(), instant: true });
+      }
+    };
+    requestAnimationFrame(() => requestAnimationFrame(snapDashInd));
+    let dashIndResizeTimer = null;
+    window.addEventListener('resize', () => {
+      clearTimeout(dashIndResizeTimer);
+      dashIndResizeTimer = setTimeout(snapDashInd, 120);
+    });
     document.querySelectorAll('.dash-unified-tab[data-dash-uni]').forEach((btn) => {
       btn.addEventListener('click', () => {
         const raw = btn.getAttribute('data-dash-uni') || 'verdict';

@@ -43,15 +43,16 @@
   }
 }
 
-table { width: 100%; border-collapse: collapse; }
+table { border-collapse: collapse; }
 
 #rune-table {
+  width: max-content;
+  min-width: 100%;
   --rt-grade-w: 6.1rem;
-  --rt-set-w: 6.25rem;
+  --rt-set-w: 5.6rem;
   --rt-row-bg: var(--bg2);
   --rt-row-bg-even: color-mix(in srgb, var(--surface) 40%, var(--bg2));
   --rt-row-bg-hover: var(--surface);
-  min-width: 1080px;
 }
 
 thead tr {
@@ -70,7 +71,7 @@ thead tr {
 th {
   font-family: var(--font-head); font-size: 0.75rem; font-weight: 700;
   letter-spacing: 0.04em; text-transform: none; color: var(--text-dim);
-  padding: 10px 12px; text-align: left; white-space: nowrap;
+  padding: 8px 8px; text-align: left; white-space: nowrap;
   cursor: pointer; user-select: none;
   transition: color 0.15s;
 }
@@ -93,7 +94,7 @@ tbody tr {
 }
 tbody tr:hover { background: var(--surface); }
 td {
-  padding: 8px 12px; font-size: 0.82rem; color: var(--text);
+  padding: 6px 8px; font-size: 0.79rem; color: var(--text);
   white-space: nowrap;
 }
 
@@ -125,7 +126,7 @@ td {
 /* Grade: fits chip (icon inside when Ancient); Set: content-width, tight to Lvl */
 #rune-table th.col-grade,
 #rune-table td.col-grade {
-  min-width: var(--rt-grade-w);
+  min-width: 5.5rem;
   width: auto;
   max-width: 7.5rem;
   padding-right: 4px;
@@ -133,7 +134,7 @@ td {
 #rune-table th.col-set,
 #rune-table td.col-set {
   min-width: var(--rt-set-w);
-  max-width: 8.5rem;
+  max-width: 7.0rem;
   width: auto;
   padding-right: 6px;
 }
@@ -145,9 +146,11 @@ td {
 /* Sub columns: same row zebra as the rest (no separate band) */
 #rune-table thead th.col-sub {
   background: var(--bg3);
+  min-width: 3.9rem;
 }
 #rune-table tbody td.col-sub {
   background: var(--rt-row-bg);
+  min-width: 3.9rem;
 }
 #rune-table tbody tr:nth-child(even) td.col-sub {
   background: var(--rt-row-bg-even);
@@ -163,3 +166,20 @@ td {
 
 .target-col-cell { display: none; }
 table.show-target .target-col-cell { display: table-cell; }
+table.show-target #target-col-header,
+table.show-target .target-col-cell {
+  min-width: 13.5rem;
+  width: auto;
+  max-width: none;
+}
+table.show-target td.target-col-cell {
+  white-space: normal;
+  line-height: 1.35;
+  vertical-align: top;
+  padding-top: 7px;
+  padding-bottom: 7px;
+}
+table.show-target td.target-col-cell .table-stat,
+table.show-target td.target-col-cell .table-stat__text {
+  white-space: normal;
+}

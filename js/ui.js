@@ -59,12 +59,12 @@
   const TOP_SPD_GRID_SLOTS = [1, 3, 4, 5, 6];
   const TOP_SPD_RADAR_VERTICES = TOP_SPD_GRID_SLOTS.length;
   /** SVG viewBox + pentagon layout (larger, centered in host). */
-  const TOP_SPD_RADAR_VB_W = 400;
-  const TOP_SPD_RADAR_VB_H = 380;
+  const TOP_SPD_RADAR_VB_W = 500;
+  const TOP_SPD_RADAR_VB_H = 460;
   const TOP_SPD_RADAR_CX = TOP_SPD_RADAR_VB_W / 2;
-  const TOP_SPD_RADAR_CY = 196;
-  const TOP_SPD_RADAR_R = 104;
-  const TOP_SPD_RADAR_LABEL_OFFSET = 48;
+  const TOP_SPD_RADAR_CY = 232;
+  const TOP_SPD_RADAR_R = 132;
+  const TOP_SPD_RADAR_LABEL_OFFSET = 50;
   const TOP_SPD_SORT_METRIC_KEY = 'swrm_top_spd_sort_metric_v1';
   const TOP_SPD_SORT_DIR_KEY = 'swrm_top_spd_sort_dir_v1';
   const DASH_UNIFIED_DIST_KEY = 'swrm_dashboard_unified_dist_v1';
@@ -153,6 +153,7 @@
       if (aria) btnAuto.setAttribute('aria-label', aria);
       else btnAuto.removeAttribute('aria-label');
     }
+    setText('lbl-dashboard-strictness', t.dashboardStrictnessLabel || 'Strictness');
   }
 
   const RULES_SUBTAB_KEY = 'swrm_rules_subtab_v1';
@@ -442,7 +443,14 @@
     const opts = options || {};
     const writeHash = opts.writeHash === true;
     const pushHistory = opts.pushHistory === true;
-    const { main, sub } = normalizeMainTabRequest(tabId);
+    let { main, sub } = normalizeMainTabRequest(tabId);
+    if (typeof isShareReadOnly === 'function' && isShareReadOnly()) {
+      if (main === 'guide' || main === 'changelog') {
+        main = 'runes';
+        sub = sub || readStoredRunesSubtab();
+        tabId = sub && sub !== 'dashboard' ? `runes/${sub}` : 'runes';
+      }
+    }
     if (showMainTabLastMain === 'monsters' && main !== 'monsters') {
       if (typeof resetMonstersTableSort === 'function') resetMonstersTableSort();
       if (typeof unpinMonsterDetail === 'function') unpinMonsterDetail();
@@ -551,6 +559,8 @@
     if (hubTable) hubTable.textContent = t.runesHubRuneTable || 'Table';
     const hubRules = document.getElementById('lbl-runes-hub-settings');
     if (hubRules) hubRules.textContent = t.runesHubRuneRules || 'Rules';
+    const hubRulesHint = document.getElementById('lbl-runes-hub-settings-hint');
+    if (hubRulesHint) hubRulesHint.textContent = t.runesHubRulesExpertHint || '';
     const hubNav = document.getElementById('runes-hub-tabs');
     if (hubNav) hubNav.setAttribute('aria-label', t.dashboard || 'Runes');
     setMainNavTabLabel(document.querySelector('[data-tab="guide"]'), t.guide);
@@ -860,6 +870,13 @@
     setSubLbl('lbl-rules-subtab-roles', t.rulesSubtabRoles);
     setSubLbl('lbl-rules-subtab-roles-hint', t.rulesSubtabRolesDesc);
 
+    setSubLbl('policy-simple-lead', t.rulesPolicySimpleLead);
+    setSubLbl('policy-expert-lead', t.rulesPolicyExpertLead);
+    const policyDashNote = document.getElementById('policy-simple-dashboard-note');
+    if (policyDashNote) policyDashNote.textContent = t.rulesPolicySimpleDashboardNote || '';
+
+    if (typeof window.syncPolicySimplePreview === 'function') window.syncPolicySimplePreview();
+
     const h3Const = settingsTab.querySelector('.constants-sheet-heading');
     if (h3Const) h3Const.textContent = t.constantsSheetTitle || '';
     const gemH = settingsTab.querySelector('.gem-meta-heading');
@@ -901,10 +918,6 @@
     const addBtn = document.getElementById('btn-add-role');
     if (addBtn) addBtn.textContent = t.addRole;
 
-    const resetConstBtn = document.getElementById('btn-reset-stat-constants');
-    if (resetConstBtn) resetConstBtn.textContent = t.resetConstantsButton || '';
-    const resetConstHint = document.getElementById('lbl-reset-constants-hint');
-    if (resetConstHint) resetConstHint.textContent = t.resetConstantsHint || '';
     
     // Update reapp labels (only text nodes, keep inputs)
     const reappInputs = [
@@ -1063,6 +1076,9 @@
   // ===================== STAGE =====================
   document.getElementById('stage-select').addEventListener('change', e => {
     stage = e.target.value;
+    if (typeof window.swrmOnDashboardStageChanged === 'function') {
+      window.swrmOnDashboardStageChanged();
+    }
     if (allRunes.length) reprocess();
   });
 
@@ -1083,8 +1099,7 @@
     }
 
     stageSelect.value = recommendedStage;
-    stage = recommendedStage;
-    if (allRunes.length) reprocess();
+    stageSelect.dispatchEvent(new Event('change', { bubbles: true }));
 
     const name = stageDisplayName(tloc, recommendedStage);
     showSwrmToast(
@@ -1174,6 +1189,10 @@
       btn.setAttribute('aria-selected', String(on));
       btn.tabIndex = on ? 0 : -1;
     });
+    const nav = document.getElementById('dash-unified-tabs');
+    if (nav && window.SWRM_MOTION && typeof window.SWRM_MOTION.positionDashUnifiedTabIndicator === 'function') {
+      window.SWRM_MOTION.positionDashUnifiedTabIndicator({ nav, activeKey: active, instant: false });
+    }
   }
 
   function setDashboardUnifiedPaneState(pane, on) {
@@ -1249,6 +1268,18 @@
     if (host && window.SWRM_MOTION && window.SWRM_MOTION.enabled()) {
       host.classList.add('dash-unified-panes--gsap');
     }
+    const snapDashInd = () => {
+      const nav = document.getElementById('dash-unified-tabs');
+      if (nav && window.SWRM_MOTION && typeof window.SWRM_MOTION.positionDashUnifiedTabIndicator === 'function') {
+        window.SWRM_MOTION.positionDashUnifiedTabIndicator({ nav, activeKey: readDashboardUnifiedTab(), instant: true });
+      }
+    };
+    requestAnimationFrame(() => requestAnimationFrame(snapDashInd));
+    let dashIndResizeTimer = null;
+    window.addEventListener('resize', () => {
+      clearTimeout(dashIndResizeTimer);
+      dashIndResizeTimer = setTimeout(snapDashInd, 120);
+    });
     document.querySelectorAll('.dash-unified-tab[data-dash-uni]').forEach((btn) => {
       btn.addEventListener('click', () => {
         const raw = btn.getAttribute('data-dash-uni') || 'verdict';
@@ -1409,7 +1440,6 @@
 
   function reprocess() {
     processedRunes = processAll(allRunes, stage, window.SWRM.settings);
-    window.SWRM.debugLastProcessedRunes = processedRunes;
     const visible = getVisibleRunes();
     renderDashboard(visible, { animateCharts: true });
     renderTable(visible);
@@ -1419,6 +1449,87 @@
   const LS_USING_DEMO = 'swrm_using_demo_dataset_v1';
   const LS_USER_LOADED_REAL = 'swrm_user_loaded_real_swex_v1';
   const SS_DEMO_BANNER_DISMISS = 'swrm_demo_banner_dismissed_session';
+  /** IndexedDB key for embedded demo — never shown as Database Slot 1. */
+  const DEMO_IDB_KEY = '__swrm_embedded_demo__';
+
+  function slotNameLooksLikeDemo(name) {
+    const n = String(name || '').trim().toLowerCase();
+    return n === 'demo' || n.startsWith('demo ') || n.includes('(demo)');
+  }
+
+  function isUsingDemoDataset() {
+    try {
+      return localStorage.getItem(LS_USING_DEMO) === '1';
+    } catch (e) {
+      return false;
+    }
+  }
+
+  async function purgeDemoStorage() {
+    markUsingDemoDataset(false);
+    try {
+      await deleteSlotData(DEMO_IDB_KEY);
+    } catch (e) {
+      console.warn('purgeDemoStorage', e);
+    }
+  }
+
+  /** Remove legacy demo rows from user-facing database slots. */
+  async function scrubDemoFromUserSlots() {
+    const slots = loadDbSlots();
+    let dirty = false;
+    for (const s of slots) {
+      if (!slotNameLooksLikeDemo(s.name)) continue;
+      Object.assign(
+        s,
+        normalizeDbSlot({ id: s.id, name: '', uploadedAt: '', active: s.active }),
+      );
+      dirty = true;
+      try {
+        await deleteSlotDataRobust(s.id);
+      } catch (e) {
+        console.warn('scrubDemoFromUserSlots', s.id, e);
+      }
+    }
+    if (dirty) saveDbSlots(slots);
+  }
+
+  async function loadDemoDatasetInMemory(jsonText, jsonObj, label) {
+    allRunes = parseSWEX(jsonObj);
+    rebuildUnitsFromSwex(jsonObj);
+    reprocess();
+    try {
+      await saveSlotData(DEMO_IDB_KEY, jsonText);
+    } catch (e) {
+      console.warn('Could not persist embedded demo to IndexedDB:', e);
+    }
+    if (!userHasLoadedRealExport()) {
+      saveDbSlots(defaultEmptyDbSlotsMeta());
+    }
+    markUsingDemoDataset(true);
+  }
+
+  async function restoreEmbeddedDemoFromStorage() {
+    try {
+      const jsonText = await loadSlotData(DEMO_IDB_KEY);
+      if (!jsonText) return false;
+      const json = JSON.parse(jsonText);
+      const runesProbe = parseSWEX(json);
+      if (!runesProbe.length) return false;
+      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en || {};
+      const label = t.demoDatasetSlotLabel || 'Demo';
+      await loadDemoDatasetInMemory(jsonText, json, label);
+      if (typeof seedDemoTeamsIfEmpty === 'function') seedDemoTeamsIfEmpty();
+      uiAfterSuccessfulRuneRestore({ name: label }, { keepTab: true });
+      applyDemoBannerTextFromTranslations();
+      syncDemoBannerVisibility();
+      if (typeof renderTeamsPanel === 'function') renderTeamsPanel();
+      return true;
+    } catch (e) {
+      console.warn('restoreEmbeddedDemoFromStorage failed:', e);
+      return false;
+    }
+  }
 
   function userHasLoadedRealExport() {
     try {
@@ -1523,6 +1634,11 @@
   function syncDemoBannerVisibility() {
     const aside = document.getElementById('demo-dataset-banner');
     if (!aside) return;
+    if (typeof isShareReadOnly === 'function' && isShareReadOnly()) {
+      aside.setAttribute('hidden', '');
+      aside.setAttribute('aria-hidden', 'true');
+      return;
+    }
     let usingDemo = false;
     try {
       usingDemo = localStorage.getItem(LS_USING_DEMO) === '1';
@@ -1620,13 +1736,12 @@
       }
       const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en || {};
       const label = t.demoDatasetSlotLabel || 'Demo';
-      allRunes = parseSWEX(json);
-      rebuildUnitsFromSwex(json);
-      reprocess();
-      markUsingDemoDataset(true);
+      await loadDemoDatasetInMemory(jsonText, json, label);
+      if (typeof seedDemoTeamsIfEmpty === 'function') seedDemoTeamsIfEmpty();
       uiAfterSuccessfulRuneRestore({ name: label }, { keepTab: options.keepTab === true });
       applyDemoBannerTextFromTranslations();
       syncDemoBannerVisibility();
+      if (typeof renderTeamsPanel === 'function') renderTeamsPanel();
       return true;
     } catch (e) {
       console.warn('Embedded demo persist/load failed:', e);
@@ -1672,6 +1787,9 @@
         console.log(`Saved ${file.name} (${fileSizeKB}KB) to IndexedDB`);
       }
       markUserLoadedRealExport();
+      await purgeDemoStorage();
+      await scrubDemoFromUserSlots();
+      if (typeof removeDemoTeams === 'function') removeDemoTeams();
       syncDemoBannerVisibility();
       document.getElementById('upload-prompt').classList.add('hidden');
       showMainTab('dashboard', { writeHash: true });
@@ -2283,7 +2401,7 @@
     const pot = sumRuneSpdSubsPotential(r);
     const grade = String(r.gradeStr || '').trim();
     let core = `+${spd} SPD`;
-    if (pot > spd) core += ` (→+${pot})`;
+    if (pot > spd) core += ` →+${pot}`;
     return grade ? `${core} · ${grade}` : core;
   }
 
@@ -2963,7 +3081,9 @@
           const cur = sumRuneSpdSubs(r);
           btn.className =
             pot > cur ? 'top-spd-chip top-spd-chip--has-pot' : 'top-spd-chip';
-          btn.textContent = formatTopSpdChipLabel(r, tloc);
+          const chipLabel = formatTopSpdChipLabel(r, tloc);
+          btn.textContent = chipLabel;
+          btn.title = chipLabel;
           const setNm = selectedSet;
           const sl = slot;
           btn.addEventListener('click', () => {
@@ -3435,7 +3555,7 @@
     );
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const lines = [];
-    lines.push(String(t.title || 'SW Rune Master'));
+    lines.push(String(t.title || 'SW-Forge'));
     lines.push(`${t.stageYourPresetLabel || 'Preset'}: ${stage}`);
     lines.push(
       `${t.stageSuggestedLabel || 'Suggested'}: ${stageDisplayName(t, recStage)} · ${t.stageScoreLabel || 'Score'} ${metrics.score} ` +
@@ -4092,6 +4212,43 @@
     if (v === 'Upgrade') return tl.actionTargetUpgrade;
     if (v === 'Finish') return tl.actionTargetFinish;
     if (v === 'Reapp') return tl.actionTargetReapp;
+    if (v === 'Keep' && r && r.decisionTrace) {
+      const dt = r.decisionTrace || {};
+      const strict = !!dt.strictFormulaMatch;
+      const policy = !!dt.policyFormulaMatch;
+      const strictRole = dt.strictBestFormula || '';
+      const policyRole = dt.policyBestFormula || dt.bestRole || '';
+      const fitScore = Number(r.fitSummary?.bestScore || 0);
+      const tier = fitScore >= 75 ? 'Excellent' : fitScore >= 60 ? 'Good' : 'Usable';
+      const fit = Number.isFinite(fitScore) && fitScore > 0 ? `Fit ${Math.round(fitScore)}` : '';
+
+      if (r.policyRelaxedRole) {
+        const base = `${roleDisplayName(r.policyRelaxedRole)} · ${tier} (Relaxed)`;
+        return fit ? `${base} · ${fit}` : base;
+      }
+
+      if ((policyRole || '') === 'Universal' || r.universalSource) {
+        if (String(r.universalSource) === 'God') {
+          const src = 'High Value · God';
+          return fit ? `${src} · ${fit}` : src;
+        }
+        if (String(r.universalSource) === 'Duo') {
+          const src = 'High Value · Duo';
+          return fit ? `${src} · ${fit}` : src;
+        }
+        const src = 'High Value';
+        return fit ? `${src} · ${fit}` : src;
+      }
+
+      if (!strict && policy && policyRole) {
+        const base = `${roleDisplayName(policyRole)} · ${tier} (Flexible)`;
+        return fit ? `${base} · ${fit}` : base;
+      }
+      if (strictRole) {
+        const base = `${roleDisplayName(strictRole)} · ${tier} (Strict)`;
+        return fit ? `${base} · ${fit}` : base;
+      }
+    }
     return '';
   }
 
@@ -4115,7 +4272,11 @@
         parts.push(`${k}=${val}`);
       });
     }
-    return parts.join(' · ');
+    if (v === 'Keep' && r && r.fitSummary && Number(r.fitSummary.bestScore || 0) > 0) {
+      parts.push(`Fit Score: ${Math.round(Number(r.fitSummary.bestScore || 0))}`);
+      parts.push('Fit Score — how well the rune stats fit this role');
+    }
+    return parts.join('\n');
   }
 
   /** Stylised “Ancient” mark: A without crossbar, dot at mid-height (matches in-game cue). */
@@ -4385,15 +4546,6 @@
   function setRuneTableMonsterMasterId(masterId) {
     runeTableMonsterMasterId =
       masterId != null && Number.isFinite(Number(masterId)) ? Number(masterId) : null;
-    const strip = document.getElementById('rune-table-monster-filter');
-    if (strip) strip.hidden = runeTableMonsterMasterId == null;
-    const label = document.getElementById('rune-table-monster-filter-label');
-    if (label && runeTableMonsterMasterId != null && window.SWRM_MONSTER_DB) {
-      const name = window.SWRM_MONSTER_DB.monsterDisplayName(runeTableMonsterMasterId);
-      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-      const tpl = t.runeTableMonsterFilterTpl || 'Runes on {name}';
-      label.textContent = tpl.replace('{name}', name);
-    }
   }
 
   function clearRuneTableMonsterMasterId() {
@@ -4464,27 +4616,12 @@
     const countEl = document.getElementById('table-count');
     if (countEl) {
       if (!runeTableShowAll && total > RUNE_TABLE_PAGE) {
-        const tmpl = t.runeTableCountCapped || '{shown} / {total} {runes}';
+        const tmpl = t.runeTableCountCapped || '{shown} / {total}';
         countEl.textContent = tmpl
           .replace(/\{shown\}/g, String(cap))
-          .replace(/\{total\}/g, String(total))
-          .replace(/\{runes\}/g, t.runes);
+          .replace(/\{total\}/g, String(total));
       } else {
         countEl.textContent = `${total} ${t.runes}`;
-      }
-    }
-
-    const detailEl = document.getElementById('table-count-detail');
-    if (detailEl) {
-      if (total === 0) {
-        detailEl.textContent = t.tableShownDetailEmpty || '';
-      } else if (!runeTableShowAll && total > RUNE_TABLE_PAGE) {
-        detailEl.textContent = (t.tableShownDetailCapped || '')
-          .replace(/\{shown\}/g, String(cap))
-          .replace(/\{total\}/g, String(total));
-      } else {
-        detailEl.textContent = (t.tableShownDetailAll || '')
-          .replace(/\{total\}/g, String(total));
       }
     }
 
@@ -4761,10 +4898,6 @@
 
   document.getElementById('btn-table-reset-filters')?.addEventListener('click', () => {
     resetRuneTableFilters();
-  });
-
-  document.getElementById('btn-rune-table-clear-monster-filter')?.addEventListener('click', () => {
-    if (typeof clearRuneTableMonsterMasterId === 'function') clearRuneTableMonsterMasterId();
   });
 
   // Table filters (search debounced separately)
@@ -5565,6 +5698,7 @@
   }
 
 
+
   buildStatConstantsTable();
   refreshEnginePreviews();
 
@@ -5681,6 +5815,19 @@
     s.statConstants = collectStatConstantsFromForm();
     window.SWRM.applyDerivedThresholdFields(s);
 
+    if (typeof readPolicyFromControls === 'function') {
+      s.policy = readPolicyFromControls();
+    }
+    const dash = document.getElementById('dashboard-policy-strictness');
+    const stSel = document.getElementById('stage-select');
+    let stg = 'Mid';
+    if (stSel && (stSel.value === 'Early' || stSel.value === 'Mid' || stSel.value === 'Late')) stg = stSel.value;
+    const v = Math.max(1, Math.min(5, parseInt(dash && dash.value, 10) || 3));
+    if (typeof window.applySimpleAnalyzerPolicy === 'function') {
+      window.applySimpleAnalyzerPolicy(stg, v);
+      s.policy = window.SWRM.mergeEvalPolicy(window.SWRM.settings.policy);
+    }
+
     const persist = JSON.parse(JSON.stringify(s));
     delete persist.hrThresholds;
     delete persist.duoThresholds;
@@ -5691,24 +5838,6 @@
     refreshRoleFilterOptions();
     if (processedRunes.length) reprocess();
     alert('Settings saved & recalculated!');
-  });
-
-  document.getElementById('btn-reset-stat-constants')?.addEventListener('click', () => {
-    const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-    if (!confirm(tloc.resetConstantsConfirm || 'Replace Constants with defaults?')) return;
-    const s = window.SWRM.settings;
-    s.statConstants = JSON.parse(JSON.stringify(window.SWRM.DEFAULT_STAT_CONSTANTS));
-    window.SWRM.applyDerivedThresholdFields(s);
-    const persist = JSON.parse(JSON.stringify(s));
-    delete persist.hrThresholds;
-    delete persist.duoThresholds;
-    delete persist.godConstants;
-    delete persist.hrCoeff;
-    saveSettings(persist);
-    buildStatConstantsTable();
-    refreshEnginePreviews();
-    if (processedRunes.length) reprocess();
-    showSwrmToast(tloc.resetConstantsDone || 'Constants reset.', { type: 'success', duration: 3800 });
   });
 
   
@@ -5728,8 +5857,13 @@
       const openedShare = await initShareProfile();
       if (openedShare) {
         renderDbSlots();
+        if (typeof applyShareUrlTabFromLocation === 'function') applyShareUrlTabFromLocation();
         return;
       }
+    }
+
+    if (typeof scrubDemoFromUserSlots === 'function') {
+      await scrubDemoFromUserSlots();
     }
 
     const savedRunes = localStorage.getItem('loadedRunes');
@@ -5737,9 +5871,10 @@
     try {
       const slots = loadDbSlots();
       const hasSlotMeta = slots.some(s => s.name && s.name.trim() !== '');
+      const realSlot = (s) => s.name && s.name.trim() !== '' && !(typeof slotNameLooksLikeDemo === 'function' && slotNameLooksLikeDemo(s.name));
       const targetSlot =
-        slots.find(s => s.active && s.name && s.name.trim() !== '') ||
-        slots.find(s => s.name && s.name.trim() !== '');
+        slots.find(s => s.active && realSlot(s)) ||
+        slots.find(s => realSlot(s));
 
       console.log('=== INITIALIZATION DEBUG ===');
       console.log('Slots from loadDbSlots():', slots);
@@ -5821,7 +5956,11 @@
             } else {
               console.log('No saved runes found; trying embedded demo');
             }
-            const demoOk = await installEmbeddedDemoDataset();
+            let demoOk = false;
+            if (typeof restoreEmbeddedDemoFromStorage === 'function') {
+              demoOk = await restoreEmbeddedDemoFromStorage();
+            }
+            if (!demoOk) demoOk = await installEmbeddedDemoDataset();
             if (!demoOk) uiShowUploadPrompt();
           }
         }
@@ -5872,6 +6011,324 @@
     localStorage.removeItem('swrm_settings_v1');
     location.reload();
   });
+
+
+  function getDashboardGameStage() {
+    const sel = document.getElementById('stage-select');
+    const v = sel && sel.value;
+    if (v === 'Early' || v === 'Mid' || v === 'Late') return v;
+    return 'Mid';
+  }
+
+  function stageToSimplePreset(stage) {
+    if (stage === 'Early') return 'Early Progression';
+    if (stage === 'Late') return 'Late Progression';
+    return 'Mid Progression';
+  }
+
+  function updateDashboardStrictnessHints() {
+    const el = document.getElementById('dashboard-policy-strictness');
+    const hint = document.getElementById('dashboard-policy-strictness-hint');
+    if (!el || !hint) return;
+    const v = Math.max(1, Math.min(5, parseInt(el.value, 10) || 3));
+    hint.textContent = `${v}/5`;
+  }
+
+  function policyFromPresetName(name) {
+    const presets = window.SWRM.DEFAULT_EVAL_POLICY_PRESETS || {};
+    const tmpl = presets[name];
+    const cur = window.SWRM.mergeEvalPolicy(window.SWRM.settings.policy);
+    if (!tmpl) {
+      return window.SWRM.mergeEvalPolicy({ ...cur, preset: name || 'Custom' });
+    }
+    return window.SWRM.mergeEvalPolicy({
+      ...cur,
+      ...tmpl,
+      preset: tmpl.preset,
+      simpleStrictness: cur.simpleStrictness,
+      relaxedRetryMode: cur.relaxedRetryMode,
+    });
+  }
+
+  /**
+   * Strictness 1–5: L=3 matches the stage preset baseline. Each step moves real filters:
+   * minUsefulSubs ±1 per level, minRolePressure ~±0.08/step, God/Duo/Slow-DPS ratios for Universal,
+   * anchor/slot modes at extremes. L≥4 turns relaxed retry off so strict pass dominates.
+   */
+  function blendSimpleStrictnessOntoStageTemplate(tmpl, L) {
+    const presets = window.SWRM.DEFAULT_EVAL_POLICY_PRESETS || {};
+    const late = presets['Late Progression'] || {};
+    const d = L - 3;
+    const base = window.SWRM.mergeEvalPolicy(tmpl);
+
+    const tUp = Math.max(0, d) / 2;
+    const tDown = Math.max(0, -d) / 2;
+
+    const blendRatioField = (field, forgiving) => {
+      const fb = Number(base[field]);
+      const cur = Number.isFinite(fb) ? fb : forgiving;
+      if (d > 0) {
+        const dest = Number(late[field]);
+        const end = Number.isFinite(dest) ? dest : cur;
+        return Math.max(0.62, Math.min(1.02, cur + (end - cur) * tUp));
+      }
+      if (d < 0) {
+        return Math.max(0.62, Math.min(1.02, cur + (forgiving - cur) * tDown));
+      }
+      return cur;
+    };
+
+    // ~0.08 / step on global floor (target band 0.05–0.10 between adjacent levels)
+    const minRolePressure = Math.max(
+      0,
+      Math.min(0.52, Number(base.minRolePressure || 0) + d * 0.082),
+    );
+
+    const prMult = 1 + d * 0.15;
+    const rolePressureByRole = {};
+    const srcRp = base.rolePressureByRole && typeof base.rolePressureByRole === 'object' ? base.rolePressureByRole : {};
+    Object.keys(srcRp).forEach((role) => {
+      const v = Number(srcRp[role]);
+      if (!Number.isFinite(v)) return;
+      const boosted = v * prMult + Math.max(0, d) * 0.028;
+      rolePressureByRole[role] = Math.max(0.18, Math.min(0.8, boosted));
+    });
+
+    // Exactly one useful-sub step per strictness level vs L=3 baseline
+    const minUsefulSubsByRole = {};
+    const srcMu = base.minUsefulSubsByRole && typeof base.minUsefulSubsByRole === 'object' ? base.minUsefulSubsByRole : {};
+    const rolesFromFormulas = Object.keys(window.SWRM.settings?.formulas || {});
+    const muKeys = new Set([...Object.keys(srcMu), ...rolesFromFormulas]);
+    muKeys.forEach((role) => {
+      let n = Number(srcMu[role]);
+      if (!Number.isFinite(n)) n = 2;
+      const adj = n + d;
+      minUsefulSubsByRole[role] = Math.max(1, Math.min(5, adj));
+    });
+
+    let minStatsModifier = 0;
+    if (Number(base.minStatsModifier) === 1) minStatsModifier = 1;
+    else if (Number(base.minStatsModifier) === -1) minStatsModifier = -1;
+    if (d <= -2) minStatsModifier = -1;
+    else if (d >= 2) minStatsModifier = 1;
+
+    let anchorMode = base.anchorMode === 'soft' ? 'soft' : 'hard';
+    if (d <= -1) anchorMode = 'soft';
+    else if (d >= 1) anchorMode = 'hard';
+
+    let slotRequirementMode = base.slotRequirementMode === 'soft' ? 'soft' : 'hard';
+    if (d <= -1) slotRequirementMode = 'soft';
+    else if (d >= 1) slotRequirementMode = 'hard';
+
+    // High strictness: no second pass — primary policy + Universal thresholds decide.
+    const relaxedRetryMode = L >= 4 ? 'off' : 'normal';
+
+    return window.SWRM.mergeEvalPolicy({
+      ...base,
+      preset: base.preset,
+      anchorMode,
+      slotRequirementMode,
+      minStatsModifier,
+      minRolePressure,
+      rolePressureByRole,
+      minUsefulSubsByRole,
+      slowDpsCoreMinRatio: blendRatioField('slowDpsCoreMinRatio', 0.665),
+      godRollMinRatio: blendRatioField('godRollMinRatio', 0.855),
+      duoRollMinRatio: blendRatioField('duoRollMinRatio', 0.755),
+      simpleStrictness: L,
+      relaxedRetryMode,
+      godCountsAsRole: false,
+      duoCountsAsRole: false,
+    });
+  }
+
+  function applySimpleAnalyzerPolicy(gameStage, strictness) {
+    const presets = window.SWRM.DEFAULT_EVAL_POLICY_PRESETS || {};
+    const presetName = stageToSimplePreset(gameStage || 'Mid');
+    const tmpl = presets[presetName] || presets['Mid Progression'];
+    const L = Math.max(1, Math.min(5, Number(strictness) || 3));
+
+    const next = blendSimpleStrictnessOntoStageTemplate(tmpl, L);
+    window.SWRM.settings.policy = next;
+    writePolicyToExpertControls(next);
+    updateDashboardStrictnessHints();
+    syncPolicySimplePreview();
+    refreshPolicySummary();
+  }
+
+  function writePolicyToExpertControls(policy) {
+    const p = window.SWRM.mergeEvalPolicy(policy);
+    const setSel = (id, val) => {
+      const el = document.getElementById(id);
+      if (!el || val == null) return;
+      el.value = String(val);
+    };
+    setSel('policy-preset', p.preset);
+    setSel('policy-anchor-mode', p.anchorMode);
+    setSel('policy-slotreq-mode', p.slotRequirementMode);
+    setSel('policy-minstats-mod', String(p.minStatsModifier));
+    const mp = document.getElementById('policy-min-pressure');
+    if (mp) {
+      const want = Number(p.minRolePressure).toFixed(2);
+      const opts = Array.from(mp.options).map((o) => o.value);
+      mp.value = opts.includes(want) ? want : (opts.includes('0.00') ? '0.00' : mp.options[0].value);
+    }
+    const g = document.getElementById('policy-god-counts');
+    const d = document.getElementById('policy-duo-counts');
+    if (g) g.checked = !!p.godCountsAsRole;
+    if (d) d.checked = !!p.duoCountsAsRole;
+    const dash = document.getElementById('dashboard-policy-strictness');
+    if (dash) dash.value = String(Math.max(1, Math.min(5, Number(p.simpleStrictness) || 3)));
+  }
+
+  function readPolicyFromControls() {
+    const cur = window.SWRM.mergeEvalPolicy(window.SWRM.settings.policy);
+    const preset = document.getElementById('policy-preset')?.value || cur.preset;
+    const anchorMode = document.getElementById('policy-anchor-mode')?.value === 'soft' ? 'soft' : 'hard';
+    const slotRequirementMode = document.getElementById('policy-slotreq-mode')?.value === 'soft' ? 'soft' : 'hard';
+    const msm = parseInt(document.getElementById('policy-minstats-mod')?.value, 10);
+    const minStatsModifier = msm === -1 || msm === 1 ? msm : 0;
+    const mpSel = document.getElementById('policy-min-pressure');
+    const minRolePressure = mpSel ? Number(mpSel.value) : cur.minRolePressure;
+    const merged = window.SWRM.mergeEvalPolicy({
+      ...cur,
+      preset,
+      anchorMode,
+      slotRequirementMode,
+      minStatsModifier,
+      minRolePressure: Number.isFinite(minRolePressure) ? minRolePressure : cur.minRolePressure,
+      godCountsAsRole: !!document.getElementById('policy-god-counts')?.checked,
+      duoCountsAsRole: !!document.getElementById('policy-duo-counts')?.checked,
+    });
+    const dash = document.getElementById('dashboard-policy-strictness');
+    if (dash) {
+      const ss = parseInt(dash.value, 10);
+      if (Number.isFinite(ss)) merged.simpleStrictness = Math.max(1, Math.min(5, ss));
+    }
+    return window.SWRM.mergeEvalPolicy(merged);
+  }
+
+  function refreshPolicySummary() {
+    const el = document.getElementById('policy-summary');
+    if (!el) return;
+    const p = window.SWRM.mergeEvalPolicy(window.SWRM.settings.policy);
+    const a = p.anchorMode === 'soft' ? 'anchor soft' : 'anchor hard';
+    const s = p.slotRequirementMode === 'soft' ? 'slots soft' : 'slots hard';
+    el.textContent = `${p.preset} · ${a} · ${s} · pressure ${Number(p.minRolePressure).toFixed(2)} · strictness ${p.simpleStrictness}/5 · retry ${p.relaxedRetryMode || 'normal'}`;
+  }
+
+  function syncPolicySimplePreview() {
+    const simplePrev = document.getElementById('policy-simple-preview');
+    if (simplePrev) simplePrev.hidden = true;
+  }
+
+  let policyReprocTm = null;
+  function schedulePolicyReprocess() {
+    refreshPolicySummary();
+    updateDashboardStrictnessHints();
+    syncPolicySimplePreview();
+    if (typeof processedRunes === 'undefined' || !processedRunes.length) return;
+    clearTimeout(policyReprocTm);
+    policyReprocTm = setTimeout(() => {
+      if (processedRunes.length) reprocess();
+    }, 90);
+  }
+
+  function applyPolicyExpertUi() {
+    const expert = document.getElementById('policy-expert-wrap');
+    if (expert) expert.hidden = false;
+  }
+
+  function initPolicySimpleExpertUx() {
+    applyPolicyExpertUi();
+  }
+
+  function initThresholdPreviewsToggle() {
+    const btn = document.getElementById('btn-toggle-threshold-previews');
+    const wrap = document.getElementById('threshold-previews-wrap');
+    if (!btn || !wrap) return;
+    const tloc = () => TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const syncBtn = () => {
+      const t = tloc();
+      const hidden = wrap.hasAttribute('hidden');
+      btn.textContent = hidden
+        ? (t.rulesThresholdPreviewsShow || 'Show threshold previews')
+        : (t.rulesThresholdPreviewsHide || 'Hide threshold previews');
+    };
+    syncBtn();
+    btn.addEventListener('click', () => {
+      if (wrap.hasAttribute('hidden')) wrap.removeAttribute('hidden');
+      else wrap.setAttribute('hidden', '');
+      syncBtn();
+    });
+  }
+
+  function initPolicyControls() {
+    const pol = window.SWRM.mergeEvalPolicy(window.SWRM.settings.policy);
+    writePolicyToExpertControls(pol);
+    updateDashboardStrictnessHints();
+    syncPolicySimplePreview();
+    refreshPolicySummary();
+
+    applySimpleAnalyzerPolicy(getDashboardGameStage(), pol.simpleStrictness);
+
+    const dash = document.getElementById('dashboard-policy-strictness');
+    if (dash) {
+      dash.addEventListener('input', () => updateDashboardStrictnessHints());
+      dash.addEventListener('change', () => {
+        const v = Math.max(1, Math.min(5, parseInt(dash.value, 10) || 3));
+        applySimpleAnalyzerPolicy(getDashboardGameStage(), v);
+        schedulePolicyReprocess();
+      });
+    }
+
+    document.getElementById('policy-preset')?.addEventListener('change', (e) => {
+      const name = e.target && e.target.value;
+      if (name && name !== 'Custom') {
+        window.SWRM.settings.policy = policyFromPresetName(name);
+        writePolicyToExpertControls(window.SWRM.settings.policy);
+      } else {
+        window.SWRM.settings.policy = window.SWRM.mergeEvalPolicy({
+          ...window.SWRM.settings.policy,
+          preset: 'Custom',
+        });
+      }
+      schedulePolicyReprocess();
+    });
+
+    ['policy-anchor-mode', 'policy-slotreq-mode', 'policy-minstats-mod', 'policy-min-pressure'].forEach((id) => {
+      document.getElementById(id)?.addEventListener('change', () => {
+        window.SWRM.settings.policy = readPolicyFromControls();
+        schedulePolicyReprocess();
+      });
+    });
+    document.getElementById('policy-god-counts')?.addEventListener('change', () => {
+      window.SWRM.settings.policy = readPolicyFromControls();
+      schedulePolicyReprocess();
+    });
+    document.getElementById('policy-duo-counts')?.addEventListener('change', () => {
+      window.SWRM.settings.policy = readPolicyFromControls();
+      schedulePolicyReprocess();
+    });
+  }
+
+  window.applySimpleAnalyzerPolicy = applySimpleAnalyzerPolicy;
+  window.getDashboardGameStage = getDashboardGameStage;
+  window.syncPolicySimplePreview = syncPolicySimplePreview;
+
+  window.swrmOnDashboardStageChanged = function () {
+    const dash = document.getElementById('dashboard-policy-strictness');
+    const v = dash ? Math.max(1, Math.min(5, parseInt(dash.value, 10) || 3)) : 3;
+    applySimpleAnalyzerPolicy(getDashboardGameStage(), v);
+    updateDashboardStrictnessHints();
+    syncPolicySimplePreview();
+    refreshPolicySummary();
+    schedulePolicyReprocess();
+  };
+
+  initPolicyControls();
+  initPolicySimpleExpertUx();
+  initThresholdPreviewsToggle();
 
   // ===================== APP SETTINGS =====================
   const DB_SLOTS_META_KEY = 'swrm_db_slots_meta_v1';
@@ -5946,7 +6403,7 @@
   }
 
   async function clearAllIndexedDbRunePayloads() {
-    for (const id of [1, 2, 3, 4, 'current-runes']) {
+    for (const id of [1, 2, 3, 4, 'current-runes', '__swrm_embedded_demo__']) {
       try {
         await deleteSlotDataRobust(id);
       } catch (e) {
@@ -6004,18 +6461,21 @@
     }).join('');
   }
 
-  function processJsonData(jsonText) {
+  async function processJsonData(jsonText) {
     const json = JSON.parse(jsonText);
     allRunes = parseSWEX(json);
     rebuildUnitsFromSwex(json);
     reprocess();
     markUserLoadedRealExport();
+    if (typeof purgeDemoStorage === 'function') await purgeDemoStorage();
+    if (typeof scrubDemoFromUserSlots === 'function') await scrubDemoFromUserSlots();
+    if (typeof removeDemoTeams === 'function') removeDemoTeams();
     syncDemoBannerVisibility();
     document.getElementById('upload-prompt').classList.add('hidden');
   }
 
-  function parseAndLoadJson(jsonText) {
-    processJsonData(jsonText);
+  async function parseAndLoadJson(jsonText) {
+    await processJsonData(jsonText);
     showMainTab('dashboard', { writeHash: true });
   }
 
@@ -6094,10 +6554,10 @@
             const jsonObj = JSON.parse(text);
             await saveSlotData(slotId, text);
             applySlotSummaryFromJson(slot, file.name, jsonObj);
+            slots.forEach((s) => { s.active = s.id === slotId; });
             saveDbSlots(slots);
+            await processJsonData(text);
             renderDbSlots();
-            markUserLoadedRealExport();
-            syncDemoBannerVisibility();
             console.log('Slot saved and rendered');
           } catch(err) {
             console.error('Error saving to IndexedDB:', err);
@@ -6199,7 +6659,7 @@
         if (!jsonText) return alert(t.slotEmpty || 'Selected slot is empty');
         slots.forEach(s => { s.active = s.id === slot.id; });
         saveDbSlots(slots);
-        processJsonData(jsonText);
+        await processJsonData(jsonText);
       } catch(err) {
         alert((t.parseError || 'Failed to parse slot JSON: ') + err.message);
       }
@@ -6357,6 +6817,15 @@
           attribute: u.attribute,
           unit_level: u.unit_level,
           rank: u.rank,
+          con: u.con,
+          atk: u.atk,
+          def: u.def,
+          spd: u.spd,
+          critical_rate: u.critical_rate,
+          critical_damage: u.critical_damage,
+          resist: u.resist,
+          accuracy: u.accuracy,
+          skills: Array.isArray(u.skills) ? u.skills : [],
           runes,
         };
       });
@@ -6533,11 +7002,13 @@
     if (!bar) {
       bar = document.createElement('aside');
       bar.id = 'share-view-banner';
-      bar.className = 'demo-dataset-banner share-view-banner';
+      bar.className = 'share-view-banner';
       const chrome = document.querySelector('.site-chrome-sticky');
       if (chrome) chrome.insertAdjacentElement('afterend', bar);
       else document.body.prepend(bar);
     }
+    bar.removeAttribute('hidden');
+    bar.setAttribute('aria-hidden', 'false');
     const name = escapeHtml(shareViewWizardName || t.shareUnknownWizard || 'another player');
     const tpl = t.shareViewingBanner || 'You are viewing {name}\'s profile (read-only).';
     bar.innerHTML = `<div class="demo-dataset-banner__inner">
@@ -6593,6 +7064,8 @@
         renderDashboard(getVisibleRunes(), { animateCharts: false });
       }
       if (typeof renderMonstersPanel === 'function') renderMonstersPanel();
+      if (typeof renderTeamsPanel === 'function') renderTeamsPanel();
+      applyShareUrlTabFromLocation();
       return true;
     } catch (e) {
       console.warn('Share load failed', e);
@@ -6606,11 +7079,15 @@
 
   function applyShareReadOnlyUi() {
     document.body.classList.toggle('share-readonly', shareReadOnly);
+    if (typeof syncDemoBannerVisibility === 'function') syncDemoBannerVisibility();
     document.querySelectorAll('.share-split__main, .share-split__caret, .share-profile-trigger').forEach((el) => {
       el.disabled = shareReadOnly;
     });
     document.querySelectorAll('.db-slot-btn, #btn-upload-slot, #btn-demo-load').forEach((el) => {
       if (el) el.disabled = shareReadOnly;
+    });
+    document.querySelectorAll('[data-share-hidden]').forEach((el) => {
+      el.hidden = shareReadOnly;
     });
     const saveBtn = document.getElementById('btn-save-settings');
     if (saveBtn) saveBtn.hidden = shareReadOnly;
@@ -6618,6 +7095,8 @@
     if (rulesRoot) {
       rulesRoot.querySelectorAll('input, select, textarea').forEach((el) => {
         el.disabled = shareReadOnly;
+        if (shareReadOnly) el.setAttribute('readonly', 'readonly');
+        else el.removeAttribute('readonly');
       });
       rulesRoot.querySelectorAll('button').forEach((el) => {
         if (el.classList.contains('rules-subtab')) return;
@@ -6631,6 +7110,12 @@
     document.querySelectorAll('[data-teams-readonly-hide]').forEach((el) => {
       el.hidden = shareReadOnly;
     });
+    if (shareReadOnly) {
+      const activeMain = document.querySelector('.tab.active')?.dataset?.tab;
+      if (activeMain === 'guide' || activeMain === 'changelog') {
+        if (typeof showMainTab === 'function') showMainTab('runes', { writeHash: true });
+      }
+    }
   }
 
   function bindShareProfileUi() {
@@ -7077,6 +7562,95 @@
     teamsActiveSetId = id;
   }
 
+  function exportTeamsStateJson() {
+    teamsStateCache = null;
+    const state = loadTeamsState();
+    return JSON.stringify(state, null, 2);
+  }
+
+  function importTeamsStateFromJson(text, merge) {
+    let parsed;
+    try {
+      parsed = JSON.parse(text);
+    } catch (e) {
+      return { ok: false, error: 'invalid_json' };
+    }
+    let incoming = defaultTeamsState();
+    if (parsed && parsed.version === 2) {
+      incoming = {
+        version: 2,
+        sets: Array.isArray(parsed.sets) ? parsed.sets : [],
+        teams: parsed.teams && typeof parsed.teams === 'object' ? parsed.teams : {},
+      };
+    } else {
+      incoming = migrateLegacyState(parsed);
+    }
+    if (merge) {
+      const cur = loadTeamsState();
+      const teamIdMap = {};
+      for (const [oldId, team] of Object.entries(incoming.teams)) {
+        const copy = { ...team, id: newTeamsId('team') };
+        teamIdMap[oldId] = copy.id;
+        cur.teams[copy.id] = copy;
+      }
+      for (const set of incoming.sets) {
+        const newSetId = newTeamsId('set');
+        cur.sets.push({
+          id: newSetId,
+          name: set.name || 'Imported set',
+          collapsed: !!set.collapsed,
+          teamIds: (set.teamIds || []).map((tid) => teamIdMap[tid]).filter(Boolean),
+        });
+      }
+      saveTeamsState(cur);
+    } else {
+      saveTeamsState(incoming);
+      teamsActiveSetId = incoming.sets[0]?.id || null;
+    }
+    teamsStateCache = null;
+    return { ok: true };
+  }
+
+  /** Remove demo sample team set after user loads their own SWEX. */
+  function removeDemoTeams() {
+    const state = loadTeamsState();
+    const demoSetIds = state.sets
+      .filter((s) => /^demo\s*teams$/i.test(String(s.name || '').trim()))
+      .map((s) => s.id);
+    if (!demoSetIds.length) return false;
+    const teamIds = new Set();
+    for (const sid of demoSetIds) {
+      const set = state.sets.find((x) => x.id === sid);
+      (set?.teamIds || []).forEach((tid) => teamIds.add(tid));
+    }
+    state.sets = state.sets.filter((s) => !demoSetIds.includes(s.id));
+    for (const tid of teamIds) delete state.teams[tid];
+    saveTeamsState(state);
+    teamsStateCache = null;
+    return true;
+  }
+
+  /** Sample teams for demo mode only (when storage is empty). */
+  function seedDemoTeamsIfEmpty() {
+    if (typeof isUsingDemoDataset === 'function' && !isUsingDemoDataset()) return false;
+    const state = loadTeamsState();
+    if (state.sets.length > 0) return false;
+    const units = (allUnits || []).filter((u) => u && u.unitId).slice(0, 10);
+    if (units.length < 3) return false;
+    const set = createTeamSet('Demo teams');
+    const slots = units.slice(0, TEAM_SIZE_DEFAULT).map((u) => u.unitId);
+    const team = createTeamInSet(set.id, 'Example AO', TEAM_SIZE_DEFAULT);
+    if (!team) return false;
+    updateTeam(team.id, {
+      slots,
+      leaderUnitId: slots[0] || null,
+      shareInProfile: true,
+      tags: ['Demo'],
+      notes: 'Sample team from demo roster — edit or replace anytime.',
+    });
+    return true;
+  }
+
   let monstersHubTabsBound = false;
 
   function normalizeMonstersSubtabId(id) {
@@ -7283,6 +7857,7 @@
         const on = set.id === activeId;
         const collapsed = !!set.collapsed;
         const count = (set.teamIds || []).length;
+        const delTitle = escapeAttr(t.teamsDeleteSet || 'Delete set');
         return `<li class="teams-set-tree__item">
           <div class="teams-set-tree__row${on ? ' is-active' : ''}">
             <button type="button" class="teams-set-tree__toggle" data-teams-set-collapse="${escapeHtml(set.id)}" aria-expanded="${collapsed ? 'false' : 'true'}">${collapsed ? '▶' : '▼'}</button>
@@ -7290,6 +7865,7 @@
               <span class="teams-set-tree__name">${escapeHtml(set.name)}</span>
               <span class="teams-set-tree__count">${count}</span>
             </button>
+            <button type="button" class="teams-set-tree__delete btn-ghost" data-teams-delete-set="${escapeHtml(set.id)}" title="${delTitle}" aria-label="${delTitle}" data-teams-readonly-hide>×</button>
           </div>
         </li>`;
       })
@@ -7511,6 +8087,59 @@
       if (tid) openTeamsEditor(tid);
     };
 
+    document.getElementById('teams-export-json')?.addEventListener('click', () => {
+      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+      try {
+        const json = exportTeamsStateJson();
+        const blob = new Blob([json], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'sw-forge-teams.json';
+        a.click();
+        URL.revokeObjectURL(a.href);
+        if (typeof showSwrmToast === 'function') {
+          showSwrmToast(t.teamsExportDone || 'Teams exported.', { type: 'success' });
+        }
+      } catch (e) {
+        if (typeof showSwrmToast === 'function') {
+          showSwrmToast((t.teamsExportFailed || 'Export failed') + (e.message ? `: ${e.message}` : ''), { type: 'error' });
+        }
+      }
+    });
+
+    document.getElementById('teams-import-json')?.addEventListener('click', () => {
+      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+      const inp = document.createElement('input');
+      inp.type = 'file';
+      inp.accept = '.json,application/json';
+      inp.style.display = 'none';
+      document.body.appendChild(inp);
+      inp.addEventListener('change', () => {
+        const file = inp.files?.[0];
+        document.body.removeChild(inp);
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          const replaceAll = confirm(
+            t.teamsImportReplaceConfirm || 'Replace all teams? OK = replace, Cancel = merge into existing.',
+          );
+          const res = importTeamsStateFromJson(String(reader.result || ''), !replaceAll);
+          if (!res.ok) {
+            if (typeof showSwrmToast === 'function') {
+              showSwrmToast(t.teamsImportFailed || 'Import failed — invalid JSON.', { type: 'error' });
+            }
+            return;
+          }
+          renderTeamsPanel();
+          if (typeof showSwrmToast === 'function') {
+            showSwrmToast(t.teamsImportDone || 'Teams imported.', { type: 'success' });
+          }
+        };
+        reader.readAsText(file);
+      });
+      inp.click();
+    });
+
     document.getElementById('teams-add-set')?.addEventListener('click', () => {
       const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
       const name = window.prompt(t.teamsNewSetPrompt || 'Set name', '');
@@ -7548,6 +8177,17 @@
     });
 
     document.getElementById('teams-set-list')?.addEventListener('click', (e) => {
+      const delBtn = e.target.closest('[data-teams-delete-set]');
+      if (delBtn) {
+        e.stopPropagation();
+        const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+        const setId = delBtn.dataset.teamsDeleteSet;
+        if (!setId) return;
+        if (!window.confirm(tloc.teamsDeleteSetConfirm || 'Delete this team set and all teams in it?')) return;
+        deleteTeamSet(setId);
+        renderTeamsPanel();
+        return;
+      }
       const collapse = e.target.closest('[data-teams-set-collapse]');
       if (collapse) {
         toggleSetCollapsed(collapse.dataset.teamsSetCollapse);
@@ -9449,6 +10089,7 @@
   }
 
   function handleMonstersUnitTagClick(btn) {
+    if (typeof isShareReadOnly === 'function' && isShareReadOnly()) return;
     const tag = btn.getAttribute('data-unit-tag');
     const uid = btn.getAttribute('data-unit-id');
     if (!tag || !uid) return;
@@ -9911,7 +10552,7 @@
         const runes = escapeHtml(runeTpl.replace(/\{n\}/g, String(u.equippedCount || 0)));
         const skills =
           u.skillUpsNeeded > 0
-            ? escapeHtml(String(u.skillUpsNeeded))
+            ? `<span class="monsters-table__devils" title="${escapeHtml((t.monstersSkillDeficitTip || '{n} to max').replace(/\{n\}/g, String(u.skillUpsNeeded)))}">${devilmonIconHtml('monsters-table__devil-icon')}<span class="monsters-table__devil-n">${escapeHtml(String(u.skillUpsNeeded))}</span></span>`
             : u.skillsMaxed
               ? '✓'
               : '—';
@@ -10407,8 +11048,6 @@
     if (lblGridSel) lblGridSel.textContent = t.monstersTableSelectAll || 'Select all visible';
     const clrToolbar = document.getElementById('monsters-toolbar-clear');
     if (clrToolbar) clrToolbar.textContent = t.monstersToolbarClear || 'Clear filters';
-    const clearMonster = document.getElementById('btn-rune-table-clear-monster-filter');
-    if (clearMonster) clearMonster.textContent = t.runeTableMonsterFilterClear || 'Clear';
     const emptyClear = document.getElementById('monsters-empty-clear-filters');
     if (emptyClear) emptyClear.textContent = t.monstersEmptyClearFilters || 'Clear filters';
     const emptySearch = document.getElementById('monsters-empty-reset-search');

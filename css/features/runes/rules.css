@@ -147,11 +147,65 @@ html.swrm-has-gsap .rules-tab-shell > .rules-tab-footer {
 .rules-subpanel--roles .role-layout {
   grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
   gap: 24px;
+  flex: 1;
+  min-height: 0;
+  margin-top: 0;
+  align-items: stretch;
+}
+.rules-subpanel--roles.is-active {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 10.5rem);
+  max-height: calc(100vh - 10.5rem);
+}
+.rules-subpanel--roles .rules-card--roles-full {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.rules-subpanel--roles .rules-card__body--roles {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.rules-subpanel--roles .role-nav,
+.rules-subpanel--roles .role-content {
+  min-height: 0;
+  overflow-y: auto;
+}
+.rules-subpanel--roles .role-content {
+  max-height: none;
 }
 @media (max-width: 720px) {
+  .rules-subpanel--roles.is-active {
+    min-height: calc(100vh - 8rem);
+    max-height: none;
+  }
   .rules-subpanel--roles .role-layout {
     grid-template-columns: 1fr;
   }
+}
+
+#rules-card-constants .rules-card__body .settings-row {
+  border-top: none;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+.constants-previews-block {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.constants-previews-block__toggle {
+  margin-bottom: 0;
+  padding-top: 0;
+}
+.constants-previews-block__panels:not([hidden]) {
+  margin-top: 14px;
 }
 
 .rules-card {
@@ -390,15 +444,25 @@ html.swrm-has-gsap .rules-tab-shell > .rules-tab-footer {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 1px;
+  gap: 0;
 }
 .stat-constants-table .sc-inp-suffix {
-  font-size: 0.68rem;
+  font-size: 0.72rem;
+  line-height: 1;
   color: var(--text-dim);
   user-select: none;
   flex-shrink: 0;
+  margin-left: 1px;
 }
-.stat-constants-table td.sc-td--pct input[type=number] { width: 52px; }
+.stat-constants-table td.sc-td--pct {
+  text-align: center;
+}
+.stat-constants-table td.sc-td--pct input[type=number] {
+  width: 46px;
+  text-align: center;
+  padding-left: 4px;
+  padding-right: 4px;
+}
 .stat-constants-table td:not(.sc-td--pct) input[type=number] { width: 58px; }
 
 .constants-reset-row {
@@ -583,4 +647,28 @@ html.swrm-has-gsap .rules-tab-shell > .rules-tab-footer {
   padding: 20px;
   max-height: 600px;
   overflow-y: auto;
+}
+
+/* ---------- Simple vs Expert (Rune Rules) ----------
+   In Simple we hide expert UI. IMPORTANT: `.rules-subpanel.is-active { display:block }`
+   overrides the HTML [hidden] attribute, so we force-hide with !important.
+   -------------------------------------------------------------------- */
+#tab-settings.rules-mode-simple .rules-expert-only {
+  display: none !important;
+}
+#tab-settings.rules-mode-expert .rules-simple-only {
+  display: none !important;
+}
+
+#tab-settings.rules-mode-simple #rules-card-constants,
+#tab-settings.rules-mode-simple #rules-card-previews,
+#tab-settings.rules-mode-simple #rules-panel-roles,
+#tab-settings.rules-mode-simple #rules-panel-verdict,
+#tab-settings.rules-mode-simple .rules-tab-footer.settings-actions {
+  display: none !important;
+}
+
+#tab-settings.rules-mode-simple #rules-subtab-roles,
+#tab-settings.rules-mode-simple #rules-subtab-verdict {
+  display: none !important;
 }

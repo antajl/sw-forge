@@ -116,6 +116,19 @@
     s.statConstants = collectStatConstantsFromForm();
     window.SWRM.applyDerivedThresholdFields(s);
 
+    if (typeof readPolicyFromControls === 'function') {
+      s.policy = readPolicyFromControls();
+    }
+    const dash = document.getElementById('dashboard-policy-strictness');
+    const stSel = document.getElementById('stage-select');
+    let stg = 'Mid';
+    if (stSel && (stSel.value === 'Early' || stSel.value === 'Mid' || stSel.value === 'Late')) stg = stSel.value;
+    const v = Math.max(1, Math.min(5, parseInt(dash && dash.value, 10) || 3));
+    if (typeof window.applySimpleAnalyzerPolicy === 'function') {
+      window.applySimpleAnalyzerPolicy(stg, v);
+      s.policy = window.SWRM.mergeEvalPolicy(window.SWRM.settings.policy);
+    }
+
     const persist = JSON.parse(JSON.stringify(s));
     delete persist.hrThresholds;
     delete persist.duoThresholds;
@@ -126,24 +139,6 @@
     refreshRoleFilterOptions();
     if (processedRunes.length) reprocess();
     alert('Settings saved & recalculated!');
-  });
-
-  document.getElementById('btn-reset-stat-constants')?.addEventListener('click', () => {
-    const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-    if (!confirm(tloc.resetConstantsConfirm || 'Replace Constants with defaults?')) return;
-    const s = window.SWRM.settings;
-    s.statConstants = JSON.parse(JSON.stringify(window.SWRM.DEFAULT_STAT_CONSTANTS));
-    window.SWRM.applyDerivedThresholdFields(s);
-    const persist = JSON.parse(JSON.stringify(s));
-    delete persist.hrThresholds;
-    delete persist.duoThresholds;
-    delete persist.godConstants;
-    delete persist.hrCoeff;
-    saveSettings(persist);
-    buildStatConstantsTable();
-    refreshEnginePreviews();
-    if (processedRunes.length) reprocess();
-    showSwrmToast(tloc.resetConstantsDone || 'Constants reset.', { type: 'success', duration: 3800 });
   });
 
   
@@ -163,8 +158,13 @@
       const openedShare = await initShareProfile();
       if (openedShare) {
         renderDbSlots();
+        if (typeof applyShareUrlTabFromLocation === 'function') applyShareUrlTabFromLocation();
         return;
       }
+    }
+
+    if (typeof scrubDemoFromUserSlots === 'function') {
+      await scrubDemoFromUserSlots();
     }
 
     const savedRunes = localStorage.getItem('loadedRunes');
@@ -172,9 +172,10 @@
     try {
       const slots = loadDbSlots();
       const hasSlotMeta = slots.some(s => s.name && s.name.trim() !== '');
+      const realSlot = (s) => s.name && s.name.trim() !== '' && !(typeof slotNameLooksLikeDemo === 'function' && slotNameLooksLikeDemo(s.name));
       const targetSlot =
-        slots.find(s => s.active && s.name && s.name.trim() !== '') ||
-        slots.find(s => s.name && s.name.trim() !== '');
+        slots.find(s => s.active && realSlot(s)) ||
+        slots.find(s => realSlot(s));
 
       console.log('=== INITIALIZATION DEBUG ===');
       console.log('Slots from loadDbSlots():', slots);
@@ -256,7 +257,11 @@
             } else {
               console.log('No saved runes found; trying embedded demo');
             }
-            const demoOk = await installEmbeddedDemoDataset();
+            let demoOk = false;
+            if (typeof restoreEmbeddedDemoFromStorage === 'function') {
+              demoOk = await restoreEmbeddedDemoFromStorage();
+            }
+            if (!demoOk) demoOk = await installEmbeddedDemoDataset();
             if (!demoOk) uiShowUploadPrompt();
           }
         }

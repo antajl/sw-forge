@@ -41,7 +41,9 @@
 
   function hasBadFlat(rune, stage) {
     const cleanFlatCount = listBadFlatSubNames(rune).length;
-    const requiredFlats = stage === 'Late' ? 1 : 2;
+    // Mid/Late: one clean bad flat is enough for Gem candidate discovery.
+    // Early keeps a stricter floor to avoid over-tagging fresh +0 runes.
+    const requiredFlats = stage === 'Early' ? 2 : 1;
     return cleanFlatCount >= requiredFlats;
   }
 
@@ -271,64 +273,14 @@
     return { code: 'no_role', detail: '' };
   }
 
+  /** @deprecated Use SWRM.getRuneVerdict / getAdvancedVerdict — kept as alias for tests. */
   function getVerdict(rune, stage, settings, roleResult, mergedResults) {
-    const hasRole = roleResult !== '';
-    const isHero = isHeroLikeGrade(rune.gradeStr);
-    const isLegend = isLegendGrade(rune.gradeStr);
-    const hasHighDuo =
-      roleResult === 'God Roll' ||
-      roleResult === 'High Roll' ||
-      roleResult === 'Duo Roll';
-
-    if (rune.level < 9) {
-      return 'Upgrade';
+    const mr = mergedResults || {};
+    if (typeof window.SWRM.getAdvancedVerdict === 'function') {
+      return window.SWRM.getAdvancedVerdict(rune, stage, settings, mr);
     }
-
-    if (rune.level < 12 && hasRole) {
-      if (!effGatesBypassed() && isHero && !hasHighDuo) {
-        const effThreshold = stage === 'Late' ? 85 : (stage === 'Mid' ? 85 : 65);
-        if (rune.eff < effThreshold) return finalizeGodSellOverride('Sell', mergedResults, rune, stage, settings);
-      }
-      return 'Finish';
-    }
-
-    if (hasRole && isLegend && matchReappRule(rune, settings)) {
-      if (!isPrimaryBuildRole(roleResult)) {
-        return 'Reapp';
-      }
-    }
-
-    if (hasRole) {
-      const gem = evaluateGemRecommendation(rune, stage, settings);
-      if (gem.can) {
-        if (passesGemQualityGate(rune, stage, isHero, hasHighDuo, settings)) {
-          return 'Gem';
-        }
-        // If a rune has a role (including Duo/God), do not Sell because of gem gating.
-        // Just skip Gem recommendation and continue to Grind/Keep.
-      }
-    }
-
-    if (!hasRole) {
-      if (!effGatesBypassed()) {
-        const effThreshold = stage === 'Late' ? 65 : (stage === 'Mid' ? 50 : 35);
-        if (isHero && !hasHighDuo) {
-          const heroEffThreshold = stage === 'Late' ? 80 : (stage === 'Mid' ? 65 : 50);
-          if (rune.eff < heroEffThreshold) return finalizeGodSellOverride('Sell', mergedResults, rune, stage, settings);
-        } else if (rune.eff < effThreshold) {
-          return finalizeGodSellOverride('Sell', mergedResults, rune, stage, settings);
-        } else {
-          return finalizeGodSellOverride('Sell', mergedResults, rune, stage, settings);
-        }
-      }
-    }
-
-    const grind = checkGrind(rune, stage, settings);
-    if (grind.can) {
-      return 'Grind';
-    }
-
-    return 'Keep';
+    if (rune.level < 9) return 'Upgrade';
+    return 'Sell';
   }
 
   S.hasBadFlat = hasBadFlat;

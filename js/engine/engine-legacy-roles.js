@@ -16,9 +16,12 @@
   function checkHighRoll(rune, stage, settings) {
     const subVal = S.subRuneValue || ((s) => (Number(s?.val) || 0) + (Number(s?.grind) || 0));
     const qRow = S.isQualifyingSubstatRow || ((s) => !!s && s.source !== 'innate');
+    const ratio = Number(settings?.policy?.godRollMinRatio);
+    const minRatio = Number.isFinite(ratio) ? ratio : 1;
     for (const s of rune.substats || []) {
       if (!qRow(s) || !s.name || s.flat) continue;
-      const threshold = window.SWRM.getGodThreshold?.(s.name, settings, rune.gradeStr);
+      const base = window.SWRM.getGodThreshold?.(s.name, settings, rune.gradeStr);
+      const threshold = Number.isFinite(Number(base)) ? Number(base) * minRatio : base;
       if (threshold != null && threshold > 0 && subVal(s) >= threshold) return true;
     }
     return false;
@@ -31,10 +34,12 @@
     if (!dr || typeof dr !== 'object') return false;
     const sm = statMap(rune);
 
+    const ratioCfg = Number(settings?.policy?.duoRollMinRatio);
+    const duoRatio = Number.isFinite(ratioCfg) ? ratioCfg : 1;
     const hit = (stat) => {
       const th = dr[stat]?.[key];
       if (th == null || !(th > 0)) return 0;
-      return (sm[stat] || 0) >= th ? 1 : 0;
+      return (sm[stat] || 0) >= (th * duoRatio) ? 1 : 0;
     };
 
     const spd = hit('SPD');

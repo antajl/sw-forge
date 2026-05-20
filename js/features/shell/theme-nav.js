@@ -78,6 +78,7 @@
       if (aria) btnAuto.setAttribute('aria-label', aria);
       else btnAuto.removeAttribute('aria-label');
     }
+    setText('lbl-dashboard-strictness', t.dashboardStrictnessLabel || 'Strictness');
   }
 
   const RULES_SUBTAB_KEY = 'swrm_rules_subtab_v1';
@@ -367,7 +368,14 @@
     const opts = options || {};
     const writeHash = opts.writeHash === true;
     const pushHistory = opts.pushHistory === true;
-    const { main, sub } = normalizeMainTabRequest(tabId);
+    let { main, sub } = normalizeMainTabRequest(tabId);
+    if (typeof isShareReadOnly === 'function' && isShareReadOnly()) {
+      if (main === 'guide' || main === 'changelog') {
+        main = 'runes';
+        sub = sub || readStoredRunesSubtab();
+        tabId = sub && sub !== 'dashboard' ? `runes/${sub}` : 'runes';
+      }
+    }
     if (showMainTabLastMain === 'monsters' && main !== 'monsters') {
       if (typeof resetMonstersTableSort === 'function') resetMonstersTableSort();
       if (typeof unpinMonsterDetail === 'function') unpinMonsterDetail();

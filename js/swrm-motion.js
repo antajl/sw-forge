@@ -174,6 +174,38 @@
     }
   }
 
+  /**
+   * Sliding underline under Dashboard “Distributions” subtabs (Verdict / Roles / …).
+   * @param {{ nav: HTMLElement|null, activeKey: string, instant?: boolean }} opts
+   * @returns {boolean} true when a GSAP tween ran
+   */
+  function positionDashUnifiedTabIndicator(opts) {
+    const { nav, activeKey, instant } = opts || {};
+    const ind = nav && nav.querySelector('.dash-unified-tabs__indicator');
+    const key = ['verdict', 'roles', 'sets', 'slots', 'eff'].includes(activeKey) ? activeKey : 'verdict';
+    const btn = document.getElementById(`dash-unified-tab-${key}`);
+    if (!nav || !ind || !btn) return false;
+    const x = btn.offsetLeft;
+    const w = Math.max(0, btn.offsetWidth);
+    killTweensOf(ind);
+    const snap = () => {
+      ind.style.left = `${x}px`;
+      ind.style.width = `${w}px`;
+    };
+    if (instant || !enabled()) {
+      snap();
+      return false;
+    }
+    gsap.to(ind, {
+      left: x,
+      width: w,
+      duration: 0.32,
+      ease: 'power3.out',
+      overwrite: 'auto',
+    });
+    return true;
+  }
+
   const subpanelTimelines = new WeakMap();
 
   /**
@@ -464,6 +496,7 @@
     animateStageAdvisor,
     cancelDashUnifiedTab,
     animateDashUnifiedTab,
+    positionDashUnifiedTabIndicator,
     swapSubpanels,
     toastIn,
     toastOut,

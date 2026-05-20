@@ -1,0 +1,53 @@
+/* Runes hub — unified control typography (dashboard, table, rules) */
+#tab-runes {
+  --runes-fs-body: 0.8125rem;
+  --runes-fs-hint: 0.75rem;
+  --runes-fs-title: 0.9375rem;
+  --runes-fs-section: 1rem;
+  --runes-fs-control: 0.8125rem;
+}
+
+#tab-runes .hint,
+#tab-runes .rules-card__desc,
+#tab-runes .stage-advisor-lead,
+#tab-runes .table-count {
+  font-size: var(--runes-fs-hint);
+}
+
+#tab-runes .rules-page-title,
+#tab-runes .rules-card__title,
+#tab-runes .dash-unified-tabs__label,
+#tab-runes .stage-metric-name {
+  font-size: var(--runes-fs-title);
+  font-weight: 600;
+}
+
+#tab-runes .rules-subtab__label {
+  font-size: var(--runes-fs-control);
+}
+
+#tab-runes .rules-subtab__hint {
+  font-size: var(--runes-fs-hint);
+}
+
+#tab-runes select,
+#tab-runes input[type='text'],
+#tab-runes input[type='number'],
+#tab-runes input[type='range'],
+#tab-runes .btn-ghost,
+#tab-runes .btn-primary,
+#tab-runes .btn-toolbar,
+#tab-runes .btn-auto-stage,
+#tab-runes .dash-unified-tab,
+#tab-runes .runes-hub-tab,
+#tab-runes .table-toolbar__input,
+#tab-runes .table-toolbar__group-label {
+  font-size: var(--runes-fs-control);
+}
+
+#tab-runes .stage-advisor-preset-label,
+#tab-runes .dashboard-strictness-inline__label,
+#tab-runes .global-filter-card label {
+  font-size: var(--runes-fs-control);
+  font-weight: 500;
+}

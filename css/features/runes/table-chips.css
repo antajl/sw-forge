@@ -155,14 +155,14 @@
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  width: 13px;
-  height: 13px;
+  width: 10px;
+  height: 10px;
   margin: 0;
   color: inherit;
 }
 
 .grade-tag .ancient-grade-icon {
-  width: 13px;
-  height: 13px;
+  width: 10px;
+  height: 10px;
   display: block;
 }

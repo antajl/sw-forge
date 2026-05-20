@@ -172,7 +172,7 @@
         const runes = escapeHtml(runeTpl.replace(/\{n\}/g, String(u.equippedCount || 0)));
         const skills =
           u.skillUpsNeeded > 0
-            ? escapeHtml(String(u.skillUpsNeeded))
+            ? `<span class="monsters-table__devils" title="${escapeHtml((t.monstersSkillDeficitTip || '{n} to max').replace(/\{n\}/g, String(u.skillUpsNeeded)))}">${devilmonIconHtml('monsters-table__devil-icon')}<span class="monsters-table__devil-n">${escapeHtml(String(u.skillUpsNeeded))}</span></span>`
             : u.skillsMaxed
               ? '✓'
               : '—';

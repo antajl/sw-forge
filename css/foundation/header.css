@@ -27,24 +27,49 @@
 }
 
 .header-shell {
-  max-width: var(--app-content-max);
-  margin: 0 auto;
+  max-width: none;
+  width: 100%;
+  margin: 0;
+  padding: 0 6px 0 4px;
 }
 
 .header-row--nav {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: 'brand tabs corner';
   align-items: center;
-  gap: 10px 14px;
-  padding: 8px 14px 8px 12px;
+  gap: 8px 12px;
+  padding: 8px 8px 8px 6px;
   min-height: 52px;
 }
 
 .header-brand {
-  flex-shrink: 0;
+  grid-area: brand;
+  justify-self: start;
+}
+
+.header-row--nav .tabs-scroll {
+  grid-area: tabs;
+  justify-self: center;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  position: static;
+  left: auto;
+  transform: none;
+  z-index: 1;
+}
+
+.header-corner-cluster {
+  grid-area: corner;
+  justify-self: end;
+  margin-left: 0;
 }
 
 .header-nav-toggle {
   display: none;
+  grid-area: corner;
+  justify-self: end;
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
@@ -90,9 +115,9 @@
 
 .logo__img {
   display: block;
-  height: 34px;
+  height: 42px;
   width: auto;
-  max-width: min(196px, 46vw);
+  max-width: min(220px, 48vw);
 }
 
 .light-theme .logo__img {
@@ -100,14 +125,15 @@
 }
 
 .tabs-scroll {
-  flex: 1;
   min-width: 0;
   overflow-x: auto;
-  overflow-y: hidden;
+  overflow-y: visible;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
-  container-type: inline-size;
-  container-name: main-tabs;
+}
+
+.tabs-scroll .tabs {
+  margin-inline: auto;
 }
 
 .header-corner-cluster {
@@ -399,7 +425,7 @@ html[lang="ru"] .header-theme-btn.header-theme-btn--wide {
   line-height: 1.2;
 }
 
-@container main-tabs (max-width: 620px) {
+@media (max-width: 900px) {
   .tab__label {
     position: absolute;
     width: 1px;
@@ -462,47 +488,31 @@ html[lang="ru"] .header-theme-btn.header-theme-btn--wide {
 }
 
 @media (max-width: 720px) {
-  .header-nav-toggle {
-    display: inline-flex;
+  .header-row--nav {
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas:
+      'brand . corner'
+      'tabs tabs tabs';
+    row-gap: 6px;
   }
 
-  .header-row--nav {
-    flex-wrap: wrap;
-    align-items: center;
+  .header-nav-toggle {
+    display: none;
   }
 
   .header-row--nav .tabs-scroll {
-    display: none;
-    order: 10;
-    flex: 1 1 100%;
-    width: 100%;
-    max-height: min(70vh, 420px);
-    overflow: auto;
-    margin-top: 4px;
-    padding: 6px 4px 8px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border2);
-    background: var(--bg2);
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
-  }
-
-  .header-row--nav.is-nav-open .tabs-scroll {
     display: block;
+    justify-self: stretch;
+    padding-bottom: 2px;
   }
 
   .header-row--nav .tabs {
-    flex-direction: column;
-    align-items: stretch;
-    width: 100%;
-    gap: 2px;
-    padding: 0;
-  }
-
-  .header-row--nav .tab {
-    width: 100%;
-    justify-content: flex-start;
-    gap: 10px;
-    padding: 10px 12px;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    width: max-content;
+    max-width: 100%;
+    margin-inline: 0;
+    padding: 2px 0 4px;
   }
 
   .header-row--nav .tab__label {
@@ -514,15 +524,6 @@ html[lang="ru"] .header-theme-btn.header-theme-btn--wide {
     clip: auto;
     clip-path: none;
     white-space: nowrap;
-  }
-
-  .header-row--nav .tab.active::after {
-    left: 8px;
-    right: auto;
-    width: 3px;
-    height: auto;
-    top: 8px;
-    bottom: 8px;
   }
 }
 

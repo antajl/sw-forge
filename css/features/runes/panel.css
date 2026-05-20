@@ -80,6 +80,26 @@ html[lang='ru'] .panel-dash-distributions-head .rules-page-lead.dash-unified-blo
 /* Unified tabs/panes */
 .dash-unified-tabs.rules-subtabs {
   margin-bottom: 14px;
+  position: relative;
+  padding-bottom: 8px;
+}
+
+.dash-unified-tabs__indicator {
+  position: absolute;
+  left: 0;
+  bottom: 4px;
+  height: 3px;
+  width: 0;
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 4;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 40%, transparent);
+  opacity: 0.95;
+}
+
+html:not(.swrm-has-gsap) .dash-unified-tabs__indicator {
+  display: none;
 }
 
 .dash-unified-tab.rules-subtab {
@@ -89,6 +109,11 @@ html[lang='ru'] .panel-dash-distributions-head .rules-page-lead.dash-unified-blo
   justify-content: center;
   text-align: center;
   padding: 11px 12px;
+  transition: background 0.14s ease, border-color 0.14s ease, color 0.14s ease;
+}
+
+.dash-unified-tab.rules-subtab.is-active {
+  transition: background 0.14s ease, border-color 0.14s ease, color 0.14s ease, box-shadow 0.24s ease;
 }
 
 .dash-unified-tab .rules-subtab__label {

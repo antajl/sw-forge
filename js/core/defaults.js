@@ -326,7 +326,7 @@ const DEFAULT_FORMULAS = {
       'Slot 4': { Early: 1, Mid: 1, Late: 1 },
       'Slot 6': { Early: 1, Mid: 1, Late: 1 },
     },
-    requireHR: { 'High Roll for Hero': { Early: false, Mid: true, Late: true }, 'High Roll for Legend': { Early: false, Mid: false, Late: true } }
+    requireHR: { 'High Roll for Hero': { Early: false, Mid: true, Late: true }, 'High Roll for Legend': { Early: false, Mid: true, Late: true } }
   },
 'Fast CC': {
     enabled: true,
@@ -518,6 +518,142 @@ const DEFAULT_GEM_META = {
   },
 };
 
+const DEFAULT_EVAL_POLICY = {
+  preset: 'Mid Progression',
+  anchorMode: 'hard',          // hard | soft
+  slotRequirementMode: 'hard', // hard | soft
+  minStatsModifier: 0,         // -1 | 0 | +1
+  minRolePressure: 0.0,        // 0..1 required role pressure floor (0 = disabled)
+  rolePressureByRole: {
+    'Fast CC': 0.50,
+    Bomber: 0.50,
+    'Classic DPS': 0.52,
+    'Slow DPS': 0.55,
+    Bruiser: 0.42,
+    Tank: 0.35,
+  },
+  minUsefulSubsByRole: {
+    'Fast CC': 2,
+    Bruiser: 2,
+    Tank: 2,
+    'Classic DPS': 3,
+    Bomber: 2,
+    'Slow DPS': 2,
+  },
+  slowDpsCoreMinRatio: 0.72,    // each of ATK%/CRate/CDmg must reach this HR ratio
+  godRollMinRatio: 0.92,        // single-line Universal fallback floor
+  duoRollMinRatio: 0.82,        // pair floor for Universal fallback
+  godCountsAsRole: false,
+  duoCountsAsRole: false,
+  /** Simple-mode slider 1–5; drives primary policy blend + relaxed second pass (see policy-ui / engine-process). */
+  simpleStrictness: 3,
+  /** normal | strict | off — relaxed second pass; Simple mode sets off at strictness ≥4. */
+  relaxedRetryMode: 'normal',
+};
+
+const DEFAULT_EVAL_POLICY_PRESETS = {
+  'Early Progression': {
+    preset: 'Early Progression',
+    anchorMode: 'soft',
+    slotRequirementMode: 'hard',
+    minStatsModifier: 0,
+    minRolePressure: 0.0,
+    rolePressureByRole: {},
+    minUsefulSubsByRole: {},
+    slowDpsCoreMinRatio: 0.72,
+    godRollMinRatio: 0.92,
+    duoRollMinRatio: 0.82,
+    godCountsAsRole: false,
+    duoCountsAsRole: false,
+  },
+  'Mid Progression': {
+    preset: 'Mid Progression',
+    anchorMode: 'hard',
+    slotRequirementMode: 'hard',
+    minStatsModifier: 0,
+    minRolePressure: 0.0,
+    rolePressureByRole: {
+      'Fast CC': 0.48,
+      Bomber: 0.50,
+      'Classic DPS': 0.50,
+      'Slow DPS': 0.55,
+      Bruiser: 0.38,
+      Tank: 0.35,
+    },
+    minUsefulSubsByRole: {
+      'Fast CC': 2,
+      Bruiser: 2,
+      Tank: 2,
+      'Classic DPS': 3,
+      Bomber: 2,
+      'Slow DPS': 2,
+    },
+    slowDpsCoreMinRatio: 0.72,
+    godRollMinRatio: 0.92,
+    duoRollMinRatio: 0.82,
+    godCountsAsRole: false,
+    duoCountsAsRole: false,
+  },
+  'Late Progression': {
+    preset: 'Late Progression',
+    anchorMode: 'hard',
+    slotRequirementMode: 'hard',
+    minStatsModifier: 1,
+    minRolePressure: 0.55,
+    rolePressureByRole: {},
+    minUsefulSubsByRole: {},
+    slowDpsCoreMinRatio: 0.75,
+    godRollMinRatio: 0.95,
+    duoRollMinRatio: 0.85,
+    godCountsAsRole: false,
+    duoCountsAsRole: false,
+  },
+  Competitive: {
+    preset: 'Competitive',
+    anchorMode: 'hard',
+    slotRequirementMode: 'hard',
+    minStatsModifier: 1,
+    minRolePressure: 0.65,
+    rolePressureByRole: {},
+    minUsefulSubsByRole: {},
+    slowDpsCoreMinRatio: 0.80,
+    godRollMinRatio: 1.00,
+    duoRollMinRatio: 0.90,
+    godCountsAsRole: false,
+    duoCountsAsRole: false,
+  },
+};
+
+// Diagnostic-only role quality model (does not affect verdict tree).
+const DEFAULT_FIT_MODEL = {
+  enabled: true,
+  scoreScale: 100,
+  hrWeight: 70,
+  synergyWeight: 20,
+  innateWeight: 10,
+  innateStats: ['SPD', 'HP%', 'ATK%', 'DEF%', 'ACC', 'RES', 'CRate', 'CDmg'],
+  roleSynergyPairs: {
+    'Fast CC': [['SPD', 'ACC'], ['SPD', 'HP%'], ['SPD', 'DEF%'], ['HP%', 'DEF%']],
+    'Classic DPS': [['SPD', 'CRate'], ['CRate', 'CDmg'], ['ATK%', 'CRate'], ['ATK%', 'CDmg']],
+    'Slow DPS': [['ATK%', 'CRate'], ['ATK%', 'CDmg'], ['CRate', 'CDmg']],
+    'Bomber': [['ATK%', 'ACC'], ['SPD', 'ACC'], ['SPD', 'ATK%']],
+    'Tank': [['HP%', 'DEF%'], ['HP%', 'RES'], ['DEF%', 'RES'], ['SPD', 'HP%']],
+    'Bruiser': [['HP%', 'DEF%'], ['SPD', 'HP%'], ['SPD', 'DEF%'], ['CRate', 'HP%']],
+  },
+};
+
+// Future-safe optional bridge: Fit Score may affect ONLY borderline cases.
+// Disabled by default and does not alter verdict unless explicitly enabled.
+const DEFAULT_BORDERLINE_POLICY = {
+  enabled: false,
+  keepVerdictsOnly: true,        // never resurrect hard dead runes
+  requirePolicyMatch: true,      // candidate must already pass policy role qualification
+  minFitScore: 75,               // floor for any influence
+  maxSoftenedChecks: 1,          // only near-pass, not heavily softened roles
+  disallowWhenNoRoleDirection: true, // block if no policy role
+  notes: 'Guardrail only. Keep verdict tree canonical.',
+};
+
 // ---- EFFICIENCY MAX VALUES (Legend 6★ for each stat) ----
 // Used to calculate efficiency %
 const EFF_MAX = {
@@ -568,6 +704,189 @@ function mergeGemMeta(savedGem) {
     };
   }
   return d;
+}
+
+function mergeEvalPolicy(savedPolicy) {
+  const d = JSON.parse(JSON.stringify(DEFAULT_EVAL_POLICY));
+  if (!savedPolicy || typeof savedPolicy !== 'object') return d;
+  const out = { ...d, ...savedPolicy };
+  out.anchorMode = out.anchorMode === 'soft' ? 'soft' : 'hard';
+  out.slotRequirementMode = out.slotRequirementMode === 'soft' ? 'soft' : 'hard';
+  const mm = Number(out.minStatsModifier);
+  out.minStatsModifier = mm === -1 ? -1 : (mm === 1 ? 1 : 0);
+  out.godCountsAsRole = out.godCountsAsRole !== false;
+  out.duoCountsAsRole = out.duoCountsAsRole !== false;
+  const ratio = (v, fb) => {
+    const n = Number(v);
+    if (!Number.isFinite(n)) return fb;
+    return Math.max(0, Math.min(1.25, n));
+  };
+  out.slowDpsCoreMinRatio = ratio(out.slowDpsCoreMinRatio, d.slowDpsCoreMinRatio);
+  out.godRollMinRatio = ratio(out.godRollMinRatio, d.godRollMinRatio);
+  out.duoRollMinRatio = ratio(out.duoRollMinRatio, d.duoRollMinRatio);
+  const rp = Number(out.minRolePressure);
+  out.minRolePressure = Number.isFinite(rp) ? Math.max(0, Math.min(1, rp)) : d.minRolePressure;
+  const srcPress = out.rolePressureByRole && typeof out.rolePressureByRole === 'object' ? out.rolePressureByRole : {};
+  const press = {};
+  Object.entries(srcPress).forEach(([k, v]) => {
+    const n = Number(v);
+    if (!Number.isFinite(n)) return;
+    press[k] = Math.max(0, Math.min(1, n));
+  });
+  out.rolePressureByRole = press;
+  const srcUseful = out.minUsefulSubsByRole && typeof out.minUsefulSubsByRole === 'object' ? out.minUsefulSubsByRole : {};
+  const useful = {};
+  Object.entries(srcUseful).forEach(([k, v]) => {
+    const n = Number(v);
+    if (!Number.isFinite(n)) return;
+    useful[k] = Math.max(0, Math.min(8, Math.round(n)));
+  });
+  out.minUsefulSubsByRole = useful;
+  if (!['Early Progression', 'Mid Progression', 'Late Progression', 'Competitive', 'Custom'].includes(out.preset)) {
+    out.preset = 'Custom';
+  }
+  const ss = Number(out.simpleStrictness);
+  out.simpleStrictness = Number.isFinite(ss) ? Math.max(1, Math.min(5, Math.round(ss))) : 3;
+  const rrm = String(out.relaxedRetryMode || '');
+  out.relaxedRetryMode = rrm === 'off' || rrm === 'strict' ? rrm : 'normal';
+  return out;
+}
+
+function mergeFitModel(savedModel) {
+  const d = JSON.parse(JSON.stringify(DEFAULT_FIT_MODEL));
+  if (!savedModel || typeof savedModel !== 'object') return d;
+  const out = { ...d, ...savedModel };
+  out.enabled = out.enabled !== false;
+  const cap = (v, lo, hi, fb) => {
+    const n = Number(v);
+    if (!Number.isFinite(n)) return fb;
+    return Math.max(lo, Math.min(hi, n));
+  };
+  out.scoreScale = cap(out.scoreScale, 10, 1000, d.scoreScale);
+  out.hrWeight = cap(out.hrWeight, 0, 100, d.hrWeight);
+  out.synergyWeight = cap(out.synergyWeight, 0, 100, d.synergyWeight);
+  out.innateWeight = cap(out.innateWeight, 0, 100, d.innateWeight);
+  out.innateStats = Array.isArray(out.innateStats) ? out.innateStats.slice() : d.innateStats.slice();
+  out.roleSynergyPairs = out.roleSynergyPairs && typeof out.roleSynergyPairs === 'object'
+    ? out.roleSynergyPairs
+    : JSON.parse(JSON.stringify(d.roleSynergyPairs));
+  return out;
+}
+
+function mergeBorderlinePolicy(saved) {
+  const d = JSON.parse(JSON.stringify(DEFAULT_BORDERLINE_POLICY));
+  if (!saved || typeof saved !== 'object') return d;
+  const out = { ...d, ...saved };
+  out.enabled = out.enabled === true;
+  out.keepVerdictsOnly = out.keepVerdictsOnly !== false;
+  out.requirePolicyMatch = out.requirePolicyMatch !== false;
+  out.disallowWhenNoRoleDirection = out.disallowWhenNoRoleDirection !== false;
+  const num = (v, lo, hi, fb) => {
+    const n = Number(v);
+    if (!Number.isFinite(n)) return fb;
+    return Math.max(lo, Math.min(hi, n));
+  };
+  out.minFitScore = num(out.minFitScore, 0, 1000, d.minFitScore);
+  out.maxSoftenedChecks = num(out.maxSoftenedChecks, 0, 8, d.maxSoftenedChecks);
+  return out;
+}
+
+function toCsvMains(raw) {
+  if (Array.isArray(raw)) {
+    const vals = raw.map((v) => String(v || '').trim()).filter((v) => v && v !== 'None');
+    return vals.length ? vals.join(', ') : 'None';
+  }
+  if (typeof raw === 'string') {
+    const txt = raw.trim();
+    return txt || 'None';
+  }
+  return 'None';
+}
+
+/** Convert legacy settings.roles entry to canonical settings.formulas shape. */
+function legacyRoleToFormula(role, fallbackName) {
+  const base = DEFAULT_FORMULAS[fallbackName]
+    ? JSON.parse(JSON.stringify(DEFAULT_FORMULAS[fallbackName]))
+    : {
+      enabled: true,
+      acceptedMains: { 2: 'None', 4: 'None', 6: 'None' },
+      substats: {
+        SPD: { Early: 'None', Mid: 'None', Late: 'None' },
+        'HP%': { Early: 'None', Mid: 'None', Late: 'None' },
+        'ATK%': { Early: 'None', Mid: 'None', Late: 'None' },
+        'DEF%': { Early: 'None', Mid: 'None', Late: 'None' },
+        CRate: { Early: 'None', Mid: 'None', Late: 'None' },
+        CDmg: { Early: 'None', Mid: 'None', Late: 'None' },
+        ACC: { Early: 'None', Mid: 'None', Late: 'None' },
+        RES: { Early: 'None', Mid: 'None', Late: 'None' },
+      },
+      mustHave: { Early: 'None', Mid: 'None', Late: 'None' },
+      slotRequirements: {
+        2: { Early: 'None', Mid: 'None', Late: 'None' },
+        4: { Early: 'None', Mid: 'None', Late: 'None' },
+        6: { Early: 'None', Mid: 'None', Late: 'None' },
+      },
+      minStats: {
+        '1/3/5': { Early: 1, Mid: 1, Late: 1 },
+        'Slot 2': { Early: 1, Mid: 1, Late: 1 },
+        'Slot 4': { Early: 1, Mid: 1, Late: 1 },
+        'Slot 6': { Early: 1, Mid: 1, Late: 1 },
+      },
+      requireHR: {
+        'High Roll for Hero': { Early: false, Mid: false, Late: false },
+        'High Roll for Legend': { Early: false, Mid: false, Late: false },
+      },
+    };
+
+  const out = JSON.parse(JSON.stringify(base));
+  if (!role || typeof role !== 'object') return out;
+  out.enabled = role.enabled !== false;
+  for (const slot of [2, 4, 6]) {
+    out.acceptedMains[slot] = toCsvMains(role.acceptedMains?.[slot] ?? out.acceptedMains[slot]);
+  }
+  const stats = ['SPD', 'HP%', 'ATK%', 'DEF%', 'CRate', 'CDmg', 'ACC', 'RES'];
+  for (const st of stats) {
+    const raw = role.substats?.[st];
+    if (raw && typeof raw === 'object') {
+      out.substats[st].Early = raw.Early ?? out.substats[st].Early;
+      out.substats[st].Mid = raw.Mid ?? out.substats[st].Mid;
+      out.substats[st].Late = raw.Late ?? out.substats[st].Late;
+    } else if (typeof raw === 'string') {
+      out.substats[st].Early = raw;
+      out.substats[st].Mid = raw;
+      out.substats[st].Late = raw;
+    }
+  }
+  for (const stage of ['Early', 'Mid', 'Late']) {
+    out.mustHave[stage] = role.mustHave?.[stage] ?? out.mustHave[stage];
+  }
+  for (const slot of [2, 4, 6]) {
+    for (const stage of ['Early', 'Mid', 'Late']) {
+      out.slotRequirements[slot][stage] =
+        role.slotRequirements?.[slot]?.[stage] ?? out.slotRequirements[slot][stage];
+    }
+  }
+  for (const slotType of ['1/3/5', 'Slot 2', 'Slot 4', 'Slot 6']) {
+    for (const stage of ['Early', 'Mid', 'Late']) {
+      const legacyDirect = role.minStats?.[stage];
+      const next = role.minStats?.[slotType]?.[stage];
+      const val = Number.isFinite(Number(next))
+        ? Number(next)
+        : (Number.isFinite(Number(legacyDirect)) ? Number(legacyDirect) : out.minStats[slotType][stage]);
+      out.minStats[slotType][stage] = val;
+    }
+  }
+  const needHero = role.requireHR?.['High Roll for Hero'] || {};
+  const needLegend = role.requireHR?.['High Roll for Legend'] || {};
+  for (const stage of ['Early', 'Mid', 'Late']) {
+    const heroLegacy = role.requireHR?.[`${stage}_Hero`];
+    const legLegacy = role.requireHR?.[`${stage}_Leg`];
+    out.requireHR['High Roll for Hero'][stage] =
+      typeof needHero[stage] === 'boolean' ? needHero[stage] : !!heroLegacy;
+    out.requireHR['High Roll for Legend'][stage] =
+      typeof needLegend[stage] === 'boolean' ? needLegend[stage] : !!legLegacy;
+  }
+  return out;
 }
 
 function getSettings() {
@@ -649,6 +968,9 @@ function getSettings() {
     grindGap = DEFAULT_GRIND.gap;
   }
   const grind = { gap: grindGap };
+  const policy = mergeEvalPolicy(saved?.policy);
+  const fitModel = mergeFitModel(saved?.fitModel);
+  const borderlinePolicy = mergeBorderlinePolicy(saved?.borderlinePolicy);
   if (presetVersion < 5) {
     gemMeta.qualityGate = JSON.parse(JSON.stringify(DEFAULT_GEM_META.qualityGate));
     reapp.sets = DEFAULT_REAPP.sets.slice();
@@ -703,6 +1025,17 @@ function getSettings() {
       formulas.Bruiser = JSON.parse(JSON.stringify(DEFAULT_FORMULAS.Bruiser));
     }
   }
+  // v16: Bomber — Legend needs HR anchor at Mid (avoids match without a high-roll line).
+  if (presetVersion < 16) {
+    if (DEFAULT_FORMULAS.Bomber && formulas.Bomber) {
+      formulas.Bomber.requireHR = JSON.parse(JSON.stringify(DEFAULT_FORMULAS.Bomber.requireHR));
+    }
+  }
+  // Canonical source is settings.formulas. Migrate any leftover legacy-only roles to formulas.
+  for (const [name, roleCfg] of Object.entries(roles || {})) {
+    if (formulas[name]) continue;
+    formulas[name] = legacyRoleToFormula(roleCfg, name);
+  }
 
   return {
     thresholds:    saved?.thresholds    || JSON.parse(JSON.stringify(DEFAULT_THRESHOLDS)),
@@ -713,10 +1046,13 @@ function getSettings() {
     roles,
     formulas,
     rolePriority,
-    presetVersion: 15,
+    presetVersion: 16,
     reapp,
     grind,
     gemMeta,
+    policy,
+    fitModel,
+    borderlinePolicy,
   };
 }
 

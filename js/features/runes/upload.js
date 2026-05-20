@@ -27,7 +27,6 @@
 
   function reprocess() {
     processedRunes = processAll(allRunes, stage, window.SWRM.settings);
-    window.SWRM.debugLastProcessedRunes = processedRunes;
     const visible = getVisibleRunes();
     renderDashboard(visible, { animateCharts: true });
     renderTable(visible);
@@ -37,6 +36,87 @@
   const LS_USING_DEMO = 'swrm_using_demo_dataset_v1';
   const LS_USER_LOADED_REAL = 'swrm_user_loaded_real_swex_v1';
   const SS_DEMO_BANNER_DISMISS = 'swrm_demo_banner_dismissed_session';
+  /** IndexedDB key for embedded demo — never shown as Database Slot 1. */
+  const DEMO_IDB_KEY = '__swrm_embedded_demo__';
+
+  function slotNameLooksLikeDemo(name) {
+    const n = String(name || '').trim().toLowerCase();
+    return n === 'demo' || n.startsWith('demo ') || n.includes('(demo)');
+  }
+
+  function isUsingDemoDataset() {
+    try {
+      return localStorage.getItem(LS_USING_DEMO) === '1';
+    } catch (e) {
+      return false;
+    }
+  }
+
+  async function purgeDemoStorage() {
+    markUsingDemoDataset(false);
+    try {
+      await deleteSlotData(DEMO_IDB_KEY);
+    } catch (e) {
+      console.warn('purgeDemoStorage', e);
+    }
+  }
+
+  /** Remove legacy demo rows from user-facing database slots. */
+  async function scrubDemoFromUserSlots() {
+    const slots = loadDbSlots();
+    let dirty = false;
+    for (const s of slots) {
+      if (!slotNameLooksLikeDemo(s.name)) continue;
+      Object.assign(
+        s,
+        normalizeDbSlot({ id: s.id, name: '', uploadedAt: '', active: s.active }),
+      );
+      dirty = true;
+      try {
+        await deleteSlotDataRobust(s.id);
+      } catch (e) {
+        console.warn('scrubDemoFromUserSlots', s.id, e);
+      }
+    }
+    if (dirty) saveDbSlots(slots);
+  }
+
+  async function loadDemoDatasetInMemory(jsonText, jsonObj, label) {
+    allRunes = parseSWEX(jsonObj);
+    rebuildUnitsFromSwex(jsonObj);
+    reprocess();
+    try {
+      await saveSlotData(DEMO_IDB_KEY, jsonText);
+    } catch (e) {
+      console.warn('Could not persist embedded demo to IndexedDB:', e);
+    }
+    if (!userHasLoadedRealExport()) {
+      saveDbSlots(defaultEmptyDbSlotsMeta());
+    }
+    markUsingDemoDataset(true);
+  }
+
+  async function restoreEmbeddedDemoFromStorage() {
+    try {
+      const jsonText = await loadSlotData(DEMO_IDB_KEY);
+      if (!jsonText) return false;
+      const json = JSON.parse(jsonText);
+      const runesProbe = parseSWEX(json);
+      if (!runesProbe.length) return false;
+      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en || {};
+      const label = t.demoDatasetSlotLabel || 'Demo';
+      await loadDemoDatasetInMemory(jsonText, json, label);
+      if (typeof seedDemoTeamsIfEmpty === 'function') seedDemoTeamsIfEmpty();
+      uiAfterSuccessfulRuneRestore({ name: label }, { keepTab: true });
+      applyDemoBannerTextFromTranslations();
+      syncDemoBannerVisibility();
+      if (typeof renderTeamsPanel === 'function') renderTeamsPanel();
+      return true;
+    } catch (e) {
+      console.warn('restoreEmbeddedDemoFromStorage failed:', e);
+      return false;
+    }
+  }
 
   function userHasLoadedRealExport() {
     try {
@@ -141,6 +221,11 @@
   function syncDemoBannerVisibility() {
     const aside = document.getElementById('demo-dataset-banner');
     if (!aside) return;
+    if (typeof isShareReadOnly === 'function' && isShareReadOnly()) {
+      aside.setAttribute('hidden', '');
+      aside.setAttribute('aria-hidden', 'true');
+      return;
+    }
     let usingDemo = false;
     try {
       usingDemo = localStorage.getItem(LS_USING_DEMO) === '1';
@@ -238,13 +323,12 @@
       }
       const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en || {};
       const label = t.demoDatasetSlotLabel || 'Demo';
-      allRunes = parseSWEX(json);
-      rebuildUnitsFromSwex(json);
-      reprocess();
-      markUsingDemoDataset(true);
+      await loadDemoDatasetInMemory(jsonText, json, label);
+      if (typeof seedDemoTeamsIfEmpty === 'function') seedDemoTeamsIfEmpty();
       uiAfterSuccessfulRuneRestore({ name: label }, { keepTab: options.keepTab === true });
       applyDemoBannerTextFromTranslations();
       syncDemoBannerVisibility();
+      if (typeof renderTeamsPanel === 'function') renderTeamsPanel();
       return true;
     } catch (e) {
       console.warn('Embedded demo persist/load failed:', e);
@@ -290,6 +374,9 @@
         console.log(`Saved ${file.name} (${fileSizeKB}KB) to IndexedDB`);
       }
       markUserLoadedRealExport();
+      await purgeDemoStorage();
+      await scrubDemoFromUserSlots();
+      if (typeof removeDemoTeams === 'function') removeDemoTeams();
       syncDemoBannerVisibility();
       document.getElementById('upload-prompt').classList.add('hidden');
       showMainTab('dashboard', { writeHash: true });

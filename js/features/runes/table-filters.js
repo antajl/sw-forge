@@ -144,15 +144,6 @@
   function setRuneTableMonsterMasterId(masterId) {
     runeTableMonsterMasterId =
       masterId != null && Number.isFinite(Number(masterId)) ? Number(masterId) : null;
-    const strip = document.getElementById('rune-table-monster-filter');
-    if (strip) strip.hidden = runeTableMonsterMasterId == null;
-    const label = document.getElementById('rune-table-monster-filter-label');
-    if (label && runeTableMonsterMasterId != null && window.SWRM_MONSTER_DB) {
-      const name = window.SWRM_MONSTER_DB.monsterDisplayName(runeTableMonsterMasterId);
-      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-      const tpl = t.runeTableMonsterFilterTpl || 'Runes on {name}';
-      label.textContent = tpl.replace('{name}', name);
-    }
   }
 
   function clearRuneTableMonsterMasterId() {
@@ -223,27 +214,12 @@
     const countEl = document.getElementById('table-count');
     if (countEl) {
       if (!runeTableShowAll && total > RUNE_TABLE_PAGE) {
-        const tmpl = t.runeTableCountCapped || '{shown} / {total} {runes}';
+        const tmpl = t.runeTableCountCapped || '{shown} / {total}';
         countEl.textContent = tmpl
           .replace(/\{shown\}/g, String(cap))
-          .replace(/\{total\}/g, String(total))
-          .replace(/\{runes\}/g, t.runes);
+          .replace(/\{total\}/g, String(total));
       } else {
         countEl.textContent = `${total} ${t.runes}`;
-      }
-    }
-
-    const detailEl = document.getElementById('table-count-detail');
-    if (detailEl) {
-      if (total === 0) {
-        detailEl.textContent = t.tableShownDetailEmpty || '';
-      } else if (!runeTableShowAll && total > RUNE_TABLE_PAGE) {
-        detailEl.textContent = (t.tableShownDetailCapped || '')
-          .replace(/\{shown\}/g, String(cap))
-          .replace(/\{total\}/g, String(total));
-      } else {
-        detailEl.textContent = (t.tableShownDetailAll || '')
-          .replace(/\{total\}/g, String(total));
       }
     }
 

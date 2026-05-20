@@ -72,10 +72,31 @@
     return 0;
   }
 
+  /**
+   * True if any qualifying **sub** line that is Include for this formula/stage is at/above HR.
+   * (Global runeHasHrAnchor counts any stat → false positives e.g. CDmg HR on Bomber where CDmg is not Include.)
+   */
+  function runeHasHrAnchorForFormula(rune, formula, stage, settings) {
+    if (!formula || !rune) return false;
+    const key = modeKey(stage, rune.gradeStr);
+    const th = settings?.hrThresholds || {};
+    for (const s of rune.substats || []) {
+      if (!isQualifyingSubstatRow(s)) continue;
+      if (!s.name) continue;
+      const inc = formula.substats?.[s.name]?.[stage];
+      if (inc !== 'Include') continue;
+      const threshold = th[s.name]?.[key];
+      if (threshold == null || !(threshold > 0)) continue;
+      if (subRuneValue(s) >= threshold) return true;
+    }
+    return false;
+  }
+
   S.modeKey = modeKey;
   S.isQualifyingSubstatRow = isQualifyingSubstatRow;
   S.subRuneValue = subRuneValue;
   S.statMap = statMap;
   S.runeHasHrAnchor = runeHasHrAnchor;
+  S.runeHasHrAnchorForFormula = runeHasHrAnchorForFormula;
   S.runePowerLevel0to3 = runePowerLevel0to3;
 })();

@@ -289,7 +289,7 @@
     );
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const lines = [];
-    lines.push(String(t.title || 'SW Rune Master'));
+    lines.push(String(t.title || 'SW-Forge'));
     lines.push(`${t.stageYourPresetLabel || 'Preset'}: ${stage}`);
     lines.push(
       `${t.stageSuggestedLabel || 'Suggested'}: ${stageDisplayName(t, recStage)} · ${t.stageScoreLabel || 'Score'} ${metrics.score} ` +

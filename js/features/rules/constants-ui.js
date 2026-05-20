@@ -172,3 +172,4 @@
     wrap.innerHTML = html;
     wireStatConstantsTableInputs(wrap);
   }
+

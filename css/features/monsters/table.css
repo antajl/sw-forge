@@ -72,6 +72,25 @@
   object-fit: contain;
 }
 
+.monsters-table__devils {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.monsters-table__devil-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.monsters-table__devil-n {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: #e8a030;
+}
+
 .monsters-table__thumb {
   max-height: 32px;
 }

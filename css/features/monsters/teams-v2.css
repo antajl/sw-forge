@@ -12,10 +12,18 @@
 
 .teams-sidebar__head {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
   margin-bottom: 10px;
+}
+
+.teams-sidebar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
 }
 
 .teams-sidebar__title {
@@ -62,6 +70,27 @@
 .teams-set-tree__count {
   font-size: 0.72rem;
   color: var(--text-dim);
+}
+
+.teams-set-tree__delete {
+  flex-shrink: 0;
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  padding: 0;
+  margin: 0;
+  border-radius: 6px;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--text-dim);
+  opacity: 0.85;
+}
+
+.teams-set-tree__delete:hover {
+  color: var(--red);
+  border-color: color-mix(in srgb, var(--red) 45%, var(--border2));
+  background: color-mix(in srgb, var(--red) 12%, var(--surface));
+  opacity: 1;
 }
 
 .teams-main__head {

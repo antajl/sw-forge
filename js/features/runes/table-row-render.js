@@ -74,6 +74,43 @@
     if (v === 'Upgrade') return tl.actionTargetUpgrade;
     if (v === 'Finish') return tl.actionTargetFinish;
     if (v === 'Reapp') return tl.actionTargetReapp;
+    if (v === 'Keep' && r && r.decisionTrace) {
+      const dt = r.decisionTrace || {};
+      const strict = !!dt.strictFormulaMatch;
+      const policy = !!dt.policyFormulaMatch;
+      const strictRole = dt.strictBestFormula || '';
+      const policyRole = dt.policyBestFormula || dt.bestRole || '';
+      const fitScore = Number(r.fitSummary?.bestScore || 0);
+      const tier = fitScore >= 75 ? 'Excellent' : fitScore >= 60 ? 'Good' : 'Usable';
+      const fit = Number.isFinite(fitScore) && fitScore > 0 ? `Fit ${Math.round(fitScore)}` : '';
+
+      if (r.policyRelaxedRole) {
+        const base = `${roleDisplayName(r.policyRelaxedRole)} · ${tier} (Relaxed)`;
+        return fit ? `${base} · ${fit}` : base;
+      }
+
+      if ((policyRole || '') === 'Universal' || r.universalSource) {
+        if (String(r.universalSource) === 'God') {
+          const src = 'High Value · God';
+          return fit ? `${src} · ${fit}` : src;
+        }
+        if (String(r.universalSource) === 'Duo') {
+          const src = 'High Value · Duo';
+          return fit ? `${src} · ${fit}` : src;
+        }
+        const src = 'High Value';
+        return fit ? `${src} · ${fit}` : src;
+      }
+
+      if (!strict && policy && policyRole) {
+        const base = `${roleDisplayName(policyRole)} · ${tier} (Flexible)`;
+        return fit ? `${base} · ${fit}` : base;
+      }
+      if (strictRole) {
+        const base = `${roleDisplayName(strictRole)} · ${tier} (Strict)`;
+        return fit ? `${base} · ${fit}` : base;
+      }
+    }
     return '';
   }
 
@@ -97,7 +134,11 @@
         parts.push(`${k}=${val}`);
       });
     }
-    return parts.join(' · ');
+    if (v === 'Keep' && r && r.fitSummary && Number(r.fitSummary.bestScore || 0) > 0) {
+      parts.push(`Fit Score: ${Math.round(Number(r.fitSummary.bestScore || 0))}`);
+      parts.push('Fit Score — how well the rune stats fit this role');
+    }
+    return parts.join('\n');
   }
 
   /** Stylised “Ancient” mark: A without crossbar, dot at mid-height (matches in-game cue). */

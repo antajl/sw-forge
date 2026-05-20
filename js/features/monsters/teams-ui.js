@@ -142,6 +142,7 @@
         const on = set.id === activeId;
         const collapsed = !!set.collapsed;
         const count = (set.teamIds || []).length;
+        const delTitle = escapeAttr(t.teamsDeleteSet || 'Delete set');
         return `<li class="teams-set-tree__item">
           <div class="teams-set-tree__row${on ? ' is-active' : ''}">
             <button type="button" class="teams-set-tree__toggle" data-teams-set-collapse="${escapeHtml(set.id)}" aria-expanded="${collapsed ? 'false' : 'true'}">${collapsed ? '▶' : '▼'}</button>
@@ -149,6 +150,7 @@
               <span class="teams-set-tree__name">${escapeHtml(set.name)}</span>
               <span class="teams-set-tree__count">${count}</span>
             </button>
+            <button type="button" class="teams-set-tree__delete btn-ghost" data-teams-delete-set="${escapeHtml(set.id)}" title="${delTitle}" aria-label="${delTitle}" data-teams-readonly-hide>×</button>
           </div>
         </li>`;
       })
@@ -370,6 +372,59 @@
       if (tid) openTeamsEditor(tid);
     };
 
+    document.getElementById('teams-export-json')?.addEventListener('click', () => {
+      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+      try {
+        const json = exportTeamsStateJson();
+        const blob = new Blob([json], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'sw-forge-teams.json';
+        a.click();
+        URL.revokeObjectURL(a.href);
+        if (typeof showSwrmToast === 'function') {
+          showSwrmToast(t.teamsExportDone || 'Teams exported.', { type: 'success' });
+        }
+      } catch (e) {
+        if (typeof showSwrmToast === 'function') {
+          showSwrmToast((t.teamsExportFailed || 'Export failed') + (e.message ? `: ${e.message}` : ''), { type: 'error' });
+        }
+      }
+    });
+
+    document.getElementById('teams-import-json')?.addEventListener('click', () => {
+      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+      const inp = document.createElement('input');
+      inp.type = 'file';
+      inp.accept = '.json,application/json';
+      inp.style.display = 'none';
+      document.body.appendChild(inp);
+      inp.addEventListener('change', () => {
+        const file = inp.files?.[0];
+        document.body.removeChild(inp);
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          const replaceAll = confirm(
+            t.teamsImportReplaceConfirm || 'Replace all teams? OK = replace, Cancel = merge into existing.',
+          );
+          const res = importTeamsStateFromJson(String(reader.result || ''), !replaceAll);
+          if (!res.ok) {
+            if (typeof showSwrmToast === 'function') {
+              showSwrmToast(t.teamsImportFailed || 'Import failed — invalid JSON.', { type: 'error' });
+            }
+            return;
+          }
+          renderTeamsPanel();
+          if (typeof showSwrmToast === 'function') {
+            showSwrmToast(t.teamsImportDone || 'Teams imported.', { type: 'success' });
+          }
+        };
+        reader.readAsText(file);
+      });
+      inp.click();
+    });
+
     document.getElementById('teams-add-set')?.addEventListener('click', () => {
       const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
       const name = window.prompt(t.teamsNewSetPrompt || 'Set name', '');
@@ -407,6 +462,17 @@
     });
 
     document.getElementById('teams-set-list')?.addEventListener('click', (e) => {
+      const delBtn = e.target.closest('[data-teams-delete-set]');
+      if (delBtn) {
+        e.stopPropagation();
+        const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+        const setId = delBtn.dataset.teamsDeleteSet;
+        if (!setId) return;
+        if (!window.confirm(tloc.teamsDeleteSetConfirm || 'Delete this team set and all teams in it?')) return;
+        deleteTeamSet(setId);
+        renderTeamsPanel();
+        return;
+      }
       const collapse = e.target.closest('[data-teams-set-collapse]');
       if (collapse) {
         toggleSetCollapsed(collapse.dataset.teamsSetCollapse);

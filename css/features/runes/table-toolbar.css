@@ -123,9 +123,6 @@
   font-size: 0.72rem;
 }
 
-.table-toolbar__monster-filter .btn-ghost.btn-toolbar {
-  flex-shrink: 0;
-}
 .table-toolbar__toggles {
   display: flex;
   flex-wrap: wrap;
@@ -173,6 +170,11 @@
   font-size: 0.82rem;
   color: var(--text-dim);
   user-select: none;
+  flex-shrink: 0;
+  min-width: 0;
+}
+.toggle-target span {
+  white-space: nowrap;
 }
 .toggle-target input[type="checkbox"] {
   accent-color: var(--accent);

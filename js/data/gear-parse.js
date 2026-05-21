@@ -36,18 +36,6 @@
     5: 'Intangible',
   };
 
-  /** SWEX relic.type → in-game category. */
-  /** SWEX relic.type → in-game category (Com2uS unique property id). */
-  const RELIC_CATEGORY_BY_TYPE = {
-    6: 'Resolute',
-    12: 'Timeless',
-    13: 'Primal',
-    14: 'Conquest',
-    16: 'Valiant',
-    11: 'Restore',
-    15: 'Restore',
-  };
-
   const RELIC_WEAR_MAX = 100;
 
   function normalizeGradeRank(rank) {
@@ -94,8 +82,19 @@
   }
 
   function relicCategory(relicType) {
-    const id = Number(relicType);
-    return RELIC_CATEGORY_BY_TYPE[id] || `Type ${id}`;
+    const fn =
+      window.SWRM && typeof window.SWRM.relicCategoryName === 'function'
+        ? window.SWRM.relicCategoryName
+        : null;
+    return fn ? fn(relicType) : '';
+  }
+
+  function relicCategoryIsVerified(relicType) {
+    const fn =
+      window.SWRM && typeof window.SWRM.isRelicCategoryVerified === 'function'
+        ? window.SWRM.isRelicCategoryVerified
+        : null;
+    return fn ? fn(relicType) : false;
   }
 
   function parseArtifact(raw) {
@@ -124,6 +123,7 @@
     const sec = effectTuple(raw.sec_effect);
     const relicType = Number(raw.type) || 0;
     const rankRaw = raw.rank != null ? raw.rank : raw.natural_rank;
+    const grade = normalizeGradeRank(rankRaw);
     const durability = Number(raw.durability);
     return {
       kind: 'relic',
@@ -131,9 +131,10 @@
       occupiedId: raw.occupied_id != null ? Number(raw.occupied_id) : null,
       relicType,
       category: relicCategory(relicType),
+      categoryVerified: relicCategoryIsVerified(relicCategory(relicType)),
       level: Number(raw.upgrade_curr) || 0,
-      grade: normalizeGradeRank(rankRaw),
-      gradeStr: gearGradeStr(rankRaw),
+      grade,
+      gradeStr: grade > 0 ? gearGradeStr(rankRaw) : '',
       durability: Number.isFinite(durability) ? durability : null,
       durabilityMax: 3,
       pri,
@@ -282,6 +283,5 @@
   window.SWRM.formatRelicDurability = formatRelicDurability;
   window.SWRM.formatRelicWearCount = formatRelicWearCount;
   window.SWRM.RELIC_WEAR_MAX = RELIC_WEAR_MAX;
-  window.SWRM.relicCategoryName = relicCategory;
   window.SWRM.artifactCategoryName = artifactCategory;
 })();

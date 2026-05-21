@@ -273,7 +273,8 @@
         const main = r.pri && fmt ? fmt(r.pri, { kind: 'relic' }) : '—';
         const sec = fmtSec ? fmtSec(r) : '—';
         const dur = fmtDur ? fmtDur(r) : '—';
-        const grade = r.gradeStr || '—';
+        const grade = r.grade > 0 && r.gradeStr ? r.gradeStr : '—';
+        const category = r.categoryVerified && r.category ? r.category : '—';
         const fmtWear =
           window.SWRM && typeof window.SWRM.formatRelicWearCount === 'function'
             ? window.SWRM.formatRelicWearCount
@@ -281,7 +282,7 @@
         const wear = fmtWear ? fmtWear(r) : '0/100';
         return `<tr>
           <td class="col-grade">${escapeHtml(grade)}</td>
-          <td>${escapeHtml(r.category || '—')}</td>
+          <td>${escapeHtml(category)}</td>
           <td class="th-num">+${escapeHtml(String(r.level || 0))}</td>
           <td class="th-num">${escapeHtml(dur)}</td>
           <td>${escapeHtml(main)}</td>

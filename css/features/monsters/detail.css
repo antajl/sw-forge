@@ -657,17 +657,17 @@
 .monsters-detail__stat-num--total-green {
   color: var(--success, #2d8a5c);
   font-weight: 600;
-  text-align: center;
+  text-align: right;
 }
 
 .monsters-detail__stat-num--pct-total {
   color: var(--text-hi);
   font-weight: 600;
-  text-align: left;
+  text-align: right;
 }
 
 .monsters-detail__stat-row--pct .monsters-detail__stat-num--pct-total {
-  grid-column: 2;
+  grid-column: 2 / 4;
 }
 
 .monsters-detail__stat-formula {
@@ -698,13 +698,9 @@
 }
 
 .monsters-detail__stats-head--core,
-.monsters-detail__stat-row--core {
-  grid-template-columns: 4.5rem 1fr 1fr;
-}
-
-.monsters-detail__stats-head--pct,
+.monsters-detail__stat-row--core,
 .monsters-detail__stat-row--pct {
-  grid-template-columns: 4.5rem 1fr;
+  grid-template-columns: 4.5rem 1fr 1fr;
 }
 
 .monsters-detail__stats-head {
@@ -715,7 +711,7 @@
 }
 
 .monsters-detail__stat-h {
-  text-align: center;
+  text-align: right;
 }
 
 .monsters-detail__stat-h--bonus {
@@ -725,18 +721,22 @@
 .monsters-detail__stat-num--rune {
   color: var(--success, #2d8a5c);
   font-weight: 600;
-  text-align: center;
+  text-align: right;
 }
 
 .monsters-detail__stat-num--total {
-  text-align: center;
+  text-align: right;
   font-weight: 600;
 }
 
 .monsters-detail__stat-num {
   font-family: var(--font-mono);
   font-size: 0.72rem;
-  text-align: center;
+  text-align: right;
+}
+
+.monsters-detail__stat-num--base {
+  text-align: right;
 }
 
 .monsters-detail__stat-num--empty {

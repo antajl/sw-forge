@@ -199,9 +199,6 @@
       base && typeof calculateMonsterStatBreakdown === 'function'
         ? calculateMonsterStatBreakdown(base, u)
         : null;
-    const lblBase = t.monstersStatBase || 'Base';
-    const lblBonus = t.monstersStatGear || t.monstersStatRunes || '+Gear';
-    const lblTotal = t.monstersStatTotal || 'Total';
     const coreKeys = [
       [t.monstersStatHp || 'HP', 'hp'],
       [t.monstersStatAtk || 'ATK', 'atk'],
@@ -214,15 +211,6 @@
       [t.monstersStatRes || 'RES', 'res'],
       [t.monstersStatAcc || 'ACC', 'acc'],
     ];
-    const coreHeadSplit = `<div class="monsters-detail__stats-head monsters-detail__stats-head--core" data-stats-head="split">
-      <span class="monsters-detail__stat-k"></span>
-      <span class="monsters-detail__stat-h">${escapeHtml(lblBase)}</span>
-      <span class="monsters-detail__stat-h monsters-detail__stat-h--bonus">${escapeHtml(lblBonus)}</span>
-    </div>`;
-    const coreHeadTotal = `<div class="monsters-detail__stats-head monsters-detail__stats-head--core-total hidden" data-stats-head="total">
-      <span class="monsters-detail__stat-k"></span>
-      <span class="monsters-detail__stat-h">${escapeHtml(lblTotal)}</span>
-    </div>`;
     function fmtVal(key, field, isPct) {
       const row = breakdown && breakdown[key];
       if (row) {
@@ -261,13 +249,12 @@
         </div>`;
     }
     function pctRow(label, key) {
-      return `<div class="monsters-detail__stat-row monsters-detail__stat-row--pct">
+      return `<div class="monsters-detail__stat-row monsters-detail__stat-row--pct" data-stat-key="${key}">
           <span class="monsters-detail__stat-k">${escapeHtml(label)}</span>
           <span class="monsters-detail__stat-num monsters-detail__stat-num--pct-total">${escapeHtml(fmtVal(key, 'total', true))}</span>
         </div>`;
     }
-    const coreBody = coreKeys.map(([label, key]) => coreRow(label, key)).join('');
-    const pctBody = pctKeys.map(([label, key]) => pctRow(label, key)).join('');
+    const statRows = coreKeys.map(([label, key]) => coreRow(label, key)).concat(pctKeys.map(([label, key]) => pctRow(label, key))).join('');
     const loading =
       !base && window.SWRM_MONSTER_DB
         ? `<p class="monsters-detail__muted monsters-detail__stats-loading">${escapeHtml(t.monstersStatsLoading || 'Loading base stats…')}</p>`
@@ -275,10 +262,7 @@
     return (
       '<div class="monsters-detail__stats-grid monsters-detail__stats-grid--split" data-stats-grid data-stats-view="split">' +
       loading +
-      coreHeadSplit +
-      coreHeadTotal +
-      coreBody +
-      pctBody +
+      statRows +
       '</div>'
     );
   }
@@ -299,14 +283,6 @@
       grid.querySelectorAll('[data-col="base"], [data-col="bonus"]').forEach((el) => {
         if (split) el.removeAttribute('hidden');
         else el.setAttribute('hidden', '');
-      });
-      grid.querySelectorAll('[data-stats-head="split"]').forEach((el) => {
-        if (split) el.removeAttribute('hidden');
-        else el.setAttribute('hidden', '');
-      });
-      grid.querySelectorAll('[data-stats-head="total"]').forEach((el) => {
-        if (split) el.setAttribute('hidden', '');
-        else el.removeAttribute('hidden');
       });
     };
     const toggle = () => {

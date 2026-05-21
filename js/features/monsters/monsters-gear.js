@@ -66,8 +66,19 @@
       gear.kind === 'relic'
         ? t.monstersGearRelic || 'Relic'
         : t.monstersGearArtifact || 'Artifact';
-    const grade = gear.gradeStr ? gear.gradeStr : '';
-    const meta = [gear.category, grade].filter(Boolean).join(' · ');
+    const grade =
+      gear.gradeStr && gear.grade > 0
+        ? gear.gradeStr
+        : gear.kind === 'relic'
+          ? ''
+          : gear.gradeStr || '';
+    const categoryLabel =
+      gear.kind === 'relic'
+        ? gear.categoryVerified
+          ? gear.category
+          : ''
+        : gear.category || '';
+    const meta = [categoryLabel, grade].filter(Boolean).join(' · ');
     const head = [kindLbl, meta].filter(Boolean).join(' · ');
     const lines =
       gear.kind === 'artifact' ? buildArtifactEffectStack(gear, t) : gearEffectLines(gear, t);
@@ -84,6 +95,23 @@
     </li>`;
   }
 
+  function isArtifactElementSlot(artifact) {
+    if (!artifact) return false;
+    if (artifact.slot === 1) return true;
+    if (artifact.slot === 2) return false;
+    const el = ['Fire', 'Water', 'Wind', 'Light', 'Dark'];
+    return el.includes(artifact.category);
+  }
+
+  function sortArtifactsForDisplay(artifacts) {
+    return artifacts.slice().sort((a, b) => {
+      const orderA = isArtifactElementSlot(a) ? 0 : 1;
+      const orderB = isArtifactElementSlot(b) ? 0 : 1;
+      if (orderA !== orderB) return orderA - orderB;
+      return String(a.category).localeCompare(String(b.category));
+    });
+  }
+
   function buildMonsterGearSectionHtml(u, t) {
     const artifacts = u.artifacts || [];
     const relics = u.relics || [];
@@ -92,7 +120,7 @@
     }
     const items = []
       .concat(
-        artifacts.slice().sort((a, b) => String(a.category).localeCompare(String(b.category))),
+        sortArtifactsForDisplay(artifacts),
         relics.slice().sort((a, b) => String(a.category).localeCompare(String(b.category))),
       )
       .map((g) => buildGearItemHtml(g, t))

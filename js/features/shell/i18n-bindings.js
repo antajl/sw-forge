@@ -167,6 +167,7 @@
     renderMonstersPanel();
     applyDemoBannerTextFromTranslations();
     syncDemoBannerVisibility();
+    if (typeof renderShareViewBanner === 'function') renderShareViewBanner();
     applySwrmDropVeilTranslations();
   }
 
@@ -244,6 +245,36 @@
     if (lblActions) lblActions.textContent = t.tableToolbarSectionActions || 'Actions';
     const lblDisplay = document.getElementById('lbl-table-toolbar-display');
     if (lblDisplay) lblDisplay.textContent = t.tableToolbarSectionDisplay || 'Display';
+    const lblRuneMoreFilters = document.getElementById('lbl-rune-more-filters');
+    if (lblRuneMoreFilters) lblRuneMoreFilters.textContent = t.runeTableMoreFilters || 'More Filters';
+    const lblRuneDrawerTitle = document.getElementById('lbl-rune-filters-drawer-title');
+    if (lblRuneDrawerTitle) lblRuneDrawerTitle.textContent = t.runeTableFiltersDrawerTitle || 'More filters';
+    const lblRuneFilterClear = document.getElementById('rune-filter-clear-all');
+    if (lblRuneFilterClear) lblRuneFilterClear.textContent = t.runeTableFilterClearAll || 'Clear all';
+    const lblRuneFv = document.getElementById('lbl-rune-filter-verdict');
+    if (lblRuneFv) lblRuneFv.textContent = t.runeFilterVerdict || 'Verdict';
+    const lblRuneFr = document.getElementById('lbl-rune-filter-role');
+    if (lblRuneFr) lblRuneFr.textContent = t.runeFilterRole || 'Role';
+    const lblRuneFg = document.getElementById('lbl-rune-filter-grade');
+    if (lblRuneFg) lblRuneFg.textContent = t.runeFilterGrade || 'Grade';
+    const lblRuneFs = document.getElementById('lbl-rune-filter-set');
+    if (lblRuneFs) lblRuneFs.textContent = t.runeFilterSet || 'Set';
+    const lblRuneFsl = document.getElementById('lbl-rune-filter-slot');
+    if (lblRuneFsl) lblRuneFsl.textContent = t.runeFilterSlot || 'Slot';
+    const lblRuneFm = document.getElementById('lbl-rune-filter-main');
+    if (lblRuneFm) lblRuneFm.textContent = t.runeFilterMain || 'Main stat';
+    const lblThGrade = document.getElementById('lbl-th-grade');
+    if (lblThGrade) lblThGrade.textContent = t.runeFilterGrade || 'Grade';
+    const lblThSet = document.getElementById('lbl-th-set');
+    if (lblThSet) lblThSet.textContent = t.runeFilterSet || 'Set';
+    const lblThSlot = document.getElementById('lbl-th-slot');
+    if (lblThSlot) lblThSlot.textContent = t.runeFilterSlot || 'Slot';
+    const lblThMain = document.getElementById('lbl-th-main');
+    if (lblThMain) lblThMain.textContent = t.runeFilterMain || 'Main';
+    const lblThRole = document.getElementById('lbl-th-role');
+    if (lblThRole) lblThRole.textContent = t.runeFilterRole || 'Role';
+    const lblThVerdict = document.getElementById('lbl-th-verdict');
+    if (lblThVerdict) lblThVerdict.textContent = t.runeFilterVerdict || 'Verdict';
     
     const filterVerdict = document.getElementById('filter-verdict');
     if (filterVerdict) {

@@ -464,10 +464,10 @@ main {
 .upload-btn.hidden { display: none; }
 
 /* Share profile (read-only view) */
-.share-view-banner {
+#share-view-banner.share-view-banner {
+  display: block;
+  flex-shrink: 0;
   width: 100%;
-  border-bottom: 1px solid var(--border2);
-  background: color-mix(in srgb, var(--accent) 12%, var(--bg2));
 }
 
 .share-view-banner__inner {
@@ -491,10 +491,19 @@ body.share-readonly #tab-settings input,
 body.share-readonly #tab-settings select,
 body.share-readonly #tab-settings textarea,
 body.share-readonly #tab-settings button:not(.rules-subtab):not(#share-view-exit-btn),
+body.share-readonly #tab-app-settings input:not(#app-language),
+body.share-readonly #tab-app-settings select:not(#app-language),
+body.share-readonly #tab-app-settings textarea,
+body.share-readonly #tab-app-settings button,
 body.share-readonly .share-profile-actions,
 body.share-readonly #btn-upload-slot,
 body.share-readonly .db-slot-btn,
+body.share-readonly #db-slots-wrap button,
 body.share-readonly .monsters-card__actions,
+body.share-readonly .monsters-card__actions--list,
+body.share-readonly .monsters-card__name-marks,
+body.share-readonly .monsters-mark-btn,
+body.share-readonly .monsters-tag-btn,
 body.share-readonly .monsters-card__bulk-btn,
 body.share-readonly #monsters-bulk-bar,
 body.share-readonly .monsters-detail__tag-add,
@@ -525,7 +534,12 @@ body.share-readonly #tab-settings .rules-card__add-role {
 }
 
 body.share-readonly .monsters-detail__tag-input,
-body.share-readonly .monsters-detail__tag-add {
+body.share-readonly .monsters-detail__tag-add,
+body.share-readonly .monsters-card__name-marks,
+body.share-readonly .monsters-card__actions,
+body.share-readonly .monsters-card__actions--list,
+body.share-readonly .monsters-mark-btn,
+body.share-readonly .monsters-tag-btn {
   display: none !important;
 }
 

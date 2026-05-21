@@ -76,6 +76,11 @@ th {
   transition: color 0.15s;
 }
 th:hover { color: var(--accent); }
+
+#rune-table thead th.th--filtered .th-text,
+#rune-table thead .th-text.th-text--filtered {
+  color: var(--accent);
+}
 th.sort-asc::after { content: ' ↑'; color: var(--accent); }
 th.sort-desc::after { content: ' ↓'; color: var(--accent); }
 

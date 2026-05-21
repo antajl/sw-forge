@@ -334,10 +334,16 @@
     if (!bar) {
       bar = document.createElement('aside');
       bar.id = 'share-view-banner';
-      bar.className = 'share-view-banner';
+      bar.className = 'share-view-banner demo-dataset-banner';
       const chrome = document.querySelector('.site-chrome-sticky');
-      if (chrome) chrome.insertAdjacentElement('afterend', bar);
-      else document.body.prepend(bar);
+      const demo = document.getElementById('demo-dataset-banner');
+      if (demo && chrome && demo.parentElement === chrome) {
+        demo.insertAdjacentElement('afterend', bar);
+      } else if (chrome) {
+        chrome.appendChild(bar);
+      } else {
+        document.body.prepend(bar);
+      }
     }
     bar.removeAttribute('hidden');
     bar.setAttribute('aria-hidden', 'false');
@@ -435,6 +441,15 @@
         if (el.id === 'share-view-exit-btn') return;
         el.disabled = shareReadOnly;
         if (shareReadOnly && el.id === 'btn-save-settings') el.hidden = true;
+      });
+    }
+    const appSettingsRoot = document.getElementById('tab-app-settings');
+    if (appSettingsRoot) {
+      appSettingsRoot.querySelectorAll('input, select, textarea, button').forEach((el) => {
+        if (el.id === 'app-language') return;
+        el.disabled = shareReadOnly;
+        if (shareReadOnly) el.setAttribute('readonly', 'readonly');
+        else el.removeAttribute('readonly');
       });
     }
     const bulkBar = document.getElementById('monsters-bulk-bar');

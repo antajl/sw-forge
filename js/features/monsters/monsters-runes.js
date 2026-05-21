@@ -383,6 +383,7 @@
   }
 
   function buildCardActionsHtml(u, t) {
+    if (typeof isShareReadOnly === 'function' && isShareReadOnly()) return '';
     const uid = escapeHtml(String(u.unitId));
     const storageOn = isStorageMarked(u);
     const storageTitle = u.inStorage
@@ -395,6 +396,7 @@
   }
 
   function buildListRowMetaHtml(u, t) {
+    if (typeof isShareReadOnly === 'function' && isShareReadOnly()) return '';
     const uid = escapeHtml(String(u.unitId));
     const storageOn = isStorageMarked(u);
     const storageTitle = u.inStorage
@@ -411,6 +413,20 @@
   }
 
   function buildMonsterDetailTagsHtml(u, t) {
+    if (typeof isShareReadOnly === 'function' && isShareReadOnly()) {
+      const tags = u.customTags || [];
+      if (!tags.length) return '';
+      const chips = tags
+        .map(
+          (tag) =>
+            `<span class="monsters-detail__tag"><span class="monsters-detail__tag-label">${escapeHtml(tag)}</span></span>`,
+        )
+        .join('');
+      return `<div class="monsters-detail__custom-tags">
+      <p class="monsters-detail__custom-tags-label">${escapeHtml(t.monstersCustomTags || 'Custom tags')}</p>
+      <div class="monsters-detail__tag-list">${chips}</div>
+    </div>`;
+    }
     const tags = u.customTags || [];
     const chips = tags.length
       ? tags

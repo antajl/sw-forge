@@ -693,6 +693,7 @@
     renderMonstersPanel();
     applyDemoBannerTextFromTranslations();
     syncDemoBannerVisibility();
+    if (typeof renderShareViewBanner === 'function') renderShareViewBanner();
     applySwrmDropVeilTranslations();
   }
 
@@ -770,6 +771,36 @@
     if (lblActions) lblActions.textContent = t.tableToolbarSectionActions || 'Actions';
     const lblDisplay = document.getElementById('lbl-table-toolbar-display');
     if (lblDisplay) lblDisplay.textContent = t.tableToolbarSectionDisplay || 'Display';
+    const lblRuneMoreFilters = document.getElementById('lbl-rune-more-filters');
+    if (lblRuneMoreFilters) lblRuneMoreFilters.textContent = t.runeTableMoreFilters || 'More Filters';
+    const lblRuneDrawerTitle = document.getElementById('lbl-rune-filters-drawer-title');
+    if (lblRuneDrawerTitle) lblRuneDrawerTitle.textContent = t.runeTableFiltersDrawerTitle || 'More filters';
+    const lblRuneFilterClear = document.getElementById('rune-filter-clear-all');
+    if (lblRuneFilterClear) lblRuneFilterClear.textContent = t.runeTableFilterClearAll || 'Clear all';
+    const lblRuneFv = document.getElementById('lbl-rune-filter-verdict');
+    if (lblRuneFv) lblRuneFv.textContent = t.runeFilterVerdict || 'Verdict';
+    const lblRuneFr = document.getElementById('lbl-rune-filter-role');
+    if (lblRuneFr) lblRuneFr.textContent = t.runeFilterRole || 'Role';
+    const lblRuneFg = document.getElementById('lbl-rune-filter-grade');
+    if (lblRuneFg) lblRuneFg.textContent = t.runeFilterGrade || 'Grade';
+    const lblRuneFs = document.getElementById('lbl-rune-filter-set');
+    if (lblRuneFs) lblRuneFs.textContent = t.runeFilterSet || 'Set';
+    const lblRuneFsl = document.getElementById('lbl-rune-filter-slot');
+    if (lblRuneFsl) lblRuneFsl.textContent = t.runeFilterSlot || 'Slot';
+    const lblRuneFm = document.getElementById('lbl-rune-filter-main');
+    if (lblRuneFm) lblRuneFm.textContent = t.runeFilterMain || 'Main stat';
+    const lblThGrade = document.getElementById('lbl-th-grade');
+    if (lblThGrade) lblThGrade.textContent = t.runeFilterGrade || 'Grade';
+    const lblThSet = document.getElementById('lbl-th-set');
+    if (lblThSet) lblThSet.textContent = t.runeFilterSet || 'Set';
+    const lblThSlot = document.getElementById('lbl-th-slot');
+    if (lblThSlot) lblThSlot.textContent = t.runeFilterSlot || 'Slot';
+    const lblThMain = document.getElementById('lbl-th-main');
+    if (lblThMain) lblThMain.textContent = t.runeFilterMain || 'Main';
+    const lblThRole = document.getElementById('lbl-th-role');
+    if (lblThRole) lblThRole.textContent = t.runeFilterRole || 'Role';
+    const lblThVerdict = document.getElementById('lbl-th-verdict');
+    if (lblThVerdict) lblThVerdict.textContent = t.runeFilterVerdict || 'Verdict';
     
     const filterVerdict = document.getElementById('filter-verdict');
     if (filterVerdict) {
@@ -4491,20 +4522,129 @@
     }
   }
 
+  const RUNE_FILTER_SELECT_IDS = {
+    grade: 'filter-grade',
+    set: 'filter-set',
+    slot: 'filter-slot',
+    main: 'filter-main',
+    role: 'filter-role',
+    verdict: 'filter-verdict',
+  };
+
+  function readRuneTableFiltersFromDom() {
+    return {
+      verdict: document.getElementById('filter-verdict')?.value || '',
+      role: document.getElementById('filter-role')?.value || '',
+      grade: document.getElementById('filter-grade')?.value || '',
+      set: document.getElementById('filter-set')?.value || '',
+      slot: document.getElementById('filter-slot')?.value || '',
+      main: document.getElementById('filter-main')?.value || '',
+      ancientOnly: !!document.getElementById('toggle-ancient-only')?.checked,
+    };
+  }
+
+  function countRuneTableActiveFilters(f) {
+    let n = 0;
+    if (f.verdict) n += 1;
+    if (f.role) n += 1;
+    if (f.grade) n += 1;
+    if (f.set) n += 1;
+    if (f.slot) n += 1;
+    if (f.main) n += 1;
+    if (f.ancientOnly) n += 1;
+    return n;
+  }
+
+  function runeTableFilterChipDefs(f, t) {
+    const chips = [];
+    if (f.verdict) chips.push({ key: 'verdict', label: verdictUiLabel(t, f.verdict) || f.verdict });
+    if (f.role) chips.push({ key: 'role', label: f.role });
+    if (f.grade) chips.push({ key: 'grade', label: f.grade });
+    if (f.set) chips.push({ key: 'set', label: f.set });
+    if (f.slot) chips.push({ key: 'slot', label: `${t.runeFilterSlot || 'Slot'} ${f.slot}` });
+    if (f.main) chips.push({ key: 'main', label: f.main });
+    if (f.ancientOnly) chips.push({ key: 'ancientOnly', label: t.tableAncientOnly || 'Ancient only' });
+    return chips;
+  }
+
+  function clearRuneTableFilterChip(key) {
+    switch (key) {
+      case 'verdict':
+        document.getElementById('filter-verdict').value = '';
+        break;
+      case 'role':
+        document.getElementById('filter-role').value = '';
+        break;
+      case 'grade':
+        document.getElementById('filter-grade').value = '';
+        break;
+      case 'set':
+        document.getElementById('filter-set').value = '';
+        break;
+      case 'slot':
+        document.getElementById('filter-slot').value = '';
+        break;
+      case 'main':
+        document.getElementById('filter-main').value = '';
+        break;
+      case 'ancientOnly': {
+        const tgl = document.getElementById('toggle-ancient-only');
+        if (tgl) tgl.checked = false;
+        localStorage.setItem(RUNE_TABLE_ANCIENT_ONLY_KEY, '0');
+        break;
+      }
+      default:
+        break;
+    }
+  }
+
+  function renderRuneTableActiveFilterChips() {
+    const row = document.getElementById('rune-table-active-filters');
+    const host = document.getElementById('rune-table-filter-chips');
+    if (!row || !host) return;
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const chips = runeTableFilterChipDefs(readRuneTableFiltersFromDom(), t);
+    if (!chips.length) {
+      host.innerHTML = '';
+      row.hidden = true;
+      return;
+    }
+    row.hidden = false;
+    host.innerHTML = chips
+      .map(
+        (c) =>
+          `<span class="monsters-filter-chip">${escapeHtml(c.label)}<button type="button" class="monsters-filter-chip__remove" data-rune-filter-chip-remove="${escapeHtml(c.key)}" aria-label="Remove">✕</button></span>`,
+      )
+      .join('');
+  }
+
+  function updateRuneTableFilterSummary() {
+    const f = readRuneTableFiltersFromDom();
+    const n = countRuneTableActiveFilters(f);
+    const countEl = document.getElementById('rune-filters-active-count');
+    const moreBtn = document.getElementById('rune-more-filters-btn');
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const activeTpl = t.runeTableFiltersActive || '{n}';
+    if (countEl) {
+      countEl.textContent = n ? activeTpl.replace(/\{n\}/g, String(n)) : '';
+      countEl.hidden = !n;
+    }
+    if (moreBtn) moreBtn.classList.toggle('monsters-toolbar-btn--filters-active', n > 0);
+    renderRuneTableActiveFilterChips();
+  }
+
   function updateRuneTableFilterIndicators() {
-    document.querySelectorAll('#rune-table thead .th-text[data-filter]').forEach((textEl) => {
-      const key = textEl.getAttribute('data-filter');
-      const sel = document.getElementById(
-        key === 'grade' ? 'filter-grade'
-          : key === 'set' ? 'filter-set'
-            : key === 'slot' ? 'filter-slot'
-              : key === 'main' ? 'filter-main'
-                : key === 'role' ? 'filter-role'
-                  : key === 'verdict' ? 'filter-verdict' : ''
-      );
+    const f = readRuneTableFiltersFromDom();
+    document.querySelectorAll('#rune-table thead [data-filter-key]').forEach((th) => {
+      const key = th.getAttribute('data-filter-key');
+      const id = RUNE_FILTER_SELECT_IDS[key];
+      const sel = id ? document.getElementById(id) : null;
       const on = !!(sel && sel.value);
-      textEl.classList.toggle('th-text--filtered', on);
+      th.classList.toggle('th--filtered', on);
+      const textEl = th.querySelector('.th-text');
+      if (textEl) textEl.classList.toggle('th-text--filtered', on);
     });
+    updateRuneTableFilterSummary();
   }
 
   function resetRuneTableFilters() {
@@ -4631,6 +4771,69 @@
     updateRuneTableFilterIndicators();
     replaceRuneTableLocationFromState();
   }
+
+  function bindRuneTableFiltersDrawer() {
+    const onFilter = () => {
+      updateRuneTableFilterIndicators();
+      applyFiltersAndSort(getVisibleRunes());
+    };
+
+    function openRuneFiltersDrawer() {
+      const dlg = document.getElementById('rune-filters-drawer');
+      if (!dlg) return;
+      if (typeof dlg.showModal === 'function') {
+        try {
+          dlg.showModal();
+        } catch (e) {
+          dlg.setAttribute('open', '');
+        }
+      } else {
+        dlg.setAttribute('open', '');
+      }
+    }
+
+    function closeRuneFiltersDrawer() {
+      const dlg = document.getElementById('rune-filters-drawer');
+      if (!dlg) return;
+      if (dlg.open && typeof dlg.close === 'function') dlg.close();
+      else dlg.removeAttribute('open');
+    }
+
+    document.getElementById('rune-more-filters-btn')?.addEventListener('click', openRuneFiltersDrawer);
+    document.getElementById('rune-filters-drawer-close')?.addEventListener('click', closeRuneFiltersDrawer);
+    document.getElementById('rune-filters-drawer')?.addEventListener('close', onFilter);
+    document.getElementById('rune-filters-drawer-reset')?.addEventListener('click', () => {
+      ['filter-verdict', 'filter-role', 'filter-grade', 'filter-set', 'filter-slot', 'filter-main'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      onFilter();
+    });
+    document.getElementById('rune-filter-clear-all')?.addEventListener('click', () => {
+      ['filter-verdict', 'filter-role', 'filter-grade', 'filter-set', 'filter-slot', 'filter-main'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      const tglAncient = document.getElementById('toggle-ancient-only');
+      if (tglAncient) {
+        tglAncient.checked = false;
+        localStorage.setItem(RUNE_TABLE_ANCIENT_ONLY_KEY, '0');
+      }
+      onFilter();
+    });
+    document.getElementById('rune-table-filter-chips')?.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-rune-filter-chip-remove]');
+      if (!btn) return;
+      clearRuneTableFilterChip(btn.getAttribute('data-rune-filter-chip-remove'));
+      onFilter();
+    });
+
+    ['filter-verdict', 'filter-role', 'filter-grade', 'filter-set', 'filter-slot', 'filter-main'].forEach((id) => {
+      document.getElementById(id)?.addEventListener('change', onFilter);
+    });
+  }
+
+  bindRuneTableFiltersDrawer();
 
   // ===================== TABLE =====================
   function renderTable(runes) {
@@ -4793,85 +4996,15 @@
     document.body.removeChild(a);
   }
 
-  function closeAllRuneTableHeaderFilters() {
-    document.querySelectorAll('#rune-table thead .th-filter').forEach(s => {
-      s.style.display = 'none';
-    });
-    document.querySelectorAll('#rune-table thead .th-text').forEach(t => {
-      t.classList.remove('th-text--filter-active');
-      t.style.removeProperty('display');
-    });
-  }
-
-  // Table sorting — main table (skip filter columns; those have th-text/th-filter)
+  // Table sorting
   document.querySelectorAll('#rune-table thead th[data-sort]').forEach(th => {
-    th.addEventListener('click', (e) => {
-      // Ignore clicks on filter text/select
-      if (e.target.closest('.th-text') || e.target.closest('.th-filter')) return;
+    th.addEventListener('click', () => {
       const key = th.dataset.sort;
       if (sortKey === key) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
       else { sortKey = key; sortDir = 'desc'; }
       document.querySelectorAll('#rune-table thead th[data-sort]').forEach(t => t.classList.remove('sort-asc', 'sort-desc'));
       th.classList.add(sortDir === 'asc' ? 'sort-asc' : 'sort-desc');
       applyFiltersAndSort(getVisibleRunes());
-    });
-  });
-
-  // Inline filter toggles inside table headers — hover to reveal, click to open
-  document.querySelectorAll('#rune-table thead th .th-text').forEach(textEl => {
-    textEl.addEventListener('mouseenter', (e) => {
-      e.stopPropagation();
-      const select = textEl.parentElement.querySelector('.th-filter');
-      if (!select) return;
-      closeAllRuneTableHeaderFilters();
-      select.style.display = 'inline-block';
-      textEl.classList.add('th-text--filter-active');
-    });
-  });
-
-  // Hide select when cursor leaves the header cell (unless select is focused/open)
-  document.querySelectorAll('#rune-table thead th.th-has-filter').forEach(th => {
-    const select = th.querySelector('.th-filter');
-    const text = th.querySelector('.th-text');
-    if (!select || !text) return;
-
-    th.addEventListener('mouseleave', () => {
-      setTimeout(() => {
-        if (document.activeElement !== select) {
-          select.style.display = 'none';
-          text.classList.remove('th-text--filter-active');
-          text.style.removeProperty('display');
-        }
-      }, 200);
-    });
-  });
-
-  document.querySelectorAll('#rune-table thead th .th-filter').forEach(select => {
-    // Prevent sort when clicking inside the select
-    select.addEventListener('click', (e) => {
-      e.stopPropagation();
-    });
-
-    select.addEventListener('change', () => {
-      select.style.display = 'none';
-      const text = select.parentElement.querySelector('.th-text');
-      if (text) {
-        text.classList.remove('th-text--filter-active');
-        text.style.removeProperty('display');
-      }
-      applyFiltersAndSort(getVisibleRunes());
-    });
-
-    select.addEventListener('blur', () => {
-      // Small delay so change fires first
-      setTimeout(() => {
-        select.style.display = 'none';
-        const text = select.parentElement.querySelector('.th-text');
-        if (text) {
-          text.classList.remove('th-text--filter-active');
-          text.style.removeProperty('display');
-        }
-      }, 150);
     });
   });
 
@@ -4893,17 +5026,12 @@
 
   document.getElementById('toggle-ancient-only')?.addEventListener('change', (e) => {
     localStorage.setItem(RUNE_TABLE_ANCIENT_ONLY_KEY, e.target.checked ? '1' : '0');
+    updateRuneTableFilterIndicators();
     applyFiltersAndSort(getVisibleRunes(), { preserveTableExpansion: true });
   });
 
   document.getElementById('btn-table-reset-filters')?.addEventListener('click', () => {
     resetRuneTableFilters();
-  });
-
-  // Table filters (search debounced separately)
-  ['filter-verdict', 'filter-role', 'filter-grade', 'filter-set', 'filter-slot', 'filter-main'].forEach((id) => {
-    document.getElementById(id)?.addEventListener('input', () => applyFiltersAndSort(getVisibleRunes()));
-    document.getElementById(id)?.addEventListener('change', () => applyFiltersAndSort(getVisibleRunes()));
   });
 
   document.getElementById('search-box')?.addEventListener('input', () => {
@@ -7002,10 +7130,16 @@
     if (!bar) {
       bar = document.createElement('aside');
       bar.id = 'share-view-banner';
-      bar.className = 'share-view-banner';
+      bar.className = 'share-view-banner demo-dataset-banner';
       const chrome = document.querySelector('.site-chrome-sticky');
-      if (chrome) chrome.insertAdjacentElement('afterend', bar);
-      else document.body.prepend(bar);
+      const demo = document.getElementById('demo-dataset-banner');
+      if (demo && chrome && demo.parentElement === chrome) {
+        demo.insertAdjacentElement('afterend', bar);
+      } else if (chrome) {
+        chrome.appendChild(bar);
+      } else {
+        document.body.prepend(bar);
+      }
     }
     bar.removeAttribute('hidden');
     bar.setAttribute('aria-hidden', 'false');
@@ -7103,6 +7237,15 @@
         if (el.id === 'share-view-exit-btn') return;
         el.disabled = shareReadOnly;
         if (shareReadOnly && el.id === 'btn-save-settings') el.hidden = true;
+      });
+    }
+    const appSettingsRoot = document.getElementById('tab-app-settings');
+    if (appSettingsRoot) {
+      appSettingsRoot.querySelectorAll('input, select, textarea, button').forEach((el) => {
+        if (el.id === 'app-language') return;
+        el.disabled = shareReadOnly;
+        if (shareReadOnly) el.setAttribute('readonly', 'readonly');
+        else el.removeAttribute('readonly');
       });
     }
     const bulkBar = document.getElementById('monsters-bulk-bar');
@@ -9512,6 +9655,7 @@
   }
 
   function buildCardActionsHtml(u, t) {
+    if (typeof isShareReadOnly === 'function' && isShareReadOnly()) return '';
     const uid = escapeHtml(String(u.unitId));
     const storageOn = isStorageMarked(u);
     const storageTitle = u.inStorage
@@ -9524,6 +9668,7 @@
   }
 
   function buildListRowMetaHtml(u, t) {
+    if (typeof isShareReadOnly === 'function' && isShareReadOnly()) return '';
     const uid = escapeHtml(String(u.unitId));
     const storageOn = isStorageMarked(u);
     const storageTitle = u.inStorage
@@ -9540,6 +9685,20 @@
   }
 
   function buildMonsterDetailTagsHtml(u, t) {
+    if (typeof isShareReadOnly === 'function' && isShareReadOnly()) {
+      const tags = u.customTags || [];
+      if (!tags.length) return '';
+      const chips = tags
+        .map(
+          (tag) =>
+            `<span class="monsters-detail__tag"><span class="monsters-detail__tag-label">${escapeHtml(tag)}</span></span>`,
+        )
+        .join('');
+      return `<div class="monsters-detail__custom-tags">
+      <p class="monsters-detail__custom-tags-label">${escapeHtml(t.monstersCustomTags || 'Custom tags')}</p>
+      <div class="monsters-detail__tag-list">${chips}</div>
+    </div>`;
+    }
     const tags = u.customTags || [];
     const chips = tags.length
       ? tags
@@ -11259,21 +11418,25 @@
     document.getElementById('monsters-filter-tag')?.addEventListener('change', onFilter);
     document.getElementById('monsters-filter-role')?.addEventListener('change', onFilter);
     document.getElementById('monsters-bulk-favorite')?.addEventListener('click', () => {
+      if (typeof isShareReadOnly === 'function' && isShareReadOnly()) return;
       if (!monstersBulkSelected.size) return;
       bulkToggleFavoriteFlag([...monstersBulkSelected]);
       renderMonstersPanel();
     });
     document.getElementById('monsters-bulk-food')?.addEventListener('click', () => {
+      if (typeof isShareReadOnly === 'function' && isShareReadOnly()) return;
       if (!monstersBulkSelected.size) return;
       bulkToggleFoodFlag([...monstersBulkSelected]);
       renderMonstersPanel();
     });
     document.getElementById('monsters-bulk-storage')?.addEventListener('click', () => {
+      if (typeof isShareReadOnly === 'function' && isShareReadOnly()) return;
       if (!monstersBulkSelected.size) return;
       bulkToggleStorageMark([...monstersBulkSelected]);
       renderMonstersPanel();
     });
     document.getElementById('monsters-bulk-tag-apply')?.addEventListener('click', () => {
+      if (typeof isShareReadOnly === 'function' && isShareReadOnly()) return;
       const input = document.getElementById('monsters-bulk-tag-input');
       const val = input?.value || '';
       if (!monstersBulkSelected.size || !normalizeCustomTag(val)) return;

@@ -2,6 +2,40 @@
 .table-toolbar {
   margin-bottom: 14px;
 }
+
+.rune-table-active-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 0 0 10px;
+}
+
+.rune-table-filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.rune-table-active-filters__clear {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  color: var(--accent);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 6px;
+}
+
+.rune-table-active-filters__clear:hover {
+  text-decoration: underline;
+}
+
+#tab-runetable .table-toolbar .monsters-toolbar-btn--filters {
+  min-height: 32px;
+}
 .table-toolbar__card {
   background: var(--bg2);
   border: 1px solid var(--border);

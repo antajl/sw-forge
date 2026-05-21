@@ -409,6 +409,10 @@
                   <span class="table-toolbar__group-label" id="lbl-table-toolbar-actions">Actions</span>
                   <div class="table-toolbar__buttons">
                     <button type="button" id="btn-table-reset-filters" class="btn-ghost btn-toolbar">Reset filters</button>
+                    <button type="button" class="monsters-toolbar-btn monsters-toolbar-btn--filters" id="rune-more-filters-btn" aria-haspopup="dialog" aria-controls="rune-filters-drawer">
+                      <span id="lbl-rune-more-filters">More Filters ⚙</span>
+                      <span class="monsters-toolbar-btn__badge" id="rune-filters-active-count" hidden></span>
+                    </button>
                     <button type="button" id="btn-export-csv" class="btn-ghost btn-toolbar">Export CSV</button>
                     <div class="share-split share-split--compact" data-share-split>
                       <button type="button" class="share-split__main" id="runetable-share-main">
@@ -448,53 +452,79 @@
               </div>
             </div>
           </div>
+          <div id="rune-table-active-filters" class="rune-table-active-filters" hidden>
+            <div id="rune-table-filter-chips" class="rune-table-filter-chips"></div>
+            <button type="button" class="rune-table-active-filters__clear" id="rune-filter-clear-all">Clear all</button>
+          </div>
+          <dialog id="rune-filters-drawer" class="monsters-filters-drawer rune-filters-drawer">
+            <form method="dialog" class="monsters-filters-drawer__form">
+              <header class="monsters-filters-drawer__head">
+                <h3 class="monsters-filters-drawer__title" id="lbl-rune-filters-drawer-title">More filters</h3>
+                <button type="button" class="monsters-filters-drawer__close" id="rune-filters-drawer-close" aria-label="Close">✕</button>
+              </header>
+              <div class="monsters-filters-drawer__body">
+                <div class="monsters-toolbar__filters-grid monsters-toolbar__filters-grid--primary">
+                  <label>
+                    <span id="lbl-rune-filter-verdict">Verdict</span>
+                    <select id="filter-verdict">
+                      <option value="">All</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span id="lbl-rune-filter-role">Role</span>
+                    <select id="filter-role">
+                      <option value="">All</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span id="lbl-rune-filter-grade">Grade</span>
+                    <select id="filter-grade">
+                      <option value="">All</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span id="lbl-rune-filter-set">Set</span>
+                    <select id="filter-set">
+                      <option value="">All</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span id="lbl-rune-filter-slot">Slot</span>
+                    <select id="filter-slot">
+                      <option value="">All</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span id="lbl-rune-filter-main">Main stat</span>
+                    <select id="filter-main">
+                      <option value="">All</option>
+                    </select>
+                  </label>
+                </div>
+              </div>
+              <footer class="monsters-filters-drawer__foot">
+                <button type="button" class="btn-ghost" id="rune-filters-drawer-reset">Reset filters</button>
+                <button type="submit" class="btn-primary" id="rune-filters-drawer-done">Done</button>
+              </footer>
+            </form>
+          </dialog>
           <div class="table-wrap" id="rune-table-scroll" tabindex="0" role="region" aria-label="Rune table">
             <table id="rune-table">
               <thead>
                 <tr>
-                  <th data-sort="grade" class="th-has-filter col-grade">
-                    <span class="th-text" data-filter="grade">Grade</span>
-                    <select id="filter-grade" class="th-filter">
-                      <option value="">All</option>
-                    </select>
-                  </th>
-                  <th data-sort="set" class="th-has-filter col-set col-text">
-                    <span class="th-text" data-filter="set">Set</span>
-                    <select id="filter-set" class="th-filter">
-                      <option value="">All</option>
-                    </select>
-                  </th>
+                  <th data-sort="grade" class="col-grade" data-filter-key="grade"><span class="th-text" id="lbl-th-grade">Grade</span></th>
+                  <th data-sort="set" class="col-set col-text" data-filter-key="set"><span class="th-text" id="lbl-th-set">Set</span></th>
                   <th data-sort="level" class="th-num col-num">Lvl</th>
-                  <th data-sort="slot" class="th-has-filter th-num col-num">
-                    <span class="th-text" data-filter="slot">Slot</span>
-                    <select id="filter-slot" class="th-filter">
-                      <option value="">All</option>
-                    </select>
-                  </th>
-                  <th data-sort="main" class="th-has-filter col-text">
-                    <span class="th-text" data-filter="main">Main</span>
-                    <select id="filter-main" class="th-filter">
-                      <option value="">All</option>
-                    </select>
-                  </th>
+                  <th data-sort="slot" class="th-num col-num" data-filter-key="slot"><span class="th-text" id="lbl-th-slot">Slot</span></th>
+                  <th data-sort="main" class="col-text" data-filter-key="main"><span class="th-text" id="lbl-th-main">Main</span></th>
                   <th class="col-text">Innate</th>
                   <th data-sort="s1" class="col-sub col-sub-first">Sub 1</th>
                   <th data-sort="s2" class="col-sub">Sub 2</th>
                   <th data-sort="s3" class="col-sub">Sub 3</th>
                   <th data-sort="s4" class="col-sub">Sub 4</th>
                   <th data-sort="eff" class="th-num col-num"><span id="lbl-th-eff">Eff%</span></th>
-                  <th data-sort="role" class="th-has-filter col-text">
-                    <span class="th-text" data-filter="role">Role</span>
-                    <select id="filter-role" class="th-filter">
-                      <option value="">All</option>
-                    </select>
-                  </th>
-                  <th data-sort="verdict" class="th-has-filter col-text">
-                    <span class="th-text" data-filter="verdict">Verdict</span>
-                    <select id="filter-verdict" class="th-filter">
-                      <option value="">All</option>
-                    </select>
-                  </th>
+                  <th data-sort="role" class="col-text" data-filter-key="role"><span class="th-text" id="lbl-th-role">Role</span></th>
+                  <th data-sort="verdict" class="col-text" data-filter-key="verdict"><span class="th-text" id="lbl-th-verdict">Verdict</span></th>
                   <th id="target-col-header" class="hidden col-text">Target</th>
                 </tr>
               </thead>

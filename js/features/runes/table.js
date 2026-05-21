@@ -160,85 +160,15 @@
     document.body.removeChild(a);
   }
 
-  function closeAllRuneTableHeaderFilters() {
-    document.querySelectorAll('#rune-table thead .th-filter').forEach(s => {
-      s.style.display = 'none';
-    });
-    document.querySelectorAll('#rune-table thead .th-text').forEach(t => {
-      t.classList.remove('th-text--filter-active');
-      t.style.removeProperty('display');
-    });
-  }
-
-  // Table sorting — main table (skip filter columns; those have th-text/th-filter)
+  // Table sorting
   document.querySelectorAll('#rune-table thead th[data-sort]').forEach(th => {
-    th.addEventListener('click', (e) => {
-      // Ignore clicks on filter text/select
-      if (e.target.closest('.th-text') || e.target.closest('.th-filter')) return;
+    th.addEventListener('click', () => {
       const key = th.dataset.sort;
       if (sortKey === key) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
       else { sortKey = key; sortDir = 'desc'; }
       document.querySelectorAll('#rune-table thead th[data-sort]').forEach(t => t.classList.remove('sort-asc', 'sort-desc'));
       th.classList.add(sortDir === 'asc' ? 'sort-asc' : 'sort-desc');
       applyFiltersAndSort(getVisibleRunes());
-    });
-  });
-
-  // Inline filter toggles inside table headers — hover to reveal, click to open
-  document.querySelectorAll('#rune-table thead th .th-text').forEach(textEl => {
-    textEl.addEventListener('mouseenter', (e) => {
-      e.stopPropagation();
-      const select = textEl.parentElement.querySelector('.th-filter');
-      if (!select) return;
-      closeAllRuneTableHeaderFilters();
-      select.style.display = 'inline-block';
-      textEl.classList.add('th-text--filter-active');
-    });
-  });
-
-  // Hide select when cursor leaves the header cell (unless select is focused/open)
-  document.querySelectorAll('#rune-table thead th.th-has-filter').forEach(th => {
-    const select = th.querySelector('.th-filter');
-    const text = th.querySelector('.th-text');
-    if (!select || !text) return;
-
-    th.addEventListener('mouseleave', () => {
-      setTimeout(() => {
-        if (document.activeElement !== select) {
-          select.style.display = 'none';
-          text.classList.remove('th-text--filter-active');
-          text.style.removeProperty('display');
-        }
-      }, 200);
-    });
-  });
-
-  document.querySelectorAll('#rune-table thead th .th-filter').forEach(select => {
-    // Prevent sort when clicking inside the select
-    select.addEventListener('click', (e) => {
-      e.stopPropagation();
-    });
-
-    select.addEventListener('change', () => {
-      select.style.display = 'none';
-      const text = select.parentElement.querySelector('.th-text');
-      if (text) {
-        text.classList.remove('th-text--filter-active');
-        text.style.removeProperty('display');
-      }
-      applyFiltersAndSort(getVisibleRunes());
-    });
-
-    select.addEventListener('blur', () => {
-      // Small delay so change fires first
-      setTimeout(() => {
-        select.style.display = 'none';
-        const text = select.parentElement.querySelector('.th-text');
-        if (text) {
-          text.classList.remove('th-text--filter-active');
-          text.style.removeProperty('display');
-        }
-      }, 150);
     });
   });
 
@@ -260,17 +190,12 @@
 
   document.getElementById('toggle-ancient-only')?.addEventListener('change', (e) => {
     localStorage.setItem(RUNE_TABLE_ANCIENT_ONLY_KEY, e.target.checked ? '1' : '0');
+    updateRuneTableFilterIndicators();
     applyFiltersAndSort(getVisibleRunes(), { preserveTableExpansion: true });
   });
 
   document.getElementById('btn-table-reset-filters')?.addEventListener('click', () => {
     resetRuneTableFilters();
-  });
-
-  // Table filters (search debounced separately)
-  ['filter-verdict', 'filter-role', 'filter-grade', 'filter-set', 'filter-slot', 'filter-main'].forEach((id) => {
-    document.getElementById(id)?.addEventListener('input', () => applyFiltersAndSort(getVisibleRunes()));
-    document.getElementById(id)?.addEventListener('change', () => applyFiltersAndSort(getVisibleRunes()));
   });
 
   document.getElementById('search-box')?.addEventListener('input', () => {

@@ -21,8 +21,9 @@
   overflow-y: visible;
 }
 
-/* Demo bar supplies its own top gold edge — avoid double line under header */
-.site-chrome-sticky:has(.demo-dataset-banner:not([hidden])) .site-header {
+/* Demo / share bar supplies its own top gold edge — avoid double line under header */
+.site-chrome-sticky:has(.demo-dataset-banner:not([hidden])) .site-header,
+.site-chrome-sticky:has(#share-view-banner) .site-header {
   border-bottom-color: transparent;
 }
 

@@ -410,21 +410,25 @@
     document.getElementById('monsters-filter-tag')?.addEventListener('change', onFilter);
     document.getElementById('monsters-filter-role')?.addEventListener('change', onFilter);
     document.getElementById('monsters-bulk-favorite')?.addEventListener('click', () => {
+      if (typeof isShareReadOnly === 'function' && isShareReadOnly()) return;
       if (!monstersBulkSelected.size) return;
       bulkToggleFavoriteFlag([...monstersBulkSelected]);
       renderMonstersPanel();
     });
     document.getElementById('monsters-bulk-food')?.addEventListener('click', () => {
+      if (typeof isShareReadOnly === 'function' && isShareReadOnly()) return;
       if (!monstersBulkSelected.size) return;
       bulkToggleFoodFlag([...monstersBulkSelected]);
       renderMonstersPanel();
     });
     document.getElementById('monsters-bulk-storage')?.addEventListener('click', () => {
+      if (typeof isShareReadOnly === 'function' && isShareReadOnly()) return;
       if (!monstersBulkSelected.size) return;
       bulkToggleStorageMark([...monstersBulkSelected]);
       renderMonstersPanel();
     });
     document.getElementById('monsters-bulk-tag-apply')?.addEventListener('click', () => {
+      if (typeof isShareReadOnly === 'function' && isShareReadOnly()) return;
       const input = document.getElementById('monsters-bulk-tag-input');
       const val = input?.value || '';
       if (!monstersBulkSelected.size || !normalizeCustomTag(val)) return;

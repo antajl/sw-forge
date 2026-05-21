@@ -316,6 +316,16 @@ const TRANSLATIONS = {
     tableToolbarSearchLabel: 'Search runes',
     tableToolbarSectionActions: 'Actions',
     tableToolbarSectionDisplay: 'Display',
+    runeTableMoreFilters: 'More Filters',
+    runeTableFiltersDrawerTitle: 'More filters',
+    runeTableFiltersActive: '{n}',
+    runeTableFilterClearAll: 'Clear all',
+    runeFilterVerdict: 'Verdict',
+    runeFilterRole: 'Role',
+    runeFilterGrade: 'Grade',
+    runeFilterSet: 'Set',
+    runeFilterSlot: 'Slot',
+    runeFilterMain: 'Main stat',
     runeTableMoreHintInline:
       '{shown} / {total} in table · load all for full list (large exports may lag)',
     runeTableMoreHint:
@@ -855,6 +865,16 @@ const TRANSLATIONS = {
     tableToolbarSearchLabel: 'Поиск по рунам',
     tableToolbarSectionActions: 'Действия',
     tableToolbarSectionDisplay: 'Отображение',
+    runeTableMoreFilters: 'Ещё фильтры',
+    runeTableFiltersDrawerTitle: 'Доп. фильтры',
+    runeTableFiltersActive: '{n}',
+    runeTableFilterClearAll: 'Сбросить всё',
+    runeFilterVerdict: 'Вердикт',
+    runeFilterRole: 'Роль',
+    runeFilterGrade: 'Грейд',
+    runeFilterSet: 'Сет',
+    runeFilterSlot: 'Слот',
+    runeFilterMain: 'Мейн',
     runeTableMoreHintInline:
       '{shown} / {total} в таблице · загрузите все для полного списка (тяжело на больших выборках)',
     runeTableMoreHint:

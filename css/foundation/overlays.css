@@ -416,9 +416,17 @@ main {
   margin-bottom: 8px;
 }
 .prompt-icon {
-  font-size: 3rem; color: var(--accent);
-  filter: drop-shadow(0 0 16px var(--accent));
   margin-bottom: 20px;
+  line-height: 0;
+}
+
+.prompt-icon__img {
+  display: block;
+  width: 72px;
+  height: 72px;
+  margin: 0 auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0 16px color-mix(in srgb, var(--accent) 55%, transparent));
 }
 .prompt-card h2 {
   font-family: var(--font-head); font-size: 1.6rem;

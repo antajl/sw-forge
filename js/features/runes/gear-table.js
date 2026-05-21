@@ -259,7 +259,7 @@
         ? window.SWRM.formatRelicDurability
         : null;
     if (!filteredRelics.length) {
-      tbody.innerHTML = `<tr><td colspan="7" class="table-empty">${escapeHtml(t.tableGearEmptyRelics || 'No relics')}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" class="table-empty">${escapeHtml(t.tableGearEmptyRelics || 'No relics')}</td></tr>`;
       return;
     }
     const rows = filteredRelics
@@ -273,15 +273,13 @@
         const main = r.pri && fmt ? fmt(r.pri, { kind: 'relic' }) : '—';
         const sec = fmtSec ? fmtSec(r) : '—';
         const dur = fmtDur ? fmtDur(r) : '—';
-        const grade = r.grade > 0 && r.gradeStr ? r.gradeStr : '—';
-        const category = r.categoryVerified && r.category ? r.category : '—';
+        const category = r.category ? r.category : '—';
         const fmtWear =
           window.SWRM && typeof window.SWRM.formatRelicWearCount === 'function'
             ? window.SWRM.formatRelicWearCount
             : null;
         const wear = fmtWear ? fmtWear(r) : '0/100';
         return `<tr>
-          <td class="col-grade">${escapeHtml(grade)}</td>
           <td>${escapeHtml(category)}</td>
           <td class="th-num">+${escapeHtml(String(r.level || 0))}</td>
           <td class="th-num">${escapeHtml(dur)}</td>

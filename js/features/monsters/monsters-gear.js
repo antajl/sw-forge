@@ -72,12 +72,7 @@
         : gear.kind === 'relic'
           ? ''
           : gear.gradeStr || '';
-    const categoryLabel =
-      gear.kind === 'relic'
-        ? gear.categoryVerified
-          ? gear.category
-          : ''
-        : gear.category || '';
+    const categoryLabel = gear.category || '';
     const meta = [categoryLabel, grade].filter(Boolean).join(' · ');
     const head = [kindLbl, meta].filter(Boolean).join(' · ');
     const lines =

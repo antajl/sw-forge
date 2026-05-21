@@ -148,13 +148,6 @@
     return parts.join('\n');
   }
 
-  /** Stylised “Ancient” mark: A without crossbar, dot at mid-height (matches in-game cue). */
-  const ANCIENT_GRADE_ICON_SVG =
-    '<svg class="ancient-grade-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">'
-    + '<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.85" d="M2.35 12.85L8 2.65l5.65 10.2"/>'
-    + '<circle cx="8" cy="9.55" r="1.45" fill="currentColor"/>'
-    + '</svg>';
-
   /** Counter‑clockwise circular arrows (gem / replaced sub) — stroke reads clearly at small sizes. */
   const STAT_SUB_GEM_ICON_SVG =
     '<svg class="table-stat-gem-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">'
@@ -214,11 +207,8 @@
     const ancientTipRaw = tloc.tableAncientBadgeTitle || '';
     const ancientTipAttr = r.isAncient && ancientTipRaw ? ` title="${escapeAttr(ancientTipRaw)}"` : '';
     const ancientLbl = escapeAttr(tloc.tableAncientBadge || 'Ancient');
-    const ancientIcon = r.isAncient
-      ? `<span class="ancient-grade-icon-wrap" aria-hidden="true">${ANCIENT_GRADE_ICON_SVG}</span>`
-      : '';
     const gradeAria = r.isAncient ? ` aria-label="${ancientLbl}, ${escapeAttr(gradeLabel)}"` : '';
-    const grade = `<span class="grade-tag ${gradeClass}${r.isAncient ? ' grade-tag--ancient' : ''}"${ancientTipAttr}${gradeAria}>${ancientIcon}<span class="grade-tag__lbl">${gradeLabelHtml}</span></span>`;
+    const grade = `<span class="grade-tag ${gradeClass}${r.isAncient ? ' grade-tag--ancient' : ''}"${ancientTipAttr}${gradeAria}><span class="grade-tag__lbl">${gradeLabelHtml}</span></span>`;
 
     const effNum = getRuneNumericEff(r);
     const effTier =

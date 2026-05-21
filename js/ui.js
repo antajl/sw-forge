@@ -817,7 +817,6 @@
     bindTh('lbl-th-art-main', 'monstersGearMain', 'Main');
     bindTh('lbl-th-art-subs', 'thArtSubs', 'Subs');
     bindTh('lbl-th-art-location', 'thArtLocation', 'Location');
-    bindTh('lbl-th-rel-grade', 'thRelGrade', 'Grade');
     bindTh('lbl-th-rel-category', 'thRelCategory', 'Category');
     bindTh('lbl-th-rel-level', 'monstersGearLevel', 'Lvl');
     bindTh('lbl-th-rel-durability', 'thRelDurability', 'Durability');
@@ -865,7 +864,7 @@
     const lblThSlot = document.getElementById('lbl-th-slot');
     if (lblThSlot) lblThSlot.textContent = t.runeFilterSlot || 'Slot';
     const lblThMain = document.getElementById('lbl-th-main');
-    if (lblThMain) lblThMain.textContent = t.runeFilterMain || 'Main';
+    if (lblThMain) lblThMain.textContent = t.monstersGearMain || 'Main';
     const lblThRole = document.getElementById('lbl-th-role');
     if (lblThRole) lblThRole.textContent = t.runeFilterRole || 'Role';
     const lblThVerdict = document.getElementById('lbl-th-verdict');
@@ -4505,13 +4504,6 @@
     return parts.join('\n');
   }
 
-  /** Stylised “Ancient” mark: A without crossbar, dot at mid-height (matches in-game cue). */
-  const ANCIENT_GRADE_ICON_SVG =
-    '<svg class="ancient-grade-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">'
-    + '<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.85" d="M2.35 12.85L8 2.65l5.65 10.2"/>'
-    + '<circle cx="8" cy="9.55" r="1.45" fill="currentColor"/>'
-    + '</svg>';
-
   /** Counter‑clockwise circular arrows (gem / replaced sub) — stroke reads clearly at small sizes. */
   const STAT_SUB_GEM_ICON_SVG =
     '<svg class="table-stat-gem-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">'
@@ -4571,11 +4563,8 @@
     const ancientTipRaw = tloc.tableAncientBadgeTitle || '';
     const ancientTipAttr = r.isAncient && ancientTipRaw ? ` title="${escapeAttr(ancientTipRaw)}"` : '';
     const ancientLbl = escapeAttr(tloc.tableAncientBadge || 'Ancient');
-    const ancientIcon = r.isAncient
-      ? `<span class="ancient-grade-icon-wrap" aria-hidden="true">${ANCIENT_GRADE_ICON_SVG}</span>`
-      : '';
     const gradeAria = r.isAncient ? ` aria-label="${ancientLbl}, ${escapeAttr(gradeLabel)}"` : '';
-    const grade = `<span class="grade-tag ${gradeClass}${r.isAncient ? ' grade-tag--ancient' : ''}"${ancientTipAttr}${gradeAria}>${ancientIcon}<span class="grade-tag__lbl">${gradeLabelHtml}</span></span>`;
+    const grade = `<span class="grade-tag ${gradeClass}${r.isAncient ? ' grade-tag--ancient' : ''}"${ancientTipAttr}${gradeAria}><span class="grade-tag__lbl">${gradeLabelHtml}</span></span>`;
 
     const effNum = getRuneNumericEff(r);
     const effTier =
@@ -5323,7 +5312,7 @@
         ? window.SWRM.formatRelicDurability
         : null;
     if (!filteredRelics.length) {
-      tbody.innerHTML = `<tr><td colspan="7" class="table-empty">${escapeHtml(t.tableGearEmptyRelics || 'No relics')}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" class="table-empty">${escapeHtml(t.tableGearEmptyRelics || 'No relics')}</td></tr>`;
       return;
     }
     const rows = filteredRelics
@@ -5337,15 +5326,13 @@
         const main = r.pri && fmt ? fmt(r.pri, { kind: 'relic' }) : '—';
         const sec = fmtSec ? fmtSec(r) : '—';
         const dur = fmtDur ? fmtDur(r) : '—';
-        const grade = r.grade > 0 && r.gradeStr ? r.gradeStr : '—';
-        const category = r.categoryVerified && r.category ? r.category : '—';
+        const category = r.category ? r.category : '—';
         const fmtWear =
           window.SWRM && typeof window.SWRM.formatRelicWearCount === 'function'
             ? window.SWRM.formatRelicWearCount
             : null;
         const wear = fmtWear ? fmtWear(r) : '0/100';
         return `<tr>
-          <td class="col-grade">${escapeHtml(grade)}</td>
           <td>${escapeHtml(category)}</td>
           <td class="th-num">+${escapeHtml(String(r.level || 0))}</td>
           <td class="th-num">${escapeHtml(dur)}</td>
@@ -10304,12 +10291,7 @@
         : gear.kind === 'relic'
           ? ''
           : gear.gradeStr || '';
-    const categoryLabel =
-      gear.kind === 'relic'
-        ? gear.categoryVerified
-          ? gear.category
-          : ''
-        : gear.category || '';
+    const categoryLabel = gear.category || '';
     const meta = [categoryLabel, grade].filter(Boolean).join(' · ');
     const head = [kindLbl, meta].filter(Boolean).join(' · ');
     const lines =

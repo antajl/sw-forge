@@ -1,24 +1,35 @@
-// js/data/relic-effects.js — relic labels (SWEX + user-verified examples only)
+// js/data/relic-effects.js — relic labels (only user-confirmed mappings)
 (function () {
   const RELIC_PRI_PCT = { 100: 'hp', 101: 'atk', 102: 'def' };
 
-  /** In-game category name — only types confirmed against real relic + JSON. */
+  /** Category name only when confirmed with in-game name + matching JSON type. */
   const RELIC_CATEGORY_BY_TYPE = {
     6: 'Resolute',
+    12: 'Timeless',
     13: 'Primal',
+    14: 'Primal',
+    16: 'Restore',
   };
 
-  const RELIC_CATEGORY_VERIFIED = new Set([6, 13]);
+  const RELIC_CATEGORY_VERIFIED = new Set([6, 12, 13, 14, 16]);
 
-  /** Verified secondary wording (sec_effect = [type, threshold, bonus%]). */
   const RELIC_SEC_FORMAT = {
     6: (threshold) =>
       `DMG Taken (-1%) per (${threshold}) MAX HP at the start of battle`,
+    12: (threshold, pct) =>
+      `DEF +(${pct}%) per (${threshold}) MAX HP at the start of battle`,
     13: (threshold, pct) =>
       `MAX HP +(${pct}%) per (${threshold}) ATK at the start of battle`,
+    14: (threshold, pct) =>
+      `MAX HP +(${pct}%) per (${threshold}) SPD at the start of battle`,
+    16: (threshold, pct) =>
+      `HP Recovery and Shield amount +(${pct}%) per (${threshold}) MAX HP at the start of battle`,
   };
 
-  const RELIC_SEC_VERIFIED = new Set([6, 13]);
+  /** sec_effect[2] = bonus % shown in-game. */
+  const RELIC_SEC_USES_PCT = new Set([12, 13, 14, 16]);
+
+  const RELIC_SEC_VERIFIED = new Set([6, 12, 13, 14, 16]);
 
   function isRelicCategoryVerified(typeId) {
     return RELIC_CATEGORY_VERIFIED.has(Number(typeId));
@@ -50,7 +61,7 @@
     if (!RELIC_SEC_VERIFIED.has(type) || !Number.isFinite(threshold)) return '—';
     const fn = RELIC_SEC_FORMAT[type];
     if (!fn) return '—';
-    if (type === 13) {
+    if (RELIC_SEC_USES_PCT.has(type)) {
       if (!Number.isFinite(pct)) return '—';
       return fn(threshold, pct);
     }

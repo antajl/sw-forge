@@ -4,7 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SW Forge</title>
-  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" sizes="any" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16.png" />
+  <link rel="shortcut icon" href="/assets/favicon-32.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png" />
   <!-- Inline: SVGs have a huge default intrinsic size before css/style.css loads (e.g. live reload). -->
   <style>
     .logo__img { height: 42px; max-width: min(220px, 48vw); }
@@ -28,7 +31,7 @@
       <div class="header-row header-row--nav">
         <div class="header-brand">
           <a class="logo" href="./" id="site-logo-link" aria-label="SW Forge">
-            <img class="logo__img" src="assets/logo.svg" width="196" height="36" alt="" decoding="async" />
+            <img class="logo__img" src="assets/logo.png" width="320" height="48" alt="" decoding="async" />
           </a>
         </div>
         <button type="button" class="header-nav-toggle" id="header-nav-toggle" aria-expanded="false" aria-controls="main-tabs-panel" title="Menu">
@@ -682,7 +685,6 @@
               <table id="relic-table" class="gear-table">
                 <thead>
                   <tr>
-                    <th class="col-grade" id="lbl-th-rel-grade">Grade</th>
                     <th id="lbl-th-rel-category">Category</th>
                     <th class="th-num col-num" id="lbl-th-rel-level">Lvl</th>
                     <th class="th-num col-num" id="lbl-th-rel-durability">Durability</th>
@@ -2523,7 +2525,9 @@
   <section id="upload-prompt" class="upload-prompt hidden" role="dialog" aria-modal="true" aria-labelledby="upload-prompt-title">
     <div class="prompt-card">
       <button type="button" class="close-upload" id="close-upload-prompt" title="Close" aria-label="Close">×</button>
-      <div class="prompt-icon" aria-hidden="true">⬡</div>
+      <div class="prompt-icon" aria-hidden="true">
+        <img class="prompt-icon__img" src="assets/logo-icon.png" width="72" height="72" alt="" decoding="async" />
+      </div>
       <h2 id="upload-prompt-title">Load your SWEX JSON</h2>
       <p id="upload-prompt-lead" class="prompt-lead">Export with Summoners War Exporter (SWEX), then select your .json file. Analysis runs entirely in this browser.</p>
       <p id="upload-prompt-drag-hint" class="prompt-drag-hint" role="note"></p>

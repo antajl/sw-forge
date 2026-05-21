@@ -280,7 +280,6 @@
     bindTh('lbl-th-art-main', 'monstersGearMain', 'Main');
     bindTh('lbl-th-art-subs', 'thArtSubs', 'Subs');
     bindTh('lbl-th-art-location', 'thArtLocation', 'Location');
-    bindTh('lbl-th-rel-grade', 'thRelGrade', 'Grade');
     bindTh('lbl-th-rel-category', 'thRelCategory', 'Category');
     bindTh('lbl-th-rel-level', 'monstersGearLevel', 'Lvl');
     bindTh('lbl-th-rel-durability', 'thRelDurability', 'Durability');
@@ -328,7 +327,7 @@
     const lblThSlot = document.getElementById('lbl-th-slot');
     if (lblThSlot) lblThSlot.textContent = t.runeFilterSlot || 'Slot';
     const lblThMain = document.getElementById('lbl-th-main');
-    if (lblThMain) lblThMain.textContent = t.runeFilterMain || 'Main';
+    if (lblThMain) lblThMain.textContent = t.monstersGearMain || 'Main';
     const lblThRole = document.getElementById('lbl-th-role');
     if (lblThRole) lblThRole.textContent = t.runeFilterRole || 'Role';
     const lblThVerdict = document.getElementById('lbl-th-verdict');

@@ -46,21 +46,64 @@ html:not(.swrm-has-gsap) .table-kind-tabs__indicator {
 
 #artifact-table-scroll,
 #relic-table-scroll {
+  width: 100%;
   max-height: min(70vh, 720px);
   overflow: auto;
 }
 
 #artifact-table,
 #relic-table {
-  width: max-content;
-  min-width: 0;
-  table-layout: auto;
+  width: 100%;
+  table-layout: fixed;
+}
+
+#artifact-table thead th:nth-child(1) {
+  width: 9%;
+}
+#artifact-table thead th:nth-child(2) {
+  width: 11%;
+}
+#artifact-table thead th:nth-child(3) {
+  width: 11%;
+}
+#artifact-table thead th:nth-child(4) {
+  width: 46%;
+}
+#artifact-table thead th:nth-child(5) {
+  width: 23%;
+}
+
+#relic-table thead th:nth-child(1) {
+  width: 11%;
+}
+#relic-table thead th:nth-child(2) {
+  width: 7%;
+}
+#relic-table thead th:nth-child(3) {
+  width: 10%;
+}
+#relic-table thead th:nth-child(4) {
+  width: 11%;
+}
+#relic-table thead th:nth-child(5) {
+  width: 46%;
+}
+#relic-table thead th:nth-child(6) {
+  width: 15%;
 }
 
 #artifact-table th,
 #artifact-table td,
 #relic-table th,
 #relic-table td {
+  overflow-wrap: anywhere;
+  vertical-align: top;
+}
+
+#artifact-table th.col-grade,
+#artifact-table td.col-grade,
+#relic-table th.th-num,
+#relic-table td.th-num {
   white-space: nowrap;
 }
 
@@ -69,6 +112,7 @@ html:not(.swrm-has-gsap) .table-kind-tabs__indicator {
 #relic-table .col-text,
 #relic-table td.col-text {
   white-space: normal;
+  line-height: 1.35;
 }
 
 .gear-table .table-empty {
@@ -95,7 +139,5 @@ html:not(.swrm-has-gsap) .table-kind-tabs__indicator {
 }
 
 .gear-table .col-subs-stack {
-  min-width: 10rem;
-  max-width: 18rem;
   vertical-align: top;
 }

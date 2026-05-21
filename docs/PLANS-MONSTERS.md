@@ -62,4 +62,6 @@
 
 ## Приоритет (актуально)
 
-MVP вкладки Monsters закрыт. Дальше — раздел E и отладка UX. Для Role-фильтра при пустом `archetype` в `data/monsters-index.json`: `node tools/fetch-monsters-index.mjs` или дождаться hydrate при открытии вкладки.
+MVP вкладки Monsters закрыт. Дальше — см. **Changelog → Roadmap** (секции Monsters в `STATIC_ROADMAP`) и раздел E ниже для деталей.
+
+Для Role-фильтра при пустом `archetype` в `data/monsters-index.json`: `node tools/fetch-monsters-index.mjs` или дождаться hydrate при открытии вкладки.

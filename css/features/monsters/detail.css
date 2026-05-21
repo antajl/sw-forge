@@ -626,6 +626,50 @@
   font-size: 0.72rem;
 }
 
+.monsters-detail__stat-row--clickable {
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.monsters-detail__stat-row--clickable:hover {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.monsters-detail__stats-grid--total-view .monsters-detail__stats-head[data-stats-head='split'],
+.monsters-detail__stats-grid--total-view [data-col='base'],
+.monsters-detail__stats-grid--total-view [data-col='bonus'] {
+  display: none !important;
+}
+
+.monsters-detail__stats-grid:not(.monsters-detail__stats-grid--total-view)
+  .monsters-detail__stats-head[data-stats-head='total'],
+.monsters-detail__stats-grid:not(.monsters-detail__stats-grid--total-view) [data-col='total'] {
+  display: none !important;
+}
+
+.monsters-gear-item__body--stack {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-start;
+}
+
+.monsters-detail__stat-num--total-green {
+  color: var(--success, #2d8a5c);
+  font-weight: 600;
+  text-align: center;
+}
+
+.monsters-detail__stat-num--pct-total {
+  color: var(--text-hi);
+  font-weight: 600;
+  text-align: left;
+}
+
+.monsters-detail__stat-row--pct .monsters-detail__stat-num--pct-total {
+  grid-column: 2;
+}
+
 .monsters-detail__stat-formula {
   font-family: var(--font-mono);
   font-size: 0.72rem;
@@ -656,6 +700,11 @@
 .monsters-detail__stats-head--core,
 .monsters-detail__stat-row--core {
   grid-template-columns: 4.5rem 1fr 1fr;
+}
+
+.monsters-detail__stats-head--pct,
+.monsters-detail__stat-row--pct {
+  grid-template-columns: 4.5rem 1fr;
 }
 
 .monsters-detail__stats-head {

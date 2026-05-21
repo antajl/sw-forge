@@ -208,6 +208,15 @@
         value: sum.skillUpsTotal,
       });
     }
+    const bag = window.SWRM_ACCOUNT_GEAR;
+    if (bag && ((bag.artifacts && bag.artifacts.length) || (bag.relics && bag.relics.length))) {
+      const na = (bag.artifacts || []).length;
+      const nr = (bag.relics || []).length;
+      parts.push({
+        label: t.monstersChipGear || 'Gear in box',
+        value: `${na} / ${nr}`,
+      });
+    }
     chips.innerHTML = parts
       .map(
         (p) =>

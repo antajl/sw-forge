@@ -30,6 +30,17 @@
       if (r && r.id != null) runeById.set(Number(r.id), r);
     }
     allUnits = parseUnits(activeSwexJson, { sixStarOnly: false, runeById });
+    if (window.SWRM && typeof window.SWRM.parseAccountGear === 'function') {
+      const bag = window.SWRM.parseAccountGear(activeSwexJson);
+      window.SWRM_ACCOUNT_GEAR = bag;
+      allArtifacts = bag.artifacts || [];
+      allRelics = bag.relics || [];
+    } else {
+      window.SWRM_ACCOUNT_GEAR = null;
+      allArtifacts = [];
+      allRelics = [];
+    }
+    if (typeof onGearDataHydrated === 'function') onGearDataHydrated();
   }
 
   /**

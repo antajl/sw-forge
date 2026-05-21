@@ -150,6 +150,7 @@
     updateLanguage(currentLang);
     initDashboardUnifiedTabs();
     initRuneTablePrefsFromStorage();
+    if (typeof initTableKindTabs === 'function') initTableKindTabs();
     initRulesSubtabs();
     initChangelogSubtabs();
     initGuideSubtabs();

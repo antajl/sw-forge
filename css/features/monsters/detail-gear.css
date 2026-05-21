@@ -1,0 +1,43 @@
+.monsters-gear-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.monsters-gear-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--bg3) 55%, var(--surface));
+}
+
+.monsters-gear-item__head {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-hi);
+}
+
+.monsters-gear-item__body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  font-size: 0.62rem;
+  color: var(--text-dim);
+  font-family: var(--font-mono, 'Share Tech Mono', monospace);
+}
+
+.monsters-gear-item__line--muted {
+  opacity: 0.7;
+}
+
+.monsters-gear-account-summary {
+  margin: 0 0 8px;
+  font-size: 0.62rem;
+  color: var(--text-dim);
+}

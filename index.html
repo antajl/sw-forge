@@ -51,14 +51,14 @@
               </span>
               <span class="tab__label" id="lbl-tab-monsters">Monsters</span>
             </button>
-            <button type="button" class="tab" data-tab="guide" data-share-hidden="1" title="Archive">
+            <button type="button" class="tab" data-tab="guide" data-share-hidden="1" title="Guide">
               <span class="tab__icon" aria-hidden="true">
                 <svg class="tab__icon-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false">
                   <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
                   <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
                 </svg>
               </span>
-              <span class="tab__label">Archive</span>
+              <span class="tab__label">Guide</span>
             </button>
             <button type="button" class="tab" data-tab="changelog" data-share-hidden="1" title="Changelog">
               <span class="tab__icon" aria-hidden="true">
@@ -390,7 +390,19 @@
       <div id="tab-runetable" class="runes-hub-pane" data-runes-pane="runetable" role="tabpanel" aria-labelledby="runes-hub-tab-runetable" hidden>
       <div class="table-layout">
         <div class="table-main">
-          <div class="table-toolbar" aria-label="Rune table tools">
+          <nav class="rules-subtabs table-kind-tabs" id="table-kind-tabs" role="tablist" aria-label="Inventory lists">
+            <span class="dash-unified-tabs__indicator table-kind-tabs__indicator" aria-hidden="true"></span>
+            <button type="button" role="tab" class="rules-subtab table-kind-tab is-active" data-table-kind="runes" aria-selected="true" tabindex="0" id="lbl-table-kind-runes">
+              <span class="rules-subtab__label">Runes</span>
+            </button>
+            <button type="button" role="tab" class="rules-subtab table-kind-tab" data-table-kind="artifacts" aria-selected="false" tabindex="-1" id="lbl-table-kind-artifacts">
+              <span class="rules-subtab__label">Artifacts</span>
+            </button>
+            <button type="button" role="tab" class="rules-subtab table-kind-tab" data-table-kind="relics" aria-selected="false" tabindex="-1" id="lbl-table-kind-relics">
+              <span class="rules-subtab__label">Relics</span>
+            </button>
+          </nav>
+          <div class="table-toolbar" id="rune-table-toolbar" data-table-toolbar="runes" aria-label="Rune table tools">
             <div class="table-toolbar__card">
               <div class="table-toolbar__row table-toolbar__row--search">
                 <div class="table-toolbar__search">
@@ -404,7 +416,7 @@
                   </div>
                 </div>
               </div>
-              <div class="table-toolbar__row table-toolbar__row--controls">
+              <div class="table-toolbar__row table-toolbar__row--controls" id="rune-table-rune-only-ui">
                 <div class="table-toolbar__group table-toolbar__group--actions">
                   <div class="table-toolbar__buttons">
                     <button type="button" id="btn-table-reset-filters" class="btn-ghost btn-toolbar">Reset filters</button>
@@ -502,34 +514,186 @@
               </div>
             </div>
           </div>
+          <div class="table-toolbar hidden" id="artifact-table-toolbar" data-table-toolbar="artifacts" aria-label="Artifact table tools" hidden>
+            <div class="table-toolbar__card">
+              <div class="table-toolbar__row table-toolbar__row--search">
+                <div class="table-toolbar__search">
+                  <label class="visually-hidden" for="search-box-artifacts" id="lbl-search-box-artifacts">Search artifacts</label>
+                  <input type="text" id="search-box-artifacts" class="table-toolbar__input" placeholder="Search artifacts…" autocomplete="off" />
+                </div>
+              </div>
+              <div class="table-toolbar__row table-toolbar__row--controls">
+                <div class="table-toolbar__group table-toolbar__group--actions">
+                  <div class="table-toolbar__buttons">
+                    <button type="button" id="btn-artifact-reset-filters" class="btn-ghost btn-toolbar">Reset filters</button>
+                    <div class="filters-popover-host">
+                      <button type="button" class="monsters-toolbar-btn monsters-toolbar-btn--filters" id="artifact-more-filters-btn" aria-haspopup="true" aria-controls="artifact-filters-popover" aria-expanded="false">
+                        <span id="lbl-artifact-more-filters">More Filters ⚙</span>
+                        <span class="monsters-toolbar-btn__badge" id="artifact-filters-active-count" hidden></span>
+                      </button>
+                      <div id="artifact-filters-popover" class="filters-popover" role="dialog" aria-labelledby="lbl-artifact-filters-drawer-title" hidden data-anchor-btn="artifact-more-filters-btn">
+                        <div class="filters-popover__panel">
+                          <header class="filters-popover__head">
+                            <h3 class="filters-popover__title" id="lbl-artifact-filters-drawer-title">Artifact filters</h3>
+                            <button type="button" class="filters-popover__close" data-filters-popover-close aria-label="Close">✕</button>
+                          </header>
+                          <div class="filters-popover__body">
+                            <div class="monsters-toolbar__filters-grid monsters-toolbar__filters-grid--primary">
+                              <label>
+                                <span id="lbl-artifact-filter-grade">Grade</span>
+                                <select id="filter-artifact-grade">
+                                  <option value="">All</option>
+                                </select>
+                              </label>
+                              <label>
+                                <span id="lbl-artifact-filter-category">Category</span>
+                                <select id="filter-artifact-category">
+                                  <option value="">All</option>
+                                </select>
+                              </label>
+                              <label>
+                                <span id="lbl-artifact-filter-location">Location</span>
+                                <select id="filter-artifact-location">
+                                  <option value="">All</option>
+                                  <option value="inventory" id="lbl-artifact-filter-inventory-opt">Inventory</option>
+                                  <option value="equipped" id="lbl-artifact-filter-equipped-opt">Equipped</option>
+                                </select>
+                              </label>
+                            </div>
+                          </div>
+                          <footer class="filters-popover__foot">
+                            <button type="button" class="btn-ghost" id="artifact-filters-drawer-reset">Reset filters</button>
+                            <button type="button" class="btn-primary" data-filters-popover-done>Done</button>
+                          </footer>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="table-toolbar__count table-count-block">
+                  <span id="artifact-table-count" class="table-count" aria-live="polite">0 artifacts</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="table-toolbar hidden" id="relic-table-toolbar" data-table-toolbar="relics" aria-label="Relic table tools" hidden>
+            <div class="table-toolbar__card">
+              <div class="table-toolbar__row table-toolbar__row--search">
+                <div class="table-toolbar__search">
+                  <label class="visually-hidden" for="search-box-relics" id="lbl-search-box-relics">Search relics</label>
+                  <input type="text" id="search-box-relics" class="table-toolbar__input" placeholder="Search relics…" autocomplete="off" />
+                </div>
+              </div>
+              <div class="table-toolbar__row table-toolbar__row--controls">
+                <div class="table-toolbar__group table-toolbar__group--actions">
+                  <div class="table-toolbar__buttons">
+                    <button type="button" id="btn-relic-reset-filters" class="btn-ghost btn-toolbar">Reset filters</button>
+                    <div class="filters-popover-host">
+                      <button type="button" class="monsters-toolbar-btn monsters-toolbar-btn--filters" id="relic-more-filters-btn" aria-haspopup="true" aria-controls="relic-filters-popover" aria-expanded="false">
+                        <span id="lbl-relic-more-filters">More Filters ⚙</span>
+                        <span class="monsters-toolbar-btn__badge" id="relic-filters-active-count" hidden></span>
+                      </button>
+                      <div id="relic-filters-popover" class="filters-popover" role="dialog" aria-labelledby="lbl-relic-filters-drawer-title" hidden data-anchor-btn="relic-more-filters-btn">
+                        <div class="filters-popover__panel">
+                          <header class="filters-popover__head">
+                            <h3 class="filters-popover__title" id="lbl-relic-filters-drawer-title">Relic filters</h3>
+                            <button type="button" class="filters-popover__close" data-filters-popover-close aria-label="Close">✕</button>
+                          </header>
+                          <div class="filters-popover__body">
+                            <div class="monsters-toolbar__filters-grid monsters-toolbar__filters-grid--primary">
+                              <label>
+                                <span id="lbl-relic-filter-grade">Grade</span>
+                                <select id="filter-relic-grade">
+                                  <option value="">All</option>
+                                </select>
+                              </label>
+                              <label>
+                                <span id="lbl-relic-filter-category">Category</span>
+                                <select id="filter-relic-category">
+                                  <option value="">All</option>
+                                </select>
+                              </label>
+                            </div>
+                          </div>
+                          <footer class="filters-popover__foot">
+                            <button type="button" class="btn-ghost" id="relic-filters-drawer-reset">Reset filters</button>
+                            <button type="button" class="btn-primary" data-filters-popover-done>Done</button>
+                          </footer>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="table-toolbar__count table-count-block">
+                  <span id="relic-table-count" class="table-count" aria-live="polite">0 relics</span>
+                </div>
+              </div>
+            </div>
+          </div>
           <div id="rune-table-roster-meta" class="monsters-roster-meta rune-table-roster-meta">
             <div class="monsters-chips monsters-chips--stats" id="rune-table-roster-chips" aria-live="polite"></div>
           </div>
           <div id="rune-table-active-filters" class="rune-table-active-filters" hidden>
             <div id="rune-table-filter-chips" class="rune-table-filter-chips"></div>
           </div>
-          <div class="table-wrap" id="rune-table-scroll" tabindex="0" role="region" aria-label="Rune table">
-            <table id="rune-table">
-              <thead>
-                <tr>
-                  <th data-sort="grade" class="col-grade" data-filter-key="grade"><span class="th-text" id="lbl-th-grade">Grade</span></th>
-                  <th data-sort="set" class="col-set col-text" data-filter-key="set"><span class="th-text" id="lbl-th-set">Set</span></th>
-                  <th data-sort="level" class="th-num col-num">Lvl</th>
-                  <th data-sort="slot" class="th-num col-num" data-filter-key="slot"><span class="th-text" id="lbl-th-slot">Slot</span></th>
-                  <th data-sort="main" class="col-text" data-filter-key="main"><span class="th-text" id="lbl-th-main">Main</span></th>
-                  <th class="col-text">Innate</th>
-                  <th data-sort="s1" class="col-sub col-sub-first">Sub 1</th>
-                  <th data-sort="s2" class="col-sub">Sub 2</th>
-                  <th data-sort="s3" class="col-sub">Sub 3</th>
-                  <th data-sort="s4" class="col-sub">Sub 4</th>
-                  <th data-sort="eff" class="th-num col-num"><span id="lbl-th-eff">Eff%</span></th>
-                  <th data-sort="role" class="col-text" data-filter-key="role"><span class="th-text" id="lbl-th-role">Role</span></th>
-                  <th data-sort="verdict" class="col-text" data-filter-key="verdict"><span class="th-text" id="lbl-th-verdict">Verdict</span></th>
-                  <th id="target-col-header" class="hidden col-text">Target</th>
-                </tr>
-              </thead>
-              <tbody id="rune-tbody"></tbody>
-            </table>
+          <div class="table-kind-pane is-active" data-table-kind-pane="runes">
+            <div class="table-wrap" id="rune-table-scroll" tabindex="0" role="region" aria-label="Rune table">
+              <table id="rune-table">
+                <thead>
+                  <tr>
+                    <th data-sort="grade" class="col-grade" data-filter-key="grade"><span class="th-text" id="lbl-th-grade">Grade</span></th>
+                    <th data-sort="set" class="col-set col-text" data-filter-key="set"><span class="th-text" id="lbl-th-set">Set</span></th>
+                    <th data-sort="level" class="th-num col-num">Lvl</th>
+                    <th data-sort="slot" class="th-num col-num" data-filter-key="slot"><span class="th-text" id="lbl-th-slot">Slot</span></th>
+                    <th data-sort="main" class="col-text" data-filter-key="main"><span class="th-text" id="lbl-th-main">Main</span></th>
+                    <th class="col-text">Innate</th>
+                    <th data-sort="s1" class="col-sub col-sub-first">Sub 1</th>
+                    <th data-sort="s2" class="col-sub">Sub 2</th>
+                    <th data-sort="s3" class="col-sub">Sub 3</th>
+                    <th data-sort="s4" class="col-sub">Sub 4</th>
+                    <th data-sort="eff" class="th-num col-num"><span id="lbl-th-eff">Eff%</span></th>
+                    <th data-sort="role" class="col-text" data-filter-key="role"><span class="th-text" id="lbl-th-role">Role</span></th>
+                    <th data-sort="verdict" class="col-text" data-filter-key="verdict"><span class="th-text" id="lbl-th-verdict">Verdict</span></th>
+                    <th id="target-col-header" class="hidden col-text">Target</th>
+                  </tr>
+                </thead>
+                <tbody id="rune-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="table-kind-pane" data-table-kind-pane="artifacts" hidden>
+            <div class="table-wrap" id="artifact-table-scroll" tabindex="0" role="region" aria-label="Artifact table">
+              <table id="artifact-table" class="gear-table">
+                <thead>
+                  <tr>
+                    <th class="col-grade" id="lbl-th-art-grade">Grade</th>
+                    <th id="lbl-th-art-category">Category</th>
+                    <th id="lbl-th-art-main">Main</th>
+                    <th class="col-subs-stack" id="lbl-th-art-subs">Subs</th>
+                    <th id="lbl-th-art-location">Location</th>
+                  </tr>
+                </thead>
+                <tbody id="artifact-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="table-kind-pane" data-table-kind-pane="relics" hidden>
+            <div class="table-wrap" id="relic-table-scroll" tabindex="0" role="region" aria-label="Relic table">
+              <table id="relic-table" class="gear-table">
+                <thead>
+                  <tr>
+                    <th class="col-grade" id="lbl-th-rel-grade">Grade</th>
+                    <th id="lbl-th-rel-category">Category</th>
+                    <th class="th-num col-num" id="lbl-th-rel-level">Lvl</th>
+                    <th class="th-num col-num" id="lbl-th-rel-durability">Durability</th>
+                    <th id="lbl-th-rel-main">Main</th>
+                    <th class="col-text" id="lbl-th-rel-sec">Secondary</th>
+                    <th class="th-num col-num" id="lbl-th-rel-wearers">Equipped</th>
+                  </tr>
+                </thead>
+                <tbody id="relic-tbody"></tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -1056,8 +1220,8 @@
 
     <section id="tab-guide" class="tab-content hidden">
       <div class="rules-tab-shell">
-        <header class="rules-page-header">
-          <h2 class="rules-page-title" id="lbl-guide-page-title">Archive</h2>
+        <header class="rules-page-header visually-hidden" aria-hidden="true">
+          <h2 class="rules-page-title" id="lbl-guide-page-title">Guide</h2>
           <p class="rules-page-lead" id="lbl-guide-page-lead"></p>
         </header>
 
@@ -1082,6 +1246,11 @@
             <span class="rules-subtab__label" id="lbl-guide-subtab-table"></span>
             <span class="rules-subtab__hint" id="lbl-guide-subtab-table-hint"></span>
           </button>
+          <button type="button" role="tab" class="rules-subtab" id="guide-subtab-evaluation"
+            data-guide-subtab="evaluation" aria-selected="false" aria-controls="guide-panel-evaluation" tabindex="-1">
+            <span class="rules-subtab__label" id="lbl-guide-subtab-evaluation"></span>
+            <span class="rules-subtab__hint" id="lbl-guide-subtab-evaluation-hint"></span>
+          </button>
           <button type="button" role="tab" class="rules-subtab" id="guide-subtab-rules"
             data-guide-subtab="rules" aria-selected="false" aria-controls="guide-panel-rules" tabindex="-1">
             <span class="rules-subtab__label" id="lbl-guide-subtab-rules"></span>
@@ -1097,25 +1266,129 @@
         <div id="guide-panel-start" role="tabpanel" aria-labelledby="guide-subtab-start"
           class="rules-subpanel is-active" data-guide-subtab="start">
           <div class="guide-lang guide-lang--en guide-list">
-            <section class="guide-section" aria-labelledby="guide-h-start-en">
+            <section class="guide-section guide-section--hero" aria-labelledby="guide-h-start-en">
               <h3 id="guide-h-start-en">Getting started</h3>
-              <p><strong>What you need:</strong> A JSON export from <strong>Summoners War Exporter (SWEX)</strong>. You do <em>not</em> need a SWOP CSV — load the SWEX file directly.</p>
-              <p><strong>Privacy:</strong> The file is parsed in <strong>your browser</strong>. Nothing is uploaded to a server; your rune data stays on your device.</p>
-              <p><strong>Stat IDs:</strong> SWEX uses numeric stat codes (for example SPD = 8, CRate = 9). Everywhere in the app — mains, substats, filters, roles — those IDs are shown as readable stat names.</p>
-              <p><strong>Efficiency:</strong> If the JSON has an <code>efficiency</code> field per rune, the Rune Table and summaries prefer it. If not, efficiency is calculated here.</p>
-              <p><strong>Profiles (slots):</strong> Your first successful load becomes <strong>Data 1</strong>. Open <strong>App Settings → Database Slots</strong> to add more exports (up to four), see the wizard name/level from each file, and <strong>Swap</strong> which profile is active. The dashboard and table always reflect the active slot.</p>
-              <p><strong>Clearing data:</strong> Use <strong>Clear all saved data</strong> on the upload card if you want to wipe stored runes and related browser storage for this site (careful — that removes saved profiles too).</p>
+              <p class="guide-lead">One <strong>SWEX JSON</strong> powers the whole app — <strong>Runes</strong> for cleanup and <strong>Monsters</strong> for your box. Everything stays in your browser; nothing is uploaded.</p>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-start-flow-en">
+              <h3 id="guide-h-start-flow-en">First load</h3>
+              <div class="guide-flow" role="list">
+                <div class="guide-flow__step" role="listitem">
+                  <span class="guide-flow__num">1</span>
+                  <div class="guide-flow__body">
+                    <strong>Export from SWEX</strong>
+                    <span>Choose your file on the Runes tab — or <strong>drag &amp; drop</strong> the .json anywhere on the screen.</span>
+                  </div>
+                </div>
+                <div class="guide-flow__step" role="listitem">
+                  <span class="guide-flow__num">2</span>
+                  <div class="guide-flow__body">
+                    <strong>Set your stage</strong>
+                    <span>On the Dashboard pick <strong>Early / Mid / Late</strong> and tune <strong>Strictness</strong> — that is how picky rune grading is.</span>
+                  </div>
+                </div>
+                <div class="guide-flow__step" role="listitem">
+                  <span class="guide-flow__num">3</span>
+                  <div class="guide-flow__body">
+                    <strong>Use both tabs</strong>
+                    <span><strong>Runes → Table</strong> for Role / Verdict · <strong>Monsters → Roster</strong> to browse units and their runes.</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-start-monsters-en">
+              <h3 id="guide-h-start-monsters-en">Monsters tab</h3>
+              <div class="guide-duo-cards">
+                <article class="guide-duo-card">
+                  <span class="guide-duo-card__kicker">Roster</span>
+                  <p class="guide-duo-card__title">Your monster box</p>
+                  <p>Search by name, element, or rune text. Open a unit to see stats, skills, and all six rune slots — click a slot to jump to that rune in the Rune Table.</p>
+                </article>
+                <article class="guide-duo-card">
+                  <span class="guide-duo-card__kicker">Teams</span>
+                  <p class="guide-duo-card__title">Lineups (optional)</p>
+                  <p>Build defense/offense teams from the same export. Handy for planning who wears what — separate from rune Sell/Keep advice.</p>
+                </article>
+              </div>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-start-slots-en">
+              <h3 id="guide-h-start-slots-en">Up to four exports</h3>
+              <div class="guide-slot-grid" role="list">
+                <span class="guide-slot-tile is-active" role="listitem">Data 1</span>
+                <span class="guide-slot-tile" role="listitem">Data 2</span>
+                <span class="guide-slot-tile" role="listitem">Data 3</span>
+                <span class="guide-slot-tile" role="listitem">Data 4</span>
+              </div>
+              <p class="guide-note">In <strong>App Settings → Database Slots</strong> you can store alt accounts or before/after screenshots of your box. <strong>Swap</strong> changes which export the Dashboard and Rune Table use.</p>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-start-clear-en">
+              <h3 id="guide-h-start-clear-en">Reset</h3>
+              <div class="guide-callout guide-callout--warn">
+                <p><strong>Clear all saved data</strong> on the upload card wipes runes, rules tweaks, and all four slots from this browser — use only when you want a full fresh start.</p>
+              </div>
             </section>
           </div>
           <div class="guide-lang guide-lang--ru guide-list">
-            <section class="guide-section" aria-labelledby="guide-h-start-ru">
+            <section class="guide-section guide-section--hero" aria-labelledby="guide-h-start-ru">
               <h3 id="guide-h-start-ru">С чего начать</h3>
-              <p><strong>Что нужно:</strong> JSON-экспорт из <strong>Summoners War Exporter (SWEX)</strong>. Файл SWOP CSV <em>не</em> обязателен — загрузите SWEX напрямую.</p>
-              <p><strong>Приватность:</strong> Файл разбирается <strong>в браузере</strong>. На сервер ничего не отправляется — данные рун остаются на устройстве.</p>
-              <p><strong>ID статов:</strong> В SWEX стату кодируются числами (например SPD = 8, CRate = 9). Везде в приложении они показываются нормальными названиями.</p>
-              <p><strong>Efficiency:</strong> Если в JSON есть поле <code>efficiency</code> у руны, таблица и сводки его используют. Иначе эффективность считается здесь.</p>
-              <p><strong>Профили (слоты):</strong> Первый успешный импорт — <strong>Data 1</strong>. В <strong>Настройках приложения → Слоты баз данных</strong> можно добавить до четырёх экспортов, увидеть ник/уровень волшебника и <strong>переключить</strong> активный профиль. Панель и таблица всегда показывают активный слот.</p>
-              <p><strong>Очистка:</strong> Кнопка <strong>Удалить все сохранения</strong> на карточке загрузки сбрасывает сохранённые руны и связанное хранилище сайта (осторожно — слетят и профили).</p>
+              <p class="guide-lead">Один <strong>JSON из SWEX</strong> питает всё приложение — вкладка <strong>Руны</strong> для разбора рун и <strong>Монстры</strong> для коробки. Всё в браузере, без загрузки на сервер.</p>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-start-flow-ru">
+              <h3 id="guide-h-start-flow-ru">Первый запуск</h3>
+              <div class="guide-flow" role="list">
+                <div class="guide-flow__step" role="listitem">
+                  <span class="guide-flow__num">1</span>
+                  <div class="guide-flow__body">
+                    <strong>Экспорт SWEX</strong>
+                    <span>Файл на вкладке «Руны» — или <strong>перетащите</strong> .json в любое место экрана.</span>
+                  </div>
+                </div>
+                <div class="guide-flow__step" role="listitem">
+                  <span class="guide-flow__num">2</span>
+                  <div class="guide-flow__body">
+                    <strong>Стадия и строгость</strong>
+                    <span>На панели — <strong>Early / Mid / Late</strong> и <strong>Strictness</strong>: насколько жёстко оцениваются руны.</span>
+                  </div>
+                </div>
+                <div class="guide-flow__step" role="listitem">
+                  <span class="guide-flow__num">3</span>
+                  <div class="guide-flow__body">
+                    <strong>Две вкладки</strong>
+                    <span><strong>Руны → Таблица</strong> — Role / Verdict · <strong>Монстры → Ростер</strong> — юниты и их руны.</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-start-monsters-ru">
+              <h3 id="guide-h-start-monsters-ru">Вкладка «Монстры»</h3>
+              <div class="guide-duo-cards">
+                <article class="guide-duo-card">
+                  <span class="guide-duo-card__kicker">Ростер</span>
+                  <p class="guide-duo-card__title">Коробка монстров</p>
+                  <p>Поиск по имени, стихии, рунам на юните. Карточка монстра — статы, скиллы, шесть слотов рун; клик по слоту открывает эту руну в таблице.</p>
+                </article>
+                <article class="guide-duo-card">
+                  <span class="guide-duo-card__kicker">Команды</span>
+                  <p class="guide-duo-card__title">Составы (по желанию)</p>
+                  <p>Сборка защиты/атаки из того же экспорта. Удобно для планирования — отдельно от вердиктов Sell/Keep по рунам.</p>
+                </article>
+              </div>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-start-slots-ru">
+              <h3 id="guide-h-start-slots-ru">До четырёх экспортов</h3>
+              <div class="guide-slot-grid" role="list">
+                <span class="guide-slot-tile is-active" role="listitem">Data 1</span>
+                <span class="guide-slot-tile" role="listitem">Data 2</span>
+                <span class="guide-slot-tile" role="listitem">Data 3</span>
+                <span class="guide-slot-tile" role="listitem">Data 4</span>
+              </div>
+              <p class="guide-note">В <strong>Настройки приложения → Слоты баз данных</strong> — альт или «до/после» фарма. <strong>Swap</strong> переключает, какой экспорт видят панель и таблица.</p>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-start-clear-ru">
+              <h3 id="guide-h-start-clear-ru">Сброс</h3>
+              <div class="guide-callout guide-callout--warn">
+                <p><strong>Удалить все сохранения</strong> на карточке загрузки стирает руны, правки правил и все четыре слота в этом браузере — только если нужен полный старт с нуля.</p>
+              </div>
             </section>
           </div>
         </div>
@@ -1123,23 +1396,89 @@
         <div id="guide-panel-dashboard" role="tabpanel" aria-labelledby="guide-subtab-dashboard"
           class="rules-subpanel" data-guide-subtab="dashboard">
           <div class="guide-lang guide-lang--en guide-list">
-            <section class="guide-section" aria-labelledby="guide-h-dash-en">
+            <section class="guide-section guide-section--hero" aria-labelledby="guide-h-dash-en">
               <h3 id="guide-h-dash-en">Dashboard</h3>
-              <p><strong>Account progression</strong> (the block at the top) scores how <strong>deep your rune inventory</strong> is. The <strong>combined score</strong> and the three metric lines always use your <strong>full active export</strong> (Rare+ only, rank ≥ 3). Under each metric you’ll see its <strong>point share</strong> toward the 100-point bar (for example +12 / 35 pts). By default that block is <strong>collapsed</strong>; open the chevron for the long explanation and cards. <strong>Apply suggestion</strong> aligns <strong>Your preset</strong> (Early / Mid / Late) with the suggested stage — you can still change the preset manually.</p>
-              <p><strong>Global filters</strong> (<strong>Min level</strong>, <strong>Grade range</strong> From/To) apply to verdict cards, all charts, the efficiency chart (including the median), and the Rune Table. They do <strong>not</strong> apply to account progression above — that block ignores min level and preset for its math.</p>
-              <p><strong>Verdict mix &amp; cards:</strong> The stacked bar and the number tiles match; percentages are shares of the <em>filtered</em> total. Click a segment, tile, or role row to open the Rune Table with the same verdict/role filters. If From and To are the <strong>same grade</strong> (e.g. Hero only), the table opens with that grade. If the range spans more than one grade, the table does not force a grade filter (the grid picks an exact grade, not a “floor”).</p>
-              <p><strong>Copy summary:</strong> Next to the global filter card — copies a text snapshot: preset, suggested stage, depth metrics, filters, verdict counts, role / set lines, per-slot totals with average efficiency (not the full slot×main matrix), efficiency median and histogram buckets.</p>
-              <p><strong>Charts:</strong> The <strong>Distributions</strong> panel has one header plus five tabs — Verdict, Roles, Sets, Slot, and Efficiency. The efficiency tab shows 5% buckets with a median line. Roles combine counts with average efficiency; sets scroll inside the panel; Slot shows each slot's share of runes (1–6) and main-stat distributions for 2 / 4 / 6.</p>
+              <p class="guide-lead">Two layers: <strong>how deep your whole box is</strong> (top) vs <strong>what to do with runes right now</strong> (cards, charts, filters below).</p>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-dash-split-en">
+              <h3 id="guide-h-dash-split-en">Two scopes</h3>
+              <div class="guide-duo-cards">
+                <article class="guide-duo-card guide-duo-card--accent">
+                  <span class="guide-duo-card__kicker">Top block</span>
+                  <p class="guide-duo-card__title">Account progression</p>
+                  <p>Always counts <strong>every Rare+ rune</strong> in the active export. Ignores Min level and grade filters below. Suggests Early / Mid / Late from your box depth — <strong>Apply suggestion</strong> copies that to your preset.</p>
+                </article>
+                <article class="guide-duo-card">
+                  <span class="guide-duo-card__kicker">Rest of page</span>
+                  <p class="guide-duo-card__title">Filtered view</p>
+                  <p><strong>Min level</strong> and <strong>grade range</strong> shrink verdict tiles, charts, and what opens when you click a bar. Changing <strong>Early / Mid / Late</strong> or <strong>Strictness</strong> recalculates all rune verdicts.</p>
+                </article>
+              </div>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-dash-strict-en">
+              <h3 id="guide-h-dash-strict-en">Strictness (1–5)</h3>
+              <p class="guide-lead">A fine dial on top of <strong>Early / Mid / Late</strong>. Same export — different mood: “I am still building” vs “I only want RTA-ready pieces.”</p>
+              <div class="guide-strict-scale" role="img" aria-label="Strictness from 1 forgiving to 5 strict">
+                <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+              </div>
+              <ul class="guide-strict-ladder">
+                <li><span class="guide-strict-ladder__n">1</span><span><strong>Very forgiving</strong> — many runes get a role; weak subs and near-miss lines often pass. Good while farming and powering up.</span></li>
+                <li><span class="guide-strict-ladder__n">2</span><span><strong>Relaxed</strong> — still friendly; more Keep than Sell on mid-tier runes.</span></li>
+                <li><span class="guide-strict-ladder__n">3</span><span><strong>Balanced</strong> — default for your chosen stage. Second-chance check can mark a rune <strong>(Relaxed)</strong> in Target.</span></li>
+                <li><span class="guide-strict-ladder__n">4</span><span><strong>Strict</strong> — needs more real stat lines and stronger rolls; fewer “almost good” Keep. No second-chance pass.</span></li>
+                <li><span class="guide-strict-ladder__n">5</span><span><strong>Very strict</strong> — only strong, clean runes keep roles; borderline pieces move to Sell faster. For trimmed inventories.</span></li>
+              </ul>
+              <div class="guide-callout guide-callout--calm">
+                <p>What moves with the slider: how many useful substats you need, how high rolls must be, how hard God/Duo/Universal bars are, and whether a “soft retry” runs at all.</p>
+              </div>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-dash-click-en">
+              <h3 id="guide-h-dash-click-en">Charts → table</h3>
+              <p>Click a <strong>verdict</strong> slice, number tile, or <strong>role</strong> row — the Rune Table opens with the same filter. <strong>Enter</strong> or <strong>Space</strong> on a chart row works too (keyboard). Five chart tabs answer “where are my runes?” without leaving the Dashboard.</p>
+              <p class="guide-note"><strong>Copy summary</strong> (next to filters) pastes a text snapshot for Discord or notes — preset, depth score, filters, verdict counts, slot totals.</p>
             </section>
           </div>
           <div class="guide-lang guide-lang--ru guide-list">
-            <section class="guide-section" aria-labelledby="guide-h-dash-ru">
+            <section class="guide-section guide-section--hero" aria-labelledby="guide-h-dash-ru">
               <h3 id="guide-h-dash-ru">Панель (Dashboard)</h3>
-              <p><strong>Прогресс аккаунта</strong> (верхний блок) оценивает <strong>глубину коллекции рун</strong>. <strong>Сводный балл</strong> и три метрики всегда берут <strong>весь активный экспорт</strong> (только Rare+, ранг ≥ 3). Под каждой метрикой — <strong>вклад в 100 баллов</strong> (например +12 / 35). Блок по умолчанию <strong>свёрнут</strong>; раскройте стрелку за подробностями. <strong>Применить совет</strong> выставляет <strong>Ваш пресет</strong> (Early / Mid / Late) по предложенной стадии — вручную пресет можно сменить.</p>
-              <p><strong>Глобальные фильтры</strong> (<strong>Мин ур</strong>, <strong>Диапазон грейдов</strong> От/До) действуют на карточки вердиктов, все графики, гистограмму eff (и медиану), и таблицу рун. На блок прогресса выше они <strong>не</strong> влияют — там своя математика без мин. уровня и без привязки к пресету.</p>
-              <p><strong>Verdict mix и плитки:</strong> Столбиковая диаграмма и цифры совпадают; проценты — от <em>отфильтрованного</em> количества. Клик по сегменту, плитке или строке роли открывает таблицу с теми же фильтрами. Если <strong>От и До совпадают</strong> (например только Hero), в таблице сразу выбран этот грейд; если диапазон шире одного грейда, фильтр грейда в таблице не навязан.</p>
-              <p><strong>Копировать сводку:</strong> Рядом с карточкой фильтров — текст: пресет, совет по стадии, метрики глубины, фильтры, вердикты, роли / сеты, по каждому слоту число рун и средняя eff (без полной матрицы слот×мейн), медиана eff и корзины гистограммы.</p>
-              <p><strong>Графики:</strong> У панели «Распределения» общий заголовок и пять вкладок — Вердикты, Роли, Сеты, Слот и Эффективность. Во вкладке эффективности — корзины по 5% и медиана. Роли — число рун и средняя eff; сеты со скроллом внутри панели; Слот — компактные карточки.</p>
+              <p class="guide-lead">Два слоя: <strong>глубина всей коробки</strong> (сверху) и <strong>что делать с рунами сейчас</strong> (карточки, графики, фильтры ниже).</p>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-dash-split-ru">
+              <h3 id="guide-h-dash-split-ru">Два охвата</h3>
+              <div class="guide-duo-cards">
+                <article class="guide-duo-card guide-duo-card--accent">
+                  <span class="guide-duo-card__kicker">Верхний блок</span>
+                  <p class="guide-duo-card__title">Прогресс аккаунта</p>
+                  <p>Всегда считает <strong>все Rare+</strong> активного экспорта. Не смотрит на мин. уровень и фильтр грейдов ниже. Предлагает Early / Mid / Late по глубине коробки — <strong>Применить совет</strong> копирует это в пресет.</p>
+                </article>
+                <article class="guide-duo-card">
+                  <span class="guide-duo-card__kicker">Ниже</span>
+                  <p class="guide-duo-card__title">Отфильтрованный вид</p>
+                  <p><strong>Мин ур</strong> и <strong>диапазон грейдов</strong> сужают плитки вердиктов и графики. Смена <strong>Early / Mid / Late</strong> или <strong>Strictness</strong> пересчитывает вердикты всех рун.</p>
+                </article>
+              </div>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-dash-strict-ru">
+              <h3 id="guide-h-dash-strict-ru">Strictness (1–5)</h3>
+              <p class="guide-lead">Тонкая настройка поверх <strong>Early / Mid / Late</strong>. Тот же экспорт — другое настроение: «ещё качаю коробку» или «хочу только сильные руны».</p>
+              <div class="guide-strict-scale" role="img" aria-label="Строгость от 1 до 5">
+                <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+              </div>
+              <ul class="guide-strict-ladder">
+                <li><span class="guide-strict-ladder__n">1</span><span><strong>Очень мягко</strong> — больше рун получают роль; слабые сабы и «почти сошлось» часто проходят. Для фарма и прокачки.</span></li>
+                <li><span class="guide-strict-ladder__n">2</span><span><strong>Мягко</strong> — дружелюбно; больше Keep, меньше Sell на средних рунах.</span></li>
+                <li><span class="guide-strict-ladder__n">3</span><span><strong>Баланс</strong> — база для выбранной стадии. Возможна вторая попытка — в Target будет <strong>(Relaxed)</strong>.</span></li>
+                <li><span class="guide-strict-ladder__n">4</span><span><strong>Строго</strong> — нужно больше сильных линий; меньше «почти хороших» Keep. Без второй попытки.</span></li>
+                <li><span class="guide-strict-ladder__n">5</span><span><strong>Очень строго</strong> — роли только у реально сильных рун; пограничные чаще Sell. Для жёсткой чистки коробки.</span></li>
+              </ul>
+              <div class="guide-callout guide-callout--calm">
+                <p>Что двигает слайдер: число полезных сабов, высота роллов, пороги God/Duo/Universal и включена ли мягкая вторая проверка.</p>
+              </div>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-dash-click-ru">
+              <h3 id="guide-h-dash-click-ru">Графики → таблица</h3>
+              <p>Клик по <strong>вердикту</strong>, плитке или <strong>роли</strong> открывает таблицу с фильтром. На строке графика работают <strong>Enter</strong> и <strong>Пробел</strong>.</p>
+              <p class="guide-note"><strong>Копировать сводку</strong> рядом с фильтрами — текст для Discord/заметок: пресет, балл глубины, фильтры, вердикты.</p>
             </section>
           </div>
         </div>
@@ -1147,55 +1486,97 @@
         <div id="guide-panel-progression" role="tabpanel" aria-labelledby="guide-subtab-progression"
           class="rules-subpanel" data-guide-subtab="progression">
           <div class="guide-lang guide-lang--en guide-list">
-            <section class="guide-section" aria-labelledby="guide-h-depth-en">
-              <h3 id="guide-h-depth-en">Account progression (depth)</h3>
-              <p class="guide-lead">This estimates how strong your <strong>rune box</strong> is in absolute terms — not arena rank or monsters. Big accounts need real volume <em>and</em> quality to max the bar; tiny exports cannot fake a late-game score.</p>
-              <p><strong>Independent of preset &amp; min level:</strong> Combined score and the three cards ignore <strong>Early / Mid / Late</strong> and the dashboard <strong>Min Lvl</strong>. Changing the preset still updates verdicts everywhere else (cards, charts, table).</p>
-              <h4 class="guide-subhead">The three metrics</h4>
-              <ul>
-                <li><strong>Speed Depth (35%)</strong> — Runes where total sub <strong>SPD</strong> (roll + grind) is at least <strong>18</strong>.</li>
-                <li><strong>Power Depth (35%)</strong> — <strong>6★</strong> runes at exactly <strong>+15</strong>.</li>
-                <li><strong>Elite Quality (30%)</strong> — Mean <strong>uncapped</strong> efficiency on your top <strong>50</strong> runes by that score (or all runes if you have fewer than 50). Values above 100% are expected for very strong pieces.</li>
+            <section class="guide-section guide-section--hero" aria-labelledby="guide-h-depth-en">
+              <h3 id="guide-h-depth-en">Account progression</h3>
+              <p class="guide-lead">One number (0–100) for <strong>how stacked your rune box is</strong> — speed runes, +15 six-stars, and top-end efficiency. Not RTA rank and not monster box.</p>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-depth-metrics-en">
+              <h3 id="guide-h-depth-metrics-en">Three parts of the score</h3>
+              <ul class="guide-metric-stack">
+                <li class="guide-metric-row">
+                  <span class="guide-metric-row__label">Speed depth</span>
+                  <span class="guide-metric-row__bar" style="--w:35%"><span>35%</span></span>
+                  <span class="guide-metric-row__hint">Runes with total <strong>SPD</strong> sub ≥ <strong>18</strong> (roll + grind). Full bar ≈ <strong>250</strong> such runes.</span>
+                </li>
+                <li class="guide-metric-row">
+                  <span class="guide-metric-row__label">Power depth</span>
+                  <span class="guide-metric-row__bar" style="--w:35%"><span>35%</span></span>
+                  <span class="guide-metric-row__hint"><strong>6★ +15</strong> count. Full bar ≈ <strong>600</strong> runes.</span>
+                </li>
+                <li class="guide-metric-row">
+                  <span class="guide-metric-row__label">Elite quality</span>
+                  <span class="guide-metric-row__bar guide-metric-row__bar--elite" style="--w:30%"><span>30%</span></span>
+                  <span class="guide-metric-row__hint">Average efficiency of your <strong>best 50</strong> runes (uncapped internally). Strong boxes land near <strong>110%</strong> average here.</span>
+                </li>
               </ul>
-              <h4 class="guide-subhead">How they combine</h4>
-              <ul>
-                <li>Speed: <code>min(Speed Depth ÷ 250, 1) × 35</code> — full 35 points at <strong>250+</strong> qualifying runes.</li>
-                <li>Power: <code>min(+15 six-star count ÷ 600, 1) × 35</code> — full points at <strong>600+</strong> such runes.</li>
-                <li>Elite: <code>min(max(0, eliteAvg − 80) ÷ 30, 1) × 30</code> — full points from <strong>110%</strong> average upward (80 + 30).</li>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-depth-how-en">
+              <h3 id="guide-h-depth-how-en">How the 0–100 score is built</h3>
+              <p class="guide-lead">Three independent bars add up to <strong>100 points max</strong>. Your counts are shown on the dashboard cards; underneath you see how many points each part contributed.</p>
+              <ul class="guide-checklist">
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Speed (up to 35 pts)</strong> — each Rare+ rune whose total <strong>SPD sub</strong> (roll + grind) is at least <strong>18</strong> counts. Example: 125 such runes ≈ half the speed bar; <strong>250+</strong> fills it.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Power (up to 35 pts)</strong> — every <strong>6★ at exactly +15</strong>. <strong>600+</strong> maxes this bar — endgame inventory depth.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Elite (up to 30 pts)</strong> — average efficiency of your <strong>best 50</strong> runes (uncapped, so it can go above 100%). Starts contributing above <strong>80%</strong> average; tops out around <strong>110%</strong> average.</span></li>
               </ul>
-              <h4 class="guide-subhead">Suggested stage from score</h4>
-              <ul>
-                <li><strong>Early</strong> — below <strong>45</strong></li>
-                <li><strong>Mid</strong> — from <strong>45</strong> up to (but not including) <strong>85</strong></li>
-                <li><strong>Late</strong> — <strong>85</strong> or more</li>
-              </ul>
-              <p><strong>Rune Table Eff:</strong> The Eff% column prefers SWEX <code>efficiency</code> when present (otherwise this app’s calculation). Display stays at or below <strong>100%</strong>; account-depth <strong>Elite Quality</strong> above uses uncapped math internally so its average can exceed 100%.</p>
+              <div class="guide-callout guide-callout--warn">
+                <p>A small box can still show a decent score if those 50 top runes are insane — but speed/power counts expose a shallow inventory. You cannot “fake” 250 SPD runes with only a handful of units.</p>
+              </div>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-depth-stage-en">
+              <h3 id="guide-h-depth-stage-en">Suggested stage</h3>
+              <div class="guide-score-ladder" role="list">
+                <div class="guide-score-ladder__row" role="listitem"><span class="guide-score-ladder__range">&lt; 45</span><span class="guide-stage-bar__seg guide-stage-bar__seg--early">Early</span></div>
+                <div class="guide-score-ladder__row" role="listitem"><span class="guide-score-ladder__range">45 – 84</span><span class="guide-stage-bar__seg guide-stage-bar__seg--mid">Mid</span></div>
+                <div class="guide-score-ladder__row" role="listitem"><span class="guide-score-ladder__range">85+</span><span class="guide-stage-bar__seg guide-stage-bar__seg--late">Late</span></div>
+              </div>
+              <p class="guide-note"><strong>Apply suggestion</strong> only copies the preset — per-rune verdicts change when you pick Early / Mid / Late yourself.</p>
             </section>
           </div>
           <div class="guide-lang guide-lang--ru guide-list">
-            <section class="guide-section" aria-labelledby="guide-h-depth-ru">
-              <h3 id="guide-h-depth-ru">Прогресс аккаунта (глубина)</h3>
-              <p class="guide-lead">Оценка силы <strong>коробки рун</strong> в абсолютных числах — не арена и не монстры. Чтобы заполнить шкалу, нужен и объём, и качество; маленький экспорт не «прикинется» эндгеймом.</p>
-              <p><strong>Без привязки к пресету и мин. уровню:</strong> Сводный балл и три карточки не смотрят на <strong>Early / Mid / Late</strong> и на <strong>Мин Ур</strong> панели. Смена пресета по-прежнему меняет вердикты везде ниже (карточки, графики, таблица).</p>
-              <h4 class="guide-subhead">Три метрики</h4>
-              <ul>
-                <li><strong>Speed Depth (35%)</strong> — Руны, где суммарный саб <strong>SPD</strong> (кат + гринд) ≥ <strong>18</strong>.</li>
-                <li><strong>Power Depth (35%)</strong> — <strong>6★</strong> руны ровно <strong>+15</strong>.</li>
-                <li><strong>Elite Quality (30%)</strong> — Средняя <strong>без потолка</strong> eff по топ-<strong>50</strong> рун (или по всем, если меньше 50). Значения выше 100% — норма для очень сильных рун.</li>
+            <section class="guide-section guide-section--hero" aria-labelledby="guide-h-depth-ru">
+              <h3 id="guide-h-depth-ru">Прогресс аккаунта</h3>
+              <p class="guide-lead">Один балл (0–100): <strong>насколько прокачана коробка рун</strong> — спд-руны, +15 шестизвёздочные, элитная eff. Не ранг арены и не монстры.</p>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-depth-metrics-ru">
+              <h3 id="guide-h-depth-metrics-ru">Три части балла</h3>
+              <ul class="guide-metric-stack">
+                <li class="guide-metric-row">
+                  <span class="guide-metric-row__label">Глубина скорости</span>
+                  <span class="guide-metric-row__bar" style="--w:35%"><span>35%</span></span>
+                  <span class="guide-metric-row__hint">Руны с суммарным сабом <strong>SPD</strong> ≥ <strong>18</strong> (кат + гринд). Полная шкала ≈ <strong>250</strong> рун.</span>
+                </li>
+                <li class="guide-metric-row">
+                  <span class="guide-metric-row__label">Глубина силы</span>
+                  <span class="guide-metric-row__bar" style="--w:35%"><span>35%</span></span>
+                  <span class="guide-metric-row__hint">Число <strong>6★ +15</strong>. Полная шкала ≈ <strong>600</strong> рун.</span>
+                </li>
+                <li class="guide-metric-row">
+                  <span class="guide-metric-row__label">Элитное качество</span>
+                  <span class="guide-metric-row__bar guide-metric-row__bar--elite" style="--w:30%"><span>30%</span></span>
+                  <span class="guide-metric-row__hint">Средняя eff по <strong>лучшим 50</strong> рунам (внутри без потолка 100%). Сильные коробки ≈ <strong>110%</strong> среднего.</span>
+                </li>
               </ul>
-              <h4 class="guide-subhead">Как складывается балл</h4>
-              <ul>
-                <li>Скорость: <code>min(Speed Depth ÷ 250, 1) × 35</code> — полные 35 при <strong>250+</strong> подходящих рун.</li>
-                <li>Сила: <code>min(число +15 шестизвёздочных ÷ 600, 1) × 35</code> — полный вклад при <strong>600+</strong> таких рун.</li>
-                <li>Элита: <code>min(max(0, eliteAvg − 80) ÷ 30, 1) × 30</code> — полные 30 от средней <strong>110%</strong> и выше (80 + 30).</li>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-depth-how-ru">
+              <h3 id="guide-h-depth-how-ru">Как складывается балл 0–100</h3>
+              <p class="guide-lead">Три независимые полоски дают <strong>максимум 100</strong>. На карточках панели — ваши числа; ниже видно вклад каждой части в баллы.</p>
+              <ul class="guide-checklist">
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Скорость (до 35)</strong> — каждая Rare+ руна, где суммарный саб <strong>SPD</strong> (кат + гринд) ≥ <strong>18</strong>. Пример: 125 рун ≈ половина шкалы; <strong>250+</strong> — полный вклад.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Сила (до 35)</strong> — каждая <strong>6★ ровно +15</strong>. <strong>600+</strong> — максимум, глубина эндгейм-коробки.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Элита (до 30)</strong> — средняя eff по <strong>лучшим 50</strong> рунам (без потолка 100%). Растёт от средней <strong>80%</strong>; упирается около <strong>110%</strong>.</span></li>
               </ul>
-              <h4 class="guide-subhead">Стадия по баллу</h4>
-              <ul>
-                <li><strong>Early</strong> — ниже <strong>45</strong></li>
-                <li><strong>Mid</strong> — от <strong>45</strong> до <strong>85</strong> не включая</li>
-                <li><strong>Late</strong> — <strong>85</strong> и выше</li>
-              </ul>
-              <p><strong>Eff в таблице:</strong> Колонка в первую очередь берёт <code>efficiency</code> из SWEX при наличии (иначе расчёт приложения). Отображение не выше <strong>100%</strong>; для метрики <strong>Elite Quality</strong> в блоке прогресса используется отдельный расчёт без потолка, поэтому среднее там может быть &gt; 100%.</p>
+              <div class="guide-callout guide-callout--warn">
+                <p>Маленькая коробка может иметь высокую «элиту», если топ-50 рун идеальны — но мало спд-рун и +15 это покажут. 250 быстрых рун «нарисовать» нельзя.</p>
+              </div>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-depth-stage-ru">
+              <h3 id="guide-h-depth-stage-ru">Предложенная стадия</h3>
+              <div class="guide-score-ladder" role="list">
+                <div class="guide-score-ladder__row" role="listitem"><span class="guide-score-ladder__range">&lt; 45</span><span class="guide-stage-bar__seg guide-stage-bar__seg--early">Early</span></div>
+                <div class="guide-score-ladder__row" role="listitem"><span class="guide-score-ladder__range">45 – 84</span><span class="guide-stage-bar__seg guide-stage-bar__seg--mid">Mid</span></div>
+                <div class="guide-score-ladder__row" role="listitem"><span class="guide-score-ladder__range">85+</span><span class="guide-stage-bar__seg guide-stage-bar__seg--late">Late</span></div>
+              </div>
+              <p class="guide-note"><strong>Применить совет</strong> только копирует пресет — вердикты по рунам меняются, когда вы сами выберете Early / Mid / Late.</p>
             </section>
           </div>
         </div>
@@ -1203,31 +1584,462 @@
         <div id="guide-panel-table" role="tabpanel" aria-labelledby="guide-subtab-table"
           class="rules-subpanel" data-guide-subtab="table">
           <div class="guide-lang guide-lang--en guide-list">
-            <section class="guide-section" aria-labelledby="guide-h-table-en">
+            <section class="guide-section guide-section--hero" aria-labelledby="guide-h-table-en">
               <h3 id="guide-h-table-en">Rune Table</h3>
-              <p><strong>Toolbar:</strong> Search, <strong>Actions</strong> (reset filters, export CSV), optional <strong>Target</strong> column toggle. If many runes match, the grid loads the <strong>first 500</strong> rows for responsiveness — use <strong>Load all … in table</strong> when you need the complete filtered list (very large exports can feel slower).</p>
-              <p><strong>Filters &amp; sort:</strong> Header row filters for verdict, role, grade, set, slot, main stat; click column headers to sort. Default sort is Eff% descending. Innate line and full substats show in each row.</p>
-              <p><strong>Eff column:</strong> Prefers SWEX <code>efficiency</code> when present; otherwise the app calculation, shown capped at <strong>100%</strong>.</p>
-              <p><strong>Ancient:</strong> Not a separate JSON field — SWEX uses <strong>+10</strong> on <code>class</code> (&gt;10, e.g. 6★ Ancient Legend often <code>class</code> 16) and <code>rank</code> / <code>extra</code> in 11–15. Ancient rows show a small <strong>A-with-dot</strong> icon before the grade chip; use <strong>Ancient only</strong> in the toolbar to filter. Shared URLs can include <code>ancient=1</code>; CSV still has an Ancient column.</p>
-              <p><strong>Colored chips:</strong> Only <strong>Grade</strong>, <strong>Role</strong>, <strong>Verdict</strong>, and <strong>Eff%</strong> use tinted chips. Set, main, innate, and substats are plain text in the row (easier to scan).</p>
-              <p><strong>Subs (grind / gem):</strong> Each sub shows the <strong>total on the rune</strong> (roll + grind). If grindstone was applied, the bonus appears in brackets — for example <code>HP% 13 [3]</code> means 13 total with +3 from grind (not “13 base plus 3 more”). Grind text uses a <strong>warm gold–orange</strong> tone. Enchanted lines add the circular-arrows icon; when there’s no grind bracket, only the icon is visually heavier.</p>
-              <p><strong>Target column:</strong> Appears when the verdict filter is Gem or Grind. <strong>Grind</strong> — numeric goals (rounded up). <strong>Gem</strong> — which flat substats should be replaced (for example “Replace HP” or “Replace HP or DEF”), without naming the enchant destination stat. Hover for raw <code>grindInfo</code> / <code>gemInfo</code> when present.</p>
-              <p><strong>Shareable URL:</strong> When you change filters / sort / search on this tab, the address bar can include <code>#runetable?…</code> query params — copy the link to reopen the same view later on this device/browser.</p>
-              <p><strong>Debug:</strong> Each parsed rune keeps <code>_raw</code> from SWEX for inspection in devtools.</p>
+              <p class="guide-lead">Your action list: every rune with <strong>Role</strong>, <strong>Verdict</strong>, stats, and a short <strong>Target</strong> line when the app has a specific next step.</p>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-table-cols-en">
+              <h3 id="guide-h-table-cols-en">Columns that matter</h3>
+              <div class="guide-col-map">
+                <div class="guide-col-map__item"><span class="guide-verdict-chip keep">Role</span><span>Build the rune fits (or Universal)</span></div>
+                <div class="guide-col-map__item"><span class="guide-verdict-chip finish">Verdict</span><span>Upgrade · Finish · Keep · Gem · Grind · Reapp · Sell</span></div>
+                <div class="guide-col-map__item"><span class="guide-verdict-chip upgrade">Eff%</span><span>Sort helper — capped at 100% in the grid</span></div>
+                <div class="guide-col-map__item"><span class="guide-verdict-chip gem">Target</span><span>Why Sell, what to grind, or Keep quality line</span></div>
+              </div>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-table-toolbar-en">
+              <h3 id="guide-h-table-toolbar-en">Toolbar &amp; summary chips</h3>
+              <ul class="guide-checklist">
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Chips above the grid</strong> — quick counts: total shown, Ancient, equipped, +15, Keep (for the current filter).</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>More Filters</strong> — Ancient only, hide Target column, reset filters.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Active filter chips</strong> — click the × on a chip to drop one filter without clearing everything.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Target column</strong> — hidden by default; turn off “hide Target” to see Keep quality lines and Grind/Gem hints in-grid.</span></li>
+              </ul>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-table-read-en">
+              <h3 id="guide-h-table-read-en">Reading a row</h3>
+              <ul class="guide-checklist">
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Colored chips</strong> — grade, role, verdict, Eff% only. Set / main / subs are plain text.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Equipped</strong> — search can find the monster name in the row; useful for “what is this rune on?”</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Ancient</strong> — A-with-dot before grade; <strong>Ancient only</strong> in More Filters.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>HP% 13 [3]</strong> — total on rune; bracket = grind bonus only. Gem = circular-arrows icon.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Header filters</strong> — verdict / role / grade / set / slot / main under column titles; click column headers to sort (default Eff% down).</span></li>
+              </ul>
+              <p class="guide-note">Huge exports: first <strong>500 rows</strong> for speed — <strong>Load all …</strong> for the full filtered list. Search highlights matches in the row.</p>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-table-link-en">
+              <h3 id="guide-h-table-link-en">Share &amp; export</h3>
+              <p><strong>Export CSV</strong> — spreadsheet of the filtered list. <strong>Share</strong> (toolbar) — read-only link for monsters/runes (see App Settings for modes).</p>
+              <p>Filters update the URL to <strong>#runetable?…</strong> — bookmark or send the link to reopen the same view in this browser.</p>
             </section>
           </div>
           <div class="guide-lang guide-lang--ru guide-list">
-            <section class="guide-section" aria-labelledby="guide-h-table-ru">
+            <section class="guide-section guide-section--hero" aria-labelledby="guide-h-table-ru">
               <h3 id="guide-h-table-ru">Таблица рун</h3>
-              <p><strong>Панель инструментов:</strong> Поиск, <strong>Действия</strong> (сброс фильтров, CSV), опция колонки <strong>Target</strong>. При большом числе совпадений в сетке сначала <strong>первые 500</strong> строк — нажмите <strong>Загрузить все …</strong> для полного списка (очень большие выгрузки могут тормозить).</p>
-              <p><strong>Фильтры и сортировка:</strong> Строка под заголовками — вердикт, роль, грейд, сет, слот, мейн; клик по заголовку колонки меняет сортировку. По умолчанию — Eff% по убыванию. В строке видны innate и все сабы.</p>
-              <p><strong>Eff:</strong> При наличии берётся <code>efficiency</code> из SWEX; иначе расчёт приложения, отображение не выше <strong>100%</strong>.</p>
-              <p><strong>Древние (Ancient):</strong> Отдельного поля нет — в SWEX кодирование <strong>+10</strong>: <code>class</code> &gt; 10 (у 6★ древней легендарки часто <code>class</code> 16) и <code>rank</code> / <code>extra</code> в 11–15. В колонке грейда — маленькая иконка <strong>«A с точкой»</strong> перед чипом; фильтр <strong>Только древние</strong> в панели таблицы. В ссылке можно <code>ancient=1</code>; в CSV по-прежнему колонка Ancient.</p>
-              <p><strong>Цветные чипы:</strong> Только <strong>грейд</strong>, <strong>роль</strong>, <strong>вердикт</strong> и <strong>Eff%</strong>. Сет, мейн, innate и сабы — обычный текст в строке.</p>
-              <p><strong>Сабы (гринд / гем):</strong> Показывается <strong>итог на руне</strong> (ролл + гринд). В скобках — только прибавка гринда: например <code>HP% 13 [3]</code> — всего 13, из них +3 камнем. Подпись гринда — <strong>золотисто‑оранжевая</strong>. Зачарование — значок стрелок; без скобок гринда акцент на иконке.</p>
-              <p><strong>Колонка Target:</strong> Для фильтров Gem или Grind. <strong>Grind</strong> — числовые цели (округление вверх). <strong>Gem</strong> — какие плоские сабы заменить, без указания целевого % стата. Подсказка при наведении — сырые <code>grindInfo</code> / <code>gemInfo</code>.</p>
-              <p><strong>Ссылка с состоянием:</strong> При смене фильтров / сортировки / поиска в адресе может появиться <code>#runetable?…</code> — можно скопировать и открыть тот же вид позже в этом браузере.</p>
-              <p><strong>Отладка:</strong> У каждой руны есть <code>_raw</code> из SWEX для просмотра в консоли.</p>
+              <p class="guide-lead">Список действий: у каждой руны <strong>Role</strong>, <strong>Verdict</strong>, статы и короткий <strong>Target</strong>, если есть конкретный шаг.</p>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-table-cols-ru">
+              <h3 id="guide-h-table-cols-ru">Главные колонки</h3>
+              <div class="guide-col-map">
+                <div class="guide-col-map__item"><span class="guide-verdict-chip keep">Role</span><span>Билд или Universal</span></div>
+                <div class="guide-col-map__item"><span class="guide-verdict-chip finish">Verdict</span><span>Upgrade · Finish · Keep · Gem · Grind · Reapp · Sell</span></div>
+                <div class="guide-col-map__item"><span class="guide-verdict-chip upgrade">Eff%</span><span>Для сортировки — в сетке до 100%</span></div>
+                <div class="guide-col-map__item"><span class="guide-verdict-chip gem">Target</span><span>Почему Sell, куда гринд, качество Keep</span></div>
+              </div>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-table-toolbar-ru">
+              <h3 id="guide-h-table-toolbar-ru">Панель и чипы сводки</h3>
+              <ul class="guide-checklist">
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Чипы над таблицей</strong> — всего в выборке, древние, на монстрах, +15, Keep.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Ещё фильтры</strong> — только древние, скрыть Target, сброс.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Чипы активных фильтров</strong> — крестик снимает один фильтр, не все сразу.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Колонка Target</strong> — по умолчанию скрыта; снимите «скрыть Target», чтобы видеть качество Keep и подсказки Grind/Gem.</span></li>
+              </ul>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-table-read-ru">
+              <h3 id="guide-h-table-read-ru">Как читать строку</h3>
+              <ul class="guide-checklist">
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Цветные чипы</strong> — грейд, роль, вердикт, Eff%. Сет / мейн / сабы — текст.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>На монстре</strong> — поиск находит имя юнита в строке.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Древняя</strong> — «A с точкой»; <strong>Только древние</strong> в «Ещё фильтры».</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>HP% 13 [3]</strong> — итого на руне; в скобках только гринд. Гем — стрелки.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Фильтры в заголовке</strong> — вердикт / роль / грейд / сет / слот / мейн; клик по заголовку — сортировка (по умолчанию Eff% ↓).</span></li>
+              </ul>
+              <p class="guide-note">Огромный экспорт: сначала <strong>500 строк</strong> — <strong>Загрузить все …</strong> для полного списка. Поиск подсвечивает совпадения.</p>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-table-link-ru">
+              <h3 id="guide-h-table-link-ru">Поделиться и экспорт</h3>
+              <p><strong>Export CSV</strong> — таблица отфильтрованного списка. <strong>Share</strong> в панели — ссылка только для чтения (режимы в Настройках приложения).</p>
+              <p>Фильтры попадают в URL <strong>#runetable?…</strong> — закладка или ссылка для того же вида в этом браузере.</p>
+            </section>
+          </div>
+        </div>
+
+        <div id="guide-panel-evaluation" role="tabpanel" aria-labelledby="guide-subtab-evaluation"
+          class="rules-subpanel" data-guide-subtab="evaluation">
+          <div class="guide-lang guide-lang--en guide-list">
+            <section class="guide-section guide-section--hero" aria-labelledby="guide-h-eval-intro-en">
+              <h3 id="guide-h-eval-intro-en">How rune scoring works</h3>
+              <p class="guide-lead">SW Forge looks at each rune like a coach would: <strong>which monster build could wear it?</strong> and <strong>what should you do with it next?</strong> You pick your account stage (<strong>Early / Mid / Late</strong>) — that sets how picky the checks are. Everything runs in your browser on the export you loaded.</p>
+              <div class="guide-callout guide-callout--calm">
+                <p><strong>You do not need to edit spreadsheets.</strong> The <strong>Role</strong> and <strong>Verdict</strong> columns are the main answers. Open <strong>Rune Rules</strong> only if you want to tune how strict the app is.</p>
+              </div>
+            </section>
+
+            <section class="guide-section" aria-labelledby="guide-h-eval-flow-en">
+              <h3 id="guide-h-eval-flow-en">The path each rune takes</h3>
+              <div class="guide-flow" role="list">
+                <div class="guide-flow__step" role="listitem">
+                  <span class="guide-flow__num">1</span>
+                  <div class="guide-flow__body">
+                    <strong>Your SWEX export</strong>
+                    <span>Set, slot, main stat, substats, level, efficiency, ancient flag.</span>
+                  </div>
+                </div>
+                <div class="guide-flow__step" role="listitem">
+                  <span class="guide-flow__num">2</span>
+                  <div class="guide-flow__body">
+                    <strong>Account stage</strong>
+                    <span>Early, Mid, or Late on the Dashboard — same labels as your preset.</span>
+                  </div>
+                </div>
+                <div class="guide-flow__step" role="listitem">
+                  <span class="guide-flow__num">3</span>
+                  <div class="guide-flow__body">
+                    <strong>Build roles</strong>
+                    <span>Six playstyles (Bomber, Bruiser, Fast CC, …) plus special “monster rune” tags.</span>
+                  </div>
+                </div>
+                <div class="guide-flow__step" role="listitem">
+                  <span class="guide-flow__num">4</span>
+                  <div class="guide-flow__body">
+                    <strong>Verdict + Target</strong>
+                    <span>Keep, Gem, Grind, Sell, … and a plain sentence when something is Sell.</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="guide-section" aria-labelledby="guide-h-eval-two-en">
+              <h3 id="guide-h-eval-two-en">Two answers per rune</h3>
+              <div class="guide-duo-cards">
+                <article class="guide-duo-card">
+                  <span class="guide-duo-card__kicker">Column: Role</span>
+                  <p class="guide-duo-card__title">Who is this rune for?</p>
+                  <p>First matching build in priority order — e.g. <strong>Fast CC</strong> before <strong>Bomber</strong>. If no build fits but stats are insane, Role becomes <strong>Universal (High Value)</strong> from a <strong>God</strong> or <strong>Duo</strong> line.</p>
+                </article>
+                <article class="guide-duo-card">
+                  <span class="guide-duo-card__kicker">Column: Verdict</span>
+                  <p class="guide-duo-card__title">What should I do?</p>
+                  <p>Depends on <strong>upgrade level</strong> and whether a role matched. Same rune can be <strong>Finish</strong> at +10 and <strong>Keep</strong> at +15 once it earns a role.</p>
+                </article>
+              </div>
+            </section>
+
+            <section class="guide-section" aria-labelledby="guide-h-eval-roles-en">
+              <h3 id="guide-h-eval-roles-en">Build roles</h3>
+              <p>Each role is a PvP/PvE build template — allowed <strong>mains on 2 / 4 / 6</strong> and which <strong>substats</strong> count.</p>
+              <div class="guide-role-grid">
+                <span class="guide-role-pill">Fast CC</span>
+                <span class="guide-role-pill">Classic DPS</span>
+                <span class="guide-role-pill">Bomber</span>
+                <span class="guide-role-pill">Tank</span>
+                <span class="guide-role-pill">Bruiser</span>
+                <span class="guide-role-pill">Slow DPS</span>
+                <span class="guide-role-pill guide-role-pill--universal">Universal · High Value</span>
+              </div>
+              <p class="guide-note">Seventh outcome: valuable stats, no exact build — keep for future monsters or trade fodder carefully.</p>
+            </section>
+
+            <section class="guide-section" aria-labelledby="guide-h-eval-checks-en">
+              <h3 id="guide-h-eval-checks-en">What “fits a role” means</h3>
+              <p class="guide-lead">A rune must pass several checks for that role at your chosen stage. Think of it as a checklist — not one magic number.</p>
+              <ul class="guide-checklist">
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Main stat on 2 / 4 / 6</strong> — e.g. slot 4 must be ATK%, HP%, or another allowed main for that build.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>No forbidden substats</strong> — stats marked “exclude” for that role (wrong stats block the match).</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Must-have stat</strong> — e.g. Bomber often needs <strong>ATK%</strong> somewhere (sub or main).</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Enough useful lines</strong> — minimum count of good substats for that slot group (1/3/5 vs 2/4/6).</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>High-roll anchor</strong> — on Mid/Late, at least one included sub should be a real “high” line for Hero or Legend (depends on preset).</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Overall stat strength</strong> — substats should be reasonably close to strong lines for that stage, not just present.</span></li>
+              </ul>
+              <div class="guide-callout guide-callout--calm">
+                <p><strong>Relaxed retry</strong> — if the strict checklist fails, the app tries once more with softer rules (when Strictness is 1–3). A rune that passes only then shows <strong>(Relaxed)</strong> in Target on Keep — common on Mid accounts, not a bug.</p>
+              </div>
+              <div class="guide-callout guide-callout--warn">
+                <p><strong>Efficiency %</strong> sorts the table; it does <em>not</em> pick the role alone. A 84% rune can still be Sell.</p>
+              </div>
+            </section>
+
+            <section class="guide-section" aria-labelledby="guide-h-eval-special-en">
+              <h3 id="guide-h-eval-special-en">God Roll, Duo Roll &amp; Universal</h3>
+              <div class="guide-duo-cards">
+                <article class="guide-duo-card guide-duo-card--accent">
+                  <p class="guide-duo-card__title">God Roll</p>
+                  <p>One sub line reaches a very high “god” bar for your grade — too strong to trash.</p>
+                </article>
+                <article class="guide-duo-card guide-duo-card--accent">
+                  <p class="guide-duo-card__title">Duo Roll</p>
+                  <p>Two stats together hit a strong pair (<strong>SPD + HP%</strong>, <strong>CRate + CDmg</strong>, …).</p>
+                </article>
+              </div>
+              <div class="guide-callout guide-callout--calm">
+                <p>If <strong>no build role</strong> matched but God or Duo did, Role shows <strong>Universal (High Value)</strong> — great rune, not tied to one current team. Target may say <strong>High Value · God</strong> or <strong>· Duo</strong>.</p>
+              </div>
+            </section>
+
+            <section class="guide-section" aria-labelledby="guide-h-eval-fit-en">
+              <h3 id="guide-h-eval-fit-en">Fit Score</h3>
+              <div class="guide-fit-scale" role="img" aria-label="Fit score bands 0 to 100">
+                <span class="guide-fit-scale__zone guide-fit-scale__zone--low">Usable &lt;60</span>
+                <span class="guide-fit-scale__zone guide-fit-scale__zone--mid">Good 60–74</span>
+                <span class="guide-fit-scale__zone guide-fit-scale__zone--hi">Excellent 75+</span>
+              </div>
+              <p><strong>0–100</strong> — how closely substats match the chosen role. It does <strong>not</strong> change Verdict; use it to compare two Keep runes for the same build. Shown in Target on Keep as <strong>Fit 67</strong> etc.</p>
+            </section>
+
+            <section class="guide-section" aria-labelledby="guide-h-eval-verdicts-en">
+              <h3 id="guide-h-eval-verdicts-en">Verdicts by rune level</h3>
+              <ol class="guide-verdict-ladder">
+                <li class="guide-verdict-ladder__item guide-verdict-ladder__item--upgrade">
+                  <span class="guide-verdict-chip upgrade">Upgrade</span>
+                  <div><strong>Below +9</strong> — too early to judge; level it first.</div>
+                </li>
+                <li class="guide-verdict-ladder__item guide-verdict-ladder__item--finish">
+                  <span class="guide-verdict-chip finish">Finish</span>
+                  <div><strong>+9 to +11</strong> — has a role (or God/Duo) or can reach one with a grind; worth finishing.</div>
+                </li>
+                <li class="guide-verdict-ladder__item guide-verdict-ladder__item--keep">
+                  <span class="guide-verdict-chip keep">Keep</span>
+                  <div><strong>+12 and up</strong> — fits a build; keep in inventory.</div>
+                </li>
+                <li class="guide-verdict-ladder__item guide-verdict-ladder__item--gem">
+                  <span class="guide-verdict-chip gem">Gem</span>
+                  <div><strong>+12+</strong> — role OK but has a bad flat sub (HP / ATK / DEF) worth replacing with a gem.</div>
+                </li>
+                <li class="guide-verdict-ladder__item guide-verdict-ladder__item--grind">
+                  <span class="guide-verdict-chip grind">Grind</span>
+                  <div><strong>+12+</strong> — no role yet, but one grind on SPD / HP% / DEF% / ATK% could unlock a build.</div>
+                </li>
+                <li class="guide-verdict-ladder__item guide-verdict-ladder__item--reapp">
+                  <span class="guide-verdict-chip reapp">Reapp</span>
+                  <div><strong>Legend +12+</strong> — no role; matches reapp rules (set, main, efficiency cap).</div>
+                </li>
+                <li class="guide-verdict-ladder__item guide-verdict-ladder__item--sell">
+                  <span class="guide-verdict-chip sell">Sell</span>
+                  <div><strong>+12+</strong> — no fitting build and no grind/reapp path; fodder or sell.</div>
+                </li>
+              </ol>
+            </section>
+
+            <section class="guide-section" aria-labelledby="guide-h-eval-target-en">
+              <h3 id="guide-h-eval-target-en">Target column</h3>
+              <div class="guide-target-grid">
+                <article class="guide-target-card"><span class="guide-verdict-chip keep">Keep</span><p>Role · <strong>Excellent / Good / Usable</strong> · <strong>Strict</strong>, <strong>Flexible</strong>, or <strong>Relaxed</strong> · optional <strong>Fit N</strong></p></article>
+                <article class="guide-target-card"><span class="guide-verdict-chip grind">Grind</span><p>Which stat to push with a grindstone (SPD, HP%, …)</p></article>
+                <article class="guide-target-card"><span class="guide-verdict-chip gem">Gem</span><p>Which flat sub to replace — e.g. <strong>Replace HP or DEF</strong></p></article>
+                <article class="guide-target-card"><span class="guide-verdict-chip sell">Sell</span><p>Plain reason — near-miss Duo, wrong main, weak lines for Mid, low eff, …</p></article>
+              </div>
+            </section>
+
+            <section class="guide-section" aria-labelledby="guide-h-eval-stage-en">
+              <h3 id="guide-h-eval-stage-en">Early / Mid / Late</h3>
+              <div class="guide-stage-bar" role="img" aria-label="Early then Mid then Late progression">
+                <span class="guide-stage-bar__seg guide-stage-bar__seg--early">Early</span>
+                <span class="guide-stage-bar__seg guide-stage-bar__seg--mid">Mid</span>
+                <span class="guide-stage-bar__seg guide-stage-bar__seg--late">Late</span>
+              </div>
+              <p>Stage changes <strong>every rune’s</strong> Role and Verdict — not the account progression score at the top.</p>
+              <h4 class="guide-subhead">Example (illustrative)</h4>
+              <p class="guide-note">Legend Swift slot 2, main <strong>SPD</strong>, subs: <strong>HP% 18</strong>, DEF% 12, flat ATK, CR% 6 — same rune, different presets:</p>
+              <ul class="guide-stage-compare">
+                <li><span class="guide-stage-bar__seg guide-stage-bar__seg--early">Early</span><span class="guide-verdict-chip keep">Keep</span><span>Bruiser — anchor rules softer</span></li>
+                <li><span class="guide-stage-bar__seg guide-stage-bar__seg--mid">Mid</span><span class="guide-verdict-chip gem">Gem</span><span>Role OK — replace flat ATK</span></li>
+                <li><span class="guide-stage-bar__seg guide-stage-bar__seg--late">Late</span><span class="guide-verdict-chip sell">Sell</span><span>Lines too weak for late-game bar</span></li>
+              </ul>
+            </section>
+
+            <section class="guide-section" aria-labelledby="guide-h-eval-tune-en">
+              <h3 id="guide-h-eval-tune-en">Strictness &amp; Rune Rules</h3>
+              <p><strong>Strictness (1–5)</strong> on the Dashboard makes checks tougher: more useful substats required, higher rolls to match a role, stricter God/Duo bars. <strong>1–2</strong> — more runes pass; <strong>4–5</strong> — only strong pieces; relaxed retry is <strong>off</strong> at 4–5.</p>
+              <p class="guide-note">Expert edits live in <strong>Rune Rules</strong> — use <strong>Save &amp; Recalculate</strong> after changing thresholds there.</p>
+            </section>
+          </div>
+
+          <div class="guide-lang guide-lang--ru guide-list">
+            <section class="guide-section guide-section--hero" aria-labelledby="guide-h-eval-intro-ru">
+              <h3 id="guide-h-eval-intro-ru">Как оцениваются руны</h3>
+              <p class="guide-lead">SW Forge смотрит на руну как тренер: <strong>под какого монстра/билд она подходит?</strong> и <strong>что с ней делать дальше?</strong> Вы выбираете стадию аккаунта (<strong>Early / Mid / Late</strong>) — от этого зависит строгость проверок. Всё считается в браузере по загруженному экспорту.</p>
+              <div class="guide-callout guide-callout--calm">
+                <p><strong>Не нужно ковырять таблицы вручную.</strong> Главные ответы — колонки <strong>Role</strong> и <strong>Verdict</strong>. Вкладка <strong>Правила рун</strong> — только если хотите подкрутить жёсткость.</p>
+              </div>
+            </section>
+
+            <section class="guide-section" aria-labelledby="guide-h-eval-flow-ru">
+              <h3 id="guide-h-eval-flow-ru">Путь каждой руны</h3>
+              <div class="guide-flow" role="list">
+                <div class="guide-flow__step" role="listitem">
+                  <span class="guide-flow__num">1</span>
+                  <div class="guide-flow__body">
+                    <strong>Экспорт SWEX</strong>
+                    <span>Сет, слот, основной стат, сабы, уровень, eff, древняя или нет.</span>
+                  </div>
+                </div>
+                <div class="guide-flow__step" role="listitem">
+                  <span class="guide-flow__num">2</span>
+                  <div class="guide-flow__body">
+                    <strong>Стадия аккаунта</strong>
+                    <span>Early, Mid или Late на панели — тот же пресет, что вы выбрали.</span>
+                  </div>
+                </div>
+                <div class="guide-flow__step" role="listitem">
+                  <span class="guide-flow__num">3</span>
+                  <div class="guide-flow__body">
+                    <strong>Роли билдов</strong>
+                    <span>Шесть стилей (Bomber, Bruiser, Fast CC, …) и особые метки «очень сильная руна».</span>
+                  </div>
+                </div>
+                <div class="guide-flow__step" role="listitem">
+                  <span class="guide-flow__num">4</span>
+                  <div class="guide-flow__body">
+                    <strong>Вердикт + Target</strong>
+                    <span>Keep, Gem, Grind, Sell… и понятная фраза, почему Sell.</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="guide-section" aria-labelledby="guide-h-eval-two-ru">
+              <h3 id="guide-h-eval-two-ru">Два ответа на руну</h3>
+              <div class="guide-duo-cards">
+                <article class="guide-duo-card">
+                  <span class="guide-duo-card__kicker">Колонка Role</span>
+                  <p class="guide-duo-card__title">Кому эта руна?</p>
+                  <p>Первая роль по приоритету — напр. <strong>Fast CC</strong> раньше <strong>Bomber</strong>. Если билд не сошёлся, но статы «богоподобные», Role = <strong>Universal (High Value)</strong> через <strong>God</strong> или <strong>Duo</strong>.</p>
+                </article>
+                <article class="guide-duo-card">
+                  <span class="guide-duo-card__kicker">Колонка Verdict</span>
+                  <p class="guide-duo-card__title">Что делать?</p>
+                  <p>От <strong>уровня руны</strong> и совпадения роли. Одна руна: <strong>Finish</strong> на +10 и <strong>Keep</strong> на +15.</p>
+                </article>
+              </div>
+            </section>
+
+            <section class="guide-section" aria-labelledby="guide-h-eval-roles-ru">
+              <h3 id="guide-h-eval-roles-ru">Роли билдов</h3>
+              <p>Шаблон билда — допустимые <strong>мейны 2 / 4 / 6</strong> и нужные <strong>сабстаты</strong>.</p>
+              <div class="guide-role-grid">
+                <span class="guide-role-pill">Fast CC</span>
+                <span class="guide-role-pill">Classic DPS</span>
+                <span class="guide-role-pill">Bomber</span>
+                <span class="guide-role-pill">Tank</span>
+                <span class="guide-role-pill">Bruiser</span>
+                <span class="guide-role-pill">Slow DPS</span>
+                <span class="guide-role-pill guide-role-pill--universal">Universal · High Value</span>
+              </div>
+              <p class="guide-note">Седьмой исход: ценные статы без точного билда — беречь под будущих монстров.</p>
+            </section>
+
+            <section class="guide-section" aria-labelledby="guide-h-eval-checks-ru">
+              <h3 id="guide-h-eval-checks-ru">Что значит «подходит под роль»</h3>
+              <p class="guide-lead">Руна проходит несколько проверок для этой роли на выбранной стадии. Это чеклист, а не одна цифра eff.</p>
+              <ul class="guide-checklist">
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Мейн на 2 / 4 / 6</strong> — слот 4 должен быть из разрешённых для билда (ATK%, HP% и т.д.).</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Нет запрещённых сабов</strong> — статы с «exclude» для роли режут совпадение.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Обязательный стат</strong> — у Bomber часто нужен <strong>ATK%</strong> (саб или мейн).</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Достаточно полезных линий</strong> — минимум хороших сабов для группы слотов 1/3/5 или 2/4/6.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Якорь high roll</strong> — на Mid/Late хотя бы один Include-саб должен быть «высокой» линией для Hero/Legend (по пресету).</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Сила статов в целом</strong> — сабы близки к сильным линиям стадии, а не просто «есть на руне».</span></li>
+              </ul>
+              <div class="guide-callout guide-callout--calm">
+                <p><strong>Relaxed retry</strong> — если строгий чеклист не прошёл, вторая попытка с мягче правилами (при Strictness 1–3). В Target на Keep будет <strong>(Relaxed)</strong> — нормально для Mid, не ошибка.</p>
+              </div>
+              <div class="guide-callout guide-callout--warn">
+                <p><strong>Efficiency %</strong> — для сортировки; <em>роль</em> одной eff не ставится. 84% может быть Sell.</p>
+              </div>
+            </section>
+
+            <section class="guide-section" aria-labelledby="guide-h-eval-special-ru">
+              <h3 id="guide-h-eval-special-ru">God Roll, Duo Roll и Universal</h3>
+              <div class="guide-duo-cards">
+                <article class="guide-duo-card guide-duo-card--accent">
+                  <p class="guide-duo-card__title">God Roll</p>
+                  <p>Одна линия саба выше «god»-порога для грейда — слишком ценная, чтобы выкинуть.</p>
+                </article>
+                <article class="guide-duo-card guide-duo-card--accent">
+                  <p class="guide-duo-card__title">Duo Roll</p>
+                  <p>Сильная пара статов (<strong>SPD + HP%</strong>, <strong>CRate + CDmg</strong>, …).</p>
+                </article>
+              </div>
+              <div class="guide-callout guide-callout--calm">
+                <p>Если <strong>ни один билд</strong> не подошёл, но есть God или Duo — Role <strong>Universal (High Value)</strong>: руна ценная, но не под конкретную команду. Target: <strong>High Value · God</strong> или <strong>· Duo</strong>.</p>
+              </div>
+            </section>
+
+            <section class="guide-section" aria-labelledby="guide-h-eval-fit-ru">
+              <h3 id="guide-h-eval-fit-ru">Fit Score</h3>
+              <div class="guide-fit-scale" role="img" aria-label="Диапазоны Fit Score">
+                <span class="guide-fit-scale__zone guide-fit-scale__zone--low">Usable &lt;60</span>
+                <span class="guide-fit-scale__zone guide-fit-scale__zone--mid">Good 60–74</span>
+                <span class="guide-fit-scale__zone guide-fit-scale__zone--hi">Excellent 75+</span>
+              </div>
+              <p><strong>0–100</strong> — насколько сабы похожи на идеал для роли. <strong>Не меняет Verdict</strong> — только сравнение рун одной роли. В Target на Keep: <strong>Fit 67</strong> и т.д.</p>
+            </section>
+
+            <section class="guide-section" aria-labelledby="guide-h-eval-verdicts-ru">
+              <h3 id="guide-h-eval-verdicts-ru">Вердикты по уровню руны</h3>
+              <ol class="guide-verdict-ladder">
+                <li class="guide-verdict-ladder__item guide-verdict-ladder__item--upgrade">
+                  <span class="guide-verdict-chip upgrade">Upgrade</span>
+                  <div><strong>Ниже +9</strong> — рано судить; качайте дальше.</div>
+                </li>
+                <li class="guide-verdict-ladder__item guide-verdict-ladder__item--finish">
+                  <span class="guide-verdict-chip finish">Finish</span>
+                  <div><strong>+9…+11</strong> — есть роль (или God/Duo) или гринд даст роль; имеет смысл докачать.</div>
+                </li>
+                <li class="guide-verdict-ladder__item guide-verdict-ladder__item--keep">
+                  <span class="guide-verdict-chip keep">Keep</span>
+                  <div><strong>+12 и выше</strong> — подходит под билд; хранить.</div>
+                </li>
+                <li class="guide-verdict-ladder__item guide-verdict-ladder__item--gem">
+                  <span class="guide-verdict-chip gem">Gem</span>
+                  <div><strong>+12+</strong> — роль есть, но плоский саб (HP/ATK/DEF) лучше заменить гемом.</div>
+                </li>
+                <li class="guide-verdict-ladder__item guide-verdict-ladder__item--grind">
+                  <span class="guide-verdict-chip grind">Grind</span>
+                  <div><strong>+12+</strong> — роли нет, но один гринд по SPD / HP% / DEF% / ATK% может открыть билд.</div>
+                </li>
+                <li class="guide-verdict-ladder__item guide-verdict-ladder__item--reapp">
+                  <span class="guide-verdict-chip reapp">Reapp</span>
+                  <div><strong>Legend +12+</strong> — нет роли; подходит под правила реаппа (сет, мейн, потолок eff).</div>
+                </li>
+                <li class="guide-verdict-ladder__item guide-verdict-ladder__item--sell">
+                  <span class="guide-verdict-chip sell">Sell</span>
+                  <div><strong>+12+</strong> — нет билда и нет пути гринд/реапп; фоддер или продажа.</div>
+                </li>
+              </ol>
+            </section>
+
+            <section class="guide-section" aria-labelledby="guide-h-eval-target-ru">
+              <h3 id="guide-h-eval-target-ru">Колонка Target</h3>
+              <div class="guide-target-grid">
+                <article class="guide-target-card"><span class="guide-verdict-chip keep">Keep</span><p>Роль · <strong>Excellent / Good / Usable</strong> · <strong>Strict</strong>, <strong>Flexible</strong> или <strong>Relaxed</strong> · <strong>Fit N</strong></p></article>
+                <article class="guide-target-card"><span class="guide-verdict-chip grind">Grind</span><p>Какой стат грайндить (SPD, HP%, …)</p></article>
+                <article class="guide-target-card"><span class="guide-verdict-chip gem">Gem</span><p>Какой плоский саб заменить</p></article>
+                <article class="guide-target-card"><span class="guide-verdict-chip sell">Sell</span><p>Причина простым языком — почти Duo, мейн, слабые линии…</p></article>
+              </div>
+            </section>
+
+            <section class="guide-section" aria-labelledby="guide-h-eval-stage-ru">
+              <h3 id="guide-h-eval-stage-ru">Early / Mid / Late</h3>
+              <div class="guide-stage-bar" role="img" aria-label="Стадии Early Mid Late">
+                <span class="guide-stage-bar__seg guide-stage-bar__seg--early">Early</span>
+                <span class="guide-stage-bar__seg guide-stage-bar__seg--mid">Mid</span>
+                <span class="guide-stage-bar__seg guide-stage-bar__seg--late">Late</span>
+              </div>
+              <p>Стадия меняет <strong>Role и Verdict каждой руны</strong>, не балл прогресса сверху.</p>
+              <h4 class="guide-subhead">Пример (иллюстрация)</h4>
+              <p class="guide-note">Legend Swift слот 2, мейн <strong>SPD</strong>, сабы: <strong>HP% 18</strong>, DEF% 12, flat ATK, CR% 6:</p>
+              <ul class="guide-stage-compare">
+                <li><span class="guide-stage-bar__seg guide-stage-bar__seg--early">Early</span><span class="guide-verdict-chip keep">Keep</span><span>Bruiser — мягче якорь</span></li>
+                <li><span class="guide-stage-bar__seg guide-stage-bar__seg--mid">Mid</span><span class="guide-verdict-chip gem">Gem</span><span>Роль есть — заменить flat ATK</span></li>
+                <li><span class="guide-stage-bar__seg guide-stage-bar__seg--late">Late</span><span class="guide-verdict-chip sell">Sell</span><span>Линии слабы для Late</span></li>
+              </ul>
+            </section>
+
+            <section class="guide-section" aria-labelledby="guide-h-eval-tune-ru">
+              <h3 id="guide-h-eval-tune-ru">Strictness и Правила рун</h3>
+              <p><strong>Strictness (1–5)</strong> на панели: больше полезных сабов, выше роллы, жёстче God/Duo. <strong>1–2</strong> — проходят легче; <strong>4–5</strong> — только сильные; relaxed retry <strong>выключен</strong> на 4–5.</p>
+              <p class="guide-note">Тонкая настройка — <strong>Правила рун</strong>; после правок — <strong>Сохранить и пересчитать</strong>.</p>
             </section>
           </div>
         </div>
@@ -1235,45 +2047,302 @@
         <div id="guide-panel-rules" role="tabpanel" aria-labelledby="guide-subtab-rules"
           class="rules-subpanel" data-guide-subtab="rules">
           <div class="guide-lang guide-lang--en guide-list">
-            <section class="guide-section" aria-labelledby="guide-h-rules-en">
-              <h3 id="guide-h-rules-en">Rune Rules tab</h3>
-              <p><strong>Sections:</strong> Three subtabs in order — <strong>Engine</strong> (constants for eight substats plus read-only God / Duo / stage-line previews), <strong>Roles</strong> (archetype formulas full width), and <strong>Verdict rules</strong> (Gem, Grind, Reapp cards). The page uses the same chrome shell as <strong>Account progression</strong> on the Dashboard. The last-opened subtab is remembered for this browser session.</p>
-              <p><strong>Roles vs Engine vs verdicts:</strong> <strong>Roles</strong> (six archetype formulas) decide whether a rune fits a build. <strong>Engine</strong> constants feed three read-only previews — <strong>God</strong> (Hero/Leg), <strong>High Roll</strong> (stage × grade), <strong>Duo</strong> (HR × (1 − Duo%), same 8×6 grid). <strong>Verdict</strong> adds Sell / Keep / Gem / Grind / Reapp on top.</p>
-              <p><strong>Sub values in checks:</strong> God, Duo, HR anchors, and Min Stats use <strong>roll + grind</strong> as shown on the rune (innate/prefix excluded from the four sub lines). <strong>Grind verdict</strong> still simulates +5 SPD / +10% from the <em>ungrinded base</em> on that line.</p>
-              <h4 class="guide-subhead">God vs High Roll vs Duo</h4>
-              <ul>
-                <li><strong>God Roll</strong> (role filter «High Roll») — rescue when no archetype matched: any sub line hits the <strong>God</strong> preview line (flat subs ignored).</li>
-                <li><strong>Require High Roll</strong> in formulas — optional: at least one of the four sub lines must reach the <strong>High Roll</strong> grid for your preset stage × grade.</li>
-                <li><strong>Duo Roll</strong> — summed totals per stat vs Duo preview; match when any spreadsheet pair (SPD+HP%, CR+CD, …) both pass.</li>
+            <section class="guide-section guide-section--hero" aria-labelledby="guide-h-rules-en">
+              <h3 id="guide-h-rules-en">Rune Rules</h3>
+              <p class="guide-lead">Open <strong>Runes → Rules</strong> to tune the same engine that fills <strong>Role</strong> and <strong>Verdict</strong> in the table. The Dashboard <strong>Strictness</strong> slider is the everyday control; this page is the full spreadsheet-style setup.</p>
+            </section>
+
+            <section class="guide-section" aria-labelledby="guide-h-rules-where-en">
+              <h3 id="guide-h-rules-where-en">Simple vs full Rules</h3>
+              <div class="guide-duo-cards">
+                <article class="guide-duo-card guide-duo-card--accent">
+                  <span class="guide-duo-card__kicker">Most players</span>
+                  <p class="guide-duo-card__title">Dashboard only</p>
+                  <p><strong>Early / Mid / Late</strong> + <strong>Strictness 1–5</strong> on the Dashboard bar. The Rules tab shows a short <strong>Evaluation Policy</strong> note — no need to open Engine or formulas.</p>
+                </article>
+                <article class="guide-duo-card">
+                  <span class="guide-duo-card__kicker">Power users</span>
+                  <p class="guide-duo-card__title">Full Rules tab</p>
+                  <p>Three subtabs — <strong>Engine</strong>, <strong>Roles</strong>, <strong>Verdict rules</strong> — plus <strong>Save &amp; Recalculate</strong> at the bottom. Matches SWOP-style tuning.</p>
+                </article>
+              </div>
+            </section>
+
+            <section class="guide-section" aria-labelledby="guide-h-rules-pipe-en">
+              <h3 id="guide-h-rules-pipe-en">How the pieces connect</h3>
+              <div class="guide-flow" role="list">
+                <div class="guide-flow__step" role="listitem">
+                  <span class="guide-flow__num">A</span>
+                  <div class="guide-flow__body">
+                    <strong>Constants (8 stats)</strong>
+                    <span>Base numbers for SPD, HP%, CRate, … — every “high line” is built from these.</span>
+                  </div>
+                </div>
+                <div class="guide-flow__step" role="listitem">
+                  <span class="guide-flow__num">B</span>
+                  <div class="guide-flow__body">
+                    <strong>Evaluation Policy</strong>
+                    <span>How strictly a rune must pass role checks (preset, anchor, pressure, …).</span>
+                  </div>
+                </div>
+                <div class="guide-flow__step" role="listitem">
+                  <span class="guide-flow__num">C</span>
+                  <div class="guide-flow__body">
+                    <strong>Role formulas</strong>
+                    <span>Per build: allowed mains, good/bad subs, must-have, min lines, HR anchor.</span>
+                  </div>
+                </div>
+                <div class="guide-flow__step" role="listitem">
+                  <span class="guide-flow__num">D</span>
+                  <div class="guide-flow__body">
+                    <strong>Verdict rules</strong>
+                    <span>When to flag Gem / Grind / Reapp after a role (or lack of one) is known.</span>
+                  </div>
+                </div>
+              </div>
+              <p class="guide-note">Result → <strong>Role</strong>, <strong>Verdict</strong>, <strong>Target</strong> in the Rune Table. Plain overview → <strong>How scoring works</strong> in this Guide.</p>
+            </section>
+
+            <section class="guide-section" aria-labelledby="guide-h-rules-engine-en">
+              <h3 id="guide-h-rules-engine-en">Engine tab</h3>
+              <h4 class="guide-subhead">1 — Constants (8 stats)</h4>
+              <p class="guide-lead">One row per stat (SPD, HP%, ATK%, DEF%, CRate, CDmg, ACC, RES). Totals use <strong>roll + grind</strong> on the rune, same as in the table.</p>
+              <ul class="guide-checklist">
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Base</strong> — Mid-game Hero anchor for that stat (e.g. SPD 16).</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>God +%</strong> — God Roll line = Base × (1 + %). One huge sub can save a rune as Universal.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Early −% / Late +%</strong> — scales the <strong>High Roll</strong> grid by account stage.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Legend −%</strong> — Legend runes use a slightly lower HR line than Hero at the same stage.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Duo −%</strong> — Duo line = High Roll × (1 − %); pairs like SPD+HP% must both clear their lines.</span></li>
               </ul>
-              <h4 class="guide-subhead">Formulas — Min Stats vs Require High Roll</h4>
-              <p><strong>Min Stats</strong> counts how many <em>Include</em> substats appear (roll + grind totals); must-have does not add to that count. <strong>Require High Roll</strong> is separate and checks individual sub lines, not the Min Stats count.</p>
-              <h4 class="guide-subhead">Grind verdict</h4>
-              <p>Only SPD / HP% / DEF% / ATK% on an <strong>ungrinded, unenchanted</strong> line versus <strong>Late × grade High Roll</strong> (never God). <strong>Gap</strong> default <strong>0.5</strong> (migration v9).</p>
-              <h4 class="guide-subhead">Safety rails</h4>
-              <p>Failing a Gem quality gate does not force <strong>Sell</strong> when a role already matched. With <strong>no role</strong> and no <strong>Duo</strong> or <strong>God</strong> rescue signal, only Sell / Reapp / Upgrade remain.</p>
-              <p><strong>Saving:</strong> Changes under <strong>Roles</strong> save continuously and re-run the pipeline immediately. After editing <strong>Engine</strong> constants or <strong>Verdict</strong> inputs, press <strong>Save &amp; Recalculate</strong> at the bottom so Dashboard + Rune Table match.</p>
+              <p class="guide-note"><strong>Show threshold previews</strong> — read-only God / High Roll / Duo tables (stage × grade). Change numbers above → previews update live; <strong>Save &amp; Recalculate</strong> applies to all runes.</p>
+
+              <h4 class="guide-subhead">2 — Evaluation Policy</h4>
+              <p>Global strictness on top of your Dashboard stage. Expert fields:</p>
+              <div class="guide-target-grid">
+                <article class="guide-target-card">
+                  <p class="guide-duo-card__title">Preset</p>
+                  <p><strong>Early / Mid / Late / Competitive Progression</strong> loads a full profile. <strong>Custom</strong> keeps your manual tweaks.</p>
+                </article>
+                <article class="guide-target-card">
+                  <p class="guide-duo-card__title">Anchor requirement</p>
+                  <p><strong>Hard</strong> — must hit a real high-roll line when the role asks for it. <strong>Soft</strong> — allows near-misses.</p>
+                </article>
+                <article class="guide-target-card">
+                  <p class="guide-duo-card__title">Slot requirements</p>
+                  <p><strong>Hard / Soft</strong> — how strictly slot 2/4/6 “required stat” rows in role formulas are enforced.</p>
+                </article>
+                <article class="guide-target-card">
+                  <p class="guide-duo-card__title">Supporting stats</p>
+                  <p><strong>+1 / 0 / −1</strong> — bumps how many <em>Include</em> subs you need beyond each role’s minimum.</p>
+                </article>
+                <article class="guide-target-card">
+                  <p class="guide-duo-card__title">Stat quality for role</p>
+                  <p>0.00 = off · higher = substats must be closer to strong lines (fewer Keep). Per-role floors also exist in the preset.</p>
+                </article>
+                <article class="guide-target-card">
+                  <p class="guide-duo-card__title">God / Duo counts as role</p>
+                  <p>Leave <strong>off</strong> (recommended): God/Duo stay <strong>High Value</strong> tags → Universal. On = they can become the primary Role name.</p>
+                </article>
+              </div>
+              <div class="guide-callout guide-callout--calm">
+                <p>Dashboard <strong>Strictness 1–5</strong> blends with the active preset (useful subs, pressure, God/Duo bars). At <strong>4–5</strong> relaxed retry is disabled — same idea as in the scoring guide.</p>
+              </div>
+            </section>
+
+            <section class="guide-section" aria-labelledby="guide-h-rules-roles-en">
+              <h3 id="guide-h-rules-roles-en">Roles tab</h3>
+              <p class="guide-lead">Six default builds (Fast CC, Classic DPS, Bomber, Tank, Bruiser, Slow DPS). Pick one in the left list; the big sheet is that role’s formula.</p>
+              <ul class="guide-checklist">
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Enable formula</strong> — off = role ignored in matching.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Accepted mains</strong> — slot 2 / 4 / 6: comma list (SPD, HP%, …) or None.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Sub-stats grid</strong> — per stat × Early/Mid/Late: <strong>Include</strong> (counts toward min lines), blank, or <strong>Exclude</strong> (blocks the role).</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Must have</strong> — one required stat on the rune for that stage (e.g. Bomber → ATK%).</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Slot requirements</strong> — e.g. slot 2 must be SPD for Fast CC on Mid.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Min stats</strong> — how many Include lines needed on 1/3/5 vs slot 2 / 4 / 6 groups (must-have does not add to this count).</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Anchor (High Roll)</strong> — checkboxes: at least one sub must reach Hero or Legend HR line for that stage.</span></li>
+              </ul>
+              <p class="guide-note">Edits apply on change — table refreshes without the footer button. You can <strong>+ Add role</strong> for custom builds (keep at least one role). <strong>Reset Constants</strong> only restores the 8-stat grid, not these formulas.</p>
+            </section>
+
+            <section class="guide-section" aria-labelledby="guide-h-rules-verdict-en">
+              <h3 id="guide-h-rules-verdict-en">Verdict rules tab</h3>
+              <p class="guide-lead">Fine-tunes <strong>Gem</strong>, <strong>Grind</strong>, <strong>Reapp</strong> on top of the main verdict tree (Upgrade / Finish / Keep / Sell).</p>
+              <div class="guide-duo-cards">
+                <article class="guide-duo-card">
+                  <span class="guide-duo-card__kicker">Gem suggestions</span>
+                  <p class="guide-duo-card__title">Bad flat subs</p>
+                  <p>When enabled, +12+ runes with weak flat HP/ATK/DEF subs can get <strong>Gem</strong> — Target lists which flat to replace. Enchant only rerolls subs, not innate.</p>
+                </article>
+                <article class="guide-duo-card">
+                  <span class="guide-duo-card__kicker">Grind suggestions</span>
+                  <p class="guide-duo-card__title">One push away</p>
+                  <p><strong>Grind gap</strong> (try 0.3–0.5): lower = stricter. Compares ungrinded SPD / HP% / DEF% / ATK% to <strong>Late × grade High Roll</strong> — if one grind could reach the line, verdict becomes Grind.</p>
+                </article>
+                <article class="guide-duo-card guide-duo-card--accent">
+                  <span class="guide-duo-card__kicker">Reapp candidates</span>
+                  <p class="guide-duo-card__title">Legend fodder with potential</p>
+                  <p>Filter by <strong>allowed sets</strong>, <strong>innate stats</strong>, mains on 2/4/6, and <strong>max efficiency</strong> — only runes below that eff and matching the list can get <strong>Reapp</strong>.</p>
+                </article>
+              </div>
+            </section>
+
+            <section class="guide-section" aria-labelledby="guide-h-rules-save-en">
+              <h3 id="guide-h-rules-save-en">Save &amp; reset</h3>
+              <ul class="guide-checklist">
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Roles</strong> — auto-save on every change.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Constants, Policy, Verdict rules</strong> — use <strong>Save &amp; Recalculate</strong> (footer).</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Reset to Defaults</strong> — full factory reset of rules (careful).</span></li>
+              </ul>
             </section>
           </div>
+
           <div class="guide-lang guide-lang--ru guide-list">
-            <section class="guide-section" aria-labelledby="guide-h-rules-ru">
-              <h3 id="guide-h-rules-ru">Вкладка «Правила рун»</h3>
-              <p><strong>Разделы:</strong> Три подвкладки по порядку — <strong>Движок</strong> (константы для восьми сабов и превью God / Duo / стадий), <strong>Роли</strong> (формулы архетипов на всю ширину), <strong>Правила вердикта</strong> (Gem, Grind, Reapp). Оформление — тот же chrome-блок, что у <strong>Прогресса аккаунта</strong> на панели. Последняя открытая подвкладка запоминается на сессию.</p>
-              <p><strong>Роли, движок, вердикты:</strong> <strong>Роли</strong> — шесть формул архетипов. <strong>Движок</strong> — превью God, High Roll (стадия × грейд), Duo (HR × (1 − Duo%)). <strong>Вердикт</strong> — Sell / Keep / Gem / Grind / Reapp.</p>
-              <p><strong>Значения сабов:</strong> God, Duo, якорь HR и Min Stats — <strong>ролл + гринд</strong> как на руне (четыре строки сабов, без innate). <strong>Grind</strong> считает от <em>базы до камня</em> на непрокачанной строке.</p>
-              <h4 class="guide-subhead">God, High Roll и Duo</h4>
-              <ul>
-                <li><strong>God Roll</strong> (в фильтре роли «High Roll») — спасение без архетипа: любая строка саба ≥ линии God (flat не считаются).</li>
-                <li><strong>Require High Roll</strong> в формулах — опционально: хотя бы одна из четырёх строк сабов ≥ сетки High Roll для пресета.</li>
-                <li><strong>Duo Roll</strong> — суммы по статам против превью Duo; пара как в таблице (SPD+HP%, CR+CD, …).</li>
+            <section class="guide-section guide-section--hero" aria-labelledby="guide-h-rules-ru">
+              <h3 id="guide-h-rules-ru">Правила рун</h3>
+              <p class="guide-lead"><strong>Руны → Правила</strong> — настройка того же движка, что заполняет <strong>Role</strong> и <strong>Verdict</strong> в таблице. Для обычной игры хватает <strong>Strictness</strong> на панели; эта страница — полный уровень как в SWOP.</p>
+            </section>
+
+            <section class="guide-section" aria-labelledby="guide-h-rules-where-ru">
+              <h3 id="guide-h-rules-where-ru">Простой и полный режим</h3>
+              <div class="guide-duo-cards">
+                <article class="guide-duo-card guide-duo-card--accent">
+                  <span class="guide-duo-card__kicker">Большинству</span>
+                  <p class="guide-duo-card__title">Только панель</p>
+                  <p><strong>Early / Mid / Late</strong> и <strong>Strictness 1–5</strong> на Dashboard. В Правилах — короткая заметка про политику оценки, без формул.</p>
+                </article>
+                <article class="guide-duo-card">
+                  <span class="guide-duo-card__kicker">Продвинутым</span>
+                  <p class="guide-duo-card__title">Вкладка Правила целиком</p>
+                  <p>Три подвкладки — <strong>Движок</strong>, <strong>Роли</strong>, <strong>Вердикты</strong> — и внизу <strong>Сохранить и пересчитать</strong>.</p>
+                </article>
+              </div>
+            </section>
+
+            <section class="guide-section" aria-labelledby="guide-h-rules-pipe-ru">
+              <h3 id="guide-h-rules-pipe-ru">Как связаны блоки</h3>
+              <div class="guide-flow" role="list">
+                <div class="guide-flow__step" role="listitem">
+                  <span class="guide-flow__num">A</span>
+                  <div class="guide-flow__body">
+                    <strong>Constants (8 статов)</strong>
+                    <span>Базовые числа SPD, HP%, CRate… — от них строятся все «высокие линии».</span>
+                  </div>
+                </div>
+                <div class="guide-flow__step" role="listitem">
+                  <span class="guide-flow__num">B</span>
+                  <div class="guide-flow__body">
+                    <strong>Evaluation Policy</strong>
+                    <span>Насколько жёстко руна должна пройти проверки роли (пресет, якорь, давление…).</span>
+                  </div>
+                </div>
+                <div class="guide-flow__step" role="listitem">
+                  <span class="guide-flow__num">C</span>
+                  <div class="guide-flow__body">
+                    <strong>Формулы ролей</strong>
+                    <span>По билду: мейны, Include/Exclude, must-have, минимум линий, HR-якорь.</span>
+                  </div>
+                </div>
+                <div class="guide-flow__step" role="listitem">
+                  <span class="guide-flow__num">D</span>
+                  <div class="guide-flow__body">
+                    <strong>Правила вердиктов</strong>
+                    <span>Когда ставить Gem / Grind / Reapp после определения роли.</span>
+                  </div>
+                </div>
+              </div>
+              <p class="guide-note">Итог — <strong>Role</strong>, <strong>Verdict</strong>, <strong>Target</strong> в таблице. Обзор простым языком → <strong>Оценка рун</strong> в Справке.</p>
+            </section>
+
+            <section class="guide-section" aria-labelledby="guide-h-rules-engine-ru">
+              <h3 id="guide-h-rules-engine-ru">Вкладка «Движок»</h3>
+              <h4 class="guide-subhead">1 — Constants (8 статов)</h4>
+              <p class="guide-lead">Строка на стат. Считается <strong>кат + гринд</strong> на руне, как в таблице.</p>
+              <ul class="guide-checklist">
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Base</strong> — якорь Mid Hero для стата (напр. SPD 16).</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>God +%</strong> — линия God Roll = Base × (1 + %); один огромный саб → Universal.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Early −% / Late +%</strong> — сетка <strong>High Roll</strong> по стадии аккаунта.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Legend −%</strong> — у Legend линия HR чуть ниже Hero на той же стадии.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Duo −%</strong> — Duo = High Roll × (1 − %); пары SPD+HP% и т.д. должны пройти обе линии.</span></li>
               </ul>
-              <h4 class="guide-subhead">Формулы — Min Stats и Require High Roll</h4>
-              <p><strong>Min Stats</strong> — сколько Include-сабов есть (с учётом гринда); must-have не увеличивает счёт. <strong>Require High Roll</strong> отдельно и проверяет <em>строки</em> сабов, не сумму Min Stats.</p>
-              <h4 class="guide-subhead">Вердикт Grind</h4>
-              <p>SPD / HP% / DEF% / ATK% на строке <strong>без гринда и гема</strong> к линии <strong>Late × грейд High Roll</strong> (не God). <strong>Gap</strong> по умолчанию <strong>0.5</strong> (миграция v9).</p>
-              <h4 class="guide-subhead">Защита от странных вердиктов</h4>
-              <p>Gem quality gate не сбрасывает в <strong>Sell</strong> руну с ролью. Без роли и без <strong>Duo</strong> / <strong>God</strong> — только Sell, Reapp, Upgrade.</p>
-              <p><strong>Сохранение:</strong> Правки в <strong>Ролях</strong> сохраняются и пересчитывают руны сразу. После изменений в <strong>Движке</strong> или <strong>Вердикте</strong> нажмите <strong>Сохранить и пересчитать</strong> внизу, чтобы панель и таблица совпали.</p>
+              <p class="guide-note"><strong>Показать превью порогов</strong> — таблицы God / High Roll / Duo (стадия × грейд). Меняете Constants → превью сразу; <strong>Сохранить и пересчитать</strong> — на все руны.</p>
+
+              <h4 class="guide-subhead">2 — Evaluation Policy</h4>
+              <p>Глобальная жёсткость поверх стадии с панели. Поля эксперта:</p>
+              <div class="guide-target-grid">
+                <article class="guide-target-card">
+                  <p class="guide-duo-card__title">Preset</p>
+                  <p><strong>Early / Mid / Late / Competitive Progression</strong> — готовый профиль. <strong>Custom</strong> — ваши ручные правки.</p>
+                </article>
+                <article class="guide-target-card">
+                  <p class="guide-duo-card__title">Anchor requirement</p>
+                  <p><strong>Hard</strong> — нужна настоящая high-roll линия, если роль требует. <strong>Soft</strong> — почти сошлось тоже ок.</p>
+                </article>
+                <article class="guide-target-card">
+                  <p class="guide-duo-card__title">Slot requirements</p>
+                  <p><strong>Hard / Soft</strong> — жёсткость «обязательного стата на слоте» из формул ролей.</p>
+                </article>
+                <article class="guide-target-card">
+                  <p class="guide-duo-card__title">Supporting stats</p>
+                  <p><strong>+1 / 0 / −1</strong> — сдвиг числа нужных Include-сабов сверх минимума роли.</p>
+                </article>
+                <article class="guide-target-card">
+                  <p class="guide-duo-card__title">Stat quality for role</p>
+                  <p>0.00 = выкл · выше — сабы ближе к сильным линиям (меньше Keep). В пресете есть и пороги по ролям.</p>
+                </article>
+                <article class="guide-target-card">
+                  <p class="guide-duo-card__title">God / Duo counts as role</p>
+                  <p><strong>Выкл</strong> (рекомендуется): God/Duo → <strong>High Value</strong> и Universal. <strong>Вкл</strong> — могут стать именем Role.</p>
+                </article>
+              </div>
+              <div class="guide-callout guide-callout--calm">
+                <p><strong>Strictness 1–5</strong> на панели смешивается с активным пресетом. На <strong>4–5</strong> relaxed retry выключен — как в разделе «Оценка рун».</p>
+              </div>
+            </section>
+
+            <section class="guide-section" aria-labelledby="guide-h-rules-roles-ru">
+              <h3 id="guide-h-rules-roles-ru">Вкладка «Роли»</h3>
+              <p class="guide-lead">Шесть билдов по умолчанию. Слева список — справа формула выбранной роли.</p>
+              <ul class="guide-checklist">
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Enable formula</strong> — выкл = роль не участвует в матче.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Accepted mains</strong> — слоты 2 / 4 / 6: список через запятую или None.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Сетка Sub-stats</strong> — стат × Early/Mid/Late: <strong>Include</strong>, пусто или <strong>Exclude</strong> (ломает роль).</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Must have</strong> — один обязательный стат на стадии (Bomber → ATK%).</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Slot requirements</strong> — напр. слот 2 = SPD для Fast CC на Mid.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Min stats</strong> — сколько Include на группах 1/3/5 и слотах 2/4/6 (must-have в счёт не входит).</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Anchor (High Roll)</strong> — галочки: хотя бы один саб ≥ линии Hero или Legend HR.</span></li>
+              </ul>
+              <p class="guide-note">Правки сразу пересчитывают таблицу. Можно <strong>+ Add role</strong> для своих билдов. <strong>Reset Constants</strong> — только сетка 8 статов, не формулы ролей.</p>
+            </section>
+
+            <section class="guide-section" aria-labelledby="guide-h-rules-verdict-ru">
+              <h3 id="guide-h-rules-verdict-ru">Вкладка «Правила вердикта»</h3>
+              <p class="guide-lead">Тонкая настройка <strong>Gem</strong>, <strong>Grind</strong>, <strong>Reapp</strong> поверх дерева Upgrade / Finish / Keep / Sell.</p>
+              <div class="guide-duo-cards">
+                <article class="guide-duo-card">
+                  <span class="guide-duo-card__kicker">Gem</span>
+                  <p class="guide-duo-card__title">Плоские сабы</p>
+                  <p>Если включено — на +12+ с слабыми flat HP/ATK/DEF может быть <strong>Gem</strong>; Target пишет, что заменить. Гем меняет только сабы, не innate.</p>
+                </article>
+                <article class="guide-duo-card">
+                  <span class="guide-duo-card__kicker">Grind</span>
+                  <p class="guide-duo-card__title">Один камень до роли</p>
+                  <p><strong>Grind gap</strong> (0.3–0.5): меньше = жёстче. Непрокачанные SPD/HP%/DEF%/ATK% сравниваются с <strong>Late × грейд High Roll</strong> — если один гринд дотянет, verdict Grind.</p>
+                </article>
+                <article class="guide-duo-card guide-duo-card--accent">
+                  <span class="guide-duo-card__kicker">Reapp</span>
+                  <p class="guide-duo-card__title">Кандидаты под реапп</p>
+                  <p>Фильтры: <strong>сеты</strong>, <strong>innate</strong>, мейны 2/4/6, <strong>макс. eff</strong> — Reapp только ниже порога eff и при совпадении списков.</p>
+                </article>
+              </div>
+            </section>
+
+            <section class="guide-section" aria-labelledby="guide-h-rules-save-ru">
+              <h3 id="guide-h-rules-save-ru">Сохранение и сброс</h3>
+              <ul class="guide-checklist">
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Роли</strong> — сохраняются при каждом изменении.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Constants, Policy, Вердикты</strong> — <strong>Сохранить и пересчитать</strong> внизу.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Reset to Defaults</strong> — полный сброс правил (осторожно).</span></li>
+              </ul>
             </section>
           </div>
         </div>
@@ -1281,51 +2350,71 @@
         <div id="guide-panel-tips" role="tabpanel" aria-labelledby="guide-subtab-tips"
           class="rules-subpanel" data-guide-subtab="tips">
           <div class="guide-lang guide-lang--en guide-list">
-            <section class="guide-section" aria-labelledby="guide-h-tips-en">
-              <h3 id="guide-h-tips-en">Tips, FAQ &amp; misc</h3>
-              <p><strong>Where language lives:</strong> Open the <strong>App Settings</strong> tab and use the <strong>Language</strong> dropdown (English / Russian).</p>
-              <p><strong>Theme:</strong> <strong>Dark</strong> is the default on first visit. A sun / moon slider beside the donate control switches light and dark.</p>
-              <p><strong>Demo banner:</strong> When sample data is loaded, a full-width bar sits directly under the header (sticky with the header) and reminds you to upload your own SWEX JSON.</p>
-              <p><strong>What persists:</strong> Loaded runes per slot, customized rules, Rune Table view state in the URL hash, and theme/language usually live in <strong>localStorage</strong> for this origin. Clearing site data removes them.</p>
-              <p><strong>No cloud sync:</strong> There is no account system — backups are whatever you export from SWEX or copy yourself.</p>
-              <p><strong>SWEX quirks:</strong> Rare exports expose <code>set_id</code> <strong>99</strong>; that is not a normal playable rune set name in-game, so the UI may label it Set99.</p>
-              <p><strong>Keyboard:</strong> On the Rune Table tab, press <strong>/</strong> to focus search; arrow keys / Page Up / Page Down scroll the grid when focus is inside it.</p>
-              <p><strong>Versions:</strong> Open the <strong>Changelog</strong> tab for bundled release notes (same build string as the footer).</p>
-              <p><strong>Footer:</strong> Trademark disclaimer plus the exact <strong>build</strong> version. The heart <strong>Donate</strong> button opens Lava.top in a new tab.</p>
-              <p><strong>Something looks wrong after an update?</strong> Try a hard refresh. If rules feel out of sync, open Rune Rules and hit <strong>Save &amp; Recalculate</strong> once.</p>
+            <section class="guide-section guide-section--hero" aria-labelledby="guide-h-tips-en">
+              <h3 id="guide-h-tips-en">Shortcuts &amp; hidden tricks</h3>
+              <p class="guide-lead">Quality-of-life features that are easy to miss. Rune logic is in <strong>How scoring works</strong>.</p>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-tips-keys-en">
+              <h3 id="guide-h-tips-keys-en">Keyboard</h3>
+              <ul class="guide-shortcut-list">
+                <li><span class="guide-kbd">/</span><span><strong>Runes → Table</strong> — focus search from any tab (not while typing elsewhere). Open Table to see the field.</span></li>
+                <li><span class="guide-kbd">↑ ↓</span><span><strong>Runes → Table</strong> — scroll the grid when that tab is open and focus is not in a filter box.</span></li>
+                <li><span class="guide-kbd">PgUp PgDn</span><span><strong>Runes → Table</strong> — page through the grid faster (same conditions).</span></li>
+                <li><span class="guide-kbd">Enter Space</span><span><strong>Dashboard charts</strong> — activate a clickable verdict / role / set / slot row (same as click) → opens filtered table.</span></li>
+                <li><span class="guide-kbd">Enter Space</span><span><strong>Monsters roster</strong> — open the focused monster row.</span></li>
+              </ul>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-tips-mouse-en">
+              <h3 id="guide-h-tips-mouse-en">Mouse &amp; links</h3>
+              <ul class="guide-checklist">
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Drag &amp; drop</strong> a SWEX .json onto the page — loads into active Data 1 (same as the upload button).</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Dashboard → Table</strong> — click chart bars, verdict tiles, or role lines to filter the table in one step.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Monster rune slot</strong> — click a slot in unit detail → Rune Table focused on that rune.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>#runetable?…</strong> in the address bar — share your current filters; <strong>Copy summary</strong> on Dashboard for a text dump.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Filter chips</strong> on the table — remove one active filter with × instead of resetting all.</span></li>
+              </ul>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-tips-app-en">
+              <h3 id="guide-h-tips-app-en">App</h3>
+              <ul class="guide-checklist">
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>App Settings</strong> — language, share link modes, four database slots.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Theme toggle</strong> (header) — light / dark.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span>After an update, verdicts look off → hard refresh, then once <strong>Save &amp; Recalculate</strong> in Rune Rules.</span></li>
+              </ul>
             </section>
           </div>
           <div class="guide-lang guide-lang--ru guide-list">
-            <section class="guide-section" aria-labelledby="guide-h-tips-ru">
-              <h3 id="guide-h-tips-ru">Советы, вопросы и прочее</h3>
-              <h4 class="guide-subhead">Быстрый старт (для обычного игрока)</h4>
-              <details>
-                <summary><strong>Как пользоваться анализатором?</strong></summary>
-                <p>1) Выберите <strong>этап игры</strong> (Early / Mid / Late). 2) Нажмите <strong>Analyze</strong>. 3) Смотрите таблицу: <strong>Verdict</strong> — действие, <strong>Target</strong> — понятная причина.</p>
-                <p>Если хочется чуть жёстче/мягче — в Engine → Evaluation Policy оставьте режим <strong>Simple</strong> и подвигайте <strong>Strictness</strong> (1–5).</p>
-              </details>
-              <details>
-                <summary><strong>Что значат Keep / Finish / Gem / Grind / Sell?</strong></summary>
-                <p><strong>Keep</strong> — оставь (есть роль и руна подходит). <strong>Finish</strong> — есть потенциал, стоит докачать до +12/+15 и пересмотреть. <strong>Gem</strong> — есть плоский саб, который лучше заменить. <strong>Grind</strong> — стоит гриндить один из ключевых %/SPD статов. <strong>Sell</strong> — руна не подходит под роли и не даёт хорошей “ценности” через High Value.</p>
-              </details>
-              <details>
-                <summary><strong>Что такое “Universal / High Value”?</strong></summary>
-                <p>Это <strong>универсальная руна</strong>: явная роль не нашлась, но статы слишком хорошие, чтобы сразу продавать. Обычно причина — <strong>God</strong> (очень высокий один стат) или <strong>Duo</strong> (сильная пара статов).</p>
-              </details>
-              <details>
-                <summary><strong>Что такое Fit?</strong></summary>
-                <p><strong>Fit</strong> — “рейтинг подходящести”: насколько статы руны похожи на идеальные для выбранной роли. Это подсказка, а не отдельная “эффективность”.</p>
-              </details>
-              <p><strong>Язык:</strong> Вкладка <strong>Приложение</strong> — список <strong>Язык</strong> (English / Русский).</p>
-              <p><strong>Тема:</strong> По умолчанию при первом заходе — <strong>тёмная</strong>. Переключатель светлой / тёмной темы — рядом с донатом в шапке.</p>
-              <p><strong>Демо-плашка:</strong> При загрузке примера данных — полноширинная полоса сразу под шапкой (липнет вместе с шапкой) с напоминанием загрузить свой SWEX JSON.</p>
-              <p><strong>Что сохраняется:</strong> Руны по слотам, правила, состояние вида вкладки «Таблица» в хэше URL, тема и язык — как правило в <strong>localStorage</strong>. Очистка данных сайта всё сбросит.</p>
-              <p><strong>Без облака:</strong> Аккаунта нет — «бэкап» это ваш SWEX JSON и то, что сами сохраните.</p>
-              <p><strong>Особенности SWEX:</strong> Редкий <code>set_id</code> <strong>99</strong> не соответствует обычному игровому сету — в интерфейсе может отображаться Set99.</p>
-              <p><strong>Клавиатура:</strong> На вкладке таблицы <strong>/</strong> фокусирует поиск; стрелки и Page Up/Down листают сетку, когда фокус внутри неё.</p>
-              <p><strong>Версии:</strong> Вкладка <strong>Лог</strong> (Changelog) — зафиксированные заметки релиза (та же сборка, что в футере).</p>
-              <p><strong>Футер:</strong> Дисклеймер и номер <strong>сборки</strong>. Кнопка <strong>Донат</strong> открывает Lava.top в новой вкладке.</p>
-              <p><strong>После обновления что-то «поехало»?</strong> Попробуйте жёсткое обновление страницы. Если вердикты кажутся не теми — зайдите в Правила рун и один раз нажмите <strong>Сохранить и пересчитать</strong>.</p>
+            <section class="guide-section guide-section--hero" aria-labelledby="guide-h-tips-ru">
+              <h3 id="guide-h-tips-ru">Горячие клавиши и фишки</h3>
+              <p class="guide-lead">Удобства, которые легко не заметить. Логика оценки — в <strong>Оценка рун</strong>.</p>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-tips-keys-ru">
+              <h3 id="guide-h-tips-keys-ru">Клавиатура</h3>
+              <ul class="guide-shortcut-list">
+                <li><span class="guide-kbd">/</span><span><strong>Руны → Таблица</strong> — фокус в поиск с любой вкладки (если не печатаете в другом поле). Откройте Таблицу, чтобы увидеть поле.</span></li>
+                <li><span class="guide-kbd">↑ ↓</span><span><strong>Руны → Таблица</strong> — прокрутка сетки, когда вкладка открыта и фокус не в фильтре.</span></li>
+                <li><span class="guide-kbd">PgUp PgDn</span><span><strong>Руны → Таблица</strong> — листать страницами (те же условия).</span></li>
+                <li><span class="guide-kbd">Enter Пробел</span><span><strong>Графики панели</strong> — активировать кликабельную строку (как клик) → таблица с фильтром.</span></li>
+                <li><span class="guide-kbd">Enter Пробел</span><span><strong>Ростер монстров</strong> — открыть монстра в фокусе.</span></li>
+              </ul>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-tips-mouse-ru">
+              <h3 id="guide-h-tips-mouse-ru">Мышь и ссылки</h3>
+              <ul class="guide-checklist">
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Перетащить</strong> SWEX .json на страницу — загрузка в активный Data 1.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Панель → таблица</strong> — клик по графику, плитке вердикта или строке роли.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Слот руны на монстре</strong> — клик по слоту в карточке → эта руна в таблице.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>#runetable?…</strong> в адресе — поделиться фильтрами; <strong>Копировать сводку</strong> на панели — текст.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Чипы фильтров</strong> — снять один фильтр крестиком, не сбрасывая всё.</span></li>
+              </ul>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-tips-app-ru">
+              <h3 id="guide-h-tips-app-ru">Приложение</h3>
+              <ul class="guide-checklist">
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Настройки приложения</strong> — язык, режимы Share, четыре слота баз.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Тема</strong> в шапке — светлая / тёмная.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span>После обновления «не те» вердикты → жёсткое F5, затем раз <strong>Сохранить и пересчитать</strong> в Правилах рун.</span></li>
+              </ul>
             </section>
           </div>
         </div>
@@ -1334,7 +2423,7 @@
 
     <section id="tab-changelog" class="tab-content hidden">
       <div class="rules-tab-shell">
-        <header class="rules-page-header">
+        <header class="rules-page-header visually-hidden" aria-hidden="true">
           <h2 class="rules-page-title" id="lbl-changelog-page-title">Changelog</h2>
           <p class="rules-page-lead" id="lbl-changelog-page-lead"></p>
         </header>
@@ -1357,54 +2446,67 @@
         </div>
         <div id="changelog-panel-roadmap" role="tabpanel" aria-labelledby="changelog-subtab-roadmap"
           class="rules-subpanel" data-changelog-subtab="roadmap">
-          <p class="settings-desc changelog-lead" id="lbl-changelog-roadmap-lead"></p>
-          <div id="changelog-roadmap-list" class="changelog-releases"></div>
+          <div id="changelog-roadmap-list" class="roadmap-grid" role="document"></div>
         </div>
       </div>
     </section>
 
     <!-- APP SETTINGS TAB -->
     <section id="tab-app-settings" class="tab-content hidden">
-      <div class="settings-layout">
-        <div class="settings-content">
-          <h3>General Settings</h3>
-          
-          <div class="db-settings-header">
-            <label>Language
-              <select id="app-language">
+      <div class="app-settings-shell">
+        <article class="app-settings-card" aria-labelledby="lbl-app-settings-language-title">
+          <header class="app-settings-card__head">
+            <h2 class="app-settings-card__title" id="lbl-app-settings-language-title">Language</h2>
+          </header>
+          <div class="app-settings-card__body">
+            <div class="app-settings-field">
+              <label for="app-language">Interface language</label>
+              <select id="app-language" aria-labelledby="lbl-app-settings-language-title">
                 <option value="en">English</option>
                 <option value="ru">Русский</option>
                 <option value="fr">Français</option>
               </select>
-            </label>
+            </div>
           </div>
-          
-          <h3 id="share-profile-title">Share Profile</h3>
-          <p id="share-profile-desc" class="settings-desc">Create a read-only link to your equipped monsters (or full inventory).</p>
-          <div class="share-profile-actions">
-            <div class="share-split" data-share-split>
-              <button type="button" class="share-split__main" id="share-profile-btn">
-                <span class="share-split__icon" aria-hidden="true">🔗</span>
-                <span class="share-split__label" data-share-split-label>Share</span>
-              </button>
-              <button type="button" class="share-split__caret" aria-expanded="false" aria-haspopup="true" aria-controls="settings-share-menu" title="Share options">▼</button>
-              <div class="share-split__menu" id="settings-share-menu" role="menu" hidden>
-                <p class="share-split__menu-title" id="lbl-share-menu-title-settings">Share roster</p>
-                <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="all">All monsters + all runes</button>
-                <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="equipped-monsters">Equipped monsters only</button>
-                <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="equipped-runes">Equipped runes only</button>
-                <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="equipped-both">Equipped monsters + equipped runes</button>
-                <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="selected">Selected monsters only</button>
-                <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="favorites">Favorites only</button>
-                <button type="button" class="share-split__menu-copy" data-share-copy-link>Copy link</button>
+        </article>
+
+        <article class="app-settings-card" aria-labelledby="share-profile-title">
+          <header class="app-settings-card__head">
+            <h2 class="app-settings-card__title" id="share-profile-title">Share profile</h2>
+            <p id="share-profile-desc" class="app-settings-card__desc">Create a read-only link to your roster, runes, or both.</p>
+          </header>
+          <div class="app-settings-card__body">
+            <div class="share-profile-actions">
+              <div class="share-split" data-share-split>
+                <button type="button" class="share-split__main" id="share-profile-btn">
+                  <span class="share-split__icon" aria-hidden="true">🔗</span>
+                  <span class="share-split__label" data-share-split-label>Share</span>
+                </button>
+                <button type="button" class="share-split__caret" aria-expanded="false" aria-haspopup="true" aria-controls="settings-share-menu" title="Share options">▼</button>
+                <div class="share-split__menu" id="settings-share-menu" role="menu" hidden>
+                  <p class="share-split__menu-title" id="lbl-share-menu-title-settings">Share roster</p>
+                  <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="all">All monsters + all runes</button>
+                  <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="equipped-monsters">Equipped monsters only</button>
+                  <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="equipped-runes">Equipped runes only</button>
+                  <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="equipped-both">Equipped monsters + equipped runes</button>
+                  <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="selected">Selected monsters only</button>
+                  <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="favorites">Favorites only</button>
+                  <button type="button" class="share-split__menu-copy" data-share-copy-link>Copy link</button>
+                </div>
               </div>
             </div>
           </div>
+        </article>
 
-          <h3 id="db-slots-title">Database Slots</h3>
-          <p id="db-slots-desc" class="settings-desc">Store up to 4 different JSON databases and switch between them instantly.</p>
-          <div id="db-slots-wrap"></div>
-        </div>
+        <article class="app-settings-card" aria-labelledby="db-slots-title">
+          <header class="app-settings-card__head">
+            <h2 class="app-settings-card__title" id="db-slots-title">Database slots</h2>
+            <p id="db-slots-desc" class="app-settings-card__desc">Store up to four SWEX exports and switch the active profile instantly.</p>
+          </header>
+          <div class="app-settings-card__body">
+            <div id="db-slots-wrap" class="db-slots-wrap"></div>
+          </div>
+        </article>
       </div>
     </section>
 
@@ -1457,6 +2559,9 @@
   <script src="js/core/defaults.js"></script>
   <script src="js/core/changelog-data.js"></script>
   <script src="js/core/bootstrap.js"></script>
+  <script src="js/data/artifact-effects.js"></script>
+  <script src="js/data/relic-effects.js"></script>
+  <script src="js/data/gear-parse.js"></script>
   <script src="js/data/parser.js"></script>
   <script src="js/data/skill-db.js"></script>
   <script src="js/data/monster-db.js"></script>

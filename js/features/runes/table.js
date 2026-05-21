@@ -215,10 +215,17 @@
     const onTableTab = isRuneTablePaneVisible();
 
     if (e.key === '/' && !e.ctrlKey && !e.metaKey && !e.altKey) {
-      if (inField && e.target.id !== 'search-box') return;
-      if (inField && e.target.id === 'search-box') return;
+      const kind = typeof readTableKind === 'function' ? readTableKind() : 'runes';
+      const searchIds = {
+        runes: 'search-box',
+        artifacts: 'search-box-artifacts',
+        relics: 'search-box-relics',
+      };
+      const activeId = searchIds[kind] || 'search-box';
+      if (inField && e.target.id !== activeId) return;
+      if (inField && e.target.id === activeId) return;
       e.preventDefault();
-      document.getElementById('search-box')?.focus();
+      document.getElementById(activeId)?.focus();
       return;
     }
 

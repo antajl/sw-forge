@@ -195,12 +195,13 @@
       return `<p class="monsters-detail__muted">${escapeHtml(t.monstersNoStats || 'No stat data in SWEX.')}</p>`;
     }
     const base = u.baseStats || null;
-    const computed =
-      base && typeof calculateMonsterStatTotals === 'function'
-        ? calculateMonsterStatTotals(base, u)
+    const breakdown =
+      base && typeof calculateMonsterStatBreakdown === 'function'
+        ? calculateMonsterStatBreakdown(base, u)
         : null;
-    const lblRune = t.monstersStatRunes || '+Runes';
-    const lblTot = t.monstersStatTotal || 'Total';
+    const lblBase = t.monstersStatBase || 'Base';
+    const lblBonus = t.monstersStatGear || t.monstersStatRunes || '+Gear';
+    const lblTotal = t.monstersStatTotal || 'Total';
     const coreKeys = [
       [t.monstersStatHp || 'HP', 'hp'],
       [t.monstersStatAtk || 'ATK', 'atk'],
@@ -213,48 +214,115 @@
       [t.monstersStatRes || 'RES', 'res'],
       [t.monstersStatAcc || 'ACC', 'acc'],
     ];
-    const coreHead = `<div class="monsters-detail__stats-head monsters-detail__stats-head--core">
+    const coreHeadSplit = `<div class="monsters-detail__stats-head monsters-detail__stats-head--core" data-stats-head="split">
       <span class="monsters-detail__stat-k"></span>
-      <span class="monsters-detail__stat-h">${escapeHtml(lblTot)}</span>
-      <span class="monsters-detail__stat-h monsters-detail__stat-h--bonus">${escapeHtml(lblRune)}</span>
+      <span class="monsters-detail__stat-h">${escapeHtml(lblBase)}</span>
+      <span class="monsters-detail__stat-h monsters-detail__stat-h--bonus">${escapeHtml(lblBonus)}</span>
     </div>`;
-    function statRow(label, key, isPct) {
-      const b = base ? Number(base[key]) : NaN;
-      const total =
-        computed && Number.isFinite(computed[key]) ? computed[key] : NaN;
-      const totStr = Number.isFinite(total)
-        ? isPct
-          ? `${Math.round(total)}%`
-          : String(Math.round(total))
-        : '—';
-      let bonusHtml =
-        '<span class="monsters-detail__stat-num monsters-detail__stat-num--empty" aria-hidden="true"></span>';
-      if (Number.isFinite(b) && Number.isFinite(total)) {
-        const { rune: runeStr } = formatStatRuneDelta(total, b, isPct);
-        bonusHtml = `<span class="monsters-detail__stat-num monsters-detail__stat-num--rune">${escapeHtml(runeStr)}</span>`;
-      } else if (computed) {
-        bonusHtml = '<span class="monsters-detail__stat-num monsters-detail__stat-num--rune">—</span>';
+    const coreHeadTotal = `<div class="monsters-detail__stats-head monsters-detail__stats-head--core-total hidden" data-stats-head="total">
+      <span class="monsters-detail__stat-k"></span>
+      <span class="monsters-detail__stat-h">${escapeHtml(lblTotal)}</span>
+    </div>`;
+    function fmtVal(key, field, isPct) {
+      const row = breakdown && breakdown[key];
+      if (row) {
+        const n = row[field];
+        if (!Number.isFinite(n)) return '—';
+        if (typeof displayStatValue === 'function') {
+          return displayStatValue(key, n, isPct);
+        }
+        return isPct ? `${Math.round(n)}%` : String(Math.round(n));
       }
-      return `<div class="monsters-detail__stat-row monsters-detail__stat-row--core">
+      if (field === 'total' && s) {
+        const n = Number(s[key]);
+        if (Number.isFinite(n)) {
+          if (typeof displayStatValue === 'function') return displayStatValue(key, n, isPct);
+          return isPct ? `${Math.round(n)}%` : String(Math.round(n));
+        }
+      }
+      return '—';
+    }
+    function coreRow(label, key) {
+      const row = breakdown && breakdown[key];
+      const bonus = row && Number.isFinite(row.bonus) ? row.bonus : 0;
+      const bonusStr =
+        bonus > 0
+          ? row.isPct
+            ? `+${bonus}%`
+            : `+${bonus}`
+          : row?.isPct
+            ? '0%'
+            : '0';
+      return `<div class="monsters-detail__stat-row monsters-detail__stat-row--core monsters-detail__stat-row--clickable" data-stat-key="${key}" role="button" tabindex="0" aria-label="${escapeHtml(label)}">
           <span class="monsters-detail__stat-k">${escapeHtml(label)}</span>
-          <span class="monsters-detail__stat-num monsters-detail__stat-num--total">${escapeHtml(totStr)}</span>
-          ${bonusHtml}
+          <span class="monsters-detail__stat-num monsters-detail__stat-num--base" data-col="base">${escapeHtml(fmtVal(key, 'base', false))}</span>
+          <span class="monsters-detail__stat-num monsters-detail__stat-num--rune" data-col="bonus">${escapeHtml(bonusStr)}</span>
+          <span class="monsters-detail__stat-num monsters-detail__stat-num--total-green" data-col="total" hidden>${escapeHtml(fmtVal(key, 'total', false))}</span>
         </div>`;
     }
-    const coreBody = coreKeys.map(([label, key]) => statRow(label, key, false)).join('');
-    const pctBody = pctKeys.map(([label, key]) => statRow(label, key, true)).join('');
+    function pctRow(label, key) {
+      return `<div class="monsters-detail__stat-row monsters-detail__stat-row--pct">
+          <span class="monsters-detail__stat-k">${escapeHtml(label)}</span>
+          <span class="monsters-detail__stat-num monsters-detail__stat-num--pct-total">${escapeHtml(fmtVal(key, 'total', true))}</span>
+        </div>`;
+    }
+    const coreBody = coreKeys.map(([label, key]) => coreRow(label, key)).join('');
+    const pctBody = pctKeys.map(([label, key]) => pctRow(label, key)).join('');
     const loading =
       !base && window.SWRM_MONSTER_DB
         ? `<p class="monsters-detail__muted monsters-detail__stats-loading">${escapeHtml(t.monstersStatsLoading || 'Loading base stats…')}</p>`
         : '';
     return (
-      '<div class="monsters-detail__stats-grid monsters-detail__stats-grid--split">' +
-      coreHead +
+      '<div class="monsters-detail__stats-grid monsters-detail__stats-grid--split" data-stats-grid data-stats-view="split">' +
       loading +
+      coreHeadSplit +
+      coreHeadTotal +
       coreBody +
       pctBody +
       '</div>'
     );
+  }
+
+  function bindMonsterDetailStatsToggle(root) {
+    if (!root) return;
+    const grid = root.querySelector('[data-stats-grid]');
+    if (!grid || grid.dataset.statsToggleBound === '1') return;
+    grid.dataset.statsToggleBound = '1';
+    const setView = (mode) => {
+      const split = mode !== 'total';
+      grid.dataset.statsView = split ? 'split' : 'total';
+      grid.classList.toggle('monsters-detail__stats-grid--total-view', !split);
+      grid.querySelectorAll('[data-col="total"]').forEach((el) => {
+        if (split) el.setAttribute('hidden', '');
+        else el.removeAttribute('hidden');
+      });
+      grid.querySelectorAll('[data-col="base"], [data-col="bonus"]').forEach((el) => {
+        if (split) el.removeAttribute('hidden');
+        else el.setAttribute('hidden', '');
+      });
+      grid.querySelectorAll('[data-stats-head="split"]').forEach((el) => {
+        if (split) el.removeAttribute('hidden');
+        else el.setAttribute('hidden', '');
+      });
+      grid.querySelectorAll('[data-stats-head="total"]').forEach((el) => {
+        if (split) el.setAttribute('hidden', '');
+        else el.removeAttribute('hidden');
+      });
+    };
+    const toggle = () => {
+      const next = grid.dataset.statsView === 'total' ? 'split' : 'total';
+      setView(next);
+    };
+    grid.querySelectorAll('.monsters-detail__stat-row--core').forEach((row) => {
+      row.addEventListener('click', toggle);
+      row.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          toggle();
+        }
+      });
+    });
+    setView('split');
   }
 
   function buildMonsterStatsHtml(u, t) {

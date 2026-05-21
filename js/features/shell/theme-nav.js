@@ -167,6 +167,7 @@
       id === 'dashboard' ||
       id === 'progression' ||
       id === 'table' ||
+      id === 'evaluation' ||
       id === 'rules' ||
       id === 'tips'
     ) {
@@ -268,6 +269,7 @@
     if (h === 'roster' || h === 'teams') {
       return { tab: 'monsters', runesSubtab: null, monstersSubtab: h, query };
     }
+    if (h === 'archive') return { tab: 'guide', runesSubtab: null, monstersSubtab: null, query };
     if (MAIN_TAB_IDS.includes(h)) return { tab: h, runesSubtab: null, monstersSubtab: null, query };
     return { tab: null, runesSubtab: null, monstersSubtab: null, query };
   }
@@ -337,11 +339,17 @@
     }
 
     if (id === 'runetable') {
-      const { query } = splitMainHash();
-      if (query) applyRuneTableQueryParams(new URLSearchParams(query));
-      updateSortHeaderClasses();
-      updateRuneTableFilterIndicators();
-      applyFiltersAndSort(getVisibleRunes(), { preserveTableExpansion: true });
+      if (typeof initTableKindTabs === 'function') initTableKindTabs();
+      const kind = typeof readTableKind === 'function' ? readTableKind() : 'runes';
+      if (kind === 'runes') {
+        const { query } = splitMainHash();
+        if (query) applyRuneTableQueryParams(new URLSearchParams(query));
+        updateSortHeaderClasses();
+        updateRuneTableFilterIndicators();
+        applyFiltersAndSort(getVisibleRunes(), { preserveTableExpansion: true });
+      } else if (typeof showTableKind === 'function') {
+        showTableKind(kind);
+      }
     }
   }
 
@@ -443,7 +451,8 @@
             hashParts.monstersSubtab ||
             readStoredMonstersSubtab();
           url = monstersSub === 'roster' ? `${base}#monsters` : `${base}#monsters/${monstersSub}`;
-        } else url = `${base}#${main}`;
+        } else if (main === 'guide') url = `${base}#guide`;
+        else url = `${base}#${main}`;
         if (pushHistory) history.pushState(null, '', url);
         else history.replaceState(null, '', url);
       } catch (e) { /* ignore */ }

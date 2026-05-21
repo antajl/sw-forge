@@ -119,36 +119,369 @@ const STATIC_CHANGELOG = [
   },
 ];
 
-/** Roadmap (Changelog tab → Plans). Full docs: docs/PLANS.md, Monsters: docs/PLANS-MONSTERS.md */
+/**
+ * Roadmap (Changelog → Roadmap). Structured sections; rendered like Guide cards.
+ * Full docs: docs/PLANS.md · Monsters: docs/PLANS-MONSTERS.md
+ * Shipped Monsters MVP (roster, filters, Teams, bulk, Guide tab, Runes dashboard, etc.) is intentionally omitted here.
+ */
 const STATIC_ROADMAP = {
-  en: [
-    '— SWARFARM gap: account-wide devilmon planning (beyond per-monster deficit icons) — later in Monsters.',
-    '— SWARFARM gap: authored teams with real speed tuning; in-game layouts are generic — saved local decks later, no public share.',
-    '[Monsters · later] Monster Builder, saved teams in browser, fusion hex tracker, full account devilmon summary.',
-    '[Runes] Rune Score column (sortable; documented; not duplicate Sell).',
-    '[Runes] Compare two SWEX database slots (verdict & role diff).',
-    '[Runes] Optional God-potential hint; optional stricter Grind rule.',
-    '[Artifacts] Separate tab: SWEX artifacts, filters, rules engine (large scope).',
-    '[Guide] French guide bodies for Monsters (UI strings partly FR already).',
-    '[—] Out of scope: our own backend, community drop logs; full SWARFARM bestiary clone — link out.',
-  ],
-  ru: [
-    '— Пробел SWARFARM: полная сводка девилмонов по аккаунту (chip skill-ups уже есть).',
-    '— Пробел SWARFARM: пачки с точным speed tuning; позже — локальные деки без публичных ссылок.',
-    '[Монстры · позже] Monster Builder, сохранённые команды, трекер fusion, сводка девилмонов по аккаунту.',
-    '[Руны] Колонка Rune Score; сравнение двух слотов SWEX; God potential; жёстче Grind.',
-    '[Артефакты] Отдельная вкладка (крупный объём).',
-    '[Guide] FR-тексты для Monsters.',
-    '[—] Вне scope: публичные профили, sync, логи дропа; полный бестиарий — ссылки на swarfarm.com.',
-  ],
-  fr: [
-    '— Manque SWARFARM : profils publics / account review — toujours impossible en jeu ; ici SWEX local seulement (pas d’URL sans serveur).',
-    '— Manque SWARFARM : synthèse diables compte (chip skill-ups déjà en place).',
-    '— Manque SWARFARM : teams avec speed tuning réel ; decks locaux plus tard, pas de partage public.',
-    '[Monstres · plus tard] Monster Builder, équipes sauvegardées, fusion, synthèse diables compte.',
-    '[Runes] Colonne Rune Score ; comparer 2 slots SWEX ; God potential ; Meule plus stricte.',
-    '[Artéfacts] Onglet dédié (gros chantier).',
-    '[Guide] Corps FR Monstres.',
-    '[—] Hors scope : profils publics, sync, logs drop ; bestiaire complet — liens swarfarm.com.',
-  ],
+  en: {
+    intro:
+      'What we plan next — not a release schedule. Ordered by priority (top = do first). Runes stay the core; Monsters grows into a real box overview. Browser-only unless noted.',
+    sections: [
+      {
+        id: 'monsters-overview',
+        kicker: 'Monsters',
+        title: 'Box overview (phase 1)',
+        phase: 'Near term',
+        lead: 'Expand today’s summary chips into an at-a-glance “what needs attention” strip on Roster.',
+        items: [
+          'Clickable tiles: unruned · partial runes · 6/6 · needs skill-ups · in storage',
+          'One Box readiness score (e.g. % of six-stars with full rune sets)',
+          'Next actions line: “12 unruned · 47 skill-up levels · 8 in storage without runes”',
+          'Each tile opens Roster with the matching filter',
+        ],
+      },
+      {
+        id: 'monsters-account',
+        kicker: 'Monsters',
+        title: 'Account-wide planning',
+        phase: 'High',
+        lead: 'Lessons from SWARFARM: players want a plan for the whole box, not only per-row icons.',
+        items: [
+          'Devilmon & skill-up planner: priority Nat5/Nat4, total levels to max, “stuck at 3/7” list',
+          'Fusion / hexagram tracker: what you can fuse from current box',
+          'Monster Builder (lite): suggest inventory runes for an archetype → open in Rune Table (not a full SWOP optimizer)',
+          'Richer Teams: saved decks + notes in localStorage; squad readiness and speed-gap hints (SWEX stats, labeled as export-based)',
+        ],
+      },
+      {
+        id: 'monsters-dashboard',
+        kicker: 'Monsters',
+        title: 'Dashboard tab (phase 2)',
+        phase: 'Medium term',
+        lead: 'Optional third sub-tab — Dashboard | Roster | Teams — mirroring Runes, but for units not verdicts.',
+        items: [
+          'Top: box score + 2–3 bars (6/6 coverage, skill-up debt, optional avg rune quality on units)',
+          'Clickable breakdown charts: element, role, rune state, skill state → filtered Roster',
+          'Teams strip: how many saved squads have slots without 6/6 → jump to Teams',
+          'Cross-link from Runes depth: “Rune box 68/100 — but 140 six-stars still without 6/6”',
+        ],
+      },
+      {
+        id: 'share',
+        kicker: 'Share',
+        title: 'Profiles & account review',
+        phase: 'Planned',
+        lead: 'Frontend-only on GitHub Pages — no SW Forge backend.',
+        items: [
+          'Read-only share URL: external JSON (?profile=) or compressed payload (?data=)',
+          'Account review view for mentors: roster summary + rune highlights',
+          'Share modes already in App Settings wired to stable public links',
+        ],
+      },
+      {
+        id: 'runes',
+        kicker: 'Runes',
+        title: 'Table & engine',
+        phase: 'Planned',
+        items: [
+          'Rune Score column — sortable strength signal, documented, not a second Sell',
+          'Compare two Database Slots — verdict & role diff between exports',
+          'God-potential hint on the row (informational)',
+          'Optional stricter Grind rule (eff / HR subs)',
+        ],
+      },
+      {
+        id: 'monsters-roster',
+        kicker: 'Monsters',
+        title: 'Roster depth',
+        phase: 'Later',
+        items: [
+          'Compare two units side-by-side (stats, skills, six slots)',
+          'Duplicate Nat5 hint (“two identical — food candidate?”)',
+          'Saved filter presets: skill-up queue, unruned six-stars, RTA-tagged units',
+          'Content tags on units (RTA, Siege, ToA) + filter by tag',
+        ],
+      },
+      {
+        id: 'artifacts',
+        kicker: 'Artifacts',
+        title: 'Dedicated tab',
+        phase: 'Large scope',
+        items: [
+          'Parse artifacts from SWEX',
+          'Filters and table UX parallel to runes',
+          'Separate rules engine (not mixed into rune verdicts)',
+        ],
+      },
+      {
+        id: 'guide-i18n',
+        kicker: 'Guide & i18n',
+        title: 'Documentation',
+        phase: 'Ongoing',
+        items: [
+          'French Guide bodies for Monsters (and Artifacts when that tab exists)',
+          'More FR UI strings on Monsters toolbar and filters',
+        ],
+      },
+      {
+        id: 'builders',
+        kicker: 'Long horizon',
+        title: 'Content builders',
+        phase: 'Exploratory',
+        lead: 'Only if SW Forge becomes a broader hub — competes with SWLens/SWOP territory.',
+        items: [
+          'RTA / Arena / Siege draft helpers from your own box',
+          'Turn-order / speed notes on top of SWEX stats (honest “not in-game exact”)',
+        ],
+      },
+    ],
+    outOfScope: {
+      title: 'Out of scope',
+      items: [
+        'Our own backend, cloud accounts, or hosted profile database',
+        'Community drop logs (Cairos / Rift / SD)',
+        'Full SWARFARM bestiary clone — link to swarfarm.com for multipliers and reference',
+        'Million-permutation rune optimizer (SWOP / SWLens class tools)',
+      ],
+    },
+  },
+  ru: {
+    intro:
+      'Что планируем дальше — не график релизов. Сверху вниз — по приоритету (важнее → раньше). Ядро — руны; Монстры — обзор коробки. Только в браузере, если не указано иное.',
+    sections: [
+      {
+        id: 'monsters-overview',
+        kicker: 'Монстры',
+        title: 'Обзор коробки (фаза 1)',
+        phase: 'Ближайшее',
+        lead: 'Развить текущие чипы сводки в полосу «на что смотреть сегодня» над Roster.',
+        items: [
+          'Кликабельные плитки: без рун · частично · 6/6 · нужны skill-ups · в складе',
+          'Один балл готовности коробки (например % 6★ с полными сетами)',
+          'Строка действий: «12 без рун · 47 уровней skill-up · 8 в storage без рун»',
+          'Клик по плитке → Roster с нужным фильтром',
+        ],
+      },
+      {
+        id: 'monsters-account',
+        kicker: 'Монстры',
+        title: 'Планирование по аккаунту',
+        phase: 'Высокий',
+        lead: 'Урок SWARFARM: нужен план на всю коробку, не только иконки в строке.',
+        items: [
+          'Планировщик девилмонов и skill-ups: приоритет Nat5/Nat4, уровни до max, список «застрял на 3/7»',
+          'Трекер fusion / hexagram — что можно собрать из текущей коробки',
+          'Monster Builder (lite): подбор рун из инвентаря под архетип → Rune Table (не полный SWOP)',
+          'Развитие Teams: сохранённые деки + заметки в localStorage; готовность пачки и разрывы по SPD (статы SWEX, с пометкой «не как в игре»)',
+        ],
+      },
+      {
+        id: 'monsters-dashboard',
+        kicker: 'Монстры',
+        title: 'Вкладка Dashboard (фаза 2)',
+        phase: 'Средний срок',
+        lead: 'Опционально третья подвкладка — Dashboard | Roster | Teams — как у рун, но про юнитов, не вердикты.',
+        items: [
+          'Верх: балл коробки + 2–3 шкалы (6/6, долг skill-ups, опционально качество рун на юнитах)',
+          'Графики с drill-down: стихия, роль, состояние рун, скиллы → фильтрованный Roster',
+          'Полоска Teams: сколько составов без 6/6 на слотах → переход в Teams',
+          'Связка с глубиной рун: «коробка рун 68/100 — но 140 six-stars без 6/6»',
+        ],
+      },
+      {
+        id: 'share',
+        kicker: 'Share',
+        title: 'Профили и account review',
+        phase: 'В планах',
+        lead: 'Только фронт на GitHub Pages — без бэкенда SW Forge.',
+        items: [
+          'Read-only ссылка: внешний JSON (?profile=) или сжатый payload (?data=)',
+          'Режим «разбор аккаунта» для наставника: сводка ростера + акценты по рунам',
+          'Режимы Share из Настроек приложения → стабильные публичные URL',
+        ],
+      },
+      {
+        id: 'runes',
+        kicker: 'Руны',
+        title: 'Таблица и движок',
+        phase: 'В планах',
+        items: [
+          'Колонка Rune Score — сортируемый сигнал силы, не второй Sell',
+          'Сравнение двух слотов Database — diff вердиктов и ролей',
+          'Подсказка God-potential в строке (информационно)',
+          'Опционально жёстче правило Grind (eff / HR subs)',
+        ],
+      },
+      {
+        id: 'monsters-roster',
+        kicker: 'Монстры',
+        title: 'Углубление Roster',
+        phase: 'Позже',
+        items: [
+          'Сравнение двух юнитов рядом (статы, скиллы, 6 слотов)',
+          'Подсказка «дубликат Nat5» (два одинаковых — кандидат в food?)',
+          'Пресеты фильтров: очередь skill-up, голые 6★, юниты с тегом RTA',
+          'Теги контента на юнитах (RTA, Siege, ToA) + фильтр по тегу',
+        ],
+      },
+      {
+        id: 'artifacts',
+        kicker: 'Артефакты',
+        title: 'Отдельная вкладка',
+        phase: 'Крупный объём',
+        items: [
+          'Парсинг артефактов из SWEX',
+          'Фильтры и таблица в духе рун',
+          'Отдельный движок правил (не смешивать с вердиктами рун)',
+        ],
+      },
+      {
+        id: 'guide-i18n',
+        kicker: 'Guide & i18n',
+        title: 'Документация',
+        phase: 'Постоянно',
+        items: [
+          'Французские тексты Guide для Monsters (и Artifacts, когда появится вкладка)',
+          'Больше FR-строк в тулбаре и фильтрах Monsters',
+        ],
+      },
+      {
+        id: 'builders',
+        kicker: 'Долгий горизонт',
+        title: 'Контент-билдеры',
+        phase: 'Исследование',
+        lead: 'Только если SW Forge станет шире — территория SWLens/SWOP.',
+        items: [
+          'Черновики RTA / Arena / Siege из своей коробки',
+          'Заметки по порядку ходов / SPD поверх статов SWEX (честно: «не точь-в-точь как в игре»)',
+        ],
+      },
+    ],
+    outOfScope: {
+      title: 'Вне scope',
+      items: [
+        'Свой бэкенд, облачные аккаунты, база профилей на нашем сервере',
+        'Логи дропа комьюнити (Cairos / Rift / SD)',
+        'Полный клон бестиария SWARFARM — ссылки на swarfarm.com',
+        'Оптимизатор рун на миллионы перестановок (класс SWOP / SWLens)',
+      ],
+    },
+  },
+  fr: {
+    intro:
+      'Pistes à venir — pas un calendrier. Classées par priorité (haut = d’abord). Runes = cœur ; Monstres = aperçu boîte. Local navigateur sauf mention contraire.',
+    sections: [
+      {
+        id: 'monsters-overview',
+        kicker: 'Monstres',
+        title: 'Aperçu boîte (phase 1)',
+        phase: 'Proche',
+        lead: 'Étendre les chips actuelles en bandeau « quoi traiter aujourd’hui » sur le Roster.',
+        items: [
+          'Tuiles cliquables : sans runes · partiel · 6/6 · skill-ups manquants · stockage',
+          'Score de préparation boîte (% de 6★ avec sets complets)',
+          'Ligne d’actions : « 12 sans runes · 47 niveaux skill-up · 8 en stockage sans runes »',
+          'Clic → Roster filtré',
+        ],
+      },
+      {
+        id: 'monsters-account',
+        kicker: 'Monstres',
+        title: 'Planification compte',
+        phase: 'Priorité haute',
+        items: [
+          'Plan diables & skill-ups : priorités Nat5/Nat4, niveaux jusqu’au max',
+          'Suivi fusion / hexagram',
+          'Monster Builder (lite) → table runes (pas un SWOP complet)',
+          'Teams enrichies : decks sauvegardés, notes locales, préparation escouade',
+        ],
+      },
+      {
+        id: 'monsters-dashboard',
+        kicker: 'Monstres',
+        title: 'Onglet Dashboard (phase 2)',
+        phase: 'Moyen terme',
+        lead: 'Sous-onglet optionnel — Dashboard | Roster | Teams — comme Runes, mais pour les unités.',
+        items: [
+          'Haut : score boîte + barres (6/6, dette skill-ups, qualité runes optionnelle)',
+          'Graphiques cliquables : élément, rôle, état runes, skills → Roster filtré',
+          'Bandeau Teams : escouades avec slots sans 6/6',
+          'Lien profondeur runes : « boîte runes 68/100 — mais 140 6★ sans 6/6 »',
+        ],
+      },
+      {
+        id: 'share',
+        kicker: 'Partage',
+        title: 'Profils & review',
+        phase: 'Prévu',
+        items: [
+          'URL lecture seule (?profile= ou ?data= compressé)',
+          'Vue account review pour mentors',
+          'Modes Share → liens publics stables',
+        ],
+      },
+      {
+        id: 'runes',
+        kicker: 'Runes',
+        title: 'Table & moteur',
+        phase: 'Prévu',
+        items: [
+          'Colonne Rune Score',
+          'Comparer 2 slots SWEX (diff verdicts & rôles)',
+          'Indice God-potential ; règle Meule plus stricte (option)',
+        ],
+      },
+      {
+        id: 'monsters-roster',
+        kicker: 'Monstres',
+        title: 'Roster avancé',
+        phase: 'Plus tard',
+        items: [
+          'Comparer deux unités côte à côte',
+          'Alerte doublon Nat5',
+          'Filtres prédéfinis ; tags contenu (RTA, Siege, ToA)',
+        ],
+      },
+      {
+        id: 'artifacts',
+        kicker: 'Artéfacts',
+        title: 'Onglet dédié',
+        phase: 'Gros chantier',
+        items: [
+          'Parse SWEX, filtres, table, moteur de règles séparé',
+        ],
+      },
+      {
+        id: 'guide-i18n',
+        kicker: 'Guide',
+        title: 'Documentation',
+        phase: 'Continu',
+        items: [
+          'Corps FR du Guide Monstres (et Artéfacts plus tard)',
+          'Plus de chaînes FR dans l’UI Monstres',
+        ],
+      },
+      {
+        id: 'builders',
+        kicker: 'Horizon',
+        title: 'Builders contenu',
+        phase: 'Exploratoire',
+        items: [
+          'Aides draft RTA / Arène / Siege depuis votre boîte',
+          'Notes ordre de tour / VIT sur stats SWEX',
+        ],
+      },
+    ],
+    outOfScope: {
+      title: 'Hors scope',
+      items: [
+        'Backend propre, comptes cloud, base de profils hébergée',
+        'Logs de drop communautaires',
+        'Clone complet du bestiaire SWARFARM',
+        'Optimiseur runes type SWOP / SWLens',
+      ],
+    },
+  },
 };

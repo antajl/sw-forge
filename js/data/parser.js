@@ -424,6 +424,10 @@
       const stars = unitRank;
       if (o.sixStarOnly && unitRank !== 6) continue;
       const runeSlots = unitRuneSlots(u, runeById);
+      const gear =
+        typeof window.SWRM.parseUnitGear === 'function'
+          ? window.SWRM.parseUnitGear(u)
+          : { artifacts: [], relics: [] };
       const equippedCount = countEquippedRuneSlots(runeSlots);
       const skills = [];
       if (Array.isArray(u.skills)) {
@@ -456,6 +460,8 @@
           acc: Number(u.accuracy) || 0,
         },
         runeSlots,
+        artifacts: gear.artifacts,
+        relics: gear.relics,
         equippedCount,
         hasFullRunes: equippedCount >= 6,
         skills,

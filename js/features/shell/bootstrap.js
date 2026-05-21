@@ -8,6 +8,8 @@
           DEFAULT_ROLES, DEFAULT_REAPP, DEFAULT_GRIND, DEFAULT_GEM_META, TRANSLATIONS } = window.SWRM;
 
   let allRunes = [];
+  let allArtifacts = [];
+  let allRelics = [];
   /** 6★ units from last SWEX `unit_list` (see rebuildUnitsFromSwex). */
   let allUnits = [];
   let activeSwexJson = null;

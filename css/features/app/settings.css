@@ -1,0 +1,85 @@
+/* App Settings — card layout aligned with Guide / Rules tabs */
+#tab-app-settings.tab-content {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+#tab-app-settings .app-settings-shell {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+#tab-app-settings .app-settings-card {
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-lg);
+  background: var(--bg2);
+  overflow: hidden;
+}
+
+#tab-app-settings .app-settings-card__head {
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid color-mix(in srgb, var(--border2) 85%, transparent);
+  background: color-mix(in srgb, var(--bg3) 88%, var(--surface));
+}
+
+#tab-app-settings .app-settings-card__title {
+  margin: 0;
+  font-family: var(--font-head);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-hi);
+  letter-spacing: 0.02em;
+}
+
+#tab-app-settings .app-settings-card__desc {
+  margin: 6px 0 0;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+
+#tab-app-settings .app-settings-card__body {
+  padding: 14px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+#tab-app-settings .app-settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 20rem;
+}
+
+#tab-app-settings .app-settings-field label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+#tab-app-settings .app-settings-field select {
+  width: 100%;
+}
+
+#tab-app-settings .share-profile-actions {
+  margin: 0;
+}
+
+#tab-app-settings .db-slots-wrap {
+  margin-top: 0;
+}
+
+@media (max-width: 640px) {
+  #tab-app-settings .db-slots-wrap {
+    grid-template-columns: 1fr;
+  }
+}

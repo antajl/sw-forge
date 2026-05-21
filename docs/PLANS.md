@@ -45,14 +45,19 @@
 
 ## Категория: Monsters
 
-См. **`docs/PLANS-MONSTERS.md`** — полный список и **приоритет только для Monsters**.
+См. **`docs/PLANS-MONSTERS.md`** — что уже в сборке (MVP закрыт).
 
-Кратко в roadmap:
+**Активный roadmap в UI:** Changelog → Roadmap (`js/core/changelog-data.js` → `STATIC_ROADMAP`).
 
-- List: девилмон-дефицит, мини-сеты, иконка локации, кастомные теги.
-- Cards: сетка рун 6-1-2 / 5-4-3, скиллы N/max, статы как в игре, hover по руне (+15, sub, rolls).
-- Фильтры: max / needs skill-up, unruned, по сету, Role.
-- Bulk: мультивыбор → food, теги.
+Кратко по приоритету (сверху вниз в Changelog → Roadmap):
+
+1. **Box overview** на Roster (плитки, readiness, next actions).
+2. **Account-wide:** devilmon/skill planner, fusion tracker, Monster Builder lite, richer Teams.
+3. **Monsters → Dashboard** (опционально): score, графики, drill-down, связка с Rune depth.
+4. **Share** — account review по ссылке.
+5. **Runes** — Rune Score, diff слотов, God hint, Grind.
+6. **Roster depth** — compare, duplicates, presets, tags.
+7. **Artifacts** · **Guide FR** · **Builders** (горизонт).
 
 ---
 

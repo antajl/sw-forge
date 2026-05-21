@@ -59,6 +59,10 @@
     if (subGuideTable) subGuideTable.textContent = t.guideSubtabTable || '';
     const subGuideTableHint = document.getElementById('lbl-guide-subtab-table-hint');
     if (subGuideTableHint) subGuideTableHint.textContent = t.guideSubtabTableHint || '';
+    const subGuideEval = document.getElementById('lbl-guide-subtab-evaluation');
+    if (subGuideEval) subGuideEval.textContent = t.guideSubtabEvaluation || '';
+    const subGuideEvalHint = document.getElementById('lbl-guide-subtab-evaluation-hint');
+    if (subGuideEvalHint) subGuideEvalHint.textContent = t.guideSubtabEvaluationHint || '';
     const subGuideRules = document.getElementById('lbl-guide-subtab-rules');
     if (subGuideRules) subGuideRules.textContent = t.guideSubtabRules || '';
     const subGuideRulesHint = document.getElementById('lbl-guide-subtab-rules-hint');
@@ -75,8 +79,6 @@
     if (changelogPageLead) changelogPageLead.textContent = t.changelogPageLead || '';
     const shippedLead = document.getElementById('lbl-changelog-shipped-lead');
     if (shippedLead) shippedLead.textContent = t.changelogShippedLead || '';
-    const roadmapLead = document.getElementById('lbl-changelog-roadmap-lead');
-    if (roadmapLead) roadmapLead.textContent = t.changelogRoadmapLead || '';
     const subShipped = document.getElementById('lbl-changelog-subtab-shipped');
     if (subShipped) subShipped.textContent = t.changelogSubtabShipped || 'Releases';
     const subRoadmap = document.getElementById('lbl-changelog-subtab-roadmap');
@@ -263,6 +265,62 @@
     if (lblRuneFsl) lblRuneFsl.textContent = t.runeFilterSlot || 'Slot';
     const lblRuneFm = document.getElementById('lbl-rune-filter-main');
     if (lblRuneFm) lblRuneFm.textContent = t.runeFilterMain || 'Main stat';
+    const lblTableKindRunes = document.getElementById('lbl-table-kind-runes');
+    if (lblTableKindRunes) lblTableKindRunes.textContent = t.tableKindRunes || 'Runes';
+    const lblTableKindArt = document.getElementById('lbl-table-kind-artifacts');
+    if (lblTableKindArt) lblTableKindArt.textContent = t.tableKindArtifacts || 'Artifacts';
+    const lblTableKindRel = document.getElementById('lbl-table-kind-relics');
+    if (lblTableKindRel) lblTableKindRel.textContent = t.tableKindRelics || 'Relics';
+    const bindTh = (id, key, fallback) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = t[key] || fallback;
+    };
+    bindTh('lbl-th-art-grade', 'thArtGrade', 'Grade');
+    bindTh('lbl-th-art-category', 'thArtCategory', 'Category');
+    bindTh('lbl-th-art-main', 'monstersGearMain', 'Main');
+    bindTh('lbl-th-art-subs', 'thArtSubs', 'Subs');
+    bindTh('lbl-th-art-location', 'thArtLocation', 'Location');
+    bindTh('lbl-th-rel-grade', 'thRelGrade', 'Grade');
+    bindTh('lbl-th-rel-category', 'thRelCategory', 'Category');
+    bindTh('lbl-th-rel-level', 'monstersGearLevel', 'Lvl');
+    bindTh('lbl-th-rel-durability', 'thRelDurability', 'Durability');
+    bindTh('lbl-th-rel-main', 'monstersGearMain', 'Main');
+    bindTh('lbl-th-rel-sec', 'monstersGearSecondary', 'Secondary');
+    bindTh('lbl-th-rel-wearers', 'thRelWearers', 'Equipped');
+    const artSearch = document.getElementById('search-box-artifacts');
+    if (artSearch) artSearch.placeholder = t.tableSearchArtifacts || 'Search artifacts…';
+    const relSearch = document.getElementById('search-box-relics');
+    if (relSearch) relSearch.placeholder = t.tableSearchRelics || 'Search relics…';
+    const lblArtSearch = document.getElementById('lbl-search-box-artifacts');
+    if (lblArtSearch) lblArtSearch.textContent = t.tableSearchArtifacts || 'Search artifacts';
+    const lblRelSearch = document.getElementById('lbl-search-box-relics');
+    if (lblRelSearch) lblRelSearch.textContent = t.tableSearchRelics || 'Search relics';
+    const btnArtReset = document.getElementById('btn-artifact-reset-filters');
+    if (btnArtReset) btnArtReset.textContent = t.tableResetFilters || 'Reset filters';
+    const btnRelReset = document.getElementById('btn-relic-reset-filters');
+    if (btnRelReset) btnRelReset.textContent = t.tableResetFilters || 'Reset filters';
+    const lblArtMore = document.getElementById('lbl-artifact-more-filters');
+    if (lblArtMore) lblArtMore.textContent = t.runeTableMoreFilters || 'More Filters';
+    const lblRelMore = document.getElementById('lbl-relic-more-filters');
+    if (lblRelMore) lblRelMore.textContent = t.runeTableMoreFilters || 'More Filters';
+    const lblArtDrawer = document.getElementById('lbl-artifact-filters-drawer-title');
+    if (lblArtDrawer) lblArtDrawer.textContent = t.artifactFiltersDrawerTitle || 'Artifact filters';
+    const lblRelDrawer = document.getElementById('lbl-relic-filters-drawer-title');
+    if (lblRelDrawer) lblRelDrawer.textContent = t.relicFiltersDrawerTitle || 'Relic filters';
+    const lblArtFg = document.getElementById('lbl-artifact-filter-grade');
+    if (lblArtFg) lblArtFg.textContent = t.artifactFilterGrade || 'Grade';
+    const lblArtFc = document.getElementById('lbl-artifact-filter-category');
+    if (lblArtFc) lblArtFc.textContent = t.artifactFilterCategory || 'Category';
+    const lblArtFl = document.getElementById('lbl-artifact-filter-location');
+    if (lblArtFl) lblArtFl.textContent = t.artifactFilterLocation || 'Location';
+    const lblArtInv = document.getElementById('lbl-artifact-filter-inventory-opt');
+    if (lblArtInv) lblArtInv.textContent = t.artifactFilterInventory || t.tableGearInventory || 'Inventory';
+    const lblArtEq = document.getElementById('lbl-artifact-filter-equipped-opt');
+    if (lblArtEq) lblArtEq.textContent = t.artifactFilterEquipped || 'Equipped';
+    const lblRelFg = document.getElementById('lbl-relic-filter-grade');
+    if (lblRelFg) lblRelFg.textContent = t.relicFilterGrade || 'Grade';
+    const lblRelFc = document.getElementById('lbl-relic-filter-category');
+    if (lblRelFc) lblRelFc.textContent = t.relicFilterCategory || 'Category';
     const lblThGrade = document.getElementById('lbl-th-grade');
     if (lblThGrade) lblThGrade.textContent = t.runeFilterGrade || 'Grade';
     const lblThSet = document.getElementById('lbl-th-set');
@@ -447,7 +505,7 @@
     // Update dashboard cards
     updateDashboardLabels();
     // Update language label in app settings tab
-    const langLabel = document.querySelector('#tab-app-settings .db-settings-header label:first-child');
+    const langLabel = document.querySelector('#tab-app-settings .app-settings-field label');
     if (langLabel) {
       const select = document.getElementById('app-language');
       if (select) {

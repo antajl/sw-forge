@@ -12,6 +12,8 @@
           DEFAULT_ROLES, DEFAULT_REAPP, DEFAULT_GRIND, DEFAULT_GEM_META, TRANSLATIONS } = window.SWRM;
 
   let allRunes = [];
+  let allArtifacts = [];
+  let allRelics = [];
   /** 6★ units from last SWEX `unit_list` (see rebuildUnitsFromSwex). */
   let allUnits = [];
   let activeSwexJson = null;
@@ -242,6 +244,7 @@
       id === 'dashboard' ||
       id === 'progression' ||
       id === 'table' ||
+      id === 'evaluation' ||
       id === 'rules' ||
       id === 'tips'
     ) {
@@ -343,6 +346,7 @@
     if (h === 'roster' || h === 'teams') {
       return { tab: 'monsters', runesSubtab: null, monstersSubtab: h, query };
     }
+    if (h === 'archive') return { tab: 'guide', runesSubtab: null, monstersSubtab: null, query };
     if (MAIN_TAB_IDS.includes(h)) return { tab: h, runesSubtab: null, monstersSubtab: null, query };
     return { tab: null, runesSubtab: null, monstersSubtab: null, query };
   }
@@ -412,11 +416,17 @@
     }
 
     if (id === 'runetable') {
-      const { query } = splitMainHash();
-      if (query) applyRuneTableQueryParams(new URLSearchParams(query));
-      updateSortHeaderClasses();
-      updateRuneTableFilterIndicators();
-      applyFiltersAndSort(getVisibleRunes(), { preserveTableExpansion: true });
+      if (typeof initTableKindTabs === 'function') initTableKindTabs();
+      const kind = typeof readTableKind === 'function' ? readTableKind() : 'runes';
+      if (kind === 'runes') {
+        const { query } = splitMainHash();
+        if (query) applyRuneTableQueryParams(new URLSearchParams(query));
+        updateSortHeaderClasses();
+        updateRuneTableFilterIndicators();
+        applyFiltersAndSort(getVisibleRunes(), { preserveTableExpansion: true });
+      } else if (typeof showTableKind === 'function') {
+        showTableKind(kind);
+      }
     }
   }
 
@@ -518,7 +528,8 @@
             hashParts.monstersSubtab ||
             readStoredMonstersSubtab();
           url = monstersSub === 'roster' ? `${base}#monsters` : `${base}#monsters/${monstersSub}`;
-        } else url = `${base}#${main}`;
+        } else if (main === 'guide') url = `${base}#guide`;
+        else url = `${base}#${main}`;
         if (pushHistory) history.pushState(null, '', url);
         else history.replaceState(null, '', url);
       } catch (e) { /* ignore */ }
@@ -585,6 +596,10 @@
     if (subGuideTable) subGuideTable.textContent = t.guideSubtabTable || '';
     const subGuideTableHint = document.getElementById('lbl-guide-subtab-table-hint');
     if (subGuideTableHint) subGuideTableHint.textContent = t.guideSubtabTableHint || '';
+    const subGuideEval = document.getElementById('lbl-guide-subtab-evaluation');
+    if (subGuideEval) subGuideEval.textContent = t.guideSubtabEvaluation || '';
+    const subGuideEvalHint = document.getElementById('lbl-guide-subtab-evaluation-hint');
+    if (subGuideEvalHint) subGuideEvalHint.textContent = t.guideSubtabEvaluationHint || '';
     const subGuideRules = document.getElementById('lbl-guide-subtab-rules');
     if (subGuideRules) subGuideRules.textContent = t.guideSubtabRules || '';
     const subGuideRulesHint = document.getElementById('lbl-guide-subtab-rules-hint');
@@ -601,8 +616,6 @@
     if (changelogPageLead) changelogPageLead.textContent = t.changelogPageLead || '';
     const shippedLead = document.getElementById('lbl-changelog-shipped-lead');
     if (shippedLead) shippedLead.textContent = t.changelogShippedLead || '';
-    const roadmapLead = document.getElementById('lbl-changelog-roadmap-lead');
-    if (roadmapLead) roadmapLead.textContent = t.changelogRoadmapLead || '';
     const subShipped = document.getElementById('lbl-changelog-subtab-shipped');
     if (subShipped) subShipped.textContent = t.changelogSubtabShipped || 'Releases';
     const subRoadmap = document.getElementById('lbl-changelog-subtab-roadmap');
@@ -789,6 +802,62 @@
     if (lblRuneFsl) lblRuneFsl.textContent = t.runeFilterSlot || 'Slot';
     const lblRuneFm = document.getElementById('lbl-rune-filter-main');
     if (lblRuneFm) lblRuneFm.textContent = t.runeFilterMain || 'Main stat';
+    const lblTableKindRunes = document.getElementById('lbl-table-kind-runes');
+    if (lblTableKindRunes) lblTableKindRunes.textContent = t.tableKindRunes || 'Runes';
+    const lblTableKindArt = document.getElementById('lbl-table-kind-artifacts');
+    if (lblTableKindArt) lblTableKindArt.textContent = t.tableKindArtifacts || 'Artifacts';
+    const lblTableKindRel = document.getElementById('lbl-table-kind-relics');
+    if (lblTableKindRel) lblTableKindRel.textContent = t.tableKindRelics || 'Relics';
+    const bindTh = (id, key, fallback) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = t[key] || fallback;
+    };
+    bindTh('lbl-th-art-grade', 'thArtGrade', 'Grade');
+    bindTh('lbl-th-art-category', 'thArtCategory', 'Category');
+    bindTh('lbl-th-art-main', 'monstersGearMain', 'Main');
+    bindTh('lbl-th-art-subs', 'thArtSubs', 'Subs');
+    bindTh('lbl-th-art-location', 'thArtLocation', 'Location');
+    bindTh('lbl-th-rel-grade', 'thRelGrade', 'Grade');
+    bindTh('lbl-th-rel-category', 'thRelCategory', 'Category');
+    bindTh('lbl-th-rel-level', 'monstersGearLevel', 'Lvl');
+    bindTh('lbl-th-rel-durability', 'thRelDurability', 'Durability');
+    bindTh('lbl-th-rel-main', 'monstersGearMain', 'Main');
+    bindTh('lbl-th-rel-sec', 'monstersGearSecondary', 'Secondary');
+    bindTh('lbl-th-rel-wearers', 'thRelWearers', 'Equipped');
+    const artSearch = document.getElementById('search-box-artifacts');
+    if (artSearch) artSearch.placeholder = t.tableSearchArtifacts || 'Search artifacts…';
+    const relSearch = document.getElementById('search-box-relics');
+    if (relSearch) relSearch.placeholder = t.tableSearchRelics || 'Search relics…';
+    const lblArtSearch = document.getElementById('lbl-search-box-artifacts');
+    if (lblArtSearch) lblArtSearch.textContent = t.tableSearchArtifacts || 'Search artifacts';
+    const lblRelSearch = document.getElementById('lbl-search-box-relics');
+    if (lblRelSearch) lblRelSearch.textContent = t.tableSearchRelics || 'Search relics';
+    const btnArtReset = document.getElementById('btn-artifact-reset-filters');
+    if (btnArtReset) btnArtReset.textContent = t.tableResetFilters || 'Reset filters';
+    const btnRelReset = document.getElementById('btn-relic-reset-filters');
+    if (btnRelReset) btnRelReset.textContent = t.tableResetFilters || 'Reset filters';
+    const lblArtMore = document.getElementById('lbl-artifact-more-filters');
+    if (lblArtMore) lblArtMore.textContent = t.runeTableMoreFilters || 'More Filters';
+    const lblRelMore = document.getElementById('lbl-relic-more-filters');
+    if (lblRelMore) lblRelMore.textContent = t.runeTableMoreFilters || 'More Filters';
+    const lblArtDrawer = document.getElementById('lbl-artifact-filters-drawer-title');
+    if (lblArtDrawer) lblArtDrawer.textContent = t.artifactFiltersDrawerTitle || 'Artifact filters';
+    const lblRelDrawer = document.getElementById('lbl-relic-filters-drawer-title');
+    if (lblRelDrawer) lblRelDrawer.textContent = t.relicFiltersDrawerTitle || 'Relic filters';
+    const lblArtFg = document.getElementById('lbl-artifact-filter-grade');
+    if (lblArtFg) lblArtFg.textContent = t.artifactFilterGrade || 'Grade';
+    const lblArtFc = document.getElementById('lbl-artifact-filter-category');
+    if (lblArtFc) lblArtFc.textContent = t.artifactFilterCategory || 'Category';
+    const lblArtFl = document.getElementById('lbl-artifact-filter-location');
+    if (lblArtFl) lblArtFl.textContent = t.artifactFilterLocation || 'Location';
+    const lblArtInv = document.getElementById('lbl-artifact-filter-inventory-opt');
+    if (lblArtInv) lblArtInv.textContent = t.artifactFilterInventory || t.tableGearInventory || 'Inventory';
+    const lblArtEq = document.getElementById('lbl-artifact-filter-equipped-opt');
+    if (lblArtEq) lblArtEq.textContent = t.artifactFilterEquipped || 'Equipped';
+    const lblRelFg = document.getElementById('lbl-relic-filter-grade');
+    if (lblRelFg) lblRelFg.textContent = t.relicFilterGrade || 'Grade';
+    const lblRelFc = document.getElementById('lbl-relic-filter-category');
+    if (lblRelFc) lblRelFc.textContent = t.relicFilterCategory || 'Category';
     const lblThGrade = document.getElementById('lbl-th-grade');
     if (lblThGrade) lblThGrade.textContent = t.runeFilterGrade || 'Grade';
     const lblThSet = document.getElementById('lbl-th-set');
@@ -973,7 +1042,7 @@
     // Update dashboard cards
     updateDashboardLabels();
     // Update language label in app settings tab
-    const langLabel = document.querySelector('#tab-app-settings .db-settings-header label:first-child');
+    const langLabel = document.querySelector('#tab-app-settings .app-settings-field label');
     if (langLabel) {
       const select = document.getElementById('app-language');
       if (select) {
@@ -2070,6 +2139,17 @@
       if (r && r.id != null) runeById.set(Number(r.id), r);
     }
     allUnits = parseUnits(activeSwexJson, { sixStarOnly: false, runeById });
+    if (window.SWRM && typeof window.SWRM.parseAccountGear === 'function') {
+      const bag = window.SWRM.parseAccountGear(activeSwexJson);
+      window.SWRM_ACCOUNT_GEAR = bag;
+      allArtifacts = bag.artifacts || [];
+      allRelics = bag.relics || [];
+    } else {
+      window.SWRM_ACCOUNT_GEAR = null;
+      allArtifacts = [];
+      allRelics = [];
+    }
+    if (typeof onGearDataHydrated === 'function') onGearDataHydrated();
   }
 
   /**
@@ -3479,10 +3559,8 @@
       eliteAvgUncapped = sumE / eliteK;
     }
 
-    const spdCap = Math.max(spdDepthCount, 1);
-    const plus15Cap = Math.max(plus15DepthCount, 1);
-    const spdNorm = Math.min(spdDepthCount / spdCap, 1);
-    const plus15Norm = Math.min(plus15DepthCount / plus15Cap, 1);
+    const spdNorm = Math.min(spdDepthCount / CFG.spdDepthCap, 1);
+    const plus15Norm = Math.min(plus15DepthCount / CFG.plus15DepthCap, 1);
     const eliteEffExcess = Math.max(0, eliteAvgUncapped - CFG.eliteEffBaseline);
     const eliteNorm = Math.min(eliteEffExcess / CFG.eliteEffSpan, 1);
 
@@ -4985,6 +5063,426 @@
 
   bindRuneTableFiltersDrawer();
 
+  const TABLE_KIND_IDS = ['runes', 'artifacts', 'relics'];
+  const TABLE_KIND_STORAGE_KEY = 'swrm_table_kind_v1';
+  let tableKindTabsBound = false;
+  let filteredArtifacts = [];
+  let filteredRelics = [];
+  let artifactFilterGrade = '';
+  let artifactFilterCategory = '';
+  let artifactFilterLocation = '';
+  let relicFilterGrade = '';
+  let relicFilterCategory = '';
+
+  function normalizeTableKind(id) {
+    return TABLE_KIND_IDS.includes(id) ? id : 'runes';
+  }
+
+  function readTableKind() {
+    try {
+      const v = sessionStorage.getItem(TABLE_KIND_STORAGE_KEY);
+      return normalizeTableKind(v || 'runes');
+    } catch (e) {
+      return 'runes';
+    }
+  }
+
+  function writeTableKind(id) {
+    try {
+      sessionStorage.setItem(TABLE_KIND_STORAGE_KEY, normalizeTableKind(id));
+    } catch (e) { /* ignore */ }
+  }
+
+  function gearLocationLabel(occupiedId, t) {
+    const inv = t.tableGearInventory || 'Inventory';
+    if (occupiedId == null || !Number.isFinite(Number(occupiedId)) || Number(occupiedId) === 0) {
+      return inv;
+    }
+    const uid = Number(occupiedId);
+    const u = (allUnits || []).find((x) => Number(x.unitId) === uid);
+    if (!u) return inv;
+    const db = window.SWRM_MONSTER_DB;
+    const name = db ? db.monsterDisplayName(u.masterId) : '';
+    return name || `#${u.masterId}`;
+  }
+
+  function gearSearchHay(gear) {
+    const parts = [
+      gear.kind,
+      gear.category,
+      gear.gradeStr,
+      gearLocationLabel(gear.occupiedId, { tableGearInventory: 'Inventory' }),
+    ];
+    const fmt = window.SWRM && window.SWRM.formatGearEffectLine;
+    const fmtSub = window.SWRM && window.SWRM.formatArtifactSubLine;
+    const fmtSec = window.SWRM && window.SWRM.formatRelicSecLine;
+    if (gear.pri && fmt) parts.push(fmt(gear.pri, { kind: gear.kind }));
+    if (gear.kind === 'relic' && fmtSec) parts.push(fmtSec(gear));
+    if (gear.kind === 'artifact' && fmtSub) {
+      for (const s of gear.secs || []) parts.push(fmtSub(s));
+    }
+    return parts.join(' ').toLowerCase();
+  }
+
+  function artifactPassesFilters(a) {
+    if (artifactFilterGrade && String(a.gradeStr || '') !== artifactFilterGrade) return false;
+    if (artifactFilterCategory && String(a.category || '') !== artifactFilterCategory) return false;
+    if (artifactFilterLocation === 'inventory') {
+      if (a.occupiedId != null && Number(a.occupiedId) !== 0) return false;
+    } else if (artifactFilterLocation === 'equipped') {
+      if (a.occupiedId == null || Number(a.occupiedId) === 0) return false;
+    }
+    return true;
+  }
+
+  function relicPassesFilters(r) {
+    if (relicFilterGrade && String(r.gradeStr || '') !== relicFilterGrade) return false;
+    if (relicFilterCategory && String(r.category || '') !== relicFilterCategory) return false;
+    return true;
+  }
+
+  function applyGearTableSearch() {
+    const artQ = (document.getElementById('search-box-artifacts')?.value || '')
+      .trim()
+      .toLowerCase();
+    const relQ = (document.getElementById('search-box-relics')?.value || '').trim().toLowerCase();
+    const artSrc = (allArtifacts || []).filter(artifactPassesFilters);
+    const relSrc = (allRelics || []).filter(relicPassesFilters);
+    filteredArtifacts = !artQ
+      ? artSrc.slice()
+      : artSrc.filter((a) => gearSearchHay(a).includes(artQ));
+    filteredRelics = !relQ ? relSrc.slice() : relSrc.filter((r) => gearSearchHay(r).includes(relQ));
+  }
+
+  function countActiveArtifactFilters() {
+    let n = 0;
+    if (artifactFilterGrade) n++;
+    if (artifactFilterCategory) n++;
+    if (artifactFilterLocation) n++;
+    return n;
+  }
+
+  function countActiveRelicFilters() {
+    let n = 0;
+    if (relicFilterGrade) n++;
+    if (relicFilterCategory) n++;
+    return n;
+  }
+
+  function updateArtifactFilterBadge() {
+    const badge = document.getElementById('artifact-filters-active-count');
+    if (!badge) return;
+    const n = countActiveArtifactFilters();
+    if (n > 0) {
+      badge.textContent = String(n);
+      badge.hidden = false;
+    } else {
+      badge.hidden = true;
+    }
+  }
+
+  function updateRelicFilterBadge() {
+    const badge = document.getElementById('relic-filters-active-count');
+    if (!badge) return;
+    const n = countActiveRelicFilters();
+    if (n > 0) {
+      badge.textContent = String(n);
+      badge.hidden = false;
+    } else {
+      badge.hidden = true;
+    }
+  }
+
+  function populateGearFilterSelects() {
+    const arts = allArtifacts || [];
+    const rels = allRelics || [];
+    const artGrades = [...new Set(arts.map((a) => a.gradeStr).filter(Boolean))].sort();
+    const artCats = [...new Set(arts.map((a) => a.category).filter(Boolean))].sort();
+    const relGrades = [...new Set(rels.map((r) => r.gradeStr).filter(Boolean))].sort();
+    const relCats = [...new Set(rels.map((r) => r.category).filter(Boolean))].sort();
+    const fill = (sel, values, current) => {
+      if (!sel) return;
+      const keep = current || sel.value || '';
+      sel.innerHTML = '<option value="">All</option>';
+      for (const v of values) {
+        const opt = document.createElement('option');
+        opt.value = v;
+        opt.textContent = v;
+        sel.appendChild(opt);
+      }
+      sel.value = keep;
+    };
+    fill(document.getElementById('filter-artifact-grade'), artGrades, artifactFilterGrade);
+    fill(document.getElementById('filter-artifact-category'), artCats, artifactFilterCategory);
+    fill(document.getElementById('filter-relic-grade'), relGrades, relicFilterGrade);
+    fill(document.getElementById('filter-relic-category'), relCats, relicFilterCategory);
+  }
+
+  function resetArtifactTableFilters() {
+    artifactFilterGrade = '';
+    artifactFilterCategory = '';
+    artifactFilterLocation = '';
+    const sb = document.getElementById('search-box-artifacts');
+    if (sb) sb.value = '';
+    const g = document.getElementById('filter-artifact-grade');
+    const c = document.getElementById('filter-artifact-category');
+    const l = document.getElementById('filter-artifact-location');
+    if (g) g.value = '';
+    if (c) c.value = '';
+    if (l) l.value = '';
+    updateArtifactFilterBadge();
+    renderGearTables();
+  }
+
+  function resetRelicTableFilters() {
+    relicFilterGrade = '';
+    relicFilterCategory = '';
+    const sb = document.getElementById('search-box-relics');
+    if (sb) sb.value = '';
+    const g = document.getElementById('filter-relic-grade');
+    const c = document.getElementById('filter-relic-category');
+    if (g) g.value = '';
+    if (c) c.value = '';
+    updateRelicFilterBadge();
+    renderGearTables();
+  }
+
+  function updateGearTableCount() {
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const artEl = document.getElementById('artifact-table-count');
+    const relEl = document.getElementById('relic-table-count');
+    if (artEl) {
+      artEl.textContent = (t.tableCountArtifacts || '{n} artifacts').replace(
+        '{n}',
+        String(filteredArtifacts.length),
+      );
+    }
+    if (relEl) {
+      relEl.textContent = (t.tableCountRelics || '{n} relics').replace(
+        '{n}',
+        String(filteredRelics.length),
+      );
+    }
+    const legacy = document.getElementById('table-count');
+    const kind = readTableKind();
+    if (legacy && kind === 'artifacts' && artEl) legacy.textContent = artEl.textContent;
+    if (legacy && kind === 'relics' && relEl) legacy.textContent = relEl.textContent;
+  }
+
+  function artifactSubStack(a, fmtSub) {
+    const subs = (a.secs || []).slice(0, 4);
+    if (!subs.length) {
+      return '<span class="gear-table-subs__empty">—</span>';
+    }
+    return subs
+      .map((s) => {
+        const text = s && fmtSub ? fmtSub(s) : '—';
+        return `<span class="gear-table-subs__line">${escapeHtml(text)}</span>`;
+      })
+      .join('');
+  }
+
+  function renderArtifactTableBody() {
+    const tbody = document.getElementById('artifact-tbody');
+    if (!tbody) return;
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const fmt = window.SWRM && window.SWRM.formatGearEffectLine;
+    const fmtSub = window.SWRM && window.SWRM.formatArtifactSubLine;
+    if (!filteredArtifacts.length) {
+      tbody.innerHTML = `<tr><td colspan="5" class="table-empty">${escapeHtml(t.tableGearEmpty || 'No artifacts')}</td></tr>`;
+      return;
+    }
+    const rows = filteredArtifacts
+      .slice()
+      .sort(
+        (a, b) =>
+          String(a.category).localeCompare(String(b.category)) ||
+          String(a.gradeStr).localeCompare(String(b.gradeStr)),
+      )
+      .map((a) => {
+        const main = a.pri && fmt ? fmt(a.pri, { kind: 'artifact' }) : '—';
+        return `<tr>
+          <td class="col-grade">${escapeHtml(a.gradeStr || '—')}</td>
+          <td>${escapeHtml(a.category || '—')}</td>
+          <td>${escapeHtml(main)}</td>
+          <td class="col-subs-stack"><div class="gear-table-subs">${artifactSubStack(a, fmtSub)}</div></td>
+          <td>${escapeHtml(gearLocationLabel(a.occupiedId, t))}</td>
+        </tr>`;
+      });
+    tbody.innerHTML = rows.join('');
+  }
+
+  function renderRelicTableBody() {
+    const tbody = document.getElementById('relic-tbody');
+    if (!tbody) return;
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const fmt = window.SWRM && window.SWRM.formatGearEffectLine;
+    const fmtSec = window.SWRM && window.SWRM.formatRelicSecLine;
+    const fmtDur =
+      window.SWRM && typeof window.SWRM.formatRelicDurability === 'function'
+        ? window.SWRM.formatRelicDurability
+        : null;
+    if (!filteredRelics.length) {
+      tbody.innerHTML = `<tr><td colspan="7" class="table-empty">${escapeHtml(t.tableGearEmptyRelics || 'No relics')}</td></tr>`;
+      return;
+    }
+    const rows = filteredRelics
+      .slice()
+      .sort(
+        (a, b) =>
+          String(a.category).localeCompare(String(b.category)) ||
+          (b.level || 0) - (a.level || 0),
+      )
+      .map((r) => {
+        const main = r.pri && fmt ? fmt(r.pri, { kind: 'relic' }) : '—';
+        const sec = fmtSec ? fmtSec(r) : '—';
+        const dur = fmtDur ? fmtDur(r) : '—';
+        const grade = r.gradeStr || '—';
+        const fmtWear =
+          window.SWRM && typeof window.SWRM.formatRelicWearCount === 'function'
+            ? window.SWRM.formatRelicWearCount
+            : null;
+        const wear = fmtWear ? fmtWear(r) : '0/100';
+        return `<tr>
+          <td class="col-grade">${escapeHtml(grade)}</td>
+          <td>${escapeHtml(r.category || '—')}</td>
+          <td class="th-num">+${escapeHtml(String(r.level || 0))}</td>
+          <td class="th-num">${escapeHtml(dur)}</td>
+          <td>${escapeHtml(main)}</td>
+          <td class="col-text">${escapeHtml(sec)}</td>
+          <td class="th-num">${escapeHtml(wear)}</td>
+        </tr>`;
+      });
+    tbody.innerHTML = rows.join('');
+  }
+
+  function renderGearTables() {
+    applyGearTableSearch();
+    renderArtifactTableBody();
+    renderRelicTableBody();
+    updateGearTableCount();
+  }
+
+  function setTableToolbarVisible(kind) {
+    document.querySelectorAll('[data-table-toolbar]').forEach((el) => {
+      const on = el.dataset.tableToolbar === kind;
+      el.classList.toggle('hidden', !on);
+      if (on) el.removeAttribute('hidden');
+      else el.setAttribute('hidden', '');
+    });
+  }
+
+  function updateTableKindTabIndicator() {
+    const nav = document.getElementById('table-kind-tabs');
+    const indicator = nav && nav.querySelector('.table-kind-tabs__indicator');
+    const active = nav && nav.querySelector('.table-kind-tab.is-active');
+    if (!nav || !indicator || !active) return;
+    const navRect = nav.getBoundingClientRect();
+    const tabRect = active.getBoundingClientRect();
+    indicator.style.left = `${tabRect.left - navRect.left}px`;
+    indicator.style.width = `${tabRect.width}px`;
+  }
+
+  function showTableKind(kind, options) {
+    const id = normalizeTableKind(kind);
+    writeTableKind(id);
+    document.querySelectorAll('.table-kind-tab').forEach((btn) => {
+      const on = btn.dataset.tableKind === id;
+      btn.classList.toggle('is-active', on);
+      btn.setAttribute('aria-selected', on ? 'true' : 'false');
+      btn.tabIndex = on ? 0 : -1;
+    });
+    document.querySelectorAll('[data-table-kind-pane]').forEach((pane) => {
+      const on = pane.dataset.tableKindPane === id;
+      pane.classList.toggle('is-active', on);
+      pane.classList.toggle('hidden', !on);
+      if (on) pane.removeAttribute('hidden');
+      else pane.setAttribute('hidden', '');
+    });
+    setTableToolbarVisible(id);
+    const runeOnly = document.getElementById('rune-table-rune-only-ui');
+    if (runeOnly) runeOnly.hidden = id !== 'runes';
+    const loadStrip = document.getElementById('rune-table-load-strip');
+    if (loadStrip) loadStrip.classList.toggle('hidden', id !== 'runes');
+    const runeMeta = document.getElementById('rune-table-roster-meta');
+    if (runeMeta) runeMeta.classList.toggle('hidden', id !== 'runes');
+    const runeChips = document.getElementById('rune-table-active-filters');
+    if (runeChips) runeChips.classList.toggle('hidden', id !== 'runes');
+    const search = document.getElementById('search-box');
+    if (search) {
+      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+      search.placeholder = t.tableSearchRunes || 'Search by set, stat, role…';
+    }
+    updateTableKindTabIndicator();
+    if (id === 'runes') {
+      if (options && options.skipRuneRender) return;
+      applyFiltersAndSort(getVisibleRunes(), { preserveTableExpansion: true });
+    } else {
+      renderGearTables();
+    }
+  }
+
+  function bindGearTableFilters() {
+    if (bindGearTableFilters._done) return;
+    bindGearTableFilters._done = true;
+
+    document.getElementById('btn-artifact-reset-filters')?.addEventListener('click', resetArtifactTableFilters);
+    document.getElementById('artifact-filters-drawer-reset')?.addEventListener('click', resetArtifactTableFilters);
+    document.getElementById('btn-relic-reset-filters')?.addEventListener('click', resetRelicTableFilters);
+    document.getElementById('relic-filters-drawer-reset')?.addEventListener('click', resetRelicTableFilters);
+
+    const onArtifactFilterChange = () => {
+      artifactFilterGrade = document.getElementById('filter-artifact-grade')?.value || '';
+      artifactFilterCategory = document.getElementById('filter-artifact-category')?.value || '';
+      artifactFilterLocation = document.getElementById('filter-artifact-location')?.value || '';
+      updateArtifactFilterBadge();
+      renderGearTables();
+    };
+    document.getElementById('filter-artifact-grade')?.addEventListener('change', onArtifactFilterChange);
+    document.getElementById('filter-artifact-category')?.addEventListener('change', onArtifactFilterChange);
+    document.getElementById('filter-artifact-location')?.addEventListener('change', onArtifactFilterChange);
+
+    const onRelicFilterChange = () => {
+      relicFilterGrade = document.getElementById('filter-relic-grade')?.value || '';
+      relicFilterCategory = document.getElementById('filter-relic-category')?.value || '';
+      updateRelicFilterBadge();
+      renderGearTables();
+    };
+    document.getElementById('filter-relic-grade')?.addEventListener('change', onRelicFilterChange);
+    document.getElementById('filter-relic-category')?.addEventListener('change', onRelicFilterChange);
+
+    let artDebounce = null;
+    document.getElementById('search-box-artifacts')?.addEventListener('input', () => {
+      clearTimeout(artDebounce);
+      artDebounce = setTimeout(() => renderGearTables(), 280);
+    });
+    let relDebounce = null;
+    document.getElementById('search-box-relics')?.addEventListener('input', () => {
+      clearTimeout(relDebounce);
+      relDebounce = setTimeout(() => renderGearTables(), 280);
+    });
+  }
+
+  function initTableKindTabs() {
+    const nav = document.getElementById('table-kind-tabs');
+    if (!nav || tableKindTabsBound) return;
+    tableKindTabsBound = true;
+    bindGearTableFilters();
+    nav.querySelectorAll('.table-kind-tab').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const kind = btn.dataset.tableKind;
+        if (!kind) return;
+        showTableKind(kind);
+      });
+    });
+    showTableKind(readTableKind(), { skipRuneRender: true });
+  }
+
+  function onGearDataHydrated() {
+    populateGearFilterSelects();
+    if (readTableKind() !== 'runes') renderGearTables();
+  }
+
   // ===================== TABLE =====================
   function renderTable(runes) {
     applyFiltersAndSort(runes);
@@ -5201,10 +5699,17 @@
     const onTableTab = isRuneTablePaneVisible();
 
     if (e.key === '/' && !e.ctrlKey && !e.metaKey && !e.altKey) {
-      if (inField && e.target.id !== 'search-box') return;
-      if (inField && e.target.id === 'search-box') return;
+      const kind = typeof readTableKind === 'function' ? readTableKind() : 'runes';
+      const searchIds = {
+        runes: 'search-box',
+        artifacts: 'search-box-artifacts',
+        relics: 'search-box-relics',
+      };
+      const activeId = searchIds[kind] || 'search-box';
+      if (inField && e.target.id !== activeId) return;
+      if (inField && e.target.id === activeId) return;
       e.preventDefault();
-      document.getElementById('search-box')?.focus();
+      document.getElementById(activeId)?.focus();
       return;
     }
 
@@ -6128,6 +6633,7 @@
     updateLanguage(currentLang);
     initDashboardUnifiedTabs();
     initRuneTablePrefsFromStorage();
+    if (typeof initTableKindTabs === 'function') initTableKindTabs();
     initRulesSubtabs();
     initChangelogSubtabs();
     initGuideSubtabs();
@@ -7555,6 +8061,55 @@
     return [];
   }
 
+  function roadmapLangKey() {
+    return currentLang === 'ru' ? 'ru' : currentLang === 'fr' ? 'fr' : 'en';
+  }
+
+  /** @returns {{ intro: string, sections: object[], outOfScope?: object } | null} */
+  function roadmapPackForLang(lang) {
+    const raw =
+      (window.SWRM && window.SWRM.STATIC_ROADMAP && window.SWRM.STATIC_ROADMAP[lang]) ||
+      (window.SWRM && window.SWRM.STATIC_ROADMAP && window.SWRM.STATIC_ROADMAP.en);
+    if (!raw) return null;
+    if (Array.isArray(raw)) {
+      return {
+        intro: '',
+        sections: [{ id: 'legacy', title: 'Plans', items: raw.map((text) => ({ text })) }],
+        outOfScope: null,
+      };
+    }
+    return raw;
+  }
+
+  function renderRoadmapSection(sec, idx) {
+    const sid = escapeChangelogText(sec.id || `sec-${idx}`);
+    const titleId = `roadmap-h-${sid}`;
+    const kicker = sec.kicker
+      ? `<span class="roadmap-section__kicker">${escapeChangelogText(sec.kicker)}</span>`
+      : '';
+    const phase = sec.phase
+      ? `<span class="roadmap-phase">${escapeChangelogText(sec.phase)}</span>`
+      : '';
+    const lead = sec.lead
+      ? `<p class="guide-lead">${escapeChangelogText(sec.lead)}</p>`
+      : '';
+    const items = (sec.items || [])
+      .map((item) => {
+        const text = typeof item === 'string' ? item : item.text;
+        return `<li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span>${escapeChangelogText(text)}</span></li>`;
+      })
+      .join('');
+    return `<section class="guide-section roadmap-section" aria-labelledby="${titleId}">
+      <div class="roadmap-section__head">
+        ${kicker}
+        <h3 class="roadmap-section__title" id="${titleId}">${escapeChangelogText(sec.title)}</h3>
+        ${phase}
+      </div>
+      ${lead}
+      <ul class="guide-checklist">${items}</ul>
+    </section>`;
+  }
+
   function renderChangelog() {
     const list = document.getElementById('changelog-list');
     if (!list) return;
@@ -7565,7 +8120,7 @@
       list.innerHTML = `<p class="settings-desc">${escapeChangelogText(t.changelogEmpty || '')}</p>`;
       return;
     }
-    const lang = currentLang === 'ru' ? 'ru' : currentLang === 'fr' ? 'fr' : 'en';
+    const lang = roadmapLangKey();
     list.innerHTML = releases.map((rel) => {
       const items = changelogItemsForLang(rel, lang);
       const ul = items.length
@@ -7579,16 +8134,28 @@
     const list = document.getElementById('changelog-roadmap-list');
     if (!list) return;
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-    const lang = currentLang === 'ru' ? 'ru' : currentLang === 'fr' ? 'fr' : 'en';
-    const items =
-      (window.SWRM && window.SWRM.STATIC_ROADMAP && window.SWRM.STATIC_ROADMAP[lang]) ||
-      (window.SWRM && window.SWRM.STATIC_ROADMAP && window.SWRM.STATIC_ROADMAP.en) ||
-      [];
-    if (!items.length) {
+    const pack = roadmapPackForLang(roadmapLangKey());
+    if (!pack || (!pack.sections?.length && !pack.intro)) {
       list.innerHTML = `<p class="settings-desc">${escapeChangelogText(t.changelogRoadmapEmpty || '')}</p>`;
       return;
     }
-    list.innerHTML = `<article class="changelog-release changelog-release--roadmap"><ul class="changelog-bullets">${items.map((tx) => `<li>${escapeChangelogText(tx)}</li>`).join('')}</ul></article>`;
+    const intro = pack.intro
+      ? `<section class="guide-section guide-section--hero roadmap-section roadmap-section--intro" aria-labelledby="roadmap-intro-title">
+          <h3 id="roadmap-intro-title">${escapeChangelogText(t.changelogSubtabRoadmap || 'Roadmap')}</h3>
+          <p class="guide-lead">${escapeChangelogText(pack.intro)}</p>
+        </section>`
+      : '';
+    const sections = (pack.sections || []).map((sec, i) => renderRoadmapSection(sec, i)).join('');
+    const oos = pack.outOfScope;
+    const outBlock = oos?.items?.length
+      ? `<section class="guide-section roadmap-section roadmap-section--oos" aria-labelledby="roadmap-oos-title">
+          <h3 id="roadmap-oos-title">${escapeChangelogText(oos.title)}</h3>
+          <div class="guide-callout guide-callout--warn">
+            <ul class="guide-bullets">${oos.items.map((tx) => `<li>${escapeChangelogText(tx)}</li>`).join('')}</ul>
+          </div>
+        </section>`
+      : '';
+    list.innerHTML = `<div class="roadmap-grid__inner">${intro}${sections}${outBlock}</div>`;
   }
 
   const MONSTERS_FILTER_STORAGE_KEY = 'swrm_monsters_filters_v2';
@@ -9154,6 +9721,15 @@
         value: sum.skillUpsTotal,
       });
     }
+    const bag = window.SWRM_ACCOUNT_GEAR;
+    if (bag && ((bag.artifacts && bag.artifacts.length) || (bag.relics && bag.relics.length))) {
+      const na = (bag.artifacts || []).length;
+      const nr = (bag.relics || []).length;
+      parts.push({
+        label: t.monstersChipGear || 'Gear in box',
+        value: `${na} / ${nr}`,
+      });
+    }
     chips.innerHTML = parts
       .map(
         (p) =>
@@ -9453,15 +10029,36 @@
 //
 // SWEX does not ship reliable final combat totals on units; we derive Total from:
 //   1) Base at unit level — SWARFARM monster base/max stats scaled to u.level
-//   2) All equipped runes — main (slot 1/3/5 flat, 2/4/6 %), innate, substats (+ grind)
+//   2) Equipped runes — mains, innate (prefix), substats (+ grind)
+//   3) Active rune set bonuses (2-/4-piece panel stats)
+//   4) Artifacts / relics — only confirmed pri effects (flat HP/ATK/DEF; relic % HP/ATK/DEF)
 //
-// Per stat key (hp, atk, def, spd, critRate, critDmg, res, acc):
-//   flat  = sum of flat bonuses from runes
-//   pct   = sum of % bonuses from runes (each % applies to base only, not to flat)
-//   total = round(base + flat + base * pct / 100)
+// HP / ATK / DEF / SPD: flat bonuses stack; % bonuses apply to base (runes + set %).
+// CRI Rate / CRI Dmg / RES / ACC: % bonuses stack additively on base (game stat screen).
 //
-// +Runes column in UI = total − base. Not included: artifacts, glory towers, leader/passive buffs.
+// +Gear column = total − base. Not included: glory, leader/passive, artifact combat subs.
   const PCT_STAT_TYPES = new Set([2, 4, 6, 9, 10, 11, 12]);
+  const ADDITIVE_PCT_KEYS = new Set(['critRate', 'critDmg', 'res', 'acc']);
+
+  /** Panel stat bonuses when a set threshold is active (one rule per set name). */
+  const RUNE_SET_PANEL_BONUSES = {
+    Energy: { need: 2, hpPct: 15 },
+    Guard: { need: 2, defPct: 15 },
+    Swift: { need: 4, spdFlat: 25 },
+    Blade: { need: 2, critRatePct: 12 },
+    Rage: { need: 4, critDmgPct: 40 },
+    Focus: { need: 2, accPct: 20 },
+    Endure: { need: 2, resPct: 20 },
+    Fatal: { need: 4, atkPct: 35 },
+    Despair: { need: 4, accPct: 25 },
+    Vampire: { need: 4, hpPct: 35 },
+    Fight: { need: 2, atkPct: 8 },
+    Determination: { need: 2, defPct: 8 },
+    Enhance: { need: 2, hpPct: 8 },
+    Accuracy: { need: 2, accPct: 20 },
+    Tolerance: { need: 2, resPct: 20 },
+  };
+
   function statKeyForTypeId(typeId) {
     const id = Number(typeId);
     if (id === 1 || id === 2) return 'hp';
@@ -9494,7 +10091,6 @@
     return (Number(sub?.val) || 0) + (Number(sub?.grind) || 0);
   }
 
-  /** Collect flat / % bonuses for one stat key from all runes. */
   function sumRuneBonusesForKey(statKey, runesArray) {
     let flat = 0;
     let pct = 0;
@@ -9521,20 +10117,105 @@
     return { flat, pct };
   }
 
-  /**
-   * Total stat from base + runes (flat first, then % of base).
-   * @param {number} base
-   * @param {object[]} runesArray parsed runes
-   * @param {string} statKey hp|atk|def|spd|critRate|critDmg|res|acc
-   */
-  function calculateTotalStatForKey(base, runesArray, statKey) {
+  function countRuneSets(runesArray) {
+    const counts = {};
+    for (const rune of runesArray || []) {
+      if (!rune || !rune.setName) continue;
+      counts[rune.setName] = (counts[rune.setName] || 0) + 1;
+    }
+    return counts;
+  }
+
+  function sumSetBonusesForKey(statKey, runesArray) {
+    let flat = 0;
+    let pct = 0;
+    const counts = countRuneSets(runesArray);
+    for (const [setName, total] of Object.entries(counts)) {
+      const rule = RUNE_SET_PANEL_BONUSES[setName];
+      if (!rule || total < rule.need) continue;
+      if (rule.spdFlat && statKey === 'spd') flat += rule.spdFlat;
+      if (rule.hpPct && statKey === 'hp') pct += rule.hpPct;
+      if (rule.atkPct && statKey === 'atk') pct += rule.atkPct;
+      if (rule.defPct && statKey === 'def') pct += rule.defPct;
+      if (rule.critRatePct && statKey === 'critRate') pct += rule.critRatePct;
+      if (rule.critDmgPct && statKey === 'critDmg') pct += rule.critDmgPct;
+      if (rule.resPct && statKey === 'res') pct += rule.resPct;
+      if (rule.accPct && statKey === 'acc') pct += rule.accPct;
+    }
+    return { flat, pct };
+  }
+
+  function sumConfirmedGearBonusesForKey(statKey, unit) {
+    if (!unit || !window.SWRM || typeof window.SWRM.sumGearBonusesForKey !== 'function') {
+      return { flat: 0, pct: 0 };
+    }
+    return window.SWRM.sumGearBonusesForKey(statKey, unit);
+  }
+
+  function calculateTotalStatForKey(base, runesArray, statKey, unit) {
     const b = Number(base);
     const baseNum = Number.isFinite(b) ? b : 0;
-    const { flat, pct } = sumRuneBonusesForKey(statKey, runesArray);
-    let total = baseNum;
-    total += flat;
-    if (pct) total += baseNum * (pct / 100);
-    return Math.round(total);
+    const rune = sumRuneBonusesForKey(statKey, runesArray);
+    const set = sumSetBonusesForKey(statKey, runesArray);
+    const gear = sumConfirmedGearBonusesForKey(statKey, unit);
+    const flat = rune.flat + set.flat + gear.flat;
+    const pct = rune.pct + set.pct + gear.pct;
+    let total = baseNum + flat;
+    if (pct) {
+      if (ADDITIVE_PCT_KEYS.has(statKey)) total += pct;
+      else total += (baseNum * pct) / 100;
+    }
+    return roundStatTotal(statKey, total);
+  }
+
+  /** Match in-game stat screen (HP/ATK/DEF ceil; SPD floor; % round). */
+  function roundStatTotal(statKey, total) {
+    const n = Number(total);
+    if (!Number.isFinite(n)) return 0;
+    if (statKey === 'spd') return Math.floor(n + 1e-6);
+    if (statKey === 'hp' || statKey === 'atk' || statKey === 'def') {
+      return Math.ceil(n - 1e-9);
+    }
+    return Math.round(n);
+  }
+
+  function displayStatValue(statKey, value, isPct) {
+    const n = roundStatTotal(statKey, value);
+    return isPct ? `${n}%` : String(n);
+  }
+
+  function reconcileTotalWithSwex(statKey, computedTotal, unit) {
+    const s = unit && unit.stats;
+    if (!s) return computedTotal;
+    const swex = Number(s[statKey]);
+    if (!Number.isFinite(swex)) return computedTotal;
+    const comp = roundStatTotal(statKey, computedTotal);
+    const sw = roundStatTotal(statKey, swex);
+    if (Math.abs(sw - comp) <= 1) return sw;
+    return comp;
+  }
+
+  function calculateMonsterStatBreakdown(baseStats, unit) {
+    const runes = getUnitEquippedRunes(unit);
+    const keys = ['hp', 'atk', 'def', 'spd', 'critRate', 'critDmg', 'res', 'acc'];
+    const out = {};
+    for (const key of keys) {
+      const b = baseStats && Number.isFinite(Number(baseStats[key])) ? Number(baseStats[key]) : 0;
+      const baseRounded = roundStatTotal(key, b);
+      let total = calculateTotalStatForKey(b, runes, key, unit);
+      total = reconcileTotalWithSwex(key, total, unit);
+      const isPct = ADDITIVE_PCT_KEYS.has(key);
+      let bonus = total - baseRounded;
+      if (!isPct) bonus = Math.max(0, bonus);
+      else bonus = Math.max(0, Math.round(bonus));
+      out[key] = {
+        base: baseRounded,
+        bonus,
+        total,
+        isPct,
+      };
+    }
+    return out;
   }
 
   function getUnitEquippedRunes(u) {
@@ -9543,14 +10224,111 @@
   }
 
   function calculateMonsterStatTotals(baseStats, unit) {
-    const runes = getUnitEquippedRunes(unit);
-    const keys = ['hp', 'atk', 'def', 'spd', 'critRate', 'critDmg', 'res', 'acc'];
+    const bd = calculateMonsterStatBreakdown(baseStats, unit);
     const totals = {};
-    for (const key of keys) {
-      const b = baseStats && Number.isFinite(Number(baseStats[key])) ? Number(baseStats[key]) : 0;
-      totals[key] = calculateTotalStatForKey(b, runes, key);
-    }
+    for (const key of Object.keys(bd)) totals[key] = bd[key].total;
     return totals;
+  }
+
+  function gearEffectLines(gear, t) {
+    const lines = [];
+    const fmtPri =
+      window.SWRM && typeof window.SWRM.formatGearEffectLine === 'function'
+        ? window.SWRM.formatGearEffectLine
+        : null;
+    const fmtSub =
+      window.SWRM && typeof window.SWRM.formatArtifactSubLine === 'function'
+        ? window.SWRM.formatArtifactSubLine
+        : null;
+    const fmtRelicSec =
+      window.SWRM && typeof window.SWRM.formatRelicSecLine === 'function'
+        ? window.SWRM.formatRelicSecLine
+        : null;
+    const fmtDur =
+      window.SWRM && typeof window.SWRM.formatRelicDurability === 'function'
+        ? window.SWRM.formatRelicDurability
+        : null;
+    if (gear.pri && fmtPri) {
+      const line = fmtPri(gear.pri, { kind: gear.kind });
+      if (line) lines.push(line);
+    }
+    if (gear.kind === 'relic') {
+      if (fmtRelicSec) {
+        const line = fmtRelicSec(gear);
+        if (line) lines.push(line);
+      }
+      if (fmtDur) lines.push(`${t.monstersGearDurability || 'Durability'} ${fmtDur(gear)}`);
+      if (gear.level) lines.push(`+${gear.level}`);
+    }
+    if (gear.kind === 'artifact' && gear.secs && gear.secs.length && fmtSub) {
+      for (const s of gear.secs) {
+        const line = fmtSub(s);
+        if (line) lines.push(line);
+      }
+    }
+    return lines;
+  }
+
+  function buildArtifactEffectStack(gear, t) {
+    const fmtPri =
+      window.SWRM && typeof window.SWRM.formatGearEffectLine === 'function'
+        ? window.SWRM.formatGearEffectLine
+        : null;
+    const fmtSub =
+      window.SWRM && typeof window.SWRM.formatArtifactSubLine === 'function'
+        ? window.SWRM.formatArtifactSubLine
+        : null;
+    const lines = [];
+    if (gear.pri && fmtPri) {
+      const line = fmtPri(gear.pri, { kind: 'artifact' });
+      if (line) lines.push(line);
+    }
+    if (fmtSub) {
+      for (const sub of (gear.secs || []).slice(0, 4)) {
+        const line = fmtSub(sub);
+        if (line) lines.push(line);
+      }
+    }
+    return lines;
+  }
+
+  function buildGearItemHtml(gear, t) {
+    const kindLbl =
+      gear.kind === 'relic'
+        ? t.monstersGearRelic || 'Relic'
+        : t.monstersGearArtifact || 'Artifact';
+    const grade = gear.gradeStr ? gear.gradeStr : '';
+    const meta = [gear.category, grade].filter(Boolean).join(' · ');
+    const head = [kindLbl, meta].filter(Boolean).join(' · ');
+    const lines =
+      gear.kind === 'artifact' ? buildArtifactEffectStack(gear, t) : gearEffectLines(gear, t);
+    const bodyCls =
+      gear.kind === 'artifact'
+        ? 'monsters-gear-item__body monsters-gear-item__body--stack'
+        : 'monsters-gear-item__body';
+    const body = lines.length
+      ? lines.map((l) => `<span class="monsters-gear-item__line">${escapeHtml(l)}</span>`).join('')
+      : `<span class="monsters-gear-item__line monsters-gear-item__line--muted">${escapeHtml(t.monstersGearNoEffects || '—')}</span>`;
+    return `<li class="monsters-gear-item">
+      <span class="monsters-gear-item__head">${escapeHtml(head)}</span>
+      <span class="${bodyCls}">${body}</span>
+    </li>`;
+  }
+
+  function buildMonsterGearSectionHtml(u, t) {
+    const artifacts = u.artifacts || [];
+    const relics = u.relics || [];
+    if (!artifacts.length && !relics.length) {
+      return `<p class="monsters-detail__muted">${escapeHtml(t.monstersGearEmpty || 'No artifacts or relics on this monster.')}</p>`;
+    }
+    const items = []
+      .concat(
+        artifacts.slice().sort((a, b) => String(a.category).localeCompare(String(b.category))),
+        relics.slice().sort((a, b) => String(a.category).localeCompare(String(b.category))),
+      )
+      .map((g) => buildGearItemHtml(g, t))
+      .join('');
+    return `<ul class="monsters-gear-list">${items}</ul>`;
   }
 
   function formatMonsterRuneTooltip(r, t, slotNo) {
@@ -9749,12 +10527,13 @@
       return `<p class="monsters-detail__muted">${escapeHtml(t.monstersNoStats || 'No stat data in SWEX.')}</p>`;
     }
     const base = u.baseStats || null;
-    const computed =
-      base && typeof calculateMonsterStatTotals === 'function'
-        ? calculateMonsterStatTotals(base, u)
+    const breakdown =
+      base && typeof calculateMonsterStatBreakdown === 'function'
+        ? calculateMonsterStatBreakdown(base, u)
         : null;
-    const lblRune = t.monstersStatRunes || '+Runes';
-    const lblTot = t.monstersStatTotal || 'Total';
+    const lblBase = t.monstersStatBase || 'Base';
+    const lblBonus = t.monstersStatGear || t.monstersStatRunes || '+Gear';
+    const lblTotal = t.monstersStatTotal || 'Total';
     const coreKeys = [
       [t.monstersStatHp || 'HP', 'hp'],
       [t.monstersStatAtk || 'ATK', 'atk'],
@@ -9767,48 +10546,115 @@
       [t.monstersStatRes || 'RES', 'res'],
       [t.monstersStatAcc || 'ACC', 'acc'],
     ];
-    const coreHead = `<div class="monsters-detail__stats-head monsters-detail__stats-head--core">
+    const coreHeadSplit = `<div class="monsters-detail__stats-head monsters-detail__stats-head--core" data-stats-head="split">
       <span class="monsters-detail__stat-k"></span>
-      <span class="monsters-detail__stat-h">${escapeHtml(lblTot)}</span>
-      <span class="monsters-detail__stat-h monsters-detail__stat-h--bonus">${escapeHtml(lblRune)}</span>
+      <span class="monsters-detail__stat-h">${escapeHtml(lblBase)}</span>
+      <span class="monsters-detail__stat-h monsters-detail__stat-h--bonus">${escapeHtml(lblBonus)}</span>
     </div>`;
-    function statRow(label, key, isPct) {
-      const b = base ? Number(base[key]) : NaN;
-      const total =
-        computed && Number.isFinite(computed[key]) ? computed[key] : NaN;
-      const totStr = Number.isFinite(total)
-        ? isPct
-          ? `${Math.round(total)}%`
-          : String(Math.round(total))
-        : '—';
-      let bonusHtml =
-        '<span class="monsters-detail__stat-num monsters-detail__stat-num--empty" aria-hidden="true"></span>';
-      if (Number.isFinite(b) && Number.isFinite(total)) {
-        const { rune: runeStr } = formatStatRuneDelta(total, b, isPct);
-        bonusHtml = `<span class="monsters-detail__stat-num monsters-detail__stat-num--rune">${escapeHtml(runeStr)}</span>`;
-      } else if (computed) {
-        bonusHtml = '<span class="monsters-detail__stat-num monsters-detail__stat-num--rune">—</span>';
+    const coreHeadTotal = `<div class="monsters-detail__stats-head monsters-detail__stats-head--core-total hidden" data-stats-head="total">
+      <span class="monsters-detail__stat-k"></span>
+      <span class="monsters-detail__stat-h">${escapeHtml(lblTotal)}</span>
+    </div>`;
+    function fmtVal(key, field, isPct) {
+      const row = breakdown && breakdown[key];
+      if (row) {
+        const n = row[field];
+        if (!Number.isFinite(n)) return '—';
+        if (typeof displayStatValue === 'function') {
+          return displayStatValue(key, n, isPct);
+        }
+        return isPct ? `${Math.round(n)}%` : String(Math.round(n));
       }
-      return `<div class="monsters-detail__stat-row monsters-detail__stat-row--core">
+      if (field === 'total' && s) {
+        const n = Number(s[key]);
+        if (Number.isFinite(n)) {
+          if (typeof displayStatValue === 'function') return displayStatValue(key, n, isPct);
+          return isPct ? `${Math.round(n)}%` : String(Math.round(n));
+        }
+      }
+      return '—';
+    }
+    function coreRow(label, key) {
+      const row = breakdown && breakdown[key];
+      const bonus = row && Number.isFinite(row.bonus) ? row.bonus : 0;
+      const bonusStr =
+        bonus > 0
+          ? row.isPct
+            ? `+${bonus}%`
+            : `+${bonus}`
+          : row?.isPct
+            ? '0%'
+            : '0';
+      return `<div class="monsters-detail__stat-row monsters-detail__stat-row--core monsters-detail__stat-row--clickable" data-stat-key="${key}" role="button" tabindex="0" aria-label="${escapeHtml(label)}">
           <span class="monsters-detail__stat-k">${escapeHtml(label)}</span>
-          <span class="monsters-detail__stat-num monsters-detail__stat-num--total">${escapeHtml(totStr)}</span>
-          ${bonusHtml}
+          <span class="monsters-detail__stat-num monsters-detail__stat-num--base" data-col="base">${escapeHtml(fmtVal(key, 'base', false))}</span>
+          <span class="monsters-detail__stat-num monsters-detail__stat-num--rune" data-col="bonus">${escapeHtml(bonusStr)}</span>
+          <span class="monsters-detail__stat-num monsters-detail__stat-num--total-green" data-col="total" hidden>${escapeHtml(fmtVal(key, 'total', false))}</span>
         </div>`;
     }
-    const coreBody = coreKeys.map(([label, key]) => statRow(label, key, false)).join('');
-    const pctBody = pctKeys.map(([label, key]) => statRow(label, key, true)).join('');
+    function pctRow(label, key) {
+      return `<div class="monsters-detail__stat-row monsters-detail__stat-row--pct">
+          <span class="monsters-detail__stat-k">${escapeHtml(label)}</span>
+          <span class="monsters-detail__stat-num monsters-detail__stat-num--pct-total">${escapeHtml(fmtVal(key, 'total', true))}</span>
+        </div>`;
+    }
+    const coreBody = coreKeys.map(([label, key]) => coreRow(label, key)).join('');
+    const pctBody = pctKeys.map(([label, key]) => pctRow(label, key)).join('');
     const loading =
       !base && window.SWRM_MONSTER_DB
         ? `<p class="monsters-detail__muted monsters-detail__stats-loading">${escapeHtml(t.monstersStatsLoading || 'Loading base stats…')}</p>`
         : '';
     return (
-      '<div class="monsters-detail__stats-grid monsters-detail__stats-grid--split">' +
-      coreHead +
+      '<div class="monsters-detail__stats-grid monsters-detail__stats-grid--split" data-stats-grid data-stats-view="split">' +
       loading +
+      coreHeadSplit +
+      coreHeadTotal +
       coreBody +
       pctBody +
       '</div>'
     );
+  }
+
+  function bindMonsterDetailStatsToggle(root) {
+    if (!root) return;
+    const grid = root.querySelector('[data-stats-grid]');
+    if (!grid || grid.dataset.statsToggleBound === '1') return;
+    grid.dataset.statsToggleBound = '1';
+    const setView = (mode) => {
+      const split = mode !== 'total';
+      grid.dataset.statsView = split ? 'split' : 'total';
+      grid.classList.toggle('monsters-detail__stats-grid--total-view', !split);
+      grid.querySelectorAll('[data-col="total"]').forEach((el) => {
+        if (split) el.setAttribute('hidden', '');
+        else el.removeAttribute('hidden');
+      });
+      grid.querySelectorAll('[data-col="base"], [data-col="bonus"]').forEach((el) => {
+        if (split) el.removeAttribute('hidden');
+        else el.setAttribute('hidden', '');
+      });
+      grid.querySelectorAll('[data-stats-head="split"]').forEach((el) => {
+        if (split) el.removeAttribute('hidden');
+        else el.setAttribute('hidden', '');
+      });
+      grid.querySelectorAll('[data-stats-head="total"]').forEach((el) => {
+        if (split) el.setAttribute('hidden', '');
+        else el.removeAttribute('hidden');
+      });
+    };
+    const toggle = () => {
+      const next = grid.dataset.statsView === 'total' ? 'split' : 'total';
+      setView(next);
+    };
+    grid.querySelectorAll('.monsters-detail__stat-row--core').forEach((row) => {
+      row.addEventListener('click', toggle);
+      row.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          toggle();
+        }
+      });
+    });
+    setView('split');
   }
 
   function buildMonsterStatsHtml(u, t) {
@@ -10414,6 +11260,10 @@
     }
     const runesBlock =
       buildRuneSetBonusSummaryHtml(u, t, db) + buildMonsterDetailRunesStrip(u, db, t);
+    const gearBlock =
+      typeof buildMonsterGearSectionHtml === 'function'
+        ? buildMonsterGearSectionHtml(u, t)
+        : '';
     const natStars =
       meta && meta.natural_stars != null
         ? meta.natural_stars
@@ -10463,6 +11313,10 @@
           <h4 class="monsters-detail__section-title">${escapeHtml(t.monstersDetailRunes || 'Runes')}</h4>
           ${runesBlock}
         </section>
+        <section class="monsters-detail__section" data-detail-gear>
+          <h4 class="monsters-detail__section-title">${escapeHtml(t.monstersDetailGear || 'Artifacts & Relics')}</h4>
+          ${gearBlock}
+        </section>
       </div>`;
 
     body.hidden = false;
@@ -10477,6 +11331,9 @@
     }
     if (typeof bindMonsterDetailSkillTips === 'function') {
       bindMonsterDetailSkillTips(body, skillRows);
+    }
+    if (typeof bindMonsterDetailStatsToggle === 'function') {
+      bindMonsterDetailStatsToggle(body);
     }
 
     body.querySelector('[data-open-runes-all]')?.addEventListener('click', () => openMonsterRunesInTable(u));
@@ -10503,6 +11360,9 @@
           db.hasUsableBaseStats(base);
         if (statsHost && baseOk) {
           statsHost.innerHTML = buildMonsterDetailStatsBlock({ ...u, meta: row, baseStats: base }, t);
+          if (typeof bindMonsterDetailStatsToggle === 'function') {
+            bindMonsterDetailStatsToggle(body);
+          }
         }
 
         const skillsSec = body.querySelector('[data-detail-skills]');
@@ -10521,6 +11381,9 @@
           if (typeof bindMonsterDetailSkillTips === 'function') {
             const rows = skillDb ? skillDb.enrichUnitSkillsForDetail(u.skills) : skillRows;
             bindMonsterDetailSkillTips(body, rows);
+          }
+          if (typeof bindMonsterDetailStatsToggle === 'function') {
+            bindMonsterDetailStatsToggle(body);
           }
         }
 

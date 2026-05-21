@@ -72,10 +72,8 @@
       eliteAvgUncapped = sumE / eliteK;
     }
 
-    const spdCap = Math.max(spdDepthCount, 1);
-    const plus15Cap = Math.max(plus15DepthCount, 1);
-    const spdNorm = Math.min(spdDepthCount / spdCap, 1);
-    const plus15Norm = Math.min(plus15DepthCount / plus15Cap, 1);
+    const spdNorm = Math.min(spdDepthCount / CFG.spdDepthCap, 1);
+    const plus15Norm = Math.min(plus15DepthCount / CFG.plus15DepthCap, 1);
     const eliteEffExcess = Math.max(0, eliteAvgUncapped - CFG.eliteEffBaseline);
     const eliteNorm = Math.min(eliteEffExcess / CFG.eliteEffSpan, 1);
 

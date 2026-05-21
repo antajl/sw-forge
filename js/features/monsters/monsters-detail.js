@@ -46,6 +46,10 @@
     }
     const runesBlock =
       buildRuneSetBonusSummaryHtml(u, t, db) + buildMonsterDetailRunesStrip(u, db, t);
+    const gearBlock =
+      typeof buildMonsterGearSectionHtml === 'function'
+        ? buildMonsterGearSectionHtml(u, t)
+        : '';
     const natStars =
       meta && meta.natural_stars != null
         ? meta.natural_stars
@@ -95,6 +99,10 @@
           <h4 class="monsters-detail__section-title">${escapeHtml(t.monstersDetailRunes || 'Runes')}</h4>
           ${runesBlock}
         </section>
+        <section class="monsters-detail__section" data-detail-gear>
+          <h4 class="monsters-detail__section-title">${escapeHtml(t.monstersDetailGear || 'Artifacts & Relics')}</h4>
+          ${gearBlock}
+        </section>
       </div>`;
 
     body.hidden = false;
@@ -109,6 +117,9 @@
     }
     if (typeof bindMonsterDetailSkillTips === 'function') {
       bindMonsterDetailSkillTips(body, skillRows);
+    }
+    if (typeof bindMonsterDetailStatsToggle === 'function') {
+      bindMonsterDetailStatsToggle(body);
     }
 
     body.querySelector('[data-open-runes-all]')?.addEventListener('click', () => openMonsterRunesInTable(u));
@@ -135,6 +146,9 @@
           db.hasUsableBaseStats(base);
         if (statsHost && baseOk) {
           statsHost.innerHTML = buildMonsterDetailStatsBlock({ ...u, meta: row, baseStats: base }, t);
+          if (typeof bindMonsterDetailStatsToggle === 'function') {
+            bindMonsterDetailStatsToggle(body);
+          }
         }
 
         const skillsSec = body.querySelector('[data-detail-skills]');
@@ -153,6 +167,9 @@
           if (typeof bindMonsterDetailSkillTips === 'function') {
             const rows = skillDb ? skillDb.enrichUnitSkillsForDetail(u.skills) : skillRows;
             bindMonsterDetailSkillTips(body, rows);
+          }
+          if (typeof bindMonsterDetailStatsToggle === 'function') {
+            bindMonsterDetailStatsToggle(body);
           }
         }
 

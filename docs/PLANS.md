@@ -15,7 +15,7 @@
 
 **Было на SWARFARM:** ссылка → полный разбор коробки, сортировка по качеству рун, артефакты, указание на ошибки сборки.
 
-**У нас:** только локальный SWEX в браузере сегодня. **Публичный share — в scope как чистый фронтенд (GitHub Pages):** без своего сервера, через `?profile=https://…/export.json` (чтение JSON по ссылке) и/или `?data=…` (сжатая строка с данными аккаунта в URL). Ограничения: длина URL, CORS у хостинга JSON, размер экспорта — нужен компрессор и лимиты.
+**У нас:** read-only **Share Profile** через Cloudflare Worker + D1 (2026-05-20). Дальше — mentor account review, опционально `?profile=` / `?data=` без Worker.
 
 ### 2. Skill-up'ы и девилмоны на уровне аккаунта
 
@@ -39,7 +39,10 @@
 
 - Навигация: хаб Runes + вкладка **Monsters**, один SWEX.
 - Monsters MVP: 6★ roster, фильтры, карточки/список, плавающий detail, руны на карточке, SWARFARM имена/иконки, ★/🍖, открытие рун в таблице, фильтр монстра в Rune Table.
-- Runes: движок, таблица, dashboard, depth, changelog/guide субтабы, i18n EN/RU/FR (частично).
+- **Box overview** на Roster (плитки, readiness, фильтры по клику) — 2026-05-21.
+- Runes: движок, таблица, dashboard, depth, **Forge Score**, changelog/guide субтабы, i18n EN/RU/FR (частично).
+- Runes → Table: вкладки **Artifacts / Relics** (таблицы + парсинг SWEX); gear на detail Monsters.
+- Share Profile (Worker + D1), логотипы/favicon.
 
 ---
 
@@ -51,28 +54,29 @@
 
 Кратко по приоритету (сверху вниз в Changelog → Roadmap):
 
-1. **Box overview** на Roster (плитки, readiness, next actions).
-2. **Account-wide:** devilmon/skill planner, fusion tracker, Monster Builder lite, richer Teams.
-3. **Monsters → Dashboard** (опционально): score, графики, drill-down, связка с Rune depth.
-4. **Share** — account review по ссылке.
-5. **Runes** — Rune Score, diff слотов, God hint, Grind.
-6. **Roster depth** — compare, duplicates, presets, tags.
-7. **Artifacts** · **Guide FR** · **Builders** (горизонт).
+1. **Account-wide:** devilmon/skill planner, fusion tracker, Monster Builder lite, richer Teams.
+2. **Monsters → Dashboard** (опционально): score, графики, drill-down, связка с Rune depth.
+3. **Share (частично)** — mentor account review, Teams в payload, опционально URL без Worker.
+4. **Runes** — diff слотов, God hint, Grind, тюнинг Forge Score.
+5. **Roster depth** — compare, duplicates, presets, tags.
+6. **Artifacts/relics (частично)** — движок правил gear; опционально отдельная вкладка.
+7. **Guide FR** · **Builders** (горизонт).
 
 ---
 
 ## Категория: Runes
 
-- **Rune Score** — колонка в таблице (сила/слабость), без дублирования Sell.
+- **Forge Score** — колонка в таблице (отдельно от Eff% и вердикта); Guide → Rune Table.
 - **Сравнение двух слотов SWEX** — diff вердиктов и ролей.
 - **God potential** — информационная подсказка в строке (не вердикт).
 - **Жёстче Grind** — опциональное правило (eff / HR subs).
 
 ---
 
-## Категория: Artifacts
+## Категория: Artifacts & relics
 
-- Отдельная вкладка: парсинг SWEX, фильтры, свой движок правил (крупный scope).
+- **Сделано:** таблицы под Runes → Table, парсинг SWEX, gear на Monsters detail.
+- **В планах:** движок правил Keep/Sell для gear (отдельно от рун); опционально верхняя вкладка.
 
 ---
 
@@ -83,11 +87,10 @@
 
 ---
 
-## Категория: Share & profiles (frontend-only)
+## Категория: Share & profiles
 
-- **Share URL** на GitHub Pages: `?profile=` внешний JSON или `?data=` сжатый payload (LZ-string / аналог).
-- Read-only просмотр чужого ростера / рун (account review) без бэкенда.
-- Синхронизация между устройствами «как облако» без сервера — только если пользователь сам хостит JSON.
+- **Сделано:** Share Profile (Worker + D1), режимы из App Settings.
+- **Дальше:** account review banner для наставника; `?profile=` / `?data=` без Worker; Teams в share payload.
 
 ## Категория: Out of scope
 

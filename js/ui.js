@@ -24,7 +24,7 @@
   /** First paint of Rune Table: this many rows; user can load the rest explicitly. */
   const RUNE_TABLE_PAGE = 500;
   const RUNE_TABLE_SORT_KEYS = new Set([
-    'grade', 'set', 'level', 'slot', 'main', 'eff', 'role', 'verdict', 's1', 's2', 's3', 's4',
+    'grade', 'set', 'level', 'slot', 'main', 'eff', 'score', 'role', 'verdict', 's1', 's2', 's3', 's4',
   ]);
   const RUNE_TABLE_ANCIENT_ONLY_KEY = 'swrm_rune_table_ancient_only_v1';
   const RUNE_TABLE_HIDE_TARGET_KEY = 'swrm_rune_table_hide_target_v1';
@@ -911,6 +911,7 @@
       if (sets.includes(current)) filterSet.value = current;
     }
     applyRuneTableEffHeader();
+    if (typeof applyRuneTableScoreHeader === 'function') applyRuneTableScoreHeader();
 
     const filterSlot = document.getElementById('filter-slot');
     if (filterSlot) {
@@ -4355,6 +4356,315 @@
     if (el) el.textContent = val;
   }
 
+  const SWRM_REF = () => window.SWRM || {};
+
+  /** How much each MAIN stat type is worth (0–100), separate from subs. */
+  const MAIN_STAT_VALUE = {
+    SPD: 100,
+    CDmg: 93,
+    'ATK%': 91,
+    CRate: 86,
+    ACC: 80,
+    'HP%': 76,
+    'DEF%': 73,
+    RES: 71,
+    ATK: 58,
+    DEF: 56,
+    HP: 54,
+  };
+
+  /** How much each SUB stat type is worth (0–100) — own ranking, not the same as main. */
+  const SUB_STAT_VALUE = {
+    SPD: 100,
+    CDmg: 96,
+    CRate: 92,
+    'ATK%': 90,
+    ACC: 84,
+    'HP%': 78,
+    'DEF%': 74,
+    RES: 72,
+    ATK: 62,
+    DEF: 60,
+    HP: 58,
+  };
+
+  /** Innate uses sub-tier values but weaker overall role in the sum. */
+  const INNATE_WEIGHT_VS_SUB = 0.38;
+
+  const STAT_NAME_TO_TYPE = {
+    HP: 1,
+    'HP%': 2,
+    ATK: 3,
+    'ATK%': 4,
+    DEF: 5,
+    'DEF%': 6,
+    SPD: 8,
+    CRate: 9,
+    CDmg: 10,
+    RES: 11,
+    ACC: 12,
+  };
+
+  /** Main ↔ sub: values above 1 = synergy bonus, below 1 = anti-synergy penalty. */
+  const MAIN_SUB_SYNERGY = {
+    'SPD|SPD': 1.14,
+    'SPD|ACC': 1.1,
+    'SPD|ATK%': 1.06,
+    'SPD|HP%': 0.94,
+    'SPD|RES': 0.92,
+    'SPD|DEF%': 0.93,
+    'ATK%|ATK%': 1.14,
+    'ATK%|CDmg': 1.13,
+    'ATK%|CRate': 1.1,
+    'ATK%|SPD': 1.08,
+    'ATK%|RES': 0.9,
+    'ATK%|DEF%': 0.91,
+    'HP%|HP%': 1.12,
+    'HP%|DEF%': 1.11,
+    'HP%|RES': 1.1,
+    'HP%|SPD': 1.04,
+    'HP%|ATK%': 0.93,
+    'HP%|CDmg': 0.92,
+    'DEF%|DEF%': 1.12,
+    'DEF%|HP%': 1.1,
+    'DEF%|RES': 1.09,
+    'DEF%|ATK%': 0.92,
+    'CDmg|CRate': 1.12,
+    'CDmg|ATK%': 1.1,
+    'CDmg|CDmg': 1.08,
+    'CRate|CDmg': 1.12,
+    'ACC|SPD': 1.1,
+    'ACC|ACC': 1.08,
+    'RES|HP%': 1.1,
+    'RES|RES': 1.08,
+    'ATK|ATK': 1.1,
+    'DEF|DEF': 1.1,
+    'HP|HP': 1.1,
+  };
+
+  /** Sub ↔ sub pairs (unordered). >1 bonus, <1 penalty. */
+  const SUB_SUB_SYNERGY = {
+    'CRate|CDmg': 1.12,
+    'ATK%|CDmg': 1.1,
+    'ATK%|CRate': 1.08,
+    'SPD|ACC': 1.09,
+    'SPD|CDmg': 1.07,
+    'HP%|DEF%': 1.08,
+    'HP%|RES': 1.07,
+    'DEF%|RES': 1.06,
+    'ATK%|SPD': 1.06,
+    'SPD|HP%': 0.95,
+    'ATK%|RES': 0.93,
+    'ATK%|HP%': 0.94,
+    'CDmg|RES': 0.94,
+    'ACC|HP%': 0.96,
+  };
+
+  const DEFAULT_SYNERGY = 1;
+  const DEFAULT_ANTI_SYNERGY = 0.94;
+
+  /** Typical rune lands ~55–75 points before normalize. */
+  const SCORE_CALIBRATION = 295;
+
+  function statTypeId(statName, subOrRune) {
+    if (subOrRune && Number(subOrRune.type) > 0) return Number(subOrRune.type);
+    return STAT_NAME_TO_TYPE[statName] || 0;
+  }
+
+  function subLineValue(s) {
+    const S = SWRM_REF();
+    if (typeof S.subRuneValue === 'function') return S.subRuneValue(s);
+    return (Number(s?.val) || 0) + (Number(s?.grind) || 0);
+  }
+
+  function maxRollForType(typeId) {
+    const S = SWRM_REF();
+    const m = S.SUB_MAX && S.SUB_MAX[typeId];
+    return m ? m * 5 : 0;
+  }
+
+  function maxRollForMain(rune) {
+    const slot = Number(rune.slot) || 0;
+    const main = rune.mainName;
+    const S = SWRM_REF();
+    const table = S.EFF_MAIN_MAX && S.EFF_MAIN_MAX[slot];
+    if (table && main && table[main]) return table[main];
+    const typeId = statTypeId(main, null);
+    return maxRollForType(typeId) || 1;
+  }
+
+  /** Roll quality 0–1: how much of the stat is present (not engine HR). */
+  function rollQuality(value, maxRoll) {
+    if (!maxRoll || maxRoll <= 0) return 0.5;
+    return Math.min(1.12, Math.max(0, Number(value) / maxRoll));
+  }
+
+  function synergyKey(a, b) {
+    return [a, b].sort().join('|');
+  }
+
+  function lookupSynergy(map, a, b, fallback) {
+    if (!a || !b) return fallback;
+    return map[synergyKey(a, b)] ?? fallback;
+  }
+
+  function qualifyingSubs(rune) {
+    return (rune.substats || []).filter((s) => s && s.name && s.source !== 'innate');
+  }
+
+  function mainContribution(rune) {
+    const main = rune.mainName;
+    if (!main) return 0;
+    const intrinsic = MAIN_STAT_VALUE[main] ?? 50;
+    const q = rollQuality(Number(rune.mainVal) || 0, maxRollForMain(rune));
+    return intrinsic * q;
+  }
+
+  function subContribution(sub, slot) {
+    const name = sub.name;
+    const intrinsic = SUB_STAT_VALUE[name] ?? 45;
+    const typeId = statTypeId(name, sub);
+    const q = rollQuality(subLineValue(sub), maxRollForType(typeId));
+    let slotMul = 1;
+    const flatOnPercentSlot =
+      (slot === 2 || slot === 4 || slot === 6) && (typeId === 1 || typeId === 3 || typeId === 5);
+    if (flatOnPercentSlot) slotMul = 0.88;
+    return intrinsic * q * slotMul;
+  }
+
+  function innateContribution(rune) {
+    const name = rune.innate_name;
+    if (!name) return 0;
+    const intrinsic = (SUB_STAT_VALUE[name] ?? 45) * INNATE_WEIGHT_VS_SUB;
+    const typeId = statTypeId(name, { type: rune.innate_type });
+    const q = rollQuality(Number(rune.innate_val) || 0, maxRollForType(typeId));
+    return intrinsic * q;
+  }
+
+  function mainSubSynergyFactor(main, subs) {
+    if (!main || !subs.length) return 1;
+    let sum = 0;
+    let n = 0;
+    for (const s of subs) {
+      const m = lookupSynergy(MAIN_SUB_SYNERGY, main, s.name, DEFAULT_ANTI_SYNERGY);
+      sum += m;
+      n += 1;
+    }
+    return n ? sum / n : 1;
+  }
+
+  function subSubSynergyFactor(subs) {
+    const names = subs.map((s) => s.name).filter(Boolean);
+    if (names.length < 2) return 1;
+    let sum = 0;
+    let n = 0;
+    for (let i = 0; i < names.length; i++) {
+      for (let j = i + 1; j < names.length; j++) {
+        sum += lookupSynergy(SUB_SUB_SYNERGY, names[i], names[j], DEFAULT_SYNERGY);
+        n += 1;
+      }
+    }
+    if (!n) return 1;
+    return sum / n;
+  }
+
+  function duplicateSubPenalty(subs) {
+    const counts = {};
+    for (const s of subs) {
+      counts[s.name] = (counts[s.name] || 0) + 1;
+    }
+    let mul = 1;
+    for (const c of Object.values(counts)) {
+      if (c > 1) mul *= Math.pow(0.88, c - 1);
+    }
+    return mul;
+  }
+
+  function computeForgeScoreBreakdown(rune) {
+    if (!rune) {
+      return {
+        total: 0,
+        mainPts: 0,
+        subPts: 0,
+        innatePts: 0,
+        mainSubSyn: 1,
+        subSubSyn: 1,
+        dupSub: 1,
+      };
+    }
+    const main = rune.mainName || '';
+    const subs = qualifyingSubs(rune);
+    const slot = Number(rune.slot) || 0;
+
+    const mainPts = mainContribution(rune);
+    const subPts = subs.reduce((acc, s) => acc + subContribution(s, slot), 0);
+    const innatePts = innateContribution(rune);
+
+    const mainSubSyn = mainSubSynergyFactor(main, subs);
+    const subSubSyn = subSubSynergyFactor(subs);
+    const dupSub = duplicateSubPenalty(subs);
+
+    const raw =
+      (mainPts + subPts + innatePts) * mainSubSyn * subSubSyn * dupSub;
+    const total = Math.max(0, Math.min(100, Math.round((raw / SCORE_CALIBRATION) * 100)));
+
+    return {
+      total,
+      mainPts: Math.round(mainPts),
+      subPts: Math.round(subPts),
+      innatePts: Math.round(innatePts),
+      mainSubSyn: Math.round(mainSubSyn * 100) / 100,
+      subSubSyn: Math.round(subSubSyn * 100) / 100,
+      dupSub: Math.round(dupSub * 100) / 100,
+    };
+  }
+
+  function computeForgeScore(rune) {
+    return computeForgeScoreBreakdown(rune).total;
+  }
+
+  function computeRuneScore(rune) {
+    return computeForgeScore(rune);
+  }
+
+  function runeScoreBreakdown(rune) {
+    return computeForgeScoreBreakdown(rune);
+  }
+
+  function formatForgeScoreTooltip(b, t) {
+    const tpl =
+      t.forgeScoreTooltip ||
+      'Main {mainPts} pts · Subs {subPts} · Innate {innatePts}. Synergy main↔sub ×{ms} · sub↔sub ×{ss} · dup ×{dup}. Stat tiers + roll size — not Eff% or verdict.';
+    return tpl
+      .replace(/\{mainPts\}/g, String(b.mainPts))
+      .replace(/\{subPts\}/g, String(b.subPts))
+      .replace(/\{innatePts\}/g, String(b.innatePts))
+      .replace(/\{ms\}/g, String(b.mainSubSyn))
+      .replace(/\{ss\}/g, String(b.subSubSyn))
+      .replace(/\{dup\}/g, String(b.dupSub));
+  }
+
+  function runeScoreTooltip(r, t) {
+    const b = runeScoreBreakdown(r);
+    return formatForgeScoreTooltip(b, t || {});
+  }
+
+  function runeScoreTier(score) {
+    const n = Number(score) || 0;
+    if (n >= 88) return 'stat-chip--score-hi';
+    if (n >= 72) return 'stat-chip--score-mid';
+    return 'stat-chip--score-lo';
+  }
+
+  const S = SWRM_REF();
+  if (S) {
+    S.computeForgeScore = computeForgeScore;
+    S.computeForgeScoreBreakdown = computeForgeScoreBreakdown;
+    S.formatForgeScoreTooltip = formatForgeScoreTooltip;
+    S.FORGE_SCORE_MAIN_VALUE = MAIN_STAT_VALUE;
+    S.FORGE_SCORE_SUB_VALUE = SUB_STAT_VALUE;
+  }
+
   function highlightSearchInPlain(text, qRaw) {
     const q = (qRaw || '').trim().toLowerCase();
     const t = String(text ?? '');
@@ -4570,6 +4880,15 @@
     const effTier =
       effNum >= 90 ? 'stat-chip--eff-hi' : effNum >= 75 ? 'stat-chip--eff-mid' : 'stat-chip--eff-lo';
     const effShown = `${(Math.round(effNum * 10) / 10).toFixed(1)}%`;
+    const scoreNum = typeof computeRuneScore === 'function' ? computeRuneScore(r) : 0;
+    const scoreTier = typeof runeScoreTier === 'function' ? runeScoreTier(scoreNum) : 'stat-chip--score-lo';
+    const scoreShown = String(scoreNum);
+    const tScore = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const scoreTitle = escapeAttr(
+      typeof runeScoreTooltip === 'function'
+        ? runeScoreTooltip(r, tScore)
+        : tScore.tableScoreHint || '',
+    );
     const rCls = roleClass(r.role);
     const subs   = r.substats.slice(0, 4);
     const innate = r.innate_name ? `${r.innate_name} ${r.innate_val}` : '';
@@ -4610,6 +4929,7 @@
       ${subCell(subs[2], false)}
       ${subCell(subs[3], false)}
       <td class="col-num td-num"><span class="stat-chip stat-chip--eff ${effTier}">${highlightSearchInPlain(effShown, tableSearchHighlight)}</span></td>
+      <td class="col-num td-num" title="${scoreTitle}"><span class="stat-chip stat-chip--score ${scoreTier}">${highlightSearchInPlain(scoreShown, tableSearchHighlight)}</span></td>
       <td class="col-text">${roleHtml}</td>
       <td class="col-text">${verdictHtml}</td>
       <td class="target-col-cell col-text"${targetTipAttr}>${targetHtml}</td>
@@ -5055,13 +5375,6 @@
   const TABLE_KIND_IDS = ['runes', 'artifacts', 'relics'];
   const TABLE_KIND_STORAGE_KEY = 'swrm_table_kind_v1';
   let tableKindTabsBound = false;
-  let filteredArtifacts = [];
-  let filteredRelics = [];
-  let artifactFilterGrade = '';
-  let artifactFilterCategory = '';
-  let artifactFilterLocation = '';
-  let relicFilterGrade = '';
-  let relicFilterCategory = '';
 
   function normalizeTableKind(id) {
     return TABLE_KIND_IDS.includes(id) ? id : 'runes';
@@ -5113,75 +5426,6 @@
     return parts.join(' ').toLowerCase();
   }
 
-  function artifactPassesFilters(a) {
-    if (artifactFilterGrade && String(a.gradeStr || '') !== artifactFilterGrade) return false;
-    if (artifactFilterCategory && String(a.category || '') !== artifactFilterCategory) return false;
-    if (artifactFilterLocation === 'inventory') {
-      if (a.occupiedId != null && Number(a.occupiedId) !== 0) return false;
-    } else if (artifactFilterLocation === 'equipped') {
-      if (a.occupiedId == null || Number(a.occupiedId) === 0) return false;
-    }
-    return true;
-  }
-
-  function relicPassesFilters(r) {
-    if (relicFilterGrade && String(r.gradeStr || '') !== relicFilterGrade) return false;
-    if (relicFilterCategory && String(r.category || '') !== relicFilterCategory) return false;
-    return true;
-  }
-
-  function applyGearTableSearch() {
-    const artQ = (document.getElementById('search-box-artifacts')?.value || '')
-      .trim()
-      .toLowerCase();
-    const relQ = (document.getElementById('search-box-relics')?.value || '').trim().toLowerCase();
-    const artSrc = (allArtifacts || []).filter(artifactPassesFilters);
-    const relSrc = (allRelics || []).filter(relicPassesFilters);
-    filteredArtifacts = !artQ
-      ? artSrc.slice()
-      : artSrc.filter((a) => gearSearchHay(a).includes(artQ));
-    filteredRelics = !relQ ? relSrc.slice() : relSrc.filter((r) => gearSearchHay(r).includes(relQ));
-  }
-
-  function countActiveArtifactFilters() {
-    let n = 0;
-    if (artifactFilterGrade) n++;
-    if (artifactFilterCategory) n++;
-    if (artifactFilterLocation) n++;
-    return n;
-  }
-
-  function countActiveRelicFilters() {
-    let n = 0;
-    if (relicFilterGrade) n++;
-    if (relicFilterCategory) n++;
-    return n;
-  }
-
-  function updateArtifactFilterBadge() {
-    const badge = document.getElementById('artifact-filters-active-count');
-    if (!badge) return;
-    const n = countActiveArtifactFilters();
-    if (n > 0) {
-      badge.textContent = String(n);
-      badge.hidden = false;
-    } else {
-      badge.hidden = true;
-    }
-  }
-
-  function updateRelicFilterBadge() {
-    const badge = document.getElementById('relic-filters-active-count');
-    if (!badge) return;
-    const n = countActiveRelicFilters();
-    if (n > 0) {
-      badge.textContent = String(n);
-      badge.hidden = false;
-    } else {
-      badge.hidden = true;
-    }
-  }
-
   function populateGearFilterSelects() {
     const arts = allArtifacts || [];
     const rels = allRelics || [];
@@ -5201,39 +5445,34 @@
       }
       sel.value = keep;
     };
-    fill(document.getElementById('filter-artifact-grade'), artGrades, artifactFilterGrade);
-    fill(document.getElementById('filter-artifact-category'), artCats, artifactFilterCategory);
-    fill(document.getElementById('filter-relic-grade'), relGrades, relicFilterGrade);
-    fill(document.getElementById('filter-relic-category'), relCats, relicFilterCategory);
+    fill(
+      document.getElementById('filter-artifact-grade'),
+      artGrades,
+      typeof artifactFilterGrade !== 'undefined' ? artifactFilterGrade : '',
+    );
+    fill(
+      document.getElementById('filter-artifact-category'),
+      artCats,
+      typeof artifactFilterCategory !== 'undefined' ? artifactFilterCategory : '',
+    );
+    fill(
+      document.getElementById('filter-relic-grade'),
+      relGrades,
+      typeof relicFilterGrade !== 'undefined' ? relicFilterGrade : '',
+    );
+    fill(
+      document.getElementById('filter-relic-category'),
+      relCats,
+      typeof relicFilterCategory !== 'undefined' ? relicFilterCategory : '',
+    );
   }
 
-  function resetArtifactTableFilters() {
-    artifactFilterGrade = '';
-    artifactFilterCategory = '';
-    artifactFilterLocation = '';
-    const sb = document.getElementById('search-box-artifacts');
-    if (sb) sb.value = '';
-    const g = document.getElementById('filter-artifact-grade');
-    const c = document.getElementById('filter-artifact-category');
-    const l = document.getElementById('filter-artifact-location');
-    if (g) g.value = '';
-    if (c) c.value = '';
-    if (l) l.value = '';
-    updateArtifactFilterBadge();
-    renderGearTables();
-  }
-
-  function resetRelicTableFilters() {
-    relicFilterGrade = '';
-    relicFilterCategory = '';
-    const sb = document.getElementById('search-box-relics');
-    if (sb) sb.value = '';
-    const g = document.getElementById('filter-relic-grade');
-    const c = document.getElementById('filter-relic-category');
-    if (g) g.value = '';
-    if (c) c.value = '';
-    updateRelicFilterBadge();
-    renderGearTables();
+  function renderGearTables() {
+    applyArtifactTableSearch();
+    applyRelicTableSearch();
+    renderArtifactTableBody();
+    renderRelicTableBody();
+    updateGearTableCount();
   }
 
   function updateGearTableCount() {
@@ -5256,99 +5495,6 @@
     const kind = readTableKind();
     if (legacy && kind === 'artifacts' && artEl) legacy.textContent = artEl.textContent;
     if (legacy && kind === 'relics' && relEl) legacy.textContent = relEl.textContent;
-  }
-
-  function artifactSubStack(a, fmtSub) {
-    const subs = (a.secs || []).slice(0, 4);
-    if (!subs.length) {
-      return '<span class="gear-table-subs__empty">—</span>';
-    }
-    return subs
-      .map((s) => {
-        const text = s && fmtSub ? fmtSub(s) : '—';
-        return `<span class="gear-table-subs__line">${escapeHtml(text)}</span>`;
-      })
-      .join('');
-  }
-
-  function renderArtifactTableBody() {
-    const tbody = document.getElementById('artifact-tbody');
-    if (!tbody) return;
-    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-    const fmt = window.SWRM && window.SWRM.formatGearEffectLine;
-    const fmtSub = window.SWRM && window.SWRM.formatArtifactSubLine;
-    if (!filteredArtifacts.length) {
-      tbody.innerHTML = `<tr><td colspan="5" class="table-empty">${escapeHtml(t.tableGearEmpty || 'No artifacts')}</td></tr>`;
-      return;
-    }
-    const rows = filteredArtifacts
-      .slice()
-      .sort(
-        (a, b) =>
-          String(a.category).localeCompare(String(b.category)) ||
-          String(a.gradeStr).localeCompare(String(b.gradeStr)),
-      )
-      .map((a) => {
-        const main = a.pri && fmt ? fmt(a.pri, { kind: 'artifact' }) : '—';
-        return `<tr>
-          <td class="col-grade">${escapeHtml(a.gradeStr || '—')}</td>
-          <td>${escapeHtml(a.category || '—')}</td>
-          <td>${escapeHtml(main)}</td>
-          <td class="col-subs-stack"><div class="gear-table-subs">${artifactSubStack(a, fmtSub)}</div></td>
-          <td>${escapeHtml(gearLocationLabel(a.occupiedId, t))}</td>
-        </tr>`;
-      });
-    tbody.innerHTML = rows.join('');
-  }
-
-  function renderRelicTableBody() {
-    const tbody = document.getElementById('relic-tbody');
-    if (!tbody) return;
-    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-    const fmt = window.SWRM && window.SWRM.formatGearEffectLine;
-    const fmtSec = window.SWRM && window.SWRM.formatRelicSecLine;
-    const fmtDur =
-      window.SWRM && typeof window.SWRM.formatRelicDurability === 'function'
-        ? window.SWRM.formatRelicDurability
-        : null;
-    if (!filteredRelics.length) {
-      tbody.innerHTML = `<tr><td colspan="6" class="table-empty">${escapeHtml(t.tableGearEmptyRelics || 'No relics')}</td></tr>`;
-      return;
-    }
-    const rows = filteredRelics
-      .slice()
-      .sort(
-        (a, b) =>
-          String(a.category).localeCompare(String(b.category)) ||
-          (b.level || 0) - (a.level || 0),
-      )
-      .map((r) => {
-        const main = r.pri && fmt ? fmt(r.pri, { kind: 'relic' }) : '—';
-        const sec = fmtSec ? fmtSec(r) : '—';
-        const dur = fmtDur ? fmtDur(r) : '—';
-        const category = r.category ? r.category : '—';
-        const fmtWear =
-          window.SWRM && typeof window.SWRM.formatRelicWearCount === 'function'
-            ? window.SWRM.formatRelicWearCount
-            : null;
-        const wear = fmtWear ? fmtWear(r) : '0/100';
-        return `<tr>
-          <td>${escapeHtml(category)}</td>
-          <td class="th-num">+${escapeHtml(String(r.level || 0))}</td>
-          <td class="th-num">${escapeHtml(dur)}</td>
-          <td>${escapeHtml(main)}</td>
-          <td class="col-text">${escapeHtml(sec)}</td>
-          <td class="th-num">${escapeHtml(wear)}</td>
-        </tr>`;
-      });
-    tbody.innerHTML = rows.join('');
-  }
-
-  function renderGearTables() {
-    applyGearTableSearch();
-    renderArtifactTableBody();
-    renderRelicTableBody();
-    updateGearTableCount();
   }
 
   function setTableToolbarVisible(kind) {
@@ -5410,52 +5556,12 @@
     }
   }
 
-  function bindGearTableFilters() {
-    if (bindGearTableFilters._done) return;
-    bindGearTableFilters._done = true;
-
-    document.getElementById('btn-artifact-reset-filters')?.addEventListener('click', resetArtifactTableFilters);
-    document.getElementById('artifact-filters-drawer-reset')?.addEventListener('click', resetArtifactTableFilters);
-    document.getElementById('btn-relic-reset-filters')?.addEventListener('click', resetRelicTableFilters);
-    document.getElementById('relic-filters-drawer-reset')?.addEventListener('click', resetRelicTableFilters);
-
-    const onArtifactFilterChange = () => {
-      artifactFilterGrade = document.getElementById('filter-artifact-grade')?.value || '';
-      artifactFilterCategory = document.getElementById('filter-artifact-category')?.value || '';
-      artifactFilterLocation = document.getElementById('filter-artifact-location')?.value || '';
-      updateArtifactFilterBadge();
-      renderGearTables();
-    };
-    document.getElementById('filter-artifact-grade')?.addEventListener('change', onArtifactFilterChange);
-    document.getElementById('filter-artifact-category')?.addEventListener('change', onArtifactFilterChange);
-    document.getElementById('filter-artifact-location')?.addEventListener('change', onArtifactFilterChange);
-
-    const onRelicFilterChange = () => {
-      relicFilterGrade = document.getElementById('filter-relic-grade')?.value || '';
-      relicFilterCategory = document.getElementById('filter-relic-category')?.value || '';
-      updateRelicFilterBadge();
-      renderGearTables();
-    };
-    document.getElementById('filter-relic-grade')?.addEventListener('change', onRelicFilterChange);
-    document.getElementById('filter-relic-category')?.addEventListener('change', onRelicFilterChange);
-
-    let artDebounce = null;
-    document.getElementById('search-box-artifacts')?.addEventListener('input', () => {
-      clearTimeout(artDebounce);
-      artDebounce = setTimeout(() => renderGearTables(), 280);
-    });
-    let relDebounce = null;
-    document.getElementById('search-box-relics')?.addEventListener('input', () => {
-      clearTimeout(relDebounce);
-      relDebounce = setTimeout(() => renderGearTables(), 280);
-    });
-  }
-
   function initTableKindTabs() {
     const nav = document.getElementById('table-kind-tabs');
     if (!nav || tableKindTabsBound) return;
     tableKindTabsBound = true;
-    bindGearTableFilters();
+    bindArtifactTableFilters();
+    bindRelicTableFilters();
     nav.querySelectorAll('.table-kind-tab').forEach((btn) => {
       btn.addEventListener('click', () => {
         const kind = btn.dataset.tableKind;
@@ -5469,6 +5575,250 @@
   function onGearDataHydrated() {
     populateGearFilterSelects();
     if (readTableKind() !== 'runes') renderGearTables();
+  }
+
+  let filteredArtifacts = [];
+  let artifactFilterGrade = '';
+  let artifactFilterCategory = '';
+  let artifactFilterLocation = '';
+
+  function artifactPassesFilters(a) {
+    if (artifactFilterGrade && String(a.gradeStr || '') !== artifactFilterGrade) return false;
+    if (artifactFilterCategory && String(a.category || '') !== artifactFilterCategory) return false;
+    if (artifactFilterLocation === 'inventory') {
+      if (a.occupiedId != null && Number(a.occupiedId) !== 0) return false;
+    } else if (artifactFilterLocation === 'equipped') {
+      if (a.occupiedId == null || Number(a.occupiedId) === 0) return false;
+    }
+    return true;
+  }
+
+  function applyArtifactTableSearch() {
+    const artQ = (document.getElementById('search-box-artifacts')?.value || '')
+      .trim()
+      .toLowerCase();
+    const artSrc = (allArtifacts || []).filter(artifactPassesFilters);
+    filteredArtifacts = !artQ
+      ? artSrc.slice()
+      : artSrc.filter((a) => gearSearchHay(a).includes(artQ));
+  }
+
+  function countActiveArtifactFilters() {
+    let n = 0;
+    if (artifactFilterGrade) n++;
+    if (artifactFilterCategory) n++;
+    if (artifactFilterLocation) n++;
+    return n;
+  }
+
+  function updateArtifactFilterBadge() {
+    const badge = document.getElementById('artifact-filters-active-count');
+    if (!badge) return;
+    const n = countActiveArtifactFilters();
+    if (n > 0) {
+      badge.textContent = String(n);
+      badge.hidden = false;
+    } else {
+      badge.hidden = true;
+    }
+  }
+
+  function resetArtifactTableFilters() {
+    artifactFilterGrade = '';
+    artifactFilterCategory = '';
+    artifactFilterLocation = '';
+    const sb = document.getElementById('search-box-artifacts');
+    if (sb) sb.value = '';
+    const g = document.getElementById('filter-artifact-grade');
+    const c = document.getElementById('filter-artifact-category');
+    const l = document.getElementById('filter-artifact-location');
+    if (g) g.value = '';
+    if (c) c.value = '';
+    if (l) l.value = '';
+    updateArtifactFilterBadge();
+    renderGearTables();
+  }
+
+  function artifactSubStack(a, fmtSub) {
+    const subs = (a.secs || []).slice(0, 4);
+    if (!subs.length) {
+      return '<span class="gear-table-subs__empty">—</span>';
+    }
+    return subs
+      .map((s) => {
+        const text = s && fmtSub ? fmtSub(s) : '—';
+        return `<span class="gear-table-subs__line">${escapeHtml(text)}</span>`;
+      })
+      .join('');
+  }
+
+  function renderArtifactTableBody() {
+    const tbody = document.getElementById('artifact-tbody');
+    if (!tbody) return;
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const fmt = window.SWRM && window.SWRM.formatGearEffectLine;
+    const fmtSub = window.SWRM && window.SWRM.formatArtifactSubLine;
+    if (!filteredArtifacts.length) {
+      tbody.innerHTML = `<tr><td colspan="5" class="table-empty">${escapeHtml(t.tableGearEmpty || 'No artifacts')}</td></tr>`;
+      return;
+    }
+    const rows = filteredArtifacts
+      .slice()
+      .sort(
+        (a, b) =>
+          String(a.category).localeCompare(String(b.category)) ||
+          String(a.gradeStr).localeCompare(String(b.gradeStr)),
+      )
+      .map((a) => {
+        const main = a.pri && fmt ? fmt(a.pri, { kind: 'artifact' }) : '—';
+        return `<tr>
+          <td class="col-grade">${escapeHtml(a.gradeStr || '—')}</td>
+          <td>${escapeHtml(a.category || '—')}</td>
+          <td>${escapeHtml(main)}</td>
+          <td class="col-subs-stack"><div class="gear-table-subs">${artifactSubStack(a, fmtSub)}</div></td>
+          <td>${escapeHtml(gearLocationLabel(a.occupiedId, t))}</td>
+        </tr>`;
+      });
+    tbody.innerHTML = rows.join('');
+  }
+
+  function bindArtifactTableFilters() {
+    if (bindArtifactTableFilters._done) return;
+    bindArtifactTableFilters._done = true;
+
+    document.getElementById('btn-artifact-reset-filters')?.addEventListener('click', resetArtifactTableFilters);
+    document.getElementById('artifact-filters-drawer-reset')?.addEventListener('click', resetArtifactTableFilters);
+
+    const onArtifactFilterChange = () => {
+      artifactFilterGrade = document.getElementById('filter-artifact-grade')?.value || '';
+      artifactFilterCategory = document.getElementById('filter-artifact-category')?.value || '';
+      artifactFilterLocation = document.getElementById('filter-artifact-location')?.value || '';
+      updateArtifactFilterBadge();
+      renderGearTables();
+    };
+    document.getElementById('filter-artifact-grade')?.addEventListener('change', onArtifactFilterChange);
+    document.getElementById('filter-artifact-category')?.addEventListener('change', onArtifactFilterChange);
+    document.getElementById('filter-artifact-location')?.addEventListener('change', onArtifactFilterChange);
+
+    let artDebounce = null;
+    document.getElementById('search-box-artifacts')?.addEventListener('input', () => {
+      clearTimeout(artDebounce);
+      artDebounce = setTimeout(() => renderGearTables(), 280);
+    });
+  }
+
+  let filteredRelics = [];
+  let relicFilterGrade = '';
+  let relicFilterCategory = '';
+
+  function relicPassesFilters(r) {
+    if (relicFilterGrade && String(r.gradeStr || '') !== relicFilterGrade) return false;
+    if (relicFilterCategory && String(r.category || '') !== relicFilterCategory) return false;
+    return true;
+  }
+
+  function applyRelicTableSearch() {
+    const relQ = (document.getElementById('search-box-relics')?.value || '').trim().toLowerCase();
+    const relSrc = (allRelics || []).filter(relicPassesFilters);
+    filteredRelics = !relQ ? relSrc.slice() : relSrc.filter((r) => gearSearchHay(r).includes(relQ));
+  }
+
+  function countActiveRelicFilters() {
+    let n = 0;
+    if (relicFilterGrade) n++;
+    if (relicFilterCategory) n++;
+    return n;
+  }
+
+  function updateRelicFilterBadge() {
+    const badge = document.getElementById('relic-filters-active-count');
+    if (!badge) return;
+    const n = countActiveRelicFilters();
+    if (n > 0) {
+      badge.textContent = String(n);
+      badge.hidden = false;
+    } else {
+      badge.hidden = true;
+    }
+  }
+
+  function resetRelicTableFilters() {
+    relicFilterGrade = '';
+    relicFilterCategory = '';
+    const sb = document.getElementById('search-box-relics');
+    if (sb) sb.value = '';
+    const g = document.getElementById('filter-relic-grade');
+    const c = document.getElementById('filter-relic-category');
+    if (g) g.value = '';
+    if (c) c.value = '';
+    updateRelicFilterBadge();
+    renderGearTables();
+  }
+
+  function renderRelicTableBody() {
+    const tbody = document.getElementById('relic-tbody');
+    if (!tbody) return;
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const fmt = window.SWRM && window.SWRM.formatGearEffectLine;
+    const fmtSec = window.SWRM && window.SWRM.formatRelicSecLine;
+    const fmtDur =
+      window.SWRM && typeof window.SWRM.formatRelicDurability === 'function'
+        ? window.SWRM.formatRelicDurability
+        : null;
+    if (!filteredRelics.length) {
+      tbody.innerHTML = `<tr><td colspan="6" class="table-empty">${escapeHtml(t.tableGearEmptyRelics || 'No relics')}</td></tr>`;
+      return;
+    }
+    const rows = filteredRelics
+      .slice()
+      .sort(
+        (a, b) =>
+          String(a.category).localeCompare(String(b.category)) ||
+          (b.level || 0) - (a.level || 0),
+      )
+      .map((r) => {
+        const main = r.pri && fmt ? fmt(r.pri, { kind: 'relic' }) : '—';
+        const sec = fmtSec ? fmtSec(r) : '—';
+        const dur = fmtDur ? fmtDur(r) : '—';
+        const category = r.category ? r.category : '—';
+        const fmtWear =
+          window.SWRM && typeof window.SWRM.formatRelicWearCount === 'function'
+            ? window.SWRM.formatRelicWearCount
+            : null;
+        const wear = fmtWear ? fmtWear(r) : '0/100';
+        return `<tr>
+          <td>${escapeHtml(category)}</td>
+          <td class="th-num">+${escapeHtml(String(r.level || 0))}</td>
+          <td class="th-num">${escapeHtml(dur)}</td>
+          <td>${escapeHtml(main)}</td>
+          <td class="col-text">${escapeHtml(sec)}</td>
+          <td class="th-num">${escapeHtml(wear)}</td>
+        </tr>`;
+      });
+    tbody.innerHTML = rows.join('');
+  }
+
+  function bindRelicTableFilters() {
+    if (bindRelicTableFilters._done) return;
+    bindRelicTableFilters._done = true;
+
+    document.getElementById('btn-relic-reset-filters')?.addEventListener('click', resetRelicTableFilters);
+    document.getElementById('relic-filters-drawer-reset')?.addEventListener('click', resetRelicTableFilters);
+
+    const onRelicFilterChange = () => {
+      relicFilterGrade = document.getElementById('filter-relic-grade')?.value || '';
+      relicFilterCategory = document.getElementById('filter-relic-category')?.value || '';
+      updateRelicFilterBadge();
+      renderGearTables();
+    };
+    document.getElementById('filter-relic-grade')?.addEventListener('change', onRelicFilterChange);
+    document.getElementById('filter-relic-category')?.addEventListener('change', onRelicFilterChange);
+
+    let relDebounce = null;
+    document.getElementById('search-box-relics')?.addEventListener('input', () => {
+      clearTimeout(relDebounce);
+      relDebounce = setTimeout(() => renderGearTables(), 280);
+    });
   }
 
   // ===================== TABLE =====================
@@ -5489,8 +5839,17 @@
     lbl.setAttribute('title', t.tableEffHeaderCappedTitle || '');
   }
 
+  function applyRuneTableScoreHeader() {
+    const lbl = document.getElementById('lbl-th-score');
+    if (!lbl) return;
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    lbl.textContent = t.tableScoreHeader || 'Score';
+    lbl.setAttribute('title', t.tableScoreHint || '');
+  }
+
   function initRuneTablePrefsFromStorage() {
     applyRuneTableEffHeader();
+    applyRuneTableScoreHeader();
     const ancient = document.getElementById('toggle-ancient-only');
     if (ancient) {
       const v = localStorage.getItem(RUNE_TABLE_ANCIENT_ONLY_KEY);
@@ -5513,6 +5872,10 @@
         case 'level':   av = a.level;   bv = b.level;   break;
         case 'main':    av = a.mainName;bv = b.mainName;break;
         case 'eff':     av = getRuneNumericEff(a); bv = getRuneNumericEff(b); break;
+        case 'score':
+          av = typeof computeRuneScore === 'function' ? computeRuneScore(a) : 0;
+          bv = typeof computeRuneScore === 'function' ? computeRuneScore(b) : 0;
+          break;
         case 'role':    av = a.role;    bv = b.role;    break;
         case 'verdict': av = a.verdict; bv = b.verdict; break;
         case 's1':      av = a.substats[0]?.name || ''; bv = b.substats[0]?.name || ''; break;
@@ -5581,7 +5944,7 @@
     const headers = [
       'Grade',
       tloc.csvHeaderAncient || 'Ancient',
-      'Set', 'Lvl', 'Slot', 'Main', 'Innate', 'Sub1', 'Sub2', 'Sub3', 'Sub4', 'Eff%', 'Role', 'Verdict',
+      'Set', 'Lvl', 'Slot', 'Main', 'Innate', 'Sub1', 'Sub2', 'Sub3', 'Sub4', 'Eff%', 'Score', 'Role', 'Verdict',
     ];
     if (includeTarget) headers.push('Target');
     function cellPart(s) {
@@ -5615,6 +5978,7 @@
         subcell(subs[2]),
         subcell(subs[3]),
         `${getRuneNumericEff(r).toFixed(1)}%`,
+        String(typeof computeRuneScore === 'function' ? computeRuneScore(r) : ''),
         roleDisplayName(r.role || ''),
         r.verdict || '',
       ];
@@ -8176,6 +8540,69 @@
   let monstersDetailTab = 'info';
   let monstersRuneFocusState = null;
 
+  let monstersHubTabsBound = false;
+
+  function normalizeMonstersSubtabId(id) {
+    return MONSTERS_SUBTAB_IDS.includes(id) ? id : 'roster';
+  }
+
+  function showMonstersSubtab(subId, options) {
+    const id = normalizeMonstersSubtabId(subId);
+    try {
+      sessionStorage.setItem(MONSTERS_SUBTAB_STORAGE_KEY, id);
+    } catch (e) { /* ignore */ }
+
+    document.querySelectorAll('.monsters-hub-tab').forEach((btn) => {
+      const on = btn.dataset.monstersHub === id;
+      btn.classList.toggle('is-active', on);
+      btn.setAttribute('aria-selected', on ? 'true' : 'false');
+      btn.tabIndex = on ? 0 : -1;
+    });
+
+    document.querySelectorAll('.monsters-hub-pane').forEach((pane) => {
+      const on = pane.dataset.monstersPane === id;
+      pane.classList.toggle('is-active', on);
+      pane.classList.toggle('hidden', !on);
+      if (on) pane.removeAttribute('hidden');
+      else pane.setAttribute('hidden', '');
+    });
+
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const lead = document.getElementById('lbl-monsters-lead');
+    if (lead) {
+      lead.textContent =
+        id === 'teams'
+          ? t.monstersTeamsLead || 'Build named teams and group them into sets (e.g. Arena Offence).'
+          : t.monstersLead || '';
+    }
+
+    if (id === 'roster') {
+      void renderMonstersPanel();
+    } else if (id === 'teams' && typeof renderTeamsPanel === 'function') {
+      renderTeamsPanel();
+    }
+  }
+
+  function initMonstersHubTabs() {
+    const nav = document.getElementById('monsters-hub-tabs');
+    if (!nav || monstersHubTabsBound) return;
+    monstersHubTabsBound = true;
+    nav.querySelectorAll('.monsters-hub-tab').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const sub = btn.dataset.monstersHub;
+        if (!sub) return;
+        showMainTab('monsters', { monstersSubtab: sub, writeHash: true });
+      });
+    });
+  }
+
+  function monstersSubtabFromHashSegment(segment) {
+    const s = String(segment || '').trim().toLowerCase();
+    if (s === 'team' || s === 'teams') return 'teams';
+    if (s === 'roster' || s === 'list') return 'roster';
+    return MONSTERS_SUBTAB_IDS.includes(s) ? s : null;
+  }
+
   const TEAMS_STORAGE_KEY = 'swrm_teams_v2';
   const TEAMS_STORAGE_KEY_LEGACY = 'swrm_teams_v1';
   const TEAM_SIZE_MIN = 3;
@@ -8566,69 +8993,6 @@
       notes: 'Sample team from demo roster — edit or replace anytime.',
     });
     return true;
-  }
-
-  let monstersHubTabsBound = false;
-
-  function normalizeMonstersSubtabId(id) {
-    return MONSTERS_SUBTAB_IDS.includes(id) ? id : 'roster';
-  }
-
-  function showMonstersSubtab(subId, options) {
-    const id = normalizeMonstersSubtabId(subId);
-    try {
-      sessionStorage.setItem(MONSTERS_SUBTAB_STORAGE_KEY, id);
-    } catch (e) { /* ignore */ }
-
-    document.querySelectorAll('.monsters-hub-tab').forEach((btn) => {
-      const on = btn.dataset.monstersHub === id;
-      btn.classList.toggle('is-active', on);
-      btn.setAttribute('aria-selected', on ? 'true' : 'false');
-      btn.tabIndex = on ? 0 : -1;
-    });
-
-    document.querySelectorAll('.monsters-hub-pane').forEach((pane) => {
-      const on = pane.dataset.monstersPane === id;
-      pane.classList.toggle('is-active', on);
-      pane.classList.toggle('hidden', !on);
-      if (on) pane.removeAttribute('hidden');
-      else pane.setAttribute('hidden', '');
-    });
-
-    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-    const lead = document.getElementById('lbl-monsters-lead');
-    if (lead) {
-      lead.textContent =
-        id === 'teams'
-          ? t.monstersTeamsLead || 'Build named teams and group them into sets (e.g. Arena Offence).'
-          : t.monstersLead || '';
-    }
-
-    if (id === 'roster') {
-      void renderMonstersPanel();
-    } else if (id === 'teams' && typeof renderTeamsPanel === 'function') {
-      renderTeamsPanel();
-    }
-  }
-
-  function initMonstersHubTabs() {
-    const nav = document.getElementById('monsters-hub-tabs');
-    if (!nav || monstersHubTabsBound) return;
-    monstersHubTabsBound = true;
-    nav.querySelectorAll('.monsters-hub-tab').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const sub = btn.dataset.monstersHub;
-        if (!sub) return;
-        showMainTab('monsters', { monstersSubtab: sub, writeHash: true });
-      });
-    });
-  }
-
-  function monstersSubtabFromHashSegment(segment) {
-    const s = String(segment || '').trim().toLowerCase();
-    if (s === 'team' || s === 'teams') return 'teams';
-    if (s === 'roster' || s === 'list') return 'roster';
-    return MONSTERS_SUBTAB_IDS.includes(s) ? s : null;
   }
 
   let teamsUiBound = false;
@@ -10012,6 +10376,151 @@
     };
     window.addEventListener('scroll', reposition, true);
     window.addEventListener('resize', reposition);
+  }
+
+  let boxOverviewBound = false;
+
+  function computeMonstersBoxOverview(units) {
+    let total = 0;
+    let unruned = 0;
+    let partial = 0;
+    let fullSix = 0;
+    let skillMonsters = 0;
+    let skillUpsTotal = 0;
+    let storage = 0;
+    for (const u of units || []) {
+      if (typeof isTechnicalFodderMonster === 'function' && isTechnicalFodderMonster(u)) continue;
+      total += 1;
+      if (u.inStorage) storage += 1;
+      if (u.equippedCount <= 0) unruned += 1;
+      else if (!u.hasFullRunes) partial += 1;
+      if (u.hasFullRunes) fullSix += 1;
+      if (u.skillUpsNeeded > 0) {
+        skillMonsters += 1;
+        skillUpsTotal += u.skillUpsNeeded;
+      }
+    }
+    const readinessPct = total > 0 ? Math.round((100 * fullSix) / total) : 0;
+    return {
+      total,
+      unruned,
+      partial,
+      fullSix,
+      skillMonsters,
+      skillUpsTotal,
+      storage,
+      readinessPct,
+    };
+  }
+
+  function applyMonsterBoxOverviewFilter(kind) {
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const f =
+      typeof readMonstersFiltersFromDom === 'function'
+        ? readMonstersFiltersFromDom()
+        : { sort: 'name', q: '', element: '', location: 'all', minLevelMin: 0 };
+    f.runeFilter = '';
+    f.skillFilter = '';
+    f.fullSixOnly = false;
+    f.location = 'all';
+    if (kind === 'unruned') f.runeFilter = 'unruned';
+    else if (kind === 'partial') f.runeFilter = 'partial';
+    else if (kind === 'fullSix') f.fullSixOnly = true;
+    else if (kind === 'skill-ups') f.skillFilter = 'needs-up';
+    else if (kind === 'storage') f.location = 'storage';
+    if (typeof writeMonstersFilters === 'function') writeMonstersFilters(f);
+    const runeSel = document.getElementById('monsters-filter-rune');
+    const skillSel = document.getElementById('monsters-filter-skill');
+    const locSel = document.getElementById('monsters-filter-location');
+    const sixBtn = document.getElementById('monsters-filter-full-six');
+    if (runeSel) runeSel.value = f.runeFilter || '';
+    if (skillSel) skillSel.value = f.skillFilter || '';
+    if (locSel) locSel.value = f.location || 'all';
+    if (typeof syncMonstersShowAllButton === 'function') syncMonstersShowAllButton(!!f.fullSixOnly, t);
+    if (typeof updateMonstersFilterSummary === 'function') updateMonstersFilterSummary();
+    if (typeof renderMonstersPanel === 'function') void renderMonstersPanel();
+  }
+
+  function renderMonstersBoxOverview(units) {
+    const root = document.getElementById('monsters-box-overview');
+    const lead = document.getElementById('monsters-box-overview-lead');
+    const tiles = document.getElementById('monsters-box-overview-tiles');
+    if (!root || !tiles) return;
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const o = computeMonstersBoxOverview(units);
+    if (!o.total) {
+      root.hidden = true;
+      return;
+    }
+    root.hidden = false;
+    if (lead) {
+      const tpl =
+        t.monstersBoxOverviewLead ||
+        '{readiness}% of your 6★ have full rune sets · {unruned} without runes · {partial} incomplete · {skill} skill levels to max';
+      lead.textContent = tpl
+        .replace(/\{readiness\}/g, String(o.readinessPct))
+        .replace(/\{unruned\}/g, String(o.unruned))
+        .replace(/\{partial\}/g, String(o.partial))
+        .replace(/\{skill\}/g, String(o.skillUpsTotal));
+    }
+    const defs = [
+      {
+        kind: 'unruned',
+        label: t.monstersBoxTileUnruned || 'No runes',
+        value: o.unruned,
+        hide: o.unruned === 0,
+      },
+      {
+        kind: 'partial',
+        label: t.monstersBoxTilePartial || 'Incomplete sets',
+        value: o.partial,
+        hide: o.partial === 0,
+      },
+      {
+        kind: 'fullSix',
+        label: t.monstersBoxTileFullSix || 'Full 6/6',
+        value: o.fullSix,
+        hide: false,
+      },
+      {
+        kind: 'skill-ups',
+        label: t.monstersBoxTileSkillUps || 'Need skill-ups',
+        value: o.skillMonsters,
+        sub: o.skillUpsTotal > 0 ? `(${o.skillUpsTotal} lv)` : '',
+        hide: o.skillMonsters === 0,
+      },
+      {
+        kind: 'storage',
+        label: t.monstersBoxTileStorage || 'In storage',
+        value: o.storage,
+        hide: o.storage === 0,
+      },
+    ];
+    tiles.innerHTML = defs
+      .filter((d) => !d.hide)
+      .map(
+        (d) =>
+          `<button type="button" class="monsters-box-tile" data-box-tile="${escapeHtml(d.kind)}" title="${escapeHtml(t.monstersBoxTileHint || 'Show matching monsters')}">
+            <span class="monsters-box-tile__value">${escapeHtml(String(d.value))}${d.sub ? `<span class="monsters-box-tile__sub">${escapeHtml(d.sub)}</span>` : ''}</span>
+            <span class="monsters-box-tile__label">${escapeHtml(d.label)}</span>
+          </button>`,
+      )
+      .join('');
+    bindMonstersBoxOverview();
+  }
+
+  function bindMonstersBoxOverview() {
+    if (boxOverviewBound) return;
+    const tiles = document.getElementById('monsters-box-overview-tiles');
+    if (!tiles) return;
+    boxOverviewBound = true;
+    tiles.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-box-tile]');
+      if (!btn) return;
+      const kind = btn.dataset.boxTile;
+      if (!kind) return;
+      applyMonsterBoxOverviewFilter(kind);
+    });
   }
 
 //
@@ -11994,6 +12503,7 @@
         return renderMonstersPanel();
       }
       if (grid) grid.innerHTML = '';
+      if (typeof renderMonstersBoxOverview === 'function') renderMonstersBoxOverview([]);
       renderMonstersChips({ total: 0, anyRune: 0, fullSix: 0, skillUpsTotal: 0 }, t, false);
       renderMonstersEmptyState('no-data', t);
       hideMonstersDetailFloat();
@@ -12084,6 +12594,7 @@
     }
     monstersVisibleUnitIds = visible.map((u) => String(u.unitId));
     const sum = computeMonstersSummary(enriched);
+    if (typeof renderMonstersBoxOverview === 'function') renderMonstersBoxOverview(enriched);
     renderMonstersChips(sum, t, indexMissing, skillsIndexMissing);
     if (typeof renderRuneTableRosterChips === 'function') renderRuneTableRosterChips();
 

@@ -17,8 +17,17 @@
     lbl.setAttribute('title', t.tableEffHeaderCappedTitle || '');
   }
 
+  function applyRuneTableScoreHeader() {
+    const lbl = document.getElementById('lbl-th-score');
+    if (!lbl) return;
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    lbl.textContent = t.tableScoreHeader || 'Score';
+    lbl.setAttribute('title', t.tableScoreHint || '');
+  }
+
   function initRuneTablePrefsFromStorage() {
     applyRuneTableEffHeader();
+    applyRuneTableScoreHeader();
     const ancient = document.getElementById('toggle-ancient-only');
     if (ancient) {
       const v = localStorage.getItem(RUNE_TABLE_ANCIENT_ONLY_KEY);
@@ -41,6 +50,10 @@
         case 'level':   av = a.level;   bv = b.level;   break;
         case 'main':    av = a.mainName;bv = b.mainName;break;
         case 'eff':     av = getRuneNumericEff(a); bv = getRuneNumericEff(b); break;
+        case 'score':
+          av = typeof computeRuneScore === 'function' ? computeRuneScore(a) : 0;
+          bv = typeof computeRuneScore === 'function' ? computeRuneScore(b) : 0;
+          break;
         case 'role':    av = a.role;    bv = b.role;    break;
         case 'verdict': av = a.verdict; bv = b.verdict; break;
         case 's1':      av = a.substats[0]?.name || ''; bv = b.substats[0]?.name || ''; break;
@@ -109,7 +122,7 @@
     const headers = [
       'Grade',
       tloc.csvHeaderAncient || 'Ancient',
-      'Set', 'Lvl', 'Slot', 'Main', 'Innate', 'Sub1', 'Sub2', 'Sub3', 'Sub4', 'Eff%', 'Role', 'Verdict',
+      'Set', 'Lvl', 'Slot', 'Main', 'Innate', 'Sub1', 'Sub2', 'Sub3', 'Sub4', 'Eff%', 'Score', 'Role', 'Verdict',
     ];
     if (includeTarget) headers.push('Target');
     function cellPart(s) {
@@ -143,6 +156,7 @@
         subcell(subs[2]),
         subcell(subs[3]),
         `${getRuneNumericEff(r).toFixed(1)}%`,
+        String(typeof computeRuneScore === 'function' ? computeRuneScore(r) : ''),
         roleDisplayName(r.role || ''),
         r.verdict || '',
       ];

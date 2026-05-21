@@ -119,7 +119,7 @@ npm run watch:ui
 3. `git push` to `main` → Cloudflare Pages deploys automatically (~1 min)
 4. Verify at https://sw-forge.pages.dev
 
-See **`docs/PROJECT-CONTEXT.md`** (source of truth) and `docs/ARCHITECTURE.md` for the feature-to-file map and script load order.
+See **`docs/FEATURES.md`** (feature folders), **`docs/PROJECT-CONTEXT.md`**, and **`docs/ARCHITECTURE.md`** for script load order.
 
 **Layout:** `js/core/`, `js/data/`, `js/features/`, `css/foundation/`, `css/features/`. Demo data: `data/demo.json`.
 

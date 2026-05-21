@@ -1,0 +1,79 @@
+/* Box overview — clickable attention tiles on Monsters → Roster */
+.monsters-box-overview {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--surface) 88%, var(--bg2));
+}
+
+.monsters-box-overview[hidden] {
+  display: none !important;
+}
+
+.monsters-box-overview__lead {
+  margin: 0;
+  font-size: var(--text-caption);
+  line-height: 1.45;
+  color: var(--text-dim);
+}
+
+.monsters-box-overview__tiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.monsters-box-tile {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 5.5rem;
+  padding: 8px 12px;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  background: var(--bg3);
+  color: var(--text-hi);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  transition:
+    border-color 0.15s,
+    background 0.15s,
+    box-shadow 0.15s;
+}
+
+.monsters-box-tile:hover {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border2));
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg3));
+}
+
+.monsters-box-tile:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.monsters-box-tile__value {
+  font-family: var(--font-mono);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-hi);
+  line-height: 1.1;
+}
+
+.monsters-box-tile__sub {
+  margin-left: 4px;
+  font-size: 0.72rem;
+  font-weight: 400;
+  color: var(--text-dim);
+}
+
+.monsters-box-tile__label {
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  letter-spacing: 0.02em;
+}

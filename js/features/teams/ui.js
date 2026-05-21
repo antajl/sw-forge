@@ -1,4 +1,4 @@
-// js/features/monsters/teams-ui.js — Teams builder UI
+// js/features/teams/ui.js — Teams builder UI (Monsters → Teams pane)
   let teamsUiBound = false;
   let teamsEditingTeamId = null;
 

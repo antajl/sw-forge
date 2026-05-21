@@ -20,7 +20,7 @@
   /** First paint of Rune Table: this many rows; user can load the rest explicitly. */
   const RUNE_TABLE_PAGE = 500;
   const RUNE_TABLE_SORT_KEYS = new Set([
-    'grade', 'set', 'level', 'slot', 'main', 'eff', 'role', 'verdict', 's1', 's2', 's3', 's4',
+    'grade', 'set', 'level', 'slot', 'main', 'eff', 'score', 'role', 'verdict', 's1', 's2', 's3', 's4',
   ]);
   const RUNE_TABLE_ANCIENT_ONLY_KEY = 'swrm_rune_table_ancient_only_v1';
   const RUNE_TABLE_HIDE_TARGET_KEY = 'swrm_rune_table_hide_target_v1';

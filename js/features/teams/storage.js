@@ -1,4 +1,4 @@
-// js/features/monsters/teams-storage.js — team sets & teams (v2)
+// js/features/teams/storage.js — team sets & teams (v2)
   const TEAMS_STORAGE_KEY = 'swrm_teams_v2';
   const TEAMS_STORAGE_KEY_LEGACY = 'swrm_teams_v1';
   const TEAM_SIZE_MIN = 3;

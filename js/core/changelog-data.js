@@ -7,6 +7,77 @@
  */
 const STATIC_CHANGELOG = [
   {
+    date: '2026-05-21',
+    items: {
+      en: [
+        'Forge Score column in the Rune Table: separate 0–100 rating from main-tier values, sub-tier values (different ranking), main↔sub synergy (+/−), sub↔sub pairs, duplicate-sub penalty, and a small innate term — not Eff% and not verdict.',
+        'Guide → Rune Table documents Forge Score vs Eff%; hover Score for a point breakdown.',
+        'Monsters → Roster: Box overview strip with clickable tiles (unruned, incomplete sets, 6/6, skill-ups, storage) and a readiness summary line.',
+        'Fix: a JavaScript syntax error in the score module could block the whole app (tabs and UI frozen) until reload after rebuild.',
+        'Project layout: UI split into gear/ (artifact & relic tables), teams/, and monsters/box-overview modules; docs in docs/FEATURES.md.',
+      ],
+      ru: [
+        'Колонка Forge Score в таблице рун: отдельная шкала 0–100 — ценность main и sub (разные рейтинги), синергии main↔sub (+/−), пары сабов, штраф за дубли, слабый innate; не Eff% и не вердикт.',
+        'Guide → Таблица рун: раздел Forge Score vs Eff%; подсказка при наведении на Score.',
+        'Монстры → Roster: полоса «обзор коробки» с плитками (без рун, неполный сет, 6/6, skill-ups, склад) и строка готовности.',
+        'Исправление: синтаксическая ошибка в модуле Score могла ломать весь интерфейс (вкладки не переключались) до пересборки.',
+        'Структура: модули gear/, teams/, monsters/box-overview; описание в docs/FEATURES.md.',
+      ],
+      fr: [
+        'Colonne Forge Score : note 0–100 séparée (tiers main/sub, synergies, paires, doublons, innate léger) — pas Eff% ni verdict.',
+        'Guide → Table runes : Forge Score vs Eff% ; infobulle sur Score.',
+        'Monstres → Roster : bandeau « vue boîte » avec tuiles cliquables et ligne de readiness.',
+        'Correctif : erreur de syntaxe JS dans le module Score pouvait bloquer toute l’app.',
+        'Découpe des sources : dossiers gear/, teams/, box-overview.',
+      ],
+    },
+  },
+  {
+    date: '2026-05-20',
+    items: {
+      en: [
+        'Runes hub → Table: three inventory tabs — Runes, Artifacts, Relics — each with search, filters, and full-width tables; relic Grade column removed (not in SWEX).',
+        'Monsters: artifacts and relics on the detail panel (main + subs); SWEX gear parsing with user-confirmed relic labels; monster card stats layout and toggle (base / +gear / total).',
+        'Share Profile via Cloudflare Worker + D1 (read-only links, multiple export modes); PNG logos and favicon set.',
+        'Ancient rune grade glow (Legend/Hero/Rare tint); Main column label shortened to Main.',
+        'Developer: js/features reorganized (gear/, teams/, runes/, monsters/); npm run build:ui.',
+      ],
+      ru: [
+        'Runes → Таблица: три вкладки инвентаря — руны, артефакты, реликты — поиск, фильтры, таблица на всю ширину; колонка Grade у реликтов убрана (нет в SWEX).',
+        'Монстры: артефакты и реликты в панели деталей; парсинг gear из SWEX и подтверждённые подписи реликтов; статы на карточке и переключатель base / +gear / total.',
+        'Share Profile через Cloudflare Worker + D1; логотипы PNG и favicon.',
+        'Свечение грейда Ancient; колонка Main вместо Main stat.',
+        'Разработка: реорганизация js/features (gear/, teams/, runes/, monsters/); npm run build:ui.',
+      ],
+      fr: [
+        'Hub Runes → trois onglets inventaire (runes, artéfacts, reliques) avec filtres et tableaux pleine largeur.',
+        'Monstres : artéfacts/reliques au détail ; parsing SWEX gear.',
+        'Partage de profil via Worker ; logos PNG.',
+        'Lueur grade Ancient ; colonne Main.',
+      ],
+    },
+  },
+  {
+    date: '2026-05-19',
+    items: {
+      en: [
+        'Monsters tab: expanded filters, table/card views, bulk actions, rune slots on cards, skill-up hints, Teams builder in localStorage.',
+        'Rune table: equipped-monster filter from monster detail, roster summary chips above the grid, filter popovers aligned with Monsters toolbar.',
+        'Rules / engine tweaks for gem and grind display; relic and artifact effect label maps from SW-Exporter.',
+      ],
+      ru: [
+        'Вкладка Монстры: фильтры, таблица/карточки, bulk, слоты рун, подсказки skill-up, Teams в localStorage.',
+        'Таблица рун: фильтр по монстру с деталки, чипы сводки над таблицей, поповеры фильтров как у Monsters.',
+        'Правки gem/grind; карты подписей артефактов и реликтов по SW-Exporter.',
+      ],
+      fr: [
+        'Onglet Monstres : filtres, vues, bulk, Teams.',
+        'Table runes : chips résumé, filtres monstre.',
+        'Cartes libellés artéfacts/reliques.',
+      ],
+    },
+  },
+  {
     date: '2026-05-18',
     items: {
       en: [
@@ -130,19 +201,6 @@ const STATIC_ROADMAP = {
       'What we plan next — not a release schedule. Ordered by priority (top = do first). Runes stay the core; Monsters grows into a real box overview. Browser-only unless noted.',
     sections: [
       {
-        id: 'monsters-overview',
-        kicker: 'Monsters',
-        title: 'Box overview (phase 1)',
-        phase: 'Near term',
-        lead: 'Expand today’s summary chips into an at-a-glance “what needs attention” strip on Roster.',
-        items: [
-          'Clickable tiles: unruned · partial runes · 6/6 · needs skill-ups · in storage',
-          'One Box readiness score (e.g. % of six-stars with full rune sets)',
-          'Next actions line: “12 unruned · 47 skill-up levels · 8 in storage without runes”',
-          'Each tile opens Roster with the matching filter',
-        ],
-      },
-      {
         id: 'monsters-account',
         kicker: 'Monsters',
         title: 'Account-wide planning',
@@ -172,12 +230,12 @@ const STATIC_ROADMAP = {
         id: 'share',
         kicker: 'Share',
         title: 'Profiles & account review',
-        phase: 'Planned',
-        lead: 'Frontend-only on GitHub Pages — no SW Forge backend.',
+        phase: 'Partial',
+        lead: 'Read-only share links work today (Cloudflare Worker + D1). Next: richer mentor view without extra backend.',
         items: [
-          'Read-only share URL: external JSON (?profile=) or compressed payload (?data=)',
-          'Account review view for mentors: roster summary + rune highlights',
-          'Share modes already in App Settings wired to stable public links',
+          'Account review banner: roster + rune highlights for shared links',
+          'Optional ?profile= external JSON or compressed ?data= URL (no Worker)',
+          'Public Teams in share payload',
         ],
       },
       {
@@ -186,10 +244,10 @@ const STATIC_ROADMAP = {
         title: 'Table & engine',
         phase: 'Planned',
         items: [
-          'Rune Score column — sortable strength signal, documented, not a second Sell',
           'Compare two Database Slots — verdict & role diff between exports',
           'God-potential hint on the row (informational)',
           'Optional stricter Grind rule (eff / HR subs)',
+          'Tune Forge Score weights / synergy tables from community feedback',
         ],
       },
       {
@@ -206,13 +264,14 @@ const STATIC_ROADMAP = {
       },
       {
         id: 'artifacts',
-        kicker: 'Artifacts',
-        title: 'Dedicated tab',
-        phase: 'Large scope',
+        kicker: 'Artifacts & relics',
+        title: 'Rules & polish',
+        phase: 'Partial',
+        lead: 'Inventory tables and SWEX parsing ship under Runes → Table. Verdict engine for gear is not built yet.',
         items: [
-          'Parse artifacts from SWEX',
-          'Filters and table UX parallel to runes',
-          'Separate rules engine (not mixed into rune verdicts)',
+          'Artifact / relic rules engine (Keep/Sell-style) separate from rune verdicts',
+          'Dedicated top-level tab (optional) vs nested under Runes',
+          'More confirmed relic type labels from community',
         ],
       },
       {
@@ -252,19 +311,6 @@ const STATIC_ROADMAP = {
       'Что планируем дальше — не график релизов. Сверху вниз — по приоритету (важнее → раньше). Ядро — руны; Монстры — обзор коробки. Только в браузере, если не указано иное.',
     sections: [
       {
-        id: 'monsters-overview',
-        kicker: 'Монстры',
-        title: 'Обзор коробки (фаза 1)',
-        phase: 'Ближайшее',
-        lead: 'Развить текущие чипы сводки в полосу «на что смотреть сегодня» над Roster.',
-        items: [
-          'Кликабельные плитки: без рун · частично · 6/6 · нужны skill-ups · в складе',
-          'Один балл готовности коробки (например % 6★ с полными сетами)',
-          'Строка действий: «12 без рун · 47 уровней skill-up · 8 в storage без рун»',
-          'Клик по плитке → Roster с нужным фильтром',
-        ],
-      },
-      {
         id: 'monsters-account',
         kicker: 'Монстры',
         title: 'Планирование по аккаунту',
@@ -294,12 +340,12 @@ const STATIC_ROADMAP = {
         id: 'share',
         kicker: 'Share',
         title: 'Профили и account review',
-        phase: 'В планах',
-        lead: 'Только фронт на GitHub Pages — без бэкенда SW Forge.',
+        phase: 'Частично',
+        lead: 'Read-only ссылки уже работают (Cloudflare Worker + D1). Дальше — богаче mentor-view без своего бэкенда.',
         items: [
-          'Read-only ссылка: внешний JSON (?profile=) или сжатый payload (?data=)',
-          'Режим «разбор аккаунта» для наставника: сводка ростера + акценты по рунам',
-          'Режимы Share из Настроек приложения → стабильные публичные URL',
+          'Баннер account review: ростер + акценты по рунам для shared-ссылок',
+          'Опционально ?profile= JSON или сжатый ?data= без Worker',
+          'Публичные Teams в payload шаринга',
         ],
       },
       {
@@ -308,10 +354,10 @@ const STATIC_ROADMAP = {
         title: 'Таблица и движок',
         phase: 'В планах',
         items: [
-          'Колонка Rune Score — сортируемый сигнал силы, не второй Sell',
           'Сравнение двух слотов Database — diff вердиктов и ролей',
           'Подсказка God-potential в строке (информационно)',
           'Опционально жёстче правило Grind (eff / HR subs)',
+          'Подстройка весов Forge Score / таблиц синергий по отзывам',
         ],
       },
       {
@@ -328,13 +374,14 @@ const STATIC_ROADMAP = {
       },
       {
         id: 'artifacts',
-        kicker: 'Артефакты',
-        title: 'Отдельная вкладка',
-        phase: 'Крупный объём',
+        kicker: 'Артефакты и реликты',
+        title: 'Правила и полировка',
+        phase: 'Частично',
+        lead: 'Таблицы и парсинг SWEX уже в Runes → Таблица. Движок вердиктов для gear ещё нет.',
         items: [
-          'Парсинг артефактов из SWEX',
-          'Фильтры и таблица в духе рун',
-          'Отдельный движок правил (не смешивать с вердиктами рун)',
+          'Движок правил артефактов/реликтов (Keep/Sell) отдельно от рун',
+          'Отдельная верхняя вкладка (опционально) vs вложение в Runes',
+          'Больше подтверждённых подписей типов реликтов',
         ],
       },
       {
@@ -374,19 +421,6 @@ const STATIC_ROADMAP = {
       'Pistes à venir — pas un calendrier. Classées par priorité (haut = d’abord). Runes = cœur ; Monstres = aperçu boîte. Local navigateur sauf mention contraire.',
     sections: [
       {
-        id: 'monsters-overview',
-        kicker: 'Monstres',
-        title: 'Aperçu boîte (phase 1)',
-        phase: 'Proche',
-        lead: 'Étendre les chips actuelles en bandeau « quoi traiter aujourd’hui » sur le Roster.',
-        items: [
-          'Tuiles cliquables : sans runes · partiel · 6/6 · skill-ups manquants · stockage',
-          'Score de préparation boîte (% de 6★ avec sets complets)',
-          'Ligne d’actions : « 12 sans runes · 47 niveaux skill-up · 8 en stockage sans runes »',
-          'Clic → Roster filtré',
-        ],
-      },
-      {
         id: 'monsters-account',
         kicker: 'Monstres',
         title: 'Planification compte',
@@ -415,11 +449,12 @@ const STATIC_ROADMAP = {
         id: 'share',
         kicker: 'Partage',
         title: 'Profils & review',
-        phase: 'Prévu',
+        phase: 'Partiel',
+        lead: 'Liens lecture seule via Worker + D1. Suite : vue mentor plus riche.',
         items: [
-          'URL lecture seule (?profile= ou ?data= compressé)',
-          'Vue account review pour mentors',
-          'Modes Share → liens publics stables',
+          'Bannière account review (roster + runes) sur liens partagés',
+          'Option ?profile= ou ?data= sans Worker',
+          'Teams publics dans le payload',
         ],
       },
       {
@@ -428,9 +463,9 @@ const STATIC_ROADMAP = {
         title: 'Table & moteur',
         phase: 'Prévu',
         items: [
-          'Colonne Rune Score',
           'Comparer 2 slots SWEX (diff verdicts & rôles)',
           'Indice God-potential ; règle Meule plus stricte (option)',
+          'Ajuster les poids Forge Score / synergies',
         ],
       },
       {
@@ -446,11 +481,14 @@ const STATIC_ROADMAP = {
       },
       {
         id: 'artifacts',
-        kicker: 'Artéfacts',
-        title: 'Onglet dédié',
-        phase: 'Gros chantier',
+        kicker: 'Artéfacts & reliques',
+        title: 'Règles & finition',
+        phase: 'Partiel',
+        lead: 'Tables inventaire + parse SWEX sous Runes → Table. Pas encore de moteur de verdicts gear.',
         items: [
-          'Parse SWEX, filtres, table, moteur de règles séparé',
+          'Moteur de règles artéfacts/reliques (Keep/Sell) séparé des runes',
+          'Onglet dédié (option) vs sous Runes',
+          'Plus de libellés reliques confirmés',
         ],
       },
       {

@@ -141,6 +141,28 @@
   color: var(--text-dim);
 }
 
+/* Rune Score column (0–100 hint, separate from Eff%) */
+.stat-chip.stat-chip--score {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  min-width: 2.1rem;
+  justify-content: center;
+}
+.stat-chip.stat-chip--score.stat-chip--score-hi {
+  --chip-tint: var(--tint-keep);
+  --chip-surface-pct: 68%;
+}
+.stat-chip.stat-chip--score.stat-chip--score-mid {
+  --chip-tint: var(--tint-eff-mid);
+  --chip-surface-pct: 74%;
+}
+.stat-chip.stat-chip--score.stat-chip--score-lo {
+  --chip-tint: var(--tint-muted);
+  --chip-surface-pct: 88%;
+  color: var(--text-dim);
+}
+
 /* Ancient: strong glow, kept inside the grade cell (no filter — it bleeds into the next row). */
 .grade-tag--ancient {
   box-shadow:

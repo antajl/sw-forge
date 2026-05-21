@@ -1,0 +1,114 @@
+// js/features/gear/relics-table.js — relic inventory table
+  let filteredRelics = [];
+  let relicFilterGrade = '';
+  let relicFilterCategory = '';
+
+  function relicPassesFilters(r) {
+    if (relicFilterGrade && String(r.gradeStr || '') !== relicFilterGrade) return false;
+    if (relicFilterCategory && String(r.category || '') !== relicFilterCategory) return false;
+    return true;
+  }
+
+  function applyRelicTableSearch() {
+    const relQ = (document.getElementById('search-box-relics')?.value || '').trim().toLowerCase();
+    const relSrc = (allRelics || []).filter(relicPassesFilters);
+    filteredRelics = !relQ ? relSrc.slice() : relSrc.filter((r) => gearSearchHay(r).includes(relQ));
+  }
+
+  function countActiveRelicFilters() {
+    let n = 0;
+    if (relicFilterGrade) n++;
+    if (relicFilterCategory) n++;
+    return n;
+  }
+
+  function updateRelicFilterBadge() {
+    const badge = document.getElementById('relic-filters-active-count');
+    if (!badge) return;
+    const n = countActiveRelicFilters();
+    if (n > 0) {
+      badge.textContent = String(n);
+      badge.hidden = false;
+    } else {
+      badge.hidden = true;
+    }
+  }
+
+  function resetRelicTableFilters() {
+    relicFilterGrade = '';
+    relicFilterCategory = '';
+    const sb = document.getElementById('search-box-relics');
+    if (sb) sb.value = '';
+    const g = document.getElementById('filter-relic-grade');
+    const c = document.getElementById('filter-relic-category');
+    if (g) g.value = '';
+    if (c) c.value = '';
+    updateRelicFilterBadge();
+    renderGearTables();
+  }
+
+  function renderRelicTableBody() {
+    const tbody = document.getElementById('relic-tbody');
+    if (!tbody) return;
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const fmt = window.SWRM && window.SWRM.formatGearEffectLine;
+    const fmtSec = window.SWRM && window.SWRM.formatRelicSecLine;
+    const fmtDur =
+      window.SWRM && typeof window.SWRM.formatRelicDurability === 'function'
+        ? window.SWRM.formatRelicDurability
+        : null;
+    if (!filteredRelics.length) {
+      tbody.innerHTML = `<tr><td colspan="6" class="table-empty">${escapeHtml(t.tableGearEmptyRelics || 'No relics')}</td></tr>`;
+      return;
+    }
+    const rows = filteredRelics
+      .slice()
+      .sort(
+        (a, b) =>
+          String(a.category).localeCompare(String(b.category)) ||
+          (b.level || 0) - (a.level || 0),
+      )
+      .map((r) => {
+        const main = r.pri && fmt ? fmt(r.pri, { kind: 'relic' }) : '—';
+        const sec = fmtSec ? fmtSec(r) : '—';
+        const dur = fmtDur ? fmtDur(r) : '—';
+        const category = r.category ? r.category : '—';
+        const fmtWear =
+          window.SWRM && typeof window.SWRM.formatRelicWearCount === 'function'
+            ? window.SWRM.formatRelicWearCount
+            : null;
+        const wear = fmtWear ? fmtWear(r) : '0/100';
+        return `<tr>
+          <td>${escapeHtml(category)}</td>
+          <td class="th-num">+${escapeHtml(String(r.level || 0))}</td>
+          <td class="th-num">${escapeHtml(dur)}</td>
+          <td>${escapeHtml(main)}</td>
+          <td class="col-text">${escapeHtml(sec)}</td>
+          <td class="th-num">${escapeHtml(wear)}</td>
+        </tr>`;
+      });
+    tbody.innerHTML = rows.join('');
+  }
+
+  function bindRelicTableFilters() {
+    if (bindRelicTableFilters._done) return;
+    bindRelicTableFilters._done = true;
+
+    document.getElementById('btn-relic-reset-filters')?.addEventListener('click', resetRelicTableFilters);
+    document.getElementById('relic-filters-drawer-reset')?.addEventListener('click', resetRelicTableFilters);
+
+    const onRelicFilterChange = () => {
+      relicFilterGrade = document.getElementById('filter-relic-grade')?.value || '';
+      relicFilterCategory = document.getElementById('filter-relic-category')?.value || '';
+      updateRelicFilterBadge();
+      renderGearTables();
+    };
+    document.getElementById('filter-relic-grade')?.addEventListener('change', onRelicFilterChange);
+    document.getElementById('filter-relic-category')?.addEventListener('change', onRelicFilterChange);
+
+    let relDebounce = null;
+    document.getElementById('search-box-relics')?.addEventListener('input', () => {
+      clearTimeout(relDebounce);
+      relDebounce = setTimeout(() => renderGearTables(), 280);
+    });
+  }

@@ -17,6 +17,7 @@
         return renderMonstersPanel();
       }
       if (grid) grid.innerHTML = '';
+      if (typeof renderMonstersBoxOverview === 'function') renderMonstersBoxOverview([]);
       renderMonstersChips({ total: 0, anyRune: 0, fullSix: 0, skillUpsTotal: 0 }, t, false);
       renderMonstersEmptyState('no-data', t);
       hideMonstersDetailFloat();
@@ -107,6 +108,7 @@
     }
     monstersVisibleUnitIds = visible.map((u) => String(u.unitId));
     const sum = computeMonstersSummary(enriched);
+    if (typeof renderMonstersBoxOverview === 'function') renderMonstersBoxOverview(enriched);
     renderMonstersChips(sum, t, indexMissing, skillsIndexMissing);
     if (typeof renderRuneTableRosterChips === 'function') renderRuneTableRosterChips();
 

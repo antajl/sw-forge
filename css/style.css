@@ -7,4 +7,6 @@
 @import url('./features/guide/archive.css');
 @import url('./features/app/settings.css');
 @import url('./features/runes/index.css');
+@import url('./features/gear/index.css');
+@import url('./features/teams/index.css');
 @import url('./features/monsters/index.css');

@@ -1,4 +1,4 @@
-// js/data/artifact-effects.js — artifact sub labels (SW-Exporter mapping.js artifact.effectTypes.sub)
+// js/data/artifacts/effects.js — artifact sub labels (SW-Exporter mapping.js artifact.effectTypes.sub)
 (function () {
   /** @type {Record<number, (value: number) => string>} */
   const ARTIFACT_SUB_FORMAT = {

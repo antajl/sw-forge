@@ -1,4 +1,4 @@
-// js/data/relic-effects.js — relic labels (only user-confirmed mappings)
+// js/data/relics/effects.js — relic labels (only user-confirmed mappings)
 (function () {
   const RELIC_PRI_PCT = { 100: 'hp', 101: 'atk', 102: 'def' };
 

@@ -374,6 +374,7 @@
       if (sets.includes(current)) filterSet.value = current;
     }
     applyRuneTableEffHeader();
+    if (typeof applyRuneTableScoreHeader === 'function') applyRuneTableScoreHeader();
 
     const filterSlot = document.getElementById('filter-slot');
     if (filterSlot) {

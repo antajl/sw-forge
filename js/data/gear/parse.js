@@ -1,4 +1,4 @@
-// js/data/gear-parse.js — SWEX artifacts & relics → normalized gear + panel stat bonuses
+// js/data/gear/parse.js — SWEX artifacts & relics → normalized gear + panel stat bonuses
 (function () {
   const STAT = window.SWRM && window.SWRM.STAT_NAMES;
   const GRADE_SHORT = (window.SWRM && window.SWRM.GRADE_SHORT) || { 3: 'Rare', 4: 'Hero', 5: 'Legend' };

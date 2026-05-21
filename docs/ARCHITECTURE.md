@@ -12,11 +12,12 @@ SW Forge is a static browser app. Cloudflare Pages serves `index.html`, CSS, dat
 2. `js/data/parser.js`
 3. `js/data/skill-db.js`
 4. `js/data/monster-db.js`
-5. `js/engine/*.js`
-6. `js/advanced-formulas.js`
-7. `js/self-test.js`
-8. `js/swrm-motion.js`
-9. `js/ui.js`
+5. `js/data/artifacts/effects.js`, `js/data/relics/effects.js`, `js/data/gear/parse.js`
+6. `js/engine/*.js`
+7. `js/advanced-formulas.js`
+8. `js/self-test.js`
+9. `js/swrm-motion.js`
+10. `js/ui.js` (includes Forge Score in `js/features/runes/rune-score.js`)
 
 The app API is exposed through `window.SWRM` and related browser globals. Keep that order stable unless the dependency graph is changed deliberately.
 
@@ -29,8 +30,11 @@ The app API is exposed through `window.SWRM` and related browser globals. Keep t
 | Header, theme, tabs | `js/features/shell/*` | `css/foundation/header.css`, `css/foundation/base.css` |
 | Runes dashboard | `js/features/runes/dashboard.js`, `charts.js`, `verdict-filters.js`, `stage-advisor-ui.js`, `depth.js`, `copy-summary.js` | `css/features/runes/*` |
 | Rune table | `js/features/runes/table.js`, `table-filters.js`, `table-row-render.js` | `css/features/runes/table-*.css` |
+| Artifacts & relics tables | `js/features/gear/table-kind.js`, `artifacts-table.js`, `relics-table.js` | `css/features/gear/*` |
+| Teams | `js/features/teams/*` | `css/features/teams/*` |
 | Rune rules | `js/features/rules/*` | `css/features/runes/rules.css` |
 | Monsters | `js/features/monsters/*` | `css/features/monsters/*` |
+| Gear data (SWEX) | `js/data/gear/parse.js`, `js/data/artifacts/effects.js`, `js/data/relics/effects.js` | none |
 | App settings, guide, changelog | `js/features/app/*`, shell bindings | `css/foundation/*`, `css/features/runes/hub.css` |
 | Verdicts and formulas | `js/engine/*`, `js/advanced-formulas.js`, `js/core/defaults.js` | none |
 | SWEX/data loading | `js/data/parser.js`, `js/data/skill-db.js`, `js/data/monster-db.js` | none |
@@ -54,8 +58,12 @@ Use `npm run build:ui` after any edit under `js/features/`.
 `css/style.css` imports:
 
 - `css/foundation/*` (base, header, overlays, toasts)
-- `css/features/runes/index.css` (dashboard modules, table, hub, rules, stage-advisor)
+- `css/features/runes/index.css` (dashboard, rune table, hub, rules, stage-advisor)
+- `css/features/gear/index.css` (artifact/relic table tabs & layout)
+- `css/features/teams/index.css`
 - `css/features/monsters/index.css`
+
+See **`docs/FEATURES.md`** for the full feature-folder map.
 
 ## Conventions
 

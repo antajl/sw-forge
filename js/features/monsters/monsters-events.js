@@ -90,8 +90,6 @@
     if (elLbl) elLbl.textContent = t.monstersFilterElement || 'Element';
     const locLbl = document.getElementById('lbl-monsters-filter-location');
     if (locLbl) locLbl.textContent = t.monstersFilterLocation || 'Location';
-    const sortLbl = document.getElementById('lbl-monsters-filter-sort');
-    if (sortLbl) sortLbl.textContent = t.monstersFilterSort || 'Sort';
     const skillLbl = document.getElementById('lbl-monsters-filter-skill');
     if (skillLbl) skillLbl.textContent = t.monstersFilterSkill || 'Skills';
     const runeLbl = document.getElementById('lbl-monsters-filter-rune');
@@ -197,8 +195,10 @@
     if (btnTable) btnTable.title = t.monstersViewTable || 'Table';
     const lblGridSel = document.getElementById('lbl-monsters-grid-select-all');
     if (lblGridSel) lblGridSel.textContent = t.monstersTableSelectAll || 'Select all visible';
-    const clrToolbar = document.getElementById('monsters-toolbar-clear');
-    if (clrToolbar) clrToolbar.textContent = t.monstersToolbarClear || 'Clear filters';
+    const resetToolbar = document.getElementById('monsters-toolbar-reset-filters');
+    if (resetToolbar) resetToolbar.textContent = t.tableResetFilters || 'Reset filters';
+    const exportBtn = document.getElementById('btn-monsters-export-csv');
+    if (exportBtn) exportBtn.textContent = t.exportTableCsv || 'Export CSV';
     const emptyClear = document.getElementById('monsters-empty-clear-filters');
     if (emptyClear) emptyClear.textContent = t.monstersEmptyClearFilters || 'Clear filters';
     const emptySearch = document.getElementById('monsters-empty-reset-search');
@@ -223,26 +223,11 @@
       if (o1) o1.textContent = t.monstersLocationActive || 'In use';
       if (o2) o2.textContent = t.monstersLocationStorage || 'Storage';
     }
-    const sortSel = document.getElementById('monsters-filter-sort');
-    if (sortSel) {
-      const opts = {
-        name: t.monstersSortName || 'Name',
-        'level-desc': t.monstersSortLevelDesc || 'Level ↓',
-        'level-asc': t.monstersSortLevelAsc || 'Level ↑',
-        'runes-desc': t.monstersSortRunes || 'Runes equipped',
-        element: t.monstersSortElement || 'Element',
-        'favorite-first': t.monstersSortFavorite || 'Favorites first',
-        'food-first': t.monstersSortFood || 'Food first',
-      };
-      sortSel.querySelectorAll('option').forEach((opt) => {
-        const v = opt.value;
-        if (opts[v]) opt.textContent = opts[v];
-      });
-    }
   }
 
   function countMonstersActiveFilters(f) {
     let n = 0;
+    if (f.element) n += 1;
     if (f.location && f.location !== 'all') n += 1;
     if (f.skillFilter) n += 1;
     if (f.runeFilter) n += 1;
@@ -380,7 +365,7 @@
       q: document.getElementById('monsters-filter-q')?.value || '',
       element: document.getElementById('monsters-filter-element')?.value || '',
       location: document.getElementById('monsters-filter-location')?.value || 'all',
-      sort: document.getElementById('monsters-filter-sort')?.value || 'name',
+      sort: readMonstersFilters().sort || 'name',
       skillFilter: document.getElementById('monsters-filter-skill')?.value || '',
       runeFilter: document.getElementById('monsters-filter-rune')?.value || '',
       runeSet: document.getElementById('monsters-filter-rune-set')?.value || '',
@@ -392,18 +377,84 @@
     };
   }
 
+  function exportMonstersCsv() {
+    const cache = monstersEnrichedCache || [];
+    if (!cache.length) return;
+    const filters = readMonstersFiltersFromDom();
+    const filtered = filterMonstersList(cache, filters);
+    const view = readMonstersView();
+    const visible =
+      view === 'table' ? sortMonstersForTable(filtered) : sortMonstersList(filtered, filters.sort);
+    if (!visible.length) return;
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    function cellPart(s) {
+      const raw = String(s ?? '');
+      if (/[,"\n\r]/.test(raw)) return `"${raw.replace(/"/g, '""')}"`;
+      return raw;
+    }
+    const headers = [
+      t.monstersColName || 'Name',
+      t.monstersColLevel || 'Lv',
+      t.monstersColElement || 'Element',
+      t.monstersColRole || 'Archetype',
+      t.monstersColRunes || 'Runes',
+      t.monstersColDevilmons || 'Devilmons',
+      t.monstersColMarks || 'Marks',
+      t.monstersColTags || 'Tags',
+    ];
+    const lines = [headers.map(cellPart).join(',')];
+    for (const u of visible) {
+      const marks = [];
+      if (u.favorite) marks.push('★');
+      if (u.food) marks.push('🍖');
+      if (u.inStorage) marks.push('▣');
+      else if (u.storageMark) marks.push('▣*');
+      const skillUps = u.skillUpsNeeded > 0 ? String(u.skillUpsNeeded) : '0';
+      lines.push(
+        [
+          u.displayName,
+          u.level,
+          u.metaElement || '',
+          u.metaArchetype || '',
+          String(u.equippedCount || 0),
+          skillUps,
+          marks.join(' ') || '—',
+          (u.customTags || []).join(', ') || '—',
+        ]
+          .map(cellPart)
+          .join(','),
+      );
+    }
+    const csv = `\uFEFF${lines.join('\r\n')}`;
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `sw-monsters-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    URL.revokeObjectURL(a.href);
+    document.body.removeChild(a);
+  }
+
   function bindMonstersToolbar() {
     const onFilter = () => {
+      monstersSearchHighlight = (document.getElementById('monsters-filter-q')?.value || '').trim().toLowerCase();
       writeMonstersFilters(readMonstersFiltersFromDom());
       updateMonstersFilterSummary();
       renderMonstersPanel();
     };
+    monstersSearchHighlight = (document.getElementById('monsters-filter-q')?.value || '').trim().toLowerCase();
     document.getElementById('monsters-filter-q')?.addEventListener('input', onFilter);
     document.getElementById('monsters-filter-element')?.addEventListener('change', onFilter);
     document.getElementById('monsters-filter-min-level')?.addEventListener('input', onFilter);
     document.getElementById('monsters-filter-min-level')?.addEventListener('change', onFilter);
     document.getElementById('monsters-filter-location')?.addEventListener('change', onFilter);
-    document.getElementById('monsters-filter-sort')?.addEventListener('change', onFilter);
+    document.getElementById('monsters-toolbar-reset-filters')?.addEventListener('click', () => {
+      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+      resetMonstersToolbarFilters(t);
+      renderMonstersPanel();
+    });
+    document.getElementById('btn-monsters-export-csv')?.addEventListener('click', exportMonstersCsv);
     document.getElementById('monsters-filter-skill')?.addEventListener('change', onFilter);
     document.getElementById('monsters-filter-rune')?.addEventListener('change', onFilter);
     document.getElementById('monsters-filter-rune-set')?.addEventListener('change', onFilter);
@@ -478,41 +529,23 @@
       updateMonstersFilterSummary();
       renderMonstersPanel();
     });
-    function openMonstersFiltersDrawer() {
-      const dlg = document.getElementById('monsters-filters-drawer');
-      if (!dlg) return;
-      if (typeof dlg.showModal === 'function') {
-        try {
-          dlg.showModal();
-        } catch (e) {
-          dlg.setAttribute('open', '');
-        }
-      } else {
-        dlg.setAttribute('open', '');
-      }
-    }
-
-    function closeMonstersFiltersDrawer() {
-      const dlg = document.getElementById('monsters-filters-drawer');
-      if (!dlg) return;
-      if (dlg.open && typeof dlg.close === 'function') dlg.close();
-      else dlg.removeAttribute('open');
-    }
-
-    document.getElementById('monsters-more-filters-btn')?.addEventListener('click', () => {
-      openMonstersFiltersDrawer();
-    });
-    document.getElementById('monsters-filters-drawer-close')?.addEventListener('click', () => {
-      closeMonstersFiltersDrawer();
-    });
-    document.getElementById('monsters-filters-drawer')?.addEventListener('close', () => {
+    const onMonstersFiltersClose = () => {
       const f = readMonstersFiltersFromDom();
       writeMonstersFilters(f);
       updateMonstersFilterSummary();
       renderMonstersPanel();
+    };
+    bindFiltersPopover('monsters-more-filters-btn', 'monsters-filters-popover', {
+      onClose: onMonstersFiltersClose,
     });
     document.getElementById('monsters-filters-drawer-reset')?.addEventListener('click', () => {
       clearMonstersPanelFilters();
+      const elSel = document.getElementById('monsters-filter-element');
+      if (elSel) elSel.value = '';
+      const lvlInp = document.getElementById('monsters-filter-min-level');
+      if (lvlInp) lvlInp.value = '';
+      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+      syncMonstersMinLevelInput(0, t);
       writeMonstersFilters(readMonstersFiltersFromDom());
       updateMonstersFilterSummary();
       renderMonstersPanel();

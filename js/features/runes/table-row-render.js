@@ -28,12 +28,19 @@
   function sellReasonText(r) {
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const code = r.sellReasonCode || '';
+    const roleLbl = roleDisplayName(r.sellReasonDetail || '');
+    const roleTpl = (tpl) => (tpl || '').replace(/\{role\}/g, roleLbl);
     if (!code) return t.sellReasonNoRole || 'No matching role';
     if (code === 'duo_near') return t.sellReasonDuoNear || '';
-    if (code === 'exclude') {
-      const roleLbl = roleDisplayName(r.sellReasonDetail || '');
-      return (t.sellReasonExclude || 'Exclude stat blocks {role}').replace(/\{role\}/g, roleLbl);
-    }
+    if (code === 'exclude') return roleTpl(t.sellReasonExclude || 'Exclude stat blocks {role}');
+    if (code === 'main_stat') return roleTpl(t.sellReasonMainStat || 'Main stat not accepted for {role}');
+    if (code === 'must_have') return roleTpl(t.sellReasonMustHave || 'Missing required stat for {role}');
+    if (code === 'anchor_hr') return roleTpl(t.sellReasonAnchor || 'No high-roll anchor for {role}');
+    if (code === 'min_stats') return roleTpl(t.sellReasonMinStats || 'Too few supporting subs for {role}');
+    if (code === 'role_pressure') return roleTpl(t.sellReasonPressure || 'Substats too weak for {role}');
+    if (code === 'slot_req') return roleTpl(t.sellReasonSlotReq || 'Slot requirement failed for {role}');
+    if (code === 'slow_dps_core') return roleTpl(t.sellReasonSlowDps || 'Core DPS stats too low for {role}');
+    if (code === 'near_miss') return roleTpl(t.sellReasonNearMiss || 'Close to {role}, preset rules not met');
     if (code === 'bad_flat') return t.sellReasonBadFlat || '';
     if (code === 'low_eff') return t.sellReasonLowEff || '';
     if (code === 'low_eff_finish') return t.sellReasonLowEffFinish || '';

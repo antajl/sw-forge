@@ -77,6 +77,23 @@ th {
 }
 th:hover { color: var(--accent); }
 
+#rune-table thead .th-text {
+  cursor: default;
+  display: inline;
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: var(--font-head);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+}
+
+#rune-table thead .th-text::after {
+  display: none;
+}
+
 #rune-table thead th.th--filtered .th-text,
 #rune-table thead .th-text.th-text--filtered {
   color: var(--accent);

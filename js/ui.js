@@ -998,6 +998,10 @@
     if (typeof syncShareSplitLabels === 'function') syncShareSplitLabels();
     const moreFilters = document.getElementById('lbl-monsters-more-filters');
     if (moreFilters) moreFilters.textContent = t.monstersMoreFilters || 'More Filters';
+    const monstersReset = document.getElementById('monsters-toolbar-reset-filters');
+    if (monstersReset) monstersReset.textContent = t.tableResetFilters || 'Reset filters';
+    const monstersExport = document.getElementById('btn-monsters-export-csv');
+    if (monstersExport) monstersExport.textContent = t.exportTableCsv || 'Export CSV';
     const clearAll = document.getElementById('monsters-filter-clear-all');
     if (clearAll) clearAll.textContent = t.monstersFilterClearAll || 'Clear all';
     const bulkFav = document.getElementById('lbl-monsters-bulk-favorite');
@@ -1084,6 +1088,111 @@
     });
   }
 
+  function closeAllFiltersPopovers(exceptId) {
+    document.querySelectorAll('.filters-popover').forEach((panel) => {
+      if (exceptId && panel.id === exceptId) return;
+      panel.hidden = true;
+      panel.dataset.open = '0';
+    });
+    document.querySelectorAll('[data-filters-popover-btn]').forEach((btn) => {
+      const panelId = btn.getAttribute('aria-controls');
+      if (exceptId && panelId === exceptId) return;
+      btn.setAttribute('aria-expanded', 'false');
+      btn.closest('.filters-popover-host')?.classList.remove('is-open');
+    });
+  }
+
+  function positionFiltersPopover(btn, panel) {
+    if (!btn || !panel) return;
+    const host = btn.closest('.filters-popover-host');
+    if (host) {
+      panel.style.position = '';
+      panel.style.top = '';
+      panel.style.left = '';
+      panel.style.right = '';
+      panel.style.width = '';
+      return;
+    }
+    const r = btn.getBoundingClientRect();
+    const gap = 6;
+    const maxW = Math.min(360, window.innerWidth - 16);
+    let left = r.left;
+    if (left + maxW > window.innerWidth - 8) left = window.innerWidth - maxW - 8;
+    if (left < 8) left = 8;
+    panel.style.position = 'fixed';
+    panel.style.top = `${Math.round(r.bottom + gap)}px`;
+    panel.style.left = `${Math.round(left)}px`;
+    panel.style.right = 'auto';
+    panel.style.width = `${Math.round(maxW)}px`;
+  }
+
+  function bindFiltersPopover(btnId, panelId, opts) {
+    const btn = document.getElementById(btnId);
+    const panel = document.getElementById(panelId);
+    if (!btn || !panel) return;
+    const onClose = opts && typeof opts.onClose === 'function' ? opts.onClose : null;
+
+    btn.setAttribute('data-filters-popover-btn', '1');
+    if (!btn.hasAttribute('aria-controls')) btn.setAttribute('aria-controls', panelId);
+
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const open = panel.hidden;
+      closeAllFiltersPopovers(open ? panelId : null);
+      if (open) {
+        positionFiltersPopover(btn, panel);
+        panel.hidden = false;
+        panel.dataset.open = '1';
+        btn.setAttribute('aria-expanded', 'true');
+        btn.closest('.filters-popover-host')?.classList.add('is-open');
+      }
+    });
+
+    panel.querySelectorAll('[data-filters-popover-close]').forEach((el) => {
+      el.addEventListener('click', () => {
+        panel.hidden = true;
+        panel.dataset.open = '0';
+        btn.setAttribute('aria-expanded', 'false');
+        btn.closest('.filters-popover-host')?.classList.remove('is-open');
+        if (onClose) onClose();
+      });
+    });
+
+    panel.querySelectorAll('[data-filters-popover-done]').forEach((el) => {
+      el.addEventListener('click', () => {
+        panel.hidden = true;
+        panel.dataset.open = '0';
+        btn.setAttribute('aria-expanded', 'false');
+        btn.closest('.filters-popover-host')?.classList.remove('is-open');
+        if (onClose) onClose();
+      });
+    });
+  }
+
+  if (!window.__swrmFiltersPopoverDocBound) {
+    window.__swrmFiltersPopoverDocBound = true;
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('.filters-popover-host') || e.target.closest('.filters-popover')) return;
+      document.querySelectorAll('.filters-popover[data-open="1"]').forEach((panel) => {
+        const btn = document.querySelector(`[aria-controls="${panel.id}"]`);
+        const onCloseAttr = panel.getAttribute('data-on-close');
+        panel.hidden = true;
+        panel.dataset.open = '0';
+        if (btn) {
+          btn.setAttribute('aria-expanded', 'false');
+          btn.closest('.filters-popover-host')?.classList.remove('is-open');
+        }
+      });
+    });
+    window.addEventListener('resize', () => {
+      document.querySelectorAll('.filters-popover[data-open="1"]').forEach((panel) => {
+        const btnId = panel.getAttribute('data-anchor-btn');
+        const btn = btnId ? document.getElementById(btnId) : document.querySelector(`[aria-controls="${panel.id}"]`);
+        positionFiltersPopover(btn, panel);
+      });
+    });
+  }
+
   // ===================== TABS =====================
   initHeaderMobileNav();
 
@@ -1109,8 +1218,9 @@
     stage = e.target.value;
     if (typeof window.swrmOnDashboardStageChanged === 'function') {
       window.swrmOnDashboardStageChanged();
+    } else if (allRunes.length) {
+      reprocess();
     }
-    if (allRunes.length) reprocess();
   });
 
   // Auto Game Stage button
@@ -4197,12 +4307,19 @@
   function sellReasonText(r) {
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const code = r.sellReasonCode || '';
+    const roleLbl = roleDisplayName(r.sellReasonDetail || '');
+    const roleTpl = (tpl) => (tpl || '').replace(/\{role\}/g, roleLbl);
     if (!code) return t.sellReasonNoRole || 'No matching role';
     if (code === 'duo_near') return t.sellReasonDuoNear || '';
-    if (code === 'exclude') {
-      const roleLbl = roleDisplayName(r.sellReasonDetail || '');
-      return (t.sellReasonExclude || 'Exclude stat blocks {role}').replace(/\{role\}/g, roleLbl);
-    }
+    if (code === 'exclude') return roleTpl(t.sellReasonExclude || 'Exclude stat blocks {role}');
+    if (code === 'main_stat') return roleTpl(t.sellReasonMainStat || 'Main stat not accepted for {role}');
+    if (code === 'must_have') return roleTpl(t.sellReasonMustHave || 'Missing required stat for {role}');
+    if (code === 'anchor_hr') return roleTpl(t.sellReasonAnchor || 'No high-roll anchor for {role}');
+    if (code === 'min_stats') return roleTpl(t.sellReasonMinStats || 'Too few supporting subs for {role}');
+    if (code === 'role_pressure') return roleTpl(t.sellReasonPressure || 'Substats too weak for {role}');
+    if (code === 'slot_req') return roleTpl(t.sellReasonSlotReq || 'Slot requirement failed for {role}');
+    if (code === 'slow_dps_core') return roleTpl(t.sellReasonSlowDps || 'Core DPS stats too low for {role}');
+    if (code === 'near_miss') return roleTpl(t.sellReasonNearMiss || 'Close to {role}, preset rules not met');
     if (code === 'bad_flat') return t.sellReasonBadFlat || '';
     if (code === 'low_eff') return t.sellReasonLowEff || '';
     if (code === 'low_eff_finish') return t.sellReasonLowEffFinish || '';
@@ -4434,6 +4551,51 @@
 
   let filteredRunes = [];
 
+  function computeRuneTableSummary(runes) {
+    const list = runes || [];
+    let ancient = 0;
+    let equipped = 0;
+    let plus15 = 0;
+    let keep = 0;
+    for (const r of list) {
+      if (r.isAncient) ancient += 1;
+      if (r.equipped_name != null && Number.isFinite(Number(r.equipped_name))) equipped += 1;
+      if (Number(r.level) >= 15) plus15 += 1;
+      if (r.verdict === 'Keep') keep += 1;
+    }
+    return { total: list.length, ancient, equipped, plus15, keep };
+  }
+
+  function renderRuneTableRosterChips() {
+    const host = document.getElementById('rune-table-roster-chips');
+    const meta = document.getElementById('rune-table-roster-meta');
+    if (!host) return;
+    const pool = typeof getVisibleRunes === 'function' ? getVisibleRunes() : [];
+    if (!pool.length) {
+      host.innerHTML = '';
+      if (meta) meta.hidden = true;
+      return;
+    }
+    if (meta) meta.hidden = false;
+    const sum = computeRuneTableSummary(pool);
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const parts = [
+      { label: t.runeChipTotal || 'Runes', value: sum.total },
+      { label: t.runeChipAncient || 'Ancient', value: sum.ancient },
+      { label: t.runeChipEquipped || 'Equipped', value: sum.equipped },
+      { label: t.runeChipPlus15 || '+15', value: sum.plus15 },
+    ];
+    if (sum.keep > 0) {
+      parts.push({ label: t.runeChipKeep || 'Keep', value: sum.keep });
+    }
+    host.innerHTML = parts
+      .map(
+        (p) =>
+          `<span class="monsters-chip"><span class="monsters-chip__label">${escapeHtml(p.label)}</span><strong class="monsters-chip__value">${escapeHtml(String(p.value))}</strong></span>`,
+      )
+      .join('');
+  }
+
   function runeTableTargetColumnVisible() {
     const verdictFilter = document.getElementById('filter-verdict')?.value || '';
     if (verdictFilter === 'Grind' || verdictFilter === 'Gem') return true;
@@ -4540,6 +4702,7 @@
       slot: document.getElementById('filter-slot')?.value || '',
       main: document.getElementById('filter-main')?.value || '',
       ancientOnly: !!document.getElementById('toggle-ancient-only')?.checked,
+      hideTarget: !!document.getElementById('toggle-target-col')?.checked,
     };
   }
 
@@ -4552,6 +4715,7 @@
     if (f.slot) n += 1;
     if (f.main) n += 1;
     if (f.ancientOnly) n += 1;
+    if (f.hideTarget) n += 1;
     return n;
   }
 
@@ -4564,6 +4728,7 @@
     if (f.slot) chips.push({ key: 'slot', label: `${t.runeFilterSlot || 'Slot'} ${f.slot}` });
     if (f.main) chips.push({ key: 'main', label: f.main });
     if (f.ancientOnly) chips.push({ key: 'ancientOnly', label: t.tableAncientOnly || 'Ancient only' });
+    if (f.hideTarget) chips.push({ key: 'hideTarget', label: t.toggleTargetCol || 'Hide Target' });
     return chips;
   }
 
@@ -4591,6 +4756,15 @@
         const tgl = document.getElementById('toggle-ancient-only');
         if (tgl) tgl.checked = false;
         localStorage.setItem(RUNE_TABLE_ANCIENT_ONLY_KEY, '0');
+        break;
+      }
+      case 'hideTarget': {
+        const tgl = document.getElementById('toggle-target-col');
+        if (tgl) tgl.checked = false;
+        try {
+          localStorage.setItem(RUNE_TABLE_HIDE_TARGET_KEY, '0');
+        } catch (e) { /* ignore */ }
+        applyRuneTableTargetColumnVisibility();
         break;
       }
       default:
@@ -4769,6 +4943,7 @@
     tbody.innerHTML = rows.map(r => runeRow(r)).join('');
     setupRuneTableMoreUi(total, rows.length);
     updateRuneTableFilterIndicators();
+    if (typeof renderRuneTableRosterChips === 'function') renderRuneTableRosterChips();
     replaceRuneTableLocationFromState();
   }
 
@@ -4778,47 +4953,22 @@
       applyFiltersAndSort(getVisibleRunes());
     };
 
-    function openRuneFiltersDrawer() {
-      const dlg = document.getElementById('rune-filters-drawer');
-      if (!dlg) return;
-      if (typeof dlg.showModal === 'function') {
-        try {
-          dlg.showModal();
-        } catch (e) {
-          dlg.setAttribute('open', '');
-        }
-      } else {
-        dlg.setAttribute('open', '');
-      }
-    }
+    bindFiltersPopover('rune-more-filters-btn', 'rune-filters-popover', { onClose: onFilter });
 
-    function closeRuneFiltersDrawer() {
-      const dlg = document.getElementById('rune-filters-drawer');
-      if (!dlg) return;
-      if (dlg.open && typeof dlg.close === 'function') dlg.close();
-      else dlg.removeAttribute('open');
-    }
-
-    document.getElementById('rune-more-filters-btn')?.addEventListener('click', openRuneFiltersDrawer);
-    document.getElementById('rune-filters-drawer-close')?.addEventListener('click', closeRuneFiltersDrawer);
-    document.getElementById('rune-filters-drawer')?.addEventListener('close', onFilter);
     document.getElementById('rune-filters-drawer-reset')?.addEventListener('click', () => {
       ['filter-verdict', 'filter-role', 'filter-grade', 'filter-set', 'filter-slot', 'filter-main'].forEach((id) => {
         const el = document.getElementById(id);
         if (el) el.value = '';
       });
-      onFilter();
-    });
-    document.getElementById('rune-filter-clear-all')?.addEventListener('click', () => {
-      ['filter-verdict', 'filter-role', 'filter-grade', 'filter-set', 'filter-slot', 'filter-main'].forEach((id) => {
-        const el = document.getElementById(id);
-        if (el) el.value = '';
-      });
+      const tgl = document.getElementById('toggle-target-col');
+      if (tgl) tgl.checked = false;
+      try {
+        localStorage.setItem(RUNE_TABLE_HIDE_TARGET_KEY, '0');
+      } catch (e) { /* ignore */ }
       const tglAncient = document.getElementById('toggle-ancient-only');
-      if (tglAncient) {
-        tglAncient.checked = false;
-        localStorage.setItem(RUNE_TABLE_ANCIENT_ONLY_KEY, '0');
-      }
+      if (tglAncient) tglAncient.checked = false;
+      localStorage.setItem(RUNE_TABLE_ANCIENT_ONLY_KEY, '0');
+      applyRuneTableTargetColumnVisibility();
       onFilter();
     });
     document.getElementById('rune-table-filter-chips')?.addEventListener('click', (e) => {
@@ -5021,6 +5171,7 @@
     try {
       localStorage.setItem(RUNE_TABLE_HIDE_TARGET_KEY, e.target.checked ? '1' : '0');
     } catch (err) { /* ignore */ }
+    updateRuneTableFilterIndicators();
     applyFiltersAndSort(getVisibleRunes(), { preserveTableExpansion: true });
   });
 
@@ -5896,6 +6047,7 @@
 
   // Save settings
   document.getElementById('btn-save-settings').addEventListener('click', () => {
+    if (typeof isShareReadOnly === 'function' && isShareReadOnly()) return;
     const s = window.SWRM.settings;
 
     // Role substats
@@ -5981,13 +6133,16 @@
     initGuideSubtabs();
     showMainTab(mainTabIdFromHash() || 'runes');
 
+    const shareIdInUrl =
+      typeof getShareIdFromUrl === 'function' ? getShareIdFromUrl() : '';
+    if (shareIdInUrl && typeof initShareProfile === 'function') {
+      await initShareProfile();
+      renderDbSlots();
+      if (typeof applyShareUrlTabFromLocation === 'function') applyShareUrlTabFromLocation();
+      return;
+    }
     if (typeof initShareProfile === 'function') {
-      const openedShare = await initShareProfile();
-      if (openedShare) {
-        renderDbSlots();
-        if (typeof applyShareUrlTabFromLocation === 'function') applyShareUrlTabFromLocation();
-        return;
-      }
+      await initShareProfile();
     }
 
     if (typeof scrubDemoFromUserSlots === 'function') {
@@ -6796,11 +6951,13 @@
   });
 
   const SHARE_QUERY_KEY = 's';
+  const SHARE_SESSION_KEY = 'swrm_share_readonly_v1';
   const SHARE_EXPIRY_DAYS = 90;
   const SHARE_MODE_STORAGE_KEY = 'swrm_share_mode_v1';
   let shareReadOnly = false;
+  let shareViewLoadFailed = false;
   let shareViewWizardName = '';
-  let shareExportMode = 'equipped-both';
+  let shareExportMode = 'all';
 
   const SHARE_MODE_LABEL_KEYS = {
     'all': 'shareModeAll',
@@ -6820,9 +6977,9 @@
   function readStoredShareMode() {
     try {
       const v = localStorage.getItem(SHARE_MODE_STORAGE_KEY);
-      return v && SHARE_MODE_LABEL_KEYS[v] ? v : 'equipped-both';
+      return v && SHARE_MODE_LABEL_KEYS[v] ? v : 'all';
     } catch (e) {
-      return 'equipped-both';
+      return 'all';
     }
   }
 
@@ -6837,28 +6994,51 @@
   }
 
   function setShareExportMode(mode) {
-    if (!SHARE_MODE_LABEL_KEYS[mode]) mode = 'equipped-both';
+    if (!SHARE_MODE_LABEL_KEYS[mode]) mode = 'all';
     shareExportMode = mode;
     writeStoredShareMode(mode);
     syncShareSplitLabels();
   }
 
   function shareModeLabel(mode, t) {
-    const key = SHARE_MODE_LABEL_KEYS[mode] || SHARE_MODE_LABEL_KEYS['equipped-both'];
+    const key = SHARE_MODE_LABEL_KEYS[mode] || SHARE_MODE_LABEL_KEYS.all;
     return (t && t[key]) || mode;
   }
 
   function syncShareSplitLabels() {
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-    const label = shareModeLabel(shareExportMode, t);
+    const mainLabel = t.shareButtonLabel || 'Share';
     document.querySelectorAll('[data-share-split-label]').forEach((el) => {
-      el.textContent = label;
+      el.textContent = mainLabel;
     });
-    document.querySelectorAll('[data-share-mode-option]').forEach((btn) => {
+    document.querySelectorAll('[data-share-mode]').forEach((btn) => {
       const on = btn.dataset.shareMode === shareExportMode;
       btn.classList.toggle('is-active', on);
       btn.setAttribute('aria-checked', on ? 'true' : 'false');
     });
+  }
+
+  function getShareIdFromUrl() {
+    try {
+      return new URL(window.location.href).searchParams.get(SHARE_QUERY_KEY) || '';
+    } catch (e) {
+      return '';
+    }
+  }
+
+  function persistShareSession(on) {
+    try {
+      if (on) sessionStorage.setItem(SHARE_SESSION_KEY, '1');
+      else sessionStorage.removeItem(SHARE_SESSION_KEY);
+    } catch (e) { /* ignore */ }
+  }
+
+  function readShareSession() {
+    try {
+      return sessionStorage.getItem(SHARE_SESSION_KEY) === '1';
+    } catch (e) {
+      return false;
+    }
   }
 
   function shareExpiryUnix() {
@@ -6871,7 +7051,7 @@
   }
 
   function buildShareSlimPayload(mode) {
-    const exportMode = mode || shareExportMode || 'equipped-both';
+    const exportMode = mode || shareExportMode || 'all';
     const json = activeSwexJson;
     if (!json || !Array.isArray(json.unit_list)) return null;
     const runeById = new Map();
@@ -7143,32 +7323,39 @@
     }
     bar.removeAttribute('hidden');
     bar.setAttribute('aria-hidden', 'false');
-    const name = escapeHtml(shareViewWizardName || t.shareUnknownWizard || 'another player');
-    const tpl = t.shareViewingBanner || 'You are viewing {name}\'s profile (read-only).';
+    const nameRaw = (shareViewWizardName || '').trim() || (t.shareUnknownWizard || 'another player');
+    const name = escapeHtml(nameRaw);
+    const readOnlyLbl = escapeHtml(t.shareReadOnlyLabel || 'Read-only');
+    const text = shareViewLoadFailed
+      ? escapeHtml(t.shareViewLoadFailed || 'Could not load this shared profile. The link may be expired.')
+      : `<span class="share-view-banner__line"><span class="share-view-banner__prefix">${escapeHtml(t.shareViewingPrefix || 'Viewing account')}</span> <strong class="share-view-banner__name">${name}</strong></span> <span class="share-view-banner__readonly">${readOnlyLbl}</span>`;
     bar.innerHTML = `<div class="demo-dataset-banner__inner">
       <div class="demo-dataset-banner__content">
-        <span class="demo-dataset-banner__badge" aria-hidden="true">VIEW</span>
-        <span class="demo-dataset-banner__text">${tpl.replace(/\{name\}/g, name)}</span>
+        <span class="demo-dataset-banner__badge" aria-hidden="true">${readOnlyLbl}</span>
+        <span class="demo-dataset-banner__text">${text}</span>
         <button type="button" class="btn-ghost demo-dataset-banner__upload-btn" id="share-view-exit-btn">${escapeHtml(t.shareLoadOwn || 'Load your SWEX')}</button>
       </div>
     </div>`;
-    bar.querySelector('#share-view-exit-btn')?.addEventListener('click', () => {
-      try {
-        const u = new URL(window.location.href);
-        u.searchParams.delete(SHARE_QUERY_KEY);
-        window.location.href = u.pathname + u.hash;
-      } catch (e) {
-        window.location.href = window.location.pathname;
-      }
-    });
+    const exitBtn = bar.querySelector('#share-view-exit-btn');
+    if (exitBtn && !exitBtn.dataset.bound) {
+      exitBtn.dataset.bound = '1';
+      exitBtn.addEventListener('click', () => {
+        persistShareSession(false);
+        try {
+          const u = new URL(window.location.href);
+          u.searchParams.delete(SHARE_QUERY_KEY);
+          window.location.href = u.pathname + (u.hash || '');
+        } catch (e) {
+          window.location.href = window.location.pathname;
+        }
+      });
+    }
   }
 
-  async function tryOpenShareFromUrl() {
-    let shareId = '';
-    try {
-      shareId = new URL(window.location.href).searchParams.get(SHARE_QUERY_KEY) || '';
-    } catch (e) { /* ignore */ }
+  async function tryOpenShareFromUrl(shareId) {
+    shareId = shareId || getShareIdFromUrl();
     if (!shareId) return false;
+    shareViewLoadFailed = false;
     const api = typeof SWRM_API === 'string' ? SWRM_API : '';
     if (!api) return false;
     try {
@@ -7183,8 +7370,12 @@
         unit_list: parsed.unit_list || [],
         runes: [],
       };
-      if (!tryHydrateRunesFromJsonText(JSON.stringify(wrapped))) return false;
+      if (!tryHydrateRunesFromJsonText(JSON.stringify(wrapped))) {
+        shareViewLoadFailed = true;
+        return false;
+      }
       shareReadOnly = true;
+      persistShareSession(true);
       shareViewWizardName = String(body.wizard_name || parsed.wizard_name || '').trim();
       if (parsed.teams && typeof setTeamsShareViewPayload === 'function') {
         setTeamsShareViewPayload(parsed.teams);
@@ -7203,57 +7394,67 @@
       return true;
     } catch (e) {
       console.warn('Share load failed', e);
+      shareViewLoadFailed = true;
       return false;
     }
   }
 
   function isShareReadOnly() {
-    return shareReadOnly;
+    return shareReadOnly || readShareSession();
   }
 
   function applyShareReadOnlyUi() {
-    document.body.classList.toggle('share-readonly', shareReadOnly);
+    const ro = isShareReadOnly();
+    shareReadOnly = ro;
+    document.documentElement.classList.toggle('share-readonly', ro);
+    document.body.classList.toggle('share-readonly', ro);
     if (typeof syncDemoBannerVisibility === 'function') syncDemoBannerVisibility();
     document.querySelectorAll('.share-split__main, .share-split__caret, .share-profile-trigger').forEach((el) => {
-      el.disabled = shareReadOnly;
+      el.disabled = ro;
     });
     document.querySelectorAll('.db-slot-btn, #btn-upload-slot, #btn-demo-load').forEach((el) => {
-      if (el) el.disabled = shareReadOnly;
+      if (el) el.disabled = ro;
     });
     document.querySelectorAll('[data-share-hidden]').forEach((el) => {
-      el.hidden = shareReadOnly;
+      el.hidden = ro;
+    });
+    document.querySelectorAll('.tab[data-tab="guide"], .tab[data-tab="changelog"]').forEach((el) => {
+      if (ro) el.setAttribute('hidden', '');
+      else el.removeAttribute('hidden');
     });
     const saveBtn = document.getElementById('btn-save-settings');
-    if (saveBtn) saveBtn.hidden = shareReadOnly;
+    if (saveBtn) saveBtn.hidden = ro;
     const rulesRoot = document.getElementById('tab-settings');
     if (rulesRoot) {
       rulesRoot.querySelectorAll('input, select, textarea').forEach((el) => {
-        el.disabled = shareReadOnly;
-        if (shareReadOnly) el.setAttribute('readonly', 'readonly');
+        el.disabled = ro;
+        if (ro) el.setAttribute('readonly', 'readonly');
         else el.removeAttribute('readonly');
       });
       rulesRoot.querySelectorAll('button').forEach((el) => {
         if (el.classList.contains('rules-subtab')) return;
         if (el.id === 'share-view-exit-btn') return;
-        el.disabled = shareReadOnly;
-        if (shareReadOnly && el.id === 'btn-save-settings') el.hidden = true;
+        if (el.id === 'btn-toggle-threshold-previews') return;
+        el.disabled = ro;
+        if (ro && el.id === 'btn-save-settings') el.hidden = true;
       });
     }
     const appSettingsRoot = document.getElementById('tab-app-settings');
     if (appSettingsRoot) {
       appSettingsRoot.querySelectorAll('input, select, textarea, button').forEach((el) => {
         if (el.id === 'app-language') return;
-        el.disabled = shareReadOnly;
-        if (shareReadOnly) el.setAttribute('readonly', 'readonly');
+        el.disabled = ro;
+        if (ro) el.setAttribute('readonly', 'readonly');
         else el.removeAttribute('readonly');
       });
     }
     const bulkBar = document.getElementById('monsters-bulk-bar');
-    if (bulkBar) bulkBar.hidden = shareReadOnly || monstersBulkSelected.size === 0;
+    if (bulkBar) bulkBar.hidden = ro || monstersBulkSelected.size === 0;
     document.querySelectorAll('[data-teams-readonly-hide]').forEach((el) => {
-      el.hidden = shareReadOnly;
+      el.hidden = ro;
     });
-    if (shareReadOnly) {
+    renderShareViewBanner();
+    if (ro) {
       const activeMain = document.querySelector('.tab.active')?.dataset?.tab;
       if (activeMain === 'guide' || activeMain === 'changelog') {
         if (typeof showMainTab === 'function') showMainTab('runes', { writeHash: true });
@@ -7312,14 +7513,32 @@
 
   async function initShareProfile() {
     bindShareProfileUi();
-    const opened = await tryOpenShareFromUrl();
-    if (!opened) {
+    const shareId = getShareIdFromUrl();
+    if (!shareId) {
+      if (readShareSession()) persistShareSession(false);
       shareReadOnly = false;
+      shareViewLoadFailed = false;
       applyShareReadOnlyUi();
-      renderShareViewBanner();
+      return false;
+    }
+    const opened = await tryOpenShareFromUrl(shareId);
+    if (!opened) {
+      shareReadOnly = true;
+      persistShareSession(true);
+      shareViewLoadFailed = true;
+      applyShareReadOnlyUi();
+      if (typeof uiEmptyRuneApplicationState === 'function') {
+        uiEmptyRuneApplicationState({ keepTab: true });
+      }
     }
     return opened;
   }
+
+  window.SWRM = window.SWRM || {};
+  window.SWRM.isShareReadOnly = isShareReadOnly;
+  window.SWRM.applyShareReadOnlyUi = applyShareReadOnlyUi;
+  window.SWRM.renderShareViewBanner = renderShareViewBanner;
+  window.SWRM.getShareIdFromUrl = getShareIdFromUrl;
 
   // ===================== CHANGELOG (STATIC, ship-time only) =====================
   function escapeChangelogText(s) {
@@ -8767,6 +8986,66 @@
     return false;
   }
 
+  let monstersSearchHighlight = '';
+
+  function highlightMonstersSearchInPlain(text, qRaw) {
+    const q = (qRaw || '').trim().toLowerCase();
+    const t = String(text ?? '');
+    if (!q) return escapeHtml(t);
+    const tl = t.toLowerCase();
+    const parts = [];
+    let i = 0;
+    while (i < t.length) {
+      const idx = tl.indexOf(q, i);
+      if (idx === -1) {
+        parts.push(escapeHtml(t.slice(i)));
+        break;
+      }
+      if (idx > i) parts.push(escapeHtml(t.slice(i, idx)));
+      parts.push(`<mark class="search-hit">${escapeHtml(t.slice(idx, idx + q.length))}</mark>`);
+      i = idx + q.length;
+    }
+    return parts.join('');
+  }
+
+  function monsterUnitSearchHaystack(u) {
+    const bits = [
+      u.displayName,
+      u.masterId,
+      u.metaElement,
+      u.metaArchetype,
+      String(u.level ?? ''),
+      String(u.equippedCount ?? ''),
+      u.inStorage ? 'storage' : 'active',
+      u.favorite ? 'favorite' : '',
+      u.food ? 'food fodder' : '',
+      (u.customTags || []).join(' '),
+    ];
+    for (const slot of u.runeSlots || []) {
+      const r = slot.rune;
+      if (!r) continue;
+      bits.push(
+        r.setName,
+        r.mainName,
+        r.gradeStr,
+        String(r.slot),
+        String(r.level),
+        r.role,
+        r.verdict,
+      );
+      for (const s of r.substats || []) {
+        if (s.name) bits.push(s.name, String(s.val ?? ''));
+      }
+    }
+    for (const sk of u.skillRows || []) {
+      bits.push(sk.name, String(sk.level), String(sk.maxLevel));
+    }
+    return bits
+      .filter((x) => x != null && String(x).trim() !== '')
+      .join(' ')
+      .toLowerCase();
+  }
+
   function filterMonstersList(units, filters) {
     const q = (filters.q || '').trim().toLowerCase();
     const el = filters.element || '';
@@ -8802,7 +9081,7 @@
       if (markFilter === 'favorite' && !u.favorite) return false;
       if (markFilter === 'food' && !u.food) return false;
       if (q) {
-        const hay = `${u.displayName || ''} ${u.masterId}`.toLowerCase();
+        const hay = monsterUnitSearchHaystack(u);
         if (!hay.includes(q)) return false;
       }
       return true;
@@ -8859,8 +9138,8 @@
     return { total, anyRune, fullSix, skillUpsTotal };
   }
 
-  function renderMonstersChips(sum, t, indexMissing, skillsIndexMissing) {
-    const chips = document.getElementById('monsters-chips');
+  function renderMonstersChips(sum, t, indexMissing, skillsIndexMissing, chipsHostId) {
+    const chips = document.getElementById(chipsHostId || 'monsters-chips');
     if (!chips) return;
     const tpl =
       t.monstersStatsTpl || '{total} six-star · {any} with any rune · {full} with 6 runes';
@@ -8881,26 +9160,29 @@
           `<span class="monsters-chip"><span class="monsters-chip__label">${escapeHtml(p.label)}</span><strong class="monsters-chip__value">${escapeHtml(String(p.value))}</strong></span>`,
       )
       .join('');
-    if (indexMissing) {
-      const hint =
-        t.monstersIndexMissing ||
-        'Monster names need data/monsters-index.json — run: node tools/fetch-monsters-index.mjs';
-      chips.insertAdjacentHTML(
-        'beforeend',
-        `<p class="monsters-index-warn monsters-index-warn--inline">${escapeHtml(hint)}</p>`,
-      );
+    const hostId = chipsHostId || 'monsters-chips';
+    if (hostId === 'monsters-chips') {
+      if (indexMissing) {
+        const hint =
+          t.monstersIndexMissing ||
+          'Monster names need data/monsters-index.json — run: node tools/fetch-monsters-index.mjs';
+        chips.insertAdjacentHTML(
+          'beforeend',
+          `<p class="monsters-index-warn monsters-index-warn--inline">${escapeHtml(hint)}</p>`,
+        );
+      }
+      if (skillsIndexMissing) {
+        const hint =
+          t.monstersSkillsIndexMissing ||
+          'Skill max levels need data/skills-index.json — run: node tools/fetch-skills-index.mjs';
+        chips.insertAdjacentHTML(
+          'beforeend',
+          `<p class="monsters-index-warn monsters-index-warn--inline">${escapeHtml(hint)}</p>`,
+        );
+      }
+      const statsEl = document.getElementById('monsters-stats');
+      if (statsEl) statsEl.hidden = true;
     }
-    if (skillsIndexMissing) {
-      const hint =
-        t.monstersSkillsIndexMissing ||
-        'Skill max levels need data/skills-index.json — run: node tools/fetch-skills-index.mjs';
-      chips.insertAdjacentHTML(
-        'beforeend',
-        `<p class="monsters-index-warn monsters-index-warn--inline">${escapeHtml(hint)}</p>`,
-      );
-    }
-    const statsEl = document.getElementById('monsters-stats');
-    if (statsEl) statsEl.hidden = true;
   }
 
   function readMonstersView() {
@@ -10453,9 +10735,11 @@
       monstersDetailHoverUnitId != null &&
       String(monstersDetailHoverUnitId) === String(u.unitId);
     const bestiaryHref = db && u.bestiarySlug ? db.bestiaryUrl(u.bestiarySlug) : '';
+    const q = monstersSearchHighlight || '';
+    const nameHtml = highlightMonstersSearchInPlain(u.displayName || `#${u.masterId}`, q);
     const nameInner = bestiaryHref
-      ? `<a href="${escapeHtml(bestiaryHref)}" target="_blank" rel="noopener noreferrer">${escapeHtml(u.displayName)}</a>`
-      : escapeHtml(u.displayName);
+      ? `<a href="${escapeHtml(bestiaryHref)}" target="_blank" rel="noopener noreferrer">${nameHtml}</a>`
+      : nameHtml;
     const runeCells = buildRuneBlockHtml(u, db, t, view);
     const bulkSel = monstersBulkSelected.has(String(u.unitId));
     const starsBadge = buildMonsterStarsBadge(u);
@@ -10706,9 +10990,13 @@
         ]
           .filter(Boolean)
           .join(' ');
-        const name = escapeHtml(u.displayName || `#${u.masterId}`);
+        const q = monstersSearchHighlight || '';
+        const name = highlightMonstersSearchInPlain(u.displayName || `#${u.masterId}`, q);
         const runeTpl = t.monstersListRunesTpl || '{n}/6';
-        const runes = escapeHtml(runeTpl.replace(/\{n\}/g, String(u.equippedCount || 0)));
+        const runes = highlightMonstersSearchInPlain(
+          runeTpl.replace(/\{n\}/g, String(u.equippedCount || 0)),
+          q,
+        );
         const skills =
           u.skillUpsNeeded > 0
             ? `<span class="monsters-table__devils" title="${escapeHtml((t.monstersSkillDeficitTip || '{n} to max').replace(/\{n\}/g, String(u.skillUpsNeeded)))}">${devilmonIconHtml('monsters-table__devil-icon')}<span class="monsters-table__devil-n">${escapeHtml(String(u.skillUpsNeeded))}</span></span>`
@@ -10722,9 +11010,9 @@
           <td data-col="bulk" class="monsters-table__td-bulk"><input type="checkbox" class="monsters-table__bulk-cb" data-unit-id="${uid}" ${bulkSel ? 'checked' : ''} aria-label="${escapeHtml(t.monstersBulkSelectOne || 'Select')}" /></td>
           <td data-col="name"><div class="monsters-table__name-cell">${monsterTableThumbHtml(u)}<span class="monsters-table__name">${name}</span>${storageBadge}</div></td>
           <td data-col="stars">${monsterTableCellStars(u)}</td>
-          <td data-col="level">${u.level}</td>
+          <td data-col="level">${highlightMonstersSearchInPlain(String(u.level), q)}</td>
           <td data-col="element">${monsterTableElementCell(u)}</td>
-          <td data-col="role">${escapeHtml(u.metaArchetype || '—')}</td>
+          <td data-col="role">${highlightMonstersSearchInPlain(u.metaArchetype || '—', q)}</td>
           <td data-col="runes">${runes}</td>
           <td data-col="skills">${skills}</td>
           <td data-col="marks">${monsterTableCellMarks(u)}</td>
@@ -10915,11 +11203,9 @@
     const qInput = document.getElementById('monsters-filter-q');
     const elSelect = document.getElementById('monsters-filter-element');
     const locSelect = document.getElementById('monsters-filter-location');
-    const sortSelect = document.getElementById('monsters-filter-sort');
     if (qInput && qInput.value !== filters.q) qInput.value = filters.q;
     if (elSelect && elSelect.value !== filters.element) elSelect.value = filters.element;
     if (locSelect && locSelect.value !== filters.location) locSelect.value = filters.location;
-    if (sortSelect && sortSelect.value !== filters.sort) sortSelect.value = filters.sort;
     populateMonstersSetFilter();
     populateMonstersTagFilter();
     populateMonstersRoleFilter();
@@ -10949,6 +11235,7 @@
     monstersVisibleUnitIds = visible.map((u) => String(u.unitId));
     const sum = computeMonstersSummary(enriched);
     renderMonstersChips(sum, t, indexMissing, skillsIndexMissing);
+    if (typeof renderRuneTableRosterChips === 'function') renderRuneTableRosterChips();
 
     if (!visible.length) {
       grid.innerHTML = '';
@@ -11005,6 +11292,7 @@
       const hu = enriched.find((x) => String(x.unitId) === String(monstersDetailHoverUnitId));
       if (hu && hoverCard) renderMonstersDetail(hu, t, hoverCard);
     }
+    if (typeof applyShareReadOnlyUi === 'function') applyShareReadOnlyUi();
   }
 
   function populateMonstersRoleFilter() {
@@ -11098,8 +11386,6 @@
     if (elLbl) elLbl.textContent = t.monstersFilterElement || 'Element';
     const locLbl = document.getElementById('lbl-monsters-filter-location');
     if (locLbl) locLbl.textContent = t.monstersFilterLocation || 'Location';
-    const sortLbl = document.getElementById('lbl-monsters-filter-sort');
-    if (sortLbl) sortLbl.textContent = t.monstersFilterSort || 'Sort';
     const skillLbl = document.getElementById('lbl-monsters-filter-skill');
     if (skillLbl) skillLbl.textContent = t.monstersFilterSkill || 'Skills';
     const runeLbl = document.getElementById('lbl-monsters-filter-rune');
@@ -11205,8 +11491,10 @@
     if (btnTable) btnTable.title = t.monstersViewTable || 'Table';
     const lblGridSel = document.getElementById('lbl-monsters-grid-select-all');
     if (lblGridSel) lblGridSel.textContent = t.monstersTableSelectAll || 'Select all visible';
-    const clrToolbar = document.getElementById('monsters-toolbar-clear');
-    if (clrToolbar) clrToolbar.textContent = t.monstersToolbarClear || 'Clear filters';
+    const resetToolbar = document.getElementById('monsters-toolbar-reset-filters');
+    if (resetToolbar) resetToolbar.textContent = t.tableResetFilters || 'Reset filters';
+    const exportBtn = document.getElementById('btn-monsters-export-csv');
+    if (exportBtn) exportBtn.textContent = t.exportTableCsv || 'Export CSV';
     const emptyClear = document.getElementById('monsters-empty-clear-filters');
     if (emptyClear) emptyClear.textContent = t.monstersEmptyClearFilters || 'Clear filters';
     const emptySearch = document.getElementById('monsters-empty-reset-search');
@@ -11231,26 +11519,11 @@
       if (o1) o1.textContent = t.monstersLocationActive || 'In use';
       if (o2) o2.textContent = t.monstersLocationStorage || 'Storage';
     }
-    const sortSel = document.getElementById('monsters-filter-sort');
-    if (sortSel) {
-      const opts = {
-        name: t.monstersSortName || 'Name',
-        'level-desc': t.monstersSortLevelDesc || 'Level ↓',
-        'level-asc': t.monstersSortLevelAsc || 'Level ↑',
-        'runes-desc': t.monstersSortRunes || 'Runes equipped',
-        element: t.monstersSortElement || 'Element',
-        'favorite-first': t.monstersSortFavorite || 'Favorites first',
-        'food-first': t.monstersSortFood || 'Food first',
-      };
-      sortSel.querySelectorAll('option').forEach((opt) => {
-        const v = opt.value;
-        if (opts[v]) opt.textContent = opts[v];
-      });
-    }
   }
 
   function countMonstersActiveFilters(f) {
     let n = 0;
+    if (f.element) n += 1;
     if (f.location && f.location !== 'all') n += 1;
     if (f.skillFilter) n += 1;
     if (f.runeFilter) n += 1;
@@ -11388,7 +11661,7 @@
       q: document.getElementById('monsters-filter-q')?.value || '',
       element: document.getElementById('monsters-filter-element')?.value || '',
       location: document.getElementById('monsters-filter-location')?.value || 'all',
-      sort: document.getElementById('monsters-filter-sort')?.value || 'name',
+      sort: readMonstersFilters().sort || 'name',
       skillFilter: document.getElementById('monsters-filter-skill')?.value || '',
       runeFilter: document.getElementById('monsters-filter-rune')?.value || '',
       runeSet: document.getElementById('monsters-filter-rune-set')?.value || '',
@@ -11400,18 +11673,84 @@
     };
   }
 
+  function exportMonstersCsv() {
+    const cache = monstersEnrichedCache || [];
+    if (!cache.length) return;
+    const filters = readMonstersFiltersFromDom();
+    const filtered = filterMonstersList(cache, filters);
+    const view = readMonstersView();
+    const visible =
+      view === 'table' ? sortMonstersForTable(filtered) : sortMonstersList(filtered, filters.sort);
+    if (!visible.length) return;
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    function cellPart(s) {
+      const raw = String(s ?? '');
+      if (/[,"\n\r]/.test(raw)) return `"${raw.replace(/"/g, '""')}"`;
+      return raw;
+    }
+    const headers = [
+      t.monstersColName || 'Name',
+      t.monstersColLevel || 'Lv',
+      t.monstersColElement || 'Element',
+      t.monstersColRole || 'Archetype',
+      t.monstersColRunes || 'Runes',
+      t.monstersColDevilmons || 'Devilmons',
+      t.monstersColMarks || 'Marks',
+      t.monstersColTags || 'Tags',
+    ];
+    const lines = [headers.map(cellPart).join(',')];
+    for (const u of visible) {
+      const marks = [];
+      if (u.favorite) marks.push('★');
+      if (u.food) marks.push('🍖');
+      if (u.inStorage) marks.push('▣');
+      else if (u.storageMark) marks.push('▣*');
+      const skillUps = u.skillUpsNeeded > 0 ? String(u.skillUpsNeeded) : '0';
+      lines.push(
+        [
+          u.displayName,
+          u.level,
+          u.metaElement || '',
+          u.metaArchetype || '',
+          String(u.equippedCount || 0),
+          skillUps,
+          marks.join(' ') || '—',
+          (u.customTags || []).join(', ') || '—',
+        ]
+          .map(cellPart)
+          .join(','),
+      );
+    }
+    const csv = `\uFEFF${lines.join('\r\n')}`;
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `sw-monsters-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    URL.revokeObjectURL(a.href);
+    document.body.removeChild(a);
+  }
+
   function bindMonstersToolbar() {
     const onFilter = () => {
+      monstersSearchHighlight = (document.getElementById('monsters-filter-q')?.value || '').trim().toLowerCase();
       writeMonstersFilters(readMonstersFiltersFromDom());
       updateMonstersFilterSummary();
       renderMonstersPanel();
     };
+    monstersSearchHighlight = (document.getElementById('monsters-filter-q')?.value || '').trim().toLowerCase();
     document.getElementById('monsters-filter-q')?.addEventListener('input', onFilter);
     document.getElementById('monsters-filter-element')?.addEventListener('change', onFilter);
     document.getElementById('monsters-filter-min-level')?.addEventListener('input', onFilter);
     document.getElementById('monsters-filter-min-level')?.addEventListener('change', onFilter);
     document.getElementById('monsters-filter-location')?.addEventListener('change', onFilter);
-    document.getElementById('monsters-filter-sort')?.addEventListener('change', onFilter);
+    document.getElementById('monsters-toolbar-reset-filters')?.addEventListener('click', () => {
+      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+      resetMonstersToolbarFilters(t);
+      renderMonstersPanel();
+    });
+    document.getElementById('btn-monsters-export-csv')?.addEventListener('click', exportMonstersCsv);
     document.getElementById('monsters-filter-skill')?.addEventListener('change', onFilter);
     document.getElementById('monsters-filter-rune')?.addEventListener('change', onFilter);
     document.getElementById('monsters-filter-rune-set')?.addEventListener('change', onFilter);
@@ -11486,41 +11825,23 @@
       updateMonstersFilterSummary();
       renderMonstersPanel();
     });
-    function openMonstersFiltersDrawer() {
-      const dlg = document.getElementById('monsters-filters-drawer');
-      if (!dlg) return;
-      if (typeof dlg.showModal === 'function') {
-        try {
-          dlg.showModal();
-        } catch (e) {
-          dlg.setAttribute('open', '');
-        }
-      } else {
-        dlg.setAttribute('open', '');
-      }
-    }
-
-    function closeMonstersFiltersDrawer() {
-      const dlg = document.getElementById('monsters-filters-drawer');
-      if (!dlg) return;
-      if (dlg.open && typeof dlg.close === 'function') dlg.close();
-      else dlg.removeAttribute('open');
-    }
-
-    document.getElementById('monsters-more-filters-btn')?.addEventListener('click', () => {
-      openMonstersFiltersDrawer();
-    });
-    document.getElementById('monsters-filters-drawer-close')?.addEventListener('click', () => {
-      closeMonstersFiltersDrawer();
-    });
-    document.getElementById('monsters-filters-drawer')?.addEventListener('close', () => {
+    const onMonstersFiltersClose = () => {
       const f = readMonstersFiltersFromDom();
       writeMonstersFilters(f);
       updateMonstersFilterSummary();
       renderMonstersPanel();
+    };
+    bindFiltersPopover('monsters-more-filters-btn', 'monsters-filters-popover', {
+      onClose: onMonstersFiltersClose,
     });
     document.getElementById('monsters-filters-drawer-reset')?.addEventListener('click', () => {
       clearMonstersPanelFilters();
+      const elSel = document.getElementById('monsters-filter-element');
+      if (elSel) elSel.value = '';
+      const lvlInp = document.getElementById('monsters-filter-min-level');
+      if (lvlInp) lvlInp.value = '';
+      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+      syncMonstersMinLevelInput(0, t);
       writeMonstersFilters(readMonstersFiltersFromDom());
       updateMonstersFilterSummary();
       renderMonstersPanel();

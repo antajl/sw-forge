@@ -326,7 +326,7 @@ const DEFAULT_FORMULAS = {
       'Slot 4': { Early: 1, Mid: 1, Late: 1 },
       'Slot 6': { Early: 1, Mid: 1, Late: 1 },
     },
-    requireHR: { 'High Roll for Hero': { Early: false, Mid: true, Late: true }, 'High Roll for Legend': { Early: false, Mid: true, Late: true } }
+    requireHR: { 'High Roll for Hero': { Early: false, Mid: false, Late: true }, 'High Roll for Legend': { Early: false, Mid: true, Late: true } }
   },
 'Fast CC': {
     enabled: true,
@@ -526,7 +526,7 @@ const DEFAULT_EVAL_POLICY = {
   minRolePressure: 0.0,        // 0..1 required role pressure floor (0 = disabled)
   rolePressureByRole: {
     'Fast CC': 0.50,
-    Bomber: 0.50,
+    Bomber: 0.38,
     'Classic DPS': 0.52,
     'Slow DPS': 0.55,
     Bruiser: 0.42,
@@ -574,10 +574,10 @@ const DEFAULT_EVAL_POLICY_PRESETS = {
     minRolePressure: 0.0,
     rolePressureByRole: {
       'Fast CC': 0.48,
-      Bomber: 0.50,
+      Bomber: 0.38,
       'Classic DPS': 0.50,
       'Slow DPS': 0.55,
-      Bruiser: 0.38,
+      Bruiser: 0.32,
       Tank: 0.35,
     },
     minUsefulSubsByRole: {
@@ -1031,6 +1031,17 @@ function getSettings() {
       formulas.Bomber.requireHR = JSON.parse(JSON.stringify(DEFAULT_FORMULAS.Bomber.requireHR));
     }
   }
+  // v17: Bomber Hero HR anchor only Late; softer Mid role pressure for Bomber/Bruiser.
+  if (presetVersion < 17) {
+    if (DEFAULT_FORMULAS.Bomber && formulas.Bomber) {
+      formulas.Bomber.requireHR = JSON.parse(JSON.stringify(DEFAULT_FORMULAS.Bomber.requireHR));
+    }
+    if (policy && policy.rolePressureByRole) {
+      const rp = policy.rolePressureByRole;
+      if (rp.Bomber != null) rp.Bomber = 0.38;
+      if (rp.Bruiser != null) rp.Bruiser = 0.32;
+    }
+  }
   // Canonical source is settings.formulas. Migrate any leftover legacy-only roles to formulas.
   for (const [name, roleCfg] of Object.entries(roles || {})) {
     if (formulas[name]) continue;
@@ -1046,7 +1057,7 @@ function getSettings() {
     roles,
     formulas,
     rolePriority,
-    presetVersion: 16,
+    presetVersion: 17,
     reapp,
     grind,
     gemMeta,

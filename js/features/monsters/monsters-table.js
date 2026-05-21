@@ -167,9 +167,13 @@
         ]
           .filter(Boolean)
           .join(' ');
-        const name = escapeHtml(u.displayName || `#${u.masterId}`);
+        const q = monstersSearchHighlight || '';
+        const name = highlightMonstersSearchInPlain(u.displayName || `#${u.masterId}`, q);
         const runeTpl = t.monstersListRunesTpl || '{n}/6';
-        const runes = escapeHtml(runeTpl.replace(/\{n\}/g, String(u.equippedCount || 0)));
+        const runes = highlightMonstersSearchInPlain(
+          runeTpl.replace(/\{n\}/g, String(u.equippedCount || 0)),
+          q,
+        );
         const skills =
           u.skillUpsNeeded > 0
             ? `<span class="monsters-table__devils" title="${escapeHtml((t.monstersSkillDeficitTip || '{n} to max').replace(/\{n\}/g, String(u.skillUpsNeeded)))}">${devilmonIconHtml('monsters-table__devil-icon')}<span class="monsters-table__devil-n">${escapeHtml(String(u.skillUpsNeeded))}</span></span>`
@@ -183,9 +187,9 @@
           <td data-col="bulk" class="monsters-table__td-bulk"><input type="checkbox" class="monsters-table__bulk-cb" data-unit-id="${uid}" ${bulkSel ? 'checked' : ''} aria-label="${escapeHtml(t.monstersBulkSelectOne || 'Select')}" /></td>
           <td data-col="name"><div class="monsters-table__name-cell">${monsterTableThumbHtml(u)}<span class="monsters-table__name">${name}</span>${storageBadge}</div></td>
           <td data-col="stars">${monsterTableCellStars(u)}</td>
-          <td data-col="level">${u.level}</td>
+          <td data-col="level">${highlightMonstersSearchInPlain(String(u.level), q)}</td>
           <td data-col="element">${monsterTableElementCell(u)}</td>
-          <td data-col="role">${escapeHtml(u.metaArchetype || '—')}</td>
+          <td data-col="role">${highlightMonstersSearchInPlain(u.metaArchetype || '—', q)}</td>
           <td data-col="runes">${runes}</td>
           <td data-col="skills">${skills}</td>
           <td data-col="marks">${monsterTableCellMarks(u)}</td>

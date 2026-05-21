@@ -41,7 +41,8 @@
   --radius-lg: 10px;
   --glow-accent: 0 0 24px rgba(142, 197, 255, 0.22);
 
-  --app-content-max: 1200px;
+  --app-content-max: 1320px;
+  --content-max: 1320px;
   --app-gutter: 20px;
 
   /* Progression stages (Early / Mid / Late) — shared accents */

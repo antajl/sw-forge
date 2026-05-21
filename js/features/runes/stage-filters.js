@@ -4,8 +4,9 @@
     stage = e.target.value;
     if (typeof window.swrmOnDashboardStageChanged === 'function') {
       window.swrmOnDashboardStageChanged();
+    } else if (allRunes.length) {
+      reprocess();
     }
-    if (allRunes.length) reprocess();
   });
 
   // Auto Game Stage button

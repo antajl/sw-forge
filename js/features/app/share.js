@@ -1,10 +1,12 @@
 // js/features/app/share.js — Share Profile (read-only links via Worker + D1)
   const SHARE_QUERY_KEY = 's';
+  const SHARE_SESSION_KEY = 'swrm_share_readonly_v1';
   const SHARE_EXPIRY_DAYS = 90;
   const SHARE_MODE_STORAGE_KEY = 'swrm_share_mode_v1';
   let shareReadOnly = false;
+  let shareViewLoadFailed = false;
   let shareViewWizardName = '';
-  let shareExportMode = 'equipped-both';
+  let shareExportMode = 'all';
 
   const SHARE_MODE_LABEL_KEYS = {
     'all': 'shareModeAll',
@@ -24,9 +26,9 @@
   function readStoredShareMode() {
     try {
       const v = localStorage.getItem(SHARE_MODE_STORAGE_KEY);
-      return v && SHARE_MODE_LABEL_KEYS[v] ? v : 'equipped-both';
+      return v && SHARE_MODE_LABEL_KEYS[v] ? v : 'all';
     } catch (e) {
-      return 'equipped-both';
+      return 'all';
     }
   }
 
@@ -41,28 +43,51 @@
   }
 
   function setShareExportMode(mode) {
-    if (!SHARE_MODE_LABEL_KEYS[mode]) mode = 'equipped-both';
+    if (!SHARE_MODE_LABEL_KEYS[mode]) mode = 'all';
     shareExportMode = mode;
     writeStoredShareMode(mode);
     syncShareSplitLabels();
   }
 
   function shareModeLabel(mode, t) {
-    const key = SHARE_MODE_LABEL_KEYS[mode] || SHARE_MODE_LABEL_KEYS['equipped-both'];
+    const key = SHARE_MODE_LABEL_KEYS[mode] || SHARE_MODE_LABEL_KEYS.all;
     return (t && t[key]) || mode;
   }
 
   function syncShareSplitLabels() {
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-    const label = shareModeLabel(shareExportMode, t);
+    const mainLabel = t.shareButtonLabel || 'Share';
     document.querySelectorAll('[data-share-split-label]').forEach((el) => {
-      el.textContent = label;
+      el.textContent = mainLabel;
     });
-    document.querySelectorAll('[data-share-mode-option]').forEach((btn) => {
+    document.querySelectorAll('[data-share-mode]').forEach((btn) => {
       const on = btn.dataset.shareMode === shareExportMode;
       btn.classList.toggle('is-active', on);
       btn.setAttribute('aria-checked', on ? 'true' : 'false');
     });
+  }
+
+  function getShareIdFromUrl() {
+    try {
+      return new URL(window.location.href).searchParams.get(SHARE_QUERY_KEY) || '';
+    } catch (e) {
+      return '';
+    }
+  }
+
+  function persistShareSession(on) {
+    try {
+      if (on) sessionStorage.setItem(SHARE_SESSION_KEY, '1');
+      else sessionStorage.removeItem(SHARE_SESSION_KEY);
+    } catch (e) { /* ignore */ }
+  }
+
+  function readShareSession() {
+    try {
+      return sessionStorage.getItem(SHARE_SESSION_KEY) === '1';
+    } catch (e) {
+      return false;
+    }
   }
 
   function shareExpiryUnix() {
@@ -75,7 +100,7 @@
   }
 
   function buildShareSlimPayload(mode) {
-    const exportMode = mode || shareExportMode || 'equipped-both';
+    const exportMode = mode || shareExportMode || 'all';
     const json = activeSwexJson;
     if (!json || !Array.isArray(json.unit_list)) return null;
     const runeById = new Map();
@@ -347,32 +372,39 @@
     }
     bar.removeAttribute('hidden');
     bar.setAttribute('aria-hidden', 'false');
-    const name = escapeHtml(shareViewWizardName || t.shareUnknownWizard || 'another player');
-    const tpl = t.shareViewingBanner || 'You are viewing {name}\'s profile (read-only).';
+    const nameRaw = (shareViewWizardName || '').trim() || (t.shareUnknownWizard || 'another player');
+    const name = escapeHtml(nameRaw);
+    const readOnlyLbl = escapeHtml(t.shareReadOnlyLabel || 'Read-only');
+    const text = shareViewLoadFailed
+      ? escapeHtml(t.shareViewLoadFailed || 'Could not load this shared profile. The link may be expired.')
+      : `<span class="share-view-banner__line"><span class="share-view-banner__prefix">${escapeHtml(t.shareViewingPrefix || 'Viewing account')}</span> <strong class="share-view-banner__name">${name}</strong></span> <span class="share-view-banner__readonly">${readOnlyLbl}</span>`;
     bar.innerHTML = `<div class="demo-dataset-banner__inner">
       <div class="demo-dataset-banner__content">
-        <span class="demo-dataset-banner__badge" aria-hidden="true">VIEW</span>
-        <span class="demo-dataset-banner__text">${tpl.replace(/\{name\}/g, name)}</span>
+        <span class="demo-dataset-banner__badge" aria-hidden="true">${readOnlyLbl}</span>
+        <span class="demo-dataset-banner__text">${text}</span>
         <button type="button" class="btn-ghost demo-dataset-banner__upload-btn" id="share-view-exit-btn">${escapeHtml(t.shareLoadOwn || 'Load your SWEX')}</button>
       </div>
     </div>`;
-    bar.querySelector('#share-view-exit-btn')?.addEventListener('click', () => {
-      try {
-        const u = new URL(window.location.href);
-        u.searchParams.delete(SHARE_QUERY_KEY);
-        window.location.href = u.pathname + u.hash;
-      } catch (e) {
-        window.location.href = window.location.pathname;
-      }
-    });
+    const exitBtn = bar.querySelector('#share-view-exit-btn');
+    if (exitBtn && !exitBtn.dataset.bound) {
+      exitBtn.dataset.bound = '1';
+      exitBtn.addEventListener('click', () => {
+        persistShareSession(false);
+        try {
+          const u = new URL(window.location.href);
+          u.searchParams.delete(SHARE_QUERY_KEY);
+          window.location.href = u.pathname + (u.hash || '');
+        } catch (e) {
+          window.location.href = window.location.pathname;
+        }
+      });
+    }
   }
 
-  async function tryOpenShareFromUrl() {
-    let shareId = '';
-    try {
-      shareId = new URL(window.location.href).searchParams.get(SHARE_QUERY_KEY) || '';
-    } catch (e) { /* ignore */ }
+  async function tryOpenShareFromUrl(shareId) {
+    shareId = shareId || getShareIdFromUrl();
     if (!shareId) return false;
+    shareViewLoadFailed = false;
     const api = typeof SWRM_API === 'string' ? SWRM_API : '';
     if (!api) return false;
     try {
@@ -387,8 +419,12 @@
         unit_list: parsed.unit_list || [],
         runes: [],
       };
-      if (!tryHydrateRunesFromJsonText(JSON.stringify(wrapped))) return false;
+      if (!tryHydrateRunesFromJsonText(JSON.stringify(wrapped))) {
+        shareViewLoadFailed = true;
+        return false;
+      }
       shareReadOnly = true;
+      persistShareSession(true);
       shareViewWizardName = String(body.wizard_name || parsed.wizard_name || '').trim();
       if (parsed.teams && typeof setTeamsShareViewPayload === 'function') {
         setTeamsShareViewPayload(parsed.teams);
@@ -407,57 +443,67 @@
       return true;
     } catch (e) {
       console.warn('Share load failed', e);
+      shareViewLoadFailed = true;
       return false;
     }
   }
 
   function isShareReadOnly() {
-    return shareReadOnly;
+    return shareReadOnly || readShareSession();
   }
 
   function applyShareReadOnlyUi() {
-    document.body.classList.toggle('share-readonly', shareReadOnly);
+    const ro = isShareReadOnly();
+    shareReadOnly = ro;
+    document.documentElement.classList.toggle('share-readonly', ro);
+    document.body.classList.toggle('share-readonly', ro);
     if (typeof syncDemoBannerVisibility === 'function') syncDemoBannerVisibility();
     document.querySelectorAll('.share-split__main, .share-split__caret, .share-profile-trigger').forEach((el) => {
-      el.disabled = shareReadOnly;
+      el.disabled = ro;
     });
     document.querySelectorAll('.db-slot-btn, #btn-upload-slot, #btn-demo-load').forEach((el) => {
-      if (el) el.disabled = shareReadOnly;
+      if (el) el.disabled = ro;
     });
     document.querySelectorAll('[data-share-hidden]').forEach((el) => {
-      el.hidden = shareReadOnly;
+      el.hidden = ro;
+    });
+    document.querySelectorAll('.tab[data-tab="guide"], .tab[data-tab="changelog"]').forEach((el) => {
+      if (ro) el.setAttribute('hidden', '');
+      else el.removeAttribute('hidden');
     });
     const saveBtn = document.getElementById('btn-save-settings');
-    if (saveBtn) saveBtn.hidden = shareReadOnly;
+    if (saveBtn) saveBtn.hidden = ro;
     const rulesRoot = document.getElementById('tab-settings');
     if (rulesRoot) {
       rulesRoot.querySelectorAll('input, select, textarea').forEach((el) => {
-        el.disabled = shareReadOnly;
-        if (shareReadOnly) el.setAttribute('readonly', 'readonly');
+        el.disabled = ro;
+        if (ro) el.setAttribute('readonly', 'readonly');
         else el.removeAttribute('readonly');
       });
       rulesRoot.querySelectorAll('button').forEach((el) => {
         if (el.classList.contains('rules-subtab')) return;
         if (el.id === 'share-view-exit-btn') return;
-        el.disabled = shareReadOnly;
-        if (shareReadOnly && el.id === 'btn-save-settings') el.hidden = true;
+        if (el.id === 'btn-toggle-threshold-previews') return;
+        el.disabled = ro;
+        if (ro && el.id === 'btn-save-settings') el.hidden = true;
       });
     }
     const appSettingsRoot = document.getElementById('tab-app-settings');
     if (appSettingsRoot) {
       appSettingsRoot.querySelectorAll('input, select, textarea, button').forEach((el) => {
         if (el.id === 'app-language') return;
-        el.disabled = shareReadOnly;
-        if (shareReadOnly) el.setAttribute('readonly', 'readonly');
+        el.disabled = ro;
+        if (ro) el.setAttribute('readonly', 'readonly');
         else el.removeAttribute('readonly');
       });
     }
     const bulkBar = document.getElementById('monsters-bulk-bar');
-    if (bulkBar) bulkBar.hidden = shareReadOnly || monstersBulkSelected.size === 0;
+    if (bulkBar) bulkBar.hidden = ro || monstersBulkSelected.size === 0;
     document.querySelectorAll('[data-teams-readonly-hide]').forEach((el) => {
-      el.hidden = shareReadOnly;
+      el.hidden = ro;
     });
-    if (shareReadOnly) {
+    renderShareViewBanner();
+    if (ro) {
       const activeMain = document.querySelector('.tab.active')?.dataset?.tab;
       if (activeMain === 'guide' || activeMain === 'changelog') {
         if (typeof showMainTab === 'function') showMainTab('runes', { writeHash: true });
@@ -516,11 +562,29 @@
 
   async function initShareProfile() {
     bindShareProfileUi();
-    const opened = await tryOpenShareFromUrl();
-    if (!opened) {
+    const shareId = getShareIdFromUrl();
+    if (!shareId) {
+      if (readShareSession()) persistShareSession(false);
       shareReadOnly = false;
+      shareViewLoadFailed = false;
       applyShareReadOnlyUi();
-      renderShareViewBanner();
+      return false;
+    }
+    const opened = await tryOpenShareFromUrl(shareId);
+    if (!opened) {
+      shareReadOnly = true;
+      persistShareSession(true);
+      shareViewLoadFailed = true;
+      applyShareReadOnlyUi();
+      if (typeof uiEmptyRuneApplicationState === 'function') {
+        uiEmptyRuneApplicationState({ keepTab: true });
+      }
     }
     return opened;
   }
+
+  window.SWRM = window.SWRM || {};
+  window.SWRM.isShareReadOnly = isShareReadOnly;
+  window.SWRM.applyShareReadOnlyUi = applyShareReadOnlyUi;
+  window.SWRM.renderShareViewBanner = renderShareViewBanner;
+  window.SWRM.getShareIdFromUrl = getShareIdFromUrl;

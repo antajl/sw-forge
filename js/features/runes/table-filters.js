@@ -1,6 +1,51 @@
 // js/features/runes/table-filters.js — rune table filtering logic
   let filteredRunes = [];
 
+  function computeRuneTableSummary(runes) {
+    const list = runes || [];
+    let ancient = 0;
+    let equipped = 0;
+    let plus15 = 0;
+    let keep = 0;
+    for (const r of list) {
+      if (r.isAncient) ancient += 1;
+      if (r.equipped_name != null && Number.isFinite(Number(r.equipped_name))) equipped += 1;
+      if (Number(r.level) >= 15) plus15 += 1;
+      if (r.verdict === 'Keep') keep += 1;
+    }
+    return { total: list.length, ancient, equipped, plus15, keep };
+  }
+
+  function renderRuneTableRosterChips() {
+    const host = document.getElementById('rune-table-roster-chips');
+    const meta = document.getElementById('rune-table-roster-meta');
+    if (!host) return;
+    const pool = typeof getVisibleRunes === 'function' ? getVisibleRunes() : [];
+    if (!pool.length) {
+      host.innerHTML = '';
+      if (meta) meta.hidden = true;
+      return;
+    }
+    if (meta) meta.hidden = false;
+    const sum = computeRuneTableSummary(pool);
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const parts = [
+      { label: t.runeChipTotal || 'Runes', value: sum.total },
+      { label: t.runeChipAncient || 'Ancient', value: sum.ancient },
+      { label: t.runeChipEquipped || 'Equipped', value: sum.equipped },
+      { label: t.runeChipPlus15 || '+15', value: sum.plus15 },
+    ];
+    if (sum.keep > 0) {
+      parts.push({ label: t.runeChipKeep || 'Keep', value: sum.keep });
+    }
+    host.innerHTML = parts
+      .map(
+        (p) =>
+          `<span class="monsters-chip"><span class="monsters-chip__label">${escapeHtml(p.label)}</span><strong class="monsters-chip__value">${escapeHtml(String(p.value))}</strong></span>`,
+      )
+      .join('');
+  }
+
   function runeTableTargetColumnVisible() {
     const verdictFilter = document.getElementById('filter-verdict')?.value || '';
     if (verdictFilter === 'Grind' || verdictFilter === 'Gem') return true;
@@ -107,6 +152,7 @@
       slot: document.getElementById('filter-slot')?.value || '',
       main: document.getElementById('filter-main')?.value || '',
       ancientOnly: !!document.getElementById('toggle-ancient-only')?.checked,
+      hideTarget: !!document.getElementById('toggle-target-col')?.checked,
     };
   }
 
@@ -119,6 +165,7 @@
     if (f.slot) n += 1;
     if (f.main) n += 1;
     if (f.ancientOnly) n += 1;
+    if (f.hideTarget) n += 1;
     return n;
   }
 
@@ -131,6 +178,7 @@
     if (f.slot) chips.push({ key: 'slot', label: `${t.runeFilterSlot || 'Slot'} ${f.slot}` });
     if (f.main) chips.push({ key: 'main', label: f.main });
     if (f.ancientOnly) chips.push({ key: 'ancientOnly', label: t.tableAncientOnly || 'Ancient only' });
+    if (f.hideTarget) chips.push({ key: 'hideTarget', label: t.toggleTargetCol || 'Hide Target' });
     return chips;
   }
 
@@ -158,6 +206,15 @@
         const tgl = document.getElementById('toggle-ancient-only');
         if (tgl) tgl.checked = false;
         localStorage.setItem(RUNE_TABLE_ANCIENT_ONLY_KEY, '0');
+        break;
+      }
+      case 'hideTarget': {
+        const tgl = document.getElementById('toggle-target-col');
+        if (tgl) tgl.checked = false;
+        try {
+          localStorage.setItem(RUNE_TABLE_HIDE_TARGET_KEY, '0');
+        } catch (e) { /* ignore */ }
+        applyRuneTableTargetColumnVisibility();
         break;
       }
       default:
@@ -336,6 +393,7 @@
     tbody.innerHTML = rows.map(r => runeRow(r)).join('');
     setupRuneTableMoreUi(total, rows.length);
     updateRuneTableFilterIndicators();
+    if (typeof renderRuneTableRosterChips === 'function') renderRuneTableRosterChips();
     replaceRuneTableLocationFromState();
   }
 
@@ -345,47 +403,22 @@
       applyFiltersAndSort(getVisibleRunes());
     };
 
-    function openRuneFiltersDrawer() {
-      const dlg = document.getElementById('rune-filters-drawer');
-      if (!dlg) return;
-      if (typeof dlg.showModal === 'function') {
-        try {
-          dlg.showModal();
-        } catch (e) {
-          dlg.setAttribute('open', '');
-        }
-      } else {
-        dlg.setAttribute('open', '');
-      }
-    }
+    bindFiltersPopover('rune-more-filters-btn', 'rune-filters-popover', { onClose: onFilter });
 
-    function closeRuneFiltersDrawer() {
-      const dlg = document.getElementById('rune-filters-drawer');
-      if (!dlg) return;
-      if (dlg.open && typeof dlg.close === 'function') dlg.close();
-      else dlg.removeAttribute('open');
-    }
-
-    document.getElementById('rune-more-filters-btn')?.addEventListener('click', openRuneFiltersDrawer);
-    document.getElementById('rune-filters-drawer-close')?.addEventListener('click', closeRuneFiltersDrawer);
-    document.getElementById('rune-filters-drawer')?.addEventListener('close', onFilter);
     document.getElementById('rune-filters-drawer-reset')?.addEventListener('click', () => {
       ['filter-verdict', 'filter-role', 'filter-grade', 'filter-set', 'filter-slot', 'filter-main'].forEach((id) => {
         const el = document.getElementById(id);
         if (el) el.value = '';
       });
-      onFilter();
-    });
-    document.getElementById('rune-filter-clear-all')?.addEventListener('click', () => {
-      ['filter-verdict', 'filter-role', 'filter-grade', 'filter-set', 'filter-slot', 'filter-main'].forEach((id) => {
-        const el = document.getElementById(id);
-        if (el) el.value = '';
-      });
+      const tgl = document.getElementById('toggle-target-col');
+      if (tgl) tgl.checked = false;
+      try {
+        localStorage.setItem(RUNE_TABLE_HIDE_TARGET_KEY, '0');
+      } catch (e) { /* ignore */ }
       const tglAncient = document.getElementById('toggle-ancient-only');
-      if (tglAncient) {
-        tglAncient.checked = false;
-        localStorage.setItem(RUNE_TABLE_ANCIENT_ONLY_KEY, '0');
-      }
+      if (tglAncient) tglAncient.checked = false;
+      localStorage.setItem(RUNE_TABLE_ANCIENT_ONLY_KEY, '0');
+      applyRuneTableTargetColumnVisibility();
       onFilter();
     });
     document.getElementById('rune-table-filter-chips')?.addEventListener('click', (e) => {

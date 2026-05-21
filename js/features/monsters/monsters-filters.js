@@ -40,6 +40,66 @@
     return false;
   }
 
+  let monstersSearchHighlight = '';
+
+  function highlightMonstersSearchInPlain(text, qRaw) {
+    const q = (qRaw || '').trim().toLowerCase();
+    const t = String(text ?? '');
+    if (!q) return escapeHtml(t);
+    const tl = t.toLowerCase();
+    const parts = [];
+    let i = 0;
+    while (i < t.length) {
+      const idx = tl.indexOf(q, i);
+      if (idx === -1) {
+        parts.push(escapeHtml(t.slice(i)));
+        break;
+      }
+      if (idx > i) parts.push(escapeHtml(t.slice(i, idx)));
+      parts.push(`<mark class="search-hit">${escapeHtml(t.slice(idx, idx + q.length))}</mark>`);
+      i = idx + q.length;
+    }
+    return parts.join('');
+  }
+
+  function monsterUnitSearchHaystack(u) {
+    const bits = [
+      u.displayName,
+      u.masterId,
+      u.metaElement,
+      u.metaArchetype,
+      String(u.level ?? ''),
+      String(u.equippedCount ?? ''),
+      u.inStorage ? 'storage' : 'active',
+      u.favorite ? 'favorite' : '',
+      u.food ? 'food fodder' : '',
+      (u.customTags || []).join(' '),
+    ];
+    for (const slot of u.runeSlots || []) {
+      const r = slot.rune;
+      if (!r) continue;
+      bits.push(
+        r.setName,
+        r.mainName,
+        r.gradeStr,
+        String(r.slot),
+        String(r.level),
+        r.role,
+        r.verdict,
+      );
+      for (const s of r.substats || []) {
+        if (s.name) bits.push(s.name, String(s.val ?? ''));
+      }
+    }
+    for (const sk of u.skillRows || []) {
+      bits.push(sk.name, String(sk.level), String(sk.maxLevel));
+    }
+    return bits
+      .filter((x) => x != null && String(x).trim() !== '')
+      .join(' ')
+      .toLowerCase();
+  }
+
   function filterMonstersList(units, filters) {
     const q = (filters.q || '').trim().toLowerCase();
     const el = filters.element || '';
@@ -75,7 +135,7 @@
       if (markFilter === 'favorite' && !u.favorite) return false;
       if (markFilter === 'food' && !u.food) return false;
       if (q) {
-        const hay = `${u.displayName || ''} ${u.masterId}`.toLowerCase();
+        const hay = monsterUnitSearchHaystack(u);
         if (!hay.includes(q)) return false;
       }
       return true;
@@ -132,8 +192,8 @@
     return { total, anyRune, fullSix, skillUpsTotal };
   }
 
-  function renderMonstersChips(sum, t, indexMissing, skillsIndexMissing) {
-    const chips = document.getElementById('monsters-chips');
+  function renderMonstersChips(sum, t, indexMissing, skillsIndexMissing, chipsHostId) {
+    const chips = document.getElementById(chipsHostId || 'monsters-chips');
     if (!chips) return;
     const tpl =
       t.monstersStatsTpl || '{total} six-star · {any} with any rune · {full} with 6 runes';
@@ -154,26 +214,29 @@
           `<span class="monsters-chip"><span class="monsters-chip__label">${escapeHtml(p.label)}</span><strong class="monsters-chip__value">${escapeHtml(String(p.value))}</strong></span>`,
       )
       .join('');
-    if (indexMissing) {
-      const hint =
-        t.monstersIndexMissing ||
-        'Monster names need data/monsters-index.json — run: node tools/fetch-monsters-index.mjs';
-      chips.insertAdjacentHTML(
-        'beforeend',
-        `<p class="monsters-index-warn monsters-index-warn--inline">${escapeHtml(hint)}</p>`,
-      );
+    const hostId = chipsHostId || 'monsters-chips';
+    if (hostId === 'monsters-chips') {
+      if (indexMissing) {
+        const hint =
+          t.monstersIndexMissing ||
+          'Monster names need data/monsters-index.json — run: node tools/fetch-monsters-index.mjs';
+        chips.insertAdjacentHTML(
+          'beforeend',
+          `<p class="monsters-index-warn monsters-index-warn--inline">${escapeHtml(hint)}</p>`,
+        );
+      }
+      if (skillsIndexMissing) {
+        const hint =
+          t.monstersSkillsIndexMissing ||
+          'Skill max levels need data/skills-index.json — run: node tools/fetch-skills-index.mjs';
+        chips.insertAdjacentHTML(
+          'beforeend',
+          `<p class="monsters-index-warn monsters-index-warn--inline">${escapeHtml(hint)}</p>`,
+        );
+      }
+      const statsEl = document.getElementById('monsters-stats');
+      if (statsEl) statsEl.hidden = true;
     }
-    if (skillsIndexMissing) {
-      const hint =
-        t.monstersSkillsIndexMissing ||
-        'Skill max levels need data/skills-index.json — run: node tools/fetch-skills-index.mjs';
-      chips.insertAdjacentHTML(
-        'beforeend',
-        `<p class="monsters-index-warn monsters-index-warn--inline">${escapeHtml(hint)}</p>`,
-      );
-    }
-    const statsEl = document.getElementById('monsters-stats');
-    if (statsEl) statsEl.hidden = true;
   }
 
   function readMonstersView() {

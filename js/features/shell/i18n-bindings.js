@@ -472,6 +472,10 @@
     if (typeof syncShareSplitLabels === 'function') syncShareSplitLabels();
     const moreFilters = document.getElementById('lbl-monsters-more-filters');
     if (moreFilters) moreFilters.textContent = t.monstersMoreFilters || 'More Filters';
+    const monstersReset = document.getElementById('monsters-toolbar-reset-filters');
+    if (monstersReset) monstersReset.textContent = t.tableResetFilters || 'Reset filters';
+    const monstersExport = document.getElementById('btn-monsters-export-csv');
+    if (monstersExport) monstersExport.textContent = t.exportTableCsv || 'Export CSV';
     const clearAll = document.getElementById('monsters-filter-clear-all');
     if (clearAll) clearAll.textContent = t.monstersFilterClearAll || 'Clear all';
     const bulkFav = document.getElementById('lbl-monsters-bulk-favorite');

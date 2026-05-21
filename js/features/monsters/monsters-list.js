@@ -76,11 +76,9 @@
     const qInput = document.getElementById('monsters-filter-q');
     const elSelect = document.getElementById('monsters-filter-element');
     const locSelect = document.getElementById('monsters-filter-location');
-    const sortSelect = document.getElementById('monsters-filter-sort');
     if (qInput && qInput.value !== filters.q) qInput.value = filters.q;
     if (elSelect && elSelect.value !== filters.element) elSelect.value = filters.element;
     if (locSelect && locSelect.value !== filters.location) locSelect.value = filters.location;
-    if (sortSelect && sortSelect.value !== filters.sort) sortSelect.value = filters.sort;
     populateMonstersSetFilter();
     populateMonstersTagFilter();
     populateMonstersRoleFilter();
@@ -110,6 +108,7 @@
     monstersVisibleUnitIds = visible.map((u) => String(u.unitId));
     const sum = computeMonstersSummary(enriched);
     renderMonstersChips(sum, t, indexMissing, skillsIndexMissing);
+    if (typeof renderRuneTableRosterChips === 'function') renderRuneTableRosterChips();
 
     if (!visible.length) {
       grid.innerHTML = '';
@@ -166,4 +165,5 @@
       const hu = enriched.find((x) => String(x.unitId) === String(monstersDetailHoverUnitId));
       if (hu && hoverCard) renderMonstersDetail(hu, t, hoverCard);
     }
+    if (typeof applyShareReadOnlyUi === 'function') applyShareReadOnlyUi();
   }

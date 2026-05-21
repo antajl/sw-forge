@@ -225,6 +225,61 @@
     return '';
   }
 
+  const SELL_NEAR_MISS_ROLE_ORDER = [
+    'Fast CC',
+    'Classic DPS',
+    'Bomber',
+    'Tank',
+    'Bruiser',
+    'Slow DPS',
+  ];
+
+  function sellNearMissFromTrace(rune, stage) {
+    const details = rune?.decisionTrace?.formulaDetails;
+    if (!details || typeof details !== 'object') return null;
+    let best = null;
+    let bestSupport = -1;
+    for (let i = 0; i < SELL_NEAR_MISS_ROLE_ORDER.length; i++) {
+      const role = SELL_NEAR_MISS_ROLE_ORDER[i];
+      const d = details[role];
+      if (!d || d.policyMatched || d.strictMatched) continue;
+      const support = Number(d.supportCount);
+      const sc = Number.isFinite(support) ? support : 0;
+      if (!best || sc > bestSupport) {
+        best = { role, d };
+        bestSupport = sc;
+      }
+    }
+    if (!best) return null;
+    const { role, d } = best;
+    const code = d.failCode || '';
+    if (code === 'EXCLUDED_STAT' || code === 'EXCLUDE') {
+      return { code: 'exclude', detail: role };
+    }
+    if (code === 'ACCEPTED_MAINS') {
+      return { code: 'main_stat', detail: role };
+    }
+    if (code === 'MUST_HAVE') {
+      return { code: 'must_have', detail: role };
+    }
+    if (code === 'ANCHOR_HR') {
+      return { code: 'anchor_hr', detail: role };
+    }
+    if (code === 'MIN_STATS' || code === 'MIN_USEFUL_SUBS') {
+      return { code: 'min_stats', detail: role };
+    }
+    if (code === 'ROLE_PRESSURE') {
+      return { code: 'role_pressure', detail: role };
+    }
+    if (code === 'SLOT_REQUIREMENT') {
+      return { code: 'slot_req', detail: role };
+    }
+    if (code === 'SLOW_DPS_CORE') {
+      return { code: 'slow_dps_core', detail: role };
+    }
+    return { code: 'near_miss', detail: role };
+  }
+
   function computeSellReason(rune, stage, settings, mergedResults) {
     const empty = { code: '', detail: '' };
     if (!rune || rune.verdict !== 'Sell') return empty;
@@ -260,6 +315,8 @@
     }
 
     if (!bestRole && !godMatched && !duoMatched) {
+      const near = sellNearMissFromTrace(rune, stage);
+      if (near) return near;
       if (!effGatesBypassed()) {
         let effCut = stage === 'Late' ? 65 : stage === 'Mid' ? 50 : 35;
         if (isHero) {

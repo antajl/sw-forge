@@ -470,6 +470,32 @@ main {
   width: 100%;
 }
 
+.share-view-banner__line {
+  margin-right: 0.35rem;
+}
+
+.share-view-banner__prefix {
+  color: var(--text-dim);
+}
+
+.share-view-banner__name {
+  color: var(--text-hi);
+  font-weight: 700;
+}
+
+.share-view-banner__readonly {
+  display: inline-block;
+  margin-left: 0.15rem;
+  padding: 0.1em 0.45em;
+  border-radius: 4px;
+  font-size: 0.78em;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
 .share-view-banner__inner {
   max-width: var(--app-content-max);
   margin: 0 auto;
@@ -490,7 +516,7 @@ main {
 body.share-readonly #tab-settings input,
 body.share-readonly #tab-settings select,
 body.share-readonly #tab-settings textarea,
-body.share-readonly #tab-settings button:not(.rules-subtab):not(#share-view-exit-btn),
+body.share-readonly #tab-settings button:not(.rules-subtab):not(#share-view-exit-btn):not(#btn-toggle-threshold-previews),
 body.share-readonly #tab-app-settings input:not(#app-language),
 body.share-readonly #tab-app-settings select:not(#app-language),
 body.share-readonly #tab-app-settings textarea,
@@ -521,6 +547,8 @@ body.share-readonly .share-split {
   pointer-events: none;
 }
 
+html.share-readonly .tab[data-tab='guide'],
+html.share-readonly .tab[data-tab='changelog'],
 body.share-readonly .tab[data-tab='guide'],
 body.share-readonly .tab[data-tab='changelog'] {
   display: none !important;

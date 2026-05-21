@@ -123,8 +123,8 @@
   flex-wrap: wrap;
   align-items: flex-end;
   gap: 16px 24px;
-  padding-top: 4px;
-  border-top: 1px solid var(--border);
+  padding-top: 0;
+  border-top: none;
 }
 .table-toolbar__group {
   display: flex;

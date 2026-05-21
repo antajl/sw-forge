@@ -1,4 +1,52 @@
-/* Roster toolbar v2 — compact two-row layout */
+/* Roster toolbar — table-toolbar card layout (matches Runes table) */
+#tab-monsters-roster .table-toolbar {
+  margin-bottom: 10px;
+}
+
+#tab-monsters-roster .table-toolbar__row--search-roster {
+  align-items: center;
+}
+
+#tab-monsters-roster .table-toolbar__row--search-roster .monsters-view-toggle {
+  flex: 0 0 auto;
+}
+
+#tab-monsters-roster .table-toolbar .monsters-toolbar-btn--filters {
+  min-height: 32px;
+}
+
+.filters-popover__toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.filters-popover__toggles .toggle-target {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: var(--text);
+  cursor: pointer;
+  user-select: none;
+}
+
+.rune-table-roster-meta {
+  margin-bottom: 8px;
+}
+
+#tab-monsters-roster .search-hit,
+#tab-runetable .search-hit {
+  background: color-mix(in srgb, var(--accent) 38%, transparent);
+  color: var(--text-hi);
+  border-radius: 2px;
+  padding: 0 1px;
+}
+
+/* Legacy v2 toolbar (unused) */
 .monsters-toolbar.monsters-toolbar--v2 {
   display: flex;
   flex-direction: column;
@@ -368,7 +416,87 @@
   color: var(--accent);
 }
 
-/* Filters dialog */
+/* Filters popover (anchored to More Filters button) */
+.filters-popover-host {
+  position: relative;
+  display: inline-flex;
+  align-items: stretch;
+}
+
+.filters-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: auto;
+  z-index: 60;
+  min-width: 16rem;
+}
+
+.filters-popover--wide {
+  min-width: min(22rem, calc(100vw - 24px));
+  max-width: min(360px, calc(100vw - 24px));
+}
+
+.filters-popover__panel {
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.32);
+  overflow: hidden;
+}
+
+.filters-popover__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border2);
+  background: var(--bg3);
+}
+
+.filters-popover__title {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.filters-popover__close {
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+}
+
+.filters-popover__close:hover {
+  color: var(--text-hi);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.filters-popover__body {
+  padding: 12px;
+  max-height: min(70vh, 420px);
+  overflow-y: auto;
+}
+
+.filters-popover__foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--border2);
+  background: var(--bg2);
+}
+
+.filters-popover-host.is-open .monsters-toolbar-btn--filters {
+  border-color: var(--accent);
+}
+
+/* Legacy filters dialog (unused) */
 .monsters-filters-drawer {
   margin: 0;
   padding: 0;

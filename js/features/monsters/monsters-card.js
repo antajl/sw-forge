@@ -89,9 +89,11 @@
       monstersDetailHoverUnitId != null &&
       String(monstersDetailHoverUnitId) === String(u.unitId);
     const bestiaryHref = db && u.bestiarySlug ? db.bestiaryUrl(u.bestiarySlug) : '';
+    const q = monstersSearchHighlight || '';
+    const nameHtml = highlightMonstersSearchInPlain(u.displayName || `#${u.masterId}`, q);
     const nameInner = bestiaryHref
-      ? `<a href="${escapeHtml(bestiaryHref)}" target="_blank" rel="noopener noreferrer">${escapeHtml(u.displayName)}</a>`
-      : escapeHtml(u.displayName);
+      ? `<a href="${escapeHtml(bestiaryHref)}" target="_blank" rel="noopener noreferrer">${nameHtml}</a>`
+      : nameHtml;
     const runeCells = buildRuneBlockHtml(u, db, t, view);
     const bulkSel = monstersBulkSelected.has(String(u.unitId));
     const starsBadge = buildMonsterStarsBadge(u);

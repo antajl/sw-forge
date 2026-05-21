@@ -16,6 +16,7 @@ const CHUNKS = [
   'shell/theme-nav.js',
   'shell/i18n-bindings.js',
   'shell/mobile-nav.js',
+  'shell/filters-popover.js',
   'shell/main-tabs.js',
   'runes/stage-filters.js',
   'runes/upload.js',

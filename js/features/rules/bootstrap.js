@@ -69,6 +69,7 @@
 
   // Save settings
   document.getElementById('btn-save-settings').addEventListener('click', () => {
+    if (typeof isShareReadOnly === 'function' && isShareReadOnly()) return;
     const s = window.SWRM.settings;
 
     // Role substats
@@ -154,13 +155,16 @@
     initGuideSubtabs();
     showMainTab(mainTabIdFromHash() || 'runes');
 
+    const shareIdInUrl =
+      typeof getShareIdFromUrl === 'function' ? getShareIdFromUrl() : '';
+    if (shareIdInUrl && typeof initShareProfile === 'function') {
+      await initShareProfile();
+      renderDbSlots();
+      if (typeof applyShareUrlTabFromLocation === 'function') applyShareUrlTabFromLocation();
+      return;
+    }
     if (typeof initShareProfile === 'function') {
-      const openedShare = await initShareProfile();
-      if (openedShare) {
-        renderDbSlots();
-        if (typeof applyShareUrlTabFromLocation === 'function') applyShareUrlTabFromLocation();
-        return;
-      }
+      await initShareProfile();
     }
 
     if (typeof scrubDemoFromUserSlots === 'function') {

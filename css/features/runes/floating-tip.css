@@ -40,47 +40,133 @@ html.swrm-has-gsap .swrm-floating-tip {
 .swrm-floating-tip.swrm-floating-tip--rich {
   padding: 12px 14px;
   max-width: min(26rem, calc(100vw - 24px));
+  border: 1px solid color-mix(in srgb, var(--accent) 38%, var(--border2));
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--surface) 90%, var(--accent) 4%) 0%,
+    color-mix(in srgb, var(--surface) 94%, var(--bg2)) 48%,
+    color-mix(in srgb, var(--surface) 96%, var(--bg3)) 100%
+  );
+}
+
+.swrm-skill-tip__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.55rem;
+  margin-bottom: 0.4rem;
+  padding-left: 0.55rem;
+  border-left: 3px solid color-mix(in srgb, var(--accent) 72%, var(--border2));
 }
 
 .swrm-skill-tip__name {
   font-weight: 700;
+  font-size: 0.84rem;
   color: var(--text-hi);
-  margin-bottom: 0.35rem;
+  letter-spacing: 0.01em;
+}
+
+.swrm-skill-tip__cd-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, #ffd49a 88%, var(--text-hi));
+  background: color-mix(in srgb, #c47a20 22%, var(--surface));
+  border: 1px solid color-mix(in srgb, #e8a84a 35%, transparent);
 }
 
 .swrm-skill-tip__desc {
+  margin: 0 0 0.45rem;
   color: var(--text);
-  margin-bottom: 0.5rem;
-  line-height: 1.4;
+  line-height: 1.42;
+  font-size: 0.76rem;
 }
 
-.swrm-skill-tip__cd-base,
+.swrm-skill-tip__hr {
+  margin: 0.5rem 0 0.55rem;
+  border: none;
+  border-top: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border2));
+  opacity: 0.85;
+}
+
+.swrm-skill-tip__section-title {
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--accent) 55%, var(--text-dim));
+  margin-bottom: 0.4rem;
+}
+
 .swrm-skill-tip__foot {
+  display: flex;
+  gap: 0.4rem;
+  align-items: flex-start;
   font-size: 0.72rem;
   color: var(--text-dim);
-  margin-top: 0.45rem;
+  margin-top: 0.55rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed color-mix(in srgb, var(--border2) 65%, transparent);
+}
+
+.swrm-skill-tip__foot-icon {
+  flex-shrink: 0;
+  color: color-mix(in srgb, var(--accent) 70%, var(--text-dim));
+  font-size: 0.7rem;
+  line-height: 1.5;
 }
 
 .swrm-skill-tip__levels {
   display: flex;
   flex-direction: column;
-  gap: 0.28rem;
-  margin-top: 0.55rem;
-  padding-top: 0.55rem;
-  border-top: 1px solid color-mix(in srgb, var(--border2) 70%, transparent);
+  gap: 0.32rem;
 }
 
 .swrm-skill-tip__level {
   display: grid;
-  grid-template-columns: auto 1fr auto auto;
-  gap: 0.35rem 0.5rem;
+  grid-template-columns: auto auto 1fr auto;
+  gap: 0.35rem 0.45rem;
   align-items: baseline;
   font-size: 0.74rem;
   color: var(--text-dim);
+  padding: 0.22rem 0.35rem 0.22rem 0.25rem;
+  border-radius: var(--radius-sm, 4px);
+  background: color-mix(in srgb, var(--bg3) 35%, transparent);
 }
 
 .swrm-skill-tip__level--done {
   color: var(--text);
+  background: color-mix(in srgb, var(--ok, #6fcf97) 8%, var(--bg3));
+}
+
+.swrm-skill-tip__level--cd:not(.swrm-skill-tip__level--done) {
+  background: color-mix(in srgb, #c47a20 10%, var(--bg3));
+}
+
+.swrm-skill-tip__mark {
+  width: 0.65rem;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.swrm-skill-tip__mark--dot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-top: 0.35em;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--accent) 55%, var(--text-dim));
+  vertical-align: top;
+}
+
+.swrm-skill-tip__mark--done {
+  color: var(--ok, #6fcf97);
+  font-weight: 700;
 }
 
 .swrm-skill-tip__lv {
@@ -94,16 +180,15 @@ html.swrm-has-gsap .swrm-floating-tip {
 }
 
 .swrm-skill-tip__cd-tag {
-  font-size: 0.62rem;
+  font-size: 0.6rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
   color: #ffd49a;
-}
-
-.swrm-skill-tip__check {
-  color: var(--ok, #6fcf97);
-  font-weight: 700;
+  background: color-mix(in srgb, #c47a20 28%, transparent);
+  border: 1px solid color-mix(in srgb, #e8a84a 30%, transparent);
 }
 
 

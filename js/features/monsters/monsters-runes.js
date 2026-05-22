@@ -165,6 +165,17 @@
     return '';
   }
 
+  function swarfarmSkillIconFallback(skillId) {
+    const db = window.SWRM_SKILL_DB;
+    if (db && typeof db.skillIconFallbackUrl === 'function') {
+      return db.skillIconFallbackUrl(skillId) || '';
+    }
+    return '';
+  }
+
+  const SKILL_IMG_ONERROR =
+    'onerror="var f=this.dataset.fallback;if(f){this.src=f;this.removeAttribute(\'data-fallback\');}else{this.hidden=true;}"';
+
   function hydrateMonsterSkillIcons(container) {
     const db = window.SWRM_SKILL_DB;
     if (!db || typeof db.ensureSkillIcon !== 'function' || !container) return;
@@ -569,14 +580,22 @@
 
   function buildSkillTileHtml(s, skillDb) {
     const url = swarfarmSkillIconUrl(s.skillId);
+    const fb = swarfarmSkillIconFallback(s.skillId);
     const label = skillDb && s.upgradeable !== false ? skillDb.formatSkillLevelDetail(s) : '';
+    const fbAttr = fb ? ' data-fallback="' + escapeHtml(fb) + '"' : '';
     const img = url
       ? '<img class="monsters-detail__skill-img" src="' +
         escapeHtml(url) +
-        '" alt="" width="40" height="40" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.hidden=true" />'
+        '"' +
+        fbAttr +
+        ' alt="" width="40" height="40" loading="lazy" decoding="async" referrerpolicy="no-referrer" ' +
+        SKILL_IMG_ONERROR +
+        ' />'
       : '<img class="monsters-detail__skill-img" hidden data-skill-id="' +
         escapeHtml(String(s.skillId)) +
-        '" alt="" width="40" height="40" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.hidden=true" />';
+        '" alt="" width="40" height="40" loading="lazy" decoding="async" referrerpolicy="no-referrer" ' +
+        SKILL_IMG_ONERROR +
+        ' />';
     const overlay = label
       ? '<span class="monsters-detail__skill-lv-overlay">' + escapeHtml(label) + '</span>'
       : '';
@@ -595,15 +614,47 @@
   function resolveLeaderSkillTile(leaderSkill) {
     if (!leaderSkill) return null;
     const db = window.SWRM_MONSTER_DB;
+    const skillDb = window.SWRM_SKILL_DB;
+    const sk = leaderSkill.skill;
+
+    if (skillDb && sk) {
+      const sid = Number(sk.com2us_id ?? sk.com2usId ?? leaderSkill.com2us_id ?? leaderSkill.id);
+      if (Number.isFinite(sid) && sid > 0 && typeof skillDb.skillIconUrl === 'function') {
+        const url = skillDb.skillIconUrl(sid);
+        if (url) {
+          const fallback =
+            typeof skillDb.skillIconFallbackUrl === 'function'
+              ? skillDb.skillIconFallbackUrl(sid)
+              : '';
+          return { url, fallback };
+        }
+      }
+      const fn = sk.icon_filename ? String(sk.icon_filename) : '';
+      if (fn) {
+        const la = window.SWRM_LOCAL_ASSETS;
+        const url =
+          la && typeof la.resolveSkillIconUrl === 'function'
+            ? la.resolveSkillIconUrl(fn)
+            : db && typeof db.swarfarmAssetUrl === 'function'
+              ? db.swarfarmAssetUrl(`static/herders/images/skills/${fn}`)
+              : '';
+        if (url) {
+          const fallback =
+            la && typeof la.skillIconFallbackUrl === 'function' ? la.skillIconFallbackUrl(fn) : '';
+          return { url, fallback };
+        }
+      }
+    }
+
     if (db && typeof db.leaderSkillIconUrl === 'function') {
       const url = db.leaderSkillIconUrl(leaderSkill);
-      if (url) return { url };
-    }
-    const sk = leaderSkill.skill;
-    if (sk && sk.icon_filename && db && typeof db.swarfarmAssetUrl === 'function') {
-      return {
-        url: db.swarfarmAssetUrl(`static/herders/images/skills/${sk.icon_filename}`),
-      };
+      if (url) {
+        const fallback =
+          typeof db.leaderSkillIconRemoteUrl === 'function'
+            ? db.leaderSkillIconRemoteUrl(leaderSkill)
+            : '';
+        return { url, fallback };
+      }
     }
     return null;
   }
@@ -646,24 +697,24 @@
     if (!tile || !skillId || typeof setSwrmFloatTipTarget !== 'function') return false;
     const db = window.SWRM_SKILL_DB;
     if (!db) return false;
-    let html =
-      typeof db.formatSkillProgressTooltipHtml === 'function'
-        ? db.formatSkillProgressTooltipHtml(skillId, level)
-        : '';
-    let text =
-      !html && typeof db.formatSkillProgressTooltip === 'function'
+    const text =
+      typeof db.formatSkillProgressTooltip === 'function'
         ? db.formatSkillProgressTooltip(skillId, level)
         : typeof db.formatSkillTooltip === 'function'
           ? db.formatSkillTooltip(skillId, level)
           : '';
-    if (text && !/^Skill \d+/.test(text)) {
-      setSwrmFloatTipTarget(tile, text);
-      tile.setAttribute('aria-label', text);
-      return true;
-    }
+    const html =
+      typeof db.formatSkillProgressTooltipHtml === 'function'
+        ? db.formatSkillProgressTooltipHtml(skillId, level)
+        : '';
     if (html) {
       setSwrmFloatTipTarget(tile, '', { html });
       tile.setAttribute('aria-label', text || tile.getAttribute('aria-label') || '');
+      return true;
+    }
+    if (text && !/^Skill \d+/.test(text)) {
+      setSwrmFloatTipTarget(tile, text);
+      tile.setAttribute('aria-label', text);
       return true;
     }
     return false;
@@ -750,10 +801,16 @@
     }
     const leader = resolveLeaderSkillTile(leaderSkill);
     const leaderTip = escapeHtml(formatLeaderSkillTooltip(leaderSkill, t));
+    const leaderFbAttr =
+      leader && leader.fallback ? ' data-fallback="' + escapeHtml(leader.fallback) + '"' : '';
     const leaderImg = leader && leader.url
       ? '<img class="monsters-detail__skill-img" src="' +
         escapeHtml(leader.url) +
-        '" alt="" width="40" height="40" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.hidden=true" />'
+        '"' +
+        leaderFbAttr +
+        ' alt="" width="40" height="40" loading="lazy" decoding="async" referrerpolicy="no-referrer" ' +
+        SKILL_IMG_ONERROR +
+        ' />'
       : '<span class="monsters-detail__skill-img monsters-detail__skill-img--ph" aria-hidden="true"></span>';
     const leaderHtml =
       '<div class="monsters-detail__skills-leader">' +

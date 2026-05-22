@@ -351,12 +351,17 @@
     return { ok: true };
   }
 
-  /** Remove demo sample team set after user loads their own SWEX. */
+  const DEMO_TEAMS_SEED_VERSION = 3;
+  const DEMO_TEAMS_SEED_KEY = 'swrm_demo_teams_seed_v';
+
+  function isDemoTeamSetName(name) {
+    return /^demo[\s·:]/i.test(String(name || '').trim());
+  }
+
+  /** Remove all demo sample team sets after user loads their own SWEX. */
   function removeDemoTeams() {
     const state = loadTeamsState();
-    const demoSetIds = state.sets
-      .filter((s) => /^demo\s*teams$/i.test(String(s.name || '').trim()))
-      .map((s) => s.id);
+    const demoSetIds = state.sets.filter((s) => isDemoTeamSetName(s.name)).map((s) => s.id);
     if (!demoSetIds.length) return false;
     const teamIds = new Set();
     for (const sid of demoSetIds) {
@@ -367,26 +372,306 @@
     for (const tid of teamIds) delete state.teams[tid];
     saveTeamsState(state);
     teamsStateCache = null;
+    try {
+      localStorage.removeItem(DEMO_TEAMS_SEED_KEY);
+    } catch (e) { /* ignore */ }
     return true;
   }
 
-  /** Sample teams for demo mode only (when storage is empty). */
-  function seedDemoTeamsIfEmpty() {
-    if (typeof isUsingDemoDataset === 'function' && !isUsingDemoDataset()) return false;
-    const state = loadTeamsState();
-    if (state.sets.length > 0) return false;
-    const units = (allUnits || []).filter((u) => u && u.unitId).slice(0, 10);
-    if (units.length < 3) return false;
-    const set = createTeamSet('Demo teams');
-    const slots = units.slice(0, TEAM_SIZE_DEFAULT).map((u) => u.unitId);
-    const team = createTeamInSet(set.id, 'Example AO', TEAM_SIZE_DEFAULT);
+  function clearDemoTeamSets() {
+    return removeDemoTeams();
+  }
+
+  function shouldKeepDemoTeamSets() {
+    if (typeof userHasLoadedRealExport === 'function' && userHasLoadedRealExport()) return false;
+    return typeof isUsingDemoDataset === 'function' && isUsingDemoDataset();
+  }
+
+  /** Demo team sets only while demo dataset is active; remove when user loads real SWEX. */
+  function syncDemoTeamsWithDatasetMode() {
+    teamsStateCache = null;
+    if (shouldKeepDemoTeamSets()) {
+      if (typeof seedDemoTeamsIfEmpty === 'function') seedDemoTeamsIfEmpty();
+    } else {
+      removeDemoTeams();
+    }
+  }
+
+  function readDemoTeamsSeedVersion() {
+    try {
+      return Number(localStorage.getItem(DEMO_TEAMS_SEED_KEY)) || 0;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  function writeDemoTeamsSeedVersion(v) {
+    try {
+      localStorage.setItem(DEMO_TEAMS_SEED_KEY, String(v));
+    } catch (e) { /* ignore */ }
+  }
+
+  /**
+   * User-provided demo lineups (unit_id from data/demo.json, main roster only).
+   * Skipped: comps needing storage-only units (Zinc, Dias, Hwa, Lisa, Rakan) or near-duplicates.
+   */
+  const DEMO_TEAMS_LAYOUT = [
+    {
+      setName: 'Demo · B12',
+      teams: [
+        {
+          name: 'GB12',
+          size: 5,
+          leader: 35976386571,
+          slots: [27144694306, 35976386571, 5365490176, 31564033638, 8025980618],
+          tags: ['Demo', 'GB12'],
+        },
+        {
+          name: 'DB12',
+          size: 5,
+          leader: 12072006659,
+          slots: [12072006659, 27244867420, 27244858404, 5365490176, 30376382096],
+          tags: ['Demo', 'DB12'],
+        },
+        {
+          name: 'NB12',
+          size: 5,
+          leader: 13559060898,
+          slots: [13559060898, 15339861886, 30376925404, 26928924951, 26928923162],
+          tags: ['Demo', 'NB12'],
+        },
+        {
+          name: 'SRB12',
+          size: 5,
+          leader: 7637619578,
+          slots: [12072006659, 26915472290, 15339861886, 26928924951, 7637619578],
+          tags: ['Demo', 'SRB12'],
+        },
+        {
+          name: 'PCB12',
+          size: 5,
+          leader: 7637619578,
+          slots: [13578469034, 19588712314, 15339861886, 26928924951, 7637619578],
+          tags: ['Demo', 'PCB12'],
+        },
+      ],
+    },
+    {
+      setName: 'Demo · Essence',
+      teams: [
+        {
+          name: 'Magic Ess',
+          size: 5,
+          leader: 8838130354,
+          slots: [8838130354, 11050945835, 8611226449, 26928923162, 16139462679],
+          tags: ['Demo', 'Ess'],
+        },
+        {
+          name: 'Fire Ess',
+          size: 5,
+          leader: 16410692026,
+          slots: [19588712314, 15339861886, 26928924951, 16410692026, 15370507039],
+          tags: ['Demo', 'Ess'],
+        },
+        {
+          name: 'Water Ess',
+          size: 5,
+          leader: 8838130354,
+          slots: [11130827981, 15363394957, 8838130354, 8261783479, 16139462679],
+          tags: ['Demo', 'Ess'],
+        },
+        {
+          name: 'Light Ess',
+          size: 5,
+          leader: 5096889290,
+          slots: [8838130354, 11050945835, 8611226449, 27398455635, 5096889290],
+          tags: ['Demo', 'Ess'],
+        },
+      ],
+    },
+    {
+      setName: 'Demo · Rift',
+      teams: [
+        {
+          name: 'Rift R5 — Loren',
+          size: 6,
+          leader: 11130827981,
+          slots: [19588712314, 27064855468, 5365490176, 26915472290, 11130827981, 8600073708],
+          tags: ['Demo', 'Rift'],
+        },
+        {
+          name: 'Rift R5 — Bastet',
+          size: 6,
+          leader: 8151537453,
+          slots: [8151537453, 6489936246, 16410692026, 26961999021, 26881992509, 13578469034],
+          tags: ['Demo', 'Rift'],
+        },
+      ],
+    },
+    {
+      setName: 'Demo · Beasts',
+      teams: [
+        {
+          name: 'Fire Beast',
+          size: 6,
+          leader: 13578469034,
+          slots: [8600073708, 12477086251, 15394260876, 26881992509, 15370507039, 13578469034],
+          tags: ['Demo', 'Beast'],
+        },
+      ],
+    },
+    {
+      setName: 'Demo · Arena',
+      teams: [
+        {
+          name: 'AO — Seara',
+          size: 4,
+          leader: 8524048104,
+          slots: [9489707897, 8151537453, 5630889580, 8524048104],
+          tags: ['Demo', 'AO'],
+          shareInProfile: true,
+        },
+        {
+          name: 'AO — Trinity',
+          size: 4,
+          leader: 30419927866,
+          slots: [9489707897, 6946053164, 30419927866, 6608483306],
+          tags: ['Demo', 'AO'],
+          shareInProfile: true,
+        },
+        {
+          name: 'AO — Zaiross',
+          size: 4,
+          leader: 6608483306,
+          slots: [9489707897, 6946053164, 26882030840, 6608483306],
+          tags: ['Demo', 'AO'],
+          shareInProfile: true,
+        },
+        {
+          name: 'AD',
+          size: 4,
+          leader: 6076074940,
+          slots: [15661874898, 28035029184, 4667273474, 6076074940],
+          tags: ['Demo', 'AD'],
+          shareInProfile: true,
+        },
+      ],
+    },
+    {
+      setName: 'Demo · GvG',
+      teams: [
+        {
+          name: 'GD — Seara',
+          size: 3,
+          leader: 8524048104,
+          slots: [5612043734, 8524048104, 5096889290],
+          tags: ['Demo', 'GD'],
+        },
+        {
+          name: 'GD — Galleon',
+          size: 3,
+          leader: 6946053164,
+          slots: [9489707897, 6946053164, 6608483306],
+          tags: ['Demo', 'GD'],
+        },
+        {
+          name: 'GD — Martina',
+          size: 3,
+          leader: 27658693773,
+          slots: [12072006659, 27658693773, 13633460962],
+          tags: ['Demo', 'GD'],
+        },
+        {
+          name: 'GD — Khmun',
+          size: 3,
+          leader: 9041774297,
+          slots: [16399615784, 15335072189, 9041774297],
+          tags: ['Demo', 'GD'],
+        },
+      ],
+    },
+    {
+      setName: 'Demo · Dimension',
+      teams: [
+        {
+          name: 'Dim R5 1',
+          size: 5,
+          leader: 30376382096,
+          slots: [30376382096, 6946053164, 27244858404, 5365490176, 5404037534],
+          tags: ['Demo', 'Dim'],
+        },
+        {
+          name: 'Dim R5 3',
+          size: 5,
+          leader: 6115665171,
+          slots: [6115665171, 13578469034, 26992216401, 27064855468, 27398455635],
+          tags: ['Demo', 'Dim'],
+        },
+      ],
+    },
+  ];
+
+  function rosterHasDemoUnits(slotIds) {
+    const need = slotIds.filter((id) => id != null && Number(id) > 0);
+    if (!need.length) return false;
+    const have = new Set((allUnits || []).map((u) => Number(u.unitId)));
+    return need.every((id) => have.has(Number(id)));
+  }
+
+  function seedDemoTeamInSet(setId, spec) {
+    const size = clampTeamSize(spec.size || (spec.slots && spec.slots.length) || TEAM_SIZE_DEFAULT);
+    const slots = normalizeTeamSlots(spec.slots, size);
+    if (!rosterHasDemoUnits(slots)) return false;
+    const team = createTeamInSet(setId, spec.name, size);
     if (!team) return false;
+    const leader = spec.leader != null ? Number(spec.leader) : null;
+    const leaderInSlots = slots.some((id) => Number(id) === leader);
     updateTeam(team.id, {
       slots,
-      leaderUnitId: slots[0] || null,
-      shareInProfile: true,
-      tags: ['Demo'],
-      notes: 'Sample team from demo roster — edit or replace anytime.',
+      size,
+      leaderUnitId:
+        Number.isFinite(leader) && leader > 0 && leaderInSlots
+          ? leader
+          : slots.find((id) => id != null) || null,
+      shareInProfile: spec.shareInProfile !== false,
+      tags: spec.tags || ['Demo'],
+      notes: spec.notes || '',
     });
     return true;
   }
+
+  /** Sample teams for demo mode (curated sets; re-seeds when layout version bumps). */
+  function seedDemoTeamsIfEmpty() {
+    if (!shouldKeepDemoTeamSets()) return false;
+    if (!allUnits || allUnits.length < 3) return false;
+
+    const state = loadTeamsState();
+    const seededVer = readDemoTeamsSeedVersion();
+    const hasCurrentDemo =
+      seededVer >= DEMO_TEAMS_SEED_VERSION &&
+      state.sets.some((s) => isDemoTeamSetName(s.name));
+    if (hasCurrentDemo) return false;
+
+    const hasUserSets = state.sets.some((s) => !isDemoTeamSetName(s.name));
+    if (hasUserSets) return false;
+
+    clearDemoTeamSets();
+
+    let created = 0;
+    for (const block of DEMO_TEAMS_LAYOUT) {
+      const set = createTeamSet(block.setName);
+      if (!set) continue;
+      for (const spec of block.teams) {
+        if (seedDemoTeamInSet(set.id, spec)) created += 1;
+      }
+    }
+    if (created > 0) {
+      writeDemoTeamsSeedVersion(DEMO_TEAMS_SEED_VERSION);
+      teamsStateCache = null;
+    }
+    return created > 0;
+  }
+
+  window.SWRM = window.SWRM || {};
+  window.SWRM.syncDemoTeamsWithDatasetMode = syncDemoTeamsWithDatasetMode;
+  window.SWRM.removeDemoTeams = removeDemoTeams;

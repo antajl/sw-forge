@@ -5,6 +5,15 @@
     "build:ui": "node tools/build-ui.mjs",
     "build:css": "node tools/build-css.mjs",
     "build": "npm run build:css && npm run build:ui",
+    "fetch:static-bundle": "node tools/fetch-static-bundle.mjs",
+    "fetch:skills-icons": "node tools/fetch-skills-icons.mjs",
+    "fetch:leader-icons": "node tools/fetch-leader-icons.mjs",
+    "fetch:monsters-index": "node tools/fetch-monsters-index.mjs --fresh",
+    "fetch:monsters-portraits": "node tools/fetch-monsters-portraits.mjs",
+    "fetch:assets": "npm run fetch:static-bundle && npm run fetch:skills-icons && npm run fetch:leader-icons && npm run fetch:monsters-portraits",
+    "diagnose:missing-assets": "node tools/diagnose-missing-assets.mjs",
+    "fetch:missing-assets": "node tools/fetch-missing-assets.mjs",
+    "fetch:data": "node tools/fetch-skills-index.mjs --fresh && npm run fetch:monsters-index",
     "watch:ui": "node tools/watch-ui.mjs"
   }
 }

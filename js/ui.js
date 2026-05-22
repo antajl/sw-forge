@@ -1070,25 +1070,15 @@
 
     // Update dashboard cards
     updateDashboardLabels();
-    // Update language label in app settings tab
-    const langLabel = document.querySelector('#tab-app-settings .app-settings-field label');
-    if (langLabel) {
-      const select = document.getElementById('app-language');
-      if (select) {
-        select.value = currentLang;
-        const textNode = langLabel.childNodes[0];
-        if (textNode) {
-          textNode.textContent = t.language + ' ';
-        }
-      }
+    const langSelect = document.getElementById('app-language');
+    if (langSelect) langSelect.value = currentLang;
+    const headerLangLbl = document.getElementById('lbl-header-language');
+    if (headerLangLbl) headerLangLbl.textContent = t.language || 'Language';
+    if (window.SWRM && typeof window.SWRM.syncHeaderLangMenu === 'function') {
+      window.SWRM.syncHeaderLangMenu();
     }
-    
-    updateHeaderThemeA11y(t);
 
-    const shareTitle = document.getElementById('share-profile-title');
-    if (shareTitle) shareTitle.textContent = t.shareProfileTitle || 'Share Profile';
-    const shareDesc = document.getElementById('share-profile-desc');
-    if (shareDesc) shareDesc.textContent = t.shareProfileDesc || '';
+    updateHeaderThemeA11y(t);
     const shareEquippedLbl = document.getElementById('lbl-share-equipped-only');
     if (shareEquippedLbl) shareEquippedLbl.textContent = t.shareEquippedOnly || '';
     const shareBtn = document.getElementById('share-profile-btn');
@@ -1118,8 +1108,6 @@
     if (hubTeams) hubTeams.textContent = t.monstersHubTeams || 'Teams';
     const hubPlanner = document.getElementById('lbl-monsters-hub-planner');
     if (hubPlanner) hubPlanner.textContent = t.monstersHubPlanner || 'Skill plan';
-    const spLead = document.getElementById('skill-planner-lead');
-    if (spLead) spLead.textContent = t.skillPlannerLead || '';
     const spNat = document.getElementById('lbl-skill-planner-nat');
     if (spNat) spNat.textContent = t.skillPlannerNatFilter || 'Priority';
     const spNatAll = document.getElementById('lbl-skill-planner-nat-all');
@@ -1862,7 +1850,7 @@
       const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en || {};
       const label = t.demoDatasetSlotLabel || 'Demo';
       await loadDemoDatasetInMemory(jsonText, json, label);
-      if (typeof seedDemoTeamsIfEmpty === 'function') seedDemoTeamsIfEmpty();
+      if (typeof syncDemoTeamsWithDatasetMode === 'function') syncDemoTeamsWithDatasetMode();
       uiAfterSuccessfulRuneRestore({ name: label }, { keepTab: true });
       applyDemoBannerTextFromTranslations();
       syncDemoBannerVisibility();
@@ -2080,7 +2068,7 @@
       const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en || {};
       const label = t.demoDatasetSlotLabel || 'Demo';
       await loadDemoDatasetInMemory(jsonText, json, label);
-      if (typeof seedDemoTeamsIfEmpty === 'function') seedDemoTeamsIfEmpty();
+      if (typeof syncDemoTeamsWithDatasetMode === 'function') syncDemoTeamsWithDatasetMode();
       uiAfterSuccessfulRuneRestore({ name: label }, { keepTab: options.keepTab === true });
       applyDemoBannerTextFromTranslations();
       syncDemoBannerVisibility();
@@ -2132,7 +2120,8 @@
       markUserLoadedRealExport();
       await purgeDemoStorage();
       await scrubDemoFromUserSlots();
-      if (typeof removeDemoTeams === 'function') removeDemoTeams();
+      if (typeof syncDemoTeamsWithDatasetMode === 'function') syncDemoTeamsWithDatasetMode();
+      else if (typeof removeDemoTeams === 'function') removeDemoTeams();
       syncDemoBannerVisibility();
       document.getElementById('upload-prompt').classList.add('hidden');
       showMainTab('dashboard', { writeHash: true });
@@ -2283,6 +2272,14 @@
       allRelics = [];
     }
     if (typeof onGearDataHydrated === 'function') onGearDataHydrated();
+    if (typeof refreshAccountTotemFromSwex === 'function') {
+      refreshAccountTotemFromSwex(activeSwexJson);
+    } else if (window.SWRM && typeof window.SWRM.refreshAccountTotemFromSwex === 'function') {
+      window.SWRM.refreshAccountTotemFromSwex(activeSwexJson);
+    } else if (window.SWRM) {
+      window.SWRM.accountTotemSpdPct = 0;
+      window.SWRM.accountTotemLevel = 0;
+    }
   }
 
   /**
@@ -2303,7 +2300,9 @@
     if (meta && meta.name) {
       console.log(`Auto-loaded runes from ${meta.name}${meta.id != null ? ` (Data ${meta.id})` : ''}`);
     }
+    if (typeof syncDemoTeamsWithDatasetMode === 'function') syncDemoTeamsWithDatasetMode();
     syncDemoBannerVisibility();
+    if (typeof renderTeamsPanel === 'function') void renderTeamsPanel();
   }
 
   function uiShowUploadPrompt() {
@@ -2327,6 +2326,10 @@
     allRunes = [];
     allUnits = [];
     activeSwexJson = null;
+    if (window.SWRM) {
+      window.SWRM.accountTotemSpdPct = 0;
+      window.SWRM.accountTotemLevel = 0;
+    }
     processedRunes = [];
     if (!keepTab) {
       showMainTab('guide', { writeHash: true });
@@ -7640,10 +7643,12 @@
         if (targetSlot) {
           const jsonText = await loadSlotData(targetSlot.id);
           if (tryHydrateRunesFromJsonText(jsonText)) {
+            if (typeof markUsingDemoDataset === 'function') markUsingDemoDataset(false);
             uiAfterSuccessfulRuneRestore(targetSlot);
             restored = true;
           } else if (savedRunes && tryHydrateRunesFromJsonText(savedRunes)) {
             console.log(`IndexedDB empty for Data ${targetSlot.id}; restored from localStorage backup`);
+            if (typeof markUsingDemoDataset === 'function') markUsingDemoDataset(false);
             uiAfterSuccessfulRuneRestore(targetSlot);
             restored = true;
           }
@@ -7682,6 +7687,7 @@
               console.warn('Could not mirror JSON to IndexedDB slot 1:', e);
             }
           }
+          if (typeof markUsingDemoDataset === 'function') markUsingDemoDataset(false);
           uiAfterSuccessfulRuneRestore({ name: localStorage.getItem('loadedRunesName') || 'Saved export', id: 1 });
           restored = true;
         }
@@ -8213,7 +8219,8 @@
     markUserLoadedRealExport();
     if (typeof purgeDemoStorage === 'function') await purgeDemoStorage();
     if (typeof scrubDemoFromUserSlots === 'function') await scrubDemoFromUserSlots();
-    if (typeof removeDemoTeams === 'function') removeDemoTeams();
+    if (typeof syncDemoTeamsWithDatasetMode === 'function') syncDemoTeamsWithDatasetMode();
+    else if (typeof removeDemoTeams === 'function') removeDemoTeams();
     syncDemoBannerVisibility();
     document.getElementById('upload-prompt').classList.add('hidden');
   }
@@ -8223,6 +8230,75 @@
     showMainTab('dashboard', { writeHash: true });
   }
 
+  function syncHeaderLangMenu() {
+    const select = document.getElementById('app-language');
+    const wrap = document.getElementById('header-lang-wrap');
+    const btn = document.getElementById('header-lang-btn');
+    const menu = document.getElementById('header-lang-menu');
+    if (!select || !wrap || !menu) return;
+    select.value = currentLang;
+    menu.querySelectorAll('[data-lang]').forEach((opt) => {
+      const on = opt.dataset.lang === currentLang;
+      opt.classList.toggle('is-active', on);
+      opt.setAttribute('aria-checked', on ? 'true' : 'false');
+    });
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    if (btn) {
+      btn.title = t.language || 'Language';
+      btn.setAttribute('aria-label', t.language || 'Language');
+    }
+  }
+
+  function closeHeaderLangMenu() {
+    const wrap = document.getElementById('header-lang-wrap');
+    const btn = document.getElementById('header-lang-btn');
+    const menu = document.getElementById('header-lang-menu');
+    if (!wrap || !menu) return;
+    wrap.classList.remove('is-open');
+    menu.hidden = true;
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+  }
+
+  function initHeaderLangMenu() {
+    const wrap = document.getElementById('header-lang-wrap');
+    const btn = document.getElementById('header-lang-btn');
+    const menu = document.getElementById('header-lang-menu');
+    const select = document.getElementById('app-language');
+    if (!wrap || !btn || !menu || !select) return;
+    syncHeaderLangMenu();
+    if (btn.dataset.bound) return;
+    btn.dataset.bound = '1';
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const open = !wrap.classList.contains('is-open');
+      closeHeaderLangMenu();
+      if (open) {
+        wrap.classList.add('is-open');
+        menu.hidden = false;
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    });
+    menu.querySelectorAll('[data-lang]').forEach((opt) => {
+      opt.addEventListener('click', async (e) => {
+        e.preventDefault();
+        let v = opt.dataset.lang || 'en';
+        if (!['en', 'ru', 'fr'].includes(v)) v = 'en';
+        closeHeaderLangMenu();
+        await updateLanguage(v);
+        select.value = currentLang;
+        syncHeaderLangMenu();
+      });
+    });
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#header-lang-wrap')) closeHeaderLangMenu();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeHeaderLangMenu();
+    });
+  }
+
+  initHeaderLangMenu();
+
   const appLangSelect = document.getElementById('app-language');
   if (appLangSelect) {
     appLangSelect.value = currentLang;
@@ -8231,8 +8307,12 @@
       if (!['en', 'ru', 'fr'].includes(v)) v = 'en';
       await updateLanguage(v);
       appLangSelect.value = currentLang;
+      syncHeaderLangMenu();
     });
   }
+
+  window.SWRM = window.SWRM || {};
+  window.SWRM.syncHeaderLangMenu = syncHeaderLangMenu;
 
   document.getElementById('theme-toggle')?.addEventListener('click', () => toggleTheme());
 
@@ -8417,10 +8497,14 @@
   const SHARE_SESSION_KEY = 'swrm_share_readonly_v1';
   const SHARE_EXPIRY_DAYS = 90;
   const SHARE_MODE_STORAGE_KEY = 'swrm_share_mode_v1';
+  /** Cloudflare D1 row limit ~2 MB; keep request body under this. */
+  const SHARE_MAX_BODY_BYTES = 1_850_000;
   let shareReadOnly = false;
   let shareViewLoadFailed = false;
   let shareViewWizardName = '';
   let shareExportMode = 'all';
+  /** Set when viewing a shared profile (payload share_mode). */
+  let shareViewExportMode = '';
 
   const SHARE_MODE_LABEL_KEYS = {
     'all': 'shareModeAll',
@@ -8544,6 +8628,9 @@
     persistShareSession(true);
     shareViewLoadFailed = false;
     shareViewWizardName = name;
+    shareViewExportMode = String(
+      root.share_mode || parsed.share_mode || parsed.shareMode || '',
+    ).trim();
     if (parsed.teams && typeof setTeamsShareViewPayload === 'function') {
       setTeamsShareViewPayload(parsed.teams);
     } else if (root.teams && typeof setTeamsShareViewPayload === 'function') {
@@ -8617,6 +8704,43 @@
     return !!unitMetaFor(unitId).favorite;
   }
 
+  function slimRuneRawForShare(raw, parsed) {
+    const src = raw && typeof raw === 'object' ? raw : {};
+    const rid =
+      src.rune_id != null
+        ? Number(src.rune_id)
+        : parsed && parsed.id != null
+          ? Number(parsed.id)
+          : null;
+    if (!Number.isFinite(rid)) return src;
+    const rawRune = parsed && parsed._raw && typeof parsed._raw === 'object' ? parsed._raw : null;
+    const out = {
+      rune_id: rid,
+      slot_no: src.slot_no ?? rawRune?.slot_no ?? parsed?.slot,
+      set_id: src.set_id ?? rawRune?.set_id ?? parsed?.setId,
+      upgrade_curr: src.upgrade_curr ?? rawRune?.upgrade_curr ?? parsed?.level ?? 0,
+      extra: src.extra ?? rawRune?.extra ?? parsed?.grade,
+      class: src.class ?? rawRune?.class,
+      rank: src.rank ?? rawRune?.rank,
+    };
+    if (src.pri_eff) out.pri_eff = src.pri_eff;
+    else if (rawRune?.pri_eff) out.pri_eff = rawRune.pri_eff;
+    else if (parsed?.mainType != null) out.pri_eff = [parsed.mainType, parsed.mainVal];
+    if (src.prefix_eff) out.prefix_eff = src.prefix_eff;
+    else if (rawRune?.prefix_eff) out.prefix_eff = rawRune.prefix_eff;
+    if (src.sec_eff) out.sec_eff = src.sec_eff;
+    else if (rawRune?.sec_eff) out.sec_eff = rawRune.sec_eff;
+    else if (parsed?.substats) {
+      out.sec_eff = (parsed.substats || []).map((s) => [
+        s.type,
+        s.val,
+        s.enchanted ? 1 : 0,
+        s.grind || 0,
+      ]);
+    }
+    return out;
+  }
+
   function buildShareSlimPayload(mode) {
     const exportMode = mode || shareExportMode || 'all';
     const json = activeSwexJson;
@@ -8652,38 +8776,7 @@
         const runes = (u.runes || []).map((raw) => {
           const rid = raw.rune_id != null ? Number(raw.rune_id) : null;
           const parsed = rid != null && runeById.has(rid) ? runeById.get(rid) : null;
-          if (parsed) {
-            const rawRune = parsed._raw;
-            if (rawRune && typeof rawRune === 'object') {
-              return {
-                rune_id: rid,
-                slot_no: rawRune.slot_no ?? parsed.slot,
-                set_id: rawRune.set_id ?? parsed.setId,
-                upgrade_curr: rawRune.upgrade_curr ?? parsed.level,
-                extra: rawRune.extra,
-                class: rawRune.class,
-                rank: rawRune.rank,
-                pri_eff: rawRune.pri_eff ?? [parsed.mainType, parsed.mainVal],
-                prefix_eff: rawRune.prefix_eff,
-                sec_eff: rawRune.sec_eff,
-              };
-            }
-            return {
-              rune_id: rid,
-              slot_no: parsed.slot,
-              set_id: parsed.setId,
-              upgrade_curr: parsed.level,
-              extra: parsed.grade,
-              pri_eff: [parsed.mainType, parsed.mainVal],
-              sec_eff: (parsed.substats || []).map((s) => [
-                s.type,
-                s.val,
-                s.enchanted ? 1 : 0,
-                s.grind || 0,
-              ]),
-            };
-          }
-          return raw;
+          return slimRuneRawForShare(raw, parsed);
         });
         return {
           unit_master_id: u.unit_master_id,
@@ -8713,6 +8806,16 @@
       unit_list: units,
       share_mode: exportMode,
     };
+    if (exportMode === 'all') {
+      const inv = json.runes || json.rune_list || [];
+      if (Array.isArray(inv) && inv.length) {
+        payload.runes = inv.map((raw) => {
+          const rid = raw && raw.rune_id != null ? Number(raw.rune_id) : null;
+          const parsed = rid != null && runeById.has(rid) ? runeById.get(rid) : null;
+          return slimRuneRawForShare(raw, parsed);
+        });
+      }
+    }
     if (typeof exportTeamsForShare === 'function') {
       const teams = exportTeamsForShare();
       if (teams) {
@@ -8737,7 +8840,11 @@
                 attribute: src.attribute,
                 unit_level: src.unit_level,
                 rank: src.rank,
-                runes: (src.runes || []).map((raw) => raw),
+                runes: (src.runes || []).map((raw) => {
+                  const rid = raw.rune_id != null ? Number(raw.rune_id) : null;
+                  const parsed = rid != null && runeById.has(rid) ? runeById.get(rid) : null;
+                  return slimRuneRawForShare(raw, parsed);
+                }),
               });
             }
           }
@@ -8770,12 +8877,13 @@
       expires_at: shareExpiryUnix(),
     };
     const bodyStr = JSON.stringify(payload);
-    if (bodyStr.length > 900_000) {
+    if (bodyStr.length > SHARE_MAX_BODY_BYTES) {
       const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-      throw new Error(
+      const mb = (bodyStr.length / (1024 * 1024)).toFixed(1);
+      const tpl =
         t.sharePayloadTooLarge ||
-          'Export is too large to share. Try a smaller share mode (e.g. equipped only).',
-      );
+        'Export is too large to share ({size} MB). Try equipped-only, or remove unused runes from the JSON.';
+      throw new Error(tpl.replace(/\{size\}/g, mb));
     }
     const res = await fetch(`${api}/share`, {
       method: 'POST',
@@ -8867,8 +8975,79 @@
     }
   }
 
-  function buildShareMentorUnitHints(t) {
+  function unitsForShareReview() {
     const cache = typeof monstersEnrichedCache !== 'undefined' ? monstersEnrichedCache : [];
+    if (window.SWRM && typeof window.SWRM.filterPlannerRosterUnits === 'function') {
+      return window.SWRM.filterPlannerRosterUnits(cache);
+    }
+    return cache.filter((u) => {
+      if (typeof isTechnicalFodderMonster === 'function' && isTechnicalFodderMonster(u)) return false;
+      return true;
+    });
+  }
+
+  function syncShareMentorFilterDom(f) {
+    const runeSel = document.getElementById('monsters-filter-rune');
+    const skillSel = document.getElementById('monsters-filter-skill');
+    const locSel = document.getElementById('monsters-filter-location');
+    const sixBtn = document.getElementById('monsters-filter-full-six');
+    if (runeSel) runeSel.value = f.runeFilter || '';
+    if (skillSel) skillSel.value = f.skillFilter || '';
+    if (locSel) locSel.value = f.location || 'all';
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    if (typeof syncMonstersShowAllButton === 'function') {
+      syncMonstersShowAllButton(!!f.fullSixOnly, t);
+    }
+    if (typeof updateMonstersFilterSummary === 'function') updateMonstersFilterSummary();
+  }
+
+  function openMentorRoster(kind) {
+    const k = String(kind || '').trim();
+    if (!k) return;
+    const f =
+      typeof readMonstersFiltersFromDom === 'function'
+        ? readMonstersFiltersFromDom()
+        : { sort: 'name', q: '', element: '', location: 'all', minLevelMin: 0 };
+    f.runeFilter = '';
+    f.skillFilter = '';
+    f.fullSixOnly = false;
+    f.location = 'all';
+    if (k === 'skills') f.skillFilter = 'needs-up';
+    else if (k === 'partial') f.runeFilter = 'partial';
+    else if (k === 'unruned') f.runeFilter = 'unruned';
+    else if (k === 'attention') {
+      f.skillFilter = 'needs-up';
+    }
+    if (typeof writeMonstersFilters === 'function') writeMonstersFilters(f);
+    syncShareMentorFilterDom(f);
+    if (typeof showMainTab === 'function') {
+      showMainTab('monsters', { monstersSubtab: 'roster', writeHash: true });
+    }
+    window.setTimeout(() => {
+      if (typeof renderMonstersPanel === 'function') void renderMonstersPanel();
+    }, 40);
+  }
+
+  function mentorRosterSegment(innerEscaped, kind) {
+    if (!kind) return innerEscaped;
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const title = escapeHtml(t.shareMentorOpenRoster || 'Open filtered roster');
+    return `<button type="button" class="account-mentor-btn" data-mentor-roster="${escapeHtml(kind)}" title="${title}">${innerEscaped}</button>`;
+  }
+
+  function bindMentorRosterClicks() {
+    if (document.documentElement.dataset.mentorRosterBound) return;
+    document.documentElement.dataset.mentorRosterBound = '1';
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-mentor-roster]');
+      if (!btn) return;
+      e.preventDefault();
+      openMentorRoster(btn.dataset.mentorRoster);
+    });
+  }
+
+  function buildShareMentorUnitHints(t) {
+    const cache = unitsForShareReview();
     if (!cache.length) return '';
     const scored = [];
     for (const u of cache) {
@@ -8893,13 +9072,22 @@
     }
     if (!names.length) return '';
     const tpl = t.shareReviewUnits || 'Needs attention: {names}';
-    return escapeHtml(tpl.replace(/\{names\}/g, names.join(', ')));
+    const text = tpl.replace(/\{names\}/g, names.join(', '));
+    return mentorRosterSegment(escapeHtml(text), 'attention');
   }
 
-  function buildShareAccountReviewHtml() {
-    if (shareViewLoadFailed) return '';
+  function buildAccountReviewLines(opts) {
+    const o = opts || {};
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const lines = [];
+    if (!o.hideScope) {
+      const mode = o.mode || shareViewExportMode || shareExportMode || 'all';
+      const scopeTpl = shareReadOnly
+        ? t.shareReviewScope || 'In this link: {mode}'
+        : t.accountReviewScope || 'Your box: {mode}';
+      lines.push(escapeHtml(scopeTpl.replace(/\{mode\}/g, shareModeLabel(mode, t))));
+    }
+
     const runes = typeof allRunes !== 'undefined' && Array.isArray(allRunes) ? allRunes : [];
     if (runes.length) {
       let keep = 0;
@@ -8910,38 +9098,76 @@
         else if (v === 'Sell') sell += 1;
       }
       const tpl = t.shareReviewRunes || '{n} runes · Keep {keep} · Sell {sell}';
-      lines.push(
-        escapeHtml(
-          tpl
-            .replace(/\{n\}/g, String(runes.length))
-            .replace(/\{keep\}/g, String(keep))
-            .replace(/\{sell\}/g, String(sell)),
-        ),
-      );
+      const runeLine = tpl
+        .replace(/\{n\}/g, String(runes.length))
+        .replace(/\{keep\}/g, String(keep))
+        .replace(/\{sell\}/g, String(sell));
+      lines.push(escapeHtml(runeLine));
     }
-    const cache = typeof monstersEnrichedCache !== 'undefined' ? monstersEnrichedCache : [];
-    if (cache.length) {
+
+    const reviewUnits = unitsForShareReview();
+    const stats =
+      window.SWRM && typeof window.SWRM.computeSkillPlannerStats === 'function'
+        ? window.SWRM.computeSkillPlannerStats(reviewUnits)
+        : null;
+    if (stats && (stats.skillUpsTotal > 0 || stats.monstersNeeding > 0)) {
+      const tpl = t.shareReviewSkills || '{skill} skill-ups to max · {monsters} monsters';
+      const skillLine = tpl
+        .replace(/\{skill\}/g, String(stats.skillUpsTotal))
+        .replace(/\{monsters\}/g, String(stats.monstersNeeding));
+      lines.push(mentorRosterSegment(escapeHtml(skillLine), 'skills'));
+    }
+    if (reviewUnits.length) {
       let partial = 0;
-      let skill = 0;
-      for (const u of cache) {
+      for (const u of reviewUnits) {
         if (u.equippedCount > 0 && !u.hasFullRunes) partial += 1;
-        if (u.skillUpsNeeded > 0) skill += u.skillUpsNeeded;
       }
-      const tpl =
-        t.shareReviewMonsters || '{n} monsters · {partial} partial sets · {skill} skill levels to max';
-      lines.push(
-        escapeHtml(
-          tpl
-            .replace(/\{n\}/g, String(cache.length))
-            .replace(/\{partial\}/g, String(partial))
-            .replace(/\{skill\}/g, String(skill)),
-        ),
-      );
+      if (partial > 0) {
+        const tpl = t.shareReviewPartial || '{partial} with incomplete rune sets';
+        const partialLine = tpl.replace(/\{partial\}/g, String(partial));
+        lines.push(mentorRosterSegment(escapeHtml(partialLine), 'partial'));
+      }
     }
+
     const hints = buildShareMentorUnitHints(t);
     if (hints) lines.push(hints);
+    return lines;
+  }
+
+  function buildAccountReviewHtml(opts) {
+    const o = opts || {};
+    if (shareViewLoadFailed) return '';
+    const lines = buildAccountReviewLines(o);
+    const runes = typeof allRunes !== 'undefined' && Array.isArray(allRunes) ? allRunes : [];
     if (!lines.length) return '';
-    return `<p class="share-view-banner__review">${lines.join('<span class="share-view-banner__sep" aria-hidden="true"> · </span>')}</p>`;
+    if (!o.hideScope && lines.length <= 1 && !runes.length) return '';
+    const wrapClass = o.wrapClass || 'account-review';
+    return `<p class="${escapeHtml(wrapClass)}">${lines.join('<span class="account-review__sep" aria-hidden="true"> · </span>')}</p>`;
+  }
+
+  function buildShareAccountReviewHtml() {
+    return buildAccountReviewHtml({ wrapClass: 'share-view-banner__review account-review' });
+  }
+
+  function renderAccountReviewStrip() {
+    const el = document.getElementById('monsters-account-review');
+    if (!el) return;
+    if (shareReadOnly || !allUnits.length) {
+      el.hidden = true;
+      el.innerHTML = '';
+      return;
+    }
+    const html = buildAccountReviewHtml({
+      hideScope: true,
+      wrapClass: 'monsters-box-overview__review account-review',
+    });
+    if (!html) {
+      el.hidden = true;
+      el.innerHTML = '';
+      return;
+    }
+    el.hidden = false;
+    el.innerHTML = html;
   }
 
   function renderShareViewBanner() {
@@ -9099,6 +9325,7 @@
   function bindShareProfileUi() {
     shareExportMode = readStoredShareMode();
     syncShareSplitLabels();
+    bindMentorRosterClicks();
 
     document.addEventListener('click', (e) => {
       const mainBtn = e.target.closest('.share-split__main');
@@ -9176,6 +9403,9 @@
   window.SWRM.isShareReadOnly = isShareReadOnly;
   window.SWRM.applyShareReadOnlyUi = applyShareReadOnlyUi;
   window.SWRM.renderShareViewBanner = renderShareViewBanner;
+  window.SWRM.openMentorRoster = openMentorRoster;
+  window.SWRM.buildAccountReviewHtml = buildAccountReviewHtml;
+  window.SWRM.renderAccountReviewStrip = renderAccountReviewStrip;
   window.SWRM.getShareIdFromUrl = getShareIdFromUrl;
   window.SWRM.getProfileLinkFromUrl = getProfileLinkFromUrl;
 
@@ -9355,7 +9585,7 @@
         lead.textContent =
           t.monstersTeamsLead || 'Build named teams and group them into sets (e.g. Arena Offence).';
       } else if (id === 'planner') {
-        lead.textContent = t.skillPlannerLead || '';
+        lead.textContent = '';
       } else {
         lead.textContent = t.monstersLead || '';
       }
@@ -9366,7 +9596,7 @@
     } else if (id === 'planner' && typeof renderSkillPlannerPanel === 'function') {
       void renderSkillPlannerPanel();
     } else if (id === 'teams' && typeof renderTeamsPanel === 'function') {
-      renderTeamsPanel();
+      void renderTeamsPanel();
     }
   }
 
@@ -9390,6 +9620,495 @@
     if (s === 'planner' || s === 'skill' || s === 'skills' || s === 'skill-plan') return 'planner';
     return MONSTERS_SUBTAB_IDS.includes(s) ? s : null;
   }
+
+//
+// SWEX does not ship reliable final combat totals on units; we derive Total from:
+//   1) Base at unit level — SWARFARM monster base/max stats scaled to u.level
+//   2) Equipped runes — mains, innate (prefix), substats (+ grind)
+//   3) Active rune set bonuses (2-/4-piece panel stats)
+//   4) Artifacts / relics — only confirmed pri effects (flat HP/ATK/DEF; relic % HP/ATK/DEF)
+//
+// HP / ATK / DEF / SPD: flat bonuses stack; % bonuses apply to base (runes + set %).
+// CRI Rate / CRI Dmg / RES / ACC: % bonuses stack additively on base (game stat screen).
+//
+// +Gear column = total − base. Not included: glory, leader/passive, artifact combat subs.
+  const PCT_STAT_TYPES = new Set([2, 4, 6, 9, 10, 11, 12]);
+  const ADDITIVE_PCT_KEYS = new Set(['critRate', 'critDmg', 'res', 'acc']);
+
+  /** Panel stat bonuses when a set threshold is active (one rule per set name). */
+  const RUNE_SET_PANEL_BONUSES = {
+    Energy: { need: 2, hpPct: 15 },
+    Guard: { need: 2, defPct: 15 },
+    Swift: { need: 4, spdFlat: 25 },
+    Blade: { need: 2, critRatePct: 12 },
+    Rage: { need: 4, critDmgPct: 40 },
+    Focus: { need: 2, accPct: 20 },
+    Endure: { need: 2, resPct: 20 },
+    Fatal: { need: 4, atkPct: 35 },
+    Despair: { need: 4, accPct: 25 },
+    Vampire: { need: 4, hpPct: 35 },
+    Fight: { need: 2, atkPct: 8 },
+    Determination: { need: 2, defPct: 8 },
+    Enhance: { need: 2, hpPct: 8 },
+    Accuracy: { need: 2, accPct: 20 },
+    Tolerance: { need: 2, resPct: 20 },
+  };
+
+  function statKeyForTypeId(typeId) {
+    const id = Number(typeId);
+    if (id === 1 || id === 2) return 'hp';
+    if (id === 3 || id === 4) return 'atk';
+    if (id === 5 || id === 6) return 'def';
+    if (id === 8) return 'spd';
+    if (id === 9) return 'critRate';
+    if (id === 10) return 'critDmg';
+    if (id === 11) return 'res';
+    if (id === 12) return 'acc';
+    return null;
+  }
+
+  function isPercentBonus(typeId, slotNo) {
+    const id = Number(typeId);
+    const slot = Number(slotNo);
+    if (Number.isFinite(slot) && slot >= 1 && slot <= 6) {
+      if (window.SWRM && typeof window.SWRM.isMainStatFlat === 'function') {
+        return !window.SWRM.isMainStatFlat(slot, id);
+      }
+      return slot === 2 || slot === 4 || slot === 6;
+    }
+    return PCT_STAT_TYPES.has(id);
+  }
+
+  function subVal(sub) {
+    if (window.SWRM && typeof window.SWRM.subRuneValue === 'function') {
+      return window.SWRM.subRuneValue(sub);
+    }
+    return (Number(sub?.val) || 0) + (Number(sub?.grind) || 0);
+  }
+
+  function sumRuneBonusesForKey(statKey, runesArray) {
+    let flat = 0;
+    let pct = 0;
+    for (const rune of runesArray || []) {
+      if (!rune) continue;
+      const add = (typeId, value, slotNo) => {
+        const key = statKeyForTypeId(typeId);
+        const v = Number(value);
+        if (key !== statKey || !Number.isFinite(v) || v === 0) return;
+        if (isPercentBonus(typeId, slotNo)) pct += v;
+        else flat += v;
+      };
+      if (rune.mainType != null && rune.mainVal != null) {
+        add(rune.mainType, rune.mainVal, rune.slot);
+      }
+      if (rune.innate_type && rune.innate_val) {
+        add(rune.innate_type, rune.innate_val, null);
+      }
+      for (const s of rune.substats || []) {
+        if (s && s.source === 'innate') continue;
+        add(s.type, subVal(s), null);
+      }
+    }
+    return { flat, pct };
+  }
+
+  function countRuneSets(runesArray) {
+    const counts = {};
+    for (const rune of runesArray || []) {
+      if (!rune || !rune.setName) continue;
+      counts[rune.setName] = (counts[rune.setName] || 0) + 1;
+    }
+    return counts;
+  }
+
+  function sumSetBonusesForKey(statKey, runesArray) {
+    let flat = 0;
+    let pct = 0;
+    const counts = countRuneSets(runesArray);
+    for (const [setName, total] of Object.entries(counts)) {
+      const rule = RUNE_SET_PANEL_BONUSES[setName];
+      if (!rule || total < rule.need) continue;
+      if (rule.spdFlat && statKey === 'spd') flat += rule.spdFlat;
+      if (rule.hpPct && statKey === 'hp') pct += rule.hpPct;
+      if (rule.atkPct && statKey === 'atk') pct += rule.atkPct;
+      if (rule.defPct && statKey === 'def') pct += rule.defPct;
+      if (rule.critRatePct && statKey === 'critRate') pct += rule.critRatePct;
+      if (rule.critDmgPct && statKey === 'critDmg') pct += rule.critDmgPct;
+      if (rule.resPct && statKey === 'res') pct += rule.resPct;
+      if (rule.accPct && statKey === 'acc') pct += rule.accPct;
+    }
+    return { flat, pct };
+  }
+
+  function sumConfirmedGearBonusesForKey(statKey, unit) {
+    if (!unit || !window.SWRM || typeof window.SWRM.sumGearBonusesForKey !== 'function') {
+      return { flat: 0, pct: 0 };
+    }
+    return window.SWRM.sumGearBonusesForKey(statKey, unit);
+  }
+
+  function calculateTotalStatForKey(base, runesArray, statKey, unit) {
+    const b = Number(base);
+    const baseNum = Number.isFinite(b) ? b : 0;
+    const rune = sumRuneBonusesForKey(statKey, runesArray);
+    const set = sumSetBonusesForKey(statKey, runesArray);
+    const gear = sumConfirmedGearBonusesForKey(statKey, unit);
+    const flat = rune.flat + set.flat + gear.flat;
+    const pct = rune.pct + set.pct + gear.pct;
+    let total = baseNum + flat;
+    if (pct) {
+      if (ADDITIVE_PCT_KEYS.has(statKey)) total += pct;
+      else total += (baseNum * pct) / 100;
+    }
+    return roundStatTotal(statKey, total);
+  }
+
+  /** Match in-game stat screen (HP/ATK/DEF ceil; SPD floor; % round). */
+  function roundStatTotal(statKey, total) {
+    const n = Number(total);
+    if (!Number.isFinite(n)) return 0;
+    if (statKey === 'spd') return Math.floor(n + 1e-6);
+    if (statKey === 'hp' || statKey === 'atk' || statKey === 'def') {
+      return Math.ceil(n - 1e-9);
+    }
+    return Math.round(n);
+  }
+
+  function displayStatValue(statKey, value, isPct) {
+    const n = roundStatTotal(statKey, value);
+    return isPct ? `${n}%` : String(n);
+  }
+
+  function reconcileTotalWithSwex(statKey, computedTotal, unit) {
+    const s = unit && unit.stats;
+    if (!s) return computedTotal;
+    const swex = Number(s[statKey]);
+    if (!Number.isFinite(swex)) return computedTotal;
+    const comp = roundStatTotal(statKey, computedTotal);
+    const sw = roundStatTotal(statKey, swex);
+    if (Math.abs(sw - comp) <= 1) return sw;
+    return comp;
+  }
+
+  /**
+   * Sky Tribe Totem / account SPD bonus sources in SWEX (2025+):
+   * - Primary: `wizard_skill_list[]` row with `skill_id: 14` (Glory monument #14), `level` = totem level.
+   * - Legacy: `deco_list` / `deo_list` with `master_id: 11001` (old export naming).
+   * - Optional: `wizard_info.unit_home_bonus` (stat_type 8 = SPD) on some payloads.
+   */
+  const WIZARD_SKILL_ID_SPEED_TOTEM = 14;
+  const SPEED_TOTEM_DECO_MASTER_ID = 11001;
+  const COM2US_STAT_TYPE_SPD = 8;
+  /** % bonus to base SPD by totem level (SWOP / in-game, levels 1–10; extended to 20). */
+  const TOTEM_SPD_PCT_BY_LEVEL = {
+    1: 2,
+    2: 3,
+    3: 5,
+    4: 6,
+    5: 8,
+    6: 9,
+    7: 11,
+    8: 12,
+    9: 14,
+    10: 15,
+    11: 8.5,
+    12: 9,
+    13: 10,
+    14: 11,
+    15: 11.5,
+    16: 12,
+    17: 13,
+    18: 14,
+    19: 14.5,
+    20: 15,
+  };
+
+  function totemSpdPctFromLevel(level) {
+    const lv = Number(level);
+    if (!Number.isFinite(lv) || lv < 1) return 0;
+    const pct = TOTEM_SPD_PCT_BY_LEVEL[lv];
+    return pct != null ? pct : lv >= 10 ? 15 : 0;
+  }
+
+  function decoEntryMasterId(d) {
+    if (!d || typeof d !== 'object') return NaN;
+    return Number(d.master_id ?? d.deco_master_id ?? d.building_master_id);
+  }
+
+  function decoEntryLevel(d) {
+    return Number(d.level ?? d.lv ?? d.upgrade_curr ?? d.upgrade_level ?? d.building_level);
+  }
+
+  function swexAllDecoEntries(json) {
+    const out = [];
+    const seen = new Set();
+    const pushList = (list) => {
+      if (!Array.isArray(list)) return;
+      for (const d of list) {
+        if (!d || typeof d !== 'object') continue;
+        const key = `${decoEntryMasterId(d)}:${decoEntryLevel(d)}:${d.deco_id ?? ''}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        out.push(d);
+      }
+    };
+    if (!json || typeof json !== 'object') return out;
+    pushList(json.deco_list);
+    pushList(json.deo_list);
+    pushList(json.decoration_list);
+    const wi = json.wizard_info;
+    if (wi && typeof wi === 'object') {
+      pushList(wi.deco_list);
+      pushList(wi.deo_list);
+    }
+    for (const v of Object.values(json)) {
+      if (!v || typeof v !== 'object' || Array.isArray(v)) continue;
+      pushList(v.deco_list);
+      pushList(v.deo_list);
+    }
+    return out;
+  }
+
+  function wizardSkillListRows(json) {
+    if (!json || typeof json !== 'object') return [];
+    const raw = json.wizard_skill_list ?? json.wizard_info?.wizard_skill_list;
+    if (!raw) return [];
+    if (Array.isArray(raw)) return raw;
+    if (typeof raw === 'object') return Object.values(raw);
+    return [];
+  }
+
+  function totemFromWizardSkillList(json) {
+    let best = null;
+    for (const row of wizardSkillListRows(json)) {
+      if (Number(row.skill_id) !== WIZARD_SKILL_ID_SPEED_TOTEM) continue;
+      const lv = Number(row.level ?? row.skill_level ?? row.lv);
+      const pct = totemSpdPctFromLevel(lv);
+      if (pct > 0 && (!best || lv > best.level)) {
+        best = { level: lv, pct, source: 'wizard_skill_list', skill_id: WIZARD_SKILL_ID_SPEED_TOTEM };
+      }
+    }
+    return best;
+  }
+
+  function rowLooksLikeSpdBonus(row) {
+    if (!row || typeof row !== 'object') return false;
+    const stat = Number(row.stat_type ?? row.stat ?? row.attribute_type);
+    const type = Number(row.bonus_type ?? row.type ?? row.effect_type);
+    const attr = String(row.attribute ?? row.effect ?? row.stat_name ?? '').toLowerCase();
+    if (stat === COM2US_STAT_TYPE_SPD || type === COM2US_STAT_TYPE_SPD) return true;
+    if (attr.includes('speed') || attr.includes('spd')) return true;
+    return false;
+  }
+
+  function totemFromUnitHomeBonus(json) {
+    const lists = [];
+    if (json?.wizard_info?.unit_home_bonus) lists.push(json.wizard_info.unit_home_bonus);
+    if (json?.unit_home_bonus) lists.push(json.unit_home_bonus);
+    if (json?.wizard_info?.bonus_list) lists.push(json.wizard_info.bonus_list);
+    if (json?.account_bonus) lists.push(json.account_bonus);
+    let best = null;
+    for (const list of lists) {
+      if (!Array.isArray(list)) continue;
+      for (const row of list) {
+        if (!rowLooksLikeSpdBonus(row)) continue;
+        let pct = Number(row.bonus_value ?? row.value ?? row.amount ?? row.pct ?? row.rate);
+        if (!Number.isFinite(pct) || pct <= 0) continue;
+        if (pct > 0 && pct <= 1) pct *= 100;
+        const lv = Number(row.level);
+        if (pct > 0 && (!best || pct > best.pct)) {
+          best = { level: Number.isFinite(lv) ? lv : 0, pct, source: 'unit_home_bonus' };
+        }
+      }
+    }
+    return best;
+  }
+
+  function totemFromDecoList(json) {
+    let best = null;
+    for (const d of swexAllDecoEntries(json)) {
+      const mid = decoEntryMasterId(d);
+      if (mid !== SPEED_TOTEM_DECO_MASTER_ID && mid !== WIZARD_SKILL_ID_SPEED_TOTEM) continue;
+      const lv = decoEntryLevel(d);
+      const pct = totemSpdPctFromLevel(lv);
+      if (pct > 0 && (!best || lv > best.level)) {
+        best = { level: lv, pct, source: mid === SPEED_TOTEM_DECO_MASTER_ID ? 'deco_list:11001' : 'deco_list:14' };
+      }
+    }
+    return best;
+  }
+
+  /** Resolve account-wide SPD% from base (Sky Tribe Totem / Summoner monument). */
+  function findAccountSpeedTotemBonus(json) {
+    return (
+      totemFromWizardSkillList(json) ||
+      totemFromUnitHomeBonus(json) ||
+      totemFromDecoList(json) ||
+      null
+    );
+  }
+
+  function findSkyTribeTotemInJson(json) {
+    return findAccountSpeedTotemBonus(json);
+  }
+
+  function totemSpdPctFromSwexJson(json) {
+    const hit = findAccountSpeedTotemBonus(json);
+    return hit ? hit.pct : 0;
+  }
+
+  function refreshAccountTotemFromSwex(json) {
+    const hit = findAccountSpeedTotemBonus(json);
+    const pct = hit ? hit.pct : 0;
+    if (window.SWRM) {
+      window.SWRM.accountTotemSpdPct = pct;
+      window.SWRM.accountTotemLevel = hit ? hit.level : 0;
+      window.SWRM.accountTotemSource = hit ? hit.source : '';
+    }
+    return pct;
+  }
+
+  function getAccountTotemSpdPct() {
+    if (window.SWRM && Number.isFinite(Number(window.SWRM.accountTotemSpdPct))) {
+      return Number(window.SWRM.accountTotemSpdPct);
+    }
+    const json = typeof activeSwexJson !== 'undefined' ? activeSwexJson : null;
+    return totemSpdPctFromSwexJson(json);
+  }
+
+  function calculateMonsterStatBreakdown(baseStats, unit) {
+    const runes = getUnitEquippedRunes(unit);
+    const totemPct = getAccountTotemSpdPct();
+    const keys = ['hp', 'atk', 'def', 'spd', 'critRate', 'critDmg', 'res', 'acc'];
+    const out = {};
+    for (const key of keys) {
+      const b = baseStats && Number.isFinite(Number(baseStats[key])) ? Number(baseStats[key]) : 0;
+      const baseRounded = roundStatTotal(key, b);
+      let total = calculateTotalStatForKey(b, runes, key, unit);
+      total = reconcileTotalWithSwex(key, total, unit);
+      if (key === 'spd' && totemPct > 0) {
+        const totemFlat = baseSpdAuraBonusFlat(baseRounded, totemPct, 0);
+        total += totemFlat;
+      }
+      const isPct = ADDITIVE_PCT_KEYS.has(key);
+      let bonus = total - baseRounded;
+      if (!isPct) bonus = Math.max(0, bonus);
+      else bonus = Math.max(0, Math.round(bonus));
+      out[key] = {
+        base: baseRounded,
+        bonus,
+        total,
+        isPct,
+      };
+    }
+    return out;
+  }
+
+  function getUnitEquippedRunes(u) {
+    if (!u || !Array.isArray(u.runeSlots)) return [];
+    return u.runeSlots.map((s) => s && s.rune).filter(Boolean);
+  }
+
+  function calculateMonsterStatTotals(baseStats, unit) {
+    const bd = calculateMonsterStatBreakdown(baseStats, unit);
+    const totals = {};
+    for (const key of Object.keys(bd)) totals[key] = bd[key].total;
+    return totals;
+  }
+
+  /** Flat SPD from totem + leader (% of base only; runes/Swift already in SWEX unit spd). */
+  function baseSpdAuraBonusFlat(baseSpd, totemPct, leaderPct) {
+    const base = Number(baseSpd);
+    if (!Number.isFinite(base) || base <= 0) return 0;
+    const pct = (Number(totemPct) || 0) + (Number(leaderPct) || 0);
+    if (pct <= 0) return 0;
+    return Math.round((base * pct) / 100);
+  }
+
+  function leaderSkillSpdPct(leaderSkill) {
+    if (!leaderSkill) return 0;
+    const attr = String(leaderSkill.attribute || '').toLowerCase();
+    if (!attr.includes('speed')) return 0;
+    const n = Number(leaderSkill.amount);
+    return Number.isFinite(n) && n > 0 ? n : 0;
+  }
+
+  /**
+   * SWEX `unit_list[].spd` is usually base SPD at unit level (same as monster screen base),
+   * not rune total. Some exports may ship a higher value that already includes runes.
+   */
+  function swexSpdLooksLikeRuneTotal(swexSpd, baseSpd) {
+    const sw = Number(swexSpd);
+    const base = Number(baseSpd);
+    if (!Number.isFinite(sw) || !Number.isFinite(base) || base <= 0) return false;
+    return sw > base + 2;
+  }
+
+  function unitBaseSpdForSpeed(unit) {
+    if (!unit) return null;
+    const db = window.SWRM_MONSTER_DB;
+    const meta =
+      unit.meta ||
+      (db && typeof db.lookupMonster === 'function' ? db.lookupMonster(unit.masterId) : null);
+    if (db && typeof db.monsterBaseStatsAtLevel === 'function') {
+      const baseStats = db.monsterBaseStatsAtLevel(meta, unit.level);
+      const b = baseStats && Number(baseStats.spd);
+      if (Number.isFinite(b) && b > 0) return b;
+    }
+    const swex = Number(unit.stats && unit.stats.spd);
+    return Number.isFinite(swex) && swex > 0 ? swex : null;
+  }
+
+  /**
+   * Team / combat SPD: base + runes (+ Swift set) + round(base × totem%) + round(base × leader%).
+   * Uses SWEX spd as rune total only when it is clearly above scaled base.
+   * Optional spdBuffPct: +30% of that total (in-battle buff).
+   */
+  function computeUnitSpeedForTeam(unit, opts) {
+    const o = opts || {};
+    if (!unit) return null;
+    const swexSpd = Number(unit.stats && unit.stats.spd);
+    const totemPct =
+      Number(o.totemSpdPct) ||
+      (typeof getAccountTotemSpdPct === 'function' ? getAccountTotemSpdPct() : 0) ||
+      0;
+    const leaderPct = Number(o.leaderSpdPct) || 0;
+    const baseSpd = unitBaseSpdForSpeed(unit);
+    const auraBase = baseSpd != null ? baseSpd : swexSpd;
+    const auraFlat =
+      Number.isFinite(auraBase) && auraBase > 0
+        ? baseSpdAuraBonusFlat(auraBase, totemPct, leaderPct)
+        : 0;
+
+    let spd = null;
+    if (baseSpd != null) {
+      const runes = getUnitEquippedRunes(unit);
+      const runeTotal = calculateTotalStatForKey(baseSpd, runes, 'spd', unit);
+      if (swexSpdLooksLikeRuneTotal(swexSpd, baseSpd)) {
+        spd = Math.floor(swexSpd) + auraFlat;
+      } else {
+        spd = runeTotal + auraFlat;
+      }
+    } else if (Number.isFinite(swexSpd) && swexSpd > 0) {
+      spd = Math.floor(swexSpd) + auraFlat;
+    }
+    if (spd == null || !Number.isFinite(spd)) return null;
+    const buffPct = Number(o.spdBuffPct) || 0;
+    if (buffPct > 0) spd = roundStatTotal('spd', spd * (1 + buffPct / 100));
+    return roundStatTotal('spd', spd);
+  }
+
+  window.SWRM = window.SWRM || {};
+  window.SWRM.totemSpdPctFromSwexJson = totemSpdPctFromSwexJson;
+  window.SWRM.findAccountSpeedTotemBonus = findAccountSpeedTotemBonus;
+  window.SWRM.findSkyTribeTotemInJson = findSkyTribeTotemInJson;
+  window.SWRM.refreshAccountTotemFromSwex = refreshAccountTotemFromSwex;
+  window.SWRM.getAccountTotemSpdPct = getAccountTotemSpdPct;
+  window.SWRM.totemSpdPctFromLevel = totemSpdPctFromLevel;
+  window.SWRM.leaderSkillSpdPct = leaderSkillSpdPct;
+  window.SWRM.baseSpdAuraBonusFlat = baseSpdAuraBonusFlat;
+  window.SWRM.unitBaseSpdForSpeed = unitBaseSpdForSpeed;
+  window.SWRM.computeUnitSpeedForTeam = computeUnitSpeedForTeam;
 
   const TEAMS_STORAGE_KEY = 'swrm_teams_v2';
   const TEAMS_STORAGE_KEY_LEGACY = 'swrm_teams_v1';
@@ -9743,12 +10462,17 @@
     return { ok: true };
   }
 
-  /** Remove demo sample team set after user loads their own SWEX. */
+  const DEMO_TEAMS_SEED_VERSION = 3;
+  const DEMO_TEAMS_SEED_KEY = 'swrm_demo_teams_seed_v';
+
+  function isDemoTeamSetName(name) {
+    return /^demo[\s·:]/i.test(String(name || '').trim());
+  }
+
+  /** Remove all demo sample team sets after user loads their own SWEX. */
   function removeDemoTeams() {
     const state = loadTeamsState();
-    const demoSetIds = state.sets
-      .filter((s) => /^demo\s*teams$/i.test(String(s.name || '').trim()))
-      .map((s) => s.id);
+    const demoSetIds = state.sets.filter((s) => isDemoTeamSetName(s.name)).map((s) => s.id);
     if (!demoSetIds.length) return false;
     const teamIds = new Set();
     for (const sid of demoSetIds) {
@@ -9759,29 +10483,309 @@
     for (const tid of teamIds) delete state.teams[tid];
     saveTeamsState(state);
     teamsStateCache = null;
+    try {
+      localStorage.removeItem(DEMO_TEAMS_SEED_KEY);
+    } catch (e) { /* ignore */ }
     return true;
   }
 
-  /** Sample teams for demo mode only (when storage is empty). */
-  function seedDemoTeamsIfEmpty() {
-    if (typeof isUsingDemoDataset === 'function' && !isUsingDemoDataset()) return false;
-    const state = loadTeamsState();
-    if (state.sets.length > 0) return false;
-    const units = (allUnits || []).filter((u) => u && u.unitId).slice(0, 10);
-    if (units.length < 3) return false;
-    const set = createTeamSet('Demo teams');
-    const slots = units.slice(0, TEAM_SIZE_DEFAULT).map((u) => u.unitId);
-    const team = createTeamInSet(set.id, 'Example AO', TEAM_SIZE_DEFAULT);
+  function clearDemoTeamSets() {
+    return removeDemoTeams();
+  }
+
+  function shouldKeepDemoTeamSets() {
+    if (typeof userHasLoadedRealExport === 'function' && userHasLoadedRealExport()) return false;
+    return typeof isUsingDemoDataset === 'function' && isUsingDemoDataset();
+  }
+
+  /** Demo team sets only while demo dataset is active; remove when user loads real SWEX. */
+  function syncDemoTeamsWithDatasetMode() {
+    teamsStateCache = null;
+    if (shouldKeepDemoTeamSets()) {
+      if (typeof seedDemoTeamsIfEmpty === 'function') seedDemoTeamsIfEmpty();
+    } else {
+      removeDemoTeams();
+    }
+  }
+
+  function readDemoTeamsSeedVersion() {
+    try {
+      return Number(localStorage.getItem(DEMO_TEAMS_SEED_KEY)) || 0;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  function writeDemoTeamsSeedVersion(v) {
+    try {
+      localStorage.setItem(DEMO_TEAMS_SEED_KEY, String(v));
+    } catch (e) { /* ignore */ }
+  }
+
+  /**
+   * User-provided demo lineups (unit_id from data/demo.json, main roster only).
+   * Skipped: comps needing storage-only units (Zinc, Dias, Hwa, Lisa, Rakan) or near-duplicates.
+   */
+  const DEMO_TEAMS_LAYOUT = [
+    {
+      setName: 'Demo · B12',
+      teams: [
+        {
+          name: 'GB12',
+          size: 5,
+          leader: 35976386571,
+          slots: [27144694306, 35976386571, 5365490176, 31564033638, 8025980618],
+          tags: ['Demo', 'GB12'],
+        },
+        {
+          name: 'DB12',
+          size: 5,
+          leader: 12072006659,
+          slots: [12072006659, 27244867420, 27244858404, 5365490176, 30376382096],
+          tags: ['Demo', 'DB12'],
+        },
+        {
+          name: 'NB12',
+          size: 5,
+          leader: 13559060898,
+          slots: [13559060898, 15339861886, 30376925404, 26928924951, 26928923162],
+          tags: ['Demo', 'NB12'],
+        },
+        {
+          name: 'SRB12',
+          size: 5,
+          leader: 7637619578,
+          slots: [12072006659, 26915472290, 15339861886, 26928924951, 7637619578],
+          tags: ['Demo', 'SRB12'],
+        },
+        {
+          name: 'PCB12',
+          size: 5,
+          leader: 7637619578,
+          slots: [13578469034, 19588712314, 15339861886, 26928924951, 7637619578],
+          tags: ['Demo', 'PCB12'],
+        },
+      ],
+    },
+    {
+      setName: 'Demo · Essence',
+      teams: [
+        {
+          name: 'Magic Ess',
+          size: 5,
+          leader: 8838130354,
+          slots: [8838130354, 11050945835, 8611226449, 26928923162, 16139462679],
+          tags: ['Demo', 'Ess'],
+        },
+        {
+          name: 'Fire Ess',
+          size: 5,
+          leader: 16410692026,
+          slots: [19588712314, 15339861886, 26928924951, 16410692026, 15370507039],
+          tags: ['Demo', 'Ess'],
+        },
+        {
+          name: 'Water Ess',
+          size: 5,
+          leader: 8838130354,
+          slots: [11130827981, 15363394957, 8838130354, 8261783479, 16139462679],
+          tags: ['Demo', 'Ess'],
+        },
+        {
+          name: 'Light Ess',
+          size: 5,
+          leader: 5096889290,
+          slots: [8838130354, 11050945835, 8611226449, 27398455635, 5096889290],
+          tags: ['Demo', 'Ess'],
+        },
+      ],
+    },
+    {
+      setName: 'Demo · Rift',
+      teams: [
+        {
+          name: 'Rift R5 — Loren',
+          size: 6,
+          leader: 11130827981,
+          slots: [19588712314, 27064855468, 5365490176, 26915472290, 11130827981, 8600073708],
+          tags: ['Demo', 'Rift'],
+        },
+        {
+          name: 'Rift R5 — Bastet',
+          size: 6,
+          leader: 8151537453,
+          slots: [8151537453, 6489936246, 16410692026, 26961999021, 26881992509, 13578469034],
+          tags: ['Demo', 'Rift'],
+        },
+      ],
+    },
+    {
+      setName: 'Demo · Beasts',
+      teams: [
+        {
+          name: 'Fire Beast',
+          size: 6,
+          leader: 13578469034,
+          slots: [8600073708, 12477086251, 15394260876, 26881992509, 15370507039, 13578469034],
+          tags: ['Demo', 'Beast'],
+        },
+      ],
+    },
+    {
+      setName: 'Demo · Arena',
+      teams: [
+        {
+          name: 'AO — Seara',
+          size: 4,
+          leader: 8524048104,
+          slots: [9489707897, 8151537453, 5630889580, 8524048104],
+          tags: ['Demo', 'AO'],
+          shareInProfile: true,
+        },
+        {
+          name: 'AO — Trinity',
+          size: 4,
+          leader: 30419927866,
+          slots: [9489707897, 6946053164, 30419927866, 6608483306],
+          tags: ['Demo', 'AO'],
+          shareInProfile: true,
+        },
+        {
+          name: 'AO — Zaiross',
+          size: 4,
+          leader: 6608483306,
+          slots: [9489707897, 6946053164, 26882030840, 6608483306],
+          tags: ['Demo', 'AO'],
+          shareInProfile: true,
+        },
+        {
+          name: 'AD',
+          size: 4,
+          leader: 6076074940,
+          slots: [15661874898, 28035029184, 4667273474, 6076074940],
+          tags: ['Demo', 'AD'],
+          shareInProfile: true,
+        },
+      ],
+    },
+    {
+      setName: 'Demo · GvG',
+      teams: [
+        {
+          name: 'GD — Seara',
+          size: 3,
+          leader: 8524048104,
+          slots: [5612043734, 8524048104, 5096889290],
+          tags: ['Demo', 'GD'],
+        },
+        {
+          name: 'GD — Galleon',
+          size: 3,
+          leader: 6946053164,
+          slots: [9489707897, 6946053164, 6608483306],
+          tags: ['Demo', 'GD'],
+        },
+        {
+          name: 'GD — Martina',
+          size: 3,
+          leader: 27658693773,
+          slots: [12072006659, 27658693773, 13633460962],
+          tags: ['Demo', 'GD'],
+        },
+        {
+          name: 'GD — Khmun',
+          size: 3,
+          leader: 9041774297,
+          slots: [16399615784, 15335072189, 9041774297],
+          tags: ['Demo', 'GD'],
+        },
+      ],
+    },
+    {
+      setName: 'Demo · Dimension',
+      teams: [
+        {
+          name: 'Dim R5 1',
+          size: 5,
+          leader: 30376382096,
+          slots: [30376382096, 6946053164, 27244858404, 5365490176, 5404037534],
+          tags: ['Demo', 'Dim'],
+        },
+        {
+          name: 'Dim R5 3',
+          size: 5,
+          leader: 6115665171,
+          slots: [6115665171, 13578469034, 26992216401, 27064855468, 27398455635],
+          tags: ['Demo', 'Dim'],
+        },
+      ],
+    },
+  ];
+
+  function rosterHasDemoUnits(slotIds) {
+    const need = slotIds.filter((id) => id != null && Number(id) > 0);
+    if (!need.length) return false;
+    const have = new Set((allUnits || []).map((u) => Number(u.unitId)));
+    return need.every((id) => have.has(Number(id)));
+  }
+
+  function seedDemoTeamInSet(setId, spec) {
+    const size = clampTeamSize(spec.size || (spec.slots && spec.slots.length) || TEAM_SIZE_DEFAULT);
+    const slots = normalizeTeamSlots(spec.slots, size);
+    if (!rosterHasDemoUnits(slots)) return false;
+    const team = createTeamInSet(setId, spec.name, size);
     if (!team) return false;
+    const leader = spec.leader != null ? Number(spec.leader) : null;
+    const leaderInSlots = slots.some((id) => Number(id) === leader);
     updateTeam(team.id, {
       slots,
-      leaderUnitId: slots[0] || null,
-      shareInProfile: true,
-      tags: ['Demo'],
-      notes: 'Sample team from demo roster — edit or replace anytime.',
+      size,
+      leaderUnitId:
+        Number.isFinite(leader) && leader > 0 && leaderInSlots
+          ? leader
+          : slots.find((id) => id != null) || null,
+      shareInProfile: spec.shareInProfile !== false,
+      tags: spec.tags || ['Demo'],
+      notes: spec.notes || '',
     });
     return true;
   }
+
+  /** Sample teams for demo mode (curated sets; re-seeds when layout version bumps). */
+  function seedDemoTeamsIfEmpty() {
+    if (!shouldKeepDemoTeamSets()) return false;
+    if (!allUnits || allUnits.length < 3) return false;
+
+    const state = loadTeamsState();
+    const seededVer = readDemoTeamsSeedVersion();
+    const hasCurrentDemo =
+      seededVer >= DEMO_TEAMS_SEED_VERSION &&
+      state.sets.some((s) => isDemoTeamSetName(s.name));
+    if (hasCurrentDemo) return false;
+
+    const hasUserSets = state.sets.some((s) => !isDemoTeamSetName(s.name));
+    if (hasUserSets) return false;
+
+    clearDemoTeamSets();
+
+    let created = 0;
+    for (const block of DEMO_TEAMS_LAYOUT) {
+      const set = createTeamSet(block.setName);
+      if (!set) continue;
+      for (const spec of block.teams) {
+        if (seedDemoTeamInSet(set.id, spec)) created += 1;
+      }
+    }
+    if (created > 0) {
+      writeDemoTeamsSeedVersion(DEMO_TEAMS_SEED_VERSION);
+      teamsStateCache = null;
+    }
+    return created > 0;
+  }
+
+  window.SWRM = window.SWRM || {};
+  window.SWRM.syncDemoTeamsWithDatasetMode = syncDemoTeamsWithDatasetMode;
+  window.SWRM.removeDemoTeams = removeDemoTeams;
 
   let teamsUiBound = false;
   let teamsEditingTeamId = null;
@@ -9802,18 +10806,48 @@
     return u.displayName || `#${u.masterId}`;
   }
 
-  function teamUnitPortrait(unitId, masterIdFallback) {
+  function teamUnitImageFile(unitId, masterIdFallback) {
     const u = teamUnitRecord(unitId);
     const db = window.SWRM_MONSTER_DB;
-    if (!db) return '';
     const masterId = u?.masterId ?? masterIdFallback;
-    const file =
-      (u && u.imageFilename) ||
-      (masterId && typeof db.imageFilename === 'function' ? db.imageFilename(masterId) : '');
-    if (!file) return '';
-    if (typeof db.portraitUrl === 'function') return db.portraitUrl(file);
-    if (typeof db.monsterImageUrl === 'function') return db.monsterImageUrl(file);
+    if (u && u.imageFilename) return u.imageFilename;
+    if (db && masterId && typeof db.imageFilename === 'function') {
+      return db.imageFilename(masterId) || '';
+    }
     return '';
+  }
+
+  async function ensureTeamsUnitCache() {
+    if (!allUnits || !allUnits.length) return;
+    const db = window.SWRM_MONSTER_DB;
+    if (db && typeof db.loadMonsterIndex === 'function') {
+      try {
+        await db.loadMonsterIndex();
+        if (typeof db.indexCount === 'function' && db.indexCount() === 0) {
+          await db.loadMonsterIndex({ force: true });
+        }
+      } catch (e) { /* ignore */ }
+    }
+    if (monstersEnrichedCache.length) return;
+    monstersEnrichedCache = allUnits.map((u) => {
+      const meta = db ? db.lookupMonster(u.masterId) : null;
+      return {
+        ...u,
+        meta,
+        metaElement: meta && meta.element ? meta.element : '',
+        displayName: db ? db.monsterDisplayName(u.masterId) : `#${u.masterId}`,
+        imageFilename: meta && meta.image_filename ? meta.image_filename : '',
+      };
+    });
+  }
+
+  function bindTeamsCardPortraits(root) {
+    const host = root || document.getElementById('teams-card-grid');
+    if (!host || typeof bindMonsterPortrait !== 'function') return;
+    host.querySelectorAll('img.team-card__portrait[data-img-file]').forEach((img) => {
+      const file = img.getAttribute('data-img-file');
+      if (file) bindMonsterPortrait(img, file);
+    });
   }
 
   function teamRuneStatus(unitId) {
@@ -9822,6 +10856,78 @@
     if (u.hasFullRunes) return 'ready';
     if (u.equippedCount > 0) return 'partial';
     return 'unruned';
+  }
+
+  function teamLeaderSpdPct(team) {
+    const lid = team && team.leaderUnitId != null ? Number(team.leaderUnitId) : null;
+    if (!Number.isFinite(lid) || lid <= 0) return 0;
+    const u = teamUnitRecord(lid);
+    if (!u) return 0;
+    const meta =
+      u.meta ||
+      (window.SWRM_MONSTER_DB && typeof window.SWRM_MONSTER_DB.lookupMonster === 'function'
+        ? window.SWRM_MONSTER_DB.lookupMonster(u.masterId)
+        : null);
+    const ls = meta && meta.leader_skill ? meta.leader_skill : null;
+    if (typeof leaderSkillSpdPct === 'function') return leaderSkillSpdPct(ls);
+    if (!ls) return 0;
+    const attr = String(ls.attribute || '').toLowerCase();
+    if (!attr.includes('speed')) return 0;
+    const n = Number(ls.amount);
+    return Number.isFinite(n) && n > 0 ? n : 0;
+  }
+
+  function teamTotemSpdPct() {
+    if (typeof getAccountTotemSpdPct === 'function') return getAccountTotemSpdPct();
+    if (window.SWRM && typeof window.SWRM.getAccountTotemSpdPct === 'function') {
+      return window.SWRM.getAccountTotemSpdPct();
+    }
+    const json = typeof activeSwexJson !== 'undefined' ? activeSwexJson : null;
+    if (typeof totemSpdPctFromSwexJson === 'function') return totemSpdPctFromSwexJson(json);
+    if (window.SWRM && typeof window.SWRM.totemSpdPctFromSwexJson === 'function') {
+      return window.SWRM.totemSpdPctFromSwexJson(json);
+    }
+    return 0;
+  }
+
+  function teamUnitDisplaySpeed(unitId, team) {
+    const u = teamUnitRecord(unitId);
+    if (!u) return null;
+    const opts = {
+      totemSpdPct: teamTotemSpdPct(),
+      leaderSpdPct: teamLeaderSpdPct(team),
+    };
+    const calc =
+      (window.SWRM && typeof window.SWRM.computeUnitSpeedForTeam === 'function'
+        ? window.SWRM.computeUnitSpeedForTeam
+        : null) ||
+      (typeof computeUnitSpeedForTeam === 'function' ? computeUnitSpeedForTeam : null);
+    if (calc) return calc(u, opts);
+    const sw = Number(u.stats && u.stats.spd);
+    return Number.isFinite(sw) && sw > 0 ? Math.floor(sw) : null;
+  }
+
+  function computeTeamCardStats(team) {
+    const slots = team.slots || [];
+    let filled = 0;
+    let fullSix = 0;
+    for (const uid of slots) {
+      if (!uid) continue;
+      const u = teamUnitRecord(uid);
+      if (!u) continue;
+      filled += 1;
+      if (u.hasFullRunes) fullSix += 1;
+    }
+    return { filled, slotCount: slots.length, fullSix };
+  }
+
+  function buildTeamCardMeta(team, t) {
+    const st = computeTeamCardStats(team);
+    if (!st.filled) return '';
+    const tpl = t.teamsCardReadiness || '{full}/{filled} with 6/6 runes';
+    return `<p class="team-card__meta">${escapeHtml(
+      tpl.replace(/\{full\}/g, String(st.fullSix)).replace(/\{filled\}/g, String(st.filled)),
+    )}</p>`;
   }
 
   function buildTeamsUnitOptions(selectedId) {
@@ -9851,13 +10957,20 @@
         const leader = team.leaderUnitId != null && Number(team.leaderUnitId) === Number(uid);
         const missing = uid && !teamUnitRecord(uid) && !masterIds[i];
         const runeSt = uid ? teamRuneStatus(uid) : '';
-        const url = uid ? teamUnitPortrait(uid, masterIds[i]) : '';
-        const inner = url
-          ? `<img src="${escapeHtml(url)}" alt="" width="40" height="40" loading="lazy" decoding="async" />`
+        const imgFile = uid ? teamUnitImageFile(uid, masterIds[i]) : '';
+        const spd = uid ? teamUnitDisplaySpeed(uid, team) : null;
+        const spdBadge =
+          spd != null
+            ? `<span class="team-card__spd" title="${escapeHtml(t.teamsSlotSpd || 'Speed')}">${escapeHtml(String(spd))}</span>`
+            : '';
+        const inner = imgFile
+          ? `<img class="team-card__portrait" data-img-file="${escapeAttr(imgFile)}" alt="" width="52" height="52" loading="lazy" decoding="async" />`
           : '<span class="team-card__slot-empty">+</span>';
-        return `<div class="team-card__slot${leader ? ' team-card__slot--leader' : ''}${missing ? ' team-card__slot--missing' : ''}" data-slot-idx="${i}" title="${uid ? escapeHtml(teamUnitLabel(uid)) : ''}">
+        const tip = uid ? escapeHtml(teamUnitLabel(uid)) : '';
+        return `<div class="team-card__slot${leader ? ' team-card__slot--leader' : ''}${missing ? ' team-card__slot--missing' : ''}" data-slot-idx="${i}" title="${tip}">
           ${leader ? '<span class="team-card__crown" aria-hidden="true">👑</span>' : ''}
           ${inner}
+          ${spdBadge}
           ${runeSt === 'ready' ? '<span class="team-card__rune-ok" title="6/6 runes">✓</span>' : ''}
         </div>`;
       })
@@ -9908,6 +11021,7 @@
         ${actions}
       </header>
       ${buildTeamSlotIcons(team, t)}
+      ${buildTeamCardMeta(team, t)}
       ${tags ? `<div class="team-card__tags">${tags}</div>` : ''}
       ${notes}
     </article>`;
@@ -10035,9 +11149,10 @@
     renderTeamsPanel();
   }
 
-  function renderTeamsPanel() {
+  async function renderTeamsPanel() {
     const shell = document.getElementById('teams-shell');
     if (!shell) return;
+    if (typeof syncDemoTeamsWithDatasetMode === 'function') syncDemoTeamsWithDatasetMode();
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const ro = typeof isShareReadOnly === 'function' && isShareReadOnly();
     const sharePayload = getTeamsShareViewPayload();
@@ -10081,7 +11196,9 @@
     if (createBtn) createBtn.disabled = !set;
 
     renderTeamsSetList(state, t);
+    await ensureTeamsUnitCache();
     renderTeamsCardGrid(set, state, t);
+    bindTeamsCardPortraits(document.getElementById('teams-card-grid'));
 
     shell.querySelectorAll('[data-teams-readonly-hide]').forEach((el) => {
       el.hidden = ro;
@@ -10141,6 +11258,7 @@
       <h3 class="teams-share-view__title">${escapeHtml(t.teamsShareViewTitle || 'Shared teams')}</h3>
       ${blocks || `<p class="teams-share-view__empty">${escapeHtml(t.teamsShareViewEmpty || 'No public teams in this profile.')}</p>`}
     </div>`;
+    bindTeamsCardPortraits(view);
   }
 
   function bindTeamsUi() {
@@ -10346,7 +11464,7 @@
 
   function initTeamsPanel() {
     bindTeamsUi();
-    renderTeamsPanel();
+    void renderTeamsPanel();
   }
 
   function fmtRuneStatVal(type, val, slotNo) {
@@ -10657,18 +11775,29 @@
   function bindMonsterPortrait(img, imageFilename) {
     if (!img || !imageFilename || !window.SWRM_MONSTER_DB) return;
     const db = window.SWRM_MONSTER_DB;
+    const la = window.SWRM_LOCAL_ASSETS;
     let base = 0;
     img.onerror = () => {
       base += 1;
       if (base < db.IMG_BASES.length) {
-        img.src = db.monsterImageUrl(imageFilename, base);
+        const url =
+          la && typeof la.monsterPortraitRemoteUrl === 'function'
+            ? la.monsterPortraitRemoteUrl(imageFilename, base)
+            : db.monsterImageUrl(imageFilename, base);
+        img.src = url;
       } else {
         img.removeAttribute('src');
         img.classList.add('monsters-card__img--placeholder');
       }
     };
     img.referrerPolicy = 'no-referrer';
-    img.src = db.monsterImageUrl(imageFilename, 0);
+    const primary = db.monsterImageUrl(imageFilename, 0);
+    const fb =
+      la && typeof la.monsterPortraitFallbackUrl === 'function'
+        ? la.monsterPortraitFallbackUrl(imageFilename)
+        : '';
+    if (fb && fb !== primary) img.dataset.fallback = fb;
+    img.src = primary;
   }
 
   function elementClass(el) {
@@ -11297,6 +12426,9 @@
       )
       .join('');
     bindMonstersBoxOverview();
+    if (window.SWRM && typeof window.SWRM.renderAccountReviewStrip === 'function') {
+      window.SWRM.renderAccountReviewStrip();
+    }
   }
 
   function bindMonstersBoxOverview() {
@@ -11854,9 +12986,14 @@
         : `${s.level}/${s.maxLevel}`;
     const url =
       skillDb && typeof skillDb.skillIconUrl === 'function' ? skillDb.skillIconUrl(s.skillId) : '';
+    const fb =
+      skillDb && typeof skillDb.skillIconFallbackUrl === 'function'
+        ? skillDb.skillIconFallbackUrl(s.skillId)
+        : '';
     const cdCls = (s.deficitToCooldown || 0) > 0 ? ' skill-planner__skill-chip--cd' : '';
+    const fbAttr = fb ? ` data-fallback="${escapeHtml(fb)}"` : '';
     const img = url
-      ? `<img class="skill-planner__skill-chip-icon" src="${escapeHtml(url)}" alt="" width="28" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.classList.add('is-broken')" />`
+      ? `<img class="skill-planner__skill-chip-icon" src="${escapeHtml(url)}"${fbAttr} alt="" width="28" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="var f=this.dataset.fallback;if(f){this.src=f;this.removeAttribute('data-fallback');}else{this.classList.add('is-broken');}" />`
       : '<span class="skill-planner__skill-chip-icon skill-planner__skill-chip-icon--empty" aria-hidden="true"></span>';
     return `<span class="skill-planner__skill-chip${cdCls}" data-skill-id="${escapeHtml(String(s.skillId))}" data-skill-level="${escapeHtml(String(s.level))}" tabindex="0">${img}<span class="skill-planner__skill-chip-lv">${escapeHtml(label)}</span></span>`;
   }
@@ -11979,7 +13116,14 @@
       typeof skillDb.formatSkillProgressTooltip === 'function'
         ? skillDb.formatSkillProgressTooltip(skillId, level)
         : '';
-    if (text) {
+    const html =
+      typeof skillDb.formatSkillProgressTooltipHtml === 'function'
+        ? skillDb.formatSkillProgressTooltipHtml(skillId, level)
+        : '';
+    if (html) {
+      setSwrmFloatTipTarget(chip, '', { html });
+      chip.setAttribute('aria-label', text || '');
+    } else if (text) {
       setSwrmFloatTipTarget(chip, text);
       chip.setAttribute('aria-label', text);
     }
@@ -12109,11 +13253,9 @@
     const queueWrap = document.getElementById('skill-planner-queue');
     const stuckWrap = document.getElementById('skill-planner-stuck');
     const emptyEl = document.getElementById('skill-planner-empty');
-    const lead = document.getElementById('skill-planner-lead');
     if (!root || !summary || !queueWrap || !stuckWrap) return;
 
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-    if (lead) lead.textContent = t.skillPlannerLead || '';
 
     bindSkillPlannerPanel(root);
     syncSkillPlannerExcludeStorageButton(t);
@@ -12180,211 +13322,11 @@
     }
   }
 
+  window.SWRM = window.SWRM || {};
+  window.SWRM.computeSkillPlannerStats = computeSkillPlannerStats;
+  window.SWRM.filterPlannerRosterUnits = filterPlannerRosterUnits;
+
   skillPlannerExcludeStorage = readSkillPlannerExcludeStorage();
-
-//
-// SWEX does not ship reliable final combat totals on units; we derive Total from:
-//   1) Base at unit level — SWARFARM monster base/max stats scaled to u.level
-//   2) Equipped runes — mains, innate (prefix), substats (+ grind)
-//   3) Active rune set bonuses (2-/4-piece panel stats)
-//   4) Artifacts / relics — only confirmed pri effects (flat HP/ATK/DEF; relic % HP/ATK/DEF)
-//
-// HP / ATK / DEF / SPD: flat bonuses stack; % bonuses apply to base (runes + set %).
-// CRI Rate / CRI Dmg / RES / ACC: % bonuses stack additively on base (game stat screen).
-//
-// +Gear column = total − base. Not included: glory, leader/passive, artifact combat subs.
-  const PCT_STAT_TYPES = new Set([2, 4, 6, 9, 10, 11, 12]);
-  const ADDITIVE_PCT_KEYS = new Set(['critRate', 'critDmg', 'res', 'acc']);
-
-  /** Panel stat bonuses when a set threshold is active (one rule per set name). */
-  const RUNE_SET_PANEL_BONUSES = {
-    Energy: { need: 2, hpPct: 15 },
-    Guard: { need: 2, defPct: 15 },
-    Swift: { need: 4, spdFlat: 25 },
-    Blade: { need: 2, critRatePct: 12 },
-    Rage: { need: 4, critDmgPct: 40 },
-    Focus: { need: 2, accPct: 20 },
-    Endure: { need: 2, resPct: 20 },
-    Fatal: { need: 4, atkPct: 35 },
-    Despair: { need: 4, accPct: 25 },
-    Vampire: { need: 4, hpPct: 35 },
-    Fight: { need: 2, atkPct: 8 },
-    Determination: { need: 2, defPct: 8 },
-    Enhance: { need: 2, hpPct: 8 },
-    Accuracy: { need: 2, accPct: 20 },
-    Tolerance: { need: 2, resPct: 20 },
-  };
-
-  function statKeyForTypeId(typeId) {
-    const id = Number(typeId);
-    if (id === 1 || id === 2) return 'hp';
-    if (id === 3 || id === 4) return 'atk';
-    if (id === 5 || id === 6) return 'def';
-    if (id === 8) return 'spd';
-    if (id === 9) return 'critRate';
-    if (id === 10) return 'critDmg';
-    if (id === 11) return 'res';
-    if (id === 12) return 'acc';
-    return null;
-  }
-
-  function isPercentBonus(typeId, slotNo) {
-    const id = Number(typeId);
-    const slot = Number(slotNo);
-    if (Number.isFinite(slot) && slot >= 1 && slot <= 6) {
-      if (window.SWRM && typeof window.SWRM.isMainStatFlat === 'function') {
-        return !window.SWRM.isMainStatFlat(slot, id);
-      }
-      return slot === 2 || slot === 4 || slot === 6;
-    }
-    return PCT_STAT_TYPES.has(id);
-  }
-
-  function subVal(sub) {
-    if (window.SWRM && typeof window.SWRM.subRuneValue === 'function') {
-      return window.SWRM.subRuneValue(sub);
-    }
-    return (Number(sub?.val) || 0) + (Number(sub?.grind) || 0);
-  }
-
-  function sumRuneBonusesForKey(statKey, runesArray) {
-    let flat = 0;
-    let pct = 0;
-    for (const rune of runesArray || []) {
-      if (!rune) continue;
-      const add = (typeId, value, slotNo) => {
-        const key = statKeyForTypeId(typeId);
-        const v = Number(value);
-        if (key !== statKey || !Number.isFinite(v) || v === 0) return;
-        if (isPercentBonus(typeId, slotNo)) pct += v;
-        else flat += v;
-      };
-      if (rune.mainType != null && rune.mainVal != null) {
-        add(rune.mainType, rune.mainVal, rune.slot);
-      }
-      if (rune.innate_type && rune.innate_val) {
-        add(rune.innate_type, rune.innate_val, null);
-      }
-      for (const s of rune.substats || []) {
-        if (s && s.source === 'innate') continue;
-        add(s.type, subVal(s), null);
-      }
-    }
-    return { flat, pct };
-  }
-
-  function countRuneSets(runesArray) {
-    const counts = {};
-    for (const rune of runesArray || []) {
-      if (!rune || !rune.setName) continue;
-      counts[rune.setName] = (counts[rune.setName] || 0) + 1;
-    }
-    return counts;
-  }
-
-  function sumSetBonusesForKey(statKey, runesArray) {
-    let flat = 0;
-    let pct = 0;
-    const counts = countRuneSets(runesArray);
-    for (const [setName, total] of Object.entries(counts)) {
-      const rule = RUNE_SET_PANEL_BONUSES[setName];
-      if (!rule || total < rule.need) continue;
-      if (rule.spdFlat && statKey === 'spd') flat += rule.spdFlat;
-      if (rule.hpPct && statKey === 'hp') pct += rule.hpPct;
-      if (rule.atkPct && statKey === 'atk') pct += rule.atkPct;
-      if (rule.defPct && statKey === 'def') pct += rule.defPct;
-      if (rule.critRatePct && statKey === 'critRate') pct += rule.critRatePct;
-      if (rule.critDmgPct && statKey === 'critDmg') pct += rule.critDmgPct;
-      if (rule.resPct && statKey === 'res') pct += rule.resPct;
-      if (rule.accPct && statKey === 'acc') pct += rule.accPct;
-    }
-    return { flat, pct };
-  }
-
-  function sumConfirmedGearBonusesForKey(statKey, unit) {
-    if (!unit || !window.SWRM || typeof window.SWRM.sumGearBonusesForKey !== 'function') {
-      return { flat: 0, pct: 0 };
-    }
-    return window.SWRM.sumGearBonusesForKey(statKey, unit);
-  }
-
-  function calculateTotalStatForKey(base, runesArray, statKey, unit) {
-    const b = Number(base);
-    const baseNum = Number.isFinite(b) ? b : 0;
-    const rune = sumRuneBonusesForKey(statKey, runesArray);
-    const set = sumSetBonusesForKey(statKey, runesArray);
-    const gear = sumConfirmedGearBonusesForKey(statKey, unit);
-    const flat = rune.flat + set.flat + gear.flat;
-    const pct = rune.pct + set.pct + gear.pct;
-    let total = baseNum + flat;
-    if (pct) {
-      if (ADDITIVE_PCT_KEYS.has(statKey)) total += pct;
-      else total += (baseNum * pct) / 100;
-    }
-    return roundStatTotal(statKey, total);
-  }
-
-  /** Match in-game stat screen (HP/ATK/DEF ceil; SPD floor; % round). */
-  function roundStatTotal(statKey, total) {
-    const n = Number(total);
-    if (!Number.isFinite(n)) return 0;
-    if (statKey === 'spd') return Math.floor(n + 1e-6);
-    if (statKey === 'hp' || statKey === 'atk' || statKey === 'def') {
-      return Math.ceil(n - 1e-9);
-    }
-    return Math.round(n);
-  }
-
-  function displayStatValue(statKey, value, isPct) {
-    const n = roundStatTotal(statKey, value);
-    return isPct ? `${n}%` : String(n);
-  }
-
-  function reconcileTotalWithSwex(statKey, computedTotal, unit) {
-    const s = unit && unit.stats;
-    if (!s) return computedTotal;
-    const swex = Number(s[statKey]);
-    if (!Number.isFinite(swex)) return computedTotal;
-    const comp = roundStatTotal(statKey, computedTotal);
-    const sw = roundStatTotal(statKey, swex);
-    if (Math.abs(sw - comp) <= 1) return sw;
-    return comp;
-  }
-
-  function calculateMonsterStatBreakdown(baseStats, unit) {
-    const runes = getUnitEquippedRunes(unit);
-    const keys = ['hp', 'atk', 'def', 'spd', 'critRate', 'critDmg', 'res', 'acc'];
-    const out = {};
-    for (const key of keys) {
-      const b = baseStats && Number.isFinite(Number(baseStats[key])) ? Number(baseStats[key]) : 0;
-      const baseRounded = roundStatTotal(key, b);
-      let total = calculateTotalStatForKey(b, runes, key, unit);
-      total = reconcileTotalWithSwex(key, total, unit);
-      const isPct = ADDITIVE_PCT_KEYS.has(key);
-      let bonus = total - baseRounded;
-      if (!isPct) bonus = Math.max(0, bonus);
-      else bonus = Math.max(0, Math.round(bonus));
-      out[key] = {
-        base: baseRounded,
-        bonus,
-        total,
-        isPct,
-      };
-    }
-    return out;
-  }
-
-  function getUnitEquippedRunes(u) {
-    if (!u || !Array.isArray(u.runeSlots)) return [];
-    return u.runeSlots.map((s) => s && s.rune).filter(Boolean);
-  }
-
-  function calculateMonsterStatTotals(baseStats, unit) {
-    const bd = calculateMonsterStatBreakdown(baseStats, unit);
-    const totals = {};
-    for (const key of Object.keys(bd)) totals[key] = bd[key].total;
-    return totals;
-  }
 
   function gearEffectLines(gear, t) {
     const lines = [];
@@ -12722,6 +13664,17 @@
     }
     return '';
   }
+
+  function swarfarmSkillIconFallback(skillId) {
+    const db = window.SWRM_SKILL_DB;
+    if (db && typeof db.skillIconFallbackUrl === 'function') {
+      return db.skillIconFallbackUrl(skillId) || '';
+    }
+    return '';
+  }
+
+  const SKILL_IMG_ONERROR =
+    'onerror="var f=this.dataset.fallback;if(f){this.src=f;this.removeAttribute(\'data-fallback\');}else{this.hidden=true;}"';
 
   function hydrateMonsterSkillIcons(container) {
     const db = window.SWRM_SKILL_DB;
@@ -13127,14 +14080,22 @@
 
   function buildSkillTileHtml(s, skillDb) {
     const url = swarfarmSkillIconUrl(s.skillId);
+    const fb = swarfarmSkillIconFallback(s.skillId);
     const label = skillDb && s.upgradeable !== false ? skillDb.formatSkillLevelDetail(s) : '';
+    const fbAttr = fb ? ' data-fallback="' + escapeHtml(fb) + '"' : '';
     const img = url
       ? '<img class="monsters-detail__skill-img" src="' +
         escapeHtml(url) +
-        '" alt="" width="40" height="40" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.hidden=true" />'
+        '"' +
+        fbAttr +
+        ' alt="" width="40" height="40" loading="lazy" decoding="async" referrerpolicy="no-referrer" ' +
+        SKILL_IMG_ONERROR +
+        ' />'
       : '<img class="monsters-detail__skill-img" hidden data-skill-id="' +
         escapeHtml(String(s.skillId)) +
-        '" alt="" width="40" height="40" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.hidden=true" />';
+        '" alt="" width="40" height="40" loading="lazy" decoding="async" referrerpolicy="no-referrer" ' +
+        SKILL_IMG_ONERROR +
+        ' />';
     const overlay = label
       ? '<span class="monsters-detail__skill-lv-overlay">' + escapeHtml(label) + '</span>'
       : '';
@@ -13153,15 +14114,47 @@
   function resolveLeaderSkillTile(leaderSkill) {
     if (!leaderSkill) return null;
     const db = window.SWRM_MONSTER_DB;
+    const skillDb = window.SWRM_SKILL_DB;
+    const sk = leaderSkill.skill;
+
+    if (skillDb && sk) {
+      const sid = Number(sk.com2us_id ?? sk.com2usId ?? leaderSkill.com2us_id ?? leaderSkill.id);
+      if (Number.isFinite(sid) && sid > 0 && typeof skillDb.skillIconUrl === 'function') {
+        const url = skillDb.skillIconUrl(sid);
+        if (url) {
+          const fallback =
+            typeof skillDb.skillIconFallbackUrl === 'function'
+              ? skillDb.skillIconFallbackUrl(sid)
+              : '';
+          return { url, fallback };
+        }
+      }
+      const fn = sk.icon_filename ? String(sk.icon_filename) : '';
+      if (fn) {
+        const la = window.SWRM_LOCAL_ASSETS;
+        const url =
+          la && typeof la.resolveSkillIconUrl === 'function'
+            ? la.resolveSkillIconUrl(fn)
+            : db && typeof db.swarfarmAssetUrl === 'function'
+              ? db.swarfarmAssetUrl(`static/herders/images/skills/${fn}`)
+              : '';
+        if (url) {
+          const fallback =
+            la && typeof la.skillIconFallbackUrl === 'function' ? la.skillIconFallbackUrl(fn) : '';
+          return { url, fallback };
+        }
+      }
+    }
+
     if (db && typeof db.leaderSkillIconUrl === 'function') {
       const url = db.leaderSkillIconUrl(leaderSkill);
-      if (url) return { url };
-    }
-    const sk = leaderSkill.skill;
-    if (sk && sk.icon_filename && db && typeof db.swarfarmAssetUrl === 'function') {
-      return {
-        url: db.swarfarmAssetUrl(`static/herders/images/skills/${sk.icon_filename}`),
-      };
+      if (url) {
+        const fallback =
+          typeof db.leaderSkillIconRemoteUrl === 'function'
+            ? db.leaderSkillIconRemoteUrl(leaderSkill)
+            : '';
+        return { url, fallback };
+      }
     }
     return null;
   }
@@ -13204,24 +14197,24 @@
     if (!tile || !skillId || typeof setSwrmFloatTipTarget !== 'function') return false;
     const db = window.SWRM_SKILL_DB;
     if (!db) return false;
-    let html =
-      typeof db.formatSkillProgressTooltipHtml === 'function'
-        ? db.formatSkillProgressTooltipHtml(skillId, level)
-        : '';
-    let text =
-      !html && typeof db.formatSkillProgressTooltip === 'function'
+    const text =
+      typeof db.formatSkillProgressTooltip === 'function'
         ? db.formatSkillProgressTooltip(skillId, level)
         : typeof db.formatSkillTooltip === 'function'
           ? db.formatSkillTooltip(skillId, level)
           : '';
-    if (text && !/^Skill \d+/.test(text)) {
-      setSwrmFloatTipTarget(tile, text);
-      tile.setAttribute('aria-label', text);
-      return true;
-    }
+    const html =
+      typeof db.formatSkillProgressTooltipHtml === 'function'
+        ? db.formatSkillProgressTooltipHtml(skillId, level)
+        : '';
     if (html) {
       setSwrmFloatTipTarget(tile, '', { html });
       tile.setAttribute('aria-label', text || tile.getAttribute('aria-label') || '');
+      return true;
+    }
+    if (text && !/^Skill \d+/.test(text)) {
+      setSwrmFloatTipTarget(tile, text);
+      tile.setAttribute('aria-label', text);
       return true;
     }
     return false;
@@ -13308,10 +14301,16 @@
     }
     const leader = resolveLeaderSkillTile(leaderSkill);
     const leaderTip = escapeHtml(formatLeaderSkillTooltip(leaderSkill, t));
+    const leaderFbAttr =
+      leader && leader.fallback ? ' data-fallback="' + escapeHtml(leader.fallback) + '"' : '';
     const leaderImg = leader && leader.url
       ? '<img class="monsters-detail__skill-img" src="' +
         escapeHtml(leader.url) +
-        '" alt="" width="40" height="40" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.hidden=true" />'
+        '"' +
+        leaderFbAttr +
+        ' alt="" width="40" height="40" loading="lazy" decoding="async" referrerpolicy="no-referrer" ' +
+        SKILL_IMG_ONERROR +
+        ' />'
       : '<span class="monsters-detail__skill-img monsters-detail__skill-img--ph" aria-hidden="true"></span>';
     const leaderHtml =
       '<div class="monsters-detail__skills-leader">' +
@@ -13573,7 +14572,14 @@
 
     if (anchorEl) positionMonstersDetailFloat(anchorEl);
 
-    if (db && typeof db.fetchMonsterMetaForDetail === 'function') {
+    const needsApiFetch =
+      db &&
+      typeof db.fetchMonsterMetaForDetail === 'function' &&
+      (!lookupRow ||
+        typeof db.monsterHasBundledDetail !== 'function' ||
+        !db.monsterHasBundledDetail(lookupRow));
+
+    if (needsApiFetch) {
       db.fetchMonsterMetaForDetail(u.masterId).then((row) => {
         if (!row || !body.isConnected) return;
         db.mergeMonsterMetaIntoCache(u.masterId, row);

@@ -138,7 +138,8 @@
     markUserLoadedRealExport();
     if (typeof purgeDemoStorage === 'function') await purgeDemoStorage();
     if (typeof scrubDemoFromUserSlots === 'function') await scrubDemoFromUserSlots();
-    if (typeof removeDemoTeams === 'function') removeDemoTeams();
+    if (typeof syncDemoTeamsWithDatasetMode === 'function') syncDemoTeamsWithDatasetMode();
+    else if (typeof removeDemoTeams === 'function') removeDemoTeams();
     syncDemoBannerVisibility();
     document.getElementById('upload-prompt').classList.add('hidden');
   }
@@ -148,6 +149,75 @@
     showMainTab('dashboard', { writeHash: true });
   }
 
+  function syncHeaderLangMenu() {
+    const select = document.getElementById('app-language');
+    const wrap = document.getElementById('header-lang-wrap');
+    const btn = document.getElementById('header-lang-btn');
+    const menu = document.getElementById('header-lang-menu');
+    if (!select || !wrap || !menu) return;
+    select.value = currentLang;
+    menu.querySelectorAll('[data-lang]').forEach((opt) => {
+      const on = opt.dataset.lang === currentLang;
+      opt.classList.toggle('is-active', on);
+      opt.setAttribute('aria-checked', on ? 'true' : 'false');
+    });
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    if (btn) {
+      btn.title = t.language || 'Language';
+      btn.setAttribute('aria-label', t.language || 'Language');
+    }
+  }
+
+  function closeHeaderLangMenu() {
+    const wrap = document.getElementById('header-lang-wrap');
+    const btn = document.getElementById('header-lang-btn');
+    const menu = document.getElementById('header-lang-menu');
+    if (!wrap || !menu) return;
+    wrap.classList.remove('is-open');
+    menu.hidden = true;
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+  }
+
+  function initHeaderLangMenu() {
+    const wrap = document.getElementById('header-lang-wrap');
+    const btn = document.getElementById('header-lang-btn');
+    const menu = document.getElementById('header-lang-menu');
+    const select = document.getElementById('app-language');
+    if (!wrap || !btn || !menu || !select) return;
+    syncHeaderLangMenu();
+    if (btn.dataset.bound) return;
+    btn.dataset.bound = '1';
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const open = !wrap.classList.contains('is-open');
+      closeHeaderLangMenu();
+      if (open) {
+        wrap.classList.add('is-open');
+        menu.hidden = false;
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    });
+    menu.querySelectorAll('[data-lang]').forEach((opt) => {
+      opt.addEventListener('click', async (e) => {
+        e.preventDefault();
+        let v = opt.dataset.lang || 'en';
+        if (!['en', 'ru', 'fr'].includes(v)) v = 'en';
+        closeHeaderLangMenu();
+        await updateLanguage(v);
+        select.value = currentLang;
+        syncHeaderLangMenu();
+      });
+    });
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#header-lang-wrap')) closeHeaderLangMenu();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeHeaderLangMenu();
+    });
+  }
+
+  initHeaderLangMenu();
+
   const appLangSelect = document.getElementById('app-language');
   if (appLangSelect) {
     appLangSelect.value = currentLang;
@@ -156,8 +226,12 @@
       if (!['en', 'ru', 'fr'].includes(v)) v = 'en';
       await updateLanguage(v);
       appLangSelect.value = currentLang;
+      syncHeaderLangMenu();
     });
   }
+
+  window.SWRM = window.SWRM || {};
+  window.SWRM.syncHeaderLangMenu = syncHeaderLangMenu;
 
   document.getElementById('theme-toggle')?.addEventListener('click', () => toggleTheme());
 

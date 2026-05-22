@@ -33,7 +33,7 @@
         lead.textContent =
           t.monstersTeamsLead || 'Build named teams and group them into sets (e.g. Arena Offence).';
       } else if (id === 'planner') {
-        lead.textContent = t.skillPlannerLead || '';
+        lead.textContent = '';
       } else {
         lead.textContent = t.monstersLead || '';
       }
@@ -44,7 +44,7 @@
     } else if (id === 'planner' && typeof renderSkillPlannerPanel === 'function') {
       void renderSkillPlannerPanel();
     } else if (id === 'teams' && typeof renderTeamsPanel === 'function') {
-      renderTeamsPanel();
+      void renderTeamsPanel();
     }
   }
 

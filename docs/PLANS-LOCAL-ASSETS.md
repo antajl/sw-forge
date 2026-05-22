@@ -49,45 +49,51 @@ assets/
 ### Фаза A — JSON (низкий риск)
 
 - [x] `skills-index.json` + meta (описания, upgrades, CD)
-- [ ] Расширить `monsters-index.json`: base stats, leader_skill в индекс (сейчас часть тянется API в деталке)
-- [ ] Версия/schema в JSON + bump `APP_VERSION` после каждого обновления
+- [x] Расширить `monsters-index.json`: base stats, leader_skill (schema 2, `fetch-monsters-index.mjs --fresh`)
+- [x] Деталка монстра: без SWARFARM API, если строка индекса полная (`monsterHasBundledDetail`)
+- [x] `monsters-index.json` schema 2 перекачан локально (деплой на прод — при релизе)
 
 **Скрипты:** `tools/fetch-skills-index.mjs`, `tools/fetch-monsters-index.mjs` (доработать ingest).
 
 ### Фаза B — мелкие static (быстро, мало файлов)
 
-- [ ] `assets/elements/` (~5 PNG)
-- [ ] `assets/runes/sets/` (~20–40 PNG)
-- [ ] `assets/ui/devilmon.png`, leader skill tiles
-- [ ] `tools/fetch-static-bundle.mjs` — скачать список URL в manifest
+- [x] `assets/elements/` (~5 PNG) — `npm run fetch:static-bundle`
+- [x] `assets/runes/sets/` (~23 PNG)
+- [x] `assets/ui/devilmon.png`, `assets/artifacts/` (типы из gear/icons)
+- [x] `tools/fetch-static-bundle.mjs` + `data/static-manifest.json`
+- [x] `js/data/local-assets.js` + wiring в `monster-db`, `gear/icons`, `skill-db`
+- [x] `assets/skills/leader/` — `npm run fetch:leader-icons` (manifest + CDN fallback)
 
 **Оценка размера:** &lt; 5 MB.
 
 ### Фаза C — артефакты (средний объём)
 
-- [ ] `assets/artifacts/` по ключам из `js/data/gear/icons.js`
-- [ ] Переключить `artifactIconUrl()` на локальный путь
+- [x] `assets/artifacts/` по ключам из `js/data/gear/icons.js` (входит в `fetch:static-bundle`)
+- [x] Переключить `artifactIconUrl()` на локальный путь
 
 **Оценка:** десятки файлов, &lt; 10 MB.
 
 ### Фаза D — иконки скиллов (~5k)
 
-- [ ] `assets/skills/` по `byIcon` из `skills-index.json`
-- [ ] `skillIconUrl()` → локально; SWARFARM только для отсутствующих id после патча
+- [x] `assets/skills/` — 3976/3976 имён в manifest (`fetch:missing-assets` + `skill-icon-overrides.json` для CDN 404)
+- [x] `skillIconUrl()` → локально только если файл в `data/skills-icons-manifest.json`; иначе SWARFARM/proxy
+- [x] `tools/fetch-skills-icons.mjs` — `npm run fetch:skills-icons`
 
 **Оценка:** ~5k PNG, **50–150 MB** — основной вес репозитория. Вариант: отдельный R2 bucket + CDN, в репо только manifest.
 
 ### Фаза E — портреты монстров (самый тяжёлый)
 
-- [ ] `assets/monsters/` только для `image_filename` из `monsters-index.json` (не весь bestiary)
-- [ ] Lazy: качать только монстров, встречающихся в типичном SWEX + полный индекс опционально
+- [x] `assets/monsters/` — 2121 PNG в manifest (2 файла не найдены на SWARFARM → CDN fallback)
+- [x] `monsterImageUrl()` / `bindMonsterPortrait` — local-first + SWARFARM fallback
+- [ ] Lazy (опционально): качать только монстров из SWEX пользователя
 
 **Оценка:** 2000+ файлов, **100–300 MB** если полный bestiary. Практичный вариант: **on-demand** из экспорта пользователя (только его box) — отдельный подпункт.
 
 ### Фаза F — отключение fallback
 
-- [ ] Флаг `SWRM_LOCAL_ASSETS_ONLY` (dev) / настройка после покрытия
-- [ ] Убрать прямые вызовы SWARFARM API кроме обновления индексов разработчиком
+- [x] Флаг `SWRM_LOCAL_ASSETS_ONLY` в `js/core/meta.js` (по умолчанию `false`)
+- [x] При `true`: без CDN для manifest-картинок; без runtime API монстров/скиллов (только bundled JSON)
+- [ ] Включить `true` на проде, когда деплой `assets/` + manifests полный (опционально)
 
 ---
 
@@ -106,7 +112,17 @@ assets/
 
 ## Чеклист перед закрытием эпика
 
-1. `MASTER.md` таблица «внешние данные» — только manifest/fetch для dev.
-2. `data/README.md` + `assets/README.md` — команды обновления.
-3. CI не ломается (лимит размера Pages).
-4. Changelog + Roadmap для игроков (без путей к tools).
+1. [x] `MASTER.md` таблица «внешние данные» обновлена.
+2. [x] `data/README.md` + `assets/README.md` — команды `npm run fetch:*`.
+3. [ ] CI / лимит размера Cloudflare Pages (проверить размер `assets/` + `data/` в деплое).
+4. [x] Changelog (без путей к tools).
+
+### Деплой на Pages (один раз после миграции)
+
+Залить вместе с билдом:
+
+- `assets/` (elements, runes, artifacts, ui, skills, skills/leader, monsters)
+- `data/skills-index.json`, `data/monsters-index.json`
+- `data/*-manifest.json`, `data/static-manifest.json`
+
+Затем hard refresh. Обновление данных: `npm run fetch:data` и `npm run fetch:assets` (см. `package.json`).

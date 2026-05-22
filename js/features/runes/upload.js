@@ -111,7 +111,7 @@
       const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en || {};
       const label = t.demoDatasetSlotLabel || 'Demo';
       await loadDemoDatasetInMemory(jsonText, json, label);
-      if (typeof seedDemoTeamsIfEmpty === 'function') seedDemoTeamsIfEmpty();
+      if (typeof syncDemoTeamsWithDatasetMode === 'function') syncDemoTeamsWithDatasetMode();
       uiAfterSuccessfulRuneRestore({ name: label }, { keepTab: true });
       applyDemoBannerTextFromTranslations();
       syncDemoBannerVisibility();
@@ -329,7 +329,7 @@
       const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en || {};
       const label = t.demoDatasetSlotLabel || 'Demo';
       await loadDemoDatasetInMemory(jsonText, json, label);
-      if (typeof seedDemoTeamsIfEmpty === 'function') seedDemoTeamsIfEmpty();
+      if (typeof syncDemoTeamsWithDatasetMode === 'function') syncDemoTeamsWithDatasetMode();
       uiAfterSuccessfulRuneRestore({ name: label }, { keepTab: options.keepTab === true });
       applyDemoBannerTextFromTranslations();
       syncDemoBannerVisibility();
@@ -381,7 +381,8 @@
       markUserLoadedRealExport();
       await purgeDemoStorage();
       await scrubDemoFromUserSlots();
-      if (typeof removeDemoTeams === 'function') removeDemoTeams();
+      if (typeof syncDemoTeamsWithDatasetMode === 'function') syncDemoTeamsWithDatasetMode();
+      else if (typeof removeDemoTeams === 'function') removeDemoTeams();
       syncDemoBannerVisibility();
       document.getElementById('upload-prompt').classList.add('hidden');
       showMainTab('dashboard', { writeHash: true });

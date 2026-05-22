@@ -358,7 +358,7 @@
   position: absolute;
   top: calc(100% + 6px);
   right: 0;
-  z-index: 40;
+  z-index: 12060;
   min-width: 15.5rem;
   border: 1px solid var(--border2);
   border-radius: 10px;
@@ -414,6 +414,13 @@
   border-radius: 0 0 8px 8px;
   font-weight: 700;
   color: var(--accent);
+}
+
+.share-split--compact .share-split__main,
+.share-split--compact .share-split__caret {
+  min-height: 30px;
+  padding: 6px 10px;
+  font-size: 0.75rem;
 }
 
 /* Filters popover (anchored to More Filters button) */

@@ -128,6 +128,9 @@
       )
       .join('');
     bindMonstersBoxOverview();
+    if (window.SWRM && typeof window.SWRM.renderAccountReviewStrip === 'function') {
+      window.SWRM.renderAccountReviewStrip();
+    }
   }
 
   function bindMonstersBoxOverview() {

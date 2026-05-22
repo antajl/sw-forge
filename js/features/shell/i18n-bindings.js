@@ -533,25 +533,15 @@
 
     // Update dashboard cards
     updateDashboardLabels();
-    // Update language label in app settings tab
-    const langLabel = document.querySelector('#tab-app-settings .app-settings-field label');
-    if (langLabel) {
-      const select = document.getElementById('app-language');
-      if (select) {
-        select.value = currentLang;
-        const textNode = langLabel.childNodes[0];
-        if (textNode) {
-          textNode.textContent = t.language + ' ';
-        }
-      }
+    const langSelect = document.getElementById('app-language');
+    if (langSelect) langSelect.value = currentLang;
+    const headerLangLbl = document.getElementById('lbl-header-language');
+    if (headerLangLbl) headerLangLbl.textContent = t.language || 'Language';
+    if (window.SWRM && typeof window.SWRM.syncHeaderLangMenu === 'function') {
+      window.SWRM.syncHeaderLangMenu();
     }
-    
-    updateHeaderThemeA11y(t);
 
-    const shareTitle = document.getElementById('share-profile-title');
-    if (shareTitle) shareTitle.textContent = t.shareProfileTitle || 'Share Profile';
-    const shareDesc = document.getElementById('share-profile-desc');
-    if (shareDesc) shareDesc.textContent = t.shareProfileDesc || '';
+    updateHeaderThemeA11y(t);
     const shareEquippedLbl = document.getElementById('lbl-share-equipped-only');
     if (shareEquippedLbl) shareEquippedLbl.textContent = t.shareEquippedOnly || '';
     const shareBtn = document.getElementById('share-profile-btn');
@@ -581,8 +571,6 @@
     if (hubTeams) hubTeams.textContent = t.monstersHubTeams || 'Teams';
     const hubPlanner = document.getElementById('lbl-monsters-hub-planner');
     if (hubPlanner) hubPlanner.textContent = t.monstersHubPlanner || 'Skill plan';
-    const spLead = document.getElementById('skill-planner-lead');
-    if (spLead) spLead.textContent = t.skillPlannerLead || '';
     const spNat = document.getElementById('lbl-skill-planner-nat');
     if (spNat) spNat.textContent = t.skillPlannerNatFilter || 'Priority';
     const spNatAll = document.getElementById('lbl-skill-planner-nat-all');

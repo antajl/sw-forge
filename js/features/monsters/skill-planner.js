@@ -540,9 +540,14 @@
         : `${s.level}/${s.maxLevel}`;
     const url =
       skillDb && typeof skillDb.skillIconUrl === 'function' ? skillDb.skillIconUrl(s.skillId) : '';
+    const fb =
+      skillDb && typeof skillDb.skillIconFallbackUrl === 'function'
+        ? skillDb.skillIconFallbackUrl(s.skillId)
+        : '';
     const cdCls = (s.deficitToCooldown || 0) > 0 ? ' skill-planner__skill-chip--cd' : '';
+    const fbAttr = fb ? ` data-fallback="${escapeHtml(fb)}"` : '';
     const img = url
-      ? `<img class="skill-planner__skill-chip-icon" src="${escapeHtml(url)}" alt="" width="28" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.classList.add('is-broken')" />`
+      ? `<img class="skill-planner__skill-chip-icon" src="${escapeHtml(url)}"${fbAttr} alt="" width="28" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="var f=this.dataset.fallback;if(f){this.src=f;this.removeAttribute('data-fallback');}else{this.classList.add('is-broken');}" />`
       : '<span class="skill-planner__skill-chip-icon skill-planner__skill-chip-icon--empty" aria-hidden="true"></span>';
     return `<span class="skill-planner__skill-chip${cdCls}" data-skill-id="${escapeHtml(String(s.skillId))}" data-skill-level="${escapeHtml(String(s.level))}" tabindex="0">${img}<span class="skill-planner__skill-chip-lv">${escapeHtml(label)}</span></span>`;
   }
@@ -665,7 +670,14 @@
       typeof skillDb.formatSkillProgressTooltip === 'function'
         ? skillDb.formatSkillProgressTooltip(skillId, level)
         : '';
-    if (text) {
+    const html =
+      typeof skillDb.formatSkillProgressTooltipHtml === 'function'
+        ? skillDb.formatSkillProgressTooltipHtml(skillId, level)
+        : '';
+    if (html) {
+      setSwrmFloatTipTarget(chip, '', { html });
+      chip.setAttribute('aria-label', text || '');
+    } else if (text) {
       setSwrmFloatTipTarget(chip, text);
       chip.setAttribute('aria-label', text);
     }
@@ -795,11 +807,9 @@
     const queueWrap = document.getElementById('skill-planner-queue');
     const stuckWrap = document.getElementById('skill-planner-stuck');
     const emptyEl = document.getElementById('skill-planner-empty');
-    const lead = document.getElementById('skill-planner-lead');
     if (!root || !summary || !queueWrap || !stuckWrap) return;
 
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-    if (lead) lead.textContent = t.skillPlannerLead || '';
 
     bindSkillPlannerPanel(root);
     syncSkillPlannerExcludeStorageButton(t);
@@ -865,5 +875,9 @@
       if (skillPlannerRenderPromise === renderTask) skillPlannerRenderPromise = null;
     }
   }
+
+  window.SWRM = window.SWRM || {};
+  window.SWRM.computeSkillPlannerStats = computeSkillPlannerStats;
+  window.SWRM.filterPlannerRosterUnits = filterPlannerRosterUnits;
 
   skillPlannerExcludeStorage = readSkillPlannerExcludeStorage();

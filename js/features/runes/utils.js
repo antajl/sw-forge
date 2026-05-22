@@ -41,6 +41,14 @@
       allRelics = [];
     }
     if (typeof onGearDataHydrated === 'function') onGearDataHydrated();
+    if (typeof refreshAccountTotemFromSwex === 'function') {
+      refreshAccountTotemFromSwex(activeSwexJson);
+    } else if (window.SWRM && typeof window.SWRM.refreshAccountTotemFromSwex === 'function') {
+      window.SWRM.refreshAccountTotemFromSwex(activeSwexJson);
+    } else if (window.SWRM) {
+      window.SWRM.accountTotemSpdPct = 0;
+      window.SWRM.accountTotemLevel = 0;
+    }
   }
 
   /**
@@ -61,7 +69,9 @@
     if (meta && meta.name) {
       console.log(`Auto-loaded runes from ${meta.name}${meta.id != null ? ` (Data ${meta.id})` : ''}`);
     }
+    if (typeof syncDemoTeamsWithDatasetMode === 'function') syncDemoTeamsWithDatasetMode();
     syncDemoBannerVisibility();
+    if (typeof renderTeamsPanel === 'function') void renderTeamsPanel();
   }
 
   function uiShowUploadPrompt() {
@@ -85,6 +95,10 @@
     allRunes = [];
     allUnits = [];
     activeSwexJson = null;
+    if (window.SWRM) {
+      window.SWRM.accountTotemSpdPct = 0;
+      window.SWRM.accountTotemLevel = 0;
+    }
     processedRunes = [];
     if (!keepTab) {
       showMainTab('guide', { writeHash: true });

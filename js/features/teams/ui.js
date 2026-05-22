@@ -18,18 +18,48 @@
     return u.displayName || `#${u.masterId}`;
   }
 
-  function teamUnitPortrait(unitId, masterIdFallback) {
+  function teamUnitImageFile(unitId, masterIdFallback) {
     const u = teamUnitRecord(unitId);
     const db = window.SWRM_MONSTER_DB;
-    if (!db) return '';
     const masterId = u?.masterId ?? masterIdFallback;
-    const file =
-      (u && u.imageFilename) ||
-      (masterId && typeof db.imageFilename === 'function' ? db.imageFilename(masterId) : '');
-    if (!file) return '';
-    if (typeof db.portraitUrl === 'function') return db.portraitUrl(file);
-    if (typeof db.monsterImageUrl === 'function') return db.monsterImageUrl(file);
+    if (u && u.imageFilename) return u.imageFilename;
+    if (db && masterId && typeof db.imageFilename === 'function') {
+      return db.imageFilename(masterId) || '';
+    }
     return '';
+  }
+
+  async function ensureTeamsUnitCache() {
+    if (!allUnits || !allUnits.length) return;
+    const db = window.SWRM_MONSTER_DB;
+    if (db && typeof db.loadMonsterIndex === 'function') {
+      try {
+        await db.loadMonsterIndex();
+        if (typeof db.indexCount === 'function' && db.indexCount() === 0) {
+          await db.loadMonsterIndex({ force: true });
+        }
+      } catch (e) { /* ignore */ }
+    }
+    if (monstersEnrichedCache.length) return;
+    monstersEnrichedCache = allUnits.map((u) => {
+      const meta = db ? db.lookupMonster(u.masterId) : null;
+      return {
+        ...u,
+        meta,
+        metaElement: meta && meta.element ? meta.element : '',
+        displayName: db ? db.monsterDisplayName(u.masterId) : `#${u.masterId}`,
+        imageFilename: meta && meta.image_filename ? meta.image_filename : '',
+      };
+    });
+  }
+
+  function bindTeamsCardPortraits(root) {
+    const host = root || document.getElementById('teams-card-grid');
+    if (!host || typeof bindMonsterPortrait !== 'function') return;
+    host.querySelectorAll('img.team-card__portrait[data-img-file]').forEach((img) => {
+      const file = img.getAttribute('data-img-file');
+      if (file) bindMonsterPortrait(img, file);
+    });
   }
 
   function teamRuneStatus(unitId) {
@@ -38,6 +68,78 @@
     if (u.hasFullRunes) return 'ready';
     if (u.equippedCount > 0) return 'partial';
     return 'unruned';
+  }
+
+  function teamLeaderSpdPct(team) {
+    const lid = team && team.leaderUnitId != null ? Number(team.leaderUnitId) : null;
+    if (!Number.isFinite(lid) || lid <= 0) return 0;
+    const u = teamUnitRecord(lid);
+    if (!u) return 0;
+    const meta =
+      u.meta ||
+      (window.SWRM_MONSTER_DB && typeof window.SWRM_MONSTER_DB.lookupMonster === 'function'
+        ? window.SWRM_MONSTER_DB.lookupMonster(u.masterId)
+        : null);
+    const ls = meta && meta.leader_skill ? meta.leader_skill : null;
+    if (typeof leaderSkillSpdPct === 'function') return leaderSkillSpdPct(ls);
+    if (!ls) return 0;
+    const attr = String(ls.attribute || '').toLowerCase();
+    if (!attr.includes('speed')) return 0;
+    const n = Number(ls.amount);
+    return Number.isFinite(n) && n > 0 ? n : 0;
+  }
+
+  function teamTotemSpdPct() {
+    if (typeof getAccountTotemSpdPct === 'function') return getAccountTotemSpdPct();
+    if (window.SWRM && typeof window.SWRM.getAccountTotemSpdPct === 'function') {
+      return window.SWRM.getAccountTotemSpdPct();
+    }
+    const json = typeof activeSwexJson !== 'undefined' ? activeSwexJson : null;
+    if (typeof totemSpdPctFromSwexJson === 'function') return totemSpdPctFromSwexJson(json);
+    if (window.SWRM && typeof window.SWRM.totemSpdPctFromSwexJson === 'function') {
+      return window.SWRM.totemSpdPctFromSwexJson(json);
+    }
+    return 0;
+  }
+
+  function teamUnitDisplaySpeed(unitId, team) {
+    const u = teamUnitRecord(unitId);
+    if (!u) return null;
+    const opts = {
+      totemSpdPct: teamTotemSpdPct(),
+      leaderSpdPct: teamLeaderSpdPct(team),
+    };
+    const calc =
+      (window.SWRM && typeof window.SWRM.computeUnitSpeedForTeam === 'function'
+        ? window.SWRM.computeUnitSpeedForTeam
+        : null) ||
+      (typeof computeUnitSpeedForTeam === 'function' ? computeUnitSpeedForTeam : null);
+    if (calc) return calc(u, opts);
+    const sw = Number(u.stats && u.stats.spd);
+    return Number.isFinite(sw) && sw > 0 ? Math.floor(sw) : null;
+  }
+
+  function computeTeamCardStats(team) {
+    const slots = team.slots || [];
+    let filled = 0;
+    let fullSix = 0;
+    for (const uid of slots) {
+      if (!uid) continue;
+      const u = teamUnitRecord(uid);
+      if (!u) continue;
+      filled += 1;
+      if (u.hasFullRunes) fullSix += 1;
+    }
+    return { filled, slotCount: slots.length, fullSix };
+  }
+
+  function buildTeamCardMeta(team, t) {
+    const st = computeTeamCardStats(team);
+    if (!st.filled) return '';
+    const tpl = t.teamsCardReadiness || '{full}/{filled} with 6/6 runes';
+    return `<p class="team-card__meta">${escapeHtml(
+      tpl.replace(/\{full\}/g, String(st.fullSix)).replace(/\{filled\}/g, String(st.filled)),
+    )}</p>`;
   }
 
   function buildTeamsUnitOptions(selectedId) {
@@ -67,13 +169,20 @@
         const leader = team.leaderUnitId != null && Number(team.leaderUnitId) === Number(uid);
         const missing = uid && !teamUnitRecord(uid) && !masterIds[i];
         const runeSt = uid ? teamRuneStatus(uid) : '';
-        const url = uid ? teamUnitPortrait(uid, masterIds[i]) : '';
-        const inner = url
-          ? `<img src="${escapeHtml(url)}" alt="" width="40" height="40" loading="lazy" decoding="async" />`
+        const imgFile = uid ? teamUnitImageFile(uid, masterIds[i]) : '';
+        const spd = uid ? teamUnitDisplaySpeed(uid, team) : null;
+        const spdBadge =
+          spd != null
+            ? `<span class="team-card__spd" title="${escapeHtml(t.teamsSlotSpd || 'Speed')}">${escapeHtml(String(spd))}</span>`
+            : '';
+        const inner = imgFile
+          ? `<img class="team-card__portrait" data-img-file="${escapeAttr(imgFile)}" alt="" width="52" height="52" loading="lazy" decoding="async" />`
           : '<span class="team-card__slot-empty">+</span>';
-        return `<div class="team-card__slot${leader ? ' team-card__slot--leader' : ''}${missing ? ' team-card__slot--missing' : ''}" data-slot-idx="${i}" title="${uid ? escapeHtml(teamUnitLabel(uid)) : ''}">
+        const tip = uid ? escapeHtml(teamUnitLabel(uid)) : '';
+        return `<div class="team-card__slot${leader ? ' team-card__slot--leader' : ''}${missing ? ' team-card__slot--missing' : ''}" data-slot-idx="${i}" title="${tip}">
           ${leader ? '<span class="team-card__crown" aria-hidden="true">👑</span>' : ''}
           ${inner}
+          ${spdBadge}
           ${runeSt === 'ready' ? '<span class="team-card__rune-ok" title="6/6 runes">✓</span>' : ''}
         </div>`;
       })
@@ -124,6 +233,7 @@
         ${actions}
       </header>
       ${buildTeamSlotIcons(team, t)}
+      ${buildTeamCardMeta(team, t)}
       ${tags ? `<div class="team-card__tags">${tags}</div>` : ''}
       ${notes}
     </article>`;
@@ -251,9 +361,10 @@
     renderTeamsPanel();
   }
 
-  function renderTeamsPanel() {
+  async function renderTeamsPanel() {
     const shell = document.getElementById('teams-shell');
     if (!shell) return;
+    if (typeof syncDemoTeamsWithDatasetMode === 'function') syncDemoTeamsWithDatasetMode();
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const ro = typeof isShareReadOnly === 'function' && isShareReadOnly();
     const sharePayload = getTeamsShareViewPayload();
@@ -297,7 +408,9 @@
     if (createBtn) createBtn.disabled = !set;
 
     renderTeamsSetList(state, t);
+    await ensureTeamsUnitCache();
     renderTeamsCardGrid(set, state, t);
+    bindTeamsCardPortraits(document.getElementById('teams-card-grid'));
 
     shell.querySelectorAll('[data-teams-readonly-hide]').forEach((el) => {
       el.hidden = ro;
@@ -357,6 +470,7 @@
       <h3 class="teams-share-view__title">${escapeHtml(t.teamsShareViewTitle || 'Shared teams')}</h3>
       ${blocks || `<p class="teams-share-view__empty">${escapeHtml(t.teamsShareViewEmpty || 'No public teams in this profile.')}</p>`}
     </div>`;
+    bindTeamsCardPortraits(view);
   }
 
   function bindTeamsUi() {
@@ -562,5 +676,5 @@
 
   function initTeamsPanel() {
     bindTeamsUi();
-    renderTeamsPanel();
+    void renderTeamsPanel();
   }

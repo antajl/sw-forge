@@ -128,7 +128,14 @@
 
     if (anchorEl) positionMonstersDetailFloat(anchorEl);
 
-    if (db && typeof db.fetchMonsterMetaForDetail === 'function') {
+    const needsApiFetch =
+      db &&
+      typeof db.fetchMonsterMetaForDetail === 'function' &&
+      (!lookupRow ||
+        typeof db.monsterHasBundledDetail !== 'function' ||
+        !db.monsterHasBundledDetail(lookupRow));
+
+    if (needsApiFetch) {
       db.fetchMonsterMetaForDetail(u.masterId).then((row) => {
         if (!row || !body.isConnected) return;
         db.mergeMonsterMetaIntoCache(u.masterId, row);

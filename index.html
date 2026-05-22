@@ -82,6 +82,33 @@
           </nav>
         </div>
         <div class="header-corner-cluster">
+          <div class="header-lang" id="header-lang-wrap">
+            <label class="sr-only" id="lbl-header-language">Language</label>
+            <button
+              type="button"
+              class="header-lang__btn"
+              id="header-lang-btn"
+              aria-haspopup="true"
+              aria-expanded="false"
+              aria-controls="header-lang-menu"
+              title="Language"
+            >
+              <svg class="header-lang__svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+              </svg>
+            </button>
+            <div class="header-lang__menu" id="header-lang-menu" role="menu" hidden>
+              <button type="button" class="header-lang__option" role="menuitemradio" data-lang="en">English</button>
+              <button type="button" class="header-lang__option" role="menuitemradio" data-lang="ru">Русский</button>
+              <button type="button" class="header-lang__option" role="menuitemradio" data-lang="fr">Français</button>
+            </div>
+            <select id="app-language" class="sr-only" tabindex="-1" aria-hidden="true">
+              <option value="en">English</option>
+              <option value="ru">Русский</option>
+              <option value="fr">Français</option>
+            </select>
+          </div>
           <div class="header-donate-group">
             <a href="https://app.lava.top/antajl?tabId=donate" class="header-theme-btn header-theme-btn--wide" id="header-donate-link" target="_blank" rel="noopener noreferrer">
               <svg class="header-theme-icon header-donate-heart" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -982,7 +1009,6 @@
         </nav>
         <div id="tab-monsters-planner" class="monsters-hub-pane" data-monsters-pane="planner" role="tabpanel" aria-labelledby="monsters-hub-tab-planner" hidden>
           <div class="skill-planner" id="skill-planner-root">
-            <p class="skill-planner__lead" id="skill-planner-lead"></p>
             <div class="skill-planner__summary" id="skill-planner-summary" aria-live="polite"></div>
             <div class="skill-planner__toolbar">
               <label class="skill-planner__filter">
@@ -1263,6 +1289,7 @@
         <div class="monsters-roster-meta">
           <section id="monsters-box-overview" class="monsters-box-overview" hidden aria-label="Box overview">
             <p class="monsters-box-overview__lead" id="monsters-box-overview-lead"></p>
+            <p class="monsters-box-overview__review" id="monsters-account-review" hidden></p>
             <div class="monsters-box-overview__tiles" id="monsters-box-overview-tiles"></div>
           </section>
           <div class="monsters-chips monsters-chips--stats" id="monsters-chips" aria-live="polite"></div>
@@ -1369,12 +1396,12 @@
                 <article class="guide-duo-card">
                   <span class="guide-duo-card__kicker">Roster</span>
                   <p class="guide-duo-card__title">Your monster box</p>
-                  <p>Search by name, element, or rune text. Open a unit to see stats, skills, and all six rune slots — click a slot to jump to that rune in the Rune Table.</p>
+                  <p>Search by name, element, or rune text. Open a unit to see <strong>Base</strong>, <strong>+runes</strong>, and <strong>Total</strong> stats — Total SPD includes your account <strong>Sky Tribe Totem</strong> bonus (% of base, from the export). Six rune slots link to the Rune Table.</p>
                 </article>
                 <article class="guide-duo-card">
                   <span class="guide-duo-card__kicker">Teams</span>
                   <p class="guide-duo-card__title">Lineups (optional)</p>
-                  <p>Build defense/offense teams from the same export. Handy for planning who wears what — separate from rune Sell/Keep advice.</p>
+                  <p>Build teams from the same export. Each slot shows <strong>combat SPD</strong> (base + runes + totem and leader % of base). Crown = leader. Modern SWEX stores totem level in <strong>wizard_skill_list</strong> (<code>skill_id: 14</code>). Sample demo teams disappear after you load your own file.</p>
                 </article>
               </div>
             </section>
@@ -1386,7 +1413,7 @@
                 <span class="guide-slot-tile" role="listitem">Data 3</span>
                 <span class="guide-slot-tile" role="listitem">Data 4</span>
               </div>
-              <p class="guide-note">In <strong>App Settings → Database Slots</strong> you can store alt accounts or before/after screenshots of your box. <strong>Swap</strong> changes which export the Dashboard and Rune Table use.</p>
+              <p class="guide-note">In <strong>App Settings → Database Slots</strong> you can store alt accounts or before/after exports — <strong>Share</strong> is in the card header. <strong>Swap</strong> changes which file the Dashboard and Rune Table use. Language: globe icon in the header.</p>
             </section>
             <section class="guide-section" aria-labelledby="guide-h-start-clear-en">
               <h3 id="guide-h-start-clear-en">Reset</h3>
@@ -1432,12 +1459,12 @@
                 <article class="guide-duo-card">
                   <span class="guide-duo-card__kicker">Ростер</span>
                   <p class="guide-duo-card__title">Коробка монстров</p>
-                  <p>Поиск по имени, стихии, рунам на юните. Карточка монстра — статы, скиллы, шесть слотов рун; клик по слоту открывает эту руну в таблице.</p>
+                  <p>Поиск по имени, стихии, рунам. В карточке — <strong>Base</strong>, <strong>+runes</strong>, <strong>Total</strong>; Total SPD учитывает бонус <strong>Sky Tribe Totem</strong> (% от базы из экспорта). Шесть слотов рун → клик открывает руну в таблице.</p>
                 </article>
                 <article class="guide-duo-card">
                   <span class="guide-duo-card__kicker">Команды</span>
                   <p class="guide-duo-card__title">Составы (по желанию)</p>
-                  <p>Сборка защиты/атаки из того же экспорта. Удобно для планирования — отдельно от вердиктов Sell/Keep по рунам.</p>
+                  <p>Сборка из того же SWEX. На слоте — <strong>боевая скорость</strong> (база + руны + % тотема и лидера от базы). Корона = лидер. В новых JSON уровень тотема в <strong>wizard_skill_list</strong> (<code>skill_id: 14</code>). Демо-составы пропадают после загрузки своего файла.</p>
                 </article>
               </div>
             </section>
@@ -1449,7 +1476,7 @@
                 <span class="guide-slot-tile" role="listitem">Data 3</span>
                 <span class="guide-slot-tile" role="listitem">Data 4</span>
               </div>
-              <p class="guide-note">В <strong>Настройки приложения → Слоты баз данных</strong> — альт или «до/после» фарма. <strong>Swap</strong> переключает, какой экспорт видят панель и таблица.</p>
+              <p class="guide-note">В <strong>Настройки приложения → Слоты баз данных</strong> — альт или «до/после» фарма, кнопка <strong>Share</strong> в заголовке карточки. <strong>Swap</strong> переключает активный экспорт. Язык — иконка глобуса в шапке.</p>
             </section>
             <section class="guide-section" aria-labelledby="guide-h-start-clear-ru">
               <h3 id="guide-h-start-clear-ru">Сброс</h3>
@@ -2787,31 +2814,15 @@
     <!-- APP SETTINGS TAB -->
     <section id="tab-app-settings" class="tab-content hidden">
       <div class="app-settings-shell">
-        <article class="app-settings-card" aria-labelledby="lbl-app-settings-language-title">
-          <header class="app-settings-card__head">
-            <h2 class="app-settings-card__title" id="lbl-app-settings-language-title">Language</h2>
-          </header>
-          <div class="app-settings-card__body">
-            <div class="app-settings-field">
-              <label for="app-language">Interface language</label>
-              <select id="app-language" aria-labelledby="lbl-app-settings-language-title">
-                <option value="en">English</option>
-                <option value="ru">Русский</option>
-                <option value="fr">Français</option>
-              </select>
+        <article class="app-settings-card app-settings-card--slots" aria-labelledby="db-slots-title">
+          <header class="app-settings-card__head app-settings-card__head--split">
+            <div class="app-settings-card__head-text">
+              <h2 class="app-settings-card__title" id="db-slots-title">Database slots</h2>
+              <p id="db-slots-desc" class="app-settings-card__desc">Store up to four SWEX exports and switch the active profile instantly.</p>
             </div>
-          </div>
-        </article>
-
-        <article class="app-settings-card" aria-labelledby="share-profile-title">
-          <header class="app-settings-card__head">
-            <h2 class="app-settings-card__title" id="share-profile-title">Share profile</h2>
-            <p id="share-profile-desc" class="app-settings-card__desc">Create a read-only link to your roster, runes, or both.</p>
-          </header>
-          <div class="app-settings-card__body">
-            <div class="share-profile-actions">
-              <div class="share-split" data-share-split>
-                <button type="button" class="share-split__main" id="share-profile-btn">
+            <div class="app-settings-card__head-actions" data-share-settings-actions>
+              <div class="share-split share-split--compact" data-share-split>
+                <button type="button" class="share-split__main" id="share-profile-btn" title="Share profile">
                   <span class="share-split__icon" aria-hidden="true">🔗</span>
                   <span class="share-split__label" data-share-split-label>Share</span>
                 </button>
@@ -2828,13 +2839,6 @@
                 </div>
               </div>
             </div>
-          </div>
-        </article>
-
-        <article class="app-settings-card" aria-labelledby="db-slots-title">
-          <header class="app-settings-card__head">
-            <h2 class="app-settings-card__title" id="db-slots-title">Database slots</h2>
-            <p id="db-slots-desc" class="app-settings-card__desc">Store up to four SWEX exports and switch the active profile instantly.</p>
           </header>
           <div class="app-settings-card__body">
             <div id="db-slots-wrap" class="db-slots-wrap"></div>
@@ -2899,6 +2903,7 @@
   <script defer src="js/data/gear/parse.js"></script>
   <script defer src="js/data/gear/icons.js"></script>
   <script defer src="js/data/parser.js"></script>
+  <script defer src="js/data/local-assets.js"></script>
   <script defer src="js/data/skill-db.js"></script>
   <script defer src="js/data/monster-db.js"></script>
   <script defer src="js/engine/engine-core.js"></script>

@@ -18,6 +18,43 @@ const PAUSE_MS = 1800;
 const MAX_RETRIES = 8;
 
 const resume = process.argv.includes('--resume');
+const fresh = process.argv.includes('--fresh');
+const SCHEMA = 2;
+
+if (fresh && fs.existsSync(outPath)) {
+  fs.unlinkSync(outPath);
+  console.log('Fresh run: removed existing monsters-index.json');
+}
+
+function stripHtml(text) {
+  return String(text || '')
+    .replace(/<br\s*\/?>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function slimLeaderSkill(ls) {
+  if (!ls) return null;
+  const sk = ls.skill;
+  let skill = null;
+  if (sk && typeof sk === 'object') {
+    skill = {
+      com2us_id: sk.com2us_id,
+      icon_filename: sk.icon_filename || null,
+      name: sk.name || null,
+    };
+    const desc = stripHtml(sk.description || sk.description_en || '');
+    if (desc) skill.description = desc;
+  }
+  return {
+    attribute: ls.attribute,
+    amount: ls.amount,
+    area: ls.area,
+    element: ls.element || null,
+    skill,
+  };
+}
 
 function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
@@ -70,12 +107,17 @@ function slimMonster(m) {
     base_hp: m.base_hp,
     base_attack: m.base_attack,
     base_defense: m.base_defense,
-    base_speed: m.base_speed,
+    base_speed: m.base_speed != null ? m.base_speed : m.speed,
     max_lvl_hp: m.max_lvl_hp,
     max_lvl_attack: m.max_lvl_attack,
     max_lvl_defense: m.max_lvl_defense,
-    max_lvl_speed: m.max_lvl_speed,
+    max_lvl_speed: m.max_lvl_speed != null ? m.max_lvl_speed : m.speed,
     max_level: m.max_level,
+    crit_rate: m.crit_rate,
+    crit_damage: m.crit_damage,
+    resistance: m.resistance,
+    accuracy: m.accuracy,
+    leader_skill: slimLeaderSkill(m.leader_skill),
   };
 }
 
@@ -99,6 +141,7 @@ function writePartial(monsters, nextUrl) {
     outPath,
     JSON.stringify(
       {
+        schema: SCHEMA,
         generatedAt: new Date().toISOString(),
         count: monsters.length,
         complete: !nextUrl,
@@ -140,7 +183,13 @@ fs.mkdirSync(path.dirname(outPath), { recursive: true });
 fs.writeFileSync(
   outPath,
   JSON.stringify(
-    { generatedAt: new Date().toISOString(), count: monsters.length, complete: true, monsters },
+    {
+      schema: SCHEMA,
+      generatedAt: new Date().toISOString(),
+      count: monsters.length,
+      complete: true,
+      monsters,
+    },
     null,
     0,
   ),

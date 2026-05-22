@@ -51,6 +51,7 @@ const CHUNKS = [
 const MONSTER_PARTS = [
   'monsters/monsters-state.js',
   'monsters/monsters-hub.js',
+  'monsters/monsters-stats-calc.js',
   'teams/storage.js',
   'teams/ui.js',
   'monsters/monsters-storage.js',
@@ -58,7 +59,6 @@ const MONSTER_PARTS = [
   'monsters/monsters-filters.js',
   'monsters/box-overview.js',
   'monsters/skill-planner.js',
-  'monsters/monsters-stats-calc.js',
   'monsters/monsters-gear.js',
   'monsters/monsters-runes.js',
   'monsters/monsters-detail.js',

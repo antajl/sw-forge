@@ -4,7 +4,7 @@ These JSON files ship with the site. Refresh them locally, then deploy with the 
 
 | File | Tool | Contents |
 |------|------|----------|
-| `monsters-index.json` | `node tools/fetch-monsters-index.mjs` | Monster names, icons, bestiary slugs (from SWARFARM API) |
+| `monsters-index.json` | `node tools/fetch-monsters-index.mjs --fresh` | Names, portraits path, base/max stats, leader_skill (schema 2) |
 | `skills-index.json` | `node tools/fetch-skills-index.mjs --fresh` | All skills: max level, icon, description, upgrades, cooldown (schema 2, ~1.6 MB) |
 | `demo.json` | (manual) | Sample SWEX export for demo mode |
 

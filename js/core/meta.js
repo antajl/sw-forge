@@ -51,7 +51,7 @@ const GRADE_NAMES = { 1:'Common', 2:'Magic', 3:'Rare', 4:'Hero', 5:'Legend' };
 const GRADE_SHORT = { 3:'Rare', 4:'Hero', 5:'Legend' };
 
 /** Shown in footer, changelog, and Copy summary — bump when shipping a user-visible build. */
-const APP_VERSION = '1.2.17';
+const APP_VERSION = '1.2.18';
 
 /**
  * Debug only: when true, the verdict engine skips every check that compares `rune.eff`
@@ -66,6 +66,13 @@ const DEBUG_BYPASS_EFFICIENCY_GATES = false;
 const SWRM_API = 'https://sw-backend.antajltube.workers.dev';
 /** Set true after Worker exposes GET /swarfarm/* (static proxy). Until then, images use swarfarm.com directly. */
 const SWRM_SWARFARM_PROXY_STATIC = true;
+
+/**
+ * Debug / post-migration: when true, image URLs use only bundled files under assets/
+ * (no SWARFARM CDN fallback). Missing files show as broken/placeholder.
+ * Runtime monster/skill API calls are skipped when the bundled index already has the row.
+ */
+const SWRM_LOCAL_ASSETS_ONLY = false;
 
 
 // Slot mains (odd slots) — after i18n in monolith, kept here for load order with thresholds.

@@ -21,6 +21,17 @@
   color: var(--text-dim);
 }
 
+.monsters-box-overview__review {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--text-dim);
+}
+
+.monsters-box-overview__review[hidden] {
+  display: none !important;
+}
+
 .monsters-box-overview__tiles {
   display: flex;
   flex-wrap: wrap;

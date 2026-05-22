@@ -32,6 +32,7 @@ The app API is exposed through `window.SWRM` and related browser globals. Keep t
 | Rune table | `js/features/runes/table.js`, `table-filters.js`, `table-row-render.js` | `css/features/runes/table-*.css` |
 | Artifacts & relics tables | `js/features/gear/table-kind.js`, `artifacts-table.js`, `relics-table.js` | `css/features/gear/*` |
 | Teams | `js/features/teams/*` | `css/features/teams/*` |
+| Account SPD totem | `js/features/monsters/monsters-stats-calc.js` (`getAccountTotemSpdPct`, cached on `rebuildUnitsFromSwex`) | none |
 | Rune rules | `js/features/rules/*` | `css/features/runes/rules.css` |
 | Monsters | `js/features/monsters/*` | `css/features/monsters/*` |
 | Gear data (SWEX) | `js/data/gear/parse.js`, `js/data/artifacts/effects.js`, `js/data/relics/effects.js` | none |

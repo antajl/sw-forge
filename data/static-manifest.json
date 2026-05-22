@@ -1,0 +1,195 @@
+{
+  "generatedAt": "2026-05-22T12:41:49.830Z",
+  "files": [
+    {
+      "category": "elements",
+      "file": "fire.png",
+      "bytes": 7803
+    },
+    {
+      "category": "elements",
+      "file": "water.png",
+      "bytes": 8779
+    },
+    {
+      "category": "elements",
+      "file": "wind.png",
+      "bytes": 7768
+    },
+    {
+      "category": "elements",
+      "file": "light.png",
+      "bytes": 8119
+    },
+    {
+      "category": "elements",
+      "file": "dark.png",
+      "bytes": 7857
+    },
+    {
+      "category": "ui",
+      "file": "devilmon.png",
+      "bytes": 19097
+    },
+    {
+      "category": "artifacts",
+      "file": "fire.png",
+      "bytes": 2671
+    },
+    {
+      "category": "artifacts",
+      "file": "water.png",
+      "bytes": 2665
+    },
+    {
+      "category": "artifacts",
+      "file": "wind.png",
+      "bytes": 2618
+    },
+    {
+      "category": "artifacts",
+      "file": "light.png",
+      "bytes": 2757
+    },
+    {
+      "category": "artifacts",
+      "file": "dark.png",
+      "bytes": 2764
+    },
+    {
+      "category": "artifacts",
+      "file": "hp.png",
+      "bytes": 2699
+    },
+    {
+      "category": "artifacts",
+      "file": "attack.png",
+      "bytes": 2553
+    },
+    {
+      "category": "artifacts",
+      "file": "defense.png",
+      "bytes": 2746
+    },
+    {
+      "category": "artifacts",
+      "file": "support.png",
+      "bytes": 2730
+    },
+    {
+      "category": "runes",
+      "file": "sets/energy.png",
+      "bytes": 5700
+    },
+    {
+      "category": "runes",
+      "file": "sets/guard.png",
+      "bytes": 6298
+    },
+    {
+      "category": "runes",
+      "file": "sets/swift.png",
+      "bytes": 5583
+    },
+    {
+      "category": "runes",
+      "file": "sets/blade.png",
+      "bytes": 5984
+    },
+    {
+      "category": "runes",
+      "file": "sets/rage.png",
+      "bytes": 5667
+    },
+    {
+      "category": "runes",
+      "file": "sets/focus.png",
+      "bytes": 6135
+    },
+    {
+      "category": "runes",
+      "file": "sets/endure.png",
+      "bytes": 5927
+    },
+    {
+      "category": "runes",
+      "file": "sets/fatal.png",
+      "bytes": 5462
+    },
+    {
+      "category": "runes",
+      "file": "sets/despair.png",
+      "bytes": 5494
+    },
+    {
+      "category": "runes",
+      "file": "sets/vampire.png",
+      "bytes": 5270
+    },
+    {
+      "category": "runes",
+      "file": "sets/violent.png",
+      "bytes": 4923
+    },
+    {
+      "category": "runes",
+      "file": "sets/nemesis.png",
+      "bytes": 4377
+    },
+    {
+      "category": "runes",
+      "file": "sets/will.png",
+      "bytes": 4802
+    },
+    {
+      "category": "runes",
+      "file": "sets/shield.png",
+      "bytes": 5575
+    },
+    {
+      "category": "runes",
+      "file": "sets/revenge.png",
+      "bytes": 6112
+    },
+    {
+      "category": "runes",
+      "file": "sets/destroy.png",
+      "bytes": 5831
+    },
+    {
+      "category": "runes",
+      "file": "sets/fight.png",
+      "bytes": 5811
+    },
+    {
+      "category": "runes",
+      "file": "sets/determination.png",
+      "bytes": 5472
+    },
+    {
+      "category": "runes",
+      "file": "sets/enhance.png",
+      "bytes": 3449
+    },
+    {
+      "category": "runes",
+      "file": "sets/accuracy.png",
+      "bytes": 5994
+    },
+    {
+      "category": "runes",
+      "file": "sets/tolerance.png",
+      "bytes": 5237
+    },
+    {
+      "category": "runes",
+      "file": "sets/seal.png",
+      "bytes": 6115
+    },
+    {
+      "category": "runes",
+      "file": "sets/intangible.png",
+      "bytes": 6934
+    }
+  ]
+}

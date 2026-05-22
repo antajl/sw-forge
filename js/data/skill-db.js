@@ -265,14 +265,17 @@
     if (!parts) return '';
     const { meta: m, lv, levels } = parts;
     const headBits = [];
-    if (m.name) headBits.push(`<div class="swrm-skill-tip__name">${escTipHtml(m.name)}</div>`);
-    if (m.description) {
-      headBits.push(`<div class="swrm-skill-tip__desc">${escTipHtml(m.description)}</div>`);
+    if (m.name) {
+      headBits.push(`<div class="swrm-skill-tip__head"><div class="swrm-skill-tip__name">${escTipHtml(m.name)}</div>`);
+      if (m.cooltime != null && m.cooltime > 0) {
+        headBits.push(
+          `<span class="swrm-skill-tip__cd-pill">CD ${escTipHtml(String(m.cooltime))}</span>`,
+        );
+      }
+      headBits.push('</div>');
     }
-    if (m.cooltime != null && m.cooltime > 0) {
-      headBits.push(
-        `<div class="swrm-skill-tip__cd-base">Base cooldown: ${escTipHtml(String(m.cooltime))} turns</div>`,
-      );
+    if (m.description) {
+      headBits.push(`<p class="swrm-skill-tip__desc">${escTipHtml(m.description)}</p>`);
     }
     let levelsHtml = '';
     if (levels.length) {
@@ -286,19 +289,21 @@
             .filter(Boolean)
             .join(' ');
           const mark = row.done
-            ? '<span class="swrm-skill-tip__check" aria-hidden="true">✓</span>'
-            : '';
-          const cdLbl = row.cd ? '<span class="swrm-skill-tip__cd-tag">CD</span>' : '';
-          return `<div class="${cls}"><span class="swrm-skill-tip__lv">Lv ${row.atLv}</span><span class="swrm-skill-tip__fx">${escTipHtml(row.text)}</span>${cdLbl}${mark}</div>`;
+            ? '<span class="swrm-skill-tip__mark swrm-skill-tip__mark--done" aria-hidden="true">✓</span>'
+            : '<span class="swrm-skill-tip__mark swrm-skill-tip__mark--dot" aria-hidden="true"></span>';
+          const cdLbl = row.cd ? '<span class="swrm-skill-tip__cd-tag">CD−1</span>' : '';
+          return `<div class="${cls}">${mark}<span class="swrm-skill-tip__lv">Lv ${row.atLv}</span><span class="swrm-skill-tip__fx">${escTipHtml(row.text)}</span>${cdLbl}</div>`;
         })
         .join('');
-      levelsHtml = `<div class="swrm-skill-tip__levels">${rows}</div>`;
+      levelsHtml = `<div class="swrm-skill-tip__section"><div class="swrm-skill-tip__section-title">Skill-ups</div><div class="swrm-skill-tip__levels">${rows}</div></div>`;
     }
     let foot = '';
     if (m.cooldownUnlockLevel != null && lv < m.cooldownUnlockLevel) {
-      foot = `<div class="swrm-skill-tip__foot">Need ${escTipHtml(String(m.cooldownUnlockLevel - lv))} skill-up(s) to reach CD−1 tier (at skill Lv ${escTipHtml(String(m.cooldownUnlockLevel))}).</div>`;
+      foot = `<div class="swrm-skill-tip__foot"><span class="swrm-skill-tip__foot-icon" aria-hidden="true">◎</span> Need <strong>${escTipHtml(String(m.cooldownUnlockLevel - lv))}</strong> skill-up(s) for Cooltime Turn −1 (at skill Lv ${escTipHtml(String(m.cooldownUnlockLevel))}).</div>`;
     }
-    return `<div class="swrm-skill-tip">${headBits.join('')}${levelsHtml}${foot}</div>`;
+    const hr =
+      levelsHtml && (headBits.length || m.description) ? '<hr class="swrm-skill-tip__hr" />' : '';
+    return `<div class="swrm-skill-tip">${headBits.join('')}${hr}${levelsHtml}${foot}</div>`;
   }
 
   async function fetchSkillMeta(skillId) {
@@ -322,6 +327,9 @@
   async function fetchSkillMaxLevel(skillId) {
     const id = Number(skillId);
     if (!Number.isFinite(id)) return null;
+    if (typeof SWRM_LOCAL_ASSETS_ONLY === 'boolean' && SWRM_LOCAL_ASSETS_ONLY) {
+      return byCom2usId.get(id) ?? null;
+    }
     if (byCom2usId.has(id) && metaByCom2usId.get(id)?.description) return byCom2usId.get(id);
     try {
       const res = await fetch(skillApiUrl(id));
@@ -460,6 +468,10 @@
     if (!Number.isFinite(id) || id <= 0) return '';
     const fn = iconByCom2usId.get(id);
     if (!fn) return '';
+    const la = window.SWRM_LOCAL_ASSETS;
+    if (la && typeof la.resolveSkillIconUrl === 'function') {
+      return la.resolveSkillIconUrl(fn);
+    }
     const rel = `static/herders/images/skills/${fn}`;
     const direct = `https://swarfarm.com/${rel}`;
     const useProxy =
@@ -467,6 +479,18 @@
     const api = typeof SWRM_API === 'string' ? SWRM_API : '';
     if (useProxy && api) return `${api}/swarfarm/${rel}`;
     return direct;
+  }
+
+  function skillIconFallbackUrl(skillId) {
+    const id = Number(skillId);
+    if (!Number.isFinite(id) || id <= 0) return '';
+    const fn = iconByCom2usId.get(id);
+    if (!fn) return '';
+    const la = window.SWRM_LOCAL_ASSETS;
+    if (la && typeof la.skillIconFallbackUrl === 'function') {
+      return la.skillIconFallbackUrl(fn);
+    }
+    return '';
   }
 
   async function ensureSkillIcon(skillId) {
@@ -529,6 +553,7 @@
     cooldownUnlockLevelFromUpgrades,
     attachSkillMetaToRow,
     skillIconUrl,
+    skillIconFallbackUrl,
     ensureSkillIcon,
     maxLevel,
     isUpgradeableSkill,

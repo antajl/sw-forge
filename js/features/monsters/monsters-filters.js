@@ -2,18 +2,29 @@
   function bindMonsterPortrait(img, imageFilename) {
     if (!img || !imageFilename || !window.SWRM_MONSTER_DB) return;
     const db = window.SWRM_MONSTER_DB;
+    const la = window.SWRM_LOCAL_ASSETS;
     let base = 0;
     img.onerror = () => {
       base += 1;
       if (base < db.IMG_BASES.length) {
-        img.src = db.monsterImageUrl(imageFilename, base);
+        const url =
+          la && typeof la.monsterPortraitRemoteUrl === 'function'
+            ? la.monsterPortraitRemoteUrl(imageFilename, base)
+            : db.monsterImageUrl(imageFilename, base);
+        img.src = url;
       } else {
         img.removeAttribute('src');
         img.classList.add('monsters-card__img--placeholder');
       }
     };
     img.referrerPolicy = 'no-referrer';
-    img.src = db.monsterImageUrl(imageFilename, 0);
+    const primary = db.monsterImageUrl(imageFilename, 0);
+    const fb =
+      la && typeof la.monsterPortraitFallbackUrl === 'function'
+        ? la.monsterPortraitFallbackUrl(imageFilename)
+        : '';
+    if (fb && fb !== primary) img.dataset.fallback = fb;
+    img.src = primary;
   }
 
   function elementClass(el) {

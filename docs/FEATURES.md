@@ -19,7 +19,7 @@ How UI and data are split after the gear/teams redistribution.
 | `shell/` | App chrome, tabs, i18n bindings | `bootstrap.js`, `i18n-bindings.js`, `main-tabs.js` |
 | `runes/` | Dashboard, rune table, filters, upload | `table.js`, `table-row-render.js`, `dashboard.js`, … |
 | `gear/` | Artifact & relic inventory tables + Runes/Artifacts/Relics sub-tabs | `table-kind.js`, `artifacts-table.js`, `relics-table.js` |
-| `teams/` | Team sets builder (Monsters → Teams hub pane) | `storage.js`, `ui.js` |
+| `teams/` | Team sets builder (Monsters → Teams hub pane); combat SPD badges | `storage.js`, `ui.js` |
 | `monsters/` | Roster, cards, detail, gear on unit | `monsters-gear.js`, `monsters-detail.js`, … |
 | `rules/` | Rune rules panels | `panel.js`, `bootstrap.js`, … |
 | `app/` | Settings, share, changelog | `settings-ui.js`, `share.js` |
@@ -44,6 +44,27 @@ How UI and data are split after the gear/teams redistribution.
 | `teams/` | Teams builder shell & cards |
 | `monsters/` | Roster, detail, cards, rune slots on unit |
 | `app/`, `guide/` | Settings, guide archive |
+
+## Combat SPD & Sky Tribe Totem (`monsters-stats-calc.js` + `teams/ui.js`)
+
+Displayed on **Teams** slot badges and **Monster detail → Total SPD** (same math).
+
+| Piece | Source |
+|--------|--------|
+| Base SPD | SWARFARM scaled to unit level (fallback: `unit_list[].spd` when it is base-only) |
+| +Runes / Swift | Computed from equipped runes + set bonuses (SWEX `unit_list[].spd` is **not** reused when it equals base) |
+| +Totem % of base | Parsed from SWEX on load (priority below) |
+| +Leader % of base | Active team leader with Attack Speed leader skill |
+
+**Totem level in SWEX (2025–2026 exports):**
+
+1. **`wizard_skill_list`** — row with **`skill_id: 14`** (Sky Tribe Totem / Speed Monument), field **`level`** (1–10 → up to 15% at level 10; table supports levels to 20).
+2. **`wizard_info.unit_home_bonus`** (or root `unit_home_bonus`) — if present, SPD stat rows.
+3. **Legacy:** **`deco_list`** / **`deo_list`** — **`master_id: 11001`**.
+
+Diagnostic: `node tools/inspect-totem-from-json.mjs path/to/export.json`
+
+**Demo teams:** `teams/storage.js` seeds sample lineups only when demo dataset is active; `syncDemoTeamsWithDatasetMode()` removes them after a real SWEX load.
 
 Entry: `css/style.css` imports `runes`, `gear`, `teams`, `monsters` index files.
 

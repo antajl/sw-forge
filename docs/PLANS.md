@@ -9,9 +9,9 @@
 
 ## 1. Monsters — account-wide
 
-1. Трекер fusion / hexagram (что можно слить из текущей коробки).
-2. Monster Builder lite: подсказка рун из инвентаря под архетип → открытие в Rune Table.
-3. Teams: заметки к декам, readiness, speed-gap по статам SWEX.
+1. ~~Fusion / hexagram tracker~~ — отложено (в игре уже есть нормальный трекер).
+2. **Monster Builder lite** — подсказка рун из инвентаря под архетип → открытие в Rune Table.
+3. **Teams** — ~~боевой SPD + тотем из SWEX~~; опционально: баф скорости в бою, нагляднее gap vs самый медленный слот.
 
 ## 2. Monsters — Dashboard (опционально)
 
@@ -22,18 +22,19 @@
 
 ## 3. Share
 
-1. Mentor review: клик из баннера → отфильтрованный Roster (очередь skill-up, без рун и т.д.).
+1. ~~**Mentor review** — клик из баннера → Roster~~ (см. Releases 2026-05-22).
+2. ~~Share в карточке Database slots~~; ~~глобус языка в шапке~~ (см. Releases 2026-05-23). Остаётся: полный share «all» при очень больших JSON (лимит Worker).
 
 ## 4. Runes
 
 1. Сравнение двух слотов SWEX (Database Slots): diff вердиктов и ролей.
 2. Опционально жёстче правило Grind (eff / HR subs).
 
-## 5. Monsters — roster depth
+## 5. Monsters — roster depth (низкий приоритет / уточнить)
 
-1. Сравнение двух юнитов side-by-side (статы, скиллы, 6 слотов).
-2. Подсказка «дубликат Nat5» (два одинаковых — кандидат в food?).
-3. Content tags на юнитах (RTA, Siege, ToA) + фильтр.
+1. ~~Side-by-side двух юнитов~~ — отложено (неочевидная ценность vs деталка + фильтры).
+2. ~~Дубликаты Nat5~~ — отложено (можно закрыть фильтром/тегом food вручную).
+3. **Content tags** — пользовательские пресеты (RTA, Siege, ToA) + фильтр по тегам (не встроенные теги игры).
 
 ## 6. Artifacts & relics
 
@@ -49,16 +50,11 @@
 
 ## 9. Локальные ассеты (вместо SWARFARM CDN)
 
-Перенос JSON и картинок на наш хост: меньше внешних запросов, стабильнее UI.  
-**Детальный план, папки, фазы, оценки размера:** [`PLANS-LOCAL-ASSETS.md`](PLANS-LOCAL-ASSETS.md).
+**Статус: эпик закрыт в коде** (A–F + fetch-скрипты). Осталось по желанию: проверить лимит Pages, деплой `assets/` + JSON, опционально `SWRM_LOCAL_ASSETS_ONLY`.
 
-Кратко по приоритету:
+**Детали:** [`PLANS-LOCAL-ASSETS.md`](PLANS-LOCAL-ASSETS.md) · поддержка: `npm run fetch:data`, `fetch:assets`, `diagnose:missing-assets`.
 
-1. ~~Скиллы JSON + meta~~ (готово — `skills-index.json`).
-2. Мелкий static: элементы, сеты рун, devilmon, leader tiles.
-3. Иконки артефактов + скиллов (~5k).
-4. Портреты монстров (тяжёлое; возможно R2 или только monsters из SWEX).
-5. Расширить `monsters-index` (статы без API в деталке).
+Опционально позже: lazy-портреты только из SWEX; R2 вместо git для PNG.
 
 ## 8. Долгий горизонт
 

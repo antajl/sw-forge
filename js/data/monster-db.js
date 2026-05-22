@@ -21,10 +21,21 @@
   function monsterImageUrl(imageFilename, baseIndex) {
     if (!imageFilename) return '';
     const i = baseIndex != null ? baseIndex : 0;
+    const la = window.SWRM_LOCAL_ASSETS;
+    if (i === 0 && la && typeof la.resolveMonsterPortraitUrl === 'function') {
+      return la.resolveMonsterPortraitUrl(imageFilename);
+    }
+    if (la && typeof la.monsterPortraitRemoteUrl === 'function') {
+      return la.monsterPortraitRemoteUrl(imageFilename, i);
+    }
     return IMG_BASES[i] ? IMG_BASES[i] + imageFilename : '';
   }
 
   function devilmonImageUrl() {
+    const la = window.SWRM_LOCAL_ASSETS;
+    if (la && typeof la.preferLocal === 'function') {
+      return la.preferLocal('ui', 'devilmon.png');
+    }
     return DEVILMON_DARK_IMG;
   }
 
@@ -34,6 +45,10 @@
       .toLowerCase()
       .replace(/\s+/g, '_');
     if (!key || key.startsWith('set')) return '';
+    const la = window.SWRM_LOCAL_ASSETS;
+    if (la && typeof la.preferLocal === 'function') {
+      return la.preferLocal('runes', `${key}.png`);
+    }
     return `${RUNE_SET_IMG_BASE}${key}.png`;
   }
 
@@ -61,6 +76,10 @@
   function elementIconUrl(elementName) {
     const k = String(elementName || '').trim().toLowerCase();
     if (!k || !['fire', 'water', 'wind', 'light', 'dark'].includes(k)) return '';
+    const la = window.SWRM_LOCAL_ASSETS;
+    if (la && typeof la.preferLocal === 'function') {
+      return la.preferLocal('elements', `${k}.png`);
+    }
     return swarfarmAssetUrl(`${ELEMENT_ICON_BASE}${k}.png`);
   }
 
@@ -146,8 +165,15 @@
     );
   }
 
-  /** SWARFARM leader skill tiles: static/herders/images/skills/leader/leader_skill_{Attr}_{Area}.png */
-  function leaderSkillIconUrl(leaderSkill) {
+  /** Index row includes scaled base stats + leader_skill (schema 2+). */
+  function monsterHasBundledDetail(row) {
+    if (!row || typeof row !== 'object') return false;
+    const hasStats = row.max_lvl_hp != null && row.base_hp != null;
+    return hasStats && row.leader_skill !== undefined;
+  }
+
+  /** SWARFARM leader tiles: leader_skill_{Attr}_{Area}.png (also try nested skill icon via skill-db). */
+  function leaderSkillIconFilename(leaderSkill) {
     if (!leaderSkill) return '';
     const attr = String(leaderSkill.attribute || '')
       .trim()
@@ -161,7 +187,22 @@
     } else if (area && area !== 'General') {
       suffix = `_${area}`;
     }
-    const filename = `leader_skill_${attr}${suffix}.png`;
+    return `leader_skill_${attr}${suffix}.png`;
+  }
+
+  function leaderSkillIconUrl(leaderSkill) {
+    const filename = leaderSkillIconFilename(leaderSkill);
+    if (!filename) return '';
+    const la = window.SWRM_LOCAL_ASSETS;
+    if (la && typeof la.resolveLeaderIconUrl === 'function') {
+      return la.resolveLeaderIconUrl(filename);
+    }
+    return swarfarmAssetUrl(`static/herders/images/skills/leader/${filename}`);
+  }
+
+  function leaderSkillIconRemoteUrl(leaderSkill) {
+    const filename = leaderSkillIconFilename(leaderSkill);
+    if (!filename) return '';
     return swarfarmAssetUrl(`static/herders/images/skills/leader/${filename}`);
   }
 
@@ -244,7 +285,16 @@
         lastLoadCount = byCom2usId.size;
         loaded = true;
         if (lastLoadCount > 0) {
-          console.log(`Monster index loaded: ${lastLoadCount} monsters`);
+          const schema = Number(data.schema);
+          const sample = byCom2usId.values().next().value;
+          const bundled =
+            sample && monsterHasBundledDetail(sample) ? 'stats+leader' : 'names only';
+          console.log(`Monster index loaded: ${lastLoadCount} monsters (${bundled})`);
+          if (schema < 2 && lastLoadCount > 0) {
+            console.warn(
+              'Monster index schema < 2 — re-run: node tools/fetch-monsters-index.mjs --fresh',
+            );
+          }
         } else {
           console.warn(
             'Monster index is empty — run: node tools/fetch-monsters-index.mjs',
@@ -288,6 +338,9 @@
   async function fetchMonsterMeta(masterId, options) {
     const id = Number(masterId);
     if (!Number.isFinite(id)) return null;
+    if (typeof SWRM_LOCAL_ASSETS_ONLY === 'boolean' && SWRM_LOCAL_ASSETS_ONLY) {
+      return byCom2usId.get(id) || null;
+    }
     const force = options && options.force === true;
     const detail = options && options.detail === true;
     const cached = byCom2usId.get(id);
@@ -303,7 +356,7 @@
     ) {
       return cached;
     }
-    if (cached && !force && detail && cachedHasStats && cached.leader_skill !== undefined) {
+    if (cached && !force && detail && monsterHasBundledDetail(cached)) {
       return cached;
     }
     try {
@@ -358,7 +411,10 @@
     isMonsterAwakened,
     monsterBaseStatsAtLevel,
     hasUsableBaseStats,
+    monsterHasBundledDetail,
     leaderSkillIconUrl,
+    leaderSkillIconRemoteUrl,
+    leaderSkillIconFilename,
     swarfarmApiUrl,
     IMG_BASES,
     isReady: () => loaded,

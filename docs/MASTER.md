@@ -182,12 +182,12 @@ SW Forge — статический сайт на **Cloudflare Pages**: анал
 | `monsters/monsters-state.js` | Состояние, ключи localStorage |
 | `monsters/monsters-hub.js` | Вкладка Monsters |
 | `teams/storage.js` | Teams localStorage + share export |
-| `teams/ui.js` | Teams UI, share view |
+| `teams/ui.js` | Teams UI, combat SPD, share view |
 | `monsters/monsters-storage.js` | Фильтры, meta units |
 | `monsters/monsters-bulk.js` | Bulk select / marks |
 | `monsters/monsters-filters.js` | Логика фильтров |
 | `monsters/box-overview.js` | Плитки обзора коробки |
-| `monsters/monsters-stats-calc.js` | Статы |
+| `monsters/monsters-stats-calc.js` | Статы, боевой SPD, парсинг тотема (`wizard_skill_list` skill_id 14) |
 | `monsters/monsters-gear.js` | Gear на detail |
 | `monsters/monsters-runes.js` | Руны на карточке |
 | `monsters/monsters-detail.js` | Панель деталей |
@@ -206,6 +206,7 @@ SW Forge — статический сайт на **Cloudflare Pages**: анал
 | `fetch-monsters-index.mjs` | Обновить `monsters-index.json` |
 | `fetch-skills-index.mjs` | `skills-index.json` (+ `metaById`; `--fresh` для полной перекачки) |
 | `extract-tab-icons.mjs` | Иконки вкладок |
+| `inspect-totem-from-json.mjs` | Где в SWEX лежит уровень Sky Tribe Totem (skill_id 14) |
 
 Одноразовые патчи: `tools/archive/` (не трогать).
 
@@ -253,9 +254,9 @@ Cloudflare Worker + D1 — Share API (`worker/src/index.js`, `wrangler.toml`).
 
 | Источник | Локально (`data/`) | По сети (рантайм) |
 |----------|-------------------|-------------------|
-| **Скиллы** | `skills-index.json`: max level, иконка, имя, описание, upgrades, CD | Fallback API только если `com2us_id` нет в индексе |
-| **Монстры** | `monsters-index.json`: имя, иконка, элемент, slug, … | `fetchMonsterMetaForDetail` — базовые статы / leader skill для панели деталки |
-| **Картинки** | — | Портреты монстров, иконки скиллов, элементов, артефактов (SWARFARM static), сеты рун, devilmon, leader skill tiles — URL через `swarfarmAssetUrl()` (прямо или Cloudflare proxy) |
+| **Скиллы** | `skills-index.json`: max level, иконка, имя, описание, upgrades, CD | Fallback API только если `com2us_id` нет в индексе (`SWRM_LOCAL_ASSETS_ONLY` отключает API) |
+| **Монстры** | `monsters-index.json` schema 2: имя, статы, `leader_skill`, портрет path | API деталки не вызывается, если строка полная (`monsterHasBundledDetail`) |
+| **Картинки** | `assets/` + manifests (`skills-icons`, `leader-icons`, `monsters-portraits`, static bundle) | CDN fallback, пока файла нет в manifest; `SWRM_LOCAL_ASSETS_ONLY=true` — только локальные PNG |
 | **Реликвии** | `assets/relics/*.png` (вручную) | — |
 | **SWEX** | `demo.json` только для демо | Экспорт пользователя — всегда локально в браузере |
 

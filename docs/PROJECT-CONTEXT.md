@@ -26,7 +26,7 @@ Vanilla JS + CSS · **Build:** `npm run build` (`build:css` + `build:ui`) · **P
 | Runes UI | `js/features/runes/` |
 | Monsters | `js/features/monsters/` |
 | Gear tables | `js/features/gear/` |
-| Teams | `js/features/teams/` |
+| Teams | `js/features/teams/` · combat SPD + totem via `monsters-stats-calc.js` |
 | SWEX / indexes | `js/data/` · bundled `data/*.json` (see `data/README.md`) |
 | i18n, changelog | `js/core/` |
 

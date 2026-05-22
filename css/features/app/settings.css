@@ -22,10 +22,32 @@
   overflow: hidden;
 }
 
+#tab-app-settings .app-settings-card--slots {
+  overflow: visible;
+}
+
 #tab-app-settings .app-settings-card__head {
   padding: 14px 16px 10px;
   border-bottom: 1px solid color-mix(in srgb, var(--border2) 85%, transparent);
   background: color-mix(in srgb, var(--bg3) 88%, var(--surface));
+}
+
+#tab-app-settings .app-settings-card__head--split {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px 16px;
+}
+
+#tab-app-settings .app-settings-card__head-text {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+#tab-app-settings .app-settings-card__head-actions {
+  flex: 0 0 auto;
+  align-self: center;
 }
 
 #tab-app-settings .app-settings-card__title {
@@ -51,35 +73,17 @@
   gap: 12px;
 }
 
-#tab-app-settings .app-settings-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  max-width: 20rem;
-}
-
-#tab-app-settings .app-settings-field label {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--text-dim);
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-}
-
-#tab-app-settings .app-settings-field select {
-  width: 100%;
-}
-
-#tab-app-settings .share-profile-actions {
-  margin: 0;
-}
-
 #tab-app-settings .db-slots-wrap {
   margin-top: 0;
 }
 
-@media (max-width: 640px) {
-  #tab-app-settings .db-slots-wrap {
-    grid-template-columns: 1fr;
-  }
+#tab-app-settings .share-split--compact {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+#tab-app-settings .share-split--compact .share-split__main,
+#tab-app-settings .share-split--compact .share-split__caret {
+  min-height: 30px;
+  padding: 6px 10px;
+  font-size: 0.75rem;
 }

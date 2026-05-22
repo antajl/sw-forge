@@ -7,9 +7,33 @@
  */
 const STATIC_CHANGELOG = [
   {
+    date: '2026-05-23',
+    items: {
+      en: [
+        'Monsters → Teams: combat SPD on each slot (base at level + runes/Swift + Sky Tribe Totem and leader % of base). Portraits stay after refresh.',
+        'Monster detail Total SPD uses the same formula; totem level is read from modern SWEX (`wizard_skill_list`, skill_id 14). Older exports may still use `deco_list` / `deo_list` with master_id 11001.',
+        'Demo sample teams only while the embedded demo dataset is active — they disappear after you load your own SWEX.',
+        'App Settings: Share control in the Database slots card; header language is a globe menu (EN / RU / FR).',
+      ],
+      ru: [
+        'Монстры → Teams: боевая скорость на слоте (база на уровне + руны/Swift + % тотема Sky Tribe и лидера от базы). Портреты не пропадают после F5.',
+        'Total SPD в карточке монстра — та же формула; уровень тотема из актуального SWEX (`wizard_skill_list`, skill_id 14). Старые файлы — `deco_list` / `deo_list`, master_id 11001.',
+        'Демо-составы только в режиме demo-данных — после загрузки своего SWEX удаляются.',
+        'Настройки: Share в карточке слотов базы; язык в шапке — иконка глобуса (EN / RU / FR).',
+      ],
+      fr: [
+        'Monstres → Teams : VIT combat par slot (base + runes/Swift + totem Sky Tribe et lead % de la base). Portraits conservés après rechargement.',
+        'Total VIT au détail : même formule ; totem lu depuis SWEX récent (`wizard_skill_list`, skill_id 14). Anciens exports : `deco_list` / `deo_list`, master_id 11001.',
+        'Équipes démo uniquement avec le jeu de données démo — retirées après import de votre SWEX.',
+        'Paramètres : partage dans la carte des slots ; langue via icône globe.',
+      ],
+    },
+  },
+  {
     date: '2026-05-22',
     items: {
       en: [
+        'Monster portraits, skill icons, leader skills, rune sets, elements, and artifact types load from the site bundle when available — faster repeat visits, less reliance on external image hosts.',
         'Monsters → Skill plan: storage toggle labels fixed, portraits on Stuck skills, “Skill-ups needed” columns; Roster More filters → Not maxed (skill-ups). Artifacts & Relics tables: type icons (SWARFARM). Forge Score tab: distribution slider works.',
         'Shared accounts: banner shows Keep/Sell, roster summary, and up to three unit names that need runes or skill-ups; Teams tab lists their shared squads.',
         'Open someone else\'s SWEX in read-only from a share link, a ?profile= JSON URL, or embedded ?data= export in the address bar.',
@@ -19,6 +43,7 @@ const STATIC_CHANGELOG = [
         'French UI loads only when you pick FR; fonts are hosted on the site (no Google Fonts).',
       ],
       ru: [
+        'Портреты монстров, иконки скиллов, лидер-скиллы, сеты рун, стихии и типы артефактов по возможности грузятся с сайта — быстрее повторные визиты, меньше зависимость от внешних CDN.',
         'Монстры → Skill plan: подписи Storage, портреты в «застрявших», колонки «нужно skill-up»; в Ростере More filters — «не на макс. (нужны skill-up)». Таблицы артефактов и реликтов: иконки типов. Forge Score: ползунок вкладок.',
         'Чужой аккаунт: в баннере Keep/Sell, сводка по монстрам и до трёх имён юнитов без рун или со skill-up; на Teams — их расшаренные отряды.',
         'Чужой SWEX в режиме только просмотра: ссылка share, ?profile= на JSON или ?data= в адресной строке.',
@@ -231,7 +256,7 @@ const STATIC_ROADMAP = {
         items: [
           'Fusion tracker: what you can build from monsters you already have',
           'Build ideas (lite): rune picks from inventory for a unit → open in the rune table',
-          'Teams: deck notes, squad readiness, speed gaps from export stats',
+          'Teams: optional polish (in-battle speed buff toggle, clearer slowest-slot gap)',
         ],
       },
       {
@@ -336,7 +361,7 @@ const STATIC_ROADMAP = {
         items: [
           'Трекер fusion / hexagram — что можно собрать из того, что уже есть',
           'Подбор рун (lite): идеи из инвентаря под юнита → таблица рун',
-          'Teams: заметки к декам, готовность пачки, разрывы по скорости по статам из экспорта',
+          'Teams: опционально — баф скорости в бою, нагляднее разрыв с самым медленным слотом',
         ],
       },
       {
@@ -440,7 +465,7 @@ const STATIC_ROADMAP = {
         items: [
           'Suivi fusion / hexagram depuis votre boîte',
           'Idées de runes (lite) depuis l’inventaire → table runes',
-          'Teams : notes, préparation d’escouade, écarts de vitesse (stats export)',
+          'Teams : optionnel — buff vitesse en combat, écart vs slot le plus lent',
         ],
       },
       {

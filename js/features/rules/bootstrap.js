@@ -206,10 +206,12 @@
         if (targetSlot) {
           const jsonText = await loadSlotData(targetSlot.id);
           if (tryHydrateRunesFromJsonText(jsonText)) {
+            if (typeof markUsingDemoDataset === 'function') markUsingDemoDataset(false);
             uiAfterSuccessfulRuneRestore(targetSlot);
             restored = true;
           } else if (savedRunes && tryHydrateRunesFromJsonText(savedRunes)) {
             console.log(`IndexedDB empty for Data ${targetSlot.id}; restored from localStorage backup`);
+            if (typeof markUsingDemoDataset === 'function') markUsingDemoDataset(false);
             uiAfterSuccessfulRuneRestore(targetSlot);
             restored = true;
           }
@@ -248,6 +250,7 @@
               console.warn('Could not mirror JSON to IndexedDB slot 1:', e);
             }
           }
+          if (typeof markUsingDemoDataset === 'function') markUsingDemoDataset(false);
           uiAfterSuccessfulRuneRestore({ name: localStorage.getItem('loadedRunesName') || 'Saved export', id: 1 });
           restored = true;
         }

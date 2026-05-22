@@ -5,10 +5,14 @@
   const SHARE_SESSION_KEY = 'swrm_share_readonly_v1';
   const SHARE_EXPIRY_DAYS = 90;
   const SHARE_MODE_STORAGE_KEY = 'swrm_share_mode_v1';
+  /** Cloudflare D1 row limit ~2 MB; keep request body under this. */
+  const SHARE_MAX_BODY_BYTES = 1_850_000;
   let shareReadOnly = false;
   let shareViewLoadFailed = false;
   let shareViewWizardName = '';
   let shareExportMode = 'all';
+  /** Set when viewing a shared profile (payload share_mode). */
+  let shareViewExportMode = '';
 
   const SHARE_MODE_LABEL_KEYS = {
     'all': 'shareModeAll',
@@ -132,6 +136,9 @@
     persistShareSession(true);
     shareViewLoadFailed = false;
     shareViewWizardName = name;
+    shareViewExportMode = String(
+      root.share_mode || parsed.share_mode || parsed.shareMode || '',
+    ).trim();
     if (parsed.teams && typeof setTeamsShareViewPayload === 'function') {
       setTeamsShareViewPayload(parsed.teams);
     } else if (root.teams && typeof setTeamsShareViewPayload === 'function') {
@@ -205,6 +212,43 @@
     return !!unitMetaFor(unitId).favorite;
   }
 
+  function slimRuneRawForShare(raw, parsed) {
+    const src = raw && typeof raw === 'object' ? raw : {};
+    const rid =
+      src.rune_id != null
+        ? Number(src.rune_id)
+        : parsed && parsed.id != null
+          ? Number(parsed.id)
+          : null;
+    if (!Number.isFinite(rid)) return src;
+    const rawRune = parsed && parsed._raw && typeof parsed._raw === 'object' ? parsed._raw : null;
+    const out = {
+      rune_id: rid,
+      slot_no: src.slot_no ?? rawRune?.slot_no ?? parsed?.slot,
+      set_id: src.set_id ?? rawRune?.set_id ?? parsed?.setId,
+      upgrade_curr: src.upgrade_curr ?? rawRune?.upgrade_curr ?? parsed?.level ?? 0,
+      extra: src.extra ?? rawRune?.extra ?? parsed?.grade,
+      class: src.class ?? rawRune?.class,
+      rank: src.rank ?? rawRune?.rank,
+    };
+    if (src.pri_eff) out.pri_eff = src.pri_eff;
+    else if (rawRune?.pri_eff) out.pri_eff = rawRune.pri_eff;
+    else if (parsed?.mainType != null) out.pri_eff = [parsed.mainType, parsed.mainVal];
+    if (src.prefix_eff) out.prefix_eff = src.prefix_eff;
+    else if (rawRune?.prefix_eff) out.prefix_eff = rawRune.prefix_eff;
+    if (src.sec_eff) out.sec_eff = src.sec_eff;
+    else if (rawRune?.sec_eff) out.sec_eff = rawRune.sec_eff;
+    else if (parsed?.substats) {
+      out.sec_eff = (parsed.substats || []).map((s) => [
+        s.type,
+        s.val,
+        s.enchanted ? 1 : 0,
+        s.grind || 0,
+      ]);
+    }
+    return out;
+  }
+
   function buildShareSlimPayload(mode) {
     const exportMode = mode || shareExportMode || 'all';
     const json = activeSwexJson;
@@ -240,38 +284,7 @@
         const runes = (u.runes || []).map((raw) => {
           const rid = raw.rune_id != null ? Number(raw.rune_id) : null;
           const parsed = rid != null && runeById.has(rid) ? runeById.get(rid) : null;
-          if (parsed) {
-            const rawRune = parsed._raw;
-            if (rawRune && typeof rawRune === 'object') {
-              return {
-                rune_id: rid,
-                slot_no: rawRune.slot_no ?? parsed.slot,
-                set_id: rawRune.set_id ?? parsed.setId,
-                upgrade_curr: rawRune.upgrade_curr ?? parsed.level,
-                extra: rawRune.extra,
-                class: rawRune.class,
-                rank: rawRune.rank,
-                pri_eff: rawRune.pri_eff ?? [parsed.mainType, parsed.mainVal],
-                prefix_eff: rawRune.prefix_eff,
-                sec_eff: rawRune.sec_eff,
-              };
-            }
-            return {
-              rune_id: rid,
-              slot_no: parsed.slot,
-              set_id: parsed.setId,
-              upgrade_curr: parsed.level,
-              extra: parsed.grade,
-              pri_eff: [parsed.mainType, parsed.mainVal],
-              sec_eff: (parsed.substats || []).map((s) => [
-                s.type,
-                s.val,
-                s.enchanted ? 1 : 0,
-                s.grind || 0,
-              ]),
-            };
-          }
-          return raw;
+          return slimRuneRawForShare(raw, parsed);
         });
         return {
           unit_master_id: u.unit_master_id,
@@ -301,6 +314,16 @@
       unit_list: units,
       share_mode: exportMode,
     };
+    if (exportMode === 'all') {
+      const inv = json.runes || json.rune_list || [];
+      if (Array.isArray(inv) && inv.length) {
+        payload.runes = inv.map((raw) => {
+          const rid = raw && raw.rune_id != null ? Number(raw.rune_id) : null;
+          const parsed = rid != null && runeById.has(rid) ? runeById.get(rid) : null;
+          return slimRuneRawForShare(raw, parsed);
+        });
+      }
+    }
     if (typeof exportTeamsForShare === 'function') {
       const teams = exportTeamsForShare();
       if (teams) {
@@ -325,7 +348,11 @@
                 attribute: src.attribute,
                 unit_level: src.unit_level,
                 rank: src.rank,
-                runes: (src.runes || []).map((raw) => raw),
+                runes: (src.runes || []).map((raw) => {
+                  const rid = raw.rune_id != null ? Number(raw.rune_id) : null;
+                  const parsed = rid != null && runeById.has(rid) ? runeById.get(rid) : null;
+                  return slimRuneRawForShare(raw, parsed);
+                }),
               });
             }
           }
@@ -358,12 +385,13 @@
       expires_at: shareExpiryUnix(),
     };
     const bodyStr = JSON.stringify(payload);
-    if (bodyStr.length > 900_000) {
+    if (bodyStr.length > SHARE_MAX_BODY_BYTES) {
       const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-      throw new Error(
+      const mb = (bodyStr.length / (1024 * 1024)).toFixed(1);
+      const tpl =
         t.sharePayloadTooLarge ||
-          'Export is too large to share. Try a smaller share mode (e.g. equipped only).',
-      );
+        'Export is too large to share ({size} MB). Try equipped-only, or remove unused runes from the JSON.';
+      throw new Error(tpl.replace(/\{size\}/g, mb));
     }
     const res = await fetch(`${api}/share`, {
       method: 'POST',
@@ -455,8 +483,79 @@
     }
   }
 
-  function buildShareMentorUnitHints(t) {
+  function unitsForShareReview() {
     const cache = typeof monstersEnrichedCache !== 'undefined' ? monstersEnrichedCache : [];
+    if (window.SWRM && typeof window.SWRM.filterPlannerRosterUnits === 'function') {
+      return window.SWRM.filterPlannerRosterUnits(cache);
+    }
+    return cache.filter((u) => {
+      if (typeof isTechnicalFodderMonster === 'function' && isTechnicalFodderMonster(u)) return false;
+      return true;
+    });
+  }
+
+  function syncShareMentorFilterDom(f) {
+    const runeSel = document.getElementById('monsters-filter-rune');
+    const skillSel = document.getElementById('monsters-filter-skill');
+    const locSel = document.getElementById('monsters-filter-location');
+    const sixBtn = document.getElementById('monsters-filter-full-six');
+    if (runeSel) runeSel.value = f.runeFilter || '';
+    if (skillSel) skillSel.value = f.skillFilter || '';
+    if (locSel) locSel.value = f.location || 'all';
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    if (typeof syncMonstersShowAllButton === 'function') {
+      syncMonstersShowAllButton(!!f.fullSixOnly, t);
+    }
+    if (typeof updateMonstersFilterSummary === 'function') updateMonstersFilterSummary();
+  }
+
+  function openMentorRoster(kind) {
+    const k = String(kind || '').trim();
+    if (!k) return;
+    const f =
+      typeof readMonstersFiltersFromDom === 'function'
+        ? readMonstersFiltersFromDom()
+        : { sort: 'name', q: '', element: '', location: 'all', minLevelMin: 0 };
+    f.runeFilter = '';
+    f.skillFilter = '';
+    f.fullSixOnly = false;
+    f.location = 'all';
+    if (k === 'skills') f.skillFilter = 'needs-up';
+    else if (k === 'partial') f.runeFilter = 'partial';
+    else if (k === 'unruned') f.runeFilter = 'unruned';
+    else if (k === 'attention') {
+      f.skillFilter = 'needs-up';
+    }
+    if (typeof writeMonstersFilters === 'function') writeMonstersFilters(f);
+    syncShareMentorFilterDom(f);
+    if (typeof showMainTab === 'function') {
+      showMainTab('monsters', { monstersSubtab: 'roster', writeHash: true });
+    }
+    window.setTimeout(() => {
+      if (typeof renderMonstersPanel === 'function') void renderMonstersPanel();
+    }, 40);
+  }
+
+  function mentorRosterSegment(innerEscaped, kind) {
+    if (!kind) return innerEscaped;
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const title = escapeHtml(t.shareMentorOpenRoster || 'Open filtered roster');
+    return `<button type="button" class="account-mentor-btn" data-mentor-roster="${escapeHtml(kind)}" title="${title}">${innerEscaped}</button>`;
+  }
+
+  function bindMentorRosterClicks() {
+    if (document.documentElement.dataset.mentorRosterBound) return;
+    document.documentElement.dataset.mentorRosterBound = '1';
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-mentor-roster]');
+      if (!btn) return;
+      e.preventDefault();
+      openMentorRoster(btn.dataset.mentorRoster);
+    });
+  }
+
+  function buildShareMentorUnitHints(t) {
+    const cache = unitsForShareReview();
     if (!cache.length) return '';
     const scored = [];
     for (const u of cache) {
@@ -481,13 +580,22 @@
     }
     if (!names.length) return '';
     const tpl = t.shareReviewUnits || 'Needs attention: {names}';
-    return escapeHtml(tpl.replace(/\{names\}/g, names.join(', ')));
+    const text = tpl.replace(/\{names\}/g, names.join(', '));
+    return mentorRosterSegment(escapeHtml(text), 'attention');
   }
 
-  function buildShareAccountReviewHtml() {
-    if (shareViewLoadFailed) return '';
+  function buildAccountReviewLines(opts) {
+    const o = opts || {};
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const lines = [];
+    if (!o.hideScope) {
+      const mode = o.mode || shareViewExportMode || shareExportMode || 'all';
+      const scopeTpl = shareReadOnly
+        ? t.shareReviewScope || 'In this link: {mode}'
+        : t.accountReviewScope || 'Your box: {mode}';
+      lines.push(escapeHtml(scopeTpl.replace(/\{mode\}/g, shareModeLabel(mode, t))));
+    }
+
     const runes = typeof allRunes !== 'undefined' && Array.isArray(allRunes) ? allRunes : [];
     if (runes.length) {
       let keep = 0;
@@ -498,38 +606,76 @@
         else if (v === 'Sell') sell += 1;
       }
       const tpl = t.shareReviewRunes || '{n} runes · Keep {keep} · Sell {sell}';
-      lines.push(
-        escapeHtml(
-          tpl
-            .replace(/\{n\}/g, String(runes.length))
-            .replace(/\{keep\}/g, String(keep))
-            .replace(/\{sell\}/g, String(sell)),
-        ),
-      );
+      const runeLine = tpl
+        .replace(/\{n\}/g, String(runes.length))
+        .replace(/\{keep\}/g, String(keep))
+        .replace(/\{sell\}/g, String(sell));
+      lines.push(escapeHtml(runeLine));
     }
-    const cache = typeof monstersEnrichedCache !== 'undefined' ? monstersEnrichedCache : [];
-    if (cache.length) {
+
+    const reviewUnits = unitsForShareReview();
+    const stats =
+      window.SWRM && typeof window.SWRM.computeSkillPlannerStats === 'function'
+        ? window.SWRM.computeSkillPlannerStats(reviewUnits)
+        : null;
+    if (stats && (stats.skillUpsTotal > 0 || stats.monstersNeeding > 0)) {
+      const tpl = t.shareReviewSkills || '{skill} skill-ups to max · {monsters} monsters';
+      const skillLine = tpl
+        .replace(/\{skill\}/g, String(stats.skillUpsTotal))
+        .replace(/\{monsters\}/g, String(stats.monstersNeeding));
+      lines.push(mentorRosterSegment(escapeHtml(skillLine), 'skills'));
+    }
+    if (reviewUnits.length) {
       let partial = 0;
-      let skill = 0;
-      for (const u of cache) {
+      for (const u of reviewUnits) {
         if (u.equippedCount > 0 && !u.hasFullRunes) partial += 1;
-        if (u.skillUpsNeeded > 0) skill += u.skillUpsNeeded;
       }
-      const tpl =
-        t.shareReviewMonsters || '{n} monsters · {partial} partial sets · {skill} skill levels to max';
-      lines.push(
-        escapeHtml(
-          tpl
-            .replace(/\{n\}/g, String(cache.length))
-            .replace(/\{partial\}/g, String(partial))
-            .replace(/\{skill\}/g, String(skill)),
-        ),
-      );
+      if (partial > 0) {
+        const tpl = t.shareReviewPartial || '{partial} with incomplete rune sets';
+        const partialLine = tpl.replace(/\{partial\}/g, String(partial));
+        lines.push(mentorRosterSegment(escapeHtml(partialLine), 'partial'));
+      }
     }
+
     const hints = buildShareMentorUnitHints(t);
     if (hints) lines.push(hints);
+    return lines;
+  }
+
+  function buildAccountReviewHtml(opts) {
+    const o = opts || {};
+    if (shareViewLoadFailed) return '';
+    const lines = buildAccountReviewLines(o);
+    const runes = typeof allRunes !== 'undefined' && Array.isArray(allRunes) ? allRunes : [];
     if (!lines.length) return '';
-    return `<p class="share-view-banner__review">${lines.join('<span class="share-view-banner__sep" aria-hidden="true"> · </span>')}</p>`;
+    if (!o.hideScope && lines.length <= 1 && !runes.length) return '';
+    const wrapClass = o.wrapClass || 'account-review';
+    return `<p class="${escapeHtml(wrapClass)}">${lines.join('<span class="account-review__sep" aria-hidden="true"> · </span>')}</p>`;
+  }
+
+  function buildShareAccountReviewHtml() {
+    return buildAccountReviewHtml({ wrapClass: 'share-view-banner__review account-review' });
+  }
+
+  function renderAccountReviewStrip() {
+    const el = document.getElementById('monsters-account-review');
+    if (!el) return;
+    if (shareReadOnly || !allUnits.length) {
+      el.hidden = true;
+      el.innerHTML = '';
+      return;
+    }
+    const html = buildAccountReviewHtml({
+      hideScope: true,
+      wrapClass: 'monsters-box-overview__review account-review',
+    });
+    if (!html) {
+      el.hidden = true;
+      el.innerHTML = '';
+      return;
+    }
+    el.hidden = false;
+    el.innerHTML = html;
   }
 
   function renderShareViewBanner() {
@@ -687,6 +833,7 @@
   function bindShareProfileUi() {
     shareExportMode = readStoredShareMode();
     syncShareSplitLabels();
+    bindMentorRosterClicks();
 
     document.addEventListener('click', (e) => {
       const mainBtn = e.target.closest('.share-split__main');
@@ -764,5 +911,8 @@
   window.SWRM.isShareReadOnly = isShareReadOnly;
   window.SWRM.applyShareReadOnlyUi = applyShareReadOnlyUi;
   window.SWRM.renderShareViewBanner = renderShareViewBanner;
+  window.SWRM.openMentorRoster = openMentorRoster;
+  window.SWRM.buildAccountReviewHtml = buildAccountReviewHtml;
+  window.SWRM.renderAccountReviewStrip = renderAccountReviewStrip;
   window.SWRM.getShareIdFromUrl = getShareIdFromUrl;
   window.SWRM.getProfileLinkFromUrl = getProfileLinkFromUrl;

@@ -44,6 +44,10 @@
   function artifactIconUrl(artifact) {
     const key = artifactIconKey(artifact);
     if (!key) return '';
+    const la = window.SWRM_LOCAL_ASSETS;
+    if (la && typeof la.preferLocal === 'function') {
+      return la.preferLocal('artifacts', `${key}.png`);
+    }
     return assetUrl(`${ARTIFACT_IMG_BASE}${key}.png`);
   }
 

@@ -8,19 +8,17 @@
   <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16.png" />
   <link rel="shortcut icon" href="/assets/favicon-32.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png" />
-  <!-- Inline: SVGs have a huge default intrinsic size before css/style.css loads (e.g. live reload). -->
+  <!-- Inline: SVGs have a huge default intrinsic size before css/dist/app.css loads (e.g. live reload). -->
   <style>
     .logo__img { height: 42px; max-width: min(220px, 48vw); }
     .header-theme-icon, .tab__icon-svg, .tab__icon-mask, .theme-toggle__icon { width: 22px; height: 22px; max-width: 22px; max-height: 22px; display: block; flex-shrink: 0; }
-    /* Avoid default link purple (currentColor) until css/style.css loads */
+    /* Avoid default link purple (currentColor) until css/dist/app.css loads */
     #header-donate-link .header-donate-heart { color: #d04356; }
     /* Stage metric SVGs are huge by default — clip collapsed progression panel until CSS loads */
     .stage-metric-icon svg { width: 18px; height: 18px; max-width: 18px; max-height: 18px; display: block; }
     #stage-advisor.is-compact .stage-advisor-expanded-wrap { max-height: 0 !important; overflow: hidden !important; visibility: hidden; }
   </style>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/dist/app.css" />
 </head>
 <body>
 
@@ -328,6 +326,10 @@
               aria-controls="dash-pane-eff" aria-selected="false" data-dash-uni="eff" tabindex="-1">
               <span class="rules-subtab__label">Efficiency</span>
             </button>
+            <button type="button" class="rules-subtab dash-unified-tab" role="tab" id="dash-unified-tab-score"
+              aria-controls="dash-pane-score" aria-selected="false" data-dash-uni="score" tabindex="-1">
+              <span class="rules-subtab__label">Forge Score</span>
+            </button>
           </nav>
           <div class="dash-unified-panes" id="dash-unified-panes">
           <div id="dash-pane-verdict" class="dash-unified-pane is-active" role="tabpanel" aria-labelledby="dash-unified-tab-verdict">
@@ -349,6 +351,12 @@
             <div class="eff-histo-host eff-histo-host--dash-pane">
               <div class="eff-median-line" id="eff-median-line" hidden role="img" tabindex="0"></div>
               <div id="eff-chart" class="eff-chart"></div>
+            </div>
+          </div>
+          <div id="dash-pane-score" class="dash-unified-pane" role="tabpanel" aria-labelledby="dash-unified-tab-score" hidden>
+            <div class="eff-histo-host eff-histo-host--dash-pane eff-histo-host--score-pane">
+              <div class="eff-median-line" id="score-median-line" hidden role="img" tabindex="0"></div>
+              <div id="score-chart" class="eff-chart eff-chart--score"></div>
             </div>
           </div>
           </div>
@@ -633,7 +641,7 @@
               </div>
             </div>
           </div>
-          <div id="rune-table-roster-meta" class="monsters-roster-meta rune-table-roster-meta">
+          <div id="rune-table-roster-meta" class="monsters-roster-meta rune-table-roster-meta" data-gear-roster-meta="runes">
             <div class="monsters-chips monsters-chips--stats" id="rune-table-roster-chips" aria-live="polite"></div>
           </div>
           <div id="rune-table-active-filters" class="rune-table-active-filters" hidden>
@@ -654,8 +662,8 @@
                     <th data-sort="s2" class="col-sub">Sub 2</th>
                     <th data-sort="s3" class="col-sub">Sub 3</th>
                     <th data-sort="s4" class="col-sub">Sub 4</th>
-                    <th data-sort="eff" class="th-num col-num"><span id="lbl-th-eff">Eff%</span></th>
-                    <th data-sort="score" class="th-num col-num"><span class="th-text" id="lbl-th-score">Score</span></th>
+                    <th data-sort="score" class="th-num col-num th-col-primary"><span class="th-text" id="lbl-th-score">Score</span></th>
+                    <th data-sort="eff" class="th-num col-num th-col-secondary"><span id="lbl-th-eff">Eff%</span></th>
                     <th data-sort="role" class="col-text" data-filter-key="role"><span class="th-text" id="lbl-th-role">Role</span></th>
                     <th data-sort="verdict" class="col-text" data-filter-key="verdict"><span class="th-text" id="lbl-th-verdict">Verdict</span></th>
                     <th id="target-col-header" class="hidden col-text">Target</th>
@@ -666,8 +674,11 @@
             </div>
           </div>
           <div class="table-kind-pane" data-table-kind-pane="artifacts" hidden>
+            <div id="artifact-table-roster-meta" class="monsters-roster-meta rune-table-roster-meta" data-gear-roster-meta="artifacts" hidden>
+              <div class="monsters-chips monsters-chips--stats" id="artifact-table-roster-chips" aria-live="polite"></div>
+            </div>
             <div class="table-wrap" id="artifact-table-scroll" tabindex="0" role="region" aria-label="Artifact table">
-              <table id="artifact-table" class="gear-table">
+              <table id="artifact-table" class="gear-table swrm-table-zebra">
                 <thead>
                   <tr>
                     <th class="col-grade" id="lbl-th-art-grade">Grade</th>
@@ -682,8 +693,11 @@
             </div>
           </div>
           <div class="table-kind-pane" data-table-kind-pane="relics" hidden>
+            <div id="relic-table-roster-meta" class="monsters-roster-meta rune-table-roster-meta" data-gear-roster-meta="relics" hidden>
+              <div class="monsters-chips monsters-chips--stats" id="relic-table-roster-chips" aria-live="polite"></div>
+            </div>
             <div class="table-wrap" id="relic-table-scroll" tabindex="0" role="region" aria-label="Relic table">
-              <table id="relic-table" class="gear-table">
+              <table id="relic-table" class="gear-table swrm-table-zebra">
                 <thead>
                   <tr>
                     <th id="lbl-th-rel-category">Category</th>
@@ -704,6 +718,10 @@
 
       <div id="tab-settings" class="runes-hub-pane rules-mode-expert" data-runes-pane="settings" role="tabpanel" aria-labelledby="runes-hub-tab-settings" hidden>
       <div class="rules-tab-shell">
+        <aside class="rules-expert-banner" id="rules-expert-banner" role="note">
+          <p class="rules-expert-banner__title" id="lbl-rules-expert-banner-title"></p>
+          <p class="rules-expert-banner__text" id="lbl-rules-expert-banner-text"></p>
+        </aside>
         <header class="rules-page-header visually-hidden" aria-hidden="true">
           <h2 class="rules-page-title" id="lbl-rules-page-title">Rune Rules</h2>
           <p class="rules-page-lead" id="lbl-rules-page-lead"></p>
@@ -957,7 +975,49 @@
             data-monsters-hub="teams" aria-selected="false" aria-controls="tab-monsters-teams" tabindex="-1">
             <span class="rules-subtab__label" id="lbl-monsters-hub-teams">Teams</span>
           </button>
+          <button type="button" role="tab" class="rules-subtab monsters-hub-tab" id="monsters-hub-tab-planner"
+            data-monsters-hub="planner" aria-selected="false" aria-controls="tab-monsters-planner" tabindex="-1">
+            <span class="rules-subtab__label" id="lbl-monsters-hub-planner">Skill plan</span>
+          </button>
         </nav>
+        <div id="tab-monsters-planner" class="monsters-hub-pane" data-monsters-pane="planner" role="tabpanel" aria-labelledby="monsters-hub-tab-planner" hidden>
+          <div class="skill-planner" id="skill-planner-root">
+            <p class="skill-planner__lead" id="skill-planner-lead"></p>
+            <div class="skill-planner__summary" id="skill-planner-summary" aria-live="polite"></div>
+            <div class="skill-planner__toolbar">
+              <label class="skill-planner__filter">
+                <span id="lbl-skill-planner-nat">Priority</span>
+                <select id="skill-planner-nat-filter" aria-labelledby="lbl-skill-planner-nat">
+                  <option value="all" id="lbl-skill-planner-nat-all">All naturals</option>
+                  <option value="nat5" id="lbl-skill-planner-nat5">Nat 5 only</option>
+                  <option value="nat4plus" id="lbl-skill-planner-nat4plus">Nat 4+</option>
+                  <option value="nat4" id="lbl-skill-planner-nat4-only">Nat 4 only</option>
+                  <option value="nat3" id="lbl-skill-planner-nat3">Nat 3 only</option>
+                </select>
+              </label>
+              <button type="button" class="btn-ghost btn-toolbar skill-planner__toggle" id="skill-planner-exclude-storage" aria-pressed="true">
+                <span id="lbl-skill-planner-exclude-storage">Exclude Storage</span>
+              </button>
+            </div>
+            <p class="skill-planner__empty" id="skill-planner-empty" hidden></p>
+            <nav class="rules-subtabs skill-planner__tabs" id="skill-planner-view-tabs" role="tablist" aria-label="">
+              <button type="button" role="tab" class="rules-subtab skill-planner__tab is-active" id="skill-planner-tab-queue"
+                data-planner-view="queue" aria-selected="true" aria-controls="skill-planner-panel-queue" tabindex="0">
+                <span class="rules-subtab__label" id="lbl-skill-planner-tab-queue">Priority queue</span>
+              </button>
+              <button type="button" role="tab" class="rules-subtab skill-planner__tab" id="skill-planner-tab-stuck"
+                data-planner-view="stuck" aria-selected="false" aria-controls="skill-planner-panel-stuck" tabindex="-1">
+                <span class="rules-subtab__label" id="lbl-skill-planner-tab-stuck">Cooldown hunt</span>
+              </button>
+            </nav>
+            <div id="skill-planner-panel-queue" class="skill-planner__panel is-active" role="tabpanel" aria-labelledby="skill-planner-tab-queue">
+              <div class="skill-planner__table-wrap" id="skill-planner-queue"></div>
+            </div>
+            <div id="skill-planner-panel-stuck" class="skill-planner__panel" role="tabpanel" aria-labelledby="skill-planner-tab-stuck" hidden>
+              <div class="skill-planner__table-wrap" id="skill-planner-stuck"></div>
+            </div>
+          </div>
+        </div>
         <div id="tab-monsters-teams" class="monsters-hub-pane" data-monsters-pane="teams" role="tabpanel" aria-labelledby="monsters-hub-tab-teams" hidden>
           <div class="teams-shell" id="teams-shell">
             <div class="teams-layout">
@@ -1084,6 +1144,14 @@
               </div>
               <p class="monsters-toolbar__filters-heading" id="lbl-monsters-filters-basic">Basic filters</p>
               <div class="monsters-toolbar__filters-grid monsters-toolbar__filters-grid--primary">
+                <label class="monsters-filter-skill-up-label">
+                  <span id="lbl-monsters-filter-skill">Skills</span>
+                  <select id="monsters-filter-skill">
+                    <option value="" id="lbl-monsters-filter-skill-all">All skills</option>
+                    <option value="needs-up" id="lbl-monsters-filter-skill-needs">Not maxed (skill-ups needed)</option>
+                    <option value="maxed" id="lbl-monsters-filter-skill-maxed">Max skills</option>
+                  </select>
+                </label>
                 <label>
                   <span id="lbl-monsters-filter-location">Location</span>
                   <select id="monsters-filter-location">
@@ -1100,14 +1168,6 @@
                     <option value="Attack">Attack</option>
                     <option value="Defense">Defense</option>
                     <option value="Support">Support</option>
-                  </select>
-                </label>
-                <label>
-                  <span id="lbl-monsters-filter-skill">Skills</span>
-                  <select id="monsters-filter-skill">
-                    <option value="">All skills</option>
-                    <option value="maxed">Max skills</option>
-                    <option value="needs-up">Needs skill-ups</option>
                   </select>
                 </label>
                 <label>
@@ -1600,8 +1660,8 @@
               <div class="guide-col-map">
                 <div class="guide-col-map__item"><span class="guide-verdict-chip keep">Role</span><span>Build the rune fits (or Universal)</span></div>
                 <div class="guide-col-map__item"><span class="guide-verdict-chip finish">Verdict</span><span>Upgrade · Finish · Keep · Gem · Grind · Reapp · Sell</span></div>
-                <div class="guide-col-map__item"><span class="guide-verdict-chip upgrade">Eff%</span><span>Classic efficiency (roll totals / 2.8) — capped at 100%</span></div>
-                <div class="guide-col-map__item"><span class="guide-verdict-chip keep">Score</span><span>Forge Score — our stat-value + synergy rating (see below)</span></div>
+                <div class="guide-col-map__item"><span class="guide-verdict-chip keep">Score</span><span><strong>Primary.</strong> Forge Score — meta combat value (synergies, archetypes, grinds)</span></div>
+                <div class="guide-col-map__item"><span class="guide-verdict-chip upgrade">Eff%</span><span><strong>Reference.</strong> SWOP classic efficiency (base rolls only) — table caps display at 100%</span></div>
                 <div class="guide-col-map__item"><span class="guide-verdict-chip gem">Target</span><span>Why Sell, what to grind, or Keep quality line</span></div>
               </div>
             </section>
@@ -1615,16 +1675,18 @@
               </ul>
             </section>
             <section class="guide-section" aria-labelledby="guide-h-table-forge-en">
-              <h3 id="guide-h-table-forge-en">Forge Score vs Eff%</h3>
-              <p class="guide-lead"><strong>Eff%</strong> is the classic SWOP-style efficiency (every sub line scored the same way vs Legend max rolls). <strong>Forge Score</strong> is our separate 0–100 rating: stat <em>tiers</em> (main list ≠ sub list), roll fullness, synergy multipliers, duplicate penalty — not Eff% and not verdict.</p>
+              <h3 id="guide-h-table-forge-en">Two rune ratings</h3>
+              <p class="guide-lead">The table shows <strong>two independent numbers</strong>. They answer different questions — use both, do not expect them to match.</p>
 
-              <h4 class="guide-subhead" id="guide-h-table-eff-en">Eff% — formula and Legend baselines</h4>
-              <p>Computed in the app from your SWEX rune (not from Sell/Keep). Main always counts as a full <strong>1.0</strong> “slot” in the score sum; innate and each sub add fractional points from roll size only (no stat-type preference except flat penalty).</p>
-              <p class="guide-formula"><code>score = 1.0 + innateTerm + Σ subTerm</code><br>
-                <code>subTerm = subValue ÷ (maxPerRoll × 5)</code> — subValue is base roll only (grind not included in Eff%).<br>
-                <code>innateTerm = 0.5 × (innateValue ÷ (maxPerRoll × 5))</code><br>
-                Flat innate or flat sub (HP / ATK / DEF): multiply that line’s term by <strong>0.5</strong>.<br>
-                <code>Eff% = min(100, round(score ÷ 2.8 × 100, 1 decimal))</code></p>
+              <div class="guide-metric-panels">
+              <article class="guide-metric-panel guide-metric-panel--eff" aria-labelledby="guide-h-table-eff-en">
+              <h4 class="guide-metric-panel__title" id="guide-h-table-eff-en">Eff%</h4>
+              <p class="guide-metric-panel__tagline">SWOP-classic roll density — blind to stat type (no meta tiers, no grinds).</p>
+              <p>Computed in-app from SWEX (not verdict). Matches SWOP: every line uses the same formula; flats and % stats are not halved.</p>
+              <p class="guide-formula"><code>score = 1.0 (main) + innateTerm + Σ subTerm</code><br>
+                <code>lineTerm = baseRoll ÷ (maxPerRoll × 5)</code> — <strong>base roll only</strong> (<code>val</code>), grind excluded.<br>
+                <code>innateTerm</code> uses the same formula as a sub line (no ×0.5).<br>
+                <code>Eff% = round(score ÷ 2.8 × 100, 1 decimal)</code> — can exceed 100% in data; <strong>table column displays min(100, Eff%)</strong>.</p>
               <p><strong>Legend 6★ max per single roll</strong> (denominator uses ×5 for five upgrades on subs/innate):</p>
               <div class="guide-stat-table-wrap">
                 <table class="guide-stat-table">
@@ -1640,30 +1702,33 @@
                   </tbody>
                 </table>
               </div>
-              <p class="guide-note">Depth charts can use uncapped Eff% (&gt;100% possible in raw math); the <strong>table column</strong> caps at 100%.</p>
+              <p class="guide-note">Depth / account metrics use <strong>uncapped</strong> Eff%. The rune table shows a capped label for quick scanning; sort by <strong>Score</strong> by default for meta value.</p>
+              </article>
 
-              <h4 class="guide-subhead" id="guide-h-table-score-formula-en">Forge Score — formula</h4>
-              <p class="guide-formula"><code>raw = (mainPts + subPts + innatePts) × mainSubSyn × subSubSyn × dupSub</code><br>
+              <article class="guide-metric-panel guide-metric-panel--forge" aria-labelledby="guide-h-table-score-formula-en">
+              <h4 class="guide-metric-panel__title" id="guide-h-table-score-formula-en">Forge Score</h4>
+              <p class="guide-metric-panel__tagline">Our 0–100 stat-value rating — tiers, synergies, grind in subs — not Eff% and not verdict.</p>
+              <p class="guide-formula"><code>raw = (mainPts + subPts + innatePts) × mainSubSyn × subSubSyn × dupSub × archetypeMul</code><br>
                 <code>Score = round( min(100, raw ÷ 295 × 100) )</code><br>
                 Sub values use <strong>roll + grind</strong> (<code>subRuneValue</code>). Roll quality = value ÷ max (capped at 1.12). Calibration constant <strong>295</strong> maps typical runes (~55–75 raw) onto 0–100.</p>
 
               <h4 class="guide-subhead" id="guide-h-table-score-main-en">Main stat tiers (0–100)</h4>
-              <p>Each main: <code>mainPts = tier × rollQuality</code>. Roll quality uses slot max mains on 2/4/6 (e.g. CDmg slot 4 max 80, SPD slot 2 max 42); slots 1/3/5 use Legend sub max ×5 for that stat type.</p>
+              <p>Each main: <code>mainPts = tier × rollQuality</code>. Roll quality uses <strong>slot main max</strong> (e.g. DEF flat slot 3 max <strong>160</strong>, HP flat slot 1 max <strong>2448</strong>, CDmg slot 4 max <strong>80</strong>, SPD slot 2 max <strong>42</strong>).</p>
+              <p>On slots <strong>1 / 3 / 5</strong> (flat-main slots), <strong>HP / ATK / DEF</strong> mains use tier <strong>72</strong> — a normal main for that slot, not a weak off-stat pick.</p>
+              <p class="guide-note">% mains on slots 2 / 4 / 6 use the tier table below.</p>
               <div class="guide-stat-table-wrap">
                 <table class="guide-stat-table">
-                  <thead><tr><th>Main stat</th><th>Tier</th></tr></thead>
+                  <thead><tr><th>Main stat</th><th>Tier</th><th>Notes</th></tr></thead>
                   <tbody>
-                    <tr><td>SPD</td><td>100</td></tr>
-                    <tr><td>CDmg</td><td>93</td></tr>
-                    <tr><td>ATK%</td><td>91</td></tr>
-                    <tr><td>CRate</td><td>86</td></tr>
-                    <tr><td>ACC</td><td>80</td></tr>
-                    <tr><td>HP%</td><td>76</td></tr>
-                    <tr><td>DEF%</td><td>73</td></tr>
-                    <tr><td>RES</td><td>71</td></tr>
-                    <tr><td>ATK</td><td>58</td></tr>
-                    <tr><td>DEF</td><td>56</td></tr>
-                    <tr><td>HP</td><td>54</td></tr>
+                    <tr><td>HP / ATK / DEF on slots 1, 3, 5</td><td>72</td><td>Flat-slot mains</td></tr>
+                    <tr><td>SPD</td><td>100</td><td>% slots</td></tr>
+                    <tr><td>CDmg</td><td>93</td><td>% slots</td></tr>
+                    <tr><td>ATK%</td><td>91</td><td>% slots</td></tr>
+                    <tr><td>CRate</td><td>89</td><td>% slots (2026 meta — slot 4 bruisers)</td></tr>
+                    <tr><td>ACC</td><td>80</td><td>% slots</td></tr>
+                    <tr><td>HP%</td><td>76</td><td>% slots</td></tr>
+                    <tr><td>DEF%</td><td>73</td><td>% slots</td></tr>
+                    <tr><td>RES</td><td>71</td><td>% slots</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -1675,8 +1740,8 @@
                   <thead><tr><th>Sub stat</th><th>Tier</th></tr></thead>
                   <tbody>
                     <tr><td>SPD</td><td>100</td></tr>
-                    <tr><td>CDmg</td><td>96</td></tr>
-                    <tr><td>CRate</td><td>92</td></tr>
+                    <tr><td>CRate</td><td>95</td></tr>
+                    <tr><td>CDmg</td><td>93</td></tr>
                     <tr><td>ATK%</td><td>90</td></tr>
                     <tr><td>ACC</td><td>84</td></tr>
                     <tr><td>HP%</td><td>78</td></tr>
@@ -1691,40 +1756,29 @@
               <p><strong>Innate (prefix):</strong> same sub tiers × roll quality × <strong>0.38</strong> (<code>INNATE_WEIGHT_VS_SUB</code>). Counts in synergy averages; not summed as a full sub line.</p>
 
               <h4 class="guide-subhead" id="guide-h-table-score-syn-en">Synergy multipliers</h4>
-              <p><strong>Main ↔ sub</strong> — average over all subs (innate excluded from sub list): listed pair → multiplier; unlisted pair → <strong>0.94</strong> (anti-synergy). Pairs are unordered (ATK% + CDmg = CDmg + ATK%).</p>
+              <p><strong>Main ↔ sub</strong> — average over all subs (innate excluded). Most pairs are unordered; <strong>ATK%↔SPD depends on direction</strong> (ATK% main + SPD sub = ×1.11, SPD main + ATK% sub = ×1.10).</p>
+              <ul class="guide-checklist guide-checklist--compact">
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Slots 1 / 3 / 5</strong> (flat mains): unlisted main+sub → <strong>1.00</strong> (neutral). Tank / def lines are not anti-synergy by default. Listed bonuses still apply.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Slots 2 / 4 / 6</strong> (% mains): unlisted → <strong>0.94</strong>. Same main+sub type on one rune cannot roll (no SPD+SPD etc.).</span></li>
+              </ul>
+              <p class="guide-subhead guide-subhead--minor">Listed main ↔ sub bonuses (both slot groups)</p>
               <div class="guide-stat-table-wrap">
                 <table class="guide-stat-table">
                   <thead><tr><th>Main + sub</th><th>×</th></tr></thead>
                   <tbody>
-                    <tr><td>SPD + SPD</td><td>1.14</td></tr>
-                    <tr><td>ATK% + ATK%</td><td>1.14</td></tr>
                     <tr><td>ATK% + CDmg</td><td>1.13</td></tr>
-                    <tr><td>HP% + HP%</td><td>1.12</td></tr>
-                    <tr><td>DEF% + DEF%</td><td>1.12</td></tr>
-                    <tr><td>CDmg + CRate / CRate + CDmg</td><td>1.12</td></tr>
+                    <tr><td>CDmg + CRate</td><td>1.12</td></tr>
                     <tr><td>HP% + DEF%</td><td>1.11</td></tr>
-                    <tr><td>SPD + ACC</td><td>1.10</td></tr>
-                    <tr><td>ATK% + CRate</td><td>1.10</td></tr>
-                    <tr><td>DEF% + HP%</td><td>1.10</td></tr>
-                    <tr><td>HP% + RES</td><td>1.10</td></tr>
+                    <tr><td>SPD + ACC · ATK% + CRate · DEF% + HP%</td><td>1.10</td></tr>
+                    <tr><td>ATK% + ATK flat · DEF% + DEF flat · HP% + HP flat</td><td>1.10</td></tr>
+                    <tr><td>HP% + RES · RES + HP%</td><td>1.10</td></tr>
                     <tr><td>DEF% + RES</td><td>1.09</td></tr>
-                    <tr><td>ACC + SPD</td><td>1.10</td></tr>
-                    <tr><td>RES + HP%</td><td>1.10</td></tr>
-                    <tr><td>ATK + ATK / DEF + DEF / HP + HP</td><td>1.10</td></tr>
-                    <tr><td>ATK% + SPD</td><td>1.08</td></tr>
-                    <tr><td>CDmg + CDmg</td><td>1.08</td></tr>
-                    <tr><td>ACC + ACC / RES + RES</td><td>1.08</td></tr>
+                    <tr><td>ATK% main + SPD sub</td><td>1.11</td></tr>
+                    <tr><td>SPD main + ATK% sub</td><td>1.10</td></tr>
                     <tr><td>HP% + SPD</td><td>1.04</td></tr>
-                    <tr><td>SPD + ATK%</td><td>1.06</td></tr>
-                    <tr><td>CDmg + ATK%</td><td>1.10</td></tr>
-                    <tr><td>SPD + HP%</td><td>0.94</td></tr>
-                    <tr><td>SPD + RES</td><td>0.92</td></tr>
-                    <tr><td>SPD + DEF%</td><td>0.93</td></tr>
                     <tr><td>ATK% + RES</td><td>0.90</td></tr>
                     <tr><td>ATK% + DEF%</td><td>0.91</td></tr>
-                    <tr><td>HP% + ATK%</td><td>0.93</td></tr>
-                    <tr><td>HP% + CDmg</td><td>0.92</td></tr>
-                    <tr><td>DEF% + ATK%</td><td>0.92</td></tr>
+                    <tr><td>CDmg + RES</td><td>0.94</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -1736,22 +1790,21 @@
                     <tr><td>CRate + CDmg</td><td>1.12</td></tr>
                     <tr><td>ATK% + CDmg</td><td>1.10</td></tr>
                     <tr><td>SPD + ACC</td><td>1.09</td></tr>
+                    <tr><td>ATK% + SPD</td><td>1.09</td></tr>
                     <tr><td>ATK% + CRate</td><td>1.08</td></tr>
                     <tr><td>HP% + DEF%</td><td>1.08</td></tr>
                     <tr><td>SPD + CDmg</td><td>1.07</td></tr>
-                    <tr><td>HP% + RES</td><td>1.07</td></tr>
-                    <tr><td>DEF% + RES</td><td>1.06</td></tr>
-                    <tr><td>ATK% + SPD</td><td>1.06</td></tr>
-                    <tr><td>ACC + HP%</td><td>0.96</td></tr>
-                    <tr><td>SPD + HP%</td><td>0.95</td></tr>
+                    <tr><td>HP% + RES · DEF% + RES</td><td>1.07 / 1.06</td></tr>
                     <tr><td>ATK% + RES</td><td>0.93</td></tr>
-                    <tr><td>ATK% + HP%</td><td>0.94</td></tr>
                     <tr><td>CDmg + RES</td><td>0.94</td></tr>
                   </tbody>
                 </table>
               </div>
-              <p><strong>Duplicate subs:</strong> same stat twice (or more) → multiply by <strong>0.88</strong> for each extra line (<code>0.88^(count−1)</code> per stat name).</p>
-              <p class="guide-note">Hover <strong>Score</strong> for live breakdown (main / subs / innate pts and × multipliers). Chip color: ≥88 high · ≥72 mid · below low. Sort by Score for “stat quality”; sort by Eff% for classic efficiency.</p>
+              <p><strong>Cross-stat duplicate (<code>dupSub</code>):</strong> ×<strong>0.88</strong> per overlap of the same <em>base</em> type across zones (<code>ATK</code> + <code>ATK%</code> count as one type). Overlaps: main↔any sub · main↔innate · innate↔any sub. Formula: <code>dupSub = 0.88^(overlaps)</code> or <strong>1.00</strong> if none. (Two SPD subs on one rune is impossible in-game.)</p>
+              <p><strong>Golden triplet (<code>archetypeMul</code>):</strong> if main + subs + qualifying innate (innate roll quality <strong>&gt; 50%</strong>) contain any <strong>3 stats</strong> from one archetype → ×<strong>1.04</strong> once: <em>Nuker</em> (ATK/ATK%, CRate, CDmg) · <em>Fast Tank</em> (HP/HP%, DEF/DEF%, SPD) · <em>Control</em> (SPD, ACC, HP/HP%) · <em>Bruiser</em> (HP/HP%, CRate, CDmg).</p>
+              <p class="guide-note">Hover <strong>Score</strong> for live breakdown (pts + all multipliers, including archetype name when ×1.04). Chip color: ≥88 high · ≥72 mid · below low.</p>
+              </article>
+              </div>
             </section>
             <section class="guide-section" aria-labelledby="guide-h-table-read-en">
               <h3 id="guide-h-table-read-en">Reading a row</h3>
@@ -1760,7 +1813,7 @@
                 <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Equipped</strong> — search can find the monster name in the row; useful for “what is this rune on?”</span></li>
                 <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Ancient</strong> — A-with-dot before grade; <strong>Ancient only</strong> in More Filters.</span></li>
                 <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>HP% 13 [3]</strong> — total on rune; bracket = grind bonus only. Gem = circular-arrows icon.</span></li>
-                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Header filters</strong> — verdict / role / grade / set / slot / main under column titles; click column headers to sort (default Eff% down).</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Header filters</strong> — verdict / role / grade / set / slot / main under column titles; click column headers to sort (default <strong>Score</strong> down).</span></li>
               </ul>
               <p class="guide-note">Huge exports: first <strong>500 rows</strong> for speed — <strong>Load all …</strong> for the full filtered list. Search highlights matches in the row.</p>
             </section>
@@ -1780,8 +1833,8 @@
               <div class="guide-col-map">
                 <div class="guide-col-map__item"><span class="guide-verdict-chip keep">Role</span><span>Билд или Universal</span></div>
                 <div class="guide-col-map__item"><span class="guide-verdict-chip finish">Verdict</span><span>Upgrade · Finish · Keep · Gem · Grind · Reapp · Sell</span></div>
-                <div class="guide-col-map__item"><span class="guide-verdict-chip upgrade">Eff%</span><span>Классическая эффективность (сумма статов / 2.8) — до 100%</span></div>
-                <div class="guide-col-map__item"><span class="guide-verdict-chip keep">Score</span><span>Forge Score — наши веса статов и синергии (ниже)</span></div>
+                <div class="guide-col-map__item"><span class="guide-verdict-chip keep">Score</span><span><strong>Главная.</strong> Forge Score — боевая ценность в мете (синергии, архетипы, гринды)</span></div>
+                <div class="guide-col-map__item"><span class="guide-verdict-chip upgrade">Eff%</span><span><strong>Справка.</strong> SWOP Eff% (только базовый ролл) — в таблице отображение до 100%</span></div>
                 <div class="guide-col-map__item"><span class="guide-verdict-chip gem">Target</span><span>Почему Sell, куда гринд, качество Keep</span></div>
               </div>
             </section>
@@ -1795,16 +1848,18 @@
               </ul>
             </section>
             <section class="guide-section" aria-labelledby="guide-h-table-forge-ru">
-              <h3 id="guide-h-table-forge-ru">Forge Score и Eff%</h3>
-              <p class="guide-lead"><strong>Eff%</strong> — классическая SWOP-эффективность (каждый саб одинаково vs макс легендарного ролла). <strong>Forge Score</strong> — наша шкала 0–100: <em>тиры</em> статов (main ≠ sub), полнота ролла, синергии, штраф за дубли — не Eff% и не вердикт.</p>
+              <h3 id="guide-h-table-forge-ru">Две оценки руны</h3>
+              <p class="guide-lead">В таблице <strong>два независимых числа</strong>. Они отвечают на разные вопросы — смотри оба, не жди совпадения.</p>
 
-              <h4 class="guide-subhead" id="guide-h-table-eff-ru">Eff% — формула и эталоны Legend</h4>
-              <p>Считается в приложении из SWEX (не из Sell/Keep). Main всегда даёт <strong>1.0</strong> в сумме score; innate и сабы — доли от размера ролла (тип стата не важен, кроме штрафа flat).</p>
-              <p class="guide-formula"><code>score = 1.0 + innateTerm + Σ subTerm</code><br>
-                <code>subTerm = значениеСаба ÷ (максЗаРолл × 5)</code> — только базовый ролл, <strong>гринд в Eff% не входит</strong>.<br>
-                <code>innateTerm = 0.5 × (innate ÷ (максЗаРолл × 5))</code><br>
-                Flat innate или flat саб (HP / ATK / DEF): множитель <strong>0.5</strong> на эту строку.<br>
-                <code>Eff% = min(100, round(score ÷ 2.8 × 100, 1 знак))</code></p>
+              <div class="guide-metric-panels">
+              <article class="guide-metric-panel guide-metric-panel--eff" aria-labelledby="guide-h-table-eff-ru">
+              <h4 class="guide-metric-panel__title" id="guide-h-table-eff-ru">Eff%</h4>
+              <p class="guide-metric-panel__tagline">Классическая SWOP-плотность роллов — без тиров меты и без гриндов.</p>
+              <p>Считается в приложении из SWEX (не вердикт). Как в SWOP: одна формула на все типы статов, flat не делятся пополам.</p>
+              <p class="guide-formula"><code>score = 1.0 (main) + innateTerm + Σ subTerm</code><br>
+                <code>lineTerm = базовыйРолл ÷ (максЗаРолл × 5)</code> — только <code>val</code>, гринд не входит.<br>
+                <code>innateTerm</code> = та же формула, что у саба (без ×0.5).<br>
+                <code>Eff% = round(score ÷ 2.8 × 100, 1 знак)</code> — в данных может быть &gt;100%; <strong>в таблице min(100, Eff%)</strong>.</p>
               <p><strong>Макс Legend 6★ за один ролл</strong> (в знаменателе ×5 для пяти апгрейдов саба/innate):</p>
               <div class="guide-stat-table-wrap">
                 <table class="guide-stat-table">
@@ -1820,30 +1875,33 @@
                   </tbody>
                 </table>
               </div>
-              <p class="guide-note">На Depth возможен uncapped Eff% (&gt;100% в сырой формуле); <strong>колонка таблицы</strong> обрезана до 100%.</p>
+              <p class="guide-note">Depth / прогрессия — <strong>uncapped</strong> Eff%. В таблице подпись до 100%; сортировка по умолчанию — <strong>Score</strong>.</p>
+              </article>
 
-              <h4 class="guide-subhead" id="guide-h-table-score-formula-ru">Forge Score — формула</h4>
-              <p class="guide-formula"><code>raw = (mainPts + subPts + innatePts) × mainSubSyn × subSubSyn × dupSub</code><br>
+              <article class="guide-metric-panel guide-metric-panel--forge" aria-labelledby="guide-h-table-score-formula-ru">
+              <h4 class="guide-metric-panel__title" id="guide-h-table-score-formula-ru">Forge Score</h4>
+              <p class="guide-metric-panel__tagline">Оценка 0–100 для меты 2026 — тиры, синергии, гринды; не SWOP Eff%.</p>
+              <p class="guide-formula"><code>raw = (mainPts + subPts + innatePts) × mainSubSyn × subSubSyn × dupSub × archetypeMul</code><br>
                 <code>Score = round( min(100, raw ÷ 295 × 100) )</code><br>
                 Сабы: <strong>ролл + гринд</strong> (<code>subRuneValue</code>). Качество ролла = value ÷ max (потолок 1.12). Калибровка <strong>295</strong>.</p>
 
               <h4 class="guide-subhead" id="guide-h-table-score-main-ru">Тиры main (0–100)</h4>
-              <p><code>mainPts = tier × rollQuality</code>. На слотах 2/4/6 — макс main из таблицы слота (напр. CDmg сл.4 макс 80, SPD сл.2 макс 42); на 1/3/5 — sub max ×5 для типа.</p>
+              <p><code>mainPts = tier × rollQuality</code>. Полнота ролла — от <strong>макса main для слота</strong> (DEF flat сл.3 макс <strong>160</strong>, HP flat сл.1 макс <strong>2448</strong>, CDmg сл.4 макс <strong>80</strong>).</p>
+              <p>На слотах <strong>1 / 3 / 5</strong> main <strong>HP / ATK / DEF</strong> (flat) → тир <strong>72</strong> — нормальный main для слота, не «слабый офф-стат».</p>
+              <p class="guide-note">% main на слотах 2 / 4 / 6 — таблица ниже.</p>
               <div class="guide-stat-table-wrap">
                 <table class="guide-stat-table">
-                  <thead><tr><th>Main</th><th>Тир</th></tr></thead>
+                  <thead><tr><th>Main</th><th>Тир</th><th>Примечание</th></tr></thead>
                   <tbody>
-                    <tr><td>SPD</td><td>100</td></tr>
-                    <tr><td>CDmg</td><td>93</td></tr>
-                    <tr><td>ATK%</td><td>91</td></tr>
-                    <tr><td>CRate</td><td>86</td></tr>
-                    <tr><td>ACC</td><td>80</td></tr>
-                    <tr><td>HP%</td><td>76</td></tr>
-                    <tr><td>DEF%</td><td>73</td></tr>
-                    <tr><td>RES</td><td>71</td></tr>
-                    <tr><td>ATK</td><td>58</td></tr>
-                    <tr><td>DEF</td><td>56</td></tr>
-                    <tr><td>HP</td><td>54</td></tr>
+                    <tr><td>HP / ATK / DEF на сл. 1, 3, 5</td><td>72</td><td>Flat-слоты</td></tr>
+                    <tr><td>SPD</td><td>100</td><td>% слоты</td></tr>
+                    <tr><td>CDmg</td><td>93</td><td>% слоты</td></tr>
+                    <tr><td>ATK%</td><td>91</td><td>% слоты</td></tr>
+                    <tr><td>CRate</td><td>89</td><td>% слоты (мета 2026)</td></tr>
+                    <tr><td>ACC</td><td>80</td><td>% слоты</td></tr>
+                    <tr><td>HP%</td><td>76</td><td>% слоты</td></tr>
+                    <tr><td>DEF%</td><td>73</td><td>% слоты</td></tr>
+                    <tr><td>RES</td><td>71</td><td>% слоты</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -1855,8 +1913,8 @@
                   <thead><tr><th>Sub</th><th>Тир</th></tr></thead>
                   <tbody>
                     <tr><td>SPD</td><td>100</td></tr>
-                    <tr><td>CDmg</td><td>96</td></tr>
-                    <tr><td>CRate</td><td>92</td></tr>
+                    <tr><td>CRate</td><td>95</td></tr>
+                    <tr><td>CDmg</td><td>93</td></tr>
                     <tr><td>ATK%</td><td>90</td></tr>
                     <tr><td>ACC</td><td>84</td></tr>
                     <tr><td>HP%</td><td>78</td></tr>
@@ -1871,40 +1929,29 @@
               <p><strong>Innate:</strong> тиры sub × качество ролла × <strong>0.38</strong>. В синергиях main↔sub innate не считается сабом.</p>
 
               <h4 class="guide-subhead" id="guide-h-table-score-syn-ru">Множители синергии</h4>
-              <p><strong>Main ↔ sub</strong> — среднее по всем сабам; пары не из таблицы → <strong>0.94</strong>. Порядок не важен.</p>
+              <p><strong>Main ↔ sub</strong> — среднее по сабам. Пара <strong>ATK%↔SPD зависит от направления</strong> (main ATK% + sub SPD = ×1.11, main SPD + sub ATK% = ×1.10).</p>
+              <ul class="guide-checklist guide-checklist--compact">
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Слоты 1 / 3 / 5</strong> (flat main): пара не из таблицы → <strong>1.00</strong> (нейтрально). DEF/HP на сл.3 — не анти-синергия. Бонусы из таблицы — как есть.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Слоты 2 / 4 / 6</strong> (% main): не из таблицы → <strong>0.94</strong>. Одинаковый main+sub на одной руне невозможен.</span></li>
+              </ul>
+              <p class="guide-subhead guide-subhead--minor">Бонусы main ↔ sub (оба типа слотов)</p>
               <div class="guide-stat-table-wrap">
                 <table class="guide-stat-table">
                   <thead><tr><th>Main + sub</th><th>×</th></tr></thead>
                   <tbody>
-                    <tr><td>SPD + SPD</td><td>1.14</td></tr>
-                    <tr><td>ATK% + ATK%</td><td>1.14</td></tr>
                     <tr><td>ATK% + CDmg</td><td>1.13</td></tr>
-                    <tr><td>HP% + HP%</td><td>1.12</td></tr>
-                    <tr><td>DEF% + DEF%</td><td>1.12</td></tr>
                     <tr><td>CDmg + CRate</td><td>1.12</td></tr>
                     <tr><td>HP% + DEF%</td><td>1.11</td></tr>
-                    <tr><td>SPD + ACC</td><td>1.10</td></tr>
-                    <tr><td>ATK% + CRate</td><td>1.10</td></tr>
-                    <tr><td>DEF% + HP%</td><td>1.10</td></tr>
-                    <tr><td>HP% + RES</td><td>1.10</td></tr>
+                    <tr><td>SPD + ACC · ATK% + CRate · DEF% + HP%</td><td>1.10</td></tr>
+                    <tr><td>ATK% + ATK flat · DEF% + DEF flat · HP% + HP flat</td><td>1.10</td></tr>
+                    <tr><td>HP% + RES · RES + HP%</td><td>1.10</td></tr>
                     <tr><td>DEF% + RES</td><td>1.09</td></tr>
-                    <tr><td>ACC + SPD</td><td>1.10</td></tr>
-                    <tr><td>RES + HP%</td><td>1.10</td></tr>
-                    <tr><td>ATK + ATK / DEF + DEF / HP + HP</td><td>1.10</td></tr>
-                    <tr><td>ATK% + SPD</td><td>1.08</td></tr>
-                    <tr><td>CDmg + CDmg</td><td>1.08</td></tr>
-                    <tr><td>ACC + ACC / RES + RES</td><td>1.08</td></tr>
+                    <tr><td>main ATK% + sub SPD</td><td>1.11</td></tr>
+                    <tr><td>main SPD + sub ATK%</td><td>1.10</td></tr>
                     <tr><td>HP% + SPD</td><td>1.04</td></tr>
-                    <tr><td>SPD + ATK%</td><td>1.06</td></tr>
-                    <tr><td>CDmg + ATK%</td><td>1.10</td></tr>
-                    <tr><td>SPD + HP%</td><td>0.94</td></tr>
-                    <tr><td>SPD + RES</td><td>0.92</td></tr>
-                    <tr><td>SPD + DEF%</td><td>0.93</td></tr>
                     <tr><td>ATK% + RES</td><td>0.90</td></tr>
                     <tr><td>ATK% + DEF%</td><td>0.91</td></tr>
-                    <tr><td>HP% + ATK%</td><td>0.93</td></tr>
-                    <tr><td>HP% + CDmg</td><td>0.92</td></tr>
-                    <tr><td>DEF% + ATK%</td><td>0.92</td></tr>
+                    <tr><td>CDmg + RES</td><td>0.94</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -1916,22 +1963,21 @@
                     <tr><td>CRate + CDmg</td><td>1.12</td></tr>
                     <tr><td>ATK% + CDmg</td><td>1.10</td></tr>
                     <tr><td>SPD + ACC</td><td>1.09</td></tr>
+                    <tr><td>ATK% + SPD</td><td>1.09</td></tr>
                     <tr><td>ATK% + CRate</td><td>1.08</td></tr>
                     <tr><td>HP% + DEF%</td><td>1.08</td></tr>
                     <tr><td>SPD + CDmg</td><td>1.07</td></tr>
-                    <tr><td>HP% + RES</td><td>1.07</td></tr>
-                    <tr><td>DEF% + RES</td><td>1.06</td></tr>
-                    <tr><td>ATK% + SPD</td><td>1.06</td></tr>
-                    <tr><td>ACC + HP%</td><td>0.96</td></tr>
-                    <tr><td>SPD + HP%</td><td>0.95</td></tr>
+                    <tr><td>HP% + RES · DEF% + RES</td><td>1.07 / 1.06</td></tr>
                     <tr><td>ATK% + RES</td><td>0.93</td></tr>
-                    <tr><td>ATK% + HP%</td><td>0.94</td></tr>
                     <tr><td>CDmg + RES</td><td>0.94</td></tr>
                   </tbody>
                 </table>
               </div>
-              <p><strong>Дубли саба:</strong> одинаковый стат 2+ раз → ×<strong>0.88</strong> за каждую лишнюю строку (<code>0.88^(n−1)</code> на имя).</p>
-              <p class="guide-note">Наведи на <strong>Score</strong> — живые main/subs/innate и множители. Цвет чипа: ≥88 · ≥72 · ниже. Score — «ценность статов»; Eff% — классическая эффективность.</p>
+              <p><strong>Кросс-дубль (<code>dupSub</code>):</strong> ×0.88 за каждое совпадение <em>базового</em> типа между main, innate и сабами (<code>ATK</code> + <code>ATK%</code> — один тип). Зоны: main↔sub · main↔innate · innate↔sub. <code>dupSub = 0.88^(число совпадений)</code>.</p>
+              <p><strong>Золотой триплет (<code>archetypeMul</code>):</strong> любые 3 стата одного архетипа (innate только если качество ролла <strong>&gt; 50%</strong>) → ×<strong>1.04</strong> один раз: <em>Нюкер</em> · <em>Быстрый танк</em> · <em>Контроль</em> · <em>Бруйзер</em>.</p>
+              <p class="guide-note">Наведи на <strong>Score</strong> — разбивка очков и множителей, включая архетип. Цвет: ≥88 · ≥72 · ниже.</p>
+              </article>
+              </div>
             </section>
             <section class="guide-section" aria-labelledby="guide-h-table-read-ru">
               <h3 id="guide-h-table-read-ru">Как читать строку</h3>
@@ -1940,7 +1986,7 @@
                 <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>На монстре</strong> — поиск находит имя юнита в строке.</span></li>
                 <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Древняя</strong> — «A с точкой»; <strong>Только древние</strong> в «Ещё фильтры».</span></li>
                 <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>HP% 13 [3]</strong> — итого на руне; в скобках только гринд. Гем — стрелки.</span></li>
-                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Фильтры в заголовке</strong> — вердикт / роль / грейд / сет / слот / мейн; клик по заголовку — сортировка (по умолчанию Eff% ↓).</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Фильтры в заголовке</strong> — вердикт / роль / грейд / сет / слот / мейн; сортировка по умолчанию — <strong>Score</strong> ↓.</span></li>
               </ul>
               <p class="guide-note">Огромный экспорт: сначала <strong>500 строк</strong> — <strong>Загрузить все …</strong> для полного списка. Поиск подсвечивает совпадения.</p>
             </section>
@@ -2843,25 +2889,28 @@
   <div id="swrm-toast-host" class="swrm-toast-host" aria-live="polite" aria-relevant="additions text"></div>
 
   <!-- settings: meta → i18n → defaults → changelog → bootstrap -->
-  <script src="js/core/meta.js"></script>
-  <script src="js/core/i18n.js"></script>
-  <script src="js/core/defaults.js"></script>
-  <script src="js/core/changelog-data.js"></script>
-  <script src="js/core/bootstrap.js"></script>
-  <script src="js/data/artifacts/effects.js"></script>
-  <script src="js/data/relics/effects.js"></script>
-  <script src="js/data/gear/parse.js"></script>
-  <script src="js/data/parser.js"></script>
-  <script src="js/data/skill-db.js"></script>
-  <script src="js/data/monster-db.js"></script>
-  <script src="js/engine/engine-core.js"></script>
-  <script src="js/engine/engine-legacy-roles.js"></script>
-  <script src="js/engine/engine-gem-reapp-verdict.js"></script>
-  <script src="js/advanced-formulas.js"></script>
-  <script src="js/engine/engine-process.js"></script>
-  <script src="js/self-test.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/gsap.min.js"></script>
-  <script src="js/swrm-motion.js"></script>
-  <script src="js/ui.js"></script>
+  <script defer src="js/core/meta.js"></script>
+  <script defer src="js/core/i18n.js"></script>
+  <script defer src="js/core/defaults.js"></script>
+  <script defer src="js/core/changelog-data.js"></script>
+  <script defer src="js/core/bootstrap.js"></script>
+  <script defer src="js/data/artifacts/effects.js"></script>
+  <script defer src="js/data/relics/effects.js"></script>
+  <script defer src="js/data/gear/parse.js"></script>
+  <script defer src="js/data/gear/icons.js"></script>
+  <script defer src="js/data/parser.js"></script>
+  <script defer src="js/data/skill-db.js"></script>
+  <script defer src="js/data/monster-db.js"></script>
+  <script defer src="js/engine/engine-core.js"></script>
+  <script defer src="js/engine/engine-legacy-roles.js"></script>
+  <script defer src="js/engine/engine-gem-reapp-verdict.js"></script>
+  <script defer src="js/advanced-formulas.js"></script>
+  <script defer src="js/engine/engine-process.js"></script>
+  <script defer src="js/self-test.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/gsap.min.js"
+    integrity="sha384-pEQB1h4Zmn9xhS6jotzltHSIQq6N0Oh3BXkCNOH5LKI81R2NRbb9efarAJYw9gTY"
+    crossorigin="anonymous"></script>
+  <script defer src="js/swrm-motion.js"></script>
+  <script defer src="js/ui.js"></script>
 </body>
 </html>

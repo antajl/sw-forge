@@ -241,7 +241,9 @@
           : row?.isPct
             ? '0%'
             : '0';
-      return `<div class="monsters-detail__stat-row monsters-detail__stat-row--core monsters-detail__stat-row--clickable" data-stat-key="${key}" role="button" tabindex="0" aria-label="${escapeHtml(label)}">
+      const clickTip = t.monstersStatsClickHint || 'Click HP–SPD to switch base+rune / total view';
+      const clickAria = `${label}. ${clickTip}`;
+      return `<div class="monsters-detail__stat-row monsters-detail__stat-row--core monsters-detail__stat-row--clickable" data-stat-key="${key}" role="button" tabindex="0" title="${escapeAttr(clickTip)}" aria-label="${escapeAttr(clickAria)}">
           <span class="monsters-detail__stat-k">${escapeHtml(label)}</span>
           <span class="monsters-detail__stat-num monsters-detail__stat-num--base" data-col="base">${escapeHtml(fmtVal(key, 'base', false))}</span>
           <span class="monsters-detail__stat-num monsters-detail__stat-num--rune" data-col="bonus">${escapeHtml(bonusStr)}</span>
@@ -251,7 +253,7 @@
     function pctRow(label, key) {
       return `<div class="monsters-detail__stat-row monsters-detail__stat-row--pct" data-stat-key="${key}">
           <span class="monsters-detail__stat-k">${escapeHtml(label)}</span>
-          <span class="monsters-detail__stat-num monsters-detail__stat-num--pct-total">${escapeHtml(fmtVal(key, 'total', true))}</span>
+          <span class="monsters-detail__stat-num monsters-detail__stat-num--pct-total" data-col="pct">${escapeHtml(fmtVal(key, 'total', true))}</span>
         </div>`;
     }
     const statRows = coreKeys.map(([label, key]) => coreRow(label, key)).concat(pctKeys.map(([label, key]) => pctRow(label, key))).join('');
@@ -276,11 +278,11 @@
       const split = mode !== 'total';
       grid.dataset.statsView = split ? 'split' : 'total';
       grid.classList.toggle('monsters-detail__stats-grid--total-view', !split);
-      grid.querySelectorAll('[data-col="total"]').forEach((el) => {
+      grid.querySelectorAll('.monsters-detail__stat-row--core [data-col="total"]').forEach((el) => {
         if (split) el.setAttribute('hidden', '');
         else el.removeAttribute('hidden');
       });
-      grid.querySelectorAll('[data-col="base"], [data-col="bonus"]').forEach((el) => {
+      grid.querySelectorAll('.monsters-detail__stat-row--core [data-col="base"], .monsters-detail__stat-row--core [data-col="bonus"]').forEach((el) => {
         if (split) el.removeAttribute('hidden');
         else el.setAttribute('hidden', '');
       });
@@ -640,41 +642,68 @@
     tile.setAttribute('aria-label', tip);
   }
 
+  function applyMonsterSkillTipToTile(tile, skillId, level) {
+    if (!tile || !skillId || typeof setSwrmFloatTipTarget !== 'function') return false;
+    const db = window.SWRM_SKILL_DB;
+    if (!db) return false;
+    let html =
+      typeof db.formatSkillProgressTooltipHtml === 'function'
+        ? db.formatSkillProgressTooltipHtml(skillId, level)
+        : '';
+    let text =
+      !html && typeof db.formatSkillProgressTooltip === 'function'
+        ? db.formatSkillProgressTooltip(skillId, level)
+        : typeof db.formatSkillTooltip === 'function'
+          ? db.formatSkillTooltip(skillId, level)
+          : '';
+    if (text && !/^Skill \d+/.test(text)) {
+      setSwrmFloatTipTarget(tile, text);
+      tile.setAttribute('aria-label', text);
+      return true;
+    }
+    if (html) {
+      setSwrmFloatTipTarget(tile, '', { html });
+      tile.setAttribute('aria-label', text || tile.getAttribute('aria-label') || '');
+      return true;
+    }
+    return false;
+  }
+
   function bindMonsterDetailSkillTips(root, skillRows) {
     if (!root || typeof setSwrmFloatTipTarget !== 'function') return;
     const rows = skillRows || [];
     const tiles = root.querySelectorAll(
       '.monsters-detail__skills-main .monsters-detail__skill-tile--tip',
     );
+    const pending = [];
     tiles.forEach((tile, i) => {
       const row = rows[i];
       const skillId = row?.skillId ?? Number(tile.getAttribute('data-skill-id'));
       const level = row?.level ?? Number(tile.getAttribute('data-skill-level'));
       if (!skillId) return;
       tile.style.cursor = 'help';
-      const applyTip = async () => {
-        const db = window.SWRM_SKILL_DB;
-        if (!db || typeof db.fetchSkillMeta !== 'function') return;
-        let text =
-          typeof db.formatSkillTooltip === 'function'
-            ? db.formatSkillTooltip(skillId, level)
-            : '';
-        const placeholder = text && /^Skill \d+/.test(text);
-        if (!text || placeholder) {
-          await db.fetchSkillMeta(skillId);
-          text =
-            typeof db.formatSkillTooltip === 'function'
-              ? db.formatSkillTooltip(skillId, level)
-              : '';
-        }
-        if (text) {
-          setSwrmFloatTipTarget(tile, text);
-          tile.setAttribute('aria-label', text);
-        }
-      };
-      tile.addEventListener('mouseenter', applyTip);
-      tile.addEventListener('focus', applyTip);
+      pending.push({ tile, skillId, level });
     });
+
+    void (async () => {
+      const db = window.SWRM_SKILL_DB;
+      if (!db) return;
+      if (typeof db.loadSkillIndex === 'function') {
+        try {
+          await db.loadSkillIndex();
+        } catch (e) { /* ignore */ }
+      }
+      for (const { tile, skillId, level } of pending) {
+        if (!tile.isConnected) continue;
+        if (applyMonsterSkillTipToTile(tile, skillId, level)) continue;
+        if (typeof db.fetchSkillMeta === 'function') {
+          try {
+            await db.fetchSkillMeta(skillId);
+          } catch (e) { /* ignore */ }
+        }
+        applyMonsterSkillTipToTile(tile, skillId, level);
+      }
+    })();
   }
 
   function formatLeaderSkillTitleBody(leaderSkill, t) {

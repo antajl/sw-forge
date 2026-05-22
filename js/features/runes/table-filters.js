@@ -75,7 +75,7 @@
     if (fsl) p.set('slot', fsl);
     const fm = document.getElementById('filter-main')?.value;
     if (fm) p.set('main', fm);
-    if (sortKey !== 'eff') p.set('sort', sortKey);
+    if (sortKey !== 'score') p.set('sort', sortKey);
     if (sortDir !== 'desc') p.set('dir', sortDir);
     if (document.getElementById('toggle-target-col')?.checked) p.set('target', '0');
     if (document.getElementById('toggle-ancient-only')?.checked) p.set('ancient', '1');
@@ -295,7 +295,7 @@
     if (tglAncient) tglAncient.checked = false;
     localStorage.setItem(RUNE_TABLE_ANCIENT_ONLY_KEY, '0');
     applyRuneTableTargetColumnVisibility();
-    sortKey = 'eff';
+    sortKey = 'score';
     sortDir = 'desc';
     runeTableShowAll = false;
     if (typeof setRuneTableMonsterMasterId === 'function') setRuneTableMonsterMasterId(null);

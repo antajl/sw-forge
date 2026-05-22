@@ -141,26 +141,62 @@
   color: var(--text-dim);
 }
 
-/* Rune Score column (0–100 hint, separate from Eff%) */
+/* Forge Score — primary metric column */
+#rune-table th.th-col-primary,
+#rune-table td.td-num--score {
+  font-weight: 600;
+}
+
 .stat-chip.stat-chip--score {
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: 0.82rem;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
-  min-width: 2.1rem;
+  min-width: 2.25rem;
   justify-content: center;
 }
 .stat-chip.stat-chip--score.stat-chip--score-hi {
   --chip-tint: var(--tint-keep);
-  --chip-surface-pct: 68%;
+  --chip-surface-pct: 62%;
+  color: color-mix(in srgb, var(--tint-keep) 55%, var(--text-hi));
 }
 .stat-chip.stat-chip--score.stat-chip--score-mid {
   --chip-tint: var(--tint-eff-mid);
-  --chip-surface-pct: 74%;
+  --chip-surface-pct: 70%;
+  color: color-mix(in srgb, var(--tint-eff-mid) 50%, var(--text-hi));
 }
 .stat-chip.stat-chip--score.stat-chip--score-lo {
   --chip-tint: var(--tint-muted);
-  --chip-surface-pct: 88%;
+  --chip-surface-pct: 86%;
   color: var(--text-dim);
+}
+
+/* Eff% — secondary SWOP reference (muted plain text) */
+#rune-table th.th-col-secondary {
+  font-weight: 400;
+  color: var(--text-dim);
+  font-size: 0.72rem;
+}
+
+#rune-table .rune-god-potential-hint {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: color-mix(in srgb, var(--gold) 72%, var(--text-dim));
+  white-space: nowrap;
+  cursor: help;
+}
+
+#rune-table .rune-eff-muted {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  color: color-mix(in srgb, var(--text-dim) 72%, transparent);
+  opacity: 0.82;
 }
 
 /* Ancient: strong glow, kept inside the grade cell (no filter — it bleeds into the next row). */

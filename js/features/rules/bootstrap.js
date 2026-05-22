@@ -147,7 +147,7 @@
   document.addEventListener('DOMContentLoaded', async () => {
     initSwrmFloatingTips();
     initTheme();
-    updateLanguage(currentLang);
+    await updateLanguage(currentLang);
     initDashboardUnifiedTabs();
     initRuneTablePrefsFromStorage();
     if (typeof initTableKindTabs === 'function') initTableKindTabs();
@@ -158,7 +158,11 @@
 
     const shareIdInUrl =
       typeof getShareIdFromUrl === 'function' ? getShareIdFromUrl() : '';
-    if (shareIdInUrl && typeof initShareProfile === 'function') {
+    const profileInUrl =
+      typeof getProfileLinkFromUrl === 'function' ? getProfileLinkFromUrl() : null;
+    const hasProfileLink =
+      profileInUrl && (profileInUrl.profileUrl || profileInUrl.dataBlob);
+    if ((shareIdInUrl || hasProfileLink) && typeof initShareProfile === 'function') {
       await initShareProfile();
       renderDbSlots();
       if (typeof applyShareUrlTabFromLocation === 'function') applyShareUrlTabFromLocation();

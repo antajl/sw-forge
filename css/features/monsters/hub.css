@@ -23,10 +23,12 @@
   min-width: 0;
 }
 
-#tab-monsters-teams[hidden] {
+#tab-monsters-teams[hidden],
+#tab-monsters-planner[hidden] {
   display: none !important;
 }
 
-#tab-monsters-teams.monsters-hub-pane.is-active[hidden] {
+#tab-monsters-teams.monsters-hub-pane.is-active[hidden],
+#tab-monsters-planner.monsters-hub-pane.is-active[hidden] {
   display: block !important;
 }

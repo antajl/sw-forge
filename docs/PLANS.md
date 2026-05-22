@@ -1,106 +1,75 @@
-# SW Rune Master — планы (roadmap)
+# SW Forge — открытые планы
 
-Краткая версия отображается во вкладке **Changelog → Roadmap** (`js/core/changelog-data.js`).  
-Детальный план вкладки Monsters: **`docs/PLANS-MONSTERS.md`**.
+> **Сделанное** — Changelog → Releases в приложении.  
+> **Код и правила** — [`MASTER.md`](MASTER.md) · **Индекс** — [`README.md`](README.md)
 
----
-
-## Контекст: что Com2uS не закрыл (уроки SWARFARM, 2026)
-
-В игре за годы закрыли много «личного» (руны, корм, слияния). С закрытием публичных профилей SWARFARM комьюнити сильнее всего потеряло **социальное** и **командное**.
-
-### 1. Публичные профили (Account Reviews) — критично для комьюнити
-
-**Статус в игре:** по-прежнему нельзя расшарить аккаунт ссылкой; совет — скрины или Discord.
-
-**Было на SWARFARM:** ссылка → полный разбор коробки, сортировка по качеству рун, артефакты, указание на ошибки сборки.
-
-**У нас:** read-only **Share Profile** через Cloudflare Worker + D1 (2026-05-20). Дальше — mentor account review, опционально `?profile=` / `?data=` без Worker.
-
-### 2. Skill-up'ы и девилмоны на уровне аккаунта
-
-**Статус в игре:** по одному мобу «сколько свитков сейчас» — есть; долгосрочного плана по всему аккаунту — нет.
-
-**Было на SWARFARM:** сводка: сколько девилмонов до ключевых Nat5 в пачках, у кого скиллы «застряли» на половине.
-
-**У нас:** задел во вкладке Monsters (скиллы из SWEX, план: дефицит до max, фильтры max / needs skill-up). Полная **аккаунт-wide** аналитика — отдельный эпик (см. Monsters E).
-
-### 3. Команды (Teams) с привязкой к сборкам и speed tuning
-
-**Статус в игре:** Layout / копирование рун, «Инфо» — усреднённые пачки.
-
-**Было на SWARFARM:** авторские гайды (ToA Hell, Siege, Cairos) с **реальным** speed tuning и порядком ходов.
-
-**У нас:** сохранённые деки в localStorage без share URL — в roadmap (Monsters, низкий приоритет).
+**Roadmap в приложении** — краткая копия этого файла для игроков (`STATIC_ROADMAP` в `js/core/changelog-data.js`): те же разделы и смысл, **без** путей, API и внутренних имён. EN + RU обязательно синхронны с PLANS; FR — тот же смысл, можно короче. После закрытия пункта — убрать отсюда и из Roadmap, записать в changelog.
 
 ---
 
-## Уже сделано (убрано из активного roadmap)
+## 1. Monsters — account-wide
 
-- Навигация: хаб Runes + вкладка **Monsters**, один SWEX.
-- Monsters MVP: 6★ roster, фильтры, карточки/список, плавающий detail, руны на карточке, SWARFARM имена/иконки, ★/🍖, открытие рун в таблице, фильтр монстра в Rune Table.
-- **Box overview** на Roster (плитки, readiness, фильтры по клику) — 2026-05-21.
-- Runes: движок, таблица, dashboard, depth, **Forge Score**, changelog/guide субтабы, i18n EN/RU/FR (частично).
-- Runes → Table: вкладки **Artifacts / Relics** (таблицы + парсинг SWEX); gear на detail Monsters.
-- Share Profile (Worker + D1), логотипы/favicon.
+1. Трекер fusion / hexagram (что можно слить из текущей коробки).
+2. Monster Builder lite: подсказка рун из инвентаря под архетип → открытие в Rune Table.
+3. Teams: заметки к декам, readiness, speed-gap по статам SWEX.
 
----
+## 2. Monsters — Dashboard (опционально)
 
-## Категория: Monsters
+1. Субтаб **Dashboard | Roster | Teams**.
+2. Score коробки, 2–3 графика (6/6, skill debt, опционально качество рун).
+3. Клик по графику → отфильтрованный Roster.
+4. Связка с Runes depth («rune box 68/100, но N 6★ без 6/6»).
 
-См. **`docs/PLANS-MONSTERS.md`** — что уже в сборке (MVP закрыт).
+## 3. Share
 
-**Активный roadmap в UI:** Changelog → Roadmap (`js/core/changelog-data.js` → `STATIC_ROADMAP`).
+1. Mentor review: клик из баннера → отфильтрованный Roster (очередь skill-up, без рун и т.д.).
 
-Кратко по приоритету (сверху вниз в Changelog → Roadmap):
+## 4. Runes
 
-1. **Account-wide:** devilmon/skill planner, fusion tracker, Monster Builder lite, richer Teams.
-2. **Monsters → Dashboard** (опционально): score, графики, drill-down, связка с Rune depth.
-3. **Share (частично)** — mentor account review, Teams в payload, опционально URL без Worker.
-4. **Runes** — diff слотов, God hint, Grind, тюнинг Forge Score.
-5. **Roster depth** — compare, duplicates, presets, tags.
-6. **Artifacts/relics (частично)** — движок правил gear; опционально отдельная вкладка.
-7. **Guide FR** · **Builders** (горизонт).
+1. Сравнение двух слотов SWEX (Database Slots): diff вердиктов и ролей.
+2. Опционально жёстче правило Grind (eff / HR subs).
 
----
+## 5. Monsters — roster depth
 
-## Категория: Runes
+1. Сравнение двух юнитов side-by-side (статы, скиллы, 6 слотов).
+2. Подсказка «дубликат Nat5» (два одинаковых — кандидат в food?).
+3. Content tags на юнитах (RTA, Siege, ToA) + фильтр.
 
-- **Forge Score** — колонка в таблице (отдельно от Eff% и вердикта); Guide → Rune Table.
-- **Сравнение двух слотов SWEX** — diff вердиктов и ролей.
-- **God potential** — информационная подсказка в строке (не вердикт).
-- **Жёстче Grind** — опциональное правило (eff / HR subs).
+## 6. Artifacts & relics
 
----
+1. Движок правил Keep/Sell для gear (отдельно от рун).
+2. Опционально отдельная верхняя вкладка (vs только Runes → Table).
+3. Больше подтверждённых подписей типов реликтов.
+4. **Иконки реликтов** — вручную: скриншоты из игры → PNG в `assets/relics/` (имена по README в папке); подключение в UI уже заложено.
 
-## Категория: Artifacts & relics
+## 7. Guide & i18n
 
-- **Сделано:** таблицы под Runes → Table, парсинг SWEX, gear на Monsters detail.
-- **В планах:** движок правил Keep/Sell для gear (отдельно от рун); опционально верхняя вкладка.
+1. FR Guide для Monsters (позже Artifacts).
+2. Дополнительные FR-строки UI Monsters.
 
----
+## 9. Локальные ассеты (вместо SWARFARM CDN)
 
-## Категория: Guide & i18n
+Перенос JSON и картинок на наш хост: меньше внешних запросов, стабильнее UI.  
+**Детальный план, папки, фазы, оценки размера:** [`PLANS-LOCAL-ASSETS.md`](PLANS-LOCAL-ASSETS.md).
 
-- Французские тексты Guide для Monsters (и позже Artifacts).
-- Дополнение FR-строк UI для Monsters.
+Кратко по приоритету:
 
----
+1. ~~Скиллы JSON + meta~~ (готово — `skills-index.json`).
+2. Мелкий static: элементы, сеты рун, devilmon, leader tiles.
+3. Иконки артефактов + скиллов (~5k).
+4. Портреты монстров (тяжёлое; возможно R2 или только monsters из SWEX).
+5. Расширить `monsters-index` (статы без API в деталке).
 
-## Категория: Share & profiles
+## 8. Долгий горизонт
 
-- **Сделано:** Share Profile (Worker + D1), режимы из App Settings.
-- **Дальше:** account review banner для наставника; `?profile=` / `?data=` без Worker; Teams в share payload.
-
-## Категория: Out of scope
-
-- Собственный бэкенд / аккаунты / база профилей на нашем сервере.
-- Community drop logs (Cairos / Rift / SD).
-- Полный клон bestiary SWARFARM — ссылки на swarfarm.com для множителей и справки.
+1. RTA / Siege draft helpers из своей коробки (не уровень SWOP).
+2. Заметки по порядку ходов и скорости на основе статов из экспорта (не точь-в-точь как в игре; **как сделать — пока не определено**).
 
 ---
 
-## Категория: Инфра / dev
+## Вне scope
 
-- Сборка `ui.js` из `js/features/` (не закрывать IIFE в середине feature-частей).
-- При необходимости: skill max-level DB для Monsters (JSON рядом с `monsters-index.json`).
+- Свой бэкенд / облачные аккаунты / база профилей на сервере.
+- Логи дропа (Cairos / Rift / SD).
+- Полный клон bestiary SWARFARM.
+- Оптимизатор рун на миллионы перестановок (SWOP / SWLens).

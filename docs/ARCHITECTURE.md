@@ -2,7 +2,7 @@
 
 SW Forge is a static browser app. Cloudflare Pages serves `index.html`, CSS, data JSON, and plain script files. There is no runtime bundler requirement.
 
-**Source of truth for paths and workflow:** `docs/PROJECT-CONTEXT.md`
+**Docs index:** `docs/README.md` · **Quick context:** `docs/PROJECT-CONTEXT.md`
 
 ## Runtime Load Order
 
@@ -39,6 +39,7 @@ The app API is exposed through `window.SWRM` and related browser globals. Keep t
 | Verdicts and formulas | `js/engine/*`, `js/advanced-formulas.js`, `js/core/defaults.js` | none |
 | SWEX/data loading | `js/data/parser.js`, `js/data/skill-db.js`, `js/data/monster-db.js` | none |
 | Demo dataset | loaded from `data/demo.json` via `js/features/runes/upload.js` | none |
+| Bundled indexes | `data/monsters-index.json`, `data/skills-index.json` (schema 2: `metaById`) | see `data/README.md`, `MASTER.md` § external data |
 
 ## UI Build
 
@@ -55,7 +56,9 @@ Use `npm run build:ui` after any edit under `js/features/`.
 
 ## CSS Entry
 
-`css/style.css` imports:
+**Production:** `index.html` loads `css/dist/app.css` (built by `npm run build:css`).
+
+**Source chain** (`css/style.css` — used when editing partials) imports:
 
 - `css/foundation/*` (base, header, overlays, toasts)
 - `css/features/runes/index.css` (dashboard, rune table, hub, rules, stage-advisor)

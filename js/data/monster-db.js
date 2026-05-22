@@ -227,7 +227,7 @@
       try {
         const url = new URL(INDEX_URL, window.location.href);
         url.searchParams.set('_', String(Date.now()).slice(0, 10));
-        const res = await fetch(url, { cache: 'no-store' });
+        const res = await fetch(url);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         const list = data.monsters != null ? data.monsters : data;

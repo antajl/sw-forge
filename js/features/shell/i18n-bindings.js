@@ -1,6 +1,28 @@
 // js/features/shell/i18n-bindings.js — UI translation bindings
   // ===================== LANGUAGE =====================
-  function updateLanguage(lang) {
+  function loadFrTranslations() {
+    if (TRANSLATIONS.fr) return Promise.resolve();
+    if (window.SWRM_I18N_FR) {
+      TRANSLATIONS.fr = { ...TRANSLATIONS.en, ...window.SWRM_I18N_FR };
+      return Promise.resolve();
+    }
+    return new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'js/core/i18n-fr.js';
+      s.onload = () => {
+        TRANSLATIONS.fr = {
+          ...TRANSLATIONS.en,
+          ...(window.SWRM_I18N_FR || {}),
+        };
+        resolve();
+      };
+      s.onerror = () => reject(new Error('Failed to load French translations'));
+      document.head.appendChild(s);
+    });
+  }
+
+  async function updateLanguage(lang) {
+    if (lang === 'fr') await loadFrTranslations();
     currentLang = lang;
     localStorage.setItem(APP_LANG_KEY, lang);
     const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
@@ -186,6 +208,7 @@
     setDashUniTabLabel('dash-unified-tab-sets', t.dashboardDistSets);
     setDashUniTabLabel('dash-unified-tab-slots', t.dashboardDistSlots);
     setDashUniTabLabel('dash-unified-tab-eff', t.dashboardDistEff);
+    setDashUniTabLabel('dash-unified-tab-score', t.dashboardDistScore);
     const uniTabs = document.getElementById('dash-unified-tabs');
     const unifiedBlockTitle = document.getElementById('lbl-dash-unified-block-title');
     if (unifiedBlockTitle) unifiedBlockTitle.textContent = t.dashboardUnifiedBlockTitle || '';
@@ -275,11 +298,13 @@
       const el = document.getElementById(id);
       if (el) el.textContent = t[key] || fallback;
     };
+    bindTh('lbl-th-art-icon', 'thArtIcon', 'Icon');
     bindTh('lbl-th-art-grade', 'thArtGrade', 'Grade');
     bindTh('lbl-th-art-category', 'thArtCategory', 'Category');
     bindTh('lbl-th-art-main', 'monstersGearMain', 'Main');
     bindTh('lbl-th-art-subs', 'thArtSubs', 'Subs');
     bindTh('lbl-th-art-location', 'thArtLocation', 'Location');
+    bindTh('lbl-th-rel-icon', 'thRelIcon', 'Icon');
     bindTh('lbl-th-rel-category', 'thRelCategory', 'Category');
     bindTh('lbl-th-rel-level', 'monstersGearLevel', 'Lvl');
     bindTh('lbl-th-rel-durability', 'thRelDurability', 'Durability');
@@ -411,6 +436,10 @@
     if (rulesPageTitle) rulesPageTitle.textContent = t.rulesPageTitle || 'Rune Rules';
     const rulesPageLead = document.getElementById('lbl-rules-page-lead');
     if (rulesPageLead) rulesPageLead.textContent = t.rulesPageLead || '';
+    const rulesExpertTitle = document.getElementById('lbl-rules-expert-banner-title');
+    if (rulesExpertTitle) rulesExpertTitle.textContent = t.rulesExpertBannerTitle || '';
+    const rulesExpertText = document.getElementById('lbl-rules-expert-banner-text');
+    if (rulesExpertText) rulesExpertText.textContent = t.rulesExpertBannerText || '';
 
     const lblPrevTitle = document.getElementById('lbl-rules-section-previews-title');
     if (lblPrevTitle) lblPrevTitle.textContent = t.rulesSectionPreviewsTitle || '';
@@ -550,6 +579,39 @@
     if (hubRoster) hubRoster.textContent = t.monstersHubRoster || 'Roster';
     const hubTeams = document.getElementById('lbl-monsters-hub-teams');
     if (hubTeams) hubTeams.textContent = t.monstersHubTeams || 'Teams';
+    const hubPlanner = document.getElementById('lbl-monsters-hub-planner');
+    if (hubPlanner) hubPlanner.textContent = t.monstersHubPlanner || 'Skill plan';
+    const spLead = document.getElementById('skill-planner-lead');
+    if (spLead) spLead.textContent = t.skillPlannerLead || '';
+    const spNat = document.getElementById('lbl-skill-planner-nat');
+    if (spNat) spNat.textContent = t.skillPlannerNatFilter || 'Priority';
+    const spNatAll = document.getElementById('lbl-skill-planner-nat-all');
+    if (spNatAll) spNatAll.textContent = t.skillPlannerNatAll || 'All naturals';
+    const spNat5 = document.getElementById('lbl-skill-planner-nat5');
+    if (spNat5) spNat5.textContent = t.skillPlannerNat5 || 'Nat 5 only';
+    const spNat4p = document.getElementById('lbl-skill-planner-nat4plus');
+    if (spNat4p) spNat4p.textContent = t.skillPlannerNat4Plus || 'Nat 4+';
+    const spNat4 = document.getElementById('lbl-skill-planner-nat4-only');
+    if (spNat4) spNat4.textContent = t.skillPlannerNat4Only || 'Nat 4 only';
+    const spNat3 = document.getElementById('lbl-skill-planner-nat3');
+    if (spNat3) spNat3.textContent = t.skillPlannerNat3 || 'Nat 3 only';
+    const spTabQueue = document.getElementById('lbl-skill-planner-tab-queue');
+    if (spTabQueue) spTabQueue.textContent = t.skillPlannerTabQueue || 'Priority queue';
+    const spTabStuck = document.getElementById('lbl-skill-planner-tab-stuck');
+    if (spTabStuck) spTabStuck.textContent = t.skillPlannerTabStuck || 'CD −1 goals';
+    const spExclude = document.getElementById('lbl-skill-planner-exclude-storage');
+    if (spExclude) {
+      const hiding = document.getElementById('skill-planner-exclude-storage')?.getAttribute('aria-pressed') === 'true';
+      spExclude.textContent = hiding
+        ? t.skillPlannerShowStorage || 'Include Storage'
+        : t.skillPlannerHideStorage || 'Exclude Storage';
+    }
+    const skillNeedsOpt = document.getElementById('lbl-monsters-filter-skill-needs');
+    if (skillNeedsOpt) skillNeedsOpt.textContent = t.monstersFilterSkillNeeds || 'Not maxed (skill-ups needed)';
+    const skillAllOpt = document.getElementById('lbl-monsters-filter-skill-all');
+    if (skillAllOpt) skillAllOpt.textContent = t.monstersFilterSkillAll || 'All skills';
+    const skillMaxedOpt = document.getElementById('lbl-monsters-filter-skill-maxed');
+    if (skillMaxedOpt) skillMaxedOpt.textContent = t.monstersFilterSkillMaxed || 'Max skills';
     const teamsSetsTitle = document.getElementById('lbl-teams-sets-title');
     if (teamsSetsTitle) teamsSetsTitle.textContent = t.teamsSetsTitle || '';
     const teamsSetName = document.getElementById('lbl-teams-set-name');

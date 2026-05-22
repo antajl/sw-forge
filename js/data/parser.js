@@ -47,9 +47,9 @@
   }
 
   /**
-   * Calculate rune efficiency % (Legend 6★ baseline)
-   * Formula: (sum of substat_value / max_possible_substat_value) / 2.8 * 100
-   * Simplified: each substat scored 0–1 relative to max Legend roll.
+   * SWOP / SWOP-classic efficiency (Legend 6★ baseline).
+   * score = 1.0 (main) + Σ line terms; each line: baseRoll ÷ (maxPerRoll × 5).
+   * No flat penalties; innate uses the same term as subs. Grind excluded from Eff%.
    */
   const SUB_MAX = {
     1:  1875, // HP flat
@@ -66,34 +66,29 @@
   };
   window.SWRM.SUB_MAX = SUB_MAX;
 
-  /**
-   * Raw efficiency % from SWOP-style score (2.8 baseline), not capped.
-   * SWOP can show well above 100%; UI table still uses capped calcEfficiency for a 0–100 scale.
-   */
+  function swopEfficiencyLineTerm(typeId, baseValue) {
+    const maxRoll = SUB_MAX[typeId];
+    if (!maxRoll) return 0;
+    return (Number(baseValue) || 0) / (maxRoll * 5);
+  }
+
+  /** Uncapped Eff% — can exceed 100 when rolls are strong (SWOP behaviour). */
   function calcEfficiencyUncapped(rune) {
-    let score = 1.0; // main
+    let score = 1.0;
     if (rune.innate_type && SUB_MAX[rune.innate_type]) {
-      let innateScore = 0.5 * ((rune.innate_val || 0) / (SUB_MAX[rune.innate_type] * 5));
-      if (rune.innate_type === 1 || rune.innate_type === 3 || rune.innate_type === 5) {
-        innateScore *= 0.5;
-      }
-      score += innateScore;
+      score += swopEfficiencyLineTerm(rune.innate_type, rune.innate_val);
     }
-    for (const s of rune.substats) {
-      const maxRoll = SUB_MAX[s.type];
-      if (maxRoll) {
-        let subScore = (s.val || 0) / (maxRoll * 5);
-        if (s.type === 1 || s.type === 3 || s.type === 5) {
-          subScore *= 0.5;
-        }
-        score += subScore;
+    for (const s of rune.substats || []) {
+      if (s && s.type && SUB_MAX[s.type]) {
+        score += swopEfficiencyLineTerm(s.type, s.val);
       }
     }
     return Math.round((score / 2.8) * 100 * 10) / 10;
-}
+  }
 
+  /** Stored on rune.eff — same as uncapped (table UI may display min(100, eff)). */
   function calcEfficiency(rune) {
-    return Math.min(100, calcEfficiencyUncapped(rune));
+    return calcEfficiencyUncapped(rune);
   }
 
   /**

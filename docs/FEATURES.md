@@ -8,7 +8,7 @@ How UI and data are split after the gear/teams redistribution.
 |-------|------|
 | `js/features/<name>/` | Browser UI modules concatenated into `js/ui.js` (`npm run build:ui`) |
 | `js/data/<name>/` | Static labels & SWEX parsers loaded before `ui.js` in `index.html` |
-| `css/features/<name>/` | Feature styles imported from `css/style.css` |
+| `css/features/<name>/` | Feature styles → `tools/build-css.mjs` → `css/dist/app.css` (prod) |
 
 **Runes tab → Table** still hosts three list kinds (Runes / Artifacts / Relics) in one screen; only the **code folders** are split.
 

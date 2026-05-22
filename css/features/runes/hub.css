@@ -39,6 +39,14 @@ body.light-theme #tab-runes > .runes-hub-tabs.rules-subtabs {
   line-height: 1.2;
 }
 
+.runes-hub-tabs #runes-hub-tab-settings .rules-subtab__hint {
+  color: color-mix(in srgb, var(--warn, #e8b84a) 88%, var(--text-dim));
+}
+
+.runes-hub-tabs #runes-hub-tab-settings:not(.is-active) {
+  border-color: color-mix(in srgb, var(--warn, #e8b84a) 22%, var(--border2));
+}
+
 .runes-hub-pane:not(.is-active) {
   display: none;
 }

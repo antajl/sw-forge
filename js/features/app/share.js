@@ -1,5 +1,7 @@
 // js/features/app/share.js — Share Profile (read-only links via Worker + D1)
   const SHARE_QUERY_KEY = 's';
+  const PROFILE_URL_QUERY_KEY = 'profile';
+  const PROFILE_DATA_QUERY_KEY = 'data';
   const SHARE_SESSION_KEY = 'swrm_share_readonly_v1';
   const SHARE_EXPIRY_DAYS = 90;
   const SHARE_MODE_STORAGE_KEY = 'swrm_share_mode_v1';
@@ -72,6 +74,110 @@
       return new URL(window.location.href).searchParams.get(SHARE_QUERY_KEY) || '';
     } catch (e) {
       return '';
+    }
+  }
+
+  function getProfileLinkFromUrl() {
+    try {
+      const params = new URL(window.location.href).searchParams;
+      return {
+        profileUrl: (params.get(PROFILE_URL_QUERY_KEY) || '').trim(),
+        dataBlob: (params.get(PROFILE_DATA_QUERY_KEY) || '').trim(),
+      };
+    } catch (e) {
+      return { profileUrl: '', dataBlob: '' };
+    }
+  }
+
+  function decodeProfileDataParam(blob) {
+    const raw = String(blob || '').trim();
+    if (!raw) return '';
+    const b64 = raw.replace(/-/g, '+').replace(/_/g, '/');
+    const padLen = (4 - (b64.length % 4)) % 4;
+    const padded = b64 + (padLen ? '='.repeat(padLen) : '');
+    const binary = atob(padded);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+    return new TextDecoder().decode(bytes);
+  }
+
+  function normalizeProfileSwexRoot(parsed) {
+    if (!parsed || typeof parsed !== 'object') return null;
+    if (Array.isArray(parsed.unit_list) || Array.isArray(parsed.runes) || Array.isArray(parsed.rune_list)) {
+      return parsed;
+    }
+    if (parsed.data && typeof parsed.data === 'object') return normalizeProfileSwexRoot(parsed.data);
+    if (typeof parsed.data === 'string') {
+      try {
+        return normalizeProfileSwexRoot(JSON.parse(parsed.data));
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  function applyReadOnlyProfilePayload(parsed, wizardName) {
+    const root = normalizeProfileSwexRoot(parsed);
+    if (!root) return false;
+    const name =
+      String(wizardName || '').trim() ||
+      String(
+        (root.wizard_info && (root.wizard_info.wizard_name || root.wizard_info.name)) ||
+          root.wizard_name ||
+          '',
+      ).trim();
+    if (!tryHydrateRunesFromJsonText(JSON.stringify(root))) return false;
+    shareReadOnly = true;
+    persistShareSession(true);
+    shareViewLoadFailed = false;
+    shareViewWizardName = name;
+    if (parsed.teams && typeof setTeamsShareViewPayload === 'function') {
+      setTeamsShareViewPayload(parsed.teams);
+    } else if (root.teams && typeof setTeamsShareViewPayload === 'function') {
+      setTeamsShareViewPayload(root.teams);
+    }
+    applyShareReadOnlyUi();
+    renderShareViewBanner();
+    if (typeof uiAfterSuccessfulRuneRestore === 'function') {
+      uiAfterSuccessfulRuneRestore({ name: shareViewWizardName }, { keepTab: true });
+    }
+    if (typeof renderDashboard === 'function' && typeof getVisibleRunes === 'function') {
+      renderDashboard(getVisibleRunes(), { animateCharts: false });
+    }
+    if (typeof renderMonstersPanel === 'function') renderMonstersPanel();
+    if (typeof renderTeamsPanel === 'function') renderTeamsPanel();
+    if (typeof applyShareUrlTabFromLocation === 'function') applyShareUrlTabFromLocation();
+    return true;
+  }
+
+  async function tryOpenProfileFromUrl() {
+    if (getShareIdFromUrl()) return false;
+    const { profileUrl, dataBlob } = getProfileLinkFromUrl();
+    if (!profileUrl && !dataBlob) return false;
+    shareViewLoadFailed = false;
+    try {
+      let text = '';
+      if (dataBlob) {
+        text = decodeProfileDataParam(dataBlob);
+      } else {
+        const res = await fetch(profileUrl);
+        if (!res.ok) throw new Error('profile fetch failed');
+        text = await res.text();
+      }
+      const parsed = JSON.parse(text);
+      return applyReadOnlyProfilePayload(parsed);
+    } catch (e) {
+      console.warn('Profile link load failed', e);
+      shareViewLoadFailed = true;
+      shareReadOnly = true;
+      persistShareSession(true);
+      applyShareReadOnlyUi();
+      renderShareViewBanner();
+      if (typeof uiEmptyRuneApplicationState === 'function') {
+        uiEmptyRuneApplicationState({ keepTab: true });
+      }
+      return false;
     }
   }
 
@@ -349,6 +455,83 @@
     }
   }
 
+  function buildShareMentorUnitHints(t) {
+    const cache = typeof monstersEnrichedCache !== 'undefined' ? monstersEnrichedCache : [];
+    if (!cache.length) return '';
+    const scored = [];
+    for (const u of cache) {
+      let score = 0;
+      if (u.skillUpsNeeded > 0) score += 3 + Math.min(u.skillUpsNeeded, 9);
+      if (u.equippedCount > 0 && !u.hasFullRunes) score += 2;
+      if (u.equippedCount === 0 && (u.level >= 40 || u.stars >= 6)) score += 1;
+      if (score > 0) {
+        scored.push({
+          score,
+          name: u.displayName && !String(u.displayName).startsWith('#') ? u.displayName : null,
+        });
+      }
+    }
+    scored.sort((a, b) => b.score - a.score);
+    const names = [];
+    for (const row of scored) {
+      if (!row.name) continue;
+      if (names.includes(row.name)) continue;
+      names.push(row.name);
+      if (names.length >= 3) break;
+    }
+    if (!names.length) return '';
+    const tpl = t.shareReviewUnits || 'Needs attention: {names}';
+    return escapeHtml(tpl.replace(/\{names\}/g, names.join(', ')));
+  }
+
+  function buildShareAccountReviewHtml() {
+    if (shareViewLoadFailed) return '';
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const lines = [];
+    const runes = typeof allRunes !== 'undefined' && Array.isArray(allRunes) ? allRunes : [];
+    if (runes.length) {
+      let keep = 0;
+      let sell = 0;
+      for (const r of runes) {
+        const v = (r.verdict || '').trim();
+        if (v === 'Keep') keep += 1;
+        else if (v === 'Sell') sell += 1;
+      }
+      const tpl = t.shareReviewRunes || '{n} runes · Keep {keep} · Sell {sell}';
+      lines.push(
+        escapeHtml(
+          tpl
+            .replace(/\{n\}/g, String(runes.length))
+            .replace(/\{keep\}/g, String(keep))
+            .replace(/\{sell\}/g, String(sell)),
+        ),
+      );
+    }
+    const cache = typeof monstersEnrichedCache !== 'undefined' ? monstersEnrichedCache : [];
+    if (cache.length) {
+      let partial = 0;
+      let skill = 0;
+      for (const u of cache) {
+        if (u.equippedCount > 0 && !u.hasFullRunes) partial += 1;
+        if (u.skillUpsNeeded > 0) skill += u.skillUpsNeeded;
+      }
+      const tpl =
+        t.shareReviewMonsters || '{n} monsters · {partial} partial sets · {skill} skill levels to max';
+      lines.push(
+        escapeHtml(
+          tpl
+            .replace(/\{n\}/g, String(cache.length))
+            .replace(/\{partial\}/g, String(partial))
+            .replace(/\{skill\}/g, String(skill)),
+        ),
+      );
+    }
+    const hints = buildShareMentorUnitHints(t);
+    if (hints) lines.push(hints);
+    if (!lines.length) return '';
+    return `<p class="share-view-banner__review">${lines.join('<span class="share-view-banner__sep" aria-hidden="true"> · </span>')}</p>`;
+  }
+
   function renderShareViewBanner() {
     let bar = document.getElementById('share-view-banner');
     if (!shareReadOnly) {
@@ -375,13 +558,17 @@
     const nameRaw = (shareViewWizardName || '').trim() || (t.shareUnknownWizard || 'another player');
     const name = escapeHtml(nameRaw);
     const readOnlyLbl = escapeHtml(t.shareReadOnlyLabel || 'Read-only');
+    const reviewHtml = shareViewLoadFailed ? '' : buildShareAccountReviewHtml();
     const text = shareViewLoadFailed
       ? escapeHtml(t.shareViewLoadFailed || 'Could not load this shared profile. The link may be expired.')
       : `<span class="share-view-banner__line"><span class="share-view-banner__prefix">${escapeHtml(t.shareViewingPrefix || 'Viewing account')}</span> <strong class="share-view-banner__name">${name}</strong></span> <span class="share-view-banner__readonly">${readOnlyLbl}</span>`;
     bar.innerHTML = `<div class="demo-dataset-banner__inner">
       <div class="demo-dataset-banner__content">
         <span class="demo-dataset-banner__badge" aria-hidden="true">${readOnlyLbl}</span>
-        <span class="demo-dataset-banner__text">${text}</span>
+        <div class="demo-dataset-banner__text-wrap">
+          <span class="demo-dataset-banner__text">${text}</span>
+          ${reviewHtml}
+        </div>
         <button type="button" class="btn-ghost demo-dataset-banner__upload-btn" id="share-view-exit-btn">${escapeHtml(t.shareLoadOwn || 'Load your SWEX')}</button>
       </div>
     </div>`;
@@ -393,6 +580,8 @@
         try {
           const u = new URL(window.location.href);
           u.searchParams.delete(SHARE_QUERY_KEY);
+          u.searchParams.delete(PROFILE_URL_QUERY_KEY);
+          u.searchParams.delete(PROFILE_DATA_QUERY_KEY);
           window.location.href = u.pathname + (u.hash || '');
         } catch (e) {
           window.location.href = window.location.pathname;
@@ -414,32 +603,16 @@
       const raw = body && body.data != null ? body.data : null;
       const text = typeof raw === 'string' ? raw : JSON.stringify(raw);
       const parsed = JSON.parse(text);
-      const wrapped = {
-        wizard_info: { wizard_name: body.wizard_name || parsed.wizard_name || '' },
-        unit_list: parsed.unit_list || [],
-        runes: [],
-      };
-      if (!tryHydrateRunesFromJsonText(JSON.stringify(wrapped))) {
+      const wizardName = String(body.wizard_name || parsed.wizard_name || '').trim();
+      const root = normalizeProfileSwexRoot(parsed);
+      if (!root) {
         shareViewLoadFailed = true;
         return false;
       }
-      shareReadOnly = true;
-      persistShareSession(true);
-      shareViewWizardName = String(body.wizard_name || parsed.wizard_name || '').trim();
-      if (parsed.teams && typeof setTeamsShareViewPayload === 'function') {
-        setTeamsShareViewPayload(parsed.teams);
+      if (!applyReadOnlyProfilePayload({ ...root, teams: parsed.teams }, wizardName)) {
+        shareViewLoadFailed = true;
+        return false;
       }
-      applyShareReadOnlyUi();
-      renderShareViewBanner();
-      if (typeof uiAfterSuccessfulRuneRestore === 'function') {
-        uiAfterSuccessfulRuneRestore({ name: shareViewWizardName }, { keepTab: true });
-      }
-      if (typeof renderDashboard === 'function' && typeof getVisibleRunes === 'function') {
-        renderDashboard(getVisibleRunes(), { animateCharts: false });
-      }
-      if (typeof renderMonstersPanel === 'function') renderMonstersPanel();
-      if (typeof renderTeamsPanel === 'function') renderTeamsPanel();
-      applyShareUrlTabFromLocation();
       return true;
     } catch (e) {
       console.warn('Share load failed', e);
@@ -564,6 +737,10 @@
     bindShareProfileUi();
     const shareId = getShareIdFromUrl();
     if (!shareId) {
+      const profileLink = getProfileLinkFromUrl();
+      if (profileLink.profileUrl || profileLink.dataBlob) {
+        return tryOpenProfileFromUrl();
+      }
       if (readShareSession()) persistShareSession(false);
       shareReadOnly = false;
       shareViewLoadFailed = false;
@@ -588,3 +765,4 @@
   window.SWRM.applyShareReadOnlyUi = applyShareReadOnlyUi;
   window.SWRM.renderShareViewBanner = renderShareViewBanner;
   window.SWRM.getShareIdFromUrl = getShareIdFromUrl;
+  window.SWRM.getProfileLinkFromUrl = getProfileLinkFromUrl;

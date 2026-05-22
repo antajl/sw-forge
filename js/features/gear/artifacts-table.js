@@ -82,6 +82,7 @@
     const fmtSub = window.SWRM && window.SWRM.formatArtifactSubLine;
     if (!filteredArtifacts.length) {
       tbody.innerHTML = `<tr><td colspan="5" class="table-empty">${escapeHtml(t.tableGearEmpty || 'No artifacts')}</td></tr>`;
+      if (typeof renderArtifactTableRosterChips === 'function') renderArtifactTableRosterChips();
       return;
     }
     const rows = filteredArtifacts
@@ -93,23 +94,36 @@
       )
       .map((a) => {
         const main = a.pri && fmt ? fmt(a.pri, { kind: 'artifact' }) : '—';
+        const catFn = window.SWRM && window.SWRM.gearCategoryCellHtml;
+        const iconUrl =
+          window.SWRM && typeof window.SWRM.artifactIconUrl === 'function'
+            ? window.SWRM.artifactIconUrl(a)
+            : '';
+        const catCell =
+          typeof catFn === 'function'
+            ? catFn(iconUrl, a.category || '—')
+            : escapeHtml(a.category || '—');
+        const gradeFn = window.SWRM && typeof window.SWRM.gearGradeTagHtml === 'function'
+          ? window.SWRM.gearGradeTagHtml
+          : null;
+        const gradeCell = gradeFn
+          ? gradeFn(a.gradeStr)
+          : escapeHtml(a.gradeStr || '—');
         return `<tr>
-          <td class="col-grade">${escapeHtml(a.gradeStr || '—')}</td>
-          <td>${escapeHtml(a.category || '—')}</td>
+          <td class="col-grade">${gradeCell}</td>
+          <td class="col-category">${catCell}</td>
           <td>${escapeHtml(main)}</td>
           <td class="col-subs-stack"><div class="gear-table-subs">${artifactSubStack(a, fmtSub)}</div></td>
           <td>${escapeHtml(gearLocationLabel(a.occupiedId, t))}</td>
         </tr>`;
       });
     tbody.innerHTML = rows.join('');
+    if (typeof renderArtifactTableRosterChips === 'function') renderArtifactTableRosterChips();
   }
 
   function bindArtifactTableFilters() {
     if (bindArtifactTableFilters._done) return;
     bindArtifactTableFilters._done = true;
-
-    document.getElementById('btn-artifact-reset-filters')?.addEventListener('click', resetArtifactTableFilters);
-    document.getElementById('artifact-filters-drawer-reset')?.addEventListener('click', resetArtifactTableFilters);
 
     const onArtifactFilterChange = () => {
       artifactFilterGrade = document.getElementById('filter-artifact-grade')?.value || '';
@@ -118,6 +132,16 @@
       updateArtifactFilterBadge();
       renderGearTables();
     };
+
+    if (typeof bindFiltersPopover === 'function') {
+      bindFiltersPopover('artifact-more-filters-btn', 'artifact-filters-popover', {
+        onClose: onArtifactFilterChange,
+      });
+    }
+
+    document.getElementById('btn-artifact-reset-filters')?.addEventListener('click', resetArtifactTableFilters);
+    document.getElementById('artifact-filters-drawer-reset')?.addEventListener('click', resetArtifactTableFilters);
+
     document.getElementById('filter-artifact-grade')?.addEventListener('change', onArtifactFilterChange);
     document.getElementById('filter-artifact-category')?.addEventListener('change', onArtifactFilterChange);
     document.getElementById('filter-artifact-location')?.addEventListener('change', onArtifactFilterChange);

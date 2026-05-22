@@ -25,8 +25,13 @@
     if (!demoOk) uiShowUploadPrompt();
   });
 
-  function reprocess() {
-    processedRunes = processAll(allRunes, stage, window.SWRM.settings);
+  async function reprocess() {
+    const settings = window.SWRM.settings;
+    if (typeof window.SWRM.processRunesAsync === 'function') {
+      processedRunes = await window.SWRM.processRunesAsync(allRunes, stage, settings);
+    } else {
+      processedRunes = processAll(allRunes, stage, settings);
+    }
     const visible = getVisibleRunes();
     renderDashboard(visible, { animateCharts: true });
     renderTable(visible);
@@ -290,7 +295,7 @@
       let lastErr = null;
       for (const rel of demoPaths) {
         try {
-          const res = await fetch(new URL(rel, window.location.href), { cache: 'no-store' });
+          const res = await fetch(new URL(rel, window.location.href));
           if (!res.ok) {
             lastErr = new Error(`HTTP ${res.status} (${rel})`);
             continue;

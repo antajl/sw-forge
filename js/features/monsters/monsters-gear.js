@@ -107,18 +107,65 @@
     });
   }
 
-  function buildMonsterGearSectionHtml(u, t) {
-    const artifacts = u.artifacts || [];
-    const relics = u.relics || [];
-    if (!artifacts.length && !relics.length) {
-      return `<p class="monsters-detail__muted">${escapeHtml(t.monstersGearEmpty || 'No artifacts or relics on this monster.')}</p>`;
+  function buildMonsterGearListHtml(items, t, emptyMsg) {
+    if (!items.length) {
+      return `<p class="monsters-detail__muted">${escapeHtml(emptyMsg || t.monstersGearEmpty || 'None equipped.')}</p>`;
     }
-    const items = []
-      .concat(
-        sortArtifactsForDisplay(artifacts),
-        relics.slice().sort((a, b) => String(a.category).localeCompare(String(b.category))),
-      )
-      .map((g) => buildGearItemHtml(g, t))
-      .join('');
-    return `<ul class="monsters-gear-list">${items}</ul>`;
+    return `<ul class="monsters-gear-list">${items.map((g) => buildGearItemHtml(g, t)).join('')}</ul>`;
+  }
+
+  function buildMonsterDetailLoadoutHtml(u, t, runesBlockHtml) {
+    const runesLbl = escapeHtml(t.monstersDetailRunes || 'Runes');
+    const artLbl = escapeHtml(t.monstersDetailArtifacts || 'Artifacts');
+    const relLbl = escapeHtml(t.monstersDetailRelics || 'Relics');
+    const countTpl = t.monstersDetailGearCount || '{n}';
+    const artifacts = sortArtifactsForDisplay(u.artifacts || []);
+    const relics = (u.relics || [])
+      .slice()
+      .sort((a, b) => String(a.category).localeCompare(String(b.category)));
+    const artCount = artifacts.length;
+    const relCount = relics.length;
+    const artCountHtml = artCount
+      ? ` <span class="monsters-detail__loadout-count">${escapeHtml(countTpl.replace('{n}', String(artCount)))}</span>`
+      : '';
+    const relCountHtml = relCount
+      ? ` <span class="monsters-detail__loadout-count">${escapeHtml(countTpl.replace('{n}', String(relCount)))}</span>`
+      : '';
+    const artEmpty = t.monstersGearArtifactsEmpty || 'No artifacts on this monster.';
+    const relEmpty = t.monstersGearRelicsEmpty || 'No relics on this monster.';
+    return `<div class="monsters-detail__loadout-tabs" role="tablist" aria-label="${escapeHtml(t.monstersDetailLoadoutAria || 'Gear')}">
+        <button type="button" class="btn-ghost btn-toolbar btn-toolbar--sm monsters-detail__loadout-tab is-active" data-loadout-tab="runes" role="tab" aria-selected="true" aria-controls="monsters-detail-loadout-runes">${runesLbl}</button>
+        <button type="button" class="btn-ghost btn-toolbar btn-toolbar--sm monsters-detail__loadout-tab" data-loadout-tab="artifacts" role="tab" aria-selected="false" aria-controls="monsters-detail-loadout-artifacts"${artCount ? '' : ' disabled'}>${artLbl}${artCountHtml}</button>
+        <button type="button" class="btn-ghost btn-toolbar btn-toolbar--sm monsters-detail__loadout-tab" data-loadout-tab="relics" role="tab" aria-selected="false" aria-controls="monsters-detail-loadout-relics"${relCount ? '' : ' disabled'}>${relLbl}${relCountHtml}</button>
+      </div>
+      <div class="monsters-detail__loadout-panels">
+        <div class="monsters-detail__loadout-panel is-active" id="monsters-detail-loadout-runes" data-loadout-panel="runes" role="tabpanel">${runesBlockHtml}</div>
+        <div class="monsters-detail__loadout-panel" id="monsters-detail-loadout-artifacts" data-loadout-panel="artifacts" role="tabpanel" hidden>${buildMonsterGearListHtml(artifacts, t, artEmpty)}</div>
+        <div class="monsters-detail__loadout-panel" id="monsters-detail-loadout-relics" data-loadout-panel="relics" role="tabpanel" hidden>${buildMonsterGearListHtml(relics, t, relEmpty)}</div>
+      </div>`;
+  }
+
+  function bindMonsterDetailLoadoutTabs(root) {
+    if (!root) return;
+    const tabs = root.querySelectorAll('[data-loadout-tab]');
+    const panels = root.querySelectorAll('[data-loadout-panel]');
+    if (!tabs.length) return;
+    tabs.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        if (btn.disabled) return;
+        const kind = btn.getAttribute('data-loadout-tab');
+        if (!kind) return;
+        tabs.forEach((b) => {
+          const on = b === btn;
+          b.classList.toggle('is-active', on);
+          b.setAttribute('aria-selected', on ? 'true' : 'false');
+        });
+        panels.forEach((p) => {
+          const on = p.getAttribute('data-loadout-panel') === kind;
+          p.classList.toggle('is-active', on);
+          if (on) p.removeAttribute('hidden');
+          else p.setAttribute('hidden', '');
+        });
+      });
+    });
   }

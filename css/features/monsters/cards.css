@@ -73,13 +73,13 @@
 .monsters-card--selected.monsters-card--favorite {
   box-shadow:
     0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent),
-    inset 0 0 0 1px color-mix(in srgb, #f0c040 35%, transparent);
+    inset 0 0 0 1px color-mix(in srgb, var(--gold) 35%, transparent);
 }
 
 .monsters-card--selected.monsters-card--food {
   box-shadow:
     0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent),
-    inset 0 0 0 1px color-mix(in srgb, #e87850 30%, transparent);
+    inset 0 0 0 1px color-mix(in srgb, var(--orange) 30%, transparent);
 }
 
 .monsters-card--hover:not(.monsters-card--bulk-on) {
@@ -362,7 +362,7 @@
 
 .monsters-card__bar--fire { background: #c44; }
 .monsters-card__bar--water { background: #48a; }
-.monsters-card__bar--wind { background: #c9a227; }
+.monsters-card__bar--wind { background: var(--gold); }
 .monsters-card__bar--light { background: #c5cad3; }
 .monsters-card__bar--dark { background: #a6a; }
 
@@ -449,21 +449,21 @@
 }
 
 .monsters-mark-btn--favorite.monsters-mark-btn--on {
-  color: #ffd54a;
-  border-color: color-mix(in srgb, #f0c040 55%, var(--border2));
-  background: color-mix(in srgb, #f0c040 28%, var(--bg3));
+  color: var(--gold);
+  border-color: color-mix(in srgb, var(--gold) 55%, var(--border2));
+  background: color-mix(in srgb, var(--gold) 28%, var(--bg3));
 }
 
 .monsters-mark-btn--food.monsters-mark-btn--on {
-  color: #ff9a6e;
-  border-color: color-mix(in srgb, #e87850 55%, var(--border2));
-  background: color-mix(in srgb, #e87850 26%, var(--bg3));
+  color: var(--orange);
+  border-color: color-mix(in srgb, var(--orange) 55%, var(--border2));
+  background: color-mix(in srgb, var(--orange) 26%, var(--bg3));
 }
 
 .monsters-mark-btn--storage.monsters-mark-btn--on {
   color: #9ec8ff;
-  border-color: color-mix(in srgb, #5b9cff 50%, var(--border2));
-  background: color-mix(in srgb, #5b9cff 24%, var(--bg3));
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--border2));
+  background: color-mix(in srgb, var(--accent) 24%, var(--bg3));
 }
 
 .monsters-mark-btn--swex:disabled {
@@ -496,25 +496,25 @@
 }
 
 .monsters-card--grid .monsters-card__actions .monsters-tag-btn[data-unit-tag='favorite'].monsters-tag-btn--on {
-  color: #ffd54a;
-  background: color-mix(in srgb, #f0c040 38%, var(--bg3));
-  border-color: color-mix(in srgb, #f0c040 65%, var(--border2));
-  box-shadow: 0 0 8px color-mix(in srgb, #f0c040 45%, transparent);
+  color: var(--gold);
+  background: color-mix(in srgb, var(--gold) 38%, var(--bg3));
+  border-color: color-mix(in srgb, var(--gold) 65%, var(--border2));
+  box-shadow: 0 0 8px color-mix(in srgb, var(--gold) 45%, transparent);
 }
 
 .monsters-card--grid .monsters-card__actions .monsters-tag-btn[data-unit-tag='food'].monsters-tag-btn--on {
-  color: #ff9a6e;
-  background: color-mix(in srgb, #e87850 34%, var(--bg3));
-  border-color: color-mix(in srgb, #e87850 60%, var(--border2));
-  box-shadow: 0 0 8px color-mix(in srgb, #e87850 40%, transparent);
+  color: var(--orange);
+  background: color-mix(in srgb, var(--orange) 34%, var(--bg3));
+  border-color: color-mix(in srgb, var(--orange) 60%, var(--border2));
+  box-shadow: 0 0 8px color-mix(in srgb, var(--orange) 40%, transparent);
 }
 
 .monsters-card--grid .monsters-card__actions .monsters-tag-btn[data-unit-tag='storageMark'].monsters-tag-btn--on,
 .monsters-card--grid .monsters-card__actions .monsters-tag-btn[data-unit-tag='storageMark'].monsters-tag-btn--swex.monsters-tag-btn--on {
   color: #9ec8ff;
-  background: color-mix(in srgb, #5b9cff 32%, var(--bg3));
-  border-color: color-mix(in srgb, #5b9cff 55%, var(--border2));
-  box-shadow: 0 0 8px color-mix(in srgb, #5b9cff 38%, transparent);
+  background: color-mix(in srgb, var(--accent) 32%, var(--bg3));
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border2));
+  box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 38%, transparent);
 }
 
 .monsters-card--list .monsters-card__actions--list {
@@ -561,9 +561,9 @@
 }
 
 .monsters-tag-btn--on {
-  color: #f0c040;
-  background: color-mix(in srgb, #f0c040 28%, var(--bg3));
-  box-shadow: 0 0 0 1px color-mix(in srgb, #f0c040 45%, transparent);
+  color: var(--gold);
+  background: color-mix(in srgb, var(--gold) 28%, var(--bg3));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--gold) 45%, transparent);
 }
 
 .monsters-tag-btn--swex.monsters-tag-btn--on {
@@ -578,17 +578,17 @@
 }
 
 .monsters-tag-btn[data-unit-tag='food'].monsters-tag-btn--on {
-  color: #e87850;
-  background: color-mix(in srgb, #e87850 24%, var(--bg3));
-  box-shadow: 0 0 0 1px color-mix(in srgb, #e87850 40%, transparent);
+  color: var(--orange);
+  background: color-mix(in srgb, var(--orange) 24%, var(--bg3));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--orange) 40%, transparent);
 }
 
 .monsters-card--favorite {
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, #f0c040 35%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gold) 35%, transparent);
 }
 
 .monsters-card--food {
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, #e87850 30%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--orange) 30%, transparent);
 }
 
 .monsters-card__badges {
@@ -599,9 +599,9 @@
 }
 
 .monsters-card__badge--fav {
-  color: #f0c040;
-  background: color-mix(in srgb, #f0c040 18%, var(--bg3));
-  border: 1px solid color-mix(in srgb, #f0c040 40%, var(--border2));
+  color: var(--gold);
+  background: color-mix(in srgb, var(--gold) 18%, var(--bg3));
+  border: 1px solid color-mix(in srgb, var(--gold) 40%, var(--border2));
   font-size: 0.62rem;
   padding: 0 4px;
   border-radius: 3px;
@@ -611,8 +611,8 @@
   font-size: 0.62rem;
   padding: 0 3px;
   border-radius: 3px;
-  background: color-mix(in srgb, #e87850 14%, var(--bg3));
-  border: 1px solid color-mix(in srgb, #e87850 35%, var(--border2));
+  background: color-mix(in srgb, var(--orange) 14%, var(--bg3));
+  border: 1px solid color-mix(in srgb, var(--orange) 35%, var(--border2));
 }
 
 .monsters-tag-btn:hover {
@@ -656,16 +656,12 @@
 
 .monsters-card--grid .monsters-card__star {
   display: inline-block;
-  font-size: 1.44rem;
+  font-size: 1.58rem;
   margin-left: -0.38em;
-  color: #f0c040;
-  -webkit-text-stroke: 1px #000;
+  color: var(--monster-star-natural);
+  -webkit-text-stroke: var(--monster-star-stroke) #000;
   paint-order: stroke fill;
-  text-shadow:
-    0 0 2px #000,
-    0 1px 0 #000,
-    1px 0 0 #000,
-    -1px 0 0 #000;
+  text-shadow: var(--monster-star-shadow);
 }
 
 .monsters-card--grid .monsters-card__star:first-child {
@@ -673,7 +669,7 @@
 }
 
 .monsters-card--grid .monsters-card__stars-row--awakened .monsters-card__star {
-  color: #f06eb0;
+  color: var(--monster-star-awaken);
 }
 
 .monsters-card--grid .monsters-card__storage-pill {
@@ -728,7 +724,7 @@
   font-size: 0.62rem;
   font-weight: 800;
   line-height: 1;
-  color: #fff;
+  color: var(--text-hi);
   border: 2px solid rgba(0, 0, 0, 0.45);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
   pointer-events: none;
@@ -870,22 +866,18 @@
   justify-content: center;
   flex-wrap: wrap;
   z-index: 3;
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   line-height: 1;
   letter-spacing: -0.04em;
-  color: #f0c040;
-  -webkit-text-stroke: 1px #000;
+  color: var(--monster-star-natural);
+  -webkit-text-stroke: var(--monster-star-stroke) #000;
   paint-order: stroke fill;
-  text-shadow:
-    0 0 2px #000,
-    0 1px 0 #000,
-    1px 0 0 #000,
-    -1px 0 0 #000;
+  text-shadow: var(--monster-star-shadow);
   pointer-events: none;
 }
 
 .monsters-detail__stars--awakened {
-  color: #f06eb0;
+  color: var(--monster-star-awaken);
 }
 
 .monsters-card__top {

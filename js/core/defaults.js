@@ -666,9 +666,12 @@ const EFF_MAX = {
 };
 // Max main stat value per slot/type for efficiency baseline
 const EFF_MAIN_MAX = {
-  2: { SPD:42, 'HP%':63, 'ATK%':63, 'DEF%':63 },
-  4: { 'HP%':63, 'ATK%':63, 'DEF%':63, CRate:58, CDmg:80 },
-  6: { 'HP%':63, 'ATK%':63, 'DEF%':63, ACC:64, RES:64 },
+  1: { HP: 2448, 'HP%': 63 },
+  2: { SPD: 42, 'HP%': 63, 'ATK%': 63, 'DEF%': 63 },
+  3: { DEF: 160, 'DEF%': 63, HP: 2448, 'HP%': 63 },
+  4: { 'HP%': 63, 'ATK%': 63, 'DEF%': 63, CRate: 58, CDmg: 80 },
+  5: { HP: 2448, DEF: 160, ATK: 160, 'HP%': 63, 'DEF%': 63, 'ATK%': 63 },
+  6: { 'HP%': 63, 'ATK%': 63, 'DEF%': 63, ACC: 64, RES: 64 },
 };
 
 // ---- SETTINGS PERSISTENCE ----

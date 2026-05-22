@@ -4,9 +4,17 @@
     applyFiltersAndSort(runes);
   }
 
+  /** SWOP Eff% (uncapped) — used for sort, CSV, depth charts. */
   function getRuneNumericEff(r) {
     if (!r) return 0;
-    return Number.isFinite(r.eff) ? r.eff : 0;
+    if (Number.isFinite(r.eff)) return r.eff;
+    const calc = window.SWRM?.calcEfficiencyUncapped;
+    return typeof calc === 'function' ? calc(r) : 0;
+  }
+
+  /** Table display only — cap at 100% like SWOP column UI. */
+  function getRuneDisplayEff(r) {
+    return Math.min(100, getRuneNumericEff(r));
   }
 
   function applyRuneTableEffHeader() {
@@ -60,7 +68,10 @@
         case 's2':      av = a.substats[1]?.name || ''; bv = b.substats[1]?.name || ''; break;
         case 's3':      av = a.substats[2]?.name || ''; bv = b.substats[2]?.name || ''; break;
         case 's4':      av = a.substats[3]?.name || ''; bv = b.substats[3]?.name || ''; break;
-        default:        av = a.eff;     bv = b.eff;
+        default:
+          av = typeof computeRuneScore === 'function' ? computeRuneScore(a) : 0;
+          bv = typeof computeRuneScore === 'function' ? computeRuneScore(b) : 0;
+          break;
       }
       if (av < bv) return dir === 'asc' ? -1 : 1;
       if (av > bv) return dir === 'asc' ? 1 : -1;
@@ -122,7 +133,7 @@
     const headers = [
       'Grade',
       tloc.csvHeaderAncient || 'Ancient',
-      'Set', 'Lvl', 'Slot', 'Main', 'Innate', 'Sub1', 'Sub2', 'Sub3', 'Sub4', 'Eff%', 'Score', 'Role', 'Verdict',
+      'Set', 'Lvl', 'Slot', 'Main', 'Innate', 'Sub1', 'Sub2', 'Sub3', 'Sub4', 'Score', 'Eff%', 'Role', 'Verdict',
     ];
     if (includeTarget) headers.push('Target');
     function cellPart(s) {
@@ -155,8 +166,8 @@
         subcell(subs[1]),
         subcell(subs[2]),
         subcell(subs[3]),
-        `${getRuneNumericEff(r).toFixed(1)}%`,
         String(typeof computeRuneScore === 'function' ? computeRuneScore(r) : ''),
+        `${getRuneNumericEff(r).toFixed(1)}`,
         roleDisplayName(r.role || ''),
         r.verdict || '',
       ];

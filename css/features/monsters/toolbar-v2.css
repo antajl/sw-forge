@@ -319,8 +319,8 @@
   align-items: stretch;
   border-radius: 10px;
   overflow: visible;
-  box-shadow: 0 0 0 1px color-mix(in srgb, #5b9cff 55%, transparent),
-    0 4px 14px color-mix(in srgb, #5b9cff 25%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 55%, transparent),
+    0 4px 14px color-mix(in srgb, var(--accent) 25%, transparent);
 }
 
 .share-split__main {
@@ -333,7 +333,7 @@
   font-size: 0.8rem;
   font-weight: 700;
   cursor: pointer;
-  color: #fff;
+  color: var(--text-hi);
   background: linear-gradient(135deg, #4f8cff 0%, #3a6fd8 100%);
   min-height: 34px;
 }
@@ -349,7 +349,7 @@
   padding: 8px 10px;
   font-size: 0.65rem;
   cursor: pointer;
-  color: #fff;
+  color: var(--text-hi);
   background: linear-gradient(135deg, #457fe8 0%, #3568c4 100%);
   min-height: 34px;
 }

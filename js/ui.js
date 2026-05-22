@@ -19,7 +19,7 @@
   let activeSwexJson = null;
   let processedRunes = [];
   let stage    = 'Mid';
-  let sortKey  = 'eff';
+  let sortKey  = 'score';
   let sortDir  = 'desc';
   /** First paint of Rune Table: this many rows; user can load the rest explicitly. */
   const RUNE_TABLE_PAGE = 500;
@@ -301,7 +301,7 @@
   const MAIN_TAB_IDS = ['runes', 'monsters', 'guide', 'changelog', 'app-settings'];
   const RUNES_SUBTAB_IDS = ['dashboard', 'runetable', 'settings'];
   const RUNES_SUBTAB_STORAGE_KEY = 'swrm_runes_subtab_v1';
-  const MONSTERS_SUBTAB_IDS = ['roster', 'teams'];
+  const MONSTERS_SUBTAB_IDS = ['roster', 'teams', 'planner'];
   const MONSTERS_SUBTAB_STORAGE_KEY = 'swrm_monsters_subtab_v1';
   let runesHubTabsBound = false;
 
@@ -309,7 +309,7 @@
     if (tabId === 'dashboard' || tabId === 'runetable' || tabId === 'settings') {
       return { main: 'runes', sub: tabId };
     }
-    if (tabId === 'roster' || tabId === 'teams') {
+    if (tabId === 'roster' || tabId === 'teams' || tabId === 'planner') {
       return { main: 'monsters', sub: tabId };
     }
     if (MAIN_TAB_IDS.includes(tabId)) return { main: tabId, sub: null };
@@ -343,7 +343,7 @@
     if (h === 'dashboard' || h === 'runetable' || h === 'settings') {
       return { tab: 'runes', runesSubtab: h, monstersSubtab: null, query };
     }
-    if (h === 'roster' || h === 'teams') {
+    if (h === 'roster' || h === 'teams' || h === 'planner') {
       return { tab: 'monsters', runesSubtab: null, monstersSubtab: h, query };
     }
     if (h === 'archive') return { tab: 'guide', runesSubtab: null, monstersSubtab: null, query };
@@ -537,7 +537,29 @@
   }
 
   // ===================== LANGUAGE =====================
-  function updateLanguage(lang) {
+  function loadFrTranslations() {
+    if (TRANSLATIONS.fr) return Promise.resolve();
+    if (window.SWRM_I18N_FR) {
+      TRANSLATIONS.fr = { ...TRANSLATIONS.en, ...window.SWRM_I18N_FR };
+      return Promise.resolve();
+    }
+    return new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'js/core/i18n-fr.js';
+      s.onload = () => {
+        TRANSLATIONS.fr = {
+          ...TRANSLATIONS.en,
+          ...(window.SWRM_I18N_FR || {}),
+        };
+        resolve();
+      };
+      s.onerror = () => reject(new Error('Failed to load French translations'));
+      document.head.appendChild(s);
+    });
+  }
+
+  async function updateLanguage(lang) {
+    if (lang === 'fr') await loadFrTranslations();
     currentLang = lang;
     localStorage.setItem(APP_LANG_KEY, lang);
     const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
@@ -723,6 +745,7 @@
     setDashUniTabLabel('dash-unified-tab-sets', t.dashboardDistSets);
     setDashUniTabLabel('dash-unified-tab-slots', t.dashboardDistSlots);
     setDashUniTabLabel('dash-unified-tab-eff', t.dashboardDistEff);
+    setDashUniTabLabel('dash-unified-tab-score', t.dashboardDistScore);
     const uniTabs = document.getElementById('dash-unified-tabs');
     const unifiedBlockTitle = document.getElementById('lbl-dash-unified-block-title');
     if (unifiedBlockTitle) unifiedBlockTitle.textContent = t.dashboardUnifiedBlockTitle || '';
@@ -812,11 +835,13 @@
       const el = document.getElementById(id);
       if (el) el.textContent = t[key] || fallback;
     };
+    bindTh('lbl-th-art-icon', 'thArtIcon', 'Icon');
     bindTh('lbl-th-art-grade', 'thArtGrade', 'Grade');
     bindTh('lbl-th-art-category', 'thArtCategory', 'Category');
     bindTh('lbl-th-art-main', 'monstersGearMain', 'Main');
     bindTh('lbl-th-art-subs', 'thArtSubs', 'Subs');
     bindTh('lbl-th-art-location', 'thArtLocation', 'Location');
+    bindTh('lbl-th-rel-icon', 'thRelIcon', 'Icon');
     bindTh('lbl-th-rel-category', 'thRelCategory', 'Category');
     bindTh('lbl-th-rel-level', 'monstersGearLevel', 'Lvl');
     bindTh('lbl-th-rel-durability', 'thRelDurability', 'Durability');
@@ -948,6 +973,10 @@
     if (rulesPageTitle) rulesPageTitle.textContent = t.rulesPageTitle || 'Rune Rules';
     const rulesPageLead = document.getElementById('lbl-rules-page-lead');
     if (rulesPageLead) rulesPageLead.textContent = t.rulesPageLead || '';
+    const rulesExpertTitle = document.getElementById('lbl-rules-expert-banner-title');
+    if (rulesExpertTitle) rulesExpertTitle.textContent = t.rulesExpertBannerTitle || '';
+    const rulesExpertText = document.getElementById('lbl-rules-expert-banner-text');
+    if (rulesExpertText) rulesExpertText.textContent = t.rulesExpertBannerText || '';
 
     const lblPrevTitle = document.getElementById('lbl-rules-section-previews-title');
     if (lblPrevTitle) lblPrevTitle.textContent = t.rulesSectionPreviewsTitle || '';
@@ -1087,6 +1116,39 @@
     if (hubRoster) hubRoster.textContent = t.monstersHubRoster || 'Roster';
     const hubTeams = document.getElementById('lbl-monsters-hub-teams');
     if (hubTeams) hubTeams.textContent = t.monstersHubTeams || 'Teams';
+    const hubPlanner = document.getElementById('lbl-monsters-hub-planner');
+    if (hubPlanner) hubPlanner.textContent = t.monstersHubPlanner || 'Skill plan';
+    const spLead = document.getElementById('skill-planner-lead');
+    if (spLead) spLead.textContent = t.skillPlannerLead || '';
+    const spNat = document.getElementById('lbl-skill-planner-nat');
+    if (spNat) spNat.textContent = t.skillPlannerNatFilter || 'Priority';
+    const spNatAll = document.getElementById('lbl-skill-planner-nat-all');
+    if (spNatAll) spNatAll.textContent = t.skillPlannerNatAll || 'All naturals';
+    const spNat5 = document.getElementById('lbl-skill-planner-nat5');
+    if (spNat5) spNat5.textContent = t.skillPlannerNat5 || 'Nat 5 only';
+    const spNat4p = document.getElementById('lbl-skill-planner-nat4plus');
+    if (spNat4p) spNat4p.textContent = t.skillPlannerNat4Plus || 'Nat 4+';
+    const spNat4 = document.getElementById('lbl-skill-planner-nat4-only');
+    if (spNat4) spNat4.textContent = t.skillPlannerNat4Only || 'Nat 4 only';
+    const spNat3 = document.getElementById('lbl-skill-planner-nat3');
+    if (spNat3) spNat3.textContent = t.skillPlannerNat3 || 'Nat 3 only';
+    const spTabQueue = document.getElementById('lbl-skill-planner-tab-queue');
+    if (spTabQueue) spTabQueue.textContent = t.skillPlannerTabQueue || 'Priority queue';
+    const spTabStuck = document.getElementById('lbl-skill-planner-tab-stuck');
+    if (spTabStuck) spTabStuck.textContent = t.skillPlannerTabStuck || 'CD −1 goals';
+    const spExclude = document.getElementById('lbl-skill-planner-exclude-storage');
+    if (spExclude) {
+      const hiding = document.getElementById('skill-planner-exclude-storage')?.getAttribute('aria-pressed') === 'true';
+      spExclude.textContent = hiding
+        ? t.skillPlannerShowStorage || 'Include Storage'
+        : t.skillPlannerHideStorage || 'Exclude Storage';
+    }
+    const skillNeedsOpt = document.getElementById('lbl-monsters-filter-skill-needs');
+    if (skillNeedsOpt) skillNeedsOpt.textContent = t.monstersFilterSkillNeeds || 'Not maxed (skill-ups needed)';
+    const skillAllOpt = document.getElementById('lbl-monsters-filter-skill-all');
+    if (skillAllOpt) skillAllOpt.textContent = t.monstersFilterSkillAll || 'All skills';
+    const skillMaxedOpt = document.getElementById('lbl-monsters-filter-skill-maxed');
+    if (skillMaxedOpt) skillMaxedOpt.textContent = t.monstersFilterSkillMaxed || 'Max skills';
     const teamsSetsTitle = document.getElementById('lbl-teams-sets-title');
     if (teamsSetsTitle) teamsSetsTitle.textContent = t.teamsSetsTitle || '';
     const teamsSetName = document.getElementById('lbl-teams-set-name');
@@ -1384,13 +1446,13 @@
         if (legacy === 'sets') v = 'sets';
         else if (legacy === 'roles') v = 'roles';
       }
-      if (['verdict', 'roles', 'sets', 'slots', 'eff'].includes(v)) return v;
+      if (['verdict', 'roles', 'sets', 'slots', 'eff', 'score'].includes(v)) return v;
     } catch (e) { /* ignore */ }
     return 'verdict';
   }
 
   function syncDashboardUnifiedTabButtons(active) {
-    const keys = ['verdict', 'roles', 'sets', 'slots', 'eff'];
+    const keys = ['verdict', 'roles', 'sets', 'slots', 'eff', 'score'];
     keys.forEach((k) => {
       const btn = document.getElementById(`dash-unified-tab-${k}`);
       if (!btn) return;
@@ -1415,7 +1477,7 @@
   }
 
   function applyDashboardUnifiedTab(which) {
-    const keys = ['verdict', 'roles', 'sets', 'slots', 'eff'];
+    const keys = ['verdict', 'roles', 'sets', 'slots', 'eff', 'score'];
     const active = keys.includes(which) ? which : 'verdict';
     const host = document.getElementById('dash-unified-panes');
     const next = document.getElementById(`dash-pane-${active}`);
@@ -1470,7 +1532,7 @@
   function initDashboardUnifiedTabs() {
     const host = document.getElementById('dash-unified-panes');
     const initial = readDashboardUnifiedTab();
-    const keys = ['verdict', 'roles', 'sets', 'slots', 'eff'];
+    const keys = ['verdict', 'roles', 'sets', 'slots', 'eff', 'score'];
     keys.forEach((k) => {
       setDashboardUnifiedPaneState(document.getElementById(`dash-pane-${k}`), k === initial);
     });
@@ -1493,7 +1555,7 @@
     document.querySelectorAll('.dash-unified-tab[data-dash-uni]').forEach((btn) => {
       btn.addEventListener('click', () => {
         const raw = btn.getAttribute('data-dash-uni') || 'verdict';
-        const w = ['verdict', 'roles', 'sets', 'slots', 'eff'].includes(raw) ? raw : 'verdict';
+        const w = ['verdict', 'roles', 'sets', 'slots', 'eff', 'score'].includes(raw) ? raw : 'verdict';
         applyDashboardUnifiedTab(w);
         try {
           localStorage.setItem(DASH_UNIFIED_DIST_KEY, w);
@@ -1622,6 +1684,72 @@
     topSpdPanelRerender(false);
   });
 
+  const SWRM_NS = window.SWRM || (window.SWRM = {});
+  let runeWorker = null;
+  let workerFailed = false;
+  let pendingId = 0;
+  const handlers = new Map();
+
+  function workerUrl() {
+    try {
+      return new URL('js/workers/rune-processor.worker.js', window.location.href).href;
+    } catch (e) {
+      return 'js/workers/rune-processor.worker.js';
+    }
+  }
+
+  function getRuneWorker() {
+    if (workerFailed || typeof Worker === 'undefined') return null;
+    if (runeWorker) return runeWorker;
+    try {
+      runeWorker = new Worker(workerUrl());
+      runeWorker.onmessage = ({ data }) => {
+        const h = handlers.get(data.requestId);
+        if (!h) return;
+        handlers.delete(data.requestId);
+        if (data.error) h.reject(new Error(data.error));
+        else h.resolve(data.result);
+      };
+      runeWorker.onerror = () => {
+        workerFailed = true;
+        for (const [, h] of handlers) {
+          h.reject(new Error('Rune worker failed'));
+        }
+        handlers.clear();
+      };
+    } catch (e) {
+      workerFailed = true;
+      return null;
+    }
+    return runeWorker;
+  }
+
+  function processRunesAsync(runes, stage, settings) {
+    const sync = () =>
+      typeof processAll === 'function'
+        ? processAll(runes, stage, settings)
+        : SWRM_NS.processAll(runes, stage, settings);
+
+    const w = getRuneWorker();
+    if (!w) return Promise.resolve(sync());
+
+    return new Promise((resolve, reject) => {
+      const requestId = ++pendingId;
+      handlers.set(requestId, { resolve, reject });
+      try {
+        w.postMessage({ runes, stage, settings, requestId });
+      } catch (e) {
+        handlers.delete(requestId);
+        reject(e);
+      }
+    }).catch((err) => {
+      console.warn('processRunesAsync: worker unavailable, using main thread', err);
+      return sync();
+    });
+  }
+
+  SWRM_NS.processRunesAsync = processRunesAsync;
+
   // ===================== FILE UPLOAD =====================
   // Initial SWEX load (file picker + drag-and-drop on #upload-prompt): see loadSwexJsonFromFile below.
 
@@ -1648,8 +1776,13 @@
     if (!demoOk) uiShowUploadPrompt();
   });
 
-  function reprocess() {
-    processedRunes = processAll(allRunes, stage, window.SWRM.settings);
+  async function reprocess() {
+    const settings = window.SWRM.settings;
+    if (typeof window.SWRM.processRunesAsync === 'function') {
+      processedRunes = await window.SWRM.processRunesAsync(allRunes, stage, settings);
+    } else {
+      processedRunes = processAll(allRunes, stage, settings);
+    }
     const visible = getVisibleRunes();
     renderDashboard(visible, { animateCharts: true });
     renderTable(visible);
@@ -1913,7 +2046,7 @@
       let lastErr = null;
       for (const rel of demoPaths) {
         try {
-          const res = await fetch(new URL(rel, window.location.href), { cache: 'no-store' });
+          const res = await fetch(new URL(rel, window.location.href));
           if (!res.ok) {
             lastErr = new Error(`HTTP ${res.status} (${rel})`);
             continue;
@@ -2352,8 +2485,8 @@
     if (duration > 0) hideTimer = setTimeout(dismiss, duration);
   }
 
-  const SWRM_FLOAT_TIP_SHOW_MS = 220;
-  const SWRM_FLOAT_TIP_HIDE_MS = 80;
+  const SWRM_FLOAT_TIP_SHOW_MS = 0;
+  const SWRM_FLOAT_TIP_HIDE_MS = 0;
   let swrmFloatTipEl = null;
   let swrmFloatTipShowTimer = null;
   let swrmFloatTipHideTimer = null;
@@ -2405,6 +2538,8 @@
       tip.hidden = true;
       tip.classList.remove('swrm-floating-tip--in');
       tip.textContent = '';
+      tip.innerHTML = '';
+      tip.classList.remove('swrm-floating-tip--rich', 'swrm-floating-tip--pre');
       swrmFloatTipAnchor = null;
     };
     if (immediate) {
@@ -2417,9 +2552,38 @@
     swrmFloatTipHideTimer = window.setTimeout(finish, SWRM_FLOAT_TIP_HIDE_MS);
   }
 
-  function showSwrmFloatTip(anchor, text) {
-    const tipText = String(text || '').replace(/\s+/g, ' ').trim();
-    if (!anchor || !tipText) return;
+  function normalizeSwrmTipText(text) {
+    return String(text || '').trim();
+  }
+
+  function findSwrmTipTarget(el) {
+    return el && el.closest ? el.closest('[data-swrm-tip],[data-swrm-tip-html]') : null;
+  }
+
+  function paintSwrmFloatTipNow(anchor, tipHtml, tipText) {
+    const tip = ensureSwrmFloatTipEl();
+    if (tipHtml) {
+      tip.innerHTML = tipHtml;
+      tip.classList.add('swrm-floating-tip--rich');
+      tip.classList.remove('swrm-floating-tip--pre');
+    } else {
+      tip.textContent = tipText;
+      tip.classList.remove('swrm-floating-tip--rich');
+      tip.classList.add('swrm-floating-tip--pre');
+    }
+    tip.hidden = false;
+    requestAnimationFrame(() => {
+      if (swrmFloatTipAnchor !== anchor) return;
+      positionSwrmFloatTip(anchor);
+      const motionApi = window.SWRM_MOTION;
+      if (!motionApi || !motionApi.floatTipIn(tip)) tip.classList.add('swrm-floating-tip--in');
+    });
+  }
+
+  function showSwrmFloatTip(anchor, text, isHtml) {
+    const tipHtml = isHtml ? String(text || '').trim() : '';
+    const tipText = isHtml ? '' : normalizeSwrmTipText(text);
+    if (!anchor || (!tipText && !tipHtml)) return;
     if (swrmFloatTipShowTimer) {
       clearTimeout(swrmFloatTipShowTimer);
       swrmFloatTipShowTimer = null;
@@ -2429,59 +2593,93 @@
       swrmFloatTipHideTimer = null;
     }
     swrmFloatTipAnchor = anchor;
+    if (SWRM_FLOAT_TIP_SHOW_MS <= 0) {
+      paintSwrmFloatTipNow(anchor, tipHtml, tipText);
+      return;
+    }
     swrmFloatTipShowTimer = window.setTimeout(() => {
       swrmFloatTipShowTimer = null;
       if (swrmFloatTipAnchor !== anchor) return;
-      const tip = ensureSwrmFloatTipEl();
-      tip.textContent = tipText;
-      tip.hidden = false;
-      requestAnimationFrame(() => {
-        positionSwrmFloatTip(anchor);
-        const motionApi = window.SWRM_MOTION;
-        if (!motionApi || !motionApi.floatTipIn(tip)) tip.classList.add('swrm-floating-tip--in');
-      });
+      paintSwrmFloatTipNow(anchor, tipHtml, tipText);
     }, SWRM_FLOAT_TIP_SHOW_MS);
   }
 
-  function setSwrmFloatTipTarget(el, text) {
+  function setSwrmFloatTipTarget(el, text, options) {
     if (!el) return;
-    const tipText = String(text || '').replace(/\s+/g, ' ').trim();
-    if (tipText) {
+    const opts = options && typeof options === 'object' ? options : {};
+    const tipHtml = String(opts.html || '').trim();
+    const tipText = normalizeSwrmTipText(text);
+    if (tipHtml) {
+      el.setAttribute('data-swrm-tip-html', tipHtml);
+      el.removeAttribute('data-swrm-tip');
+      el.removeAttribute('title');
+    } else if (tipText) {
       el.setAttribute('data-swrm-tip', tipText);
+      el.removeAttribute('data-swrm-tip-html');
       el.removeAttribute('title');
     } else {
       el.removeAttribute('data-swrm-tip');
+      el.removeAttribute('data-swrm-tip-html');
       el.removeAttribute('title');
     }
+  }
+
+  function showSwrmFloatTipFromTarget(anchor) {
+    if (!anchor) return;
+    const html = anchor.getAttribute('data-swrm-tip-html');
+    if (html) {
+      showSwrmFloatTip(anchor, html, true);
+      return;
+    }
+    showSwrmFloatTip(anchor, anchor.getAttribute('data-swrm-tip') || '', false);
   }
 
   function initSwrmFloatingTips() {
     if (initSwrmFloatingTips._done) return;
     initSwrmFloatingTips._done = true;
 
-    const onEnter = (e) => {
-      const t = e.target && e.target.closest ? e.target.closest('[data-swrm-tip]') : null;
-      if (!t) return;
-      showSwrmFloatTip(t, t.getAttribute('data-swrm-tip'));
-    };
-    const onLeave = (e) => {
-      const t = e.target && e.target.closest ? e.target.closest('[data-swrm-tip]') : null;
-      if (!t) return;
-      const rel = e.relatedTarget;
-      if (rel && t.contains(rel)) return;
-      if (swrmFloatTipAnchor === t) hideSwrmFloatTip(false);
-    };
     const onFocusIn = (e) => {
-      const t = e.target && e.target.closest ? e.target.closest('[data-swrm-tip]') : null;
-      if (t) showSwrmFloatTip(t, t.getAttribute('data-swrm-tip'));
+      const t =
+        e.target && e.target.closest
+          ? e.target.closest('[data-swrm-tip],[data-swrm-tip-html]')
+          : null;
+      if (t) showSwrmFloatTipFromTarget(t);
     };
     const onFocusOut = (e) => {
-      const t = e.target && e.target.closest ? e.target.closest('[data-swrm-tip]') : null;
+      const t =
+        e.target && e.target.closest
+          ? e.target.closest('[data-swrm-tip],[data-swrm-tip-html]')
+          : null;
       if (t && swrmFloatTipAnchor === t) hideSwrmFloatTip(false);
     };
 
-    document.addEventListener('mouseover', onEnter);
-    document.addEventListener('mouseout', onLeave);
+    const onPointerOver = (e) => {
+      const tip = findSwrmTipTarget(e.target);
+      if (!tip) return;
+      const from = findSwrmTipTarget(e.relatedTarget);
+      if (from === tip) return;
+      if (swrmFloatTipAnchor === tip && swrmFloatTipEl && !swrmFloatTipEl.hidden) {
+        positionSwrmFloatTip(tip);
+        return;
+      }
+      showSwrmFloatTipFromTarget(tip);
+    };
+    const onPointerOut = (e) => {
+      const tip = findSwrmTipTarget(e.target);
+      if (!tip) return;
+      const to = findSwrmTipTarget(e.relatedTarget);
+      if (to === tip) return;
+      const { clientX: x, clientY: y } = e;
+      requestAnimationFrame(() => {
+        if (!tip.isConnected) return;
+        const r = tip.getBoundingClientRect();
+        if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return;
+        if (swrmFloatTipAnchor === tip) hideSwrmFloatTip(true);
+      });
+    };
+
+    document.addEventListener('pointerover', onPointerOver);
+    document.addEventListener('pointerout', onPointerOut);
     document.addEventListener('focusin', onFocusIn);
     document.addEventListener('focusout', onFocusOut);
     window.addEventListener(
@@ -3712,7 +3910,9 @@
     const slotEff = { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] };
     const slotMain = { 1: {}, 2: {}, 3: {}, 4: {}, 5: {}, 6: {} };
     const effBuckets = new Array(20).fill(0);
+    const scoreBuckets = new Array(20).fill(0);
     const effVals = [];
+    const scoreVals = [];
     const verdictEff = {};
     for (let i = 0; i < runes.length; i++) {
       const r = runes[i];
@@ -3740,8 +3940,16 @@
       if (si >= 1 && si <= 6 && !Number.isNaN(si)) slotEff[si].push(eff);
       effVals.push(eff);
       effBuckets[Math.min(19, Math.floor(eff / 5))]++;
+      const sc =
+        typeof computeRuneScore === 'function'
+          ? Number(computeRuneScore(r))
+          : NaN;
+      const scoreNum = Number.isFinite(sc) ? sc : 0;
+      scoreVals.push(scoreNum);
+      scoreBuckets[Math.min(19, Math.floor(scoreNum / 5))]++;
     }
     effVals.sort((a, b) => a - b);
+    scoreVals.sort((a, b) => a - b);
     return {
       counts,
       roleCounts,
@@ -3752,7 +3960,9 @@
       slotEff,
       slotMain,
       effBuckets,
+      scoreBuckets,
       medianEff: medianSorted(effVals),
+      medianScore: medianSorted(scoreVals),
       verdictEff,
     };
   }
@@ -3853,6 +4063,20 @@
     if (!anyBucket) lines.push(`    —`);
 
     lines.push('');
+    lines.push(t.scoreDistribution || 'Forge Score distribution');
+    if (agg.medianScore != null && vis.length) {
+      lines.push(`  ${(t.scoreMedianCaption || '').replace('{score}', String(Math.round(agg.medianScore)))}`);
+    }
+    lines.push(`  ${t.dashboardExportScoreBuckets || 'Histogram (5-point buckets):'}`);
+    let anyScoreBucket = false;
+    for (let i = 0; i < 20; i++) {
+      if (!agg.scoreBuckets || !agg.scoreBuckets[i]) continue;
+      anyScoreBucket = true;
+      lines.push(`    ${i * 5}-${i * 5 + 4}: ${agg.scoreBuckets[i]}`);
+    }
+    if (!anyScoreBucket) lines.push(`    —`);
+
+    lines.push('');
     lines.push(`${t.footerVersionLabel || 'Build'}: ${(window.SWRM && window.SWRM.APP_VERSION) || ''}`);
 
     return lines.join('\n');
@@ -3875,7 +4099,7 @@
     const motionApi = window.SWRM_MOTION;
     if (!motionApi || !motionApi.enabled()) return false;
     let played = false;
-    for (const k of ['verdict', 'roles', 'sets', 'slots', 'eff']) {
+    for (const k of ['verdict', 'roles', 'sets', 'slots', 'eff', 'score']) {
       const pane = document.getElementById(`dash-pane-${k}`);
       if (pane && motionApi.animateDashboardPaneBars(pane)) played = true;
     }
@@ -4093,7 +4317,9 @@
       setCounts,
       setEff,
       effBuckets,
+      scoreBuckets,
       medianEff,
+      medianScore,
       verdictEff,
     } = agg;
 
@@ -4117,6 +4343,7 @@
     let roleBarTargets = null;
     let setBarTargets = null;
     let effBarTargets = null;
+    let scoreBarTargets = null;
     let slotShareAnimTargets = null;
 
     const verdictChartEl = document.getElementById('verdict-chart');
@@ -4279,6 +4506,46 @@
       }
     }
 
+    const scoreEl = document.getElementById('score-chart');
+    const prevScoreHeights =
+      animateCharts && scoreEl && !chartFromZero ? snapshotEffBarHeights(scoreEl) : null;
+    if (scoreEl) scoreEl.innerHTML = '';
+    const maxScoreBucket = Math.max(...(scoreBuckets || []), 1);
+    const medScore = medianScore;
+    const medScoreLine = document.getElementById('score-median-line');
+    const medianScoreTipTpl = tloc.scoreMedianCaption || 'Median Forge Score (filtered): {score}';
+    if (medScore != null && runes.length) {
+      const pos = Math.min(100, Math.max(0, medScore));
+      if (medScoreLine) {
+        medScoreLine.style.left = `calc(${pos}% - 1px)`;
+        medScoreLine.hidden = false;
+        medScoreLine.setAttribute('aria-hidden', 'false');
+        const tip = medianScoreTipTpl.replace('{score}', String(Math.round(medScore)));
+        medScoreLine.setAttribute('aria-label', tip);
+        setSwrmFloatTipTarget(medScoreLine, tip);
+      }
+    } else if (medScoreLine) {
+      medScoreLine.hidden = true;
+      medScoreLine.setAttribute('aria-hidden', 'true');
+      medScoreLine.removeAttribute('aria-label');
+      setSwrmFloatTipTarget(medScoreLine, '');
+    }
+    if (scoreEl && scoreBuckets) {
+      scoreBarTargets = [];
+      for (let i = 0; i < 20; i++) {
+        const h = Math.max(4, (scoreBuckets[i] / maxScoreBucket) * 80);
+        scoreBarTargets[i] = h;
+        const h0 = !animateCharts ? h : chartFromZero ? 0 : prevScoreHeights && prevScoreHeights[i] != null ? prevScoreHeights[i] : 0;
+        const label = `${i * 5}-${i * 5 + 4}`;
+        const cls = i >= 18 ? 'great' : i >= 14 ? 'good' : '';
+        scoreEl.innerHTML += `
+        <div class="eff-bar-wrap" title="${label}: ${scoreBuckets[i]} runes">
+          <div class="eff-bar eff-bar--score ${cls}" style="height:${h0}px"></div>
+          <div class="eff-label">${i * 5}</div>
+        </div>`;
+      }
+    }
+
     if (animateCharts) {
       rafTwice(() => {
         const mv = verdictChartEl
@@ -4317,6 +4584,16 @@
             bars.forEach((bar, i) => {
               if (effBarTargets[i] == null) return;
               const px = `${effBarTargets[i]}px`;
+              if (useGsap) heightEntries.push({ el: bar, value: px });
+              else bar.style.height = px;
+            });
+          }
+
+          if (scoreEl && scoreBarTargets && scoreBarTargets.length) {
+            const bars = scoreEl.querySelectorAll('.eff-bar');
+            bars.forEach((bar, i) => {
+              if (scoreBarTargets[i] == null) return;
+              const px = `${scoreBarTargets[i]}px`;
               if (useGsap) heightEntries.push({ el: bar, value: px });
               else bar.style.height = px;
             });
@@ -4363,7 +4640,7 @@
     SPD: 100,
     CDmg: 93,
     'ATK%': 91,
-    CRate: 86,
+    CRate: 89,
     ACC: 80,
     'HP%': 76,
     'DEF%': 73,
@@ -4376,8 +4653,8 @@
   /** How much each SUB stat type is worth (0–100) — own ranking, not the same as main. */
   const SUB_STAT_VALUE = {
     SPD: 100,
-    CDmg: 96,
-    CRate: 92,
+    CRate: 95,
+    CDmg: 93,
     'ATK%': 90,
     ACC: 84,
     'HP%': 78,
@@ -4405,41 +4682,40 @@
     ACC: 12,
   };
 
-  /** Main ↔ sub: values above 1 = synergy bonus, below 1 = anti-synergy penalty. */
+  /**
+   * Main ↔ sub (directional keys `main|sub` where order matters; else sorted fallback).
+   * Values above 1 = synergy bonus, below 1 = anti-synergy penalty.
+   */
   const MAIN_SUB_SYNERGY = {
-    'SPD|SPD': 1.14,
     'SPD|ACC': 1.1,
-    'SPD|ATK%': 1.06,
-    'SPD|HP%': 0.94,
-    'SPD|RES': 0.92,
-    'SPD|DEF%': 0.93,
-    'ATK%|ATK%': 1.14,
+    'SPD|ATK%': 1.1,
+    'ATK%|SPD': 1.11,
+    'SPD|HP%': 1,
+    'SPD|RES': 1,
+    'SPD|DEF%': 1,
     'ATK%|CDmg': 1.13,
     'ATK%|CRate': 1.1,
-    'ATK%|SPD': 1.08,
+    'ATK%|ATK': 1.1,
+    'ATK%|HP%': 1,
     'ATK%|RES': 0.9,
     'ATK%|DEF%': 0.91,
-    'HP%|HP%': 1.12,
     'HP%|DEF%': 1.11,
     'HP%|RES': 1.1,
     'HP%|SPD': 1.04,
-    'HP%|ATK%': 0.93,
-    'HP%|CDmg': 0.92,
-    'DEF%|DEF%': 1.12,
+    'HP%|ATK%': 1,
+    'HP%|CDmg': 1,
+    'HP%|HP': 1.1,
     'DEF%|HP%': 1.1,
     'DEF%|RES': 1.09,
-    'DEF%|ATK%': 0.92,
+    'DEF%|ATK%': 1,
+    'DEF%|DEF': 1.1,
     'CDmg|CRate': 1.12,
     'CDmg|ATK%': 1.1,
-    'CDmg|CDmg': 1.08,
+    'CDmg|RES': 0.94,
     'CRate|CDmg': 1.12,
     'ACC|SPD': 1.1,
-    'ACC|ACC': 1.08,
+    'ACC|HP%': 1,
     'RES|HP%': 1.1,
-    'RES|RES': 1.08,
-    'ATK|ATK': 1.1,
-    'DEF|DEF': 1.1,
-    'HP|HP': 1.1,
   };
 
   /** Sub ↔ sub pairs (unordered). >1 bonus, <1 penalty. */
@@ -4452,19 +4728,57 @@
     'HP%|DEF%': 1.08,
     'HP%|RES': 1.07,
     'DEF%|RES': 1.06,
-    'ATK%|SPD': 1.06,
-    'SPD|HP%': 0.95,
+    'ATK%|SPD': 1.09,
+    'SPD|HP%': 1,
     'ATK%|RES': 0.93,
-    'ATK%|HP%': 0.94,
+    'ATK%|HP%': 1,
     'CDmg|RES': 0.94,
-    'ACC|HP%': 0.96,
+    'ACC|HP%': 1,
   };
+
+  /** Golden triplet / archetype bonus (at most one per rune). */
+  const ARCHETYPE_MUL = 1.04;
+  const ARCHETYPES = [
+    { id: 'Nuker', tokens: ['ATK', 'CRate', 'CDmg'] },
+    { id: 'Fast Tank', tokens: ['HP', 'DEF', 'SPD'] },
+    { id: 'Control', tokens: ['SPD', 'ACC', 'HP'] },
+    { id: 'Bruiser', tokens: ['HP', 'CRate', 'CDmg'] },
+  ];
 
   const DEFAULT_SYNERGY = 1;
   const DEFAULT_ANTI_SYNERGY = 0.94;
+  const CROSS_STAT_DUP_MUL = 0.88;
+
+  /** Slots 1 / 3 / 5 only roll flat mains — not penalized vs % slots. */
+  const FLAT_MAIN_SLOTS = new Set([1, 3, 5]);
+  const FLAT_MAIN_NAMES = new Set(['HP', 'ATK', 'DEF']);
+  /** Tier for HP / ATK / DEF main on flat slots (slot-appropriate, not “wrong main”). */
+  const FLAT_SLOT_MAIN_TIER = 72;
 
   /** Typical rune lands ~55–75 points before normalize. */
   const SCORE_CALIBRATION = 295;
+
+  function isFlatMainSlot(slot) {
+    return FLAT_MAIN_SLOTS.has(Number(slot) || 0);
+  }
+
+  function mainStatTier(main, slot) {
+    if (isFlatMainSlot(slot) && FLAT_MAIN_NAMES.has(main)) return FLAT_SLOT_MAIN_TIER;
+    return MAIN_STAT_VALUE[main] ?? 50;
+  }
+
+  function mainSubSynergyFallback(slot) {
+    return isFlatMainSlot(slot) ? DEFAULT_SYNERGY : DEFAULT_ANTI_SYNERGY;
+  }
+
+  /** HP / ATK / DEF roots: flat and % share one base type for cross-zone dup checks. */
+  function baseStatType(statName) {
+    if (!statName) return '';
+    if (statName === 'HP' || statName === 'HP%') return 'HP';
+    if (statName === 'ATK' || statName === 'ATK%') return 'ATK';
+    if (statName === 'DEF' || statName === 'DEF%') return 'DEF';
+    return statName;
+  }
 
   function statTypeId(statName, subOrRune) {
     if (subOrRune && Number(subOrRune.type) > 0) return Number(subOrRune.type);
@@ -4508,6 +4822,14 @@
     return map[synergyKey(a, b)] ?? fallback;
   }
 
+  /** Main→sub pairs can be directional (e.g. ATK% main + SPD sub ≠ SPD main + ATK% sub). */
+  function lookupMainSubSynergy(main, sub, fallback) {
+    if (!main || !sub) return fallback;
+    const dir = `${main}|${sub}`;
+    if (MAIN_SUB_SYNERGY[dir] != null) return MAIN_SUB_SYNERGY[dir];
+    return lookupSynergy(MAIN_SUB_SYNERGY, main, sub, fallback);
+  }
+
   function qualifyingSubs(rune) {
     return (rune.substats || []).filter((s) => s && s.name && s.source !== 'innate');
   }
@@ -4515,7 +4837,8 @@
   function mainContribution(rune) {
     const main = rune.mainName;
     if (!main) return 0;
-    const intrinsic = MAIN_STAT_VALUE[main] ?? 50;
+    const slot = Number(rune.slot) || 0;
+    const intrinsic = mainStatTier(main, slot);
     const q = rollQuality(Number(rune.mainVal) || 0, maxRollForMain(rune));
     return intrinsic * q;
   }
@@ -4541,13 +4864,20 @@
     return intrinsic * q;
   }
 
-  function mainSubSynergyFactor(main, subs) {
+  function innateRollQuality(rune) {
+    const name = rune.innate_name;
+    if (!name) return 0;
+    const typeId = statTypeId(name, { type: rune.innate_type });
+    return rollQuality(Number(rune.innate_val) || 0, maxRollForType(typeId));
+  }
+
+  function mainSubSynergyFactor(main, subs, slot) {
     if (!main || !subs.length) return 1;
+    const fallback = mainSubSynergyFallback(slot);
     let sum = 0;
     let n = 0;
     for (const s of subs) {
-      const m = lookupSynergy(MAIN_SUB_SYNERGY, main, s.name, DEFAULT_ANTI_SYNERGY);
-      sum += m;
+      sum += lookupMainSubSynergy(main, s.name, fallback);
       n += 1;
     }
     return n ? sum / n : 1;
@@ -4568,19 +4898,65 @@
     return sum / n;
   }
 
-  function duplicateSubPenalty(subs) {
-    const counts = {};
-    for (const s of subs) {
-      counts[s.name] = (counts[s.name] || 0) + 1;
+  /**
+   * Cross-zone duplicate: same base stat on main, innate, and/or subs (ATK + ATK% = one type).
+   * 0.88^overlaps where overlap = main↔sub OR main↔innate OR innate↔sub (each at most once).
+   */
+  function duplicateSubPenalty(rune) {
+    const mainBase = baseStatType(rune.mainName);
+    const innateBase = baseStatType(rune.innate_name);
+    const subs = qualifyingSubs(rune);
+    let overlaps = 0;
+
+    if (mainBase) {
+      if (subs.some((s) => baseStatType(s.name) === mainBase)) overlaps += 1;
+      if (innateBase && innateBase === mainBase) overlaps += 1;
     }
-    let mul = 1;
-    for (const c of Object.values(counts)) {
-      if (c > 1) mul *= Math.pow(0.88, c - 1);
-    }
-    return mul;
+    if (innateBase && subs.some((s) => baseStatType(s.name) === innateBase)) overlaps += 1;
+
+    if (!overlaps) return 1;
+    return Math.pow(CROSS_STAT_DUP_MUL, overlaps);
   }
 
-  function computeForgeScoreBreakdown(rune) {
+  function archetypeLabel(id, t) {
+    const loc = t || {};
+    const map = {
+      Nuker: loc.archetypeNuker || 'Nuker',
+      'Fast Tank': loc.archetypeFastTank || 'Fast Tank',
+      Control: loc.archetypeControl || 'Control',
+      Bruiser: loc.archetypeBruiser || 'Bruiser',
+    };
+    return map[id] || id;
+  }
+
+  function collectArchetypeStatKeys(rune) {
+    const keys = new Set();
+    if (rune.mainName) keys.add(baseStatType(rune.mainName));
+    for (const s of qualifyingSubs(rune)) {
+      if (s.name) keys.add(baseStatType(s.name));
+    }
+    if (rune.innate_name && innateRollQuality(rune) > 0.5) {
+      keys.add(baseStatType(rune.innate_name));
+    }
+    return keys;
+  }
+
+  /** First matching archetype wins; bonus applied at most once. */
+  function archetypeFactor(rune, t) {
+    const keys = collectArchetypeStatKeys(rune);
+    for (const arch of ARCHETYPES) {
+      if (arch.tokens.every((tok) => keys.has(tok))) {
+        return {
+          mul: ARCHETYPE_MUL,
+          name: archetypeLabel(arch.id, t),
+          id: arch.id,
+        };
+      }
+    }
+    return { mul: 1, name: '', id: '' };
+  }
+
+  function computeForgeScoreBreakdown(rune, t) {
     if (!rune) {
       return {
         total: 0,
@@ -4590,6 +4966,8 @@
         mainSubSyn: 1,
         subSubSyn: 1,
         dupSub: 1,
+        archetypeMul: 1,
+        archetypeName: '',
       };
     }
     const main = rune.mainName || '';
@@ -4600,12 +4978,13 @@
     const subPts = subs.reduce((acc, s) => acc + subContribution(s, slot), 0);
     const innatePts = innateContribution(rune);
 
-    const mainSubSyn = mainSubSynergyFactor(main, subs);
+    const mainSubSyn = mainSubSynergyFactor(main, subs, slot);
     const subSubSyn = subSubSynergyFactor(subs);
-    const dupSub = duplicateSubPenalty(subs);
+    const dupSub = duplicateSubPenalty(rune);
+    const arch = archetypeFactor(rune, t);
 
     const raw =
-      (mainPts + subPts + innatePts) * mainSubSyn * subSubSyn * dupSub;
+      (mainPts + subPts + innatePts) * mainSubSyn * subSubSyn * dupSub * arch.mul;
     const total = Math.max(0, Math.min(100, Math.round((raw / SCORE_CALIBRATION) * 100)));
 
     return {
@@ -4616,36 +4995,46 @@
       mainSubSyn: Math.round(mainSubSyn * 100) / 100,
       subSubSyn: Math.round(subSubSyn * 100) / 100,
       dupSub: Math.round(dupSub * 100) / 100,
+      archetypeMul: Math.round(arch.mul * 100) / 100,
+      archetypeName: arch.name,
     };
   }
 
-  function computeForgeScore(rune) {
-    return computeForgeScoreBreakdown(rune).total;
+  function computeForgeScore(rune, t) {
+    return computeForgeScoreBreakdown(rune, t).total;
   }
 
-  function computeRuneScore(rune) {
-    return computeForgeScore(rune);
+  function computeRuneScore(rune, t) {
+    return computeForgeScore(rune, t);
   }
 
-  function runeScoreBreakdown(rune) {
-    return computeForgeScoreBreakdown(rune);
+  function runeScoreBreakdown(rune, t) {
+    return computeForgeScoreBreakdown(rune, t);
   }
 
   function formatForgeScoreTooltip(b, t) {
+    const loc = t || {};
+    const archetypeSuffix =
+      b.archetypeMul > 1 && b.archetypeName
+        ? (loc.forgeScoreTooltipArchetype || ' · archetype ×{mul} ({name})')
+            .replace(/\{mul\}/g, String(b.archetypeMul))
+            .replace(/\{name\}/g, String(b.archetypeName))
+        : '';
     const tpl =
-      t.forgeScoreTooltip ||
-      'Main {mainPts} pts · Subs {subPts} · Innate {innatePts}. Synergy main↔sub ×{ms} · sub↔sub ×{ss} · dup ×{dup}. Stat tiers + roll size — not Eff% or verdict.';
+      loc.forgeScoreTooltip ||
+      'Main {mainPts} pts · Subs {subPts} · Innate {innatePts}. Synergy main↔sub ×{ms} · sub↔sub ×{ss} · cross-stat dup ×{dup}{archetypeSuffix}. Stat tiers + roll size — not Eff% or verdict.';
     return tpl
       .replace(/\{mainPts\}/g, String(b.mainPts))
       .replace(/\{subPts\}/g, String(b.subPts))
       .replace(/\{innatePts\}/g, String(b.innatePts))
       .replace(/\{ms\}/g, String(b.mainSubSyn))
       .replace(/\{ss\}/g, String(b.subSubSyn))
-      .replace(/\{dup\}/g, String(b.dupSub));
+      .replace(/\{dup\}/g, String(b.dupSub))
+      .replace(/\{archetypeSuffix\}/g, archetypeSuffix);
   }
 
   function runeScoreTooltip(r, t) {
-    const b = runeScoreBreakdown(r);
+    const b = runeScoreBreakdown(r, t);
     return formatForgeScoreTooltip(b, t || {});
   }
 
@@ -4663,6 +5052,7 @@
     S.formatForgeScoreTooltip = formatForgeScoreTooltip;
     S.FORGE_SCORE_MAIN_VALUE = MAIN_STAT_VALUE;
     S.FORGE_SCORE_SUB_VALUE = SUB_STAT_VALUE;
+    S.FORGE_SCORE_ARCHETYPES = ARCHETYPES;
   }
 
   function highlightSearchInPlain(text, qRaw) {
@@ -4876,14 +5266,16 @@
     const gradeAria = r.isAncient ? ` aria-label="${ancientLbl}, ${escapeAttr(gradeLabel)}"` : '';
     const grade = `<span class="grade-tag ${gradeClass}${r.isAncient ? ' grade-tag--ancient' : ''}"${ancientTipAttr}${gradeAria}><span class="grade-tag__lbl">${gradeLabelHtml}</span></span>`;
 
-    const effNum = getRuneNumericEff(r);
-    const effTier =
-      effNum >= 90 ? 'stat-chip--eff-hi' : effNum >= 75 ? 'stat-chip--eff-mid' : 'stat-chip--eff-lo';
-    const effShown = `${(Math.round(effNum * 10) / 10).toFixed(1)}%`;
-    const scoreNum = typeof computeRuneScore === 'function' ? computeRuneScore(r) : 0;
+    const tScore = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const effDisplay =
+      typeof getRuneDisplayEff === 'function'
+        ? getRuneDisplayEff(r)
+        : Math.min(100, Number(r.eff) || 0);
+    const effShown = `${(Math.round(effDisplay * 10) / 10).toFixed(1)}%`;
+    const scoreNum =
+      typeof computeRuneScore === 'function' ? computeRuneScore(r, tScore) : 0;
     const scoreTier = typeof runeScoreTier === 'function' ? runeScoreTier(scoreNum) : 'stat-chip--score-lo';
     const scoreShown = String(scoreNum);
-    const tScore = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const scoreTitle = escapeAttr(
       typeof runeScoreTooltip === 'function'
         ? runeScoreTooltip(r, tScore)
@@ -4928,8 +5320,8 @@
       ${subCell(subs[1], false)}
       ${subCell(subs[2], false)}
       ${subCell(subs[3], false)}
-      <td class="col-num td-num"><span class="stat-chip stat-chip--eff ${effTier}">${highlightSearchInPlain(effShown, tableSearchHighlight)}</span></td>
-      <td class="col-num td-num" title="${scoreTitle}"><span class="stat-chip stat-chip--score ${scoreTier}">${highlightSearchInPlain(scoreShown, tableSearchHighlight)}</span></td>
+      <td class="col-num td-num td-num--score" title="${scoreTitle}"><span class="stat-chip stat-chip--score ${scoreTier}">${highlightSearchInPlain(scoreShown, tableSearchHighlight)}</span></td>
+      <td class="col-num td-num td-num--eff"><span class="rune-eff-muted">${highlightSearchInPlain(effShown, tableSearchHighlight)}</span></td>
       <td class="col-text">${roleHtml}</td>
       <td class="col-text">${verdictHtml}</td>
       <td class="target-col-cell col-text"${targetTipAttr}>${targetHtml}</td>
@@ -5012,7 +5404,7 @@
     if (fsl) p.set('slot', fsl);
     const fm = document.getElementById('filter-main')?.value;
     if (fm) p.set('main', fm);
-    if (sortKey !== 'eff') p.set('sort', sortKey);
+    if (sortKey !== 'score') p.set('sort', sortKey);
     if (sortDir !== 'desc') p.set('dir', sortDir);
     if (document.getElementById('toggle-target-col')?.checked) p.set('target', '0');
     if (document.getElementById('toggle-ancient-only')?.checked) p.set('ancient', '1');
@@ -5232,7 +5624,7 @@
     if (tglAncient) tglAncient.checked = false;
     localStorage.setItem(RUNE_TABLE_ANCIENT_ONLY_KEY, '0');
     applyRuneTableTargetColumnVisibility();
-    sortKey = 'eff';
+    sortKey = 'score';
     sortDir = 'desc';
     runeTableShowAll = false;
     if (typeof setRuneTableMonsterMasterId === 'function') setRuneTableMonsterMasterId(null);
@@ -5395,17 +5787,57 @@
     } catch (e) { /* ignore */ }
   }
 
+  function gearMonsterNameFromMasterId(masterId) {
+    const mid = Number(masterId);
+    if (!Number.isFinite(mid) || mid <= 0) return '';
+    const db = window.SWRM_MONSTER_DB;
+    if (db && typeof db.monsterDisplayName === 'function') {
+      const n = db.monsterDisplayName(mid);
+      if (n && !String(n).startsWith('#')) return String(n);
+    }
+    return '';
+  }
+
+  function gearUnitByOccupiedId(occupiedId) {
+    const id = Number(occupiedId);
+    if (!Number.isFinite(id) || id === 0) return null;
+    const units = allUnits || [];
+    let u = units.find((x) => Number(x.unitId) === id);
+    if (!u) u = units.find((x) => Number(x.masterId) === id);
+    if (!u && activeSwexJson && Array.isArray(activeSwexJson.unit_list)) {
+      const raw = activeSwexJson.unit_list.find(
+        (x) => x && (Number(x.unit_id) === id || Number(x.unit_master_id) === id),
+      );
+      if (raw) {
+        u = {
+          unitId: raw.unit_id,
+          masterId: Number(raw.unit_master_id),
+        };
+      }
+    }
+    return u || null;
+  }
+
   function gearLocationLabel(occupiedId, t) {
     const inv = t.tableGearInventory || 'Inventory';
     if (occupiedId == null || !Number.isFinite(Number(occupiedId)) || Number(occupiedId) === 0) {
       return inv;
     }
-    const uid = Number(occupiedId);
-    const u = (allUnits || []).find((x) => Number(x.unitId) === uid);
-    if (!u) return inv;
-    const db = window.SWRM_MONSTER_DB;
-    const name = db ? db.monsterDisplayName(u.masterId) : '';
-    return name || `#${u.masterId}`;
+    const id = Number(occupiedId);
+    const u = gearUnitByOccupiedId(id);
+    if (u) {
+      const cache = typeof monstersEnrichedCache !== 'undefined' ? monstersEnrichedCache : [];
+      const enriched = cache.find((x) => Number(x.unitId) === Number(u.unitId));
+      if (enriched && enriched.displayName && !String(enriched.displayName).startsWith('#')) {
+        return String(enriched.displayName);
+      }
+      if (u.displayName && !String(u.displayName).startsWith('#')) return String(u.displayName);
+      const byMaster = gearMonsterNameFromMasterId(u.masterId);
+      if (byMaster) return byMaster;
+      return inv;
+    }
+    const byOccupiedMaster = gearMonsterNameFromMasterId(id);
+    return byOccupiedMaster || inv;
   }
 
   function gearSearchHay(gear) {
@@ -5538,8 +5970,12 @@
     if (runeOnly) runeOnly.hidden = id !== 'runes';
     const loadStrip = document.getElementById('rune-table-load-strip');
     if (loadStrip) loadStrip.classList.toggle('hidden', id !== 'runes');
-    const runeMeta = document.getElementById('rune-table-roster-meta');
-    if (runeMeta) runeMeta.classList.toggle('hidden', id !== 'runes');
+    document.querySelectorAll('[data-gear-roster-meta]').forEach((el) => {
+      const on = el.dataset.gearRosterMeta === id;
+      el.classList.toggle('hidden', !on);
+      if (on) el.removeAttribute('hidden');
+      else el.setAttribute('hidden', '');
+    });
     const runeChips = document.getElementById('rune-table-active-filters');
     if (runeChips) runeChips.classList.toggle('hidden', id !== 'runes');
     const search = document.getElementById('search-box');
@@ -5575,6 +6011,118 @@
   function onGearDataHydrated() {
     populateGearFilterSelects();
     if (readTableKind() !== 'runes') renderGearTables();
+  }
+
+
+  function renderGearSummaryChips(hostId, parts) {
+    const host = document.getElementById(hostId);
+    if (!host) return;
+    if (!parts || !parts.length) {
+      host.innerHTML = '';
+      return;
+    }
+    host.innerHTML = parts
+      .map(
+        (p) =>
+          `<span class="monsters-chip"><span class="monsters-chip__label">${escapeHtml(p.label)}</span><strong class="monsters-chip__value">${escapeHtml(String(p.value))}</strong></span>`,
+      )
+      .join('');
+  }
+
+  function computeArtifactTableSummary(list) {
+    const items = list || [];
+    let legend = 0;
+    let hero = 0;
+    let equipped = 0;
+    let locked = 0;
+    for (let i = 0; i < items.length; i++) {
+      const a = items[i];
+      if (a.gradeStr === 'Legend') legend += 1;
+      else if (a.gradeStr === 'Hero') hero += 1;
+      if (a.occupiedId != null && Number(a.occupiedId) !== 0) equipped += 1;
+      if (a.locked) locked += 1;
+    }
+    return {
+      total: items.length,
+      legend,
+      hero,
+      equipped,
+      inventory: items.length - equipped,
+      locked,
+    };
+  }
+
+  function computeRelicTableSummary(list) {
+    const items = list || [];
+    let legend = 0;
+    let hero = 0;
+    let equipped = 0;
+    let maxLevel = 0;
+    let fullDurability = 0;
+    for (let i = 0; i < items.length; i++) {
+      const r = items[i];
+      if (r.gradeStr === 'Legend') legend += 1;
+      else if (r.gradeStr === 'Hero') hero += 1;
+      if (r.occupiedId != null && Number(r.occupiedId) !== 0) equipped += 1;
+      if (Number(r.level) >= 15) maxLevel += 1;
+      if (Number(r.durability) >= 3) fullDurability += 1;
+    }
+    return {
+      total: items.length,
+      legend,
+      hero,
+      equipped,
+      inventory: items.length - equipped,
+      maxLevel,
+      fullDurability,
+    };
+  }
+
+  function renderArtifactTableRosterChips() {
+    const meta = document.getElementById('artifact-table-roster-meta');
+    const pool = typeof filteredArtifacts !== 'undefined' ? filteredArtifacts : allArtifacts || [];
+    if (meta) {
+      meta.hidden = !pool.length;
+    }
+    if (!pool.length) {
+      renderGearSummaryChips('artifact-table-roster-chips', []);
+      return;
+    }
+    const sum = computeArtifactTableSummary(pool);
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const parts = [
+      { label: t.artChipTotal || 'Artifacts', value: sum.total },
+      { label: t.artChipLegend || 'Legend', value: sum.legend },
+      { label: t.artChipHero || 'Hero', value: sum.hero },
+      { label: t.artChipEquipped || 'Equipped', value: sum.equipped },
+      { label: t.artChipInventory || 'Inventory', value: sum.inventory },
+    ];
+    if (sum.locked > 0) {
+      parts.push({ label: t.artChipLocked || 'Locked', value: sum.locked });
+    }
+    renderGearSummaryChips('artifact-table-roster-chips', parts);
+  }
+
+  function renderRelicTableRosterChips() {
+    const meta = document.getElementById('relic-table-roster-meta');
+    const pool = typeof filteredRelics !== 'undefined' ? filteredRelics : allRelics || [];
+    if (meta) {
+      meta.hidden = !pool.length;
+    }
+    if (!pool.length) {
+      renderGearSummaryChips('relic-table-roster-chips', []);
+      return;
+    }
+    const sum = computeRelicTableSummary(pool);
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const parts = [
+      { label: t.relChipTotal || 'Relics', value: sum.total },
+      { label: t.relChipEquipped || 'Equipped', value: sum.equipped },
+      { label: t.relChipInventory || 'Inventory', value: sum.inventory },
+      { label: t.relChipMaxLevel || 'Lvl 15', value: sum.maxLevel },
+      { label: t.relChipFullDur || 'Full durability', value: sum.fullDurability },
+    ];
+    renderGearSummaryChips('relic-table-roster-chips', parts);
   }
 
   let filteredArtifacts = [];
@@ -5660,6 +6208,7 @@
     const fmtSub = window.SWRM && window.SWRM.formatArtifactSubLine;
     if (!filteredArtifacts.length) {
       tbody.innerHTML = `<tr><td colspan="5" class="table-empty">${escapeHtml(t.tableGearEmpty || 'No artifacts')}</td></tr>`;
+      if (typeof renderArtifactTableRosterChips === 'function') renderArtifactTableRosterChips();
       return;
     }
     const rows = filteredArtifacts
@@ -5671,23 +6220,36 @@
       )
       .map((a) => {
         const main = a.pri && fmt ? fmt(a.pri, { kind: 'artifact' }) : '—';
+        const catFn = window.SWRM && window.SWRM.gearCategoryCellHtml;
+        const iconUrl =
+          window.SWRM && typeof window.SWRM.artifactIconUrl === 'function'
+            ? window.SWRM.artifactIconUrl(a)
+            : '';
+        const catCell =
+          typeof catFn === 'function'
+            ? catFn(iconUrl, a.category || '—')
+            : escapeHtml(a.category || '—');
+        const gradeFn = window.SWRM && typeof window.SWRM.gearGradeTagHtml === 'function'
+          ? window.SWRM.gearGradeTagHtml
+          : null;
+        const gradeCell = gradeFn
+          ? gradeFn(a.gradeStr)
+          : escapeHtml(a.gradeStr || '—');
         return `<tr>
-          <td class="col-grade">${escapeHtml(a.gradeStr || '—')}</td>
-          <td>${escapeHtml(a.category || '—')}</td>
+          <td class="col-grade">${gradeCell}</td>
+          <td class="col-category">${catCell}</td>
           <td>${escapeHtml(main)}</td>
           <td class="col-subs-stack"><div class="gear-table-subs">${artifactSubStack(a, fmtSub)}</div></td>
           <td>${escapeHtml(gearLocationLabel(a.occupiedId, t))}</td>
         </tr>`;
       });
     tbody.innerHTML = rows.join('');
+    if (typeof renderArtifactTableRosterChips === 'function') renderArtifactTableRosterChips();
   }
 
   function bindArtifactTableFilters() {
     if (bindArtifactTableFilters._done) return;
     bindArtifactTableFilters._done = true;
-
-    document.getElementById('btn-artifact-reset-filters')?.addEventListener('click', resetArtifactTableFilters);
-    document.getElementById('artifact-filters-drawer-reset')?.addEventListener('click', resetArtifactTableFilters);
 
     const onArtifactFilterChange = () => {
       artifactFilterGrade = document.getElementById('filter-artifact-grade')?.value || '';
@@ -5696,6 +6258,16 @@
       updateArtifactFilterBadge();
       renderGearTables();
     };
+
+    if (typeof bindFiltersPopover === 'function') {
+      bindFiltersPopover('artifact-more-filters-btn', 'artifact-filters-popover', {
+        onClose: onArtifactFilterChange,
+      });
+    }
+
+    document.getElementById('btn-artifact-reset-filters')?.addEventListener('click', resetArtifactTableFilters);
+    document.getElementById('artifact-filters-drawer-reset')?.addEventListener('click', resetArtifactTableFilters);
+
     document.getElementById('filter-artifact-grade')?.addEventListener('change', onArtifactFilterChange);
     document.getElementById('filter-artifact-category')?.addEventListener('change', onArtifactFilterChange);
     document.getElementById('filter-artifact-location')?.addEventListener('change', onArtifactFilterChange);
@@ -5767,6 +6339,7 @@
         : null;
     if (!filteredRelics.length) {
       tbody.innerHTML = `<tr><td colspan="6" class="table-empty">${escapeHtml(t.tableGearEmptyRelics || 'No relics')}</td></tr>`;
+      if (typeof renderRelicTableRosterChips === 'function') renderRelicTableRosterChips();
       return;
     }
     const rows = filteredRelics
@@ -5786,8 +6359,15 @@
             ? window.SWRM.formatRelicWearCount
             : null;
         const wear = fmtWear ? fmtWear(r) : '0/100';
+        const catFn = window.SWRM && window.SWRM.gearCategoryCellHtml;
+        const paths =
+          window.SWRM && typeof window.SWRM.relicLocalIconCandidates === 'function'
+            ? window.SWRM.relicLocalIconCandidates(r)
+            : [];
+        const catCell =
+          typeof catFn === 'function' ? catFn('', category, paths) : escapeHtml(category);
         return `<tr>
-          <td>${escapeHtml(category)}</td>
+          <td class="col-category">${catCell}</td>
           <td class="th-num">+${escapeHtml(String(r.level || 0))}</td>
           <td class="th-num">${escapeHtml(dur)}</td>
           <td>${escapeHtml(main)}</td>
@@ -5796,14 +6376,12 @@
         </tr>`;
       });
     tbody.innerHTML = rows.join('');
+    if (typeof renderRelicTableRosterChips === 'function') renderRelicTableRosterChips();
   }
 
   function bindRelicTableFilters() {
     if (bindRelicTableFilters._done) return;
     bindRelicTableFilters._done = true;
-
-    document.getElementById('btn-relic-reset-filters')?.addEventListener('click', resetRelicTableFilters);
-    document.getElementById('relic-filters-drawer-reset')?.addEventListener('click', resetRelicTableFilters);
 
     const onRelicFilterChange = () => {
       relicFilterGrade = document.getElementById('filter-relic-grade')?.value || '';
@@ -5811,6 +6389,16 @@
       updateRelicFilterBadge();
       renderGearTables();
     };
+
+    if (typeof bindFiltersPopover === 'function') {
+      bindFiltersPopover('relic-more-filters-btn', 'relic-filters-popover', {
+        onClose: onRelicFilterChange,
+      });
+    }
+
+    document.getElementById('btn-relic-reset-filters')?.addEventListener('click', resetRelicTableFilters);
+    document.getElementById('relic-filters-drawer-reset')?.addEventListener('click', resetRelicTableFilters);
+
     document.getElementById('filter-relic-grade')?.addEventListener('change', onRelicFilterChange);
     document.getElementById('filter-relic-category')?.addEventListener('change', onRelicFilterChange);
 
@@ -5826,9 +6414,17 @@
     applyFiltersAndSort(runes);
   }
 
+  /** SWOP Eff% (uncapped) — used for sort, CSV, depth charts. */
   function getRuneNumericEff(r) {
     if (!r) return 0;
-    return Number.isFinite(r.eff) ? r.eff : 0;
+    if (Number.isFinite(r.eff)) return r.eff;
+    const calc = window.SWRM?.calcEfficiencyUncapped;
+    return typeof calc === 'function' ? calc(r) : 0;
+  }
+
+  /** Table display only — cap at 100% like SWOP column UI. */
+  function getRuneDisplayEff(r) {
+    return Math.min(100, getRuneNumericEff(r));
   }
 
   function applyRuneTableEffHeader() {
@@ -5882,7 +6478,10 @@
         case 's2':      av = a.substats[1]?.name || ''; bv = b.substats[1]?.name || ''; break;
         case 's3':      av = a.substats[2]?.name || ''; bv = b.substats[2]?.name || ''; break;
         case 's4':      av = a.substats[3]?.name || ''; bv = b.substats[3]?.name || ''; break;
-        default:        av = a.eff;     bv = b.eff;
+        default:
+          av = typeof computeRuneScore === 'function' ? computeRuneScore(a) : 0;
+          bv = typeof computeRuneScore === 'function' ? computeRuneScore(b) : 0;
+          break;
       }
       if (av < bv) return dir === 'asc' ? -1 : 1;
       if (av > bv) return dir === 'asc' ? 1 : -1;
@@ -5944,7 +6543,7 @@
     const headers = [
       'Grade',
       tloc.csvHeaderAncient || 'Ancient',
-      'Set', 'Lvl', 'Slot', 'Main', 'Innate', 'Sub1', 'Sub2', 'Sub3', 'Sub4', 'Eff%', 'Score', 'Role', 'Verdict',
+      'Set', 'Lvl', 'Slot', 'Main', 'Innate', 'Sub1', 'Sub2', 'Sub3', 'Sub4', 'Score', 'Eff%', 'Role', 'Verdict',
     ];
     if (includeTarget) headers.push('Target');
     function cellPart(s) {
@@ -5977,8 +6576,8 @@
         subcell(subs[1]),
         subcell(subs[2]),
         subcell(subs[3]),
-        `${getRuneNumericEff(r).toFixed(1)}%`,
         String(typeof computeRuneScore === 'function' ? computeRuneScore(r) : ''),
+        `${getRuneNumericEff(r).toFixed(1)}`,
         roleDisplayName(r.role || ''),
         r.verdict || '',
       ];
@@ -6982,7 +7581,7 @@
   document.addEventListener('DOMContentLoaded', async () => {
     initSwrmFloatingTips();
     initTheme();
-    updateLanguage(currentLang);
+    await updateLanguage(currentLang);
     initDashboardUnifiedTabs();
     initRuneTablePrefsFromStorage();
     if (typeof initTableKindTabs === 'function') initTableKindTabs();
@@ -6993,7 +7592,11 @@
 
     const shareIdInUrl =
       typeof getShareIdFromUrl === 'function' ? getShareIdFromUrl() : '';
-    if (shareIdInUrl && typeof initShareProfile === 'function') {
+    const profileInUrl =
+      typeof getProfileLinkFromUrl === 'function' ? getProfileLinkFromUrl() : null;
+    const hasProfileLink =
+      profileInUrl && (profileInUrl.profileUrl || profileInUrl.dataBlob);
+    if ((shareIdInUrl || hasProfileLink) && typeof initShareProfile === 'function') {
       await initShareProfile();
       renderDbSlots();
       if (typeof applyShareUrlTabFromLocation === 'function') applyShareUrlTabFromLocation();
@@ -7623,10 +8226,10 @@
   const appLangSelect = document.getElementById('app-language');
   if (appLangSelect) {
     appLangSelect.value = currentLang;
-    appLangSelect.addEventListener('change', () => {
+    appLangSelect.addEventListener('change', async () => {
       let v = appLangSelect.value || 'en';
       if (!['en', 'ru', 'fr'].includes(v)) v = 'en';
-      updateLanguage(v);
+      await updateLanguage(v);
       appLangSelect.value = currentLang;
     });
   }
@@ -7809,6 +8412,8 @@
   });
 
   const SHARE_QUERY_KEY = 's';
+  const PROFILE_URL_QUERY_KEY = 'profile';
+  const PROFILE_DATA_QUERY_KEY = 'data';
   const SHARE_SESSION_KEY = 'swrm_share_readonly_v1';
   const SHARE_EXPIRY_DAYS = 90;
   const SHARE_MODE_STORAGE_KEY = 'swrm_share_mode_v1';
@@ -7881,6 +8486,110 @@
       return new URL(window.location.href).searchParams.get(SHARE_QUERY_KEY) || '';
     } catch (e) {
       return '';
+    }
+  }
+
+  function getProfileLinkFromUrl() {
+    try {
+      const params = new URL(window.location.href).searchParams;
+      return {
+        profileUrl: (params.get(PROFILE_URL_QUERY_KEY) || '').trim(),
+        dataBlob: (params.get(PROFILE_DATA_QUERY_KEY) || '').trim(),
+      };
+    } catch (e) {
+      return { profileUrl: '', dataBlob: '' };
+    }
+  }
+
+  function decodeProfileDataParam(blob) {
+    const raw = String(blob || '').trim();
+    if (!raw) return '';
+    const b64 = raw.replace(/-/g, '+').replace(/_/g, '/');
+    const padLen = (4 - (b64.length % 4)) % 4;
+    const padded = b64 + (padLen ? '='.repeat(padLen) : '');
+    const binary = atob(padded);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+    return new TextDecoder().decode(bytes);
+  }
+
+  function normalizeProfileSwexRoot(parsed) {
+    if (!parsed || typeof parsed !== 'object') return null;
+    if (Array.isArray(parsed.unit_list) || Array.isArray(parsed.runes) || Array.isArray(parsed.rune_list)) {
+      return parsed;
+    }
+    if (parsed.data && typeof parsed.data === 'object') return normalizeProfileSwexRoot(parsed.data);
+    if (typeof parsed.data === 'string') {
+      try {
+        return normalizeProfileSwexRoot(JSON.parse(parsed.data));
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  function applyReadOnlyProfilePayload(parsed, wizardName) {
+    const root = normalizeProfileSwexRoot(parsed);
+    if (!root) return false;
+    const name =
+      String(wizardName || '').trim() ||
+      String(
+        (root.wizard_info && (root.wizard_info.wizard_name || root.wizard_info.name)) ||
+          root.wizard_name ||
+          '',
+      ).trim();
+    if (!tryHydrateRunesFromJsonText(JSON.stringify(root))) return false;
+    shareReadOnly = true;
+    persistShareSession(true);
+    shareViewLoadFailed = false;
+    shareViewWizardName = name;
+    if (parsed.teams && typeof setTeamsShareViewPayload === 'function') {
+      setTeamsShareViewPayload(parsed.teams);
+    } else if (root.teams && typeof setTeamsShareViewPayload === 'function') {
+      setTeamsShareViewPayload(root.teams);
+    }
+    applyShareReadOnlyUi();
+    renderShareViewBanner();
+    if (typeof uiAfterSuccessfulRuneRestore === 'function') {
+      uiAfterSuccessfulRuneRestore({ name: shareViewWizardName }, { keepTab: true });
+    }
+    if (typeof renderDashboard === 'function' && typeof getVisibleRunes === 'function') {
+      renderDashboard(getVisibleRunes(), { animateCharts: false });
+    }
+    if (typeof renderMonstersPanel === 'function') renderMonstersPanel();
+    if (typeof renderTeamsPanel === 'function') renderTeamsPanel();
+    if (typeof applyShareUrlTabFromLocation === 'function') applyShareUrlTabFromLocation();
+    return true;
+  }
+
+  async function tryOpenProfileFromUrl() {
+    if (getShareIdFromUrl()) return false;
+    const { profileUrl, dataBlob } = getProfileLinkFromUrl();
+    if (!profileUrl && !dataBlob) return false;
+    shareViewLoadFailed = false;
+    try {
+      let text = '';
+      if (dataBlob) {
+        text = decodeProfileDataParam(dataBlob);
+      } else {
+        const res = await fetch(profileUrl);
+        if (!res.ok) throw new Error('profile fetch failed');
+        text = await res.text();
+      }
+      const parsed = JSON.parse(text);
+      return applyReadOnlyProfilePayload(parsed);
+    } catch (e) {
+      console.warn('Profile link load failed', e);
+      shareViewLoadFailed = true;
+      shareReadOnly = true;
+      persistShareSession(true);
+      applyShareReadOnlyUi();
+      renderShareViewBanner();
+      if (typeof uiEmptyRuneApplicationState === 'function') {
+        uiEmptyRuneApplicationState({ keepTab: true });
+      }
+      return false;
     }
   }
 
@@ -8158,6 +8867,83 @@
     }
   }
 
+  function buildShareMentorUnitHints(t) {
+    const cache = typeof monstersEnrichedCache !== 'undefined' ? monstersEnrichedCache : [];
+    if (!cache.length) return '';
+    const scored = [];
+    for (const u of cache) {
+      let score = 0;
+      if (u.skillUpsNeeded > 0) score += 3 + Math.min(u.skillUpsNeeded, 9);
+      if (u.equippedCount > 0 && !u.hasFullRunes) score += 2;
+      if (u.equippedCount === 0 && (u.level >= 40 || u.stars >= 6)) score += 1;
+      if (score > 0) {
+        scored.push({
+          score,
+          name: u.displayName && !String(u.displayName).startsWith('#') ? u.displayName : null,
+        });
+      }
+    }
+    scored.sort((a, b) => b.score - a.score);
+    const names = [];
+    for (const row of scored) {
+      if (!row.name) continue;
+      if (names.includes(row.name)) continue;
+      names.push(row.name);
+      if (names.length >= 3) break;
+    }
+    if (!names.length) return '';
+    const tpl = t.shareReviewUnits || 'Needs attention: {names}';
+    return escapeHtml(tpl.replace(/\{names\}/g, names.join(', ')));
+  }
+
+  function buildShareAccountReviewHtml() {
+    if (shareViewLoadFailed) return '';
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const lines = [];
+    const runes = typeof allRunes !== 'undefined' && Array.isArray(allRunes) ? allRunes : [];
+    if (runes.length) {
+      let keep = 0;
+      let sell = 0;
+      for (const r of runes) {
+        const v = (r.verdict || '').trim();
+        if (v === 'Keep') keep += 1;
+        else if (v === 'Sell') sell += 1;
+      }
+      const tpl = t.shareReviewRunes || '{n} runes · Keep {keep} · Sell {sell}';
+      lines.push(
+        escapeHtml(
+          tpl
+            .replace(/\{n\}/g, String(runes.length))
+            .replace(/\{keep\}/g, String(keep))
+            .replace(/\{sell\}/g, String(sell)),
+        ),
+      );
+    }
+    const cache = typeof monstersEnrichedCache !== 'undefined' ? monstersEnrichedCache : [];
+    if (cache.length) {
+      let partial = 0;
+      let skill = 0;
+      for (const u of cache) {
+        if (u.equippedCount > 0 && !u.hasFullRunes) partial += 1;
+        if (u.skillUpsNeeded > 0) skill += u.skillUpsNeeded;
+      }
+      const tpl =
+        t.shareReviewMonsters || '{n} monsters · {partial} partial sets · {skill} skill levels to max';
+      lines.push(
+        escapeHtml(
+          tpl
+            .replace(/\{n\}/g, String(cache.length))
+            .replace(/\{partial\}/g, String(partial))
+            .replace(/\{skill\}/g, String(skill)),
+        ),
+      );
+    }
+    const hints = buildShareMentorUnitHints(t);
+    if (hints) lines.push(hints);
+    if (!lines.length) return '';
+    return `<p class="share-view-banner__review">${lines.join('<span class="share-view-banner__sep" aria-hidden="true"> · </span>')}</p>`;
+  }
+
   function renderShareViewBanner() {
     let bar = document.getElementById('share-view-banner');
     if (!shareReadOnly) {
@@ -8184,13 +8970,17 @@
     const nameRaw = (shareViewWizardName || '').trim() || (t.shareUnknownWizard || 'another player');
     const name = escapeHtml(nameRaw);
     const readOnlyLbl = escapeHtml(t.shareReadOnlyLabel || 'Read-only');
+    const reviewHtml = shareViewLoadFailed ? '' : buildShareAccountReviewHtml();
     const text = shareViewLoadFailed
       ? escapeHtml(t.shareViewLoadFailed || 'Could not load this shared profile. The link may be expired.')
       : `<span class="share-view-banner__line"><span class="share-view-banner__prefix">${escapeHtml(t.shareViewingPrefix || 'Viewing account')}</span> <strong class="share-view-banner__name">${name}</strong></span> <span class="share-view-banner__readonly">${readOnlyLbl}</span>`;
     bar.innerHTML = `<div class="demo-dataset-banner__inner">
       <div class="demo-dataset-banner__content">
         <span class="demo-dataset-banner__badge" aria-hidden="true">${readOnlyLbl}</span>
-        <span class="demo-dataset-banner__text">${text}</span>
+        <div class="demo-dataset-banner__text-wrap">
+          <span class="demo-dataset-banner__text">${text}</span>
+          ${reviewHtml}
+        </div>
         <button type="button" class="btn-ghost demo-dataset-banner__upload-btn" id="share-view-exit-btn">${escapeHtml(t.shareLoadOwn || 'Load your SWEX')}</button>
       </div>
     </div>`;
@@ -8202,6 +8992,8 @@
         try {
           const u = new URL(window.location.href);
           u.searchParams.delete(SHARE_QUERY_KEY);
+          u.searchParams.delete(PROFILE_URL_QUERY_KEY);
+          u.searchParams.delete(PROFILE_DATA_QUERY_KEY);
           window.location.href = u.pathname + (u.hash || '');
         } catch (e) {
           window.location.href = window.location.pathname;
@@ -8223,32 +9015,16 @@
       const raw = body && body.data != null ? body.data : null;
       const text = typeof raw === 'string' ? raw : JSON.stringify(raw);
       const parsed = JSON.parse(text);
-      const wrapped = {
-        wizard_info: { wizard_name: body.wizard_name || parsed.wizard_name || '' },
-        unit_list: parsed.unit_list || [],
-        runes: [],
-      };
-      if (!tryHydrateRunesFromJsonText(JSON.stringify(wrapped))) {
+      const wizardName = String(body.wizard_name || parsed.wizard_name || '').trim();
+      const root = normalizeProfileSwexRoot(parsed);
+      if (!root) {
         shareViewLoadFailed = true;
         return false;
       }
-      shareReadOnly = true;
-      persistShareSession(true);
-      shareViewWizardName = String(body.wizard_name || parsed.wizard_name || '').trim();
-      if (parsed.teams && typeof setTeamsShareViewPayload === 'function') {
-        setTeamsShareViewPayload(parsed.teams);
+      if (!applyReadOnlyProfilePayload({ ...root, teams: parsed.teams }, wizardName)) {
+        shareViewLoadFailed = true;
+        return false;
       }
-      applyShareReadOnlyUi();
-      renderShareViewBanner();
-      if (typeof uiAfterSuccessfulRuneRestore === 'function') {
-        uiAfterSuccessfulRuneRestore({ name: shareViewWizardName }, { keepTab: true });
-      }
-      if (typeof renderDashboard === 'function' && typeof getVisibleRunes === 'function') {
-        renderDashboard(getVisibleRunes(), { animateCharts: false });
-      }
-      if (typeof renderMonstersPanel === 'function') renderMonstersPanel();
-      if (typeof renderTeamsPanel === 'function') renderTeamsPanel();
-      applyShareUrlTabFromLocation();
       return true;
     } catch (e) {
       console.warn('Share load failed', e);
@@ -8373,6 +9149,10 @@
     bindShareProfileUi();
     const shareId = getShareIdFromUrl();
     if (!shareId) {
+      const profileLink = getProfileLinkFromUrl();
+      if (profileLink.profileUrl || profileLink.dataBlob) {
+        return tryOpenProfileFromUrl();
+      }
       if (readShareSession()) persistShareSession(false);
       shareReadOnly = false;
       shareViewLoadFailed = false;
@@ -8397,6 +9177,7 @@
   window.SWRM.applyShareReadOnlyUi = applyShareReadOnlyUi;
   window.SWRM.renderShareViewBanner = renderShareViewBanner;
   window.SWRM.getShareIdFromUrl = getShareIdFromUrl;
+  window.SWRM.getProfileLinkFromUrl = getProfileLinkFromUrl;
 
   // ===================== CHANGELOG (STATIC, ship-time only) =====================
   function escapeChangelogText(s) {
@@ -8570,14 +9351,20 @@
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const lead = document.getElementById('lbl-monsters-lead');
     if (lead) {
-      lead.textContent =
-        id === 'teams'
-          ? t.monstersTeamsLead || 'Build named teams and group them into sets (e.g. Arena Offence).'
-          : t.monstersLead || '';
+      if (id === 'teams') {
+        lead.textContent =
+          t.monstersTeamsLead || 'Build named teams and group them into sets (e.g. Arena Offence).';
+      } else if (id === 'planner') {
+        lead.textContent = t.skillPlannerLead || '';
+      } else {
+        lead.textContent = t.monstersLead || '';
+      }
     }
 
     if (id === 'roster') {
       void renderMonstersPanel();
+    } else if (id === 'planner' && typeof renderSkillPlannerPanel === 'function') {
+      void renderSkillPlannerPanel();
     } else if (id === 'teams' && typeof renderTeamsPanel === 'function') {
       renderTeamsPanel();
     }
@@ -8600,6 +9387,7 @@
     const s = String(segment || '').trim().toLowerCase();
     if (s === 'team' || s === 'teams') return 'teams';
     if (s === 'roster' || s === 'list') return 'roster';
+    if (s === 'planner' || s === 'skill' || s === 'skills' || s === 'skill-plan') return 'planner';
     return MONSTERS_SUBTAB_IDS.includes(s) ? s : null;
   }
 
@@ -9103,7 +9891,7 @@
       : '';
     const name = team.name || t.teamsUntitled || 'New Team';
     const publicBadge =
-      team.shareInProfile && !ro
+      team.shareInProfile || (ro && opts && opts.fromShare)
         ? `<span class="team-card__public" title="${escapeHtml(t.teamsSharePublic || 'Public in profile')}">◉</span>`
         : '';
     const actions = ro
@@ -9334,7 +10122,9 @@
     const blocks = (payload.sets || [])
       .map((set) => {
         const teams = (set.teams || [])
-          .map((raw) => buildTeamCardHtml(buildShareTeamFromPayload(raw), t, { readOnly: true }))
+          .map((raw) =>
+            buildTeamCardHtml(buildShareTeamFromPayload(raw), t, { readOnly: true, fromShare: true }),
+          )
           .join('');
         const count = (set.teams || []).length;
         return `<section class="teams-share-set-panel">
@@ -10523,6 +11313,875 @@
     });
   }
 
+  const SKILL_PLANNER_STORAGE_KEY = 'swrm_skill_planner_exclude_storage_v1';
+
+  let skillPlannerBound = false;
+  let skillPlannerNatFilter = 'all';
+  let skillPlannerExcludeStorage = true;
+  let skillPlannerView = 'queue';
+  /** @type {{ col: string, dir: 'asc'|'desc' }|null} */
+  let skillPlannerQueueSort = null;
+  /** @type {{ col: string, dir: 'asc'|'desc' }|null} */
+  let skillPlannerStuckSort = null;
+  /** @type {Array<object>} */
+  let skillPlannerUnitsCache = [];
+  let skillPlannerCdHydrateGen = 0;
+  let skillPlannerCdMetaReady = false;
+  /** @type {Promise<void>|null} */
+  let skillPlannerRenderPromise = null;
+
+  function readSkillPlannerExcludeStorage() {
+    try {
+      const v = localStorage.getItem(SKILL_PLANNER_STORAGE_KEY);
+      if (v === '0' || v === 'false') return false;
+      if (v === '1' || v === 'true') return true;
+    } catch (e) { /* ignore */ }
+    return true;
+  }
+
+  function writeSkillPlannerExcludeStorage(on) {
+    try {
+      localStorage.setItem(SKILL_PLANNER_STORAGE_KEY, on ? '1' : '0');
+    } catch (e) { /* ignore */ }
+  }
+
+  function syncSkillPlannerExcludeStorageButton(t) {
+    const btn = document.getElementById('skill-planner-exclude-storage');
+    if (!btn) return;
+    const hiding = !!skillPlannerExcludeStorage;
+    btn.classList.toggle('is-active', hiding);
+    btn.setAttribute('aria-pressed', hiding ? 'true' : 'false');
+    const lbl = document.getElementById('lbl-skill-planner-exclude-storage');
+    if (lbl) {
+      lbl.textContent = hiding
+        ? t.skillPlannerShowStorage || 'Include Storage'
+        : t.skillPlannerHideStorage || 'Exclude Storage';
+    }
+  }
+
+  function showSkillPlannerView(view) {
+    const id = view === 'stuck' ? 'stuck' : 'queue';
+    skillPlannerView = id;
+    document.querySelectorAll('.skill-planner__tab').forEach((btn) => {
+      const on = btn.dataset.plannerView === id;
+      btn.classList.toggle('is-active', on);
+      btn.setAttribute('aria-selected', on ? 'true' : 'false');
+      btn.tabIndex = on ? 0 : -1;
+    });
+    document.querySelectorAll('.skill-planner__panel').forEach((pane) => {
+      const on = pane.id === `skill-planner-panel-${id}`;
+      pane.classList.toggle('is-active', on);
+      if (on) pane.removeAttribute('hidden');
+      else pane.setAttribute('hidden', '');
+    });
+    if (id === 'stuck') void paintSkillPlannerCdPanel();
+  }
+
+  function syncSkillPlannerCdTabLabel(stats, t) {
+    const stuckTab = document.getElementById('skill-planner-tab-stuck');
+    if (!stuckTab) return;
+    const stuckLbl = t.skillPlannerTabStuck || 'Cooldown hunt';
+    const count = stats && stats.stuckRows > 0 ? ` (${stats.stuckRows})` : '';
+    const label = stuckTab.querySelector('.rules-subtab__label');
+    if (label) label.textContent = stuckLbl + count;
+  }
+
+  function paintSkillPlannerQueue(rosterUnits, t) {
+    const queueWrap = document.getElementById('skill-planner-queue');
+    const emptyEl = document.getElementById('skill-planner-empty');
+    const skillDb = window.SWRM_SKILL_DB;
+    if (!queueWrap) return;
+    const noData = !rosterUnits.length;
+    const stats = computeSkillPlannerStats(rosterUnits);
+    const noUps = !noData && stats.skillUpsTotal === 0;
+    if (emptyEl) {
+      emptyEl.hidden = !noData && !noUps;
+      emptyEl.textContent = noData
+        ? t.skillPlannerEmptyNoData || 'Load your export first (Runes tab).'
+        : t.skillPlannerEmptyMaxed || 'All tracked monsters have maxed skills.';
+    }
+    if (noData || noUps) {
+      queueWrap.innerHTML = '';
+      return;
+    }
+    const needing = sortPlannerQueue(
+      rosterUnits.filter((u) => (u.skillUpsNeeded || 0) > 0 && plannerPassesNatFilter(u)),
+    );
+    queueWrap.innerHTML = `<table class="skill-planner__table swrm-table-zebra"><caption class="sr-only">${escapeHtml(t.skillPlannerQueueTitle || 'Priority queue')}</caption>${skillPlannerQueueHeadHtml(t)}<tbody>${needing.map((u) => skillPlannerQueueRowHtml(u, skillDb, t)).join('')}</tbody></table>`;
+  }
+
+  function paintSkillPlannerCdTable(rosterUnits, t) {
+    const stuckWrap = document.getElementById('skill-planner-stuck');
+    const skillDb = window.SWRM_SKILL_DB;
+    if (!stuckWrap) return;
+    const stuckEntries = sortPlannerStuck(
+      plannerCooldownGapEntries(rosterUnits.filter((u) => plannerPassesNatFilter(u))),
+    );
+    if (!stuckEntries.length) {
+      stuckWrap.innerHTML = `<p class="skill-planner__stuck-empty">${escapeHtml(t.skillPlannerCdEmpty || t.skillPlannerStuckEmpty || 'No cooldown hunts right now.')}</p>`;
+    } else {
+      stuckWrap.innerHTML = `<table class="skill-planner__table skill-planner__table--stuck swrm-table-zebra"><caption class="sr-only">${escapeHtml(t.skillPlannerCdTitle || t.skillPlannerStuckTitle || 'Cooldown hunt')}</caption>${skillPlannerStuckHeadHtml(t)}<tbody>${stuckEntries.map((e) => skillPlannerStuckRowHtml(e, skillDb, t)).join('')}</tbody></table>`;
+    }
+    const root = document.getElementById('skill-planner-root');
+    if (root) bindSkillPlannerPortraits(root);
+  }
+
+  async function ensureSkillPlannerCdReady(units) {
+    const skillDb = window.SWRM_SKILL_DB;
+    if (!skillDb) return units.map((u) => refreshUnitSkillRows(u));
+    await skillDb.loadSkillIndex();
+    if (typeof skillDb.hasBundledSkillMeta === 'function' && skillDb.hasBundledSkillMeta()) {
+      skillPlannerCdMetaReady = true;
+      return units.map((u) => refreshUnitSkillRows(u));
+    }
+    if (!skillPlannerCdMetaReady) {
+      return hydratePlannerCdMeta(units);
+    }
+    return units.map((u) => refreshUnitSkillRows(u));
+  }
+
+  async function paintSkillPlannerCdPanel() {
+    const stuckWrap = document.getElementById('skill-planner-stuck');
+    if (!stuckWrap || skillPlannerView !== 'stuck') return;
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    let units = skillPlannerUnitsCache;
+
+    if (!units.length && skillPlannerRenderPromise) {
+      stuckWrap.innerHTML = `<p class="skill-planner__loading" role="status">${escapeHtml(t.skillPlannerCdLoading || 'Loading…')}</p>`;
+      await skillPlannerRenderPromise;
+      units = skillPlannerUnitsCache;
+    }
+
+    if (!units.length) {
+      stuckWrap.innerHTML = '';
+      return;
+    }
+
+    stuckWrap.innerHTML = `<p class="skill-planner__loading" role="status">${escapeHtml(t.skillPlannerCdLoading || 'Loading Cooltime Turn data…')}</p>`;
+    const updated = await ensureSkillPlannerCdReady(units);
+    if (skillPlannerView !== 'stuck') return;
+
+    skillPlannerUnitsCache = updated;
+    const stats = computeSkillPlannerStats(updated);
+    syncSkillPlannerCdTabLabel(stats, t);
+    const summary = document.getElementById('skill-planner-summary');
+    if (summary) summary.innerHTML = skillPlannerSummaryHtml(stats, t);
+    paintSkillPlannerCdTable(updated, t);
+  }
+
+  function schedulePlannerCdMetaBackground(units) {
+    const skillDb = window.SWRM_SKILL_DB;
+    if (skillDb && typeof skillDb.hasBundledSkillMeta === 'function' && skillDb.hasBundledSkillMeta()) {
+      skillPlannerCdMetaReady = true;
+      skillPlannerUnitsCache = units.map((u) => refreshUnitSkillRows(u));
+      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+      const stats = computeSkillPlannerStats(skillPlannerUnitsCache);
+      syncSkillPlannerCdTabLabel(stats, t);
+      const summary = document.getElementById('skill-planner-summary');
+      if (summary) summary.innerHTML = skillPlannerSummaryHtml(stats, t);
+      if (skillPlannerView === 'stuck') paintSkillPlannerCdTable(skillPlannerUnitsCache, t);
+      return;
+    }
+    void hydratePlannerCdMeta(units).then((updated) => {
+      skillPlannerUnitsCache = updated;
+      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+      const stats = computeSkillPlannerStats(updated);
+      syncSkillPlannerCdTabLabel(stats, t);
+      const summary = document.getElementById('skill-planner-summary');
+      if (summary) summary.innerHTML = skillPlannerSummaryHtml(stats, t);
+      if (skillPlannerView === 'stuck') paintSkillPlannerCdTable(updated, t);
+    });
+  }
+
+  function plannerNaturalStars(u) {
+    const n = u.meta && Number(u.meta.natural_stars);
+    return Number.isFinite(n) && n > 0 ? n : 0;
+  }
+
+  function plannerUnitLevelsToMax(u) {
+    const lvl = Number(u.level);
+    const max = Number(u.maxLevel);
+    if (!Number.isFinite(lvl) || !Number.isFinite(max) || max <= lvl) return 0;
+    return max - lvl;
+  }
+
+  function unitSkillsSource(u) {
+    if (Array.isArray(u.skills) && u.skills.length) return u.skills;
+    return (u.skillRows || [])
+      .filter((s) => s && Number.isFinite(Number(s.skillId)))
+      .map((s) => ({ skillId: s.skillId, level: s.level }));
+  }
+
+  function refreshUnitSkillRows(u) {
+    const skillDb = window.SWRM_SKILL_DB;
+    const skills = unitSkillsSource(u);
+    if (!skillDb || typeof skillDb.enrichUnitSkills !== 'function' || !skills.length) return u;
+    const pack = skillDb.enrichUnitSkills(skills);
+    return {
+      ...u,
+      skillRows: pack.skills,
+      skillUpsNeeded: pack.skillUpsNeeded,
+      skillsMaxed: pack.skillsMaxed,
+      skillsKnown: pack.skillsKnown,
+    };
+  }
+
+  /** SWARFARM meta only for skills that may still need CD−1 (not whole roster). */
+  async function hydratePlannerCdMeta(units) {
+    const skillDb = window.SWRM_SKILL_DB;
+    if (!skillDb || typeof skillDb.hydrateSkillMetaBatch !== 'function') {
+      return units.map((u) => refreshUnitSkillRows(u));
+    }
+    const gen = ++skillPlannerCdHydrateGen;
+    const ids = [];
+    for (const u of units) {
+      if ((u.skillUpsNeeded || 0) <= 0) continue;
+      for (const s of u.skillRows || []) {
+        if ((s.deficit || 0) > 0 && s.skillId) ids.push(s.skillId);
+      }
+    }
+    const uniq = [...new Set(ids.map(Number).filter(Number.isFinite))];
+    if (uniq.length) {
+      await skillDb.hydrateSkillMetaBatch(uniq, { pauseMs: 60, batchSize: 12 });
+    }
+    if (gen !== skillPlannerCdHydrateGen) return units;
+    skillPlannerCdMetaReady = true;
+    return units.map((u) => refreshUnitSkillRows(u));
+  }
+
+  function plannerCooldownGapEntries(units) {
+    const out = [];
+    for (const u of units) {
+      for (const s of u.skillRows || []) {
+        if ((s.deficitToCooldown || 0) > 0) {
+          out.push({ u, s });
+        }
+      }
+    }
+    return out;
+  }
+
+  function devilmonIconUrl() {
+    const db = window.SWRM_MONSTER_DB;
+    return db && typeof db.devilmonImageUrl === 'function' ? db.devilmonImageUrl() : '';
+  }
+
+  function plannerComparePriority(a, b) {
+    const nat = plannerNaturalStars(b) - plannerNaturalStars(a);
+    if (nat !== 0) return nat;
+    const ups = (b.skillUpsNeeded || 0) - (a.skillUpsNeeded || 0);
+    if (ups !== 0) return ups;
+    const lv = plannerUnitLevelsToMax(b) - plannerUnitLevelsToMax(a);
+    if (lv !== 0) return lv;
+    return String(a.displayName || '').localeCompare(String(b.displayName || ''));
+  }
+
+  function plannerPassesNatFilter(u) {
+    const nat = plannerNaturalStars(u);
+    if (skillPlannerNatFilter === 'nat5') return nat >= 5;
+    if (skillPlannerNatFilter === 'nat4') return nat === 4;
+    if (skillPlannerNatFilter === 'nat3') return nat === 3;
+    if (skillPlannerNatFilter === 'nat4plus') return nat >= 4;
+    return true;
+  }
+
+  function filterPlannerRosterUnits(units) {
+    return (units || []).filter((u) => {
+      if (typeof isTechnicalFodderMonster === 'function' && isTechnicalFodderMonster(u)) return false;
+      if (skillPlannerExcludeStorage && u.inStorage) return false;
+      return true;
+    });
+  }
+
+  function plannerSortIcon(col, table) {
+    const sort = table === 'stuck' ? skillPlannerStuckSort : skillPlannerQueueSort;
+    if (!sort || sort.col !== col) {
+      return '<span class="skill-planner__sort-icon" aria-hidden="true">↕</span>';
+    }
+    return `<span class="skill-planner__sort-icon" aria-hidden="true">${sort.dir === 'asc' ? '▲' : '▼'}</span>`;
+  }
+
+  function cycleSkillPlannerSort(table, col) {
+    const cur = table === 'stuck' ? skillPlannerStuckSort : skillPlannerQueueSort;
+    if (!cur || cur.col !== col) {
+      const next = { col, dir: 'desc' };
+      if (table === 'stuck') skillPlannerStuckSort = next;
+      else skillPlannerQueueSort = next;
+      return;
+    }
+    cur.dir = cur.dir === 'desc' ? 'asc' : 'desc';
+  }
+
+  function comparePlannerQueueRows(a, b, col, dir) {
+    const mul = dir === 'asc' ? 1 : -1;
+    switch (col) {
+      case 'nat':
+        return mul * (plannerNaturalStars(a) - plannerNaturalStars(b)) || mul * String(a.displayName).localeCompare(String(b.displayName));
+      case 'ups':
+        return (
+          mul * ((Number(a.skillUpsNeeded) || 0) - (Number(b.skillUpsNeeded) || 0)) ||
+          mul * String(a.displayName).localeCompare(String(b.displayName))
+        );
+      case 'level':
+        return (
+          mul * (plannerUnitLevelsToMax(a) - plannerUnitLevelsToMax(b)) ||
+          mul * ((Number(a.level) || 0) - (Number(b.level) || 0)) ||
+          mul * String(a.displayName).localeCompare(String(b.displayName))
+        );
+      case 'name':
+      default:
+        return mul * String(a.displayName || '').localeCompare(String(b.displayName || ''));
+    }
+  }
+
+  function comparePlannerStuckRows(a, b, col, dir) {
+    const mul = dir === 'asc' ? 1 : -1;
+    const ua = a.u;
+    const ub = b.u;
+    const sa = a.s;
+    const sb = b.s;
+    switch (col) {
+      case 'nat':
+        return mul * (plannerNaturalStars(ua) - plannerNaturalStars(ub)) || comparePlannerStuckRows(a, b, 'name', dir);
+      case 'skill':
+        return (
+          mul * String((sa.skillName || '') + sa.skillId).localeCompare(String((sb.skillName || '') + sb.skillId)) ||
+          comparePlannerStuckRows(a, b, 'name', dir)
+        );
+      case 'target':
+        return (
+          mul * ((Number(sa.cooldownUnlockLevel) || 0) - (Number(sb.cooldownUnlockLevel) || 0)) ||
+          comparePlannerStuckRows(a, b, 'name', dir)
+        );
+      case 'deficit':
+        return (
+          mul * ((Number(sa.deficitToCooldown) || 0) - (Number(sb.deficitToCooldown) || 0)) ||
+          comparePlannerStuckRows(a, b, 'name', dir)
+        );
+      case 'name':
+      default:
+        return (
+          mul * String(ua.displayName || '').localeCompare(String(ub.displayName || '')) ||
+          mul * ((sa.slot || 0) - (sb.slot || 0))
+        );
+    }
+  }
+
+  function sortPlannerQueue(units) {
+    const list = units.slice();
+    if (!skillPlannerQueueSort) {
+      list.sort(plannerComparePriority);
+      return list;
+    }
+    const { col, dir } = skillPlannerQueueSort;
+    list.sort((a, b) => comparePlannerQueueRows(a, b, col, dir));
+    return list;
+  }
+
+  function sortPlannerStuck(entries) {
+    const list = entries.slice();
+    if (!skillPlannerStuckSort) {
+      list.sort((a, b) => {
+        const c = plannerComparePriority(a.u, b.u);
+        if (c !== 0) return c;
+        return (a.s.slot || 0) - (b.s.slot || 0);
+      });
+      return list;
+    }
+    const { col, dir } = skillPlannerStuckSort;
+    list.sort((a, b) => comparePlannerStuckRows(a, b, col, dir));
+    return list;
+  }
+
+  async function getMonstersEnrichedForPlanner() {
+    if (monstersEnrichedCache && monstersEnrichedCache.length) {
+      const skillDb = window.SWRM_SKILL_DB;
+      if (skillDb && typeof skillDb.loadSkillIndex === 'function') {
+        try {
+          await skillDb.loadSkillIndex();
+          if (skillDb.indexCount() === 0) await skillDb.loadSkillIndex({ force: true });
+        } catch (e) { /* ignore */ }
+      }
+      return monstersEnrichedCache.map((u) => refreshUnitSkillRows(u));
+    }
+    if (!allUnits.length) {
+      const loaded = await ensureMonstersDataset();
+      if (!loaded || !allUnits.length) return [];
+    }
+    const db = window.SWRM_MONSTER_DB;
+    const skillDb = window.SWRM_SKILL_DB;
+    if (db && typeof db.loadMonsterIndex === 'function') {
+      try {
+        await db.loadMonsterIndex();
+        if (db.indexCount() === 0) await db.loadMonsterIndex({ force: true });
+      } catch (e) { /* ignore */ }
+    }
+    if (skillDb && typeof skillDb.loadSkillIndex === 'function') {
+      try {
+        await skillDb.loadSkillIndex();
+        if (skillDb.indexCount() === 0) await skillDb.loadSkillIndex({ force: true });
+      } catch (e) { /* ignore */ }
+    }
+    return allUnits.map((u) => {
+      const meta = db ? db.lookupMonster(u.masterId) : null;
+      const tags = unitMetaFor(u.unitId);
+      const skillPack = skillDb
+        ? skillDb.enrichUnitSkills(u.skills)
+        : { skills: [], skillUpsNeeded: 0, skillsMaxed: true, skillsKnown: false };
+      return {
+        ...u,
+        meta,
+        metaElement: meta && meta.element ? meta.element : '',
+        displayName: db ? db.monsterDisplayName(u.masterId) : `#${u.masterId}`,
+        imageFilename: meta && meta.image_filename ? meta.image_filename : '',
+        naturalStars: meta && Number(meta.natural_stars) > 0 ? Number(meta.natural_stars) : 0,
+        skillRows: skillPack.skills,
+        skillUpsNeeded: skillPack.skillUpsNeeded,
+        skillsMaxed: skillPack.skillsMaxed,
+        skillsKnown: skillPack.skillsKnown,
+        unitLevelsToMax: plannerUnitLevelsToMax(u),
+        favorite: tags.favorite,
+        food: tags.food,
+        storageMark: tags.storageMark,
+        customTags: tags.tags,
+      };
+    });
+  }
+
+  function computeSkillPlannerStats(units) {
+    const stats = {
+      monstersNeeding: 0,
+      skillUpsTotal: 0,
+      nat5Monsters: 0,
+      nat5Ups: 0,
+      nat4Monsters: 0,
+      nat4Ups: 0,
+      otherUps: 0,
+      stuckRows: 0,
+      unitLevelsTotal: 0,
+      monstersBelowMaxLevel: 0,
+    };
+    for (const u of units) {
+      const ups = u.skillUpsNeeded || 0;
+      const nat = plannerNaturalStars(u);
+      const lvGap = plannerUnitLevelsToMax(u);
+      if (lvGap > 0) {
+        stats.monstersBelowMaxLevel += 1;
+        stats.unitLevelsTotal += lvGap;
+      }
+      if (ups <= 0) continue;
+      stats.monstersNeeding += 1;
+      stats.skillUpsTotal += ups;
+      if (nat >= 5) {
+        stats.nat5Monsters += 1;
+        stats.nat5Ups += ups;
+      } else if (nat === 4) {
+        stats.nat4Monsters += 1;
+        stats.nat4Ups += ups;
+      } else {
+        stats.otherUps += ups;
+      }
+      for (const s of u.skillRows || []) {
+        if ((s.deficitToCooldown || 0) > 0) stats.stuckRows += 1;
+      }
+    }
+    return stats;
+  }
+
+  function skillPlannerSummaryHtml(stats, t) {
+    const cards = [
+      {
+        key: 'total',
+        value: stats.skillUpsTotal,
+        label: t.skillPlannerCardTotal || 'Skill levels to max',
+        sub:
+          stats.monstersNeeding > 0
+            ? (t.skillPlannerCardTotalSub || '{n} monsters').replace('{n}', String(stats.monstersNeeding))
+            : '',
+      },
+      {
+        key: 'nat5',
+        value: stats.nat5Ups,
+        label: t.skillPlannerCardNat5 || 'Nat 5 debt',
+        sub:
+          stats.nat5Monsters > 0
+            ? (t.skillPlannerCardNat5Sub || '{n} monsters').replace('{n}', String(stats.nat5Monsters))
+            : '',
+      },
+      {
+        key: 'nat4',
+        value: stats.nat4Ups,
+        label: t.skillPlannerCardNat4 || 'Nat 4 debt',
+        sub:
+          stats.nat4Monsters > 0
+            ? (t.skillPlannerCardNat4Sub || '{n} monsters').replace('{n}', String(stats.nat4Monsters))
+            : '',
+      },
+      {
+        key: 'stuck',
+        value: stats.stuckRows,
+        label: t.skillPlannerCardCd || 'CD −1 gaps',
+        sub: t.skillPlannerCardCdSub || 'Skills missing CD upgrade',
+        tab: 'stuck',
+      },
+      {
+        key: 'level',
+        value: stats.unitLevelsTotal,
+        label: t.skillPlannerCardLevel || 'Monster levels to max',
+        sub:
+          stats.monstersBelowMaxLevel > 0
+            ? (t.skillPlannerCardLevelSub || '{n} below max').replace('{n}', String(stats.monstersBelowMaxLevel))
+            : '',
+      },
+    ];
+    return cards
+      .map((c) => {
+        const tabAttr = c.tab ? ` data-planner-goto-tab="${c.tab}" role="button" tabindex="0"` : '';
+        const cls = c.tab ? ' skill-planner__card--clickable' : '';
+        return `<div class="skill-planner__card${cls}" data-planner-card="${c.key}"${tabAttr}>
+            <span class="skill-planner__card-value">${escapeHtml(String(c.value))}</span>
+            <span class="skill-planner__card-label">${escapeHtml(c.label)}</span>
+            ${c.sub ? `<span class="skill-planner__card-sub">${escapeHtml(c.sub)}</span>` : ''}
+          </div>`;
+      })
+      .join('');
+  }
+
+  function skillPlannerSkillChipHtml(s, skillDb) {
+    const label =
+      skillDb && typeof skillDb.formatSkillLevelDetail === 'function'
+        ? skillDb.formatSkillLevelDetail(s)
+        : `${s.level}/${s.maxLevel}`;
+    const url =
+      skillDb && typeof skillDb.skillIconUrl === 'function' ? skillDb.skillIconUrl(s.skillId) : '';
+    const cdCls = (s.deficitToCooldown || 0) > 0 ? ' skill-planner__skill-chip--cd' : '';
+    const img = url
+      ? `<img class="skill-planner__skill-chip-icon" src="${escapeHtml(url)}" alt="" width="28" height="28" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.classList.add('is-broken')" />`
+      : '<span class="skill-planner__skill-chip-icon skill-planner__skill-chip-icon--empty" aria-hidden="true"></span>';
+    return `<span class="skill-planner__skill-chip${cdCls}" data-skill-id="${escapeHtml(String(s.skillId))}" data-skill-level="${escapeHtml(String(s.level))}" tabindex="0">${img}<span class="skill-planner__skill-chip-lv">${escapeHtml(label)}</span></span>`;
+  }
+
+  function skillPlannerSkillsCell(u, skillDb) {
+    const rows = (u.skillRows || []).filter((s) => s.deficit > 0);
+    if (!rows.length) return '—';
+    return `<div class="skill-planner__skill-chips">${rows.map((s) => skillPlannerSkillChipHtml(s, skillDb)).join('')}</div>`;
+  }
+
+  function skillPlannerUpsCell(u, t) {
+    const n = u.skillUpsNeeded || 0;
+    const dUrl = devilmonIconUrl();
+    const img = dUrl
+      ? `<img class="skill-planner__devilmon" src="${escapeHtml(dUrl)}" alt="" width="22" height="22" loading="lazy" decoding="async" referrerpolicy="no-referrer" />`
+      : '';
+    const tip = escapeHtml(t.skillPlannerUpsTip || 'Skill levels still needed (≈ devilmon uses)');
+    return `<span class="skill-planner__ups-cell" title="${tip}">${img}<strong>${escapeHtml(String(n))}</strong></span>`;
+  }
+
+  function skillPlannerQueueHeadHtml(t) {
+    const sort = skillPlannerQueueSort;
+    const th = (col, labelKey, fallback) => {
+      const label = t[labelKey] || fallback;
+      const sorted = sort && sort.col === col;
+      const ariaSort = sorted ? (sort.dir === 'asc' ? 'ascending' : 'descending') : 'none';
+      return `<th scope="col" class="skill-planner__th--sortable${sorted ? ' skill-planner__th--sorted' : ''}" data-sort-table="queue" data-sort-col="${col}" aria-sort="${ariaSort}"><span class="skill-planner__th-inner">${escapeHtml(label)}${plannerSortIcon(col, 'queue')}</span></th>`;
+    };
+    return `<thead><tr>
+      ${th('name', 'skillPlannerColMonster', 'Monster')}
+      ${th('nat', 'skillPlannerColNat', 'Natural')}
+      ${th('ups', 'skillPlannerColUps', 'Levels needed')}
+      <th scope="col">${escapeHtml(t.skillPlannerColSkills || 'Skills')}</th>
+      ${th('level', 'skillPlannerColUnitLv', 'Monster level')}
+      <th scope="col" class="skill-planner__th--action">${escapeHtml(t.skillPlannerColAction || '')}</th>
+    </tr></thead>`;
+  }
+
+  function skillPlannerStuckHeadHtml(t) {
+    const sort = skillPlannerStuckSort;
+    const th = (col, labelKey, fallback) => {
+      const label = t[labelKey] || fallback;
+      const sorted = sort && sort.col === col;
+      const ariaSort = sorted ? (sort.dir === 'asc' ? 'ascending' : 'descending') : 'none';
+      return `<th scope="col" class="skill-planner__th--sortable${sorted ? ' skill-planner__th--sorted' : ''}" data-sort-table="stuck" data-sort-col="${col}" aria-sort="${ariaSort}"><span class="skill-planner__th-inner">${escapeHtml(label)}${plannerSortIcon(col, 'stuck')}</span></th>`;
+    };
+    return `<thead><tr>
+      ${th('name', 'skillPlannerColMonster', 'Monster')}
+      ${th('nat', 'skillPlannerColNat', 'Natural')}
+      ${th('skill', 'skillPlannerColCdSkill', 'Skill')}
+      ${th('target', 'skillPlannerColCdTarget', 'Target level')}
+      ${th('deficit', 'skillPlannerColDeficit', 'Skill-ups needed')}
+      <th scope="col" class="skill-planner__th--action"></th>
+    </tr></thead>`;
+  }
+
+  function skillPlannerQueueRowHtml(u, skillDb, t) {
+    const nat = plannerNaturalStars(u);
+    const natLbl = nat > 0 ? `Nat ${nat}` : '—';
+    const lvGap = plannerUnitLevelsToMax(u);
+    const lvTxt =
+      lvGap > 0
+        ? `${u.level}/${u.maxLevel} (+${lvGap})`
+        : `${u.level}/${u.maxLevel}`;
+    const thumb = u.imageFilename
+      ? `<img class="skill-planner__thumb" alt="" width="36" height="36" data-img-file="${escapeHtml(u.imageFilename)}" loading="lazy" decoding="async" />`
+      : '<span class="skill-planner__thumb skill-planner__thumb--empty" aria-hidden="true"></span>';
+    const openLbl = escapeHtml(t.skillPlannerOpenMonster || 'Open in Roster');
+    return `<tr class="skill-planner__row" data-unit-id="${escapeHtml(String(u.unitId))}">
+      <td class="skill-planner__td skill-planner__td--monster">
+        <button type="button" class="skill-planner__monster-btn" data-planner-open="${escapeHtml(String(u.unitId))}">
+          ${thumb}
+          <span class="skill-planner__monster-name">${escapeHtml(u.displayName || '')}</span>
+        </button>
+      </td>
+      <td class="skill-planner__td skill-planner__td--nat">${escapeHtml(natLbl)}</td>
+      <td class="skill-planner__td skill-planner__td--ups">${skillPlannerUpsCell(u, t)}</td>
+      <td class="skill-planner__td skill-planner__td--skills">${skillPlannerSkillsCell(u, skillDb)}</td>
+      <td class="skill-planner__td skill-planner__td--level">${escapeHtml(lvTxt)}</td>
+      <td class="skill-planner__td skill-planner__td--act">
+        <button type="button" class="btn-ghost btn-toolbar btn-toolbar--sm" data-planner-open="${escapeHtml(String(u.unitId))}">${openLbl}</button>
+      </td>
+    </tr>`;
+  }
+
+  function skillPlannerStuckRowHtml(entry, skillDb, t) {
+    const { u, s } = entry;
+    const nat = plannerNaturalStars(u);
+    const natLbl = nat > 0 ? `Nat ${nat}` : '—';
+    const thumb = u.imageFilename
+      ? `<img class="skill-planner__thumb" alt="" width="36" height="36" data-img-file="${escapeHtml(u.imageFilename)}" loading="lazy" decoding="async" />`
+      : '<span class="skill-planner__thumb skill-planner__thumb--empty" aria-hidden="true"></span>';
+    const openLbl = escapeHtml(t.skillPlannerOpenMonster || 'Open in Roster');
+    const cdLv = s.cooldownUnlockLevel != null ? s.cooldownUnlockLevel : '—';
+    const targetTxt = (t.skillPlannerCdTarget || 'Lv {cur} → {goal}')
+      .replace('{cur}', String(s.level))
+      .replace('{goal}', String(cdLv));
+    const skillName = s.skillName ? `<span class="skill-planner__cd-skill-name">${escapeHtml(s.skillName)}</span>` : '';
+    return `<tr class="skill-planner__row skill-planner__row--stuck" data-unit-id="${escapeHtml(String(u.unitId))}">
+      <td class="skill-planner__td skill-planner__td--monster">
+        <button type="button" class="skill-planner__monster-btn" data-planner-open="${escapeHtml(String(u.unitId))}">
+          ${thumb}
+          <span class="skill-planner__monster-name">${escapeHtml(u.displayName || '')}</span>
+        </button>
+      </td>
+      <td class="skill-planner__td skill-planner__td--nat">${escapeHtml(natLbl)}</td>
+      <td class="skill-planner__td skill-planner__td--skills"><div class="skill-planner__cd-skill">${skillPlannerSkillChipHtml(s, skillDb)}${skillName}</div></td>
+      <td class="skill-planner__td">${escapeHtml(targetTxt)}</td>
+      <td class="skill-planner__td"><strong>+${escapeHtml(String(s.deficitToCooldown || 0))}</strong></td>
+      <td class="skill-planner__td skill-planner__td--act"><button type="button" class="btn-ghost btn-toolbar btn-toolbar--sm" data-planner-open="${escapeHtml(String(u.unitId))}">${openLbl}</button></td>
+    </tr>`;
+  }
+
+  function applySkillPlannerChipTip(chip, skillDb) {
+    if (!chip || !skillDb || typeof setSwrmFloatTipTarget !== 'function') return;
+    const skillId = Number(chip.getAttribute('data-skill-id'));
+    const level = Number(chip.getAttribute('data-skill-level'));
+    if (!Number.isFinite(skillId)) return;
+    const text =
+      typeof skillDb.formatSkillProgressTooltip === 'function'
+        ? skillDb.formatSkillProgressTooltip(skillId, level)
+        : '';
+    if (text) {
+      setSwrmFloatTipTarget(chip, text);
+      chip.setAttribute('aria-label', text);
+    }
+  }
+
+  function bindSkillPlannerSkillTips(root) {
+    if (!root) return;
+    const skillDb = window.SWRM_SKILL_DB;
+    const chips = root.querySelectorAll('.skill-planner__skill-chip[data-skill-id]');
+    if (!chips.length) return;
+    void (async () => {
+      if (skillDb && typeof skillDb.loadSkillIndex === 'function') {
+        try {
+          await skillDb.loadSkillIndex();
+        } catch (e) { /* ignore */ }
+      }
+      chips.forEach((chip) => {
+        if (!chip.isConnected) return;
+        applySkillPlannerChipTip(chip, skillDb);
+      });
+    })();
+  }
+
+  function bindSkillPlannerPortraits(root) {
+    if (!root) return;
+    root.querySelectorAll('.skill-planner__thumb[data-img-file]').forEach((img) => {
+      const file = img.getAttribute('data-img-file');
+      if (file && typeof bindMonsterPortrait === 'function') bindMonsterPortrait(img, file);
+    });
+    bindSkillPlannerSkillTips(root);
+  }
+
+  function openMonsterFromSkillPlanner(unitId) {
+    const uid = unitId != null ? String(unitId) : '';
+    if (!uid) return;
+    if (typeof saveMonstersSelectedUnitId === 'function') saveMonstersSelectedUnitId(uid);
+    monstersSelectedUnitId = uid;
+    if (typeof showMainTab === 'function') {
+      showMainTab('monsters', { monstersSubtab: 'roster', writeHash: true });
+    }
+    window.setTimeout(() => {
+      if (typeof renderMonstersPanel === 'function') void renderMonstersPanel();
+      window.setTimeout(() => {
+        const esc =
+          typeof CSS !== 'undefined' && typeof CSS.escape === 'function'
+            ? CSS.escape(uid)
+            : uid.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+        const node = document.querySelector(
+          `.monsters-card[data-unit-id="${esc}"], .monsters-table__row[data-unit-id="${esc}"]`,
+        );
+        if (node) node.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        if (typeof showMonsterDetailForCard === 'function') {
+          showMonsterDetailForCard(uid, node || null, { pin: true });
+        }
+      }, 80);
+    }, 40);
+  }
+
+  function bindSkillPlannerPanel(root) {
+    if (!root || skillPlannerBound) return;
+    skillPlannerBound = true;
+    skillPlannerExcludeStorage = readSkillPlannerExcludeStorage();
+
+    root.addEventListener('click', (ev) => {
+      const sortTh = ev.target.closest('[data-sort-col][data-sort-table]');
+      if (sortTh) {
+        ev.preventDefault();
+        cycleSkillPlannerSort(sortTh.getAttribute('data-sort-table'), sortTh.getAttribute('data-sort-col'));
+        void renderSkillPlannerPanel();
+        return;
+      }
+      const tabBtn = ev.target.closest('[data-planner-view]');
+      if (tabBtn && tabBtn.classList.contains('skill-planner__tab')) {
+        showSkillPlannerView(tabBtn.getAttribute('data-planner-view'));
+        return;
+      }
+      const gotoTab = ev.target.closest('[data-planner-goto-tab]');
+      if (gotoTab) {
+        showSkillPlannerView(gotoTab.getAttribute('data-planner-goto-tab'));
+        return;
+      }
+      const btn = ev.target.closest('[data-planner-open]');
+      if (btn) {
+        ev.preventDefault();
+        openMonsterFromSkillPlanner(btn.getAttribute('data-planner-open'));
+      }
+    });
+
+    root.addEventListener('keydown', (ev) => {
+      if (ev.key !== 'Enter' && ev.key !== ' ') return;
+      const card = ev.target.closest('[data-planner-goto-tab]');
+      if (!card) return;
+      ev.preventDefault();
+      showSkillPlannerView(card.getAttribute('data-planner-goto-tab'));
+    });
+
+    const natSel = document.getElementById('skill-planner-nat-filter');
+    if (natSel) {
+      natSel.addEventListener('change', () => {
+        skillPlannerNatFilter = natSel.value || 'all';
+        void renderSkillPlannerPanel();
+      });
+    }
+
+    const storageBtn = document.getElementById('skill-planner-exclude-storage');
+    if (storageBtn) {
+      storageBtn.addEventListener('click', () => {
+        skillPlannerExcludeStorage = !skillPlannerExcludeStorage;
+        writeSkillPlannerExcludeStorage(skillPlannerExcludeStorage);
+        const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+        syncSkillPlannerExcludeStorageButton(t);
+        void renderSkillPlannerPanel();
+      });
+    }
+
+    document.querySelectorAll('.skill-planner__tab').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const v = btn.getAttribute('data-planner-view');
+        if (v) showSkillPlannerView(v);
+      });
+    });
+  }
+
+  async function renderSkillPlannerPanel() {
+    const root = document.getElementById('skill-planner-root');
+    const summary = document.getElementById('skill-planner-summary');
+    const queueWrap = document.getElementById('skill-planner-queue');
+    const stuckWrap = document.getElementById('skill-planner-stuck');
+    const emptyEl = document.getElementById('skill-planner-empty');
+    const lead = document.getElementById('skill-planner-lead');
+    if (!root || !summary || !queueWrap || !stuckWrap) return;
+
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    if (lead) lead.textContent = t.skillPlannerLead || '';
+
+    bindSkillPlannerPanel(root);
+    syncSkillPlannerExcludeStorageButton(t);
+    showSkillPlannerView(skillPlannerView);
+
+    const tabsNav = document.getElementById('skill-planner-view-tabs');
+    if (tabsNav) tabsNav.setAttribute('aria-label', t.skillPlannerTabsAria || 'Skill plan views');
+
+    const natSel = document.getElementById('skill-planner-nat-filter');
+    if (natSel && natSel.value !== skillPlannerNatFilter) natSel.value = skillPlannerNatFilter;
+
+    const renderTask = (async () => {
+      const skillDb = window.SWRM_SKILL_DB;
+      if (skillDb && typeof skillDb.loadSkillIndex === 'function') {
+        try {
+          await skillDb.loadSkillIndex();
+        } catch (e) { /* ignore */ }
+      }
+
+      const bundled =
+        skillDb &&
+        typeof skillDb.hasBundledSkillMeta === 'function' &&
+        skillDb.hasBundledSkillMeta();
+
+      if (!bundled) {
+        skillPlannerCdMetaReady = false;
+        skillPlannerCdHydrateGen += 1;
+      }
+
+      let allEnriched = await getMonstersEnrichedForPlanner();
+      let rosterUnits = filterPlannerRosterUnits(allEnriched);
+      if (bundled) {
+        rosterUnits = rosterUnits.map((u) => refreshUnitSkillRows(u));
+        skillPlannerCdMetaReady = true;
+      }
+      skillPlannerUnitsCache = rosterUnits;
+
+      const stats = computeSkillPlannerStats(rosterUnits);
+      summary.innerHTML = skillPlannerSummaryHtml(stats, t);
+      syncSkillPlannerCdTabLabel(stats, t);
+
+      if (!rosterUnits.length) {
+        queueWrap.innerHTML = '';
+        stuckWrap.innerHTML = '';
+        return;
+      }
+
+      paintSkillPlannerQueue(rosterUnits, t);
+      if (skillPlannerView === 'stuck') {
+        void paintSkillPlannerCdPanel();
+      } else {
+        stuckWrap.innerHTML = '';
+      }
+
+      bindSkillPlannerPortraits(root);
+      schedulePlannerCdMetaBackground(rosterUnits);
+    })();
+
+    skillPlannerRenderPromise = renderTask;
+    try {
+      await renderTask;
+    } finally {
+      if (skillPlannerRenderPromise === renderTask) skillPlannerRenderPromise = null;
+    }
+  }
+
+  skillPlannerExcludeStorage = readSkillPlannerExcludeStorage();
+
 //
 // SWEX does not ship reliable final combat totals on units; we derive Total from:
 //   1) Base at unit level — SWARFARM monster base/max stats scaled to u.level
@@ -10835,20 +12494,67 @@
     });
   }
 
-  function buildMonsterGearSectionHtml(u, t) {
-    const artifacts = u.artifacts || [];
-    const relics = u.relics || [];
-    if (!artifacts.length && !relics.length) {
-      return `<p class="monsters-detail__muted">${escapeHtml(t.monstersGearEmpty || 'No artifacts or relics on this monster.')}</p>`;
+  function buildMonsterGearListHtml(items, t, emptyMsg) {
+    if (!items.length) {
+      return `<p class="monsters-detail__muted">${escapeHtml(emptyMsg || t.monstersGearEmpty || 'None equipped.')}</p>`;
     }
-    const items = []
-      .concat(
-        sortArtifactsForDisplay(artifacts),
-        relics.slice().sort((a, b) => String(a.category).localeCompare(String(b.category))),
-      )
-      .map((g) => buildGearItemHtml(g, t))
-      .join('');
-    return `<ul class="monsters-gear-list">${items}</ul>`;
+    return `<ul class="monsters-gear-list">${items.map((g) => buildGearItemHtml(g, t)).join('')}</ul>`;
+  }
+
+  function buildMonsterDetailLoadoutHtml(u, t, runesBlockHtml) {
+    const runesLbl = escapeHtml(t.monstersDetailRunes || 'Runes');
+    const artLbl = escapeHtml(t.monstersDetailArtifacts || 'Artifacts');
+    const relLbl = escapeHtml(t.monstersDetailRelics || 'Relics');
+    const countTpl = t.monstersDetailGearCount || '{n}';
+    const artifacts = sortArtifactsForDisplay(u.artifacts || []);
+    const relics = (u.relics || [])
+      .slice()
+      .sort((a, b) => String(a.category).localeCompare(String(b.category)));
+    const artCount = artifacts.length;
+    const relCount = relics.length;
+    const artCountHtml = artCount
+      ? ` <span class="monsters-detail__loadout-count">${escapeHtml(countTpl.replace('{n}', String(artCount)))}</span>`
+      : '';
+    const relCountHtml = relCount
+      ? ` <span class="monsters-detail__loadout-count">${escapeHtml(countTpl.replace('{n}', String(relCount)))}</span>`
+      : '';
+    const artEmpty = t.monstersGearArtifactsEmpty || 'No artifacts on this monster.';
+    const relEmpty = t.monstersGearRelicsEmpty || 'No relics on this monster.';
+    return `<div class="monsters-detail__loadout-tabs" role="tablist" aria-label="${escapeHtml(t.monstersDetailLoadoutAria || 'Gear')}">
+        <button type="button" class="btn-ghost btn-toolbar btn-toolbar--sm monsters-detail__loadout-tab is-active" data-loadout-tab="runes" role="tab" aria-selected="true" aria-controls="monsters-detail-loadout-runes">${runesLbl}</button>
+        <button type="button" class="btn-ghost btn-toolbar btn-toolbar--sm monsters-detail__loadout-tab" data-loadout-tab="artifacts" role="tab" aria-selected="false" aria-controls="monsters-detail-loadout-artifacts"${artCount ? '' : ' disabled'}>${artLbl}${artCountHtml}</button>
+        <button type="button" class="btn-ghost btn-toolbar btn-toolbar--sm monsters-detail__loadout-tab" data-loadout-tab="relics" role="tab" aria-selected="false" aria-controls="monsters-detail-loadout-relics"${relCount ? '' : ' disabled'}>${relLbl}${relCountHtml}</button>
+      </div>
+      <div class="monsters-detail__loadout-panels">
+        <div class="monsters-detail__loadout-panel is-active" id="monsters-detail-loadout-runes" data-loadout-panel="runes" role="tabpanel">${runesBlockHtml}</div>
+        <div class="monsters-detail__loadout-panel" id="monsters-detail-loadout-artifacts" data-loadout-panel="artifacts" role="tabpanel" hidden>${buildMonsterGearListHtml(artifacts, t, artEmpty)}</div>
+        <div class="monsters-detail__loadout-panel" id="monsters-detail-loadout-relics" data-loadout-panel="relics" role="tabpanel" hidden>${buildMonsterGearListHtml(relics, t, relEmpty)}</div>
+      </div>`;
+  }
+
+  function bindMonsterDetailLoadoutTabs(root) {
+    if (!root) return;
+    const tabs = root.querySelectorAll('[data-loadout-tab]');
+    const panels = root.querySelectorAll('[data-loadout-panel]');
+    if (!tabs.length) return;
+    tabs.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        if (btn.disabled) return;
+        const kind = btn.getAttribute('data-loadout-tab');
+        if (!kind) return;
+        tabs.forEach((b) => {
+          const on = b === btn;
+          b.classList.toggle('is-active', on);
+          b.setAttribute('aria-selected', on ? 'true' : 'false');
+        });
+        panels.forEach((p) => {
+          const on = p.getAttribute('data-loadout-panel') === kind;
+          p.classList.toggle('is-active', on);
+          if (on) p.removeAttribute('hidden');
+          else p.setAttribute('hidden', '');
+        });
+      });
+    });
   }
 
   function formatMonsterRuneTooltip(r, t, slotNo) {
@@ -11093,7 +12799,9 @@
           : row?.isPct
             ? '0%'
             : '0';
-      return `<div class="monsters-detail__stat-row monsters-detail__stat-row--core monsters-detail__stat-row--clickable" data-stat-key="${key}" role="button" tabindex="0" aria-label="${escapeHtml(label)}">
+      const clickTip = t.monstersStatsClickHint || 'Click HP–SPD to switch base+rune / total view';
+      const clickAria = `${label}. ${clickTip}`;
+      return `<div class="monsters-detail__stat-row monsters-detail__stat-row--core monsters-detail__stat-row--clickable" data-stat-key="${key}" role="button" tabindex="0" title="${escapeAttr(clickTip)}" aria-label="${escapeAttr(clickAria)}">
           <span class="monsters-detail__stat-k">${escapeHtml(label)}</span>
           <span class="monsters-detail__stat-num monsters-detail__stat-num--base" data-col="base">${escapeHtml(fmtVal(key, 'base', false))}</span>
           <span class="monsters-detail__stat-num monsters-detail__stat-num--rune" data-col="bonus">${escapeHtml(bonusStr)}</span>
@@ -11103,7 +12811,7 @@
     function pctRow(label, key) {
       return `<div class="monsters-detail__stat-row monsters-detail__stat-row--pct" data-stat-key="${key}">
           <span class="monsters-detail__stat-k">${escapeHtml(label)}</span>
-          <span class="monsters-detail__stat-num monsters-detail__stat-num--pct-total">${escapeHtml(fmtVal(key, 'total', true))}</span>
+          <span class="monsters-detail__stat-num monsters-detail__stat-num--pct-total" data-col="pct">${escapeHtml(fmtVal(key, 'total', true))}</span>
         </div>`;
     }
     const statRows = coreKeys.map(([label, key]) => coreRow(label, key)).concat(pctKeys.map(([label, key]) => pctRow(label, key))).join('');
@@ -11128,11 +12836,11 @@
       const split = mode !== 'total';
       grid.dataset.statsView = split ? 'split' : 'total';
       grid.classList.toggle('monsters-detail__stats-grid--total-view', !split);
-      grid.querySelectorAll('[data-col="total"]').forEach((el) => {
+      grid.querySelectorAll('.monsters-detail__stat-row--core [data-col="total"]').forEach((el) => {
         if (split) el.setAttribute('hidden', '');
         else el.removeAttribute('hidden');
       });
-      grid.querySelectorAll('[data-col="base"], [data-col="bonus"]').forEach((el) => {
+      grid.querySelectorAll('.monsters-detail__stat-row--core [data-col="base"], .monsters-detail__stat-row--core [data-col="bonus"]').forEach((el) => {
         if (split) el.removeAttribute('hidden');
         else el.setAttribute('hidden', '');
       });
@@ -11492,41 +13200,68 @@
     tile.setAttribute('aria-label', tip);
   }
 
+  function applyMonsterSkillTipToTile(tile, skillId, level) {
+    if (!tile || !skillId || typeof setSwrmFloatTipTarget !== 'function') return false;
+    const db = window.SWRM_SKILL_DB;
+    if (!db) return false;
+    let html =
+      typeof db.formatSkillProgressTooltipHtml === 'function'
+        ? db.formatSkillProgressTooltipHtml(skillId, level)
+        : '';
+    let text =
+      !html && typeof db.formatSkillProgressTooltip === 'function'
+        ? db.formatSkillProgressTooltip(skillId, level)
+        : typeof db.formatSkillTooltip === 'function'
+          ? db.formatSkillTooltip(skillId, level)
+          : '';
+    if (text && !/^Skill \d+/.test(text)) {
+      setSwrmFloatTipTarget(tile, text);
+      tile.setAttribute('aria-label', text);
+      return true;
+    }
+    if (html) {
+      setSwrmFloatTipTarget(tile, '', { html });
+      tile.setAttribute('aria-label', text || tile.getAttribute('aria-label') || '');
+      return true;
+    }
+    return false;
+  }
+
   function bindMonsterDetailSkillTips(root, skillRows) {
     if (!root || typeof setSwrmFloatTipTarget !== 'function') return;
     const rows = skillRows || [];
     const tiles = root.querySelectorAll(
       '.monsters-detail__skills-main .monsters-detail__skill-tile--tip',
     );
+    const pending = [];
     tiles.forEach((tile, i) => {
       const row = rows[i];
       const skillId = row?.skillId ?? Number(tile.getAttribute('data-skill-id'));
       const level = row?.level ?? Number(tile.getAttribute('data-skill-level'));
       if (!skillId) return;
       tile.style.cursor = 'help';
-      const applyTip = async () => {
-        const db = window.SWRM_SKILL_DB;
-        if (!db || typeof db.fetchSkillMeta !== 'function') return;
-        let text =
-          typeof db.formatSkillTooltip === 'function'
-            ? db.formatSkillTooltip(skillId, level)
-            : '';
-        const placeholder = text && /^Skill \d+/.test(text);
-        if (!text || placeholder) {
-          await db.fetchSkillMeta(skillId);
-          text =
-            typeof db.formatSkillTooltip === 'function'
-              ? db.formatSkillTooltip(skillId, level)
-              : '';
-        }
-        if (text) {
-          setSwrmFloatTipTarget(tile, text);
-          tile.setAttribute('aria-label', text);
-        }
-      };
-      tile.addEventListener('mouseenter', applyTip);
-      tile.addEventListener('focus', applyTip);
+      pending.push({ tile, skillId, level });
     });
+
+    void (async () => {
+      const db = window.SWRM_SKILL_DB;
+      if (!db) return;
+      if (typeof db.loadSkillIndex === 'function') {
+        try {
+          await db.loadSkillIndex();
+        } catch (e) { /* ignore */ }
+      }
+      for (const { tile, skillId, level } of pending) {
+        if (!tile.isConnected) continue;
+        if (applyMonsterSkillTipToTile(tile, skillId, level)) continue;
+        if (typeof db.fetchSkillMeta === 'function') {
+          try {
+            await db.fetchSkillMeta(skillId);
+          } catch (e) { /* ignore */ }
+        }
+        applyMonsterSkillTipToTile(tile, skillId, level);
+      }
+    })();
   }
 
   function formatLeaderSkillTitleBody(leaderSkill, t) {
@@ -11756,10 +13491,10 @@
     }
     const runesBlock =
       buildRuneSetBonusSummaryHtml(u, t, db) + buildMonsterDetailRunesStrip(u, db, t);
-    const gearBlock =
-      typeof buildMonsterGearSectionHtml === 'function'
-        ? buildMonsterGearSectionHtml(u, t)
-        : '';
+    const loadoutBlock =
+      typeof buildMonsterDetailLoadoutHtml === 'function'
+        ? buildMonsterDetailLoadoutHtml(u, t, runesBlock)
+        : runesBlock;
     const natStars =
       meta && meta.natural_stars != null
         ? meta.natural_stars
@@ -11805,13 +13540,8 @@
           <h4 class="monsters-detail__section-title">${escapeHtml(t.monstersDetailTabSkills || 'Skills')}</h4>
           ${skillsBlock}
         </section>
-        <section class="monsters-detail__section">
-          <h4 class="monsters-detail__section-title">${escapeHtml(t.monstersDetailRunes || 'Runes')}</h4>
-          ${runesBlock}
-        </section>
-        <section class="monsters-detail__section" data-detail-gear>
-          <h4 class="monsters-detail__section-title">${escapeHtml(t.monstersDetailGear || 'Artifacts & Relics')}</h4>
-          ${gearBlock}
+        <section class="monsters-detail__section monsters-detail__section--loadout" data-detail-loadout>
+          ${loadoutBlock}
         </section>
       </div>`;
 
@@ -11827,6 +13557,12 @@
     }
     if (typeof bindMonsterDetailSkillTips === 'function') {
       bindMonsterDetailSkillTips(body, skillRows);
+    }
+    if (typeof bindMonsterDetailLoadoutTabs === 'function') {
+      bindMonsterDetailLoadoutTabs(body);
+    }
+    if (typeof bindMonsterRuneFocusPanel === 'function') {
+      bindMonsterRuneFocusPanel(body, u, t);
     }
     if (typeof bindMonsterDetailStatsToggle === 'function') {
       bindMonsterDetailStatsToggle(body);
@@ -12379,7 +14115,7 @@
         </tr>`;
       })
       .join('');
-    return `<div class="monsters-table-wrap"><table class="monsters-table"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
+    return `<div class="monsters-table-wrap"><table class="monsters-table swrm-table-zebra"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
   }
 
   function bindMonsterTableHeaderSort(grid) {
@@ -12769,9 +14505,10 @@
     const skillSel = document.getElementById('monsters-filter-skill');
     if (skillSel) {
       const opts = {
-        '': t.monstersSkillAll || 'All skills',
-        maxed: t.monstersSkillMaxed || 'Max skills',
-        'needs-up': t.monstersSkillNeedsUp || 'Needs skill-ups',
+        '': t.monstersFilterSkillAll || t.monstersSkillAll || 'All skills',
+        maxed: t.monstersFilterSkillMaxed || t.monstersSkillMaxed || 'Max skills',
+        'needs-up':
+          t.monstersFilterSkillNeeds || t.monstersSkillNeedsUp || 'Not maxed (skill-ups needed)',
       };
       skillSel.querySelectorAll('option').forEach((opt) => {
         if (opts[opt.value] != null) opt.textContent = opts[opt.value];

@@ -22,17 +22,57 @@
     } catch (e) { /* ignore */ }
   }
 
+  function gearMonsterNameFromMasterId(masterId) {
+    const mid = Number(masterId);
+    if (!Number.isFinite(mid) || mid <= 0) return '';
+    const db = window.SWRM_MONSTER_DB;
+    if (db && typeof db.monsterDisplayName === 'function') {
+      const n = db.monsterDisplayName(mid);
+      if (n && !String(n).startsWith('#')) return String(n);
+    }
+    return '';
+  }
+
+  function gearUnitByOccupiedId(occupiedId) {
+    const id = Number(occupiedId);
+    if (!Number.isFinite(id) || id === 0) return null;
+    const units = allUnits || [];
+    let u = units.find((x) => Number(x.unitId) === id);
+    if (!u) u = units.find((x) => Number(x.masterId) === id);
+    if (!u && activeSwexJson && Array.isArray(activeSwexJson.unit_list)) {
+      const raw = activeSwexJson.unit_list.find(
+        (x) => x && (Number(x.unit_id) === id || Number(x.unit_master_id) === id),
+      );
+      if (raw) {
+        u = {
+          unitId: raw.unit_id,
+          masterId: Number(raw.unit_master_id),
+        };
+      }
+    }
+    return u || null;
+  }
+
   function gearLocationLabel(occupiedId, t) {
     const inv = t.tableGearInventory || 'Inventory';
     if (occupiedId == null || !Number.isFinite(Number(occupiedId)) || Number(occupiedId) === 0) {
       return inv;
     }
-    const uid = Number(occupiedId);
-    const u = (allUnits || []).find((x) => Number(x.unitId) === uid);
-    if (!u) return inv;
-    const db = window.SWRM_MONSTER_DB;
-    const name = db ? db.monsterDisplayName(u.masterId) : '';
-    return name || `#${u.masterId}`;
+    const id = Number(occupiedId);
+    const u = gearUnitByOccupiedId(id);
+    if (u) {
+      const cache = typeof monstersEnrichedCache !== 'undefined' ? monstersEnrichedCache : [];
+      const enriched = cache.find((x) => Number(x.unitId) === Number(u.unitId));
+      if (enriched && enriched.displayName && !String(enriched.displayName).startsWith('#')) {
+        return String(enriched.displayName);
+      }
+      if (u.displayName && !String(u.displayName).startsWith('#')) return String(u.displayName);
+      const byMaster = gearMonsterNameFromMasterId(u.masterId);
+      if (byMaster) return byMaster;
+      return inv;
+    }
+    const byOccupiedMaster = gearMonsterNameFromMasterId(id);
+    return byOccupiedMaster || inv;
   }
 
   function gearSearchHay(gear) {
@@ -165,8 +205,12 @@
     if (runeOnly) runeOnly.hidden = id !== 'runes';
     const loadStrip = document.getElementById('rune-table-load-strip');
     if (loadStrip) loadStrip.classList.toggle('hidden', id !== 'runes');
-    const runeMeta = document.getElementById('rune-table-roster-meta');
-    if (runeMeta) runeMeta.classList.toggle('hidden', id !== 'runes');
+    document.querySelectorAll('[data-gear-roster-meta]').forEach((el) => {
+      const on = el.dataset.gearRosterMeta === id;
+      el.classList.toggle('hidden', !on);
+      if (on) el.removeAttribute('hidden');
+      else el.setAttribute('hidden', '');
+    });
     const runeChips = document.getElementById('rune-table-active-filters');
     if (runeChips) runeChips.classList.toggle('hidden', id !== 'runes');
     const search = document.getElementById('search-box');

@@ -193,7 +193,7 @@
 }
 
 .team-card__slot--leader {
-  box-shadow: 0 0 0 2px color-mix(in srgb, #f0c040 55%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--gold) 55%, transparent);
 }
 
 .team-card__slot--missing {
@@ -315,7 +315,7 @@
 }
 
 .teams-editor-slot--leader {
-  outline: 1px solid color-mix(in srgb, #f0c040 50%, transparent);
+  outline: 1px solid color-mix(in srgb, var(--gold) 50%, transparent);
   border-radius: 8px;
   padding: 4px;
 }

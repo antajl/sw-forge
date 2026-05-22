@@ -3,6 +3,8 @@
   "private": true,
   "scripts": {
     "build:ui": "node tools/build-ui.mjs",
+    "build:css": "node tools/build-css.mjs",
+    "build": "npm run build:css && npm run build:ui",
     "watch:ui": "node tools/watch-ui.mjs"
   }
 }

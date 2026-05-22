@@ -197,7 +197,7 @@
         </tr>`;
       })
       .join('');
-    return `<div class="monsters-table-wrap"><table class="monsters-table"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
+    return `<div class="monsters-table-wrap"><table class="monsters-table swrm-table-zebra"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
   }
 
   function bindMonsterTableHeaderSort(grid) {

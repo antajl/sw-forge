@@ -182,7 +182,7 @@
   function positionDashUnifiedTabIndicator(opts) {
     const { nav, activeKey, instant } = opts || {};
     const ind = nav && nav.querySelector('.dash-unified-tabs__indicator');
-    const key = ['verdict', 'roles', 'sets', 'slots', 'eff'].includes(activeKey) ? activeKey : 'verdict';
+    const key = ['verdict', 'roles', 'sets', 'slots', 'eff', 'score'].includes(activeKey) ? activeKey : 'verdict';
     const btn = document.getElementById(`dash-unified-tab-${key}`);
     if (!nav || !ind || !btn) return false;
     const x = btn.offsetLeft;

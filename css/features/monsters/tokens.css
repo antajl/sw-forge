@@ -1,5 +1,9 @@
 /* Monsters tab — spacing & type tokens */
 :root {
+  --monster-star-natural: var(--gold);
+  --monster-star-awaken: var(--star-awaken);
+  --monster-star-stroke: 1.35px;
+  --monster-star-shadow: 0 0 2px #000, 0 1px 0 #000, 1px 0 0 #000, -1px 0 0 #000;
   --space-xs: 4px;
   --space-sm: 8px;
   --space-md: 12px;

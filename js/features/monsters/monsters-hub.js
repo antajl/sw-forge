@@ -29,14 +29,20 @@
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const lead = document.getElementById('lbl-monsters-lead');
     if (lead) {
-      lead.textContent =
-        id === 'teams'
-          ? t.monstersTeamsLead || 'Build named teams and group them into sets (e.g. Arena Offence).'
-          : t.monstersLead || '';
+      if (id === 'teams') {
+        lead.textContent =
+          t.monstersTeamsLead || 'Build named teams and group them into sets (e.g. Arena Offence).';
+      } else if (id === 'planner') {
+        lead.textContent = t.skillPlannerLead || '';
+      } else {
+        lead.textContent = t.monstersLead || '';
+      }
     }
 
     if (id === 'roster') {
       void renderMonstersPanel();
+    } else if (id === 'planner' && typeof renderSkillPlannerPanel === 'function') {
+      void renderSkillPlannerPanel();
     } else if (id === 'teams' && typeof renderTeamsPanel === 'function') {
       renderTeamsPanel();
     }
@@ -59,5 +65,6 @@
     const s = String(segment || '').trim().toLowerCase();
     if (s === 'team' || s === 'teams') return 'teams';
     if (s === 'roster' || s === 'list') return 'roster';
+    if (s === 'planner' || s === 'skill' || s === 'skills' || s === 'skill-plan') return 'planner';
     return MONSTERS_SUBTAB_IDS.includes(s) ? s : null;
   }

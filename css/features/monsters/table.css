@@ -15,6 +15,26 @@
   font-size: 0.72rem;
 }
 
+.monsters-table.swrm-table-zebra tbody tr {
+  background: var(--swrm-row-bg);
+}
+
+.monsters-table.swrm-table-zebra tbody tr:nth-child(even) {
+  background: var(--swrm-row-bg-even);
+}
+
+.monsters-table.swrm-table-zebra tbody tr:hover td {
+  background: var(--swrm-row-bg-hover);
+}
+
+.monsters-table.swrm-table-zebra .monsters-table__row--pinned {
+  background: color-mix(in srgb, var(--accent) 12%, var(--swrm-row-bg));
+}
+
+.monsters-table.swrm-table-zebra tbody tr:nth-child(even).monsters-table__row--pinned {
+  background: color-mix(in srgb, var(--accent) 12%, var(--swrm-row-bg-even));
+}
+
 .monsters-table th,
 .monsters-table td {
   padding: 4px 8px;
@@ -174,11 +194,12 @@
 }
 
 .monsters-table__star {
-  font-size: 0.68rem;
+  font-size: 0.76rem;
   margin-left: -0.2em;
-  color: #f0c040;
-  -webkit-text-stroke: 1px #000;
+  color: var(--monster-star-natural);
+  -webkit-text-stroke: var(--monster-star-stroke) #000;
   paint-order: stroke fill;
+  text-shadow: var(--monster-star-shadow);
 }
 
 .monsters-table__star:first-child {
@@ -186,7 +207,7 @@
 }
 
 .monsters-table__stars--awakened .monsters-table__star {
-  color: #f06eb0;
+  color: var(--monster-star-awaken);
 }
 
 .monsters-table__row:hover {

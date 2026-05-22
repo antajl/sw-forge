@@ -107,7 +107,7 @@
       : '';
     const name = team.name || t.teamsUntitled || 'New Team';
     const publicBadge =
-      team.shareInProfile && !ro
+      team.shareInProfile || (ro && opts && opts.fromShare)
         ? `<span class="team-card__public" title="${escapeHtml(t.teamsSharePublic || 'Public in profile')}">◉</span>`
         : '';
     const actions = ro
@@ -338,7 +338,9 @@
     const blocks = (payload.sets || [])
       .map((set) => {
         const teams = (set.teams || [])
-          .map((raw) => buildTeamCardHtml(buildShareTeamFromPayload(raw), t, { readOnly: true }))
+          .map((raw) =>
+            buildTeamCardHtml(buildShareTeamFromPayload(raw), t, { readOnly: true, fromShare: true }),
+          )
           .join('');
         const count = (set.teams || []).length;
         return `<section class="teams-share-set-panel">

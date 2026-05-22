@@ -59,8 +59,8 @@
 
 .teams-set-list__btn.is-active,
 .teams-set-list__btn:hover {
-  border-color: var(--accent, #6ea8fe);
-  background: color-mix(in srgb, var(--accent, #6ea8fe) 12%, transparent);
+  border-color: var(--accent, var(--accent));
+  background: color-mix(in srgb, var(--accent, var(--accent)) 12%, transparent);
 }
 
 .teams-set-list__empty {
@@ -105,8 +105,8 @@
 }
 
 .teams-slot-card.is-active {
-  border-color: var(--accent, #6ea8fe);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent, #6ea8fe) 40%, transparent);
+  border-color: var(--accent, var(--accent));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent, var(--accent)) 40%, transparent);
 }
 
 .teams-slot-card__idx {

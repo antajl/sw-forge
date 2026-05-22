@@ -101,13 +101,13 @@
         if (legacy === 'sets') v = 'sets';
         else if (legacy === 'roles') v = 'roles';
       }
-      if (['verdict', 'roles', 'sets', 'slots', 'eff'].includes(v)) return v;
+      if (['verdict', 'roles', 'sets', 'slots', 'eff', 'score'].includes(v)) return v;
     } catch (e) { /* ignore */ }
     return 'verdict';
   }
 
   function syncDashboardUnifiedTabButtons(active) {
-    const keys = ['verdict', 'roles', 'sets', 'slots', 'eff'];
+    const keys = ['verdict', 'roles', 'sets', 'slots', 'eff', 'score'];
     keys.forEach((k) => {
       const btn = document.getElementById(`dash-unified-tab-${k}`);
       if (!btn) return;
@@ -132,7 +132,7 @@
   }
 
   function applyDashboardUnifiedTab(which) {
-    const keys = ['verdict', 'roles', 'sets', 'slots', 'eff'];
+    const keys = ['verdict', 'roles', 'sets', 'slots', 'eff', 'score'];
     const active = keys.includes(which) ? which : 'verdict';
     const host = document.getElementById('dash-unified-panes');
     const next = document.getElementById(`dash-pane-${active}`);
@@ -187,7 +187,7 @@
   function initDashboardUnifiedTabs() {
     const host = document.getElementById('dash-unified-panes');
     const initial = readDashboardUnifiedTab();
-    const keys = ['verdict', 'roles', 'sets', 'slots', 'eff'];
+    const keys = ['verdict', 'roles', 'sets', 'slots', 'eff', 'score'];
     keys.forEach((k) => {
       setDashboardUnifiedPaneState(document.getElementById(`dash-pane-${k}`), k === initial);
     });
@@ -210,7 +210,7 @@
     document.querySelectorAll('.dash-unified-tab[data-dash-uni]').forEach((btn) => {
       btn.addEventListener('click', () => {
         const raw = btn.getAttribute('data-dash-uni') || 'verdict';
-        const w = ['verdict', 'roles', 'sets', 'slots', 'eff'].includes(raw) ? raw : 'verdict';
+        const w = ['verdict', 'roles', 'sets', 'slots', 'eff', 'score'].includes(raw) ? raw : 'verdict';
         applyDashboardUnifiedTab(w);
         try {
           localStorage.setItem(DASH_UNIFIED_DIST_KEY, w);

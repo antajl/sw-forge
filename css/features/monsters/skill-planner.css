@@ -1,0 +1,309 @@
+/* Skill-up planner — Monsters hub sub-tab */
+.skill-planner {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+.skill-planner__lead {
+  margin: 0;
+  color: var(--text-muted, #9aa3b2);
+  font-size: 0.92rem;
+  line-height: 1.45;
+  max-width: 52rem;
+}
+
+.skill-planner__summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+  gap: 0.65rem;
+}
+
+.skill-planner__card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+  background: var(--surface-raised, rgba(255, 255, 255, 0.03));
+}
+
+.skill-planner__card-value {
+  font-size: 1.35rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary, #e8ecf1);
+}
+
+.skill-planner__card-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted, #9aa3b2);
+}
+
+.skill-planner__card-sub {
+  font-size: 0.8rem;
+  color: var(--text-secondary, #b8c0cc);
+}
+
+.skill-planner__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem 1rem;
+}
+
+.skill-planner__filter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.82rem;
+  color: var(--text-muted, #9aa3b2);
+}
+
+.skill-planner__filter select {
+  min-width: 10rem;
+}
+
+.skill-planner__hint {
+  margin: -0.35rem 0 0;
+  font-size: 0.82rem;
+  color: var(--text-muted, #9aa3b2);
+  line-height: 1.4;
+  max-width: 52rem;
+}
+
+.skill-planner__toggle.is-active {
+  border-color: var(--accent, #6eb5ff);
+  color: var(--accent, #6eb5ff);
+}
+
+.skill-planner__tabs {
+  margin: 0;
+}
+
+.skill-planner__tabs .skill-planner__tab {
+  flex: 1 1 0;
+  justify-content: center;
+}
+
+.skill-planner__panel:not(.is-active) {
+  display: none;
+}
+
+.skill-planner__panel.is-active {
+  display: block;
+  min-width: 0;
+}
+
+.skill-planner__card--clickable {
+  cursor: pointer;
+}
+
+.skill-planner__card--clickable:hover {
+  border-color: var(--accent, #6eb5ff);
+}
+
+.skill-planner__th--sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.skill-planner__th--sortable:hover {
+  color: var(--text-primary, #e8ecf1);
+}
+
+.skill-planner__th-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.skill-planner__sort-icon {
+  font-size: 0.65rem;
+  opacity: 0.65;
+}
+
+.skill-planner__th--sorted .skill-planner__sort-icon {
+  opacity: 1;
+  color: var(--accent, #6eb5ff);
+}
+
+.skill-planner__table-wrap {
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+}
+
+.skill-planner__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.skill-planner__table th,
+.skill-planner__table td {
+  padding: 0.5rem 0.65rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.06));
+  vertical-align: middle;
+}
+
+.skill-planner__table th {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted, #9aa3b2);
+  background: var(--surface-raised, rgba(255, 255, 255, 0.02));
+}
+
+.skill-planner__table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.skill-planner__table.swrm-table-zebra tbody tr {
+  background: var(--swrm-row-bg);
+}
+
+.skill-planner__table.swrm-table-zebra tbody tr:nth-child(even) {
+  background: var(--swrm-row-bg-even);
+}
+
+.skill-planner__table.swrm-table-zebra tbody tr:hover td {
+  background: var(--swrm-row-bg-hover);
+}
+
+.skill-planner__monster-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.skill-planner__monster-btn:hover .skill-planner__monster-name {
+  color: var(--accent, #6eb5ff);
+}
+
+.skill-planner__thumb {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.skill-planner__thumb--empty {
+  display: inline-block;
+  background: var(--surface-raised, rgba(255, 255, 255, 0.06));
+}
+
+.skill-planner__skill-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.skill-planner__skill-chip {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  position: relative;
+  cursor: help;
+}
+
+.skill-planner__skill-chip > * {
+  pointer-events: none;
+}
+
+.skill-planner__skill-chip-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.skill-planner__skill-chip-icon--empty,
+.skill-planner__skill-chip-icon.is-broken {
+  display: inline-block;
+  min-width: 28px;
+  min-height: 28px;
+}
+
+.skill-planner__skill-chip-lv {
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted, #9aa3b2);
+}
+
+.skill-planner__skill-chip--cd .skill-planner__skill-chip-lv {
+  color: #ffd49a;
+}
+
+.skill-planner__ups-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.skill-planner__devilmon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
+.skill-planner__cd-skill {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.skill-planner__cd-skill-name {
+  font-size: 0.82rem;
+  color: var(--text-secondary, #b8c0cc);
+}
+
+.skill-planner__stuck-deficit {
+  font-size: 0.78rem;
+  color: var(--text-muted, #9aa3b2);
+}
+
+.skill-planner__loading {
+  margin: 0;
+  padding: 1rem;
+  color: var(--text-muted, #9aa3b2);
+  font-size: 0.9rem;
+}
+
+.skill-planner__stuck-empty,
+.skill-planner__empty {
+  margin: 0;
+  padding: 1rem;
+  color: var(--text-muted, #9aa3b2);
+  font-size: 0.9rem;
+}
+
+.skill-planner__empty[hidden] {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .skill-planner__td--act,
+  .skill-planner__table th:last-child {
+    display: none;
+  }
+}

@@ -57,39 +57,87 @@ html:not(.swrm-has-gsap) .table-kind-tabs__indicator {
   table-layout: fixed;
 }
 
+#artifact-table.swrm-table-zebra tbody tr,
+#relic-table.swrm-table-zebra tbody tr {
+  background: var(--swrm-row-bg);
+}
+
+#artifact-table.swrm-table-zebra tbody tr:nth-child(even),
+#relic-table.swrm-table-zebra tbody tr:nth-child(even) {
+  background: var(--swrm-row-bg-even);
+}
+
+#artifact-table.swrm-table-zebra tbody tr:hover td,
+#relic-table.swrm-table-zebra tbody tr:hover td {
+  background: var(--swrm-row-bg-hover);
+}
+
+#artifact-table .col-grade .grade-tag,
+#relic-table .col-grade .grade-tag {
+  vertical-align: middle;
+}
+
 #artifact-table thead th:nth-child(1) {
   width: 9%;
 }
 #artifact-table thead th:nth-child(2) {
-  width: 11%;
+  width: 14%;
 }
 #artifact-table thead th:nth-child(3) {
-  width: 11%;
+  width: 10%;
 }
 #artifact-table thead th:nth-child(4) {
-  width: 46%;
+  width: 42%;
 }
 #artifact-table thead th:nth-child(5) {
-  width: 23%;
+  width: 22%;
 }
 
 #relic-table thead th:nth-child(1) {
-  width: 11%;
+  width: 14%;
 }
 #relic-table thead th:nth-child(2) {
   width: 7%;
 }
 #relic-table thead th:nth-child(3) {
-  width: 10%;
+  width: 9%;
 }
 #relic-table thead th:nth-child(4) {
-  width: 11%;
+  width: 10%;
 }
 #relic-table thead th:nth-child(5) {
-  width: 46%;
+  width: 44%;
 }
 #relic-table thead th:nth-child(6) {
-  width: 15%;
+  width: 14%;
+}
+
+.gear-table-category {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.gear-table-category__icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  flex-shrink: 0;
+  border-radius: 4px;
+}
+
+.gear-table-category__icon[hidden] {
+  display: none;
+}
+
+.gear-table-category__label {
+  min-width: 0;
+}
+
+#artifact-table td.col-category,
+#relic-table td.col-category {
+  vertical-align: middle;
 }
 
 #artifact-table th,
@@ -97,6 +145,11 @@ html:not(.swrm-has-gsap) .table-kind-tabs__indicator {
 #relic-table th,
 #relic-table td {
   overflow-wrap: anywhere;
+  vertical-align: middle;
+}
+
+#artifact-table td.col-subs-stack,
+#relic-table td.col-text {
   vertical-align: top;
 }
 

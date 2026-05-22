@@ -210,14 +210,16 @@
     const gradeAria = r.isAncient ? ` aria-label="${ancientLbl}, ${escapeAttr(gradeLabel)}"` : '';
     const grade = `<span class="grade-tag ${gradeClass}${r.isAncient ? ' grade-tag--ancient' : ''}"${ancientTipAttr}${gradeAria}><span class="grade-tag__lbl">${gradeLabelHtml}</span></span>`;
 
-    const effNum = getRuneNumericEff(r);
-    const effTier =
-      effNum >= 90 ? 'stat-chip--eff-hi' : effNum >= 75 ? 'stat-chip--eff-mid' : 'stat-chip--eff-lo';
-    const effShown = `${(Math.round(effNum * 10) / 10).toFixed(1)}%`;
-    const scoreNum = typeof computeRuneScore === 'function' ? computeRuneScore(r) : 0;
+    const tScore = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const effDisplay =
+      typeof getRuneDisplayEff === 'function'
+        ? getRuneDisplayEff(r)
+        : Math.min(100, Number(r.eff) || 0);
+    const effShown = `${(Math.round(effDisplay * 10) / 10).toFixed(1)}%`;
+    const scoreNum =
+      typeof computeRuneScore === 'function' ? computeRuneScore(r, tScore) : 0;
     const scoreTier = typeof runeScoreTier === 'function' ? runeScoreTier(scoreNum) : 'stat-chip--score-lo';
     const scoreShown = String(scoreNum);
-    const tScore = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const scoreTitle = escapeAttr(
       typeof runeScoreTooltip === 'function'
         ? runeScoreTooltip(r, tScore)
@@ -262,8 +264,8 @@
       ${subCell(subs[1], false)}
       ${subCell(subs[2], false)}
       ${subCell(subs[3], false)}
-      <td class="col-num td-num"><span class="stat-chip stat-chip--eff ${effTier}">${highlightSearchInPlain(effShown, tableSearchHighlight)}</span></td>
-      <td class="col-num td-num" title="${scoreTitle}"><span class="stat-chip stat-chip--score ${scoreTier}">${highlightSearchInPlain(scoreShown, tableSearchHighlight)}</span></td>
+      <td class="col-num td-num td-num--score" title="${scoreTitle}"><span class="stat-chip stat-chip--score ${scoreTier}">${highlightSearchInPlain(scoreShown, tableSearchHighlight)}</span></td>
+      <td class="col-num td-num td-num--eff"><span class="rune-eff-muted">${highlightSearchInPlain(effShown, tableSearchHighlight)}</span></td>
       <td class="col-text">${roleHtml}</td>
       <td class="col-text">${verdictHtml}</td>
       <td class="target-col-cell col-text"${targetTipAttr}>${targetHtml}</td>

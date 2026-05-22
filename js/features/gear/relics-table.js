@@ -59,6 +59,7 @@
         : null;
     if (!filteredRelics.length) {
       tbody.innerHTML = `<tr><td colspan="6" class="table-empty">${escapeHtml(t.tableGearEmptyRelics || 'No relics')}</td></tr>`;
+      if (typeof renderRelicTableRosterChips === 'function') renderRelicTableRosterChips();
       return;
     }
     const rows = filteredRelics
@@ -78,8 +79,15 @@
             ? window.SWRM.formatRelicWearCount
             : null;
         const wear = fmtWear ? fmtWear(r) : '0/100';
+        const catFn = window.SWRM && window.SWRM.gearCategoryCellHtml;
+        const paths =
+          window.SWRM && typeof window.SWRM.relicLocalIconCandidates === 'function'
+            ? window.SWRM.relicLocalIconCandidates(r)
+            : [];
+        const catCell =
+          typeof catFn === 'function' ? catFn('', category, paths) : escapeHtml(category);
         return `<tr>
-          <td>${escapeHtml(category)}</td>
+          <td class="col-category">${catCell}</td>
           <td class="th-num">+${escapeHtml(String(r.level || 0))}</td>
           <td class="th-num">${escapeHtml(dur)}</td>
           <td>${escapeHtml(main)}</td>
@@ -88,14 +96,12 @@
         </tr>`;
       });
     tbody.innerHTML = rows.join('');
+    if (typeof renderRelicTableRosterChips === 'function') renderRelicTableRosterChips();
   }
 
   function bindRelicTableFilters() {
     if (bindRelicTableFilters._done) return;
     bindRelicTableFilters._done = true;
-
-    document.getElementById('btn-relic-reset-filters')?.addEventListener('click', resetRelicTableFilters);
-    document.getElementById('relic-filters-drawer-reset')?.addEventListener('click', resetRelicTableFilters);
 
     const onRelicFilterChange = () => {
       relicFilterGrade = document.getElementById('filter-relic-grade')?.value || '';
@@ -103,6 +109,16 @@
       updateRelicFilterBadge();
       renderGearTables();
     };
+
+    if (typeof bindFiltersPopover === 'function') {
+      bindFiltersPopover('relic-more-filters-btn', 'relic-filters-popover', {
+        onClose: onRelicFilterChange,
+      });
+    }
+
+    document.getElementById('btn-relic-reset-filters')?.addEventListener('click', resetRelicTableFilters);
+    document.getElementById('relic-filters-drawer-reset')?.addEventListener('click', resetRelicTableFilters);
+
     document.getElementById('filter-relic-grade')?.addEventListener('change', onRelicFilterChange);
     document.getElementById('filter-relic-category')?.addEventListener('change', onRelicFilterChange);
 

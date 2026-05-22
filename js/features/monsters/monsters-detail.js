@@ -46,10 +46,10 @@
     }
     const runesBlock =
       buildRuneSetBonusSummaryHtml(u, t, db) + buildMonsterDetailRunesStrip(u, db, t);
-    const gearBlock =
-      typeof buildMonsterGearSectionHtml === 'function'
-        ? buildMonsterGearSectionHtml(u, t)
-        : '';
+    const loadoutBlock =
+      typeof buildMonsterDetailLoadoutHtml === 'function'
+        ? buildMonsterDetailLoadoutHtml(u, t, runesBlock)
+        : runesBlock;
     const natStars =
       meta && meta.natural_stars != null
         ? meta.natural_stars
@@ -95,13 +95,8 @@
           <h4 class="monsters-detail__section-title">${escapeHtml(t.monstersDetailTabSkills || 'Skills')}</h4>
           ${skillsBlock}
         </section>
-        <section class="monsters-detail__section">
-          <h4 class="monsters-detail__section-title">${escapeHtml(t.monstersDetailRunes || 'Runes')}</h4>
-          ${runesBlock}
-        </section>
-        <section class="monsters-detail__section" data-detail-gear>
-          <h4 class="monsters-detail__section-title">${escapeHtml(t.monstersDetailGear || 'Artifacts & Relics')}</h4>
-          ${gearBlock}
+        <section class="monsters-detail__section monsters-detail__section--loadout" data-detail-loadout>
+          ${loadoutBlock}
         </section>
       </div>`;
 
@@ -117,6 +112,12 @@
     }
     if (typeof bindMonsterDetailSkillTips === 'function') {
       bindMonsterDetailSkillTips(body, skillRows);
+    }
+    if (typeof bindMonsterDetailLoadoutTabs === 'function') {
+      bindMonsterDetailLoadoutTabs(body);
+    }
+    if (typeof bindMonsterRuneFocusPanel === 'function') {
+      bindMonsterRuneFocusPanel(body, u, t);
     }
     if (typeof bindMonsterDetailStatsToggle === 'function') {
       bindMonsterDetailStatsToggle(body);

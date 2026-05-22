@@ -33,6 +33,102 @@ html.swrm-has-gsap .swrm-floating-tip {
   box-shadow: 0 8px 24px color-mix(in srgb, var(--bg) 18%, transparent);
 }
 
+.swrm-floating-tip.swrm-floating-tip--pre {
+  white-space: pre-line;
+}
+
+.swrm-floating-tip.swrm-floating-tip--rich {
+  padding: 12px 14px;
+  max-width: min(26rem, calc(100vw - 24px));
+}
+
+.swrm-skill-tip__name {
+  font-weight: 700;
+  color: var(--text-hi);
+  margin-bottom: 0.35rem;
+}
+
+.swrm-skill-tip__desc {
+  color: var(--text);
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.swrm-skill-tip__cd-base,
+.swrm-skill-tip__foot {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  margin-top: 0.45rem;
+}
+
+.swrm-skill-tip__levels {
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+  margin-top: 0.55rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid color-mix(in srgb, var(--border2) 70%, transparent);
+}
+
+.swrm-skill-tip__level {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  gap: 0.35rem 0.5rem;
+  align-items: baseline;
+  font-size: 0.74rem;
+  color: var(--text-dim);
+}
+
+.swrm-skill-tip__level--done {
+  color: var(--text);
+}
+
+.swrm-skill-tip__lv {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-hi);
+}
+
+.swrm-skill-tip__fx {
+  min-width: 0;
+}
+
+.swrm-skill-tip__cd-tag {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #ffd49a;
+}
+
+.swrm-skill-tip__check {
+  color: var(--ok, #6fcf97);
+  font-weight: 700;
+}
+
+
+[data-swrm-tip],
+[data-swrm-tip-html] {
+  cursor: help;
+}
+
 .stage-metric-card[data-swrm-tip] {
   cursor: help;
+}
+
+/* Skill / metric explainer tips: plain text, same chrome as Dashboard progression cards */
+.swrm-floating-tip.swrm-floating-tip--pre:not(.swrm-floating-tip--rich) {
+  padding: 10px 12px;
+  max-width: min(22rem, calc(100vw - 24px));
+  font-size: 0.78rem;
+  line-height: 1.45;
+  border: 1px solid color-mix(in srgb, var(--border2) 82%, var(--surface));
+  background: linear-gradient(
+    155deg,
+    color-mix(in srgb, var(--surface) 92%, var(--bg3)) 0%,
+    color-mix(in srgb, var(--surface) 94%, var(--bg2)) 55%
+  );
+  box-shadow:
+    0 10px 28px color-mix(in srgb, var(--bg) 55%, transparent),
+    0 1px 2px color-mix(in srgb, var(--text-hi) 5%, transparent);
 }

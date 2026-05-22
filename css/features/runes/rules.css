@@ -1,4 +1,27 @@
 /* ========== Rune Rules tab (structured layout) ========== */
+.rules-expert-banner {
+  margin: 0 0 1.25rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid color-mix(in srgb, var(--warn, #e8b84a) 35%, var(--border2));
+  background: color-mix(in srgb, var(--warn, #e8b84a) 10%, var(--surface));
+}
+
+.rules-expert-banner__title {
+  margin: 0 0 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--text-hi);
+}
+
+.rules-expert-banner__text {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--text-dim);
+}
+
 .rules-tab-shell {
   max-width: var(--app-content-max);
   margin: 0 auto;
@@ -243,7 +266,7 @@ html.swrm-has-gsap .rules-tab-shell > .rules-tab-footer {
   font-family: var(--font-head);
   font-weight: 800;
   font-size: 0.92rem;
-  color: #fff;
+  color: var(--text-hi);
   background: linear-gradient(135deg, var(--accent), var(--accent2));
   box-shadow: 0 2px 12px color-mix(in srgb, var(--accent) 38%, transparent);
 }
@@ -506,7 +529,7 @@ html.swrm-has-gsap .rules-tab-shell > .rules-tab-footer {
 }
 .btn-primary {
   background: linear-gradient(135deg, var(--accent), var(--accent2));
-  color: #fff; border: none; padding: 10px 24px;
+  color: var(--text-hi); border: none; padding: 10px 24px;
   border-radius: var(--radius); font-family: var(--font-head);
   font-weight: 700; font-size: 0.9rem; letter-spacing: 0.06em;
   cursor: pointer; transition: all 0.2s;
@@ -615,7 +638,7 @@ html.swrm-has-gsap .rules-tab-shell > .rules-tab-footer {
 .role-prio-btn.btn-ghost:hover {
   border-color: var(--accent);
   background: color-mix(in srgb, var(--accent) 18%, var(--bg2));
-  color: #fff;
+  color: var(--text-hi);
 }
 .role-prio-btn.btn-ghost:disabled {
   opacity: 0.35;
@@ -624,7 +647,7 @@ html.swrm-has-gsap .rules-tab-shell > .rules-tab-footer {
 .role-nav-item.active .role-prio-btn.btn-ghost {
   border-color: rgba(255, 255, 255, 0.55);
   background: rgba(255, 255, 255, 0.2);
-  color: #fff;
+  color: var(--text-hi);
 }
 
 .role-nav-item:hover {
@@ -634,7 +657,7 @@ html.swrm-has-gsap .rules-tab-shell > .rules-tab-footer {
 
 .role-nav-item.active {
   background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, #000), var(--accent2));
-  color: #ffffff;
+  color: var(--text-hi);
   font-weight: 600;
   border-color: color-mix(in srgb, var(--accent) 70%, var(--border2));
   box-shadow: 0 2px 12px color-mix(in srgb, var(--accent) 28%, transparent);

@@ -151,10 +151,10 @@
   const appLangSelect = document.getElementById('app-language');
   if (appLangSelect) {
     appLangSelect.value = currentLang;
-    appLangSelect.addEventListener('change', () => {
+    appLangSelect.addEventListener('change', async () => {
       let v = appLangSelect.value || 'en';
       if (!['en', 'ru', 'fr'].includes(v)) v = 'en';
-      updateLanguage(v);
+      await updateLanguage(v);
       appLangSelect.value = currentLang;
     });
   }

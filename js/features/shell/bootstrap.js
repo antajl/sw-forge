@@ -15,7 +15,7 @@
   let activeSwexJson = null;
   let processedRunes = [];
   let stage    = 'Mid';
-  let sortKey  = 'eff';
+  let sortKey  = 'score';
   let sortDir  = 'desc';
   /** First paint of Rune Table: this many rows; user can load the rest explicitly. */
   const RUNE_TABLE_PAGE = 500;

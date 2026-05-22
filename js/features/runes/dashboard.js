@@ -16,7 +16,7 @@
     const motionApi = window.SWRM_MOTION;
     if (!motionApi || !motionApi.enabled()) return false;
     let played = false;
-    for (const k of ['verdict', 'roles', 'sets', 'slots', 'eff']) {
+    for (const k of ['verdict', 'roles', 'sets', 'slots', 'eff', 'score']) {
       const pane = document.getElementById(`dash-pane-${k}`);
       if (pane && motionApi.animateDashboardPaneBars(pane)) played = true;
     }
@@ -234,7 +234,9 @@
       setCounts,
       setEff,
       effBuckets,
+      scoreBuckets,
       medianEff,
+      medianScore,
       verdictEff,
     } = agg;
 
@@ -258,6 +260,7 @@
     let roleBarTargets = null;
     let setBarTargets = null;
     let effBarTargets = null;
+    let scoreBarTargets = null;
     let slotShareAnimTargets = null;
 
     const verdictChartEl = document.getElementById('verdict-chart');
@@ -420,6 +423,46 @@
       }
     }
 
+    const scoreEl = document.getElementById('score-chart');
+    const prevScoreHeights =
+      animateCharts && scoreEl && !chartFromZero ? snapshotEffBarHeights(scoreEl) : null;
+    if (scoreEl) scoreEl.innerHTML = '';
+    const maxScoreBucket = Math.max(...(scoreBuckets || []), 1);
+    const medScore = medianScore;
+    const medScoreLine = document.getElementById('score-median-line');
+    const medianScoreTipTpl = tloc.scoreMedianCaption || 'Median Forge Score (filtered): {score}';
+    if (medScore != null && runes.length) {
+      const pos = Math.min(100, Math.max(0, medScore));
+      if (medScoreLine) {
+        medScoreLine.style.left = `calc(${pos}% - 1px)`;
+        medScoreLine.hidden = false;
+        medScoreLine.setAttribute('aria-hidden', 'false');
+        const tip = medianScoreTipTpl.replace('{score}', String(Math.round(medScore)));
+        medScoreLine.setAttribute('aria-label', tip);
+        setSwrmFloatTipTarget(medScoreLine, tip);
+      }
+    } else if (medScoreLine) {
+      medScoreLine.hidden = true;
+      medScoreLine.setAttribute('aria-hidden', 'true');
+      medScoreLine.removeAttribute('aria-label');
+      setSwrmFloatTipTarget(medScoreLine, '');
+    }
+    if (scoreEl && scoreBuckets) {
+      scoreBarTargets = [];
+      for (let i = 0; i < 20; i++) {
+        const h = Math.max(4, (scoreBuckets[i] / maxScoreBucket) * 80);
+        scoreBarTargets[i] = h;
+        const h0 = !animateCharts ? h : chartFromZero ? 0 : prevScoreHeights && prevScoreHeights[i] != null ? prevScoreHeights[i] : 0;
+        const label = `${i * 5}-${i * 5 + 4}`;
+        const cls = i >= 18 ? 'great' : i >= 14 ? 'good' : '';
+        scoreEl.innerHTML += `
+        <div class="eff-bar-wrap" title="${label}: ${scoreBuckets[i]} runes">
+          <div class="eff-bar eff-bar--score ${cls}" style="height:${h0}px"></div>
+          <div class="eff-label">${i * 5}</div>
+        </div>`;
+      }
+    }
+
     if (animateCharts) {
       rafTwice(() => {
         const mv = verdictChartEl
@@ -458,6 +501,16 @@
             bars.forEach((bar, i) => {
               if (effBarTargets[i] == null) return;
               const px = `${effBarTargets[i]}px`;
+              if (useGsap) heightEntries.push({ el: bar, value: px });
+              else bar.style.height = px;
+            });
+          }
+
+          if (scoreEl && scoreBarTargets && scoreBarTargets.length) {
+            const bars = scoreEl.querySelectorAll('.eff-bar');
+            bars.forEach((bar, i) => {
+              if (scoreBarTargets[i] == null) return;
+              const px = `${scoreBarTargets[i]}px`;
               if (useGsap) heightEntries.push({ el: bar, value: px });
               else bar.style.height = px;
             });

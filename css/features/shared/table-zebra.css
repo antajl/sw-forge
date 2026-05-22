@@ -1,0 +1,22 @@
+/* Alternating row backgrounds (Runes table pattern) */
+.swrm-table-zebra {
+  --swrm-row-bg: var(--bg2);
+  --swrm-row-bg-even: color-mix(in srgb, var(--surface) 40%, var(--bg2));
+  --swrm-row-bg-hover: var(--surface);
+}
+
+.swrm-table-zebra tbody tr {
+  background: var(--swrm-row-bg);
+}
+
+.swrm-table-zebra tbody tr:nth-child(even) {
+  background: var(--swrm-row-bg-even);
+}
+
+.swrm-table-zebra tbody tr:hover td {
+  background: var(--swrm-row-bg-hover);
+}
+
+.light-theme .swrm-table-zebra {
+  --swrm-row-bg-even: color-mix(in srgb, var(--surface) 68%, var(--bg2));
+}

@@ -224,7 +224,7 @@
   const MAIN_TAB_IDS = ['runes', 'monsters', 'guide', 'changelog', 'app-settings'];
   const RUNES_SUBTAB_IDS = ['dashboard', 'runetable', 'settings'];
   const RUNES_SUBTAB_STORAGE_KEY = 'swrm_runes_subtab_v1';
-  const MONSTERS_SUBTAB_IDS = ['roster', 'teams'];
+  const MONSTERS_SUBTAB_IDS = ['roster', 'teams', 'planner'];
   const MONSTERS_SUBTAB_STORAGE_KEY = 'swrm_monsters_subtab_v1';
   let runesHubTabsBound = false;
 
@@ -232,7 +232,7 @@
     if (tabId === 'dashboard' || tabId === 'runetable' || tabId === 'settings') {
       return { main: 'runes', sub: tabId };
     }
-    if (tabId === 'roster' || tabId === 'teams') {
+    if (tabId === 'roster' || tabId === 'teams' || tabId === 'planner') {
       return { main: 'monsters', sub: tabId };
     }
     if (MAIN_TAB_IDS.includes(tabId)) return { main: tabId, sub: null };
@@ -266,7 +266,7 @@
     if (h === 'dashboard' || h === 'runetable' || h === 'settings') {
       return { tab: 'runes', runesSubtab: h, monstersSubtab: null, query };
     }
-    if (h === 'roster' || h === 'teams') {
+    if (h === 'roster' || h === 'teams' || h === 'planner') {
       return { tab: 'monsters', runesSubtab: null, monstersSubtab: h, query };
     }
     if (h === 'archive') return { tab: 'guide', runesSubtab: null, monstersSubtab: null, query };

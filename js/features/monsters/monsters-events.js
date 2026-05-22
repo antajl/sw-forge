@@ -112,9 +112,10 @@
     const skillSel = document.getElementById('monsters-filter-skill');
     if (skillSel) {
       const opts = {
-        '': t.monstersSkillAll || 'All skills',
-        maxed: t.monstersSkillMaxed || 'Max skills',
-        'needs-up': t.monstersSkillNeedsUp || 'Needs skill-ups',
+        '': t.monstersFilterSkillAll || t.monstersSkillAll || 'All skills',
+        maxed: t.monstersFilterSkillMaxed || t.monstersSkillMaxed || 'Max skills',
+        'needs-up':
+          t.monstersFilterSkillNeeds || t.monstersSkillNeedsUp || 'Not maxed (skill-ups needed)',
       };
       skillSel.querySelectorAll('option').forEach((opt) => {
         if (opts[opt.value] != null) opt.textContent = opts[opt.value];

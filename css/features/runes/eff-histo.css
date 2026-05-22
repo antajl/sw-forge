@@ -54,6 +54,31 @@
   bottom: 26px;
 }
 
+#dash-pane-score .eff-histo-host--dash-pane {
+  position: relative;
+  margin-top: 0;
+  padding: 14px 14px 16px;
+  border-radius: var(--radius-lg);
+  background: var(--dash-inner-well);
+  border: 1px solid color-mix(in srgb, var(--border2) 82%, var(--accent));
+}
+
+#dash-pane-score .eff-chart {
+  height: 88px;
+}
+
+#dash-pane-score .eff-median-line {
+  bottom: 26px;
+}
+
+.eff-bar--score.great {
+  background: color-mix(in srgb, var(--gold) 72%, var(--accent));
+}
+
+.eff-bar--score.good {
+  background: color-mix(in srgb, var(--accent) 55%, var(--bg3));
+}
+
 .eff-chart {
   display: flex; align-items: flex-end; gap: 3px;
   height: 80px;

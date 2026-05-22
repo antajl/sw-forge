@@ -243,8 +243,8 @@
     if (duration > 0) hideTimer = setTimeout(dismiss, duration);
   }
 
-  const SWRM_FLOAT_TIP_SHOW_MS = 220;
-  const SWRM_FLOAT_TIP_HIDE_MS = 80;
+  const SWRM_FLOAT_TIP_SHOW_MS = 0;
+  const SWRM_FLOAT_TIP_HIDE_MS = 0;
   let swrmFloatTipEl = null;
   let swrmFloatTipShowTimer = null;
   let swrmFloatTipHideTimer = null;
@@ -296,6 +296,8 @@
       tip.hidden = true;
       tip.classList.remove('swrm-floating-tip--in');
       tip.textContent = '';
+      tip.innerHTML = '';
+      tip.classList.remove('swrm-floating-tip--rich', 'swrm-floating-tip--pre');
       swrmFloatTipAnchor = null;
     };
     if (immediate) {
@@ -308,9 +310,38 @@
     swrmFloatTipHideTimer = window.setTimeout(finish, SWRM_FLOAT_TIP_HIDE_MS);
   }
 
-  function showSwrmFloatTip(anchor, text) {
-    const tipText = String(text || '').replace(/\s+/g, ' ').trim();
-    if (!anchor || !tipText) return;
+  function normalizeSwrmTipText(text) {
+    return String(text || '').trim();
+  }
+
+  function findSwrmTipTarget(el) {
+    return el && el.closest ? el.closest('[data-swrm-tip],[data-swrm-tip-html]') : null;
+  }
+
+  function paintSwrmFloatTipNow(anchor, tipHtml, tipText) {
+    const tip = ensureSwrmFloatTipEl();
+    if (tipHtml) {
+      tip.innerHTML = tipHtml;
+      tip.classList.add('swrm-floating-tip--rich');
+      tip.classList.remove('swrm-floating-tip--pre');
+    } else {
+      tip.textContent = tipText;
+      tip.classList.remove('swrm-floating-tip--rich');
+      tip.classList.add('swrm-floating-tip--pre');
+    }
+    tip.hidden = false;
+    requestAnimationFrame(() => {
+      if (swrmFloatTipAnchor !== anchor) return;
+      positionSwrmFloatTip(anchor);
+      const motionApi = window.SWRM_MOTION;
+      if (!motionApi || !motionApi.floatTipIn(tip)) tip.classList.add('swrm-floating-tip--in');
+    });
+  }
+
+  function showSwrmFloatTip(anchor, text, isHtml) {
+    const tipHtml = isHtml ? String(text || '').trim() : '';
+    const tipText = isHtml ? '' : normalizeSwrmTipText(text);
+    if (!anchor || (!tipText && !tipHtml)) return;
     if (swrmFloatTipShowTimer) {
       clearTimeout(swrmFloatTipShowTimer);
       swrmFloatTipShowTimer = null;
@@ -320,59 +351,93 @@
       swrmFloatTipHideTimer = null;
     }
     swrmFloatTipAnchor = anchor;
+    if (SWRM_FLOAT_TIP_SHOW_MS <= 0) {
+      paintSwrmFloatTipNow(anchor, tipHtml, tipText);
+      return;
+    }
     swrmFloatTipShowTimer = window.setTimeout(() => {
       swrmFloatTipShowTimer = null;
       if (swrmFloatTipAnchor !== anchor) return;
-      const tip = ensureSwrmFloatTipEl();
-      tip.textContent = tipText;
-      tip.hidden = false;
-      requestAnimationFrame(() => {
-        positionSwrmFloatTip(anchor);
-        const motionApi = window.SWRM_MOTION;
-        if (!motionApi || !motionApi.floatTipIn(tip)) tip.classList.add('swrm-floating-tip--in');
-      });
+      paintSwrmFloatTipNow(anchor, tipHtml, tipText);
     }, SWRM_FLOAT_TIP_SHOW_MS);
   }
 
-  function setSwrmFloatTipTarget(el, text) {
+  function setSwrmFloatTipTarget(el, text, options) {
     if (!el) return;
-    const tipText = String(text || '').replace(/\s+/g, ' ').trim();
-    if (tipText) {
+    const opts = options && typeof options === 'object' ? options : {};
+    const tipHtml = String(opts.html || '').trim();
+    const tipText = normalizeSwrmTipText(text);
+    if (tipHtml) {
+      el.setAttribute('data-swrm-tip-html', tipHtml);
+      el.removeAttribute('data-swrm-tip');
+      el.removeAttribute('title');
+    } else if (tipText) {
       el.setAttribute('data-swrm-tip', tipText);
+      el.removeAttribute('data-swrm-tip-html');
       el.removeAttribute('title');
     } else {
       el.removeAttribute('data-swrm-tip');
+      el.removeAttribute('data-swrm-tip-html');
       el.removeAttribute('title');
     }
+  }
+
+  function showSwrmFloatTipFromTarget(anchor) {
+    if (!anchor) return;
+    const html = anchor.getAttribute('data-swrm-tip-html');
+    if (html) {
+      showSwrmFloatTip(anchor, html, true);
+      return;
+    }
+    showSwrmFloatTip(anchor, anchor.getAttribute('data-swrm-tip') || '', false);
   }
 
   function initSwrmFloatingTips() {
     if (initSwrmFloatingTips._done) return;
     initSwrmFloatingTips._done = true;
 
-    const onEnter = (e) => {
-      const t = e.target && e.target.closest ? e.target.closest('[data-swrm-tip]') : null;
-      if (!t) return;
-      showSwrmFloatTip(t, t.getAttribute('data-swrm-tip'));
-    };
-    const onLeave = (e) => {
-      const t = e.target && e.target.closest ? e.target.closest('[data-swrm-tip]') : null;
-      if (!t) return;
-      const rel = e.relatedTarget;
-      if (rel && t.contains(rel)) return;
-      if (swrmFloatTipAnchor === t) hideSwrmFloatTip(false);
-    };
     const onFocusIn = (e) => {
-      const t = e.target && e.target.closest ? e.target.closest('[data-swrm-tip]') : null;
-      if (t) showSwrmFloatTip(t, t.getAttribute('data-swrm-tip'));
+      const t =
+        e.target && e.target.closest
+          ? e.target.closest('[data-swrm-tip],[data-swrm-tip-html]')
+          : null;
+      if (t) showSwrmFloatTipFromTarget(t);
     };
     const onFocusOut = (e) => {
-      const t = e.target && e.target.closest ? e.target.closest('[data-swrm-tip]') : null;
+      const t =
+        e.target && e.target.closest
+          ? e.target.closest('[data-swrm-tip],[data-swrm-tip-html]')
+          : null;
       if (t && swrmFloatTipAnchor === t) hideSwrmFloatTip(false);
     };
 
-    document.addEventListener('mouseover', onEnter);
-    document.addEventListener('mouseout', onLeave);
+    const onPointerOver = (e) => {
+      const tip = findSwrmTipTarget(e.target);
+      if (!tip) return;
+      const from = findSwrmTipTarget(e.relatedTarget);
+      if (from === tip) return;
+      if (swrmFloatTipAnchor === tip && swrmFloatTipEl && !swrmFloatTipEl.hidden) {
+        positionSwrmFloatTip(tip);
+        return;
+      }
+      showSwrmFloatTipFromTarget(tip);
+    };
+    const onPointerOut = (e) => {
+      const tip = findSwrmTipTarget(e.target);
+      if (!tip) return;
+      const to = findSwrmTipTarget(e.relatedTarget);
+      if (to === tip) return;
+      const { clientX: x, clientY: y } = e;
+      requestAnimationFrame(() => {
+        if (!tip.isConnected) return;
+        const r = tip.getBoundingClientRect();
+        if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return;
+        if (swrmFloatTipAnchor === tip) hideSwrmFloatTip(true);
+      });
+    };
+
+    document.addEventListener('pointerover', onPointerOver);
+    document.addEventListener('pointerout', onPointerOut);
     document.addEventListener('focusin', onFocusIn);
     document.addEventListener('focusout', onFocusOut);
     window.addEventListener(

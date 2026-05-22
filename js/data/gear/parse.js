@@ -102,12 +102,17 @@
     const pri = effectTuple(raw.pri_effect);
     const secs = (raw.sec_effects || []).map(effectTuple).filter(Boolean);
     const slot = Number(raw.slot) || 0;
-    const rankRaw = raw.rank != null ? raw.rank : raw.natural_rank;
+    const rankRaw =
+      raw.natural_rank != null && raw.natural_rank !== ''
+        ? raw.natural_rank
+        : raw.rank;
     return {
       kind: 'artifact',
       rid: raw.rid,
       occupiedId: raw.occupied_id != null ? Number(raw.occupied_id) : null,
       slot,
+      gearType: Number(raw.type) || 0,
+      attribute: Number(raw.attribute) || 0,
       category: artifactCategory(raw),
       grade: normalizeGradeRank(rankRaw),
       gradeStr: gearGradeStr(rankRaw),

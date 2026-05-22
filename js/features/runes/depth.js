@@ -225,7 +225,9 @@
     const slotEff = { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] };
     const slotMain = { 1: {}, 2: {}, 3: {}, 4: {}, 5: {}, 6: {} };
     const effBuckets = new Array(20).fill(0);
+    const scoreBuckets = new Array(20).fill(0);
     const effVals = [];
+    const scoreVals = [];
     const verdictEff = {};
     for (let i = 0; i < runes.length; i++) {
       const r = runes[i];
@@ -253,8 +255,16 @@
       if (si >= 1 && si <= 6 && !Number.isNaN(si)) slotEff[si].push(eff);
       effVals.push(eff);
       effBuckets[Math.min(19, Math.floor(eff / 5))]++;
+      const sc =
+        typeof computeRuneScore === 'function'
+          ? Number(computeRuneScore(r))
+          : NaN;
+      const scoreNum = Number.isFinite(sc) ? sc : 0;
+      scoreVals.push(scoreNum);
+      scoreBuckets[Math.min(19, Math.floor(scoreNum / 5))]++;
     }
     effVals.sort((a, b) => a - b);
+    scoreVals.sort((a, b) => a - b);
     return {
       counts,
       roleCounts,
@@ -265,7 +275,9 @@
       slotEff,
       slotMain,
       effBuckets,
+      scoreBuckets,
       medianEff: medianSorted(effVals),
+      medianScore: medianSorted(scoreVals),
       verdictEff,
     };
   }
@@ -364,6 +376,20 @@
       lines.push(`    ${i * 5}-${i * 5 + 4}%: ${agg.effBuckets[i]}`);
     }
     if (!anyBucket) lines.push(`    —`);
+
+    lines.push('');
+    lines.push(t.scoreDistribution || 'Forge Score distribution');
+    if (agg.medianScore != null && vis.length) {
+      lines.push(`  ${(t.scoreMedianCaption || '').replace('{score}', String(Math.round(agg.medianScore)))}`);
+    }
+    lines.push(`  ${t.dashboardExportScoreBuckets || 'Histogram (5-point buckets):'}`);
+    let anyScoreBucket = false;
+    for (let i = 0; i < 20; i++) {
+      if (!agg.scoreBuckets || !agg.scoreBuckets[i]) continue;
+      anyScoreBucket = true;
+      lines.push(`    ${i * 5}-${i * 5 + 4}: ${agg.scoreBuckets[i]}`);
+    }
+    if (!anyScoreBucket) lines.push(`    —`);
 
     lines.push('');
     lines.push(`${t.footerVersionLabel || 'Build'}: ${(window.SWRM && window.SWRM.APP_VERSION) || ''}`);

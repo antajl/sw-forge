@@ -101,6 +101,6 @@
 }
 
 .light-theme .th-filter option {
-  background-color: #ffffff;
+  background-color: var(--text-hi);
   color: #2a2a2a;
 }

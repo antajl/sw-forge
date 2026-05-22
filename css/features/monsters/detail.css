@@ -69,6 +69,10 @@
   cursor: help;
 }
 
+.monsters-detail__skill-tile--tip > * {
+  pointer-events: none;
+}
+
 .monsters-detail.monsters-detail--locked {
   border-color: color-mix(in srgb, var(--accent) 50%, var(--border2));
 }
@@ -144,16 +148,12 @@
 
 .monsters-detail__hero .monsters-card__star {
   display: inline-block;
-  font-size: 1.44rem;
+  font-size: 1.55rem;
   margin-left: -0.38em;
-  color: #f0c040;
-  -webkit-text-stroke: 1px #000;
+  color: var(--monster-star-natural);
+  -webkit-text-stroke: var(--monster-star-stroke) #000;
   paint-order: stroke fill;
-  text-shadow:
-    0 0 2px #000,
-    0 1px 0 #000,
-    1px 0 0 #000,
-    -1px 0 0 #000;
+  text-shadow: var(--monster-star-shadow);
 }
 
 .monsters-detail__hero .monsters-card__star:first-child {
@@ -161,7 +161,7 @@
 }
 
 .monsters-detail__hero .monsters-card__stars-row--awakened .monsters-card__star {
-  color: #f06eb0;
+  color: var(--monster-star-awaken);
 }
 
 .monsters-detail__hero .monsters-card__element-img,
@@ -214,16 +214,12 @@
 
 .monsters-detail__portrait-wrap .monsters-card__star {
   display: inline-block;
-  font-size: 1.15rem;
+  font-size: 1.28rem;
   margin-left: -0.32em;
-  color: #f0c040;
-  -webkit-text-stroke: 1px #000;
+  color: var(--monster-star-natural);
+  -webkit-text-stroke: var(--monster-star-stroke) #000;
   paint-order: stroke fill;
-  text-shadow:
-    0 0 2px #000,
-    0 1px 0 #000,
-    1px 0 0 #000,
-    -1px 0 0 #000;
+  text-shadow: var(--monster-star-shadow);
 }
 
 .monsters-detail__portrait-wrap .monsters-card__star:first-child {
@@ -231,7 +227,7 @@
 }
 
 .monsters-detail__portrait-wrap .monsters-card__stars-row--awakened .monsters-card__star {
-  color: #f06eb0;
+  color: var(--monster-star-awaken);
 }
 
 .monsters-detail__portrait-wrap .monsters-card__element-img,
@@ -255,7 +251,7 @@
 
 .monsters-detail__portrait-wrap--fire { border-color: #c44; }
 .monsters-detail__portrait-wrap--water { border-color: #48a; }
-.monsters-detail__portrait-wrap--wind { border-color: #c9a227; }
+.monsters-detail__portrait-wrap--wind { border-color: var(--gold); }
 .monsters-detail__portrait-wrap--light { border-color: #c5cad3; }
 .monsters-detail__portrait-wrap--dark { border-color: #a6a; }
 
@@ -632,18 +628,29 @@
 }
 
 .monsters-detail__stat-row--clickable:hover {
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.monsters-detail__stat-row--clickable:hover .monsters-detail__stat-k {
+  color: var(--accent);
+  text-shadow: 0 0 12px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.monsters-detail__stat-row--clickable:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 1px;
 }
 
 .monsters-detail__stats-grid--total-view .monsters-detail__stats-head[data-stats-head='split'],
-.monsters-detail__stats-grid--total-view [data-col='base'],
-.monsters-detail__stats-grid--total-view [data-col='bonus'] {
+.monsters-detail__stats-grid--total-view .monsters-detail__stat-row--core [data-col='base'],
+.monsters-detail__stats-grid--total-view .monsters-detail__stat-row--core [data-col='bonus'] {
   display: none !important;
 }
 
 .monsters-detail__stats-grid:not(.monsters-detail__stats-grid--total-view)
   .monsters-detail__stats-head[data-stats-head='total'],
-.monsters-detail__stats-grid:not(.monsters-detail__stats-grid--total-view) [data-col='total'] {
+.monsters-detail__stats-grid:not(.monsters-detail__stats-grid--total-view)
+  .monsters-detail__stat-row--core [data-col='total'] {
   display: none !important;
 }
 
@@ -655,7 +662,7 @@
 }
 
 .monsters-detail__stat-num--total-green {
-  color: var(--success, #2d8a5c);
+  color: var(--success, var(--green));
   font-weight: 600;
   text-align: right;
 }
@@ -666,8 +673,21 @@
   text-align: right;
 }
 
+.monsters-detail__stat-row--core [data-col='base'] {
+  grid-column: 2;
+}
+
+.monsters-detail__stat-row--core [data-col='bonus'] {
+  grid-column: 3;
+}
+
+.monsters-detail__stat-row--core [data-col='total'] {
+  grid-column: 2;
+}
+
 .monsters-detail__stat-row--pct .monsters-detail__stat-num--pct-total {
-  grid-column: 2 / 4;
+  grid-column: 2;
+  color: var(--text-hi);
 }
 
 .monsters-detail__stat-formula {
@@ -715,11 +735,11 @@
 }
 
 .monsters-detail__stat-h--bonus {
-  color: color-mix(in srgb, var(--success, #2d8a5c) 85%, var(--text-dim));
+  color: color-mix(in srgb, var(--success, var(--green)) 85%, var(--text-dim));
 }
 
 .monsters-detail__stat-num--rune {
-  color: var(--success, #2d8a5c);
+  color: var(--success, var(--green));
   font-weight: 600;
   text-align: right;
 }
@@ -736,6 +756,7 @@
 }
 
 .monsters-detail__stat-num--base {
+  color: var(--text-hi);
   text-align: right;
 }
 
@@ -786,7 +807,7 @@
   font-weight: 700;
   line-height: 1.2;
   text-align: center;
-  color: #fff;
+  color: var(--text-hi);
   background: rgba(0, 0, 0, 0.72);
   border-radius: 4px;
 }

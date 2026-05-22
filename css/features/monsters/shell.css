@@ -103,7 +103,7 @@
   padding: 10px 12px;
   font-size: 0.72rem;
   line-height: 1.45;
-  color: var(--warn-text, #c9a227);
+  color: var(--warn-text, var(--gold));
   background: var(--warn-bg, rgba(201, 162, 39, 0.12));
   border: 1px solid var(--warn-border, rgba(201, 162, 39, 0.35));
   border-radius: var(--radius);

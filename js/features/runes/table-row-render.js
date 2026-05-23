@@ -1,4 +1,43 @@
 // js/features/runes/table-row-render.js — HTML generation for rune table rows
+  function runeStatBaseName(name) {
+    return String(name || '').replace(/%$/, '').trim();
+  }
+
+  /** Whether the rolled value is shown with a % suffix (incl. RES / ACC). */
+  function runeStatValueIsPercent(typeId, name) {
+    const t = Number(typeId);
+    if (Number.isFinite(t)) {
+      if (t === 1 || t === 3 || t === 5 || t === 8) return false;
+      if (t === 2 || t === 4 || t === 6 || t === 9 || t === 10 || t === 11 || t === 12) return true;
+    }
+    return /%$/.test(String(name || '').trim());
+  }
+
+  function formatRuneStatPlainText(opts) {
+    const o = opts || {};
+    const base = runeStatBaseName(o.name) || '?';
+    const isPct = runeStatValueIsPercent(o.type, o.name);
+    const total =
+      o.total != null && Number.isFinite(Number(o.total))
+        ? Number(o.total)
+        : Number(o.val);
+    const n = Number.isFinite(total) ? total : 0;
+    const valShown = isPct ? `${n}%` : String(n);
+    let out = `${base} ${valShown}`;
+    const grind = Number(o.grind) || 0;
+    if (grind > 0) out += ` [+${grind}]`;
+    return out;
+  }
+
+  function runeVerdictTipText(r) {
+    const reason = runeTargetText(r);
+    const detail = runeEngineDetailTooltip(r);
+    const parts = [];
+    if (reason) parts.push(reason);
+    if (detail && detail !== reason) parts.push(detail);
+    return parts.join('\n\n');
+  }
+
   function highlightSearchInPlain(text, qRaw) {
     const q = (qRaw || '').trim().toLowerCase();
     const t = String(text ?? '');
@@ -171,8 +210,13 @@
     const gemMarked = !!(s.enchanted || (Number(s.gem) || 0) !== 0);
     const total = subLineTotal(s);
     const showGrindSuffix = grindAmt > 0;
-    const valShown = showGrindSuffix ? `${total} [${grindAmt}]` : String(total);
-    const plain = `${s.name} ${valShown}`;
+    const plain = formatRuneStatPlainText({
+      type: s.type,
+      name: s.name,
+      val: s.val,
+      total,
+      grind: grindAmt,
+    });
     const inner = highlightSearchInPlain(plain, tableSearchHighlight);
     const grindCls = showGrindSuffix ? ' table-stat__text--grind' : '';
     const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
@@ -243,25 +287,32 @@
         : tScore.tableScoreHint || '',
     );
     const rCls = roleClass(r.role);
-    const subs   = r.substats.slice(0, 4);
-    const innate = r.innate_name ? `${r.innate_name} ${r.innate_val}` : '';
-    const innateHtml = innate
-      ? tableStatLine(highlightSearchInPlain(innate, tableSearchHighlight))
+    const subs = r.substats.slice(0, 4);
+    const innatePlain = r.innate_name
+      ? formatRuneStatPlainText({
+          type: r.innate_type,
+          name: r.innate_name,
+          val: r.innate_val,
+        })
       : '';
-    const target = runeTargetText(r);
-    const targetHtml = target
-      ? tableStatLine(highlightSearchInPlain(target, tableSearchHighlight))
+    const innateHtml = innatePlain
+      ? tableStatLine(highlightSearchInPlain(innatePlain, tableSearchHighlight))
       : '';
-    const targetTipRaw = runeEngineDetailTooltip(r);
-    const targetTipAttr = targetTipRaw ? ` title="${escapeAttr(targetTipRaw)}"` : '';
-    const mainInner = highlightSearchInPlain(r.mainName, tableSearchHighlight);
+    const mainPlain = formatRuneStatPlainText({
+      type: r.mainType,
+      name: r.mainName,
+      val: r.mainVal,
+    });
+    const mainInner = highlightSearchInPlain(mainPlain, tableSearchHighlight);
     const roleText = roleDisplayName((r.role || '').trim());
     const roleHtml = roleText
       ? `<span class="role-tag ${rCls}">${highlightSearchInPlain(roleText, tableSearchHighlight)}</span>`
       : '';
     const verdictText = (r.verdict || '').trim();
+    const verdictTip = runeVerdictTipText(r);
+    const verdictTipAttr = verdictTip ? ` data-swrm-tip="${escapeAttr(verdictTip)}"` : '';
     const verdictHtml = verdictText
-      ? `<span class="verdict-tag ${verdictText.toLowerCase()}">${highlightSearchInPlain(verdictText, tableSearchHighlight)}</span>`
+      ? `<span class="verdict-tag ${verdictText.toLowerCase()}${verdictTip ? ' verdict-tag--has-tip' : ''}"${verdictTipAttr}>${highlightSearchInPlain(verdictText, tableSearchHighlight)}</span>`
       : '';
     const locText = runeLocationLabel(r, tloc);
     const locHtml = tableStatLine(highlightSearchInPlain(locText, tableSearchHighlight));
@@ -288,6 +339,5 @@
       <td class="col-text">${verdictHtml}</td>
       <td class="col-text">${roleHtml}</td>
       <td class="col-text col-location">${locHtml}</td>
-      <td class="target-col-cell col-text"${targetTipAttr}>${targetHtml}</td>
     </tr>`;
   }

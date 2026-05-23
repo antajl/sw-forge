@@ -16,7 +16,7 @@
     let keep = 0;
     for (const r of list) {
       if (r.isAncient) ancient += 1;
-      if (r.equipped_name != null && Number.isFinite(Number(r.equipped_name))) equipped += 1;
+      if (isRuneEquipped(r)) equipped += 1;
       if (Number(r.level) >= 15) plus15 += 1;
       if (r.verdict === 'Keep') keep += 1;
     }
@@ -53,19 +53,6 @@
       .join('');
   }
 
-  function runeTableTargetColumnVisible() {
-    const verdictFilter = document.getElementById('filter-verdict')?.value || '';
-    if (verdictFilter === 'Grind' || verdictFilter === 'Gem') return true;
-    return !readRuneTableHideTarget() && !document.getElementById('toggle-target-col')?.checked;
-  }
-
-  function applyRuneTableTargetColumnVisibility() {
-    const show = runeTableTargetColumnVisible();
-    document.getElementById('target-col-header')?.classList.toggle('hidden', !show);
-    document.getElementById('target-filter-cell')?.classList.toggle('hidden', !show);
-    document.getElementById('rune-table')?.classList.toggle('show-target', show);
-  }
-
   function buildRuneTableQuerySuffix() {
     const p = new URLSearchParams();
     const q = (document.getElementById('search-box')?.value || '').trim();
@@ -86,7 +73,6 @@
     if (fl) p.set('loc', fl);
     if (sortKey !== 'score') p.set('sort', sortKey);
     if (sortDir !== 'desc') p.set('dir', sortDir);
-    if (document.getElementById('toggle-target-col')?.checked) p.set('target', '0');
     if (document.getElementById('toggle-ancient-only')?.checked) p.set('ancient', '1');
     if (runeTableShowAll) p.set('all', '1');
     const s = p.toString();
@@ -124,14 +110,6 @@
       if (sk && RUNE_TABLE_SORT_KEYS.has(sk)) sortKey = sk;
       const sd = params.get('dir');
       if (sd === 'asc' || sd === 'desc') sortDir = sd;
-      if (params.has('target')) {
-        const hide = params.get('target') === '0';
-        const tgl = document.getElementById('toggle-target-col');
-        if (tgl) tgl.checked = hide;
-        try {
-          localStorage.setItem(RUNE_TABLE_HIDE_TARGET_KEY, hide ? '1' : '0');
-        } catch (e) { /* ignore */ }
-      }
       if (params.has('ancient')) {
         const on = params.get('ancient') === '1';
         const tgl = document.getElementById('toggle-ancient-only');
@@ -140,7 +118,6 @@
       }
       if (params.has('all')) runeTableShowAll = params.get('all') === '1';
       else runeTableShowAll = false;
-      applyRuneTableTargetColumnVisibility();
     } finally {
       runeTableApplyingHash = false;
       applyRuneTableEffHeader();
@@ -167,7 +144,6 @@
       main: document.getElementById('filter-main')?.value || '',
       location: document.getElementById('filter-rune-location')?.value || '',
       ancientOnly: !!document.getElementById('toggle-ancient-only')?.checked,
-      hideTarget: !!document.getElementById('toggle-target-col')?.checked,
     };
   }
 
@@ -181,7 +157,6 @@
     if (f.main) n += 1;
     if (f.location) n += 1;
     if (f.ancientOnly) n += 1;
-    if (f.hideTarget) n += 1;
     return n;
   }
 
@@ -205,7 +180,6 @@
       });
     }
     if (f.ancientOnly) chips.push({ key: 'ancientOnly', label: t.tableAncientOnly || 'Ancient only' });
-    if (f.hideTarget) chips.push({ key: 'hideTarget', label: t.toggleTargetCol || 'Hide Reason' });
     return chips;
   }
 
@@ -236,15 +210,6 @@
         const tgl = document.getElementById('toggle-ancient-only');
         if (tgl) tgl.checked = false;
         localStorage.setItem(RUNE_TABLE_ANCIENT_ONLY_KEY, '0');
-        break;
-      }
-      case 'hideTarget': {
-        const tgl = document.getElementById('toggle-target-col');
-        if (tgl) tgl.checked = false;
-        try {
-          localStorage.setItem(RUNE_TABLE_HIDE_TARGET_KEY, '0');
-        } catch (e) { /* ignore */ }
-        applyRuneTableTargetColumnVisibility();
         break;
       }
       default:
@@ -318,15 +283,9 @@
     if (fm) fm.value = '';
     const floc = document.getElementById('filter-rune-location');
     if (floc) floc.value = '';
-    const tgl = document.getElementById('toggle-target-col');
-    if (tgl) tgl.checked = false;
-    try {
-      localStorage.setItem(RUNE_TABLE_HIDE_TARGET_KEY, '0');
-    } catch (e) { /* ignore */ }
     const tglAncient = document.getElementById('toggle-ancient-only');
     if (tglAncient) tglAncient.checked = false;
     localStorage.setItem(RUNE_TABLE_ANCIENT_ONLY_KEY, '0');
-    applyRuneTableTargetColumnVisibility();
     sortKey = 'score';
     sortDir = 'desc';
     runeTableShowAll = false;
@@ -429,7 +388,6 @@
       }
     }
 
-    applyRuneTableTargetColumnVisibility();
     tbody.innerHTML = rows.map(r => runeRow(r)).join('');
     setupRuneTableMoreUi(total, rows.length);
     updateRuneTableFilterIndicators();
@@ -450,15 +408,9 @@
         const el = document.getElementById(id);
         if (el) el.value = '';
       });
-      const tgl = document.getElementById('toggle-target-col');
-      if (tgl) tgl.checked = false;
-      try {
-        localStorage.setItem(RUNE_TABLE_HIDE_TARGET_KEY, '0');
-      } catch (e) { /* ignore */ }
       const tglAncient = document.getElementById('toggle-ancient-only');
       if (tglAncient) tglAncient.checked = false;
       localStorage.setItem(RUNE_TABLE_ANCIENT_ONLY_KEY, '0');
-      applyRuneTableTargetColumnVisibility();
       onFilter();
     });
     document.getElementById('rune-table-filter-chips')?.addEventListener('click', (e) => {

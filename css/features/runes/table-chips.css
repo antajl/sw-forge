@@ -3,9 +3,9 @@
 .badge.badge-hero { --chip-tint: var(--tint-hero); }
 
 /* Legacy eff classes (e.g. if reused outside table chips) */
-.eff-hi  { color: var(--tint-eff-hi); font-family: var(--font-mono); }
-.eff-mid { color: var(--tint-eff-mid); font-family: var(--font-mono); }
-.eff-lo  { color: var(--text-dim); font-family: var(--font-mono); }
+.eff-hi  { color: var(--tint-eff-hi); font-family: var(--font-ui); }
+.eff-mid { color: var(--tint-eff-mid); font-family: var(--font-ui); }
+.eff-lo  { color: var(--text-dim); font-family: var(--font-ui); }
 
 /* ========== Rune table: plain stat lines (no chip) ========== */
 #rune-table .table-stat {
@@ -15,7 +15,7 @@
   padding: 0;
   border: none;
   background: none;
-  font-family: var(--font-mono);
+  font-family: var(--font-ui);
   font-size: 0.75rem;
   font-weight: 400;
   color: var(--text-hi);
@@ -74,7 +74,7 @@
 .role-tag,
 .verdict-tag {
   justify-content: center;
-  font-family: var(--font-mono);
+  font-family: var(--font-ui);
   font-size: 0.74rem;
   font-weight: inherit;
   letter-spacing: 0.02em;
@@ -119,9 +119,15 @@
 .verdict-tag.upgrade { --chip-tint: var(--tint-upgrade); }
 .verdict-tag.gem { --chip-tint: var(--tint-gem); }
 
+.verdict-tag.verdict-tag--has-tip {
+  cursor: help;
+  text-decoration: underline dotted color-mix(in srgb, currentColor 45%, transparent);
+  text-underline-offset: 2px;
+}
+
 /* Eff%: chip formula; hi/mid a bit stronger */
 .stat-chip.stat-chip--eff {
-  font-family: var(--font-mono);
+  font-family: var(--font-ui);
   font-size: 0.75rem;
   font-weight: inherit;
   font-variant-numeric: tabular-nums;
@@ -148,7 +154,7 @@
 }
 
 .stat-chip.stat-chip--score {
-  font-family: var(--font-mono);
+  font-family: var(--font-ui);
   font-size: 0.82rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -181,7 +187,7 @@
 #rune-table .rune-god-potential-hint {
   display: block;
   margin-top: 2px;
-  font-family: var(--font-mono);
+  font-family: var(--font-ui);
   font-size: 0.65rem;
   font-weight: 500;
   letter-spacing: 0.02em;
@@ -191,7 +197,7 @@
 }
 
 #rune-table .rune-eff-muted {
-  font-family: var(--font-mono);
+  font-family: var(--font-ui);
   font-size: 0.68rem;
   font-weight: 400;
   font-variant-numeric: tabular-nums;

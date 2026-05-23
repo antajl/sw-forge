@@ -33,6 +33,14 @@
   text-decoration: underline;
 }
 
+.rune-table-verdict-hint {
+  flex: 1 1 100%;
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: var(--text-dim);
+}
+
 #tab-runetable .table-toolbar .monsters-toolbar-btn--filters {
   min-height: 32px;
 }

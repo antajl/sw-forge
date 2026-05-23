@@ -387,10 +387,8 @@
     if (btnResetTbl) btnResetTbl.textContent = t.tableResetFilters || 'Reset filters';
     const lblAncientOnly = document.getElementById('lbl-toggle-ancient-only');
     if (lblAncientOnly) lblAncientOnly.textContent = t.tableAncientOnly || 'Ancient only';
-    const lblTgt = document.getElementById('lbl-toggle-target');
-    if (lblTgt) lblTgt.textContent = t.toggleTargetCol || 'Hide Reason';
-    const thTgt = document.getElementById('target-col-header');
-    if (thTgt) thTgt.textContent = t.targetHeading || 'Reason';
+    const lblVerdictHint = document.getElementById('lbl-rune-verdict-hint');
+    if (lblVerdictHint) lblVerdictHint.textContent = t.runeTableVerdictHint || 'Hover a Verdict tag for details.';
 
     const filterGrade = document.getElementById('filter-grade');
     if (filterGrade) {

@@ -6450,6 +6450,14 @@ html.swrm-has-gsap .swrm-floating-tip {
   text-decoration: underline;
 }
 
+.rune-table-verdict-hint {
+  flex: 1 1 100%;
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: var(--text-dim);
+}
+
 #tab-runetable .table-toolbar .monsters-toolbar-btn--filters {
   min-height: 32px;
 }
@@ -6996,9 +7004,9 @@ table.show-target td.target-col-cell .table-stat__text {
 .badge.badge-hero { --chip-tint: var(--tint-hero); }
 
 /* Legacy eff classes (e.g. if reused outside table chips) */
-.eff-hi  { color: var(--tint-eff-hi); font-family: var(--font-mono); }
-.eff-mid { color: var(--tint-eff-mid); font-family: var(--font-mono); }
-.eff-lo  { color: var(--text-dim); font-family: var(--font-mono); }
+.eff-hi  { color: var(--tint-eff-hi); font-family: var(--font-ui); }
+.eff-mid { color: var(--tint-eff-mid); font-family: var(--font-ui); }
+.eff-lo  { color: var(--text-dim); font-family: var(--font-ui); }
 
 /* ========== Rune table: plain stat lines (no chip) ========== */
 #rune-table .table-stat {
@@ -7008,7 +7016,7 @@ table.show-target td.target-col-cell .table-stat__text {
   padding: 0;
   border: none;
   background: none;
-  font-family: var(--font-mono);
+  font-family: var(--font-ui);
   font-size: 0.75rem;
   font-weight: 400;
   color: var(--text-hi);
@@ -7067,7 +7075,7 @@ table.show-target td.target-col-cell .table-stat__text {
 .role-tag,
 .verdict-tag {
   justify-content: center;
-  font-family: var(--font-mono);
+  font-family: var(--font-ui);
   font-size: 0.74rem;
   font-weight: inherit;
   letter-spacing: 0.02em;
@@ -7112,9 +7120,15 @@ table.show-target td.target-col-cell .table-stat__text {
 .verdict-tag.upgrade { --chip-tint: var(--tint-upgrade); }
 .verdict-tag.gem { --chip-tint: var(--tint-gem); }
 
+.verdict-tag.verdict-tag--has-tip {
+  cursor: help;
+  text-decoration: underline dotted color-mix(in srgb, currentColor 45%, transparent);
+  text-underline-offset: 2px;
+}
+
 /* Eff%: chip formula; hi/mid a bit stronger */
 .stat-chip.stat-chip--eff {
-  font-family: var(--font-mono);
+  font-family: var(--font-ui);
   font-size: 0.75rem;
   font-weight: inherit;
   font-variant-numeric: tabular-nums;
@@ -7141,7 +7155,7 @@ table.show-target td.target-col-cell .table-stat__text {
 }
 
 .stat-chip.stat-chip--score {
-  font-family: var(--font-mono);
+  font-family: var(--font-ui);
   font-size: 0.82rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -7174,7 +7188,7 @@ table.show-target td.target-col-cell .table-stat__text {
 #rune-table .rune-god-potential-hint {
   display: block;
   margin-top: 2px;
-  font-family: var(--font-mono);
+  font-family: var(--font-ui);
   font-size: 0.65rem;
   font-weight: 500;
   letter-spacing: 0.02em;
@@ -7184,7 +7198,7 @@ table.show-target td.target-col-cell .table-stat__text {
 }
 
 #rune-table .rune-eff-muted {
-  font-family: var(--font-mono);
+  font-family: var(--font-ui);
   font-size: 0.68rem;
   font-weight: 400;
   font-variant-numeric: tabular-nums;
@@ -7789,6 +7803,10 @@ html:not(.swrm-has-gsap) .table-kind-tabs__indicator {
 
 .team-card__slots--n6 {
   max-width: 100%;
+}
+
+.team-card__slot[data-unit-id] {
+  cursor: pointer;
 }
 
 .team-card__slot {

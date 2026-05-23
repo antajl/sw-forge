@@ -42,9 +42,6 @@
       if (v === '1') ancient.checked = true;
       else if (v === '0') ancient.checked = false;
     }
-    const hideTarget = document.getElementById('toggle-target-col');
-    if (hideTarget) hideTarget.checked = readRuneTableHideTarget();
-    applyRuneTableTargetColumnVisibility();
   }
 
   function sortRunesInPlace(arr, key, dir) {
@@ -77,14 +74,6 @@
       if (av > bv) return dir === 'asc' ? 1 : -1;
       return 0;
     });
-  }
-
-  function readRuneTableHideTarget() {
-    try {
-      return localStorage.getItem(RUNE_TABLE_HIDE_TARGET_KEY) === '1';
-    } catch (e) {
-      return false;
-    }
   }
 
   function setupRuneTableMoreUi(total, rendered) {
@@ -129,13 +118,12 @@
     const rows = filteredRunes;
     if (!rows.length) return;
     const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-    const includeTarget = document.getElementById('rune-table')?.classList.contains('show-target');
     const headers = [
       'Grade',
       tloc.csvHeaderAncient || 'Ancient',
       'Set', 'Lvl', 'Slot', 'Main', 'Innate', 'Sub1', 'Sub2', 'Sub3', 'Sub4', 'Score', 'Eff%', 'Role', 'Verdict',
+      tloc.csvHeaderReason || 'Reason',
     ];
-    if (includeTarget) headers.push(tloc.targetHeading || 'Reason');
     function cellPart(s) {
       const raw = String(s ?? '');
       if (/[,"\n\r]/.test(raw)) return `"${raw.replace(/"/g, '""')}"`;
@@ -143,11 +131,14 @@
     }
     function subcell(sub) {
       if (!sub || !sub.name) return '';
-      const g = Number(sub.grind) || 0;
       const gem = !!(sub.enchanted || (Number(sub.gem) || 0) !== 0);
-      const total = subLineTotal(sub);
-      let out = `${sub.name} ${total}`;
-      if (g > 0) out += ` [${g}]`;
+      let out = formatRuneStatPlainText({
+        type: sub.type,
+        name: sub.name,
+        val: sub.val,
+        total: subLineTotal(sub),
+        grind: sub.grind,
+      });
       if (gem) out += ' (gem)';
       return out;
     }
@@ -160,8 +151,14 @@
         r.setName,
         r.level,
         r.slot,
-        r.mainName,
-        r.innate_name ? `${r.innate_name} ${r.innate_val}` : '',
+        formatRuneStatPlainText({ type: r.mainType, name: r.mainName, val: r.mainVal }),
+        r.innate_name
+          ? formatRuneStatPlainText({
+              type: r.innate_type,
+              name: r.innate_name,
+              val: r.innate_val,
+            })
+          : '',
         subcell(subs[0]),
         subcell(subs[1]),
         subcell(subs[2]),
@@ -170,8 +167,8 @@
         `${getRuneNumericEff(r).toFixed(1)}`,
         roleDisplayName(r.role || ''),
         r.verdict || '',
+        runeVerdictTipText(r) || runeTargetText(r) || '',
       ];
-      if (includeTarget) row.push(runeTargetText(r));
       lines.push(row.map(cellPart).join(','));
     });
     const csv = `\uFEFF${lines.join('\r\n')}`;
@@ -202,15 +199,6 @@
 
   document.getElementById('btn-rune-table-show-all')?.addEventListener('click', () => {
     runeTableShowAll = true;
-    applyFiltersAndSort(getVisibleRunes(), { preserveTableExpansion: true });
-  });
-
-  // Toggle Target column visibility
-  document.getElementById('toggle-target-col')?.addEventListener('change', (e) => {
-    try {
-      localStorage.setItem(RUNE_TABLE_HIDE_TARGET_KEY, e.target.checked ? '1' : '0');
-    } catch (err) { /* ignore */ }
-    updateRuneTableFilterIndicators();
     applyFiltersAndSort(getVisibleRunes(), { preserveTableExpansion: true });
   });
 

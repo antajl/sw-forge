@@ -29,9 +29,42 @@
     return '';
   }
 
+  function enrichTeamsUnitRow(u, db, skillDb) {
+    const meta = db ? db.lookupMonster(u.masterId) : null;
+    const skillPack = skillDb
+      ? skillDb.enrichUnitSkills(u.skills)
+      : { skills: [], skillUpsNeeded: 0, skillsMaxed: true, skillsKnown: false };
+    const tags =
+      typeof unitMetaFor === 'function' ? unitMetaFor(u.unitId) : { favorite: false, food: false, storageMark: false, tags: [] };
+    return {
+      ...u,
+      meta,
+      metaElement: meta && meta.element ? meta.element : '',
+      displayName: db ? db.monsterDisplayName(u.masterId) : `#${u.masterId}`,
+      imageFilename: meta && meta.image_filename ? meta.image_filename : '',
+      bestiarySlug: meta && meta.bestiary_slug ? meta.bestiary_slug : '',
+      favorite: tags.favorite,
+      food: tags.food,
+      storageMark: tags.storageMark,
+      customTags: tags.tags,
+      metaArchetype:
+        typeof normalizeArchetype === 'function'
+          ? normalizeArchetype(
+              (meta && meta.archetype) ||
+                (db && typeof db.monsterArchetype === 'function' ? db.monsterArchetype(u.masterId) : ''),
+            )
+          : '',
+      skillRows: skillPack.skills,
+      skillUpsNeeded: skillPack.skillUpsNeeded,
+      skillsMaxed: skillPack.skillsMaxed,
+      skillsKnown: skillPack.skillsKnown,
+    };
+  }
+
   async function ensureTeamsUnitCache() {
     if (!allUnits || !allUnits.length) return;
     const db = window.SWRM_MONSTER_DB;
+    const skillDb = window.SWRM_SKILL_DB;
     if (db && typeof db.loadMonsterIndex === 'function') {
       try {
         await db.loadMonsterIndex();
@@ -40,17 +73,13 @@
         }
       } catch (e) { /* ignore */ }
     }
+    if (skillDb && typeof skillDb.loadIndex === 'function') {
+      try {
+        await skillDb.loadIndex();
+      } catch (e) { /* ignore */ }
+    }
     if (monstersEnrichedCache.length) return;
-    monstersEnrichedCache = allUnits.map((u) => {
-      const meta = db ? db.lookupMonster(u.masterId) : null;
-      return {
-        ...u,
-        meta,
-        metaElement: meta && meta.element ? meta.element : '',
-        displayName: db ? db.monsterDisplayName(u.masterId) : `#${u.masterId}`,
-        imageFilename: meta && meta.image_filename ? meta.image_filename : '',
-      };
-    });
+    monstersEnrichedCache = allUnits.map((u) => enrichTeamsUnitRow(u, db, skillDb));
   }
 
   function bindTeamsCardPortraits(root) {
@@ -59,6 +88,30 @@
     host.querySelectorAll('img.team-card__portrait[data-img-file]').forEach((img) => {
       const file = img.getAttribute('data-img-file');
       if (file) bindMonsterPortrait(img, file);
+    });
+  }
+
+  function bindTeamsSlotDetailHover(root) {
+    const host = root || document.getElementById('teams-card-grid');
+    if (!host || typeof showMonsterDetailForCard !== 'function') return;
+    host.querySelectorAll('.team-card__slot[data-unit-id]').forEach((slot) => {
+      const uid = slot.getAttribute('data-unit-id');
+      if (!uid || slot.dataset.teamsDetailHover === '1') return;
+      slot.dataset.teamsDetailHover = '1';
+      slot.addEventListener('mouseenter', () => {
+        if (monstersDetailPinnedUnitId) return;
+        showMonsterDetailForCard(uid, slot);
+      });
+      slot.addEventListener('mouseleave', () => {
+        if (typeof scheduleMonstersDetailHide === 'function') scheduleMonstersDetailHide();
+      });
+      slot.addEventListener('focus', () => {
+        if (monstersDetailPinnedUnitId) return;
+        showMonsterDetailForCard(uid, slot);
+      });
+      slot.addEventListener('blur', () => {
+        if (typeof scheduleMonstersDetailHide === 'function') scheduleMonstersDetailHide();
+      });
     });
   }
 
@@ -179,7 +232,8 @@
           ? `<img class="team-card__portrait" data-img-file="${escapeAttr(imgFile)}" alt="" width="52" height="52" loading="lazy" decoding="async" />`
           : '<span class="team-card__slot-empty">+</span>';
         const tip = uid ? escapeHtml(teamUnitLabel(uid)) : '';
-        return `<div class="team-card__slot${leader ? ' team-card__slot--leader' : ''}${missing ? ' team-card__slot--missing' : ''}" data-slot-idx="${i}" title="${tip}">
+        const unitAttr = uid ? ` data-unit-id="${escapeHtml(String(uid))}"` : '';
+        return `<div class="team-card__slot${leader ? ' team-card__slot--leader' : ''}${missing ? ' team-card__slot--missing' : ''}" data-slot-idx="${i}"${unitAttr} title="${tip}" tabindex="${uid ? '0' : '-1'}">
           ${leader ? '<span class="team-card__crown" aria-hidden="true">👑</span>' : ''}
           ${inner}
           ${spdBadge}
@@ -411,6 +465,7 @@
     await ensureTeamsUnitCache();
     renderTeamsCardGrid(set, state, t);
     bindTeamsCardPortraits(document.getElementById('teams-card-grid'));
+    bindTeamsSlotDetailHover(document.getElementById('teams-card-grid'));
 
     shell.querySelectorAll('[data-teams-readonly-hide]').forEach((el) => {
       el.hidden = ro;
@@ -438,14 +493,13 @@
       } catch (e) { /* ignore */ }
     }
     if (!monstersEnrichedCache.length && allUnits.length) {
-      monstersEnrichedCache = allUnits.map((u) => {
-        const meta = db ? db.lookupMonster(u.masterId) : null;
-        return {
-          ...u,
-          displayName: db ? db.monsterDisplayName(u.masterId) : `#${u.masterId}`,
-          imageFilename: meta && meta.image_filename ? meta.image_filename : '',
-        };
-      });
+      const skillDb = window.SWRM_SKILL_DB;
+      if (skillDb && typeof skillDb.loadIndex === 'function') {
+        try {
+          await skillDb.loadIndex();
+        } catch (e) { /* ignore */ }
+      }
+      monstersEnrichedCache = allUnits.map((u) => enrichTeamsUnitRow(u, db, skillDb));
     }
 
     const blocks = (payload.sets || [])
@@ -471,6 +525,7 @@
       ${blocks || `<p class="teams-share-view__empty">${escapeHtml(t.teamsShareViewEmpty || 'No public teams in this profile.')}</p>`}
     </div>`;
     bindTeamsCardPortraits(view);
+    bindTeamsSlotDetailHover(view);
   }
 
   function bindTeamsUi() {

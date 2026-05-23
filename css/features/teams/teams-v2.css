@@ -179,6 +179,10 @@
   max-width: 100%;
 }
 
+.team-card__slot[data-unit-id] {
+  cursor: pointer;
+}
+
 .team-card__slot {
   position: relative;
   width: 56px;

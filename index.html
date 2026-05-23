@@ -521,10 +521,6 @@
                                 <input type="checkbox" id="toggle-ancient-only" />
                                 <span id="lbl-toggle-ancient-only">Ancient only</span>
                               </label>
-                              <label class="toggle-target">
-                                <input type="checkbox" id="toggle-target-col" />
-                                <span id="lbl-toggle-target">Hide Reason</span>
-                              </label>
                             </div>
                           </div>
                           <footer class="filters-popover__foot">
@@ -678,6 +674,7 @@
           </div>
           <div id="rune-table-roster-meta" class="monsters-roster-meta rune-table-roster-meta" data-gear-roster-meta="runes">
             <div class="monsters-chips monsters-chips--stats" id="rune-table-roster-chips" aria-live="polite"></div>
+            <p class="rune-table-verdict-hint" id="lbl-rune-verdict-hint">Hover a Verdict tag for details.</p>
           </div>
           <div id="rune-table-active-filters" class="rune-table-active-filters" hidden>
             <div id="rune-table-filter-chips" class="rune-table-filter-chips"></div>
@@ -702,7 +699,6 @@
                     <th data-sort="verdict" class="col-text" data-filter-key="verdict"><span class="th-text" id="lbl-th-verdict">Verdict</span></th>
                     <th data-sort="role" class="col-text" data-filter-key="role"><span class="th-text" id="lbl-th-role">Role</span></th>
                     <th class="col-text col-location" data-filter-key="location"><span class="th-text" id="lbl-th-rune-location">Location</span></th>
-                    <th id="target-col-header" class="hidden col-text">Reason</th>
                   </tr>
                 </thead>
                 <tbody id="rune-tbody"></tbody>

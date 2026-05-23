@@ -924,10 +924,8 @@
     if (btnResetTbl) btnResetTbl.textContent = t.tableResetFilters || 'Reset filters';
     const lblAncientOnly = document.getElementById('lbl-toggle-ancient-only');
     if (lblAncientOnly) lblAncientOnly.textContent = t.tableAncientOnly || 'Ancient only';
-    const lblTgt = document.getElementById('lbl-toggle-target');
-    if (lblTgt) lblTgt.textContent = t.toggleTargetCol || 'Hide Reason';
-    const thTgt = document.getElementById('target-col-header');
-    if (thTgt) thTgt.textContent = t.targetHeading || 'Reason';
+    const lblVerdictHint = document.getElementById('lbl-rune-verdict-hint');
+    if (lblVerdictHint) lblVerdictHint.textContent = t.runeTableVerdictHint || 'Hover a Verdict tag for details.';
 
     const filterGrade = document.getElementById('filter-grade');
     if (filterGrade) {
@@ -5066,6 +5064,45 @@
     S.FORGE_SCORE_ARCHETYPES = ARCHETYPES;
   }
 
+  function runeStatBaseName(name) {
+    return String(name || '').replace(/%$/, '').trim();
+  }
+
+  /** Whether the rolled value is shown with a % suffix (incl. RES / ACC). */
+  function runeStatValueIsPercent(typeId, name) {
+    const t = Number(typeId);
+    if (Number.isFinite(t)) {
+      if (t === 1 || t === 3 || t === 5 || t === 8) return false;
+      if (t === 2 || t === 4 || t === 6 || t === 9 || t === 10 || t === 11 || t === 12) return true;
+    }
+    return /%$/.test(String(name || '').trim());
+  }
+
+  function formatRuneStatPlainText(opts) {
+    const o = opts || {};
+    const base = runeStatBaseName(o.name) || '?';
+    const isPct = runeStatValueIsPercent(o.type, o.name);
+    const total =
+      o.total != null && Number.isFinite(Number(o.total))
+        ? Number(o.total)
+        : Number(o.val);
+    const n = Number.isFinite(total) ? total : 0;
+    const valShown = isPct ? `${n}%` : String(n);
+    let out = `${base} ${valShown}`;
+    const grind = Number(o.grind) || 0;
+    if (grind > 0) out += ` [+${grind}]`;
+    return out;
+  }
+
+  function runeVerdictTipText(r) {
+    const reason = runeTargetText(r);
+    const detail = runeEngineDetailTooltip(r);
+    const parts = [];
+    if (reason) parts.push(reason);
+    if (detail && detail !== reason) parts.push(detail);
+    return parts.join('\n\n');
+  }
+
   function highlightSearchInPlain(text, qRaw) {
     const q = (qRaw || '').trim().toLowerCase();
     const t = String(text ?? '');
@@ -5238,8 +5275,13 @@
     const gemMarked = !!(s.enchanted || (Number(s.gem) || 0) !== 0);
     const total = subLineTotal(s);
     const showGrindSuffix = grindAmt > 0;
-    const valShown = showGrindSuffix ? `${total} [${grindAmt}]` : String(total);
-    const plain = `${s.name} ${valShown}`;
+    const plain = formatRuneStatPlainText({
+      type: s.type,
+      name: s.name,
+      val: s.val,
+      total,
+      grind: grindAmt,
+    });
     const inner = highlightSearchInPlain(plain, tableSearchHighlight);
     const grindCls = showGrindSuffix ? ' table-stat__text--grind' : '';
     const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
@@ -5310,25 +5352,32 @@
         : tScore.tableScoreHint || '',
     );
     const rCls = roleClass(r.role);
-    const subs   = r.substats.slice(0, 4);
-    const innate = r.innate_name ? `${r.innate_name} ${r.innate_val}` : '';
-    const innateHtml = innate
-      ? tableStatLine(highlightSearchInPlain(innate, tableSearchHighlight))
+    const subs = r.substats.slice(0, 4);
+    const innatePlain = r.innate_name
+      ? formatRuneStatPlainText({
+          type: r.innate_type,
+          name: r.innate_name,
+          val: r.innate_val,
+        })
       : '';
-    const target = runeTargetText(r);
-    const targetHtml = target
-      ? tableStatLine(highlightSearchInPlain(target, tableSearchHighlight))
+    const innateHtml = innatePlain
+      ? tableStatLine(highlightSearchInPlain(innatePlain, tableSearchHighlight))
       : '';
-    const targetTipRaw = runeEngineDetailTooltip(r);
-    const targetTipAttr = targetTipRaw ? ` title="${escapeAttr(targetTipRaw)}"` : '';
-    const mainInner = highlightSearchInPlain(r.mainName, tableSearchHighlight);
+    const mainPlain = formatRuneStatPlainText({
+      type: r.mainType,
+      name: r.mainName,
+      val: r.mainVal,
+    });
+    const mainInner = highlightSearchInPlain(mainPlain, tableSearchHighlight);
     const roleText = roleDisplayName((r.role || '').trim());
     const roleHtml = roleText
       ? `<span class="role-tag ${rCls}">${highlightSearchInPlain(roleText, tableSearchHighlight)}</span>`
       : '';
     const verdictText = (r.verdict || '').trim();
+    const verdictTip = runeVerdictTipText(r);
+    const verdictTipAttr = verdictTip ? ` data-swrm-tip="${escapeAttr(verdictTip)}"` : '';
     const verdictHtml = verdictText
-      ? `<span class="verdict-tag ${verdictText.toLowerCase()}">${highlightSearchInPlain(verdictText, tableSearchHighlight)}</span>`
+      ? `<span class="verdict-tag ${verdictText.toLowerCase()}${verdictTip ? ' verdict-tag--has-tip' : ''}"${verdictTipAttr}>${highlightSearchInPlain(verdictText, tableSearchHighlight)}</span>`
       : '';
     const locText = runeLocationLabel(r, tloc);
     const locHtml = tableStatLine(highlightSearchInPlain(locText, tableSearchHighlight));
@@ -5355,7 +5404,6 @@
       <td class="col-text">${verdictHtml}</td>
       <td class="col-text">${roleHtml}</td>
       <td class="col-text col-location">${locHtml}</td>
-      <td class="target-col-cell col-text"${targetTipAttr}>${targetHtml}</td>
     </tr>`;
   }
 
@@ -5376,7 +5424,7 @@
     let keep = 0;
     for (const r of list) {
       if (r.isAncient) ancient += 1;
-      if (r.equipped_name != null && Number.isFinite(Number(r.equipped_name))) equipped += 1;
+      if (isRuneEquipped(r)) equipped += 1;
       if (Number(r.level) >= 15) plus15 += 1;
       if (r.verdict === 'Keep') keep += 1;
     }
@@ -5413,19 +5461,6 @@
       .join('');
   }
 
-  function runeTableTargetColumnVisible() {
-    const verdictFilter = document.getElementById('filter-verdict')?.value || '';
-    if (verdictFilter === 'Grind' || verdictFilter === 'Gem') return true;
-    return !readRuneTableHideTarget() && !document.getElementById('toggle-target-col')?.checked;
-  }
-
-  function applyRuneTableTargetColumnVisibility() {
-    const show = runeTableTargetColumnVisible();
-    document.getElementById('target-col-header')?.classList.toggle('hidden', !show);
-    document.getElementById('target-filter-cell')?.classList.toggle('hidden', !show);
-    document.getElementById('rune-table')?.classList.toggle('show-target', show);
-  }
-
   function buildRuneTableQuerySuffix() {
     const p = new URLSearchParams();
     const q = (document.getElementById('search-box')?.value || '').trim();
@@ -5446,7 +5481,6 @@
     if (fl) p.set('loc', fl);
     if (sortKey !== 'score') p.set('sort', sortKey);
     if (sortDir !== 'desc') p.set('dir', sortDir);
-    if (document.getElementById('toggle-target-col')?.checked) p.set('target', '0');
     if (document.getElementById('toggle-ancient-only')?.checked) p.set('ancient', '1');
     if (runeTableShowAll) p.set('all', '1');
     const s = p.toString();
@@ -5484,14 +5518,6 @@
       if (sk && RUNE_TABLE_SORT_KEYS.has(sk)) sortKey = sk;
       const sd = params.get('dir');
       if (sd === 'asc' || sd === 'desc') sortDir = sd;
-      if (params.has('target')) {
-        const hide = params.get('target') === '0';
-        const tgl = document.getElementById('toggle-target-col');
-        if (tgl) tgl.checked = hide;
-        try {
-          localStorage.setItem(RUNE_TABLE_HIDE_TARGET_KEY, hide ? '1' : '0');
-        } catch (e) { /* ignore */ }
-      }
       if (params.has('ancient')) {
         const on = params.get('ancient') === '1';
         const tgl = document.getElementById('toggle-ancient-only');
@@ -5500,7 +5526,6 @@
       }
       if (params.has('all')) runeTableShowAll = params.get('all') === '1';
       else runeTableShowAll = false;
-      applyRuneTableTargetColumnVisibility();
     } finally {
       runeTableApplyingHash = false;
       applyRuneTableEffHeader();
@@ -5527,7 +5552,6 @@
       main: document.getElementById('filter-main')?.value || '',
       location: document.getElementById('filter-rune-location')?.value || '',
       ancientOnly: !!document.getElementById('toggle-ancient-only')?.checked,
-      hideTarget: !!document.getElementById('toggle-target-col')?.checked,
     };
   }
 
@@ -5541,7 +5565,6 @@
     if (f.main) n += 1;
     if (f.location) n += 1;
     if (f.ancientOnly) n += 1;
-    if (f.hideTarget) n += 1;
     return n;
   }
 
@@ -5565,7 +5588,6 @@
       });
     }
     if (f.ancientOnly) chips.push({ key: 'ancientOnly', label: t.tableAncientOnly || 'Ancient only' });
-    if (f.hideTarget) chips.push({ key: 'hideTarget', label: t.toggleTargetCol || 'Hide Reason' });
     return chips;
   }
 
@@ -5596,15 +5618,6 @@
         const tgl = document.getElementById('toggle-ancient-only');
         if (tgl) tgl.checked = false;
         localStorage.setItem(RUNE_TABLE_ANCIENT_ONLY_KEY, '0');
-        break;
-      }
-      case 'hideTarget': {
-        const tgl = document.getElementById('toggle-target-col');
-        if (tgl) tgl.checked = false;
-        try {
-          localStorage.setItem(RUNE_TABLE_HIDE_TARGET_KEY, '0');
-        } catch (e) { /* ignore */ }
-        applyRuneTableTargetColumnVisibility();
         break;
       }
       default:
@@ -5678,15 +5691,9 @@
     if (fm) fm.value = '';
     const floc = document.getElementById('filter-rune-location');
     if (floc) floc.value = '';
-    const tgl = document.getElementById('toggle-target-col');
-    if (tgl) tgl.checked = false;
-    try {
-      localStorage.setItem(RUNE_TABLE_HIDE_TARGET_KEY, '0');
-    } catch (e) { /* ignore */ }
     const tglAncient = document.getElementById('toggle-ancient-only');
     if (tglAncient) tglAncient.checked = false;
     localStorage.setItem(RUNE_TABLE_ANCIENT_ONLY_KEY, '0');
-    applyRuneTableTargetColumnVisibility();
     sortKey = 'score';
     sortDir = 'desc';
     runeTableShowAll = false;
@@ -5789,7 +5796,6 @@
       }
     }
 
-    applyRuneTableTargetColumnVisibility();
     tbody.innerHTML = rows.map(r => runeRow(r)).join('');
     setupRuneTableMoreUi(total, rows.length);
     updateRuneTableFilterIndicators();
@@ -5810,15 +5816,9 @@
         const el = document.getElementById(id);
         if (el) el.value = '';
       });
-      const tgl = document.getElementById('toggle-target-col');
-      if (tgl) tgl.checked = false;
-      try {
-        localStorage.setItem(RUNE_TABLE_HIDE_TARGET_KEY, '0');
-      } catch (e) { /* ignore */ }
       const tglAncient = document.getElementById('toggle-ancient-only');
       if (tglAncient) tglAncient.checked = false;
       localStorage.setItem(RUNE_TABLE_ANCIENT_ONLY_KEY, '0');
-      applyRuneTableTargetColumnVisibility();
       onFilter();
     });
     document.getElementById('rune-table-filter-chips')?.addEventListener('click', (e) => {
@@ -6523,9 +6523,6 @@
       if (v === '1') ancient.checked = true;
       else if (v === '0') ancient.checked = false;
     }
-    const hideTarget = document.getElementById('toggle-target-col');
-    if (hideTarget) hideTarget.checked = readRuneTableHideTarget();
-    applyRuneTableTargetColumnVisibility();
   }
 
   function sortRunesInPlace(arr, key, dir) {
@@ -6558,14 +6555,6 @@
       if (av > bv) return dir === 'asc' ? 1 : -1;
       return 0;
     });
-  }
-
-  function readRuneTableHideTarget() {
-    try {
-      return localStorage.getItem(RUNE_TABLE_HIDE_TARGET_KEY) === '1';
-    } catch (e) {
-      return false;
-    }
   }
 
   function setupRuneTableMoreUi(total, rendered) {
@@ -6610,13 +6599,12 @@
     const rows = filteredRunes;
     if (!rows.length) return;
     const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-    const includeTarget = document.getElementById('rune-table')?.classList.contains('show-target');
     const headers = [
       'Grade',
       tloc.csvHeaderAncient || 'Ancient',
       'Set', 'Lvl', 'Slot', 'Main', 'Innate', 'Sub1', 'Sub2', 'Sub3', 'Sub4', 'Score', 'Eff%', 'Role', 'Verdict',
+      tloc.csvHeaderReason || 'Reason',
     ];
-    if (includeTarget) headers.push(tloc.targetHeading || 'Reason');
     function cellPart(s) {
       const raw = String(s ?? '');
       if (/[,"\n\r]/.test(raw)) return `"${raw.replace(/"/g, '""')}"`;
@@ -6624,11 +6612,14 @@
     }
     function subcell(sub) {
       if (!sub || !sub.name) return '';
-      const g = Number(sub.grind) || 0;
       const gem = !!(sub.enchanted || (Number(sub.gem) || 0) !== 0);
-      const total = subLineTotal(sub);
-      let out = `${sub.name} ${total}`;
-      if (g > 0) out += ` [${g}]`;
+      let out = formatRuneStatPlainText({
+        type: sub.type,
+        name: sub.name,
+        val: sub.val,
+        total: subLineTotal(sub),
+        grind: sub.grind,
+      });
       if (gem) out += ' (gem)';
       return out;
     }
@@ -6641,8 +6632,14 @@
         r.setName,
         r.level,
         r.slot,
-        r.mainName,
-        r.innate_name ? `${r.innate_name} ${r.innate_val}` : '',
+        formatRuneStatPlainText({ type: r.mainType, name: r.mainName, val: r.mainVal }),
+        r.innate_name
+          ? formatRuneStatPlainText({
+              type: r.innate_type,
+              name: r.innate_name,
+              val: r.innate_val,
+            })
+          : '',
         subcell(subs[0]),
         subcell(subs[1]),
         subcell(subs[2]),
@@ -6651,8 +6648,8 @@
         `${getRuneNumericEff(r).toFixed(1)}`,
         roleDisplayName(r.role || ''),
         r.verdict || '',
+        runeVerdictTipText(r) || runeTargetText(r) || '',
       ];
-      if (includeTarget) row.push(runeTargetText(r));
       lines.push(row.map(cellPart).join(','));
     });
     const csv = `\uFEFF${lines.join('\r\n')}`;
@@ -6683,15 +6680,6 @@
 
   document.getElementById('btn-rune-table-show-all')?.addEventListener('click', () => {
     runeTableShowAll = true;
-    applyFiltersAndSort(getVisibleRunes(), { preserveTableExpansion: true });
-  });
-
-  // Toggle Target column visibility
-  document.getElementById('toggle-target-col')?.addEventListener('change', (e) => {
-    try {
-      localStorage.setItem(RUNE_TABLE_HIDE_TARGET_KEY, e.target.checked ? '1' : '0');
-    } catch (err) { /* ignore */ }
-    updateRuneTableFilterIndicators();
     applyFiltersAndSort(getVisibleRunes(), { preserveTableExpansion: true });
   });
 
@@ -10885,9 +10873,42 @@
     return '';
   }
 
+  function enrichTeamsUnitRow(u, db, skillDb) {
+    const meta = db ? db.lookupMonster(u.masterId) : null;
+    const skillPack = skillDb
+      ? skillDb.enrichUnitSkills(u.skills)
+      : { skills: [], skillUpsNeeded: 0, skillsMaxed: true, skillsKnown: false };
+    const tags =
+      typeof unitMetaFor === 'function' ? unitMetaFor(u.unitId) : { favorite: false, food: false, storageMark: false, tags: [] };
+    return {
+      ...u,
+      meta,
+      metaElement: meta && meta.element ? meta.element : '',
+      displayName: db ? db.monsterDisplayName(u.masterId) : `#${u.masterId}`,
+      imageFilename: meta && meta.image_filename ? meta.image_filename : '',
+      bestiarySlug: meta && meta.bestiary_slug ? meta.bestiary_slug : '',
+      favorite: tags.favorite,
+      food: tags.food,
+      storageMark: tags.storageMark,
+      customTags: tags.tags,
+      metaArchetype:
+        typeof normalizeArchetype === 'function'
+          ? normalizeArchetype(
+              (meta && meta.archetype) ||
+                (db && typeof db.monsterArchetype === 'function' ? db.monsterArchetype(u.masterId) : ''),
+            )
+          : '',
+      skillRows: skillPack.skills,
+      skillUpsNeeded: skillPack.skillUpsNeeded,
+      skillsMaxed: skillPack.skillsMaxed,
+      skillsKnown: skillPack.skillsKnown,
+    };
+  }
+
   async function ensureTeamsUnitCache() {
     if (!allUnits || !allUnits.length) return;
     const db = window.SWRM_MONSTER_DB;
+    const skillDb = window.SWRM_SKILL_DB;
     if (db && typeof db.loadMonsterIndex === 'function') {
       try {
         await db.loadMonsterIndex();
@@ -10896,17 +10917,13 @@
         }
       } catch (e) { /* ignore */ }
     }
+    if (skillDb && typeof skillDb.loadIndex === 'function') {
+      try {
+        await skillDb.loadIndex();
+      } catch (e) { /* ignore */ }
+    }
     if (monstersEnrichedCache.length) return;
-    monstersEnrichedCache = allUnits.map((u) => {
-      const meta = db ? db.lookupMonster(u.masterId) : null;
-      return {
-        ...u,
-        meta,
-        metaElement: meta && meta.element ? meta.element : '',
-        displayName: db ? db.monsterDisplayName(u.masterId) : `#${u.masterId}`,
-        imageFilename: meta && meta.image_filename ? meta.image_filename : '',
-      };
-    });
+    monstersEnrichedCache = allUnits.map((u) => enrichTeamsUnitRow(u, db, skillDb));
   }
 
   function bindTeamsCardPortraits(root) {
@@ -10915,6 +10932,30 @@
     host.querySelectorAll('img.team-card__portrait[data-img-file]').forEach((img) => {
       const file = img.getAttribute('data-img-file');
       if (file) bindMonsterPortrait(img, file);
+    });
+  }
+
+  function bindTeamsSlotDetailHover(root) {
+    const host = root || document.getElementById('teams-card-grid');
+    if (!host || typeof showMonsterDetailForCard !== 'function') return;
+    host.querySelectorAll('.team-card__slot[data-unit-id]').forEach((slot) => {
+      const uid = slot.getAttribute('data-unit-id');
+      if (!uid || slot.dataset.teamsDetailHover === '1') return;
+      slot.dataset.teamsDetailHover = '1';
+      slot.addEventListener('mouseenter', () => {
+        if (monstersDetailPinnedUnitId) return;
+        showMonsterDetailForCard(uid, slot);
+      });
+      slot.addEventListener('mouseleave', () => {
+        if (typeof scheduleMonstersDetailHide === 'function') scheduleMonstersDetailHide();
+      });
+      slot.addEventListener('focus', () => {
+        if (monstersDetailPinnedUnitId) return;
+        showMonsterDetailForCard(uid, slot);
+      });
+      slot.addEventListener('blur', () => {
+        if (typeof scheduleMonstersDetailHide === 'function') scheduleMonstersDetailHide();
+      });
     });
   }
 
@@ -11035,7 +11076,8 @@
           ? `<img class="team-card__portrait" data-img-file="${escapeAttr(imgFile)}" alt="" width="52" height="52" loading="lazy" decoding="async" />`
           : '<span class="team-card__slot-empty">+</span>';
         const tip = uid ? escapeHtml(teamUnitLabel(uid)) : '';
-        return `<div class="team-card__slot${leader ? ' team-card__slot--leader' : ''}${missing ? ' team-card__slot--missing' : ''}" data-slot-idx="${i}" title="${tip}">
+        const unitAttr = uid ? ` data-unit-id="${escapeHtml(String(uid))}"` : '';
+        return `<div class="team-card__slot${leader ? ' team-card__slot--leader' : ''}${missing ? ' team-card__slot--missing' : ''}" data-slot-idx="${i}"${unitAttr} title="${tip}" tabindex="${uid ? '0' : '-1'}">
           ${leader ? '<span class="team-card__crown" aria-hidden="true">👑</span>' : ''}
           ${inner}
           ${spdBadge}
@@ -11267,6 +11309,7 @@
     await ensureTeamsUnitCache();
     renderTeamsCardGrid(set, state, t);
     bindTeamsCardPortraits(document.getElementById('teams-card-grid'));
+    bindTeamsSlotDetailHover(document.getElementById('teams-card-grid'));
 
     shell.querySelectorAll('[data-teams-readonly-hide]').forEach((el) => {
       el.hidden = ro;
@@ -11294,14 +11337,13 @@
       } catch (e) { /* ignore */ }
     }
     if (!monstersEnrichedCache.length && allUnits.length) {
-      monstersEnrichedCache = allUnits.map((u) => {
-        const meta = db ? db.lookupMonster(u.masterId) : null;
-        return {
-          ...u,
-          displayName: db ? db.monsterDisplayName(u.masterId) : `#${u.masterId}`,
-          imageFilename: meta && meta.image_filename ? meta.image_filename : '',
-        };
-      });
+      const skillDb = window.SWRM_SKILL_DB;
+      if (skillDb && typeof skillDb.loadIndex === 'function') {
+        try {
+          await skillDb.loadIndex();
+        } catch (e) { /* ignore */ }
+      }
+      monstersEnrichedCache = allUnits.map((u) => enrichTeamsUnitRow(u, db, skillDb));
     }
 
     const blocks = (payload.sets || [])
@@ -11327,6 +11369,7 @@
       ${blocks || `<p class="teams-share-view__empty">${escapeHtml(t.teamsShareViewEmpty || 'No public teams in this profile.')}</p>`}
     </div>`;
     bindTeamsCardPortraits(view);
+    bindTeamsSlotDetailHover(view);
   }
 
   function bindTeamsUi() {

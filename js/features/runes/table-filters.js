@@ -1,6 +1,13 @@
 // js/features/runes/table-filters.js — rune table filtering logic
   let filteredRunes = [];
 
+  function isRuneEquipped(r) {
+    const uid = r.equipped_to != null ? Number(r.equipped_to) : NaN;
+    if (Number.isFinite(uid) && uid !== 0) return true;
+    const mid = r.equipped_name != null ? Number(r.equipped_name) : NaN;
+    return Number.isFinite(mid) && mid !== 0;
+  }
+
   function computeRuneTableSummary(runes) {
     const list = runes || [];
     let ancient = 0;
@@ -75,6 +82,8 @@
     if (fsl) p.set('slot', fsl);
     const fm = document.getElementById('filter-main')?.value;
     if (fm) p.set('main', fm);
+    const fl = document.getElementById('filter-rune-location')?.value;
+    if (fl) p.set('loc', fl);
     if (sortKey !== 'score') p.set('sort', sortKey);
     if (sortDir !== 'desc') p.set('dir', sortDir);
     if (document.getElementById('toggle-target-col')?.checked) p.set('target', '0');
@@ -107,6 +116,10 @@
       if (params.has('set')) document.getElementById('filter-set').value = params.get('set');
       if (params.has('slot')) document.getElementById('filter-slot').value = params.get('slot');
       if (params.has('main')) document.getElementById('filter-main').value = params.get('main');
+      if (params.has('loc')) {
+        const locEl = document.getElementById('filter-rune-location');
+        if (locEl) locEl.value = params.get('loc');
+      }
       const sk = params.get('sort');
       if (sk && RUNE_TABLE_SORT_KEYS.has(sk)) sortKey = sk;
       const sd = params.get('dir');
@@ -141,6 +154,7 @@
     main: 'filter-main',
     role: 'filter-role',
     verdict: 'filter-verdict',
+    location: 'filter-rune-location',
   };
 
   function readRuneTableFiltersFromDom() {
@@ -151,6 +165,7 @@
       set: document.getElementById('filter-set')?.value || '',
       slot: document.getElementById('filter-slot')?.value || '',
       main: document.getElementById('filter-main')?.value || '',
+      location: document.getElementById('filter-rune-location')?.value || '',
       ancientOnly: !!document.getElementById('toggle-ancient-only')?.checked,
       hideTarget: !!document.getElementById('toggle-target-col')?.checked,
     };
@@ -164,6 +179,7 @@
     if (f.set) n += 1;
     if (f.slot) n += 1;
     if (f.main) n += 1;
+    if (f.location) n += 1;
     if (f.ancientOnly) n += 1;
     if (f.hideTarget) n += 1;
     return n;
@@ -177,8 +193,19 @@
     if (f.set) chips.push({ key: 'set', label: f.set });
     if (f.slot) chips.push({ key: 'slot', label: `${t.runeFilterSlot || 'Slot'} ${f.slot}` });
     if (f.main) chips.push({ key: 'main', label: f.main });
+    if (f.location === 'inventory') {
+      chips.push({
+        key: 'location',
+        label: t.runeFilterInventory || t.artifactFilterInventory || t.tableGearInventory || 'Inventory',
+      });
+    } else if (f.location === 'equipped') {
+      chips.push({
+        key: 'location',
+        label: t.runeFilterEquipped || t.artifactFilterEquipped || 'Equipped',
+      });
+    }
     if (f.ancientOnly) chips.push({ key: 'ancientOnly', label: t.tableAncientOnly || 'Ancient only' });
-    if (f.hideTarget) chips.push({ key: 'hideTarget', label: t.toggleTargetCol || 'Hide Target' });
+    if (f.hideTarget) chips.push({ key: 'hideTarget', label: t.toggleTargetCol || 'Hide Reason' });
     return chips;
   }
 
@@ -201,6 +228,9 @@
         break;
       case 'main':
         document.getElementById('filter-main').value = '';
+        break;
+      case 'location':
+        document.getElementById('filter-rune-location').value = '';
         break;
       case 'ancientOnly': {
         const tgl = document.getElementById('toggle-ancient-only');
@@ -286,6 +316,8 @@
     if (fsl) fsl.value = '';
     const fm = document.getElementById('filter-main');
     if (fm) fm.value = '';
+    const floc = document.getElementById('filter-rune-location');
+    if (floc) floc.value = '';
     const tgl = document.getElementById('toggle-target-col');
     if (tgl) tgl.checked = false;
     try {
@@ -330,6 +362,7 @@
     const setName = document.getElementById('filter-set')?.value || '';
     const slotVal = document.getElementById('filter-slot')?.value || '';
     const mainVal = document.getElementById('filter-main')?.value || '';
+    const locVal = document.getElementById('filter-rune-location')?.value || '';
     const ancientOnly = !!document.getElementById('toggle-ancient-only')?.checked;
 
     filteredRunes = runes.filter(r => {
@@ -348,6 +381,8 @@
       if (setName && r.setName !== setName) return false;
       if (slotVal && String(r.slot) !== slotVal) return false;
       if (mainVal && r.mainName !== mainVal) return false;
+      if (locVal === 'inventory' && isRuneEquipped(r)) return false;
+      if (locVal === 'equipped' && !isRuneEquipped(r)) return false;
       if (search) {
         const subParts = (r.substats || []).flatMap((s) => {
           const total = subLineTotal(s);
@@ -357,9 +392,14 @@
         const ancientTokens = r.isAncient
           ? [String(tTable.tableAncientBadge || 'Ancient'), 'ancient']
           : [];
+        const locLabel =
+          typeof runeLocationLabel === 'function'
+            ? runeLocationLabel(r, tTable)
+            : '';
         const haystack = [
           r.setName, r.mainName, r.gradeStr, r.role, r.verdict,
           r.innate_name, String(r.innate_val ?? ''),
+          locLabel,
           ...ancientTokens,
           ...subParts,
         ].join(' ').toLowerCase();
@@ -406,7 +446,7 @@
     bindFiltersPopover('rune-more-filters-btn', 'rune-filters-popover', { onClose: onFilter });
 
     document.getElementById('rune-filters-drawer-reset')?.addEventListener('click', () => {
-      ['filter-verdict', 'filter-role', 'filter-grade', 'filter-set', 'filter-slot', 'filter-main'].forEach((id) => {
+      ['filter-verdict', 'filter-role', 'filter-grade', 'filter-set', 'filter-slot', 'filter-main', 'filter-rune-location'].forEach((id) => {
         const el = document.getElementById(id);
         if (el) el.value = '';
       });
@@ -428,7 +468,7 @@
       onFilter();
     });
 
-    ['filter-verdict', 'filter-role', 'filter-grade', 'filter-set', 'filter-slot', 'filter-main'].forEach((id) => {
+    ['filter-verdict', 'filter-role', 'filter-grade', 'filter-set', 'filter-slot', 'filter-main', 'filter-rune-location'].forEach((id) => {
       document.getElementById(id)?.addEventListener('change', onFilter);
     });
   }

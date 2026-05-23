@@ -507,6 +507,14 @@
                                   <option value="">All</option>
                                 </select>
                               </label>
+                              <label>
+                                <span id="lbl-rune-filter-location">Location</span>
+                                <select id="filter-rune-location">
+                                  <option value="">All</option>
+                                  <option value="inventory" id="lbl-rune-filter-inventory-opt">Inventory</option>
+                                  <option value="equipped" id="lbl-rune-filter-equipped-opt">Equipped</option>
+                                </select>
+                              </label>
                             </div>
                             <div class="filters-popover__toggles">
                               <label class="toggle-target">
@@ -515,7 +523,7 @@
                               </label>
                               <label class="toggle-target">
                                 <input type="checkbox" id="toggle-target-col" />
-                                <span id="lbl-toggle-target">Hide Target</span>
+                                <span id="lbl-toggle-target">Hide Reason</span>
                               </label>
                             </div>
                           </div>
@@ -679,21 +687,22 @@
               <table id="rune-table">
                 <thead>
                   <tr>
-                    <th data-sort="grade" class="col-grade" data-filter-key="grade"><span class="th-text" id="lbl-th-grade">Grade</span></th>
+                    <th data-sort="slot" class="col-slot th-num col-num" data-filter-key="slot"><span class="th-text" id="lbl-th-slot">Slot</span></th>
                     <th data-sort="set" class="col-set col-text" data-filter-key="set"><span class="th-text" id="lbl-th-set">Set</span></th>
-                    <th data-sort="level" class="th-num col-num">Lvl</th>
-                    <th data-sort="slot" class="th-num col-num" data-filter-key="slot"><span class="th-text" id="lbl-th-slot">Slot</span></th>
-                    <th data-sort="main" class="col-text" data-filter-key="main"><span class="th-text" id="lbl-th-main">Main</span></th>
-                    <th class="col-text">Innate</th>
+                    <th data-sort="main" class="col-main col-text" data-filter-key="main"><span class="th-text" id="lbl-th-main">Main</span></th>
+                    <th data-sort="grade" class="col-grade" data-filter-key="grade"><span class="th-text" id="lbl-th-grade">Grade</span></th>
+                    <th data-sort="level" class="col-lvl th-num col-num">Lvl</th>
+                    <th class="col-text col-innate col-block-gap">Innate</th>
                     <th data-sort="s1" class="col-sub col-sub-first">Sub 1</th>
                     <th data-sort="s2" class="col-sub">Sub 2</th>
                     <th data-sort="s3" class="col-sub">Sub 3</th>
                     <th data-sort="s4" class="col-sub">Sub 4</th>
+                    <th data-sort="eff" class="th-num col-num th-col-secondary col-block-gap"><span id="lbl-th-eff">Eff%</span></th>
                     <th data-sort="score" class="th-num col-num th-col-primary"><span class="th-text" id="lbl-th-score">Score</span></th>
-                    <th data-sort="eff" class="th-num col-num th-col-secondary"><span id="lbl-th-eff">Eff%</span></th>
-                    <th data-sort="role" class="col-text" data-filter-key="role"><span class="th-text" id="lbl-th-role">Role</span></th>
                     <th data-sort="verdict" class="col-text" data-filter-key="verdict"><span class="th-text" id="lbl-th-verdict">Verdict</span></th>
-                    <th id="target-col-header" class="hidden col-text">Target</th>
+                    <th data-sort="role" class="col-text" data-filter-key="role"><span class="th-text" id="lbl-th-role">Role</span></th>
+                    <th class="col-text col-location" data-filter-key="location"><span class="th-text" id="lbl-th-rune-location">Location</span></th>
+                    <th id="target-col-header" class="hidden col-text">Reason</th>
                   </tr>
                 </thead>
                 <tbody id="rune-tbody"></tbody>
@@ -1518,7 +1527,7 @@
               <ul class="guide-strict-ladder">
                 <li><span class="guide-strict-ladder__n">1</span><span><strong>Very forgiving</strong> — many runes get a role; weak subs and near-miss lines often pass. Good while farming and powering up.</span></li>
                 <li><span class="guide-strict-ladder__n">2</span><span><strong>Relaxed</strong> — still friendly; more Keep than Sell on mid-tier runes.</span></li>
-                <li><span class="guide-strict-ladder__n">3</span><span><strong>Balanced</strong> — default for your chosen stage. Second-chance check can mark a rune <strong>(Relaxed)</strong> in Target.</span></li>
+                <li><span class="guide-strict-ladder__n">3</span><span><strong>Balanced</strong> — default for your chosen stage. Second-chance check can mark a rune <strong>(Relaxed)</strong> in Reason.</span></li>
                 <li><span class="guide-strict-ladder__n">4</span><span><strong>Strict</strong> — needs more real stat lines and stronger rolls; fewer “almost good” Keep. No second-chance pass.</span></li>
                 <li><span class="guide-strict-ladder__n">5</span><span><strong>Very strict</strong> — only strong, clean runes keep roles; borderline pieces move to Sell faster. For trimmed inventories.</span></li>
               </ul>
@@ -1561,7 +1570,7 @@
               <ul class="guide-strict-ladder">
                 <li><span class="guide-strict-ladder__n">1</span><span><strong>Очень мягко</strong> — больше рун получают роль; слабые сабы и «почти сошлось» часто проходят. Для фарма и прокачки.</span></li>
                 <li><span class="guide-strict-ladder__n">2</span><span><strong>Мягко</strong> — дружелюбно; больше Keep, меньше Sell на средних рунах.</span></li>
-                <li><span class="guide-strict-ladder__n">3</span><span><strong>Баланс</strong> — база для выбранной стадии. Возможна вторая попытка — в Target будет <strong>(Relaxed)</strong>.</span></li>
+                <li><span class="guide-strict-ladder__n">3</span><span><strong>Баланс</strong> — база для выбранной стадии. Возможна вторая попытка — в «Причине» будет <strong>(Relaxed)</strong>.</span></li>
                 <li><span class="guide-strict-ladder__n">4</span><span><strong>Строго</strong> — нужно больше сильных линий; меньше «почти хороших» Keep. Без второй попытки.</span></li>
                 <li><span class="guide-strict-ladder__n">5</span><span><strong>Очень строго</strong> — роли только у реально сильных рун; пограничные чаще Sell. Для жёсткой чистки коробки.</span></li>
               </ul>
@@ -1680,7 +1689,7 @@
           <div class="guide-lang guide-lang--en guide-list">
             <section class="guide-section guide-section--hero" aria-labelledby="guide-h-table-en">
               <h3 id="guide-h-table-en">Rune Table</h3>
-              <p class="guide-lead">Your action list: every rune with <strong>Role</strong>, <strong>Verdict</strong>, stats, and a short <strong>Target</strong> line when the app has a specific next step.</p>
+              <p class="guide-lead">Your action list: every rune with <strong>Role</strong>, <strong>Verdict</strong>, stats, and a short <strong>Reason</strong> line when the app has a specific next step.</p>
             </section>
             <section class="guide-section" aria-labelledby="guide-h-table-cols-en">
               <h3 id="guide-h-table-cols-en">Columns that matter</h3>
@@ -1689,16 +1698,16 @@
                 <div class="guide-col-map__item"><span class="guide-verdict-chip finish">Verdict</span><span>Upgrade · Finish · Keep · Gem · Grind · Reapp · Sell</span></div>
                 <div class="guide-col-map__item"><span class="guide-verdict-chip keep">Score</span><span><strong>Primary.</strong> Forge Score — meta combat value (synergies, archetypes, grinds)</span></div>
                 <div class="guide-col-map__item"><span class="guide-verdict-chip upgrade">Eff%</span><span><strong>Reference.</strong> SWOP classic efficiency (base rolls only) — table caps display at 100%</span></div>
-                <div class="guide-col-map__item"><span class="guide-verdict-chip gem">Target</span><span>Why Sell, what to grind, or Keep quality line</span></div>
+                <div class="guide-col-map__item"><span class="guide-verdict-chip gem">Reason</span><span>Why Sell, what to grind, or Keep quality line</span></div>
               </div>
             </section>
             <section class="guide-section" aria-labelledby="guide-h-table-toolbar-en">
               <h3 id="guide-h-table-toolbar-en">Toolbar &amp; summary chips</h3>
               <ul class="guide-checklist">
                 <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Chips above the grid</strong> — quick counts: total shown, Ancient, equipped, +15, Keep (for the current filter).</span></li>
-                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>More Filters</strong> — Ancient only, hide Target column, reset filters.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>More Filters</strong> — Ancient only, hide Reason column, reset filters.</span></li>
                 <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Active filter chips</strong> — click the × on a chip to drop one filter without clearing everything.</span></li>
-                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Target column</strong> — hidden by default; turn off “hide Target” to see Keep quality lines and Grind/Gem hints in-grid.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Reason column</strong> — hidden by default; turn off “hide Reason” to see Keep quality lines and Grind/Gem hints in-grid.</span></li>
               </ul>
             </section>
             <section class="guide-section" aria-labelledby="guide-h-table-forge-en">
@@ -1853,7 +1862,7 @@
           <div class="guide-lang guide-lang--ru guide-list">
             <section class="guide-section guide-section--hero" aria-labelledby="guide-h-table-ru">
               <h3 id="guide-h-table-ru">Таблица рун</h3>
-              <p class="guide-lead">Список действий: у каждой руны <strong>Role</strong>, <strong>Verdict</strong>, статы и короткий <strong>Target</strong>, если есть конкретный шаг.</p>
+              <p class="guide-lead">Список действий: у каждой руны <strong>Role</strong>, <strong>Verdict</strong>, статы и короткая <strong>причина</strong>, если есть конкретный шаг.</p>
             </section>
             <section class="guide-section" aria-labelledby="guide-h-table-cols-ru">
               <h3 id="guide-h-table-cols-ru">Главные колонки</h3>
@@ -1862,16 +1871,16 @@
                 <div class="guide-col-map__item"><span class="guide-verdict-chip finish">Verdict</span><span>Upgrade · Finish · Keep · Gem · Grind · Reapp · Sell</span></div>
                 <div class="guide-col-map__item"><span class="guide-verdict-chip keep">Score</span><span><strong>Главная.</strong> Forge Score — боевая ценность в мете (синергии, архетипы, гринды)</span></div>
                 <div class="guide-col-map__item"><span class="guide-verdict-chip upgrade">Eff%</span><span><strong>Справка.</strong> SWOP Eff% (только базовый ролл) — в таблице отображение до 100%</span></div>
-                <div class="guide-col-map__item"><span class="guide-verdict-chip gem">Target</span><span>Почему Sell, куда гринд, качество Keep</span></div>
+                <div class="guide-col-map__item"><span class="guide-verdict-chip gem">Причина</span><span>Почему Sell, куда гринд, качество Keep</span></div>
               </div>
             </section>
             <section class="guide-section" aria-labelledby="guide-h-table-toolbar-ru">
               <h3 id="guide-h-table-toolbar-ru">Панель и чипы сводки</h3>
               <ul class="guide-checklist">
                 <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Чипы над таблицей</strong> — всего в выборке, древние, на монстрах, +15, Keep.</span></li>
-                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Ещё фильтры</strong> — только древние, скрыть Target, сброс.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Ещё фильтры</strong> — только древние, скрыть причину, сброс.</span></li>
                 <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Чипы активных фильтров</strong> — крестик снимает один фильтр, не все сразу.</span></li>
-                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Колонка Target</strong> — по умолчанию скрыта; снимите «скрыть Target», чтобы видеть качество Keep и подсказки Grind/Gem.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Колонка «Причина»</strong> — по умолчанию скрыта; снимите «скрыть причину», чтобы видеть качество Keep и подсказки Grind/Gem.</span></li>
               </ul>
             </section>
             <section class="guide-section" aria-labelledby="guide-h-table-forge-ru">
@@ -2063,7 +2072,7 @@
                 <div class="guide-flow__step" role="listitem">
                   <span class="guide-flow__num">4</span>
                   <div class="guide-flow__body">
-                    <strong>Verdict + Target</strong>
+                    <strong>Verdict + Reason</strong>
                     <span>Keep, Gem, Grind, Sell, … and a plain sentence when something is Sell.</span>
                   </div>
                 </div>
@@ -2113,7 +2122,7 @@
                 <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Overall stat strength</strong> — substats should be reasonably close to strong lines for that stage, not just present.</span></li>
               </ul>
               <div class="guide-callout guide-callout--calm">
-                <p><strong>Relaxed retry</strong> — if the strict checklist fails, the app tries once more with softer rules (when Strictness is 1–3). A rune that passes only then shows <strong>(Relaxed)</strong> in Target on Keep — common on Mid accounts, not a bug.</p>
+                <p><strong>Relaxed retry</strong> — if the strict checklist fails, the app tries once more with softer rules (when Strictness is 1–3). A rune that passes only then shows <strong>(Relaxed)</strong> in Reason on Keep — common on Mid accounts, not a bug.</p>
               </div>
               <div class="guide-callout guide-callout--warn">
                 <p><strong>Efficiency %</strong> sorts the table; it does <em>not</em> pick the role alone. A 84% rune can still be Sell.</p>
@@ -2133,7 +2142,7 @@
                 </article>
               </div>
               <div class="guide-callout guide-callout--calm">
-                <p>If <strong>no build role</strong> matched but God or Duo did, Role shows <strong>Universal (High Value)</strong> — great rune, not tied to one current team. Target may say <strong>High Value · God</strong> or <strong>· Duo</strong>.</p>
+                <p>If <strong>no build role</strong> matched but God or Duo did, Role shows <strong>Universal (High Value)</strong> — great rune, not tied to one current team. Reason may say <strong>High Value · God</strong> or <strong>· Duo</strong>.</p>
               </div>
             </section>
 
@@ -2144,7 +2153,7 @@
                 <span class="guide-fit-scale__zone guide-fit-scale__zone--mid">Good 60–74</span>
                 <span class="guide-fit-scale__zone guide-fit-scale__zone--hi">Excellent 75+</span>
               </div>
-              <p><strong>0–100</strong> — how closely substats match the chosen role. It does <strong>not</strong> change Verdict; use it to compare two Keep runes for the same build. Shown in Target on Keep as <strong>Fit 67</strong> etc.</p>
+              <p><strong>0–100</strong> — how closely substats match the chosen role. It does <strong>not</strong> change Verdict; use it to compare two Keep runes for the same build. Shown in Reason on Keep as <strong>Fit 67</strong> etc.</p>
             </section>
 
             <section class="guide-section" aria-labelledby="guide-h-eval-verdicts-en">
@@ -2182,7 +2191,7 @@
             </section>
 
             <section class="guide-section" aria-labelledby="guide-h-eval-target-en">
-              <h3 id="guide-h-eval-target-en">Target column</h3>
+              <h3 id="guide-h-eval-target-en">Reason column</h3>
               <div class="guide-target-grid">
                 <article class="guide-target-card"><span class="guide-verdict-chip keep">Keep</span><p>Role · <strong>Excellent / Good / Usable</strong> · <strong>Strict</strong>, <strong>Flexible</strong>, or <strong>Relaxed</strong> · optional <strong>Fit N</strong></p></article>
                 <article class="guide-target-card"><span class="guide-verdict-chip grind">Grind</span><p>Which stat to push with a grindstone (SPD, HP%, …)</p></article>
@@ -2251,7 +2260,7 @@
                 <div class="guide-flow__step" role="listitem">
                   <span class="guide-flow__num">4</span>
                   <div class="guide-flow__body">
-                    <strong>Вердикт + Target</strong>
+                    <strong>Вердикт + причина</strong>
                     <span>Keep, Gem, Grind, Sell… и понятная фраза, почему Sell.</span>
                   </div>
                 </div>
@@ -2301,7 +2310,7 @@
                 <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Сила статов в целом</strong> — сабы близки к сильным линиям стадии, а не просто «есть на руне».</span></li>
               </ul>
               <div class="guide-callout guide-callout--calm">
-                <p><strong>Relaxed retry</strong> — если строгий чеклист не прошёл, вторая попытка с мягче правилами (при Strictness 1–3). В Target на Keep будет <strong>(Relaxed)</strong> — нормально для Mid, не ошибка.</p>
+                <p><strong>Relaxed retry</strong> — если строгий чеклист не прошёл, вторая попытка с мягче правилами (при Strictness 1–3). В «Причине» на Keep будет <strong>(Relaxed)</strong> — нормально для Mid, не ошибка.</p>
               </div>
               <div class="guide-callout guide-callout--warn">
                 <p><strong>Efficiency %</strong> — для сортировки; <em>роль</em> одной eff не ставится. 84% может быть Sell.</p>
@@ -2321,7 +2330,7 @@
                 </article>
               </div>
               <div class="guide-callout guide-callout--calm">
-                <p>Если <strong>ни один билд</strong> не подошёл, но есть God или Duo — Role <strong>Universal (High Value)</strong>: руна ценная, но не под конкретную команду. Target: <strong>High Value · God</strong> или <strong>· Duo</strong>.</p>
+                <p>Если <strong>ни один билд</strong> не подошёл, но есть God или Duo — Role <strong>Universal (High Value)</strong>: руна ценная, но не под конкретную команду. Причина: <strong>High Value · God</strong> или <strong>· Duo</strong>.</p>
               </div>
             </section>
 
@@ -2332,7 +2341,7 @@
                 <span class="guide-fit-scale__zone guide-fit-scale__zone--mid">Good 60–74</span>
                 <span class="guide-fit-scale__zone guide-fit-scale__zone--hi">Excellent 75+</span>
               </div>
-              <p><strong>0–100</strong> — насколько сабы похожи на идеал для роли. <strong>Не меняет Verdict</strong> — только сравнение рун одной роли. В Target на Keep: <strong>Fit 67</strong> и т.д.</p>
+              <p><strong>0–100</strong> — насколько сабы похожи на идеал для роли. <strong>Не меняет Verdict</strong> — только сравнение рун одной роли. В «Причине» на Keep: <strong>Fit 67</strong> и т.д.</p>
             </section>
 
             <section class="guide-section" aria-labelledby="guide-h-eval-verdicts-ru">
@@ -2370,7 +2379,7 @@
             </section>
 
             <section class="guide-section" aria-labelledby="guide-h-eval-target-ru">
-              <h3 id="guide-h-eval-target-ru">Колонка Target</h3>
+              <h3 id="guide-h-eval-target-ru">Колонка «Причина»</h3>
               <div class="guide-target-grid">
                 <article class="guide-target-card"><span class="guide-verdict-chip keep">Keep</span><p>Роль · <strong>Excellent / Good / Usable</strong> · <strong>Strict</strong>, <strong>Flexible</strong> или <strong>Relaxed</strong> · <strong>Fit N</strong></p></article>
                 <article class="guide-target-card"><span class="guide-verdict-chip grind">Grind</span><p>Какой стат грайндить (SPD, HP%, …)</p></article>
@@ -2460,7 +2469,7 @@
                   </div>
                 </div>
               </div>
-              <p class="guide-note">Result → <strong>Role</strong>, <strong>Verdict</strong>, <strong>Target</strong> in the Rune Table. Plain overview → <strong>How scoring works</strong> in this Guide.</p>
+              <p class="guide-note">Result → <strong>Role</strong>, <strong>Verdict</strong>, <strong>Reason</strong> in the Rune Table. Plain overview → <strong>How scoring works</strong> in this Guide.</p>
             </section>
 
             <section class="guide-section" aria-labelledby="guide-h-rules-engine-en">
@@ -2531,7 +2540,7 @@
                 <article class="guide-duo-card">
                   <span class="guide-duo-card__kicker">Gem suggestions</span>
                   <p class="guide-duo-card__title">Bad flat subs</p>
-                  <p>When enabled, +12+ runes with weak flat HP/ATK/DEF subs can get <strong>Gem</strong> — Target lists which flat to replace. Enchant only rerolls subs, not innate.</p>
+                  <p>When enabled, +12+ runes with weak flat HP/ATK/DEF subs can get <strong>Gem</strong> — Reason lists which flat to replace. Enchant only rerolls subs, not innate.</p>
                 </article>
                 <article class="guide-duo-card">
                   <span class="guide-duo-card__kicker">Grind suggestions</span>
@@ -2610,7 +2619,7 @@
                   </div>
                 </div>
               </div>
-              <p class="guide-note">Итог — <strong>Role</strong>, <strong>Verdict</strong>, <strong>Target</strong> в таблице. Обзор простым языком → <strong>Оценка рун</strong> в Справке.</p>
+              <p class="guide-note">Итог — <strong>Role</strong>, <strong>Verdict</strong>, <strong>причина</strong> в таблице. Обзор простым языком → <strong>Оценка рун</strong> в Справке.</p>
             </section>
 
             <section class="guide-section" aria-labelledby="guide-h-rules-engine-ru">
@@ -2681,7 +2690,7 @@
                 <article class="guide-duo-card">
                   <span class="guide-duo-card__kicker">Gem</span>
                   <p class="guide-duo-card__title">Плоские сабы</p>
-                  <p>Если включено — на +12+ с слабыми flat HP/ATK/DEF может быть <strong>Gem</strong>; Target пишет, что заменить. Гем меняет только сабы, не innate.</p>
+                  <p>Если включено — на +12+ с слабыми flat HP/ATK/DEF может быть <strong>Gem</strong>; в «Причине» пишет, что заменить. Гем меняет только сабы, не innate.</p>
                 </article>
                 <article class="guide-duo-card">
                   <span class="guide-duo-card__kicker">Grind</span>

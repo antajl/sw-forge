@@ -198,6 +198,23 @@
     return m[role] || '';
   }
 
+  function runeLocationLabel(r, t) {
+    const inv = t.tableGearInventory || 'Inventory';
+    const unitId = r.equipped_to != null ? Number(r.equipped_to) : NaN;
+    if (Number.isFinite(unitId) && unitId !== 0 && typeof gearLocationLabel === 'function') {
+      return gearLocationLabel(unitId, t);
+    }
+    const masterId = r.equipped_name != null ? Number(r.equipped_name) : NaN;
+    if (Number.isFinite(masterId) && masterId !== 0) {
+      if (typeof gearMonsterNameFromMasterId === 'function') {
+        const byMaster = gearMonsterNameFromMasterId(masterId);
+        if (byMaster) return byMaster;
+      }
+      if (typeof gearLocationLabel === 'function') return gearLocationLabel(masterId, t);
+    }
+    return inv;
+  }
+
   function runeRow(r) {
     const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const gradeKey = r.gradeStr;
@@ -246,6 +263,8 @@
     const verdictHtml = verdictText
       ? `<span class="verdict-tag ${verdictText.toLowerCase()}">${highlightSearchInPlain(verdictText, tableSearchHighlight)}</span>`
       : '';
+    const locText = runeLocationLabel(r, tloc);
+    const locHtml = tableStatLine(highlightSearchInPlain(locText, tableSearchHighlight));
 
     const subCell = (sub, first) => {
       const inner = sub ? renderSubStat(sub) : '';
@@ -254,20 +273,21 @@
     };
 
     return `<tr>
-      <td class="col-grade">${grade}</td>
+      <td class="col-slot col-num td-num-plain">${highlightSearchInPlain(String(r.slot), tableSearchHighlight)}</td>
       <td class="col-set col-text">${tableStatLine(highlightSearchInPlain(r.setName, tableSearchHighlight), { set: true })}</td>
-      <td class="col-num td-num-plain">${highlightSearchInPlain(String(r.level), tableSearchHighlight)}</td>
-      <td class="col-num td-num-plain">${highlightSearchInPlain(String(r.slot), tableSearchHighlight)}</td>
-      <td class="col-text">${tableStatLine(mainInner)}</td>
-      <td class="col-text">${innateHtml}</td>
+      <td class="col-main col-text">${tableStatLine(mainInner)}</td>
+      <td class="col-grade">${grade}</td>
+      <td class="col-lvl col-num td-num-plain">${highlightSearchInPlain(String(r.level), tableSearchHighlight)}</td>
+      <td class="col-text col-innate col-block-gap">${innateHtml}</td>
       ${subCell(subs[0], true)}
       ${subCell(subs[1], false)}
       ${subCell(subs[2], false)}
       ${subCell(subs[3], false)}
+      <td class="col-num td-num td-num--eff col-block-gap"><span class="rune-eff-muted">${highlightSearchInPlain(effShown, tableSearchHighlight)}</span></td>
       <td class="col-num td-num td-num--score" title="${scoreTitle}"><span class="stat-chip stat-chip--score ${scoreTier}">${highlightSearchInPlain(scoreShown, tableSearchHighlight)}</span></td>
-      <td class="col-num td-num td-num--eff"><span class="rune-eff-muted">${highlightSearchInPlain(effShown, tableSearchHighlight)}</span></td>
-      <td class="col-text">${roleHtml}</td>
       <td class="col-text">${verdictHtml}</td>
+      <td class="col-text">${roleHtml}</td>
+      <td class="col-text col-location">${locHtml}</td>
       <td class="target-col-cell col-text"${targetTipAttr}>${targetHtml}</td>
     </tr>`;
   }

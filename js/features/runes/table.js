@@ -135,7 +135,7 @@
       tloc.csvHeaderAncient || 'Ancient',
       'Set', 'Lvl', 'Slot', 'Main', 'Innate', 'Sub1', 'Sub2', 'Sub3', 'Sub4', 'Score', 'Eff%', 'Role', 'Verdict',
     ];
-    if (includeTarget) headers.push('Target');
+    if (includeTarget) headers.push(tloc.targetHeading || 'Reason');
     function cellPart(s) {
       const raw = String(s ?? '');
       if (/[,"\n\r]/.test(raw)) return `"${raw.replace(/"/g, '""')}"`;

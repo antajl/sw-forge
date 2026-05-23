@@ -288,6 +288,12 @@
     if (lblRuneFsl) lblRuneFsl.textContent = t.runeFilterSlot || 'Slot';
     const lblRuneFm = document.getElementById('lbl-rune-filter-main');
     if (lblRuneFm) lblRuneFm.textContent = t.runeFilterMain || 'Main stat';
+    const lblRuneFl = document.getElementById('lbl-rune-filter-location');
+    if (lblRuneFl) lblRuneFl.textContent = t.runeFilterLocation || t.thRuneLocation || 'Location';
+    const lblRuneInv = document.getElementById('lbl-rune-filter-inventory-opt');
+    if (lblRuneInv) lblRuneInv.textContent = t.runeFilterInventory || t.artifactFilterInventory || t.tableGearInventory || 'Inventory';
+    const lblRuneEq = document.getElementById('lbl-rune-filter-equipped-opt');
+    if (lblRuneEq) lblRuneEq.textContent = t.runeFilterEquipped || t.artifactFilterEquipped || 'Equipped';
     const lblTableKindRunes = document.getElementById('lbl-table-kind-runes');
     if (lblTableKindRunes) lblTableKindRunes.textContent = t.tableKindRunes || 'Runes';
     const lblTableKindArt = document.getElementById('lbl-table-kind-artifacts');
@@ -357,6 +363,8 @@
     if (lblThRole) lblThRole.textContent = t.runeFilterRole || 'Role';
     const lblThVerdict = document.getElementById('lbl-th-verdict');
     if (lblThVerdict) lblThVerdict.textContent = t.runeFilterVerdict || 'Verdict';
+    const lblThRuneLoc = document.getElementById('lbl-th-rune-location');
+    if (lblThRuneLoc) lblThRuneLoc.textContent = t.thRuneLocation || t.thArtLocation || 'Location';
     
     const filterVerdict = document.getElementById('filter-verdict');
     if (filterVerdict) {
@@ -380,9 +388,9 @@
     const lblAncientOnly = document.getElementById('lbl-toggle-ancient-only');
     if (lblAncientOnly) lblAncientOnly.textContent = t.tableAncientOnly || 'Ancient only';
     const lblTgt = document.getElementById('lbl-toggle-target');
-    if (lblTgt) lblTgt.textContent = t.toggleTargetCol || 'Show Target';
+    if (lblTgt) lblTgt.textContent = t.toggleTargetCol || 'Hide Reason';
     const thTgt = document.getElementById('target-col-header');
-    if (thTgt) thTgt.textContent = t.targetHeading || 'Target';
+    if (thTgt) thTgt.textContent = t.targetHeading || 'Reason';
 
     const filterGrade = document.getElementById('filter-grade');
     if (filterGrade) {

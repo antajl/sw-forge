@@ -209,6 +209,9 @@
       verdict:    '',
     };
 
+    if (raw.occupied_id != null && Number(raw.occupied_id) !== 0) {
+      rune.equipped_to = Number(raw.occupied_id);
+    }
     rune.eff = calcEfficiency(rune);
     return rune;
   }

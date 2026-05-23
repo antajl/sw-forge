@@ -136,8 +136,13 @@ td {
 #rune-table td.td-num-plain {
   font-variant-numeric: tabular-nums;
 }
+#rune-table td.td-num-plain,
+#rune-table td.td-num--score,
+#rune-table td.td-num--eff {
+  font-family: var(--font-ui);
+  font-variant-numeric: tabular-nums;
+}
 #rune-table td.td-num-plain {
-  font-family: var(--font-mono);
   font-size: 0.78rem;
   font-weight: 400;
   color: var(--text-dim);
@@ -164,8 +169,37 @@ td {
   width: auto;
   padding-right: 6px;
 }
-#rune-table th.col-set + th.col-num,
-#rune-table td.col-set + td.col-num {
+#rune-table th.col-location,
+#rune-table td.col-location {
+  min-width: 5.5rem;
+  max-width: 9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#rune-table th.col-slot,
+#rune-table td.col-slot {
+  min-width: 2.25rem;
+  max-width: 2.75rem;
+  padding-left: 6px;
+  padding-right: 4px;
+}
+#rune-table th.col-main,
+#rune-table td.col-main {
+  min-width: 4.5rem;
+  max-width: 8rem;
+}
+#rune-table th.col-lvl,
+#rune-table td.col-lvl {
+  min-width: 2.25rem;
+  max-width: 2.75rem;
+}
+#rune-table th.col-block-gap,
+#rune-table td.col-block-gap {
+  border-left: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+  padding-left: 10px;
+}
+#rune-table th.col-num + th.col-set,
+#rune-table td.col-num + td.col-set {
   padding-left: 4px;
 }
 

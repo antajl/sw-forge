@@ -26,7 +26,7 @@ SW Forge — статический сайт на **Cloudflare Pages**: анал
 - **Runtime:** Vanilla JS + CSS, без фреймворков и бандлера в браузере
 - **Build:** `npm run build` = `build:css` + `build:ui` (артефакты коммитятся, как `ui.js`)
 - **CSS в prod:** `index.html` → `css/dist/app.css` (исходники в `css/features/`, dev-цепочка `css/style.css`)
-- **Шрифты:** IBM Plex Sans + Share Tech Mono в `assets/fonts/` (`@font-face` в `base.css`)
+- **Шрифты:** системный UI-стек (`system-ui` / Segoe UI / Roboto) в `base.css`; `tabular-nums` на body. Файлы в `assets/fonts/` — legacy, не подключаются
 - **Анимации:** GSAP 3.12.7 с jsDelivr (SRI + `crossorigin`)
 - **i18n:** EN + RU в `i18n.js`; FR lazy → `js/core/i18n-fr.js`
 - **Worker:** `worker/` (Wrangler) — Share Profile

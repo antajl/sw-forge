@@ -67,7 +67,8 @@
   gap: 4px 8px;
   font-size: 0.62rem;
   color: var(--text-dim);
-  font-family: var(--font-mono, 'Share Tech Mono', monospace);
+  font-family: var(--font-ui);
+  font-variant-numeric: tabular-nums;
 }
 
 .monsters-gear-item__line--muted {

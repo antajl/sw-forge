@@ -825,6 +825,12 @@
     if (lblRuneFsl) lblRuneFsl.textContent = t.runeFilterSlot || 'Slot';
     const lblRuneFm = document.getElementById('lbl-rune-filter-main');
     if (lblRuneFm) lblRuneFm.textContent = t.runeFilterMain || 'Main stat';
+    const lblRuneFl = document.getElementById('lbl-rune-filter-location');
+    if (lblRuneFl) lblRuneFl.textContent = t.runeFilterLocation || t.thRuneLocation || 'Location';
+    const lblRuneInv = document.getElementById('lbl-rune-filter-inventory-opt');
+    if (lblRuneInv) lblRuneInv.textContent = t.runeFilterInventory || t.artifactFilterInventory || t.tableGearInventory || 'Inventory';
+    const lblRuneEq = document.getElementById('lbl-rune-filter-equipped-opt');
+    if (lblRuneEq) lblRuneEq.textContent = t.runeFilterEquipped || t.artifactFilterEquipped || 'Equipped';
     const lblTableKindRunes = document.getElementById('lbl-table-kind-runes');
     if (lblTableKindRunes) lblTableKindRunes.textContent = t.tableKindRunes || 'Runes';
     const lblTableKindArt = document.getElementById('lbl-table-kind-artifacts');
@@ -894,6 +900,8 @@
     if (lblThRole) lblThRole.textContent = t.runeFilterRole || 'Role';
     const lblThVerdict = document.getElementById('lbl-th-verdict');
     if (lblThVerdict) lblThVerdict.textContent = t.runeFilterVerdict || 'Verdict';
+    const lblThRuneLoc = document.getElementById('lbl-th-rune-location');
+    if (lblThRuneLoc) lblThRuneLoc.textContent = t.thRuneLocation || t.thArtLocation || 'Location';
     
     const filterVerdict = document.getElementById('filter-verdict');
     if (filterVerdict) {
@@ -917,9 +925,9 @@
     const lblAncientOnly = document.getElementById('lbl-toggle-ancient-only');
     if (lblAncientOnly) lblAncientOnly.textContent = t.tableAncientOnly || 'Ancient only';
     const lblTgt = document.getElementById('lbl-toggle-target');
-    if (lblTgt) lblTgt.textContent = t.toggleTargetCol || 'Show Target';
+    if (lblTgt) lblTgt.textContent = t.toggleTargetCol || 'Hide Reason';
     const thTgt = document.getElementById('target-col-header');
-    if (thTgt) thTgt.textContent = t.targetHeading || 'Target';
+    if (thTgt) thTgt.textContent = t.targetHeading || 'Reason';
 
     const filterGrade = document.getElementById('filter-grade');
     if (filterGrade) {
@@ -5257,6 +5265,23 @@
     return m[role] || '';
   }
 
+  function runeLocationLabel(r, t) {
+    const inv = t.tableGearInventory || 'Inventory';
+    const unitId = r.equipped_to != null ? Number(r.equipped_to) : NaN;
+    if (Number.isFinite(unitId) && unitId !== 0 && typeof gearLocationLabel === 'function') {
+      return gearLocationLabel(unitId, t);
+    }
+    const masterId = r.equipped_name != null ? Number(r.equipped_name) : NaN;
+    if (Number.isFinite(masterId) && masterId !== 0) {
+      if (typeof gearMonsterNameFromMasterId === 'function') {
+        const byMaster = gearMonsterNameFromMasterId(masterId);
+        if (byMaster) return byMaster;
+      }
+      if (typeof gearLocationLabel === 'function') return gearLocationLabel(masterId, t);
+    }
+    return inv;
+  }
+
   function runeRow(r) {
     const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const gradeKey = r.gradeStr;
@@ -5305,6 +5330,8 @@
     const verdictHtml = verdictText
       ? `<span class="verdict-tag ${verdictText.toLowerCase()}">${highlightSearchInPlain(verdictText, tableSearchHighlight)}</span>`
       : '';
+    const locText = runeLocationLabel(r, tloc);
+    const locHtml = tableStatLine(highlightSearchInPlain(locText, tableSearchHighlight));
 
     const subCell = (sub, first) => {
       const inner = sub ? renderSubStat(sub) : '';
@@ -5313,25 +5340,33 @@
     };
 
     return `<tr>
-      <td class="col-grade">${grade}</td>
+      <td class="col-slot col-num td-num-plain">${highlightSearchInPlain(String(r.slot), tableSearchHighlight)}</td>
       <td class="col-set col-text">${tableStatLine(highlightSearchInPlain(r.setName, tableSearchHighlight), { set: true })}</td>
-      <td class="col-num td-num-plain">${highlightSearchInPlain(String(r.level), tableSearchHighlight)}</td>
-      <td class="col-num td-num-plain">${highlightSearchInPlain(String(r.slot), tableSearchHighlight)}</td>
-      <td class="col-text">${tableStatLine(mainInner)}</td>
-      <td class="col-text">${innateHtml}</td>
+      <td class="col-main col-text">${tableStatLine(mainInner)}</td>
+      <td class="col-grade">${grade}</td>
+      <td class="col-lvl col-num td-num-plain">${highlightSearchInPlain(String(r.level), tableSearchHighlight)}</td>
+      <td class="col-text col-innate col-block-gap">${innateHtml}</td>
       ${subCell(subs[0], true)}
       ${subCell(subs[1], false)}
       ${subCell(subs[2], false)}
       ${subCell(subs[3], false)}
+      <td class="col-num td-num td-num--eff col-block-gap"><span class="rune-eff-muted">${highlightSearchInPlain(effShown, tableSearchHighlight)}</span></td>
       <td class="col-num td-num td-num--score" title="${scoreTitle}"><span class="stat-chip stat-chip--score ${scoreTier}">${highlightSearchInPlain(scoreShown, tableSearchHighlight)}</span></td>
-      <td class="col-num td-num td-num--eff"><span class="rune-eff-muted">${highlightSearchInPlain(effShown, tableSearchHighlight)}</span></td>
-      <td class="col-text">${roleHtml}</td>
       <td class="col-text">${verdictHtml}</td>
+      <td class="col-text">${roleHtml}</td>
+      <td class="col-text col-location">${locHtml}</td>
       <td class="target-col-cell col-text"${targetTipAttr}>${targetHtml}</td>
     </tr>`;
   }
 
   let filteredRunes = [];
+
+  function isRuneEquipped(r) {
+    const uid = r.equipped_to != null ? Number(r.equipped_to) : NaN;
+    if (Number.isFinite(uid) && uid !== 0) return true;
+    const mid = r.equipped_name != null ? Number(r.equipped_name) : NaN;
+    return Number.isFinite(mid) && mid !== 0;
+  }
 
   function computeRuneTableSummary(runes) {
     const list = runes || [];
@@ -5407,6 +5442,8 @@
     if (fsl) p.set('slot', fsl);
     const fm = document.getElementById('filter-main')?.value;
     if (fm) p.set('main', fm);
+    const fl = document.getElementById('filter-rune-location')?.value;
+    if (fl) p.set('loc', fl);
     if (sortKey !== 'score') p.set('sort', sortKey);
     if (sortDir !== 'desc') p.set('dir', sortDir);
     if (document.getElementById('toggle-target-col')?.checked) p.set('target', '0');
@@ -5439,6 +5476,10 @@
       if (params.has('set')) document.getElementById('filter-set').value = params.get('set');
       if (params.has('slot')) document.getElementById('filter-slot').value = params.get('slot');
       if (params.has('main')) document.getElementById('filter-main').value = params.get('main');
+      if (params.has('loc')) {
+        const locEl = document.getElementById('filter-rune-location');
+        if (locEl) locEl.value = params.get('loc');
+      }
       const sk = params.get('sort');
       if (sk && RUNE_TABLE_SORT_KEYS.has(sk)) sortKey = sk;
       const sd = params.get('dir');
@@ -5473,6 +5514,7 @@
     main: 'filter-main',
     role: 'filter-role',
     verdict: 'filter-verdict',
+    location: 'filter-rune-location',
   };
 
   function readRuneTableFiltersFromDom() {
@@ -5483,6 +5525,7 @@
       set: document.getElementById('filter-set')?.value || '',
       slot: document.getElementById('filter-slot')?.value || '',
       main: document.getElementById('filter-main')?.value || '',
+      location: document.getElementById('filter-rune-location')?.value || '',
       ancientOnly: !!document.getElementById('toggle-ancient-only')?.checked,
       hideTarget: !!document.getElementById('toggle-target-col')?.checked,
     };
@@ -5496,6 +5539,7 @@
     if (f.set) n += 1;
     if (f.slot) n += 1;
     if (f.main) n += 1;
+    if (f.location) n += 1;
     if (f.ancientOnly) n += 1;
     if (f.hideTarget) n += 1;
     return n;
@@ -5509,8 +5553,19 @@
     if (f.set) chips.push({ key: 'set', label: f.set });
     if (f.slot) chips.push({ key: 'slot', label: `${t.runeFilterSlot || 'Slot'} ${f.slot}` });
     if (f.main) chips.push({ key: 'main', label: f.main });
+    if (f.location === 'inventory') {
+      chips.push({
+        key: 'location',
+        label: t.runeFilterInventory || t.artifactFilterInventory || t.tableGearInventory || 'Inventory',
+      });
+    } else if (f.location === 'equipped') {
+      chips.push({
+        key: 'location',
+        label: t.runeFilterEquipped || t.artifactFilterEquipped || 'Equipped',
+      });
+    }
     if (f.ancientOnly) chips.push({ key: 'ancientOnly', label: t.tableAncientOnly || 'Ancient only' });
-    if (f.hideTarget) chips.push({ key: 'hideTarget', label: t.toggleTargetCol || 'Hide Target' });
+    if (f.hideTarget) chips.push({ key: 'hideTarget', label: t.toggleTargetCol || 'Hide Reason' });
     return chips;
   }
 
@@ -5533,6 +5588,9 @@
         break;
       case 'main':
         document.getElementById('filter-main').value = '';
+        break;
+      case 'location':
+        document.getElementById('filter-rune-location').value = '';
         break;
       case 'ancientOnly': {
         const tgl = document.getElementById('toggle-ancient-only');
@@ -5618,6 +5676,8 @@
     if (fsl) fsl.value = '';
     const fm = document.getElementById('filter-main');
     if (fm) fm.value = '';
+    const floc = document.getElementById('filter-rune-location');
+    if (floc) floc.value = '';
     const tgl = document.getElementById('toggle-target-col');
     if (tgl) tgl.checked = false;
     try {
@@ -5662,6 +5722,7 @@
     const setName = document.getElementById('filter-set')?.value || '';
     const slotVal = document.getElementById('filter-slot')?.value || '';
     const mainVal = document.getElementById('filter-main')?.value || '';
+    const locVal = document.getElementById('filter-rune-location')?.value || '';
     const ancientOnly = !!document.getElementById('toggle-ancient-only')?.checked;
 
     filteredRunes = runes.filter(r => {
@@ -5680,6 +5741,8 @@
       if (setName && r.setName !== setName) return false;
       if (slotVal && String(r.slot) !== slotVal) return false;
       if (mainVal && r.mainName !== mainVal) return false;
+      if (locVal === 'inventory' && isRuneEquipped(r)) return false;
+      if (locVal === 'equipped' && !isRuneEquipped(r)) return false;
       if (search) {
         const subParts = (r.substats || []).flatMap((s) => {
           const total = subLineTotal(s);
@@ -5689,9 +5752,14 @@
         const ancientTokens = r.isAncient
           ? [String(tTable.tableAncientBadge || 'Ancient'), 'ancient']
           : [];
+        const locLabel =
+          typeof runeLocationLabel === 'function'
+            ? runeLocationLabel(r, tTable)
+            : '';
         const haystack = [
           r.setName, r.mainName, r.gradeStr, r.role, r.verdict,
           r.innate_name, String(r.innate_val ?? ''),
+          locLabel,
           ...ancientTokens,
           ...subParts,
         ].join(' ').toLowerCase();
@@ -5738,7 +5806,7 @@
     bindFiltersPopover('rune-more-filters-btn', 'rune-filters-popover', { onClose: onFilter });
 
     document.getElementById('rune-filters-drawer-reset')?.addEventListener('click', () => {
-      ['filter-verdict', 'filter-role', 'filter-grade', 'filter-set', 'filter-slot', 'filter-main'].forEach((id) => {
+      ['filter-verdict', 'filter-role', 'filter-grade', 'filter-set', 'filter-slot', 'filter-main', 'filter-rune-location'].forEach((id) => {
         const el = document.getElementById(id);
         if (el) el.value = '';
       });
@@ -5760,7 +5828,7 @@
       onFilter();
     });
 
-    ['filter-verdict', 'filter-role', 'filter-grade', 'filter-set', 'filter-slot', 'filter-main'].forEach((id) => {
+    ['filter-verdict', 'filter-role', 'filter-grade', 'filter-set', 'filter-slot', 'filter-main', 'filter-rune-location'].forEach((id) => {
       document.getElementById(id)?.addEventListener('change', onFilter);
     });
   }
@@ -6548,7 +6616,7 @@
       tloc.csvHeaderAncient || 'Ancient',
       'Set', 'Lvl', 'Slot', 'Main', 'Innate', 'Sub1', 'Sub2', 'Sub3', 'Sub4', 'Score', 'Eff%', 'Role', 'Verdict',
     ];
-    if (includeTarget) headers.push('Target');
+    if (includeTarget) headers.push(tloc.targetHeading || 'Reason');
     function cellPart(s) {
       const raw = String(s ?? '');
       if (/[,"\n\r]/.test(raw)) return `"${raw.replace(/"/g, '""')}"`;

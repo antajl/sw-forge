@@ -39,7 +39,7 @@
     globalMinLevel = parseInt(e.target.value || '0', 10) || 0;
     if (processedRunes.length) {
       const visible = getVisibleRunes();
-      renderDashboard(visible);
+      renderDashboard(visible, { animateCharts: true });
       renderTable(visible);
     }
   });
@@ -58,7 +58,7 @@
     if (smax) smax.value = String(globalGradeMax);
     if (processedRunes.length) {
       const visible = getVisibleRunes();
-      renderDashboard(visible);
+      renderDashboard(visible, { animateCharts: true });
       renderTable(visible);
     }
   });
@@ -77,7 +77,7 @@
     if (smin) smin.value = String(globalGradeMin);
     if (processedRunes.length) {
       const visible = getVisibleRunes();
-      renderDashboard(visible);
+      renderDashboard(visible, { animateCharts: true });
       renderTable(visible);
     }
   });

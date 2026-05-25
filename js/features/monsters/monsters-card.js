@@ -127,6 +127,12 @@
 
   async function ensureMonstersDataset() {
     if (allUnits.length) return true;
+    if (
+      typeof shouldSkipEmbeddedDemoBootstrap === 'function' &&
+      shouldSkipEmbeddedDemoBootstrap()
+    ) {
+      return false;
+    }
     if (typeof installEmbeddedDemoDataset !== 'function') return false;
     return installEmbeddedDemoDataset({ keepTab: true });
   }

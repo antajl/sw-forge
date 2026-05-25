@@ -92,7 +92,8 @@ SW Forge — статический сайт на **Cloudflare Pages**: анал
 ### JS — data
 | Путь | Назначение |
 |------|------------|
-| `js/data/parser.js` | `parseSWEX`, `parseRune`, `parseUnits`, Eff% |
+| `js/data/parser.js` | `parseSWEX`, `parseRune`, `parseUnits`, SWOP Eff% |
+| `js/data/ingame-score.js` | `calcIngameScore`, `ingameScoreBreakdown` — Com2uS Rating (таблица рун, колонка Ingame) |
 | `js/data/monster-db.js` | `monsters-index.json`, `SWRM_MONSTER_DB` |
 | `js/data/skill-db.js` | `skills-index.json` + `metaById` (тултипы, Skill plan CD без API) |
 | `js/data/gear/parse.js` | Артефакты/реликты из SWEX |
@@ -148,7 +149,7 @@ SW Forge — статический сайт на **Cloudflare Pages**: анал
 | `runes/depth.js` | Depth analysis |
 | `runes/dashboard.js` | Dashboard |
 | `runes/rune-score.js` | Forge Score |
-| `runes/table-row-render.js` | Строка таблицы |
+| `runes/table-row-render.js` | Строка таблицы (Ingame, Forge, Verdict tooltip, Location) |
 | `runes/table-filters.js` | Фильтры таблицы |
 | `runes/table.js` | Таблица рун |
 
@@ -236,7 +237,8 @@ Cloudflare Worker + D1 — Share API (`worker/src/index.js`, `wrangler.toml`).
 | `settings`, `saveSettings` | defaults | Настройки пользователя |
 | `TRANSLATIONS`, `STATIC_CHANGELOG`, `STATIC_ROADMAP` | i18n / changelog | UI тексты |
 | `parseSWEX`, `parseRune`, `parseUnits` | parser | SWEX → руны/юниты |
-| `calcEfficiency`, `calcEfficiencyUncapped` | parser | Eff% |
+| `calcEfficiency`, `calcEfficiencyUncapped` | parser | SWOP Eff% (Depth, dashboard charts — **не** колонка таблицы) |
+| `calcIngameScore`, `ingameScoreBreakdown` | ingame-score | Ingame Rating в таблице рун |
 | `parseAccountGear`, `parseArtifact`, `parseRelic` | gear/parse | Gear |
 | `formatGearEffectLine`, `formatArtifactSubLine` | gear/parse | Отображение stat lines |
 | `processAll`, `processRune`, `getRuneVerdict` | engine | Вердикты рун |
@@ -326,18 +328,16 @@ Dev: `css/style.css` (только локально; prod использует `
 | 6 | `js/data/artifacts/effects.js` | 2851 |
 | 7 | `js/data/relics/effects.js` | 2852 |
 | 8 | `js/data/gear/parse.js` | 2853 |
-| 9 | `js/data/parser.js` | 2854 |
-| 10 | `js/data/skill-db.js` | 2855 |
-| 11 | `js/data/monster-db.js` | 2856 |
-| 12 | `js/engine/engine-core.js` | 2857 |
-| 13 | `js/engine/engine-legacy-roles.js` | 2858 |
-| 14 | `js/engine/engine-gem-reapp-verdict.js` | 2859 |
-| 15 | `js/advanced-formulas.js` | 2860 |
-| 16 | `js/engine/engine-process.js` | 2861 |
-| 17 | `js/self-test.js` | 2862 |
-| 18 | GSAP 3.12.7 CDN (`integrity` + `crossorigin`) | 2863–2865 |
-| 19 | `js/swrm-motion.js` | 2866 |
-| 20 | `js/ui.js` | 2867 |
+| 9 | `js/data/parser.js` | ~2975 |
+| 10 | `js/data/ingame-score.js` | ~2976 |
+| 11 | `js/data/local-assets.js` | ~2977 |
+| 12 | `js/data/skill-db.js` | ~2978 |
+| 13 | `js/data/monster-db.js` | ~2979 |
+| 14–18 | `js/engine/*`, `advanced-formulas.js` | ~2980–2984 |
+| 19 | `js/self-test.js` | ~2985 |
+| 20 | GSAP CDN | ~2986–2988 |
+| 21 | `js/swrm-motion.js` | ~2989 |
+| 22 | `js/ui.js` | ~2990 |
 
 **Lazy (не в HTML):** `js/core/i18n-fr.js` — подгружается при выборе FR в `i18n-bindings.js`.
 

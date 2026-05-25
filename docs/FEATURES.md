@@ -12,12 +12,24 @@ How UI and data are split after the gear/teams redistribution.
 
 **Runes tab → Table** still hosts three list kinds (Runes / Artifacts / Relics) in one screen; only the **code folders** are split.
 
+### Rune table columns (Runes sub-tab)
+
+| Column | Source | Notes |
+|--------|--------|--------|
+| Slot … Sub4, Innate | `parser.js` + `table-row-render.js` | Stat lines, gem icon, search highlight |
+| **Ingame** | `js/data/ingame-score.js` | Com2uS Rating; sort = slots 1→6 then score ↓ within slot |
+| **Forge** | `js/features/runes/rune-score.js` | Default sort ↓; hover tooltip |
+| Verdict / Role | `engine` + `table-row-render.js` | Verdict hover = reason text (no Reason column in grid) |
+| **Location** | `runeLocationLabel()` in `table-row-render.js` | Monster name or Inventory; filter in More Filters |
+
+**SWOP Eff%** (`calcEfficiency` in `parser.js`) — account Depth elite metric and dashboard efficiency chart only; not shown in the rune grid.
+
 ## JavaScript (`js/features/`)
 
 | Folder | Scope | Main files |
 |--------|--------|------------|
 | `shell/` | App chrome, tabs, i18n bindings | `bootstrap.js`, `i18n-bindings.js`, `main-tabs.js` |
-| `runes/` | Dashboard, rune table, filters, upload | `table.js`, `table-row-render.js`, `dashboard.js`, … |
+| `runes/` | Dashboard, rune table, filters, upload | `table.js`, `table-row-render.js`, `table-virtual.js`, `dashboard.js`, … |
 | `gear/` | Artifact & relic inventory tables + Runes/Artifacts/Relics sub-tabs | `table-kind.js`, `artifacts-table.js`, `relics-table.js` |
 | `teams/` | Team sets builder (Monsters → Teams hub pane); combat SPD badges | `storage.js`, `ui.js` |
 | `monsters/` | Roster, cards, detail, gear on unit | `monsters-gear.js`, `monsters-detail.js`, … |

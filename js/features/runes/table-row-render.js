@@ -291,8 +291,11 @@
         ? window.SWRM.ingameScoreBreakdown(r).join('\n')
         : tScore.tableIngameScoreHeaderTitle || '';
     const ingameTipAttr = ingameTip ? ` data-swrm-tip="${escapeAttr(ingameTip)}"` : '';
-    const scoreNum =
-      typeof computeRuneScore === 'function' ? computeRuneScore(r, tScore) : 0;
+    const scoreNum = Number.isFinite(r.forgeScore)
+      ? r.forgeScore
+      : typeof computeRuneScore === 'function'
+        ? computeRuneScore(r, tScore)
+        : 0;
     const scoreTier = typeof runeScoreTier === 'function' ? runeScoreTier(scoreNum) : 'stat-chip--score-lo';
     const scoreShown = String(scoreNum);
     const scoreTip =

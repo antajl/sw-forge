@@ -9,15 +9,16 @@ SW Forge is a static browser app. Cloudflare Pages serves `index.html`, CSS, dat
 `index.html` is the runtime contract:
 
 1. `js/core/*.js` (meta → i18n → defaults → changelog-data → bootstrap)
-2. `js/data/parser.js`
-3. `js/data/skill-db.js`
-4. `js/data/monster-db.js`
-5. `js/data/artifacts/effects.js`, `js/data/relics/effects.js`, `js/data/gear/parse.js`
-6. `js/engine/*.js`
-7. `js/advanced-formulas.js`
-8. `js/self-test.js`
-9. `js/swrm-motion.js`
-10. `js/ui.js` (includes Forge Score in `js/features/runes/rune-score.js`)
+2. `js/data/artifacts/effects.js`, `js/data/relics/effects.js`, `js/data/gear/parse.js`, `js/data/gear/icons.js`
+3. `js/data/parser.js` (SWEX runes/units, SWOP Eff%)
+4. `js/data/ingame-score.js` (Com2uS Ingame Rating — table column, sort, CSV)
+5. `js/data/local-assets.js`, `js/data/skill-db.js`, `js/data/monster-db.js`
+6. `js/engine/*.js`, `js/advanced-formulas.js`
+7. `js/self-test.js`
+8. `js/swrm-motion.js`
+9. `js/ui.js` (Forge Score in `js/features/runes/rune-score.js`, table in `table*.js`)
+
+**Player docs:** Guide text lives in `index.html` (`#tab-guide`), not under `docs/`. Changelog strings: `js/core/changelog-data.js`.
 
 The app API is exposed through `window.SWRM` and related browser globals. Keep that order stable unless the dependency graph is changed deliberately.
 
@@ -29,7 +30,8 @@ The app API is exposed through `window.SWRM` and related browser globals. Keep t
 | --- | --- | --- |
 | Header, theme, tabs | `js/features/shell/*` | `css/foundation/header.css`, `css/foundation/base.css` |
 | Runes dashboard | `js/features/runes/dashboard.js`, `charts.js`, `verdict-filters.js`, `stage-advisor-ui.js`, `depth.js`, `copy-summary.js` | `css/features/runes/*` |
-| Rune table | `js/features/runes/table.js`, `table-filters.js`, `table-row-render.js` | `css/features/runes/table-*.css` |
+| Rune table | `js/features/runes/table.js`, `table-filters.js`, `table-row-render.js`, `table-virtual.js` | `css/features/runes/table-*.css` |
+| Ingame Rating (data) | `js/data/ingame-score.js` | — |
 | Artifacts & relics tables | `js/features/gear/table-kind.js`, `artifacts-table.js`, `relics-table.js` | `css/features/gear/*` |
 | Teams | `js/features/teams/*` | `css/features/teams/*` |
 | Account SPD totem | `js/features/monsters/monsters-stats-calc.js` (`getAccountTotemSpdPct`, cached on `rebuildUnitsFromSwex`) | none |

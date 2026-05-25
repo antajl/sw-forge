@@ -412,7 +412,7 @@
     }
 
     if (id === 'dashboard' && typeof scheduleDashboardChartReplay === 'function') {
-      scheduleDashboardChartReplay({ fromZero: true });
+      scheduleDashboardChartReplay({ tabSwitch: true, animateCharts: false });
     }
 
     if (id === 'runetable') {
@@ -540,6 +540,146 @@
     }
   }
 
+  function donateLinks() {
+    const sw = window.SWRM || {};
+    return {
+      boosty: String(sw.DONATE_BOOSTY_URL || '').trim(),
+      lava: String(sw.DONATE_LAVA_URL || '').trim(),
+      crypto: String(sw.DONATE_CRYPTO_USDT_TRC20 || '').trim(),
+    };
+  }
+
+  async function donateCopyText(text) {
+    const s = String(text || '').trim();
+    if (!s) return false;
+    try {
+      await navigator.clipboard.writeText(s);
+      return true;
+    } catch (e) {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = s;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        const ok = document.execCommand('copy');
+        ta.remove();
+        return ok;
+      } catch (e2) {
+        return false;
+      }
+    }
+  }
+
+  function updateDonateDialogTexts() {
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en || {};
+    const set = (id, text) => {
+      const el = document.getElementById(id);
+      if (el && text != null) el.textContent = text;
+    };
+    set('donate-dialog-title', t.donateDialogTitle || t.donateTitle || 'Support the development');
+    set('lbl-donate-dialog-lead', t.donateDialogLead || '');
+    set('lbl-donate-section-boosty-title', t.donateSectionBoostyTitle || '');
+    set('lbl-donate-section-boosty-desc', t.donateSectionBoostyDesc || '');
+    set('lbl-donate-btn-boosty', t.donateBtnBoosty || 'Pay via Boosty');
+    set('lbl-donate-section-lava-title', t.donateSectionLavaTitle || '');
+    set('lbl-donate-section-lava-desc', t.donateSectionLavaDesc || '');
+    set('lbl-donate-btn-lava', t.donateBtnLava || 'Pay via Lava.top');
+    set('lbl-donate-section-crypto-title', t.donateSectionCryptoTitle || '');
+    set('lbl-donate-section-crypto-desc', t.donateSectionCryptoDesc || '');
+    set('lbl-donate-copy-crypto', t.donateCopyAddress || 'Copy address');
+
+    const links = donateLinks();
+    const cryptoHint = document.getElementById('lbl-donate-crypto-hint');
+    const boostyBtn = document.getElementById('donate-link-boosty');
+    if (boostyBtn) {
+      boostyBtn.href = links.boosty || '#';
+      boostyBtn.toggleAttribute('disabled', !links.boosty);
+    }
+    const lavaBtn = document.getElementById('donate-link-lava');
+    if (lavaBtn) {
+      lavaBtn.href = links.lava || '#';
+      lavaBtn.toggleAttribute('disabled', !links.lava);
+    }
+
+    const cryptoEl = document.getElementById('donate-crypto-address');
+    const copyBtn = document.getElementById('donate-copy-crypto');
+    const prefix = t.donateCryptoPrefix || 'USDT (TRC-20):';
+    if (cryptoEl) {
+      if (links.crypto) {
+        cryptoEl.textContent = `${prefix} ${links.crypto}`;
+        cryptoEl.classList.remove('donate-dialog__crypto--empty');
+      } else {
+        cryptoEl.textContent = t.donateCryptoEmpty || 'Wallet address is not configured yet.';
+        cryptoEl.classList.add('donate-dialog__crypto--empty');
+      }
+    }
+    if (cryptoHint) {
+      if (links.crypto) {
+        cryptoHint.textContent = t.donateCryptoNetworkHint || '';
+        cryptoHint.hidden = !t.donateCryptoNetworkHint;
+      } else {
+        cryptoHint.textContent = '';
+        cryptoHint.hidden = true;
+      }
+    }
+    if (copyBtn) copyBtn.disabled = !links.crypto;
+
+    const donateBtn = document.getElementById('header-donate-btn');
+    if (donateBtn) {
+      donateBtn.setAttribute('title', t.donateTitle || '');
+      donateBtn.setAttribute('aria-label', t.donateAria || t.donateShort || 'Donate');
+    }
+    const donateLbl = document.getElementById('lbl-header-donate');
+    if (donateLbl) donateLbl.textContent = t.donateShort || 'Donate';
+  }
+
+  function openDonateDialog() {
+    const dlg = document.getElementById('donate-dialog');
+    if (!dlg) return;
+    updateDonateDialogTexts();
+    if (typeof dlg.showModal === 'function') dlg.showModal();
+  }
+
+  function closeDonateDialog() {
+    const dlg = document.getElementById('donate-dialog');
+    if (dlg && typeof dlg.close === 'function') dlg.close();
+  }
+
+  function initDonateDialog() {
+    const dlg = document.getElementById('donate-dialog');
+    const openBtn = document.getElementById('header-donate-btn');
+    if (!dlg || !openBtn) return;
+
+    openBtn.addEventListener('click', () => openDonateDialog());
+    document.getElementById('donate-dialog-close')?.addEventListener('click', () => closeDonateDialog());
+    dlg.addEventListener('cancel', (e) => {
+      e.preventDefault();
+      closeDonateDialog();
+    });
+
+    document.getElementById('donate-copy-crypto')?.addEventListener('click', async () => {
+      const links = donateLinks();
+      if (!links.crypto) return;
+      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en || {};
+      const btn = document.getElementById('donate-copy-crypto');
+      const ok = await donateCopyText(links.crypto);
+      if (btn && ok) {
+        const prev = btn.textContent;
+        btn.textContent = t.donateCopied || 'Copied';
+        window.setTimeout(() => {
+          btn.textContent = prev;
+        }, 1600);
+      }
+    });
+
+    updateDonateDialogTexts();
+  }
+
+  initDonateDialog();
+
   // ===================== LANGUAGE =====================
   function loadFrTranslations() {
     if (TRANSLATIONS.fr) return Promise.resolve();
@@ -650,13 +790,7 @@
     if (chNav) chNav.setAttribute('aria-label', t.changelogSubtabsAria || 'Changelog');
     setMainNavTabLabel(document.querySelector('[data-tab="app-settings"]'), t.appSettings);
 
-    const donateLbl = document.getElementById('lbl-header-donate');
-    if (donateLbl) donateLbl.textContent = t.donateShort || 'Donate';
-    const donateLink = document.getElementById('header-donate-link');
-    if (donateLink) {
-      donateLink.setAttribute('title', t.donateTitle || '');
-      donateLink.setAttribute('aria-label', t.donateAria || t.donateShort || 'Donate');
-    }
+    if (typeof updateDonateDialogTexts === 'function') updateDonateDialogTexts();
 
     const footDisc = document.getElementById('lbl-footer-disclaimer');
     if (footDisc) footDisc.textContent = t.footerDisclaimer || '';
@@ -729,7 +863,14 @@
     renderChangelog();
     renderRoadmap();
     syncMonstersFilterLabels(t);
-    renderMonstersPanel();
+    if (allUnits.length || processedRunes.length) {
+      renderMonstersPanel();
+    } else if (
+      typeof shouldSkipEmbeddedDemoBootstrap !== 'function' ||
+      !shouldSkipEmbeddedDemoBootstrap()
+    ) {
+      renderMonstersPanel();
+    }
     applyDemoBannerTextFromTranslations();
     syncDemoBannerVisibility();
     if (typeof renderShareViewBanner === 'function') renderShareViewBanner();
@@ -1385,7 +1526,7 @@
     globalMinLevel = parseInt(e.target.value || '0', 10) || 0;
     if (processedRunes.length) {
       const visible = getVisibleRunes();
-      renderDashboard(visible);
+      renderDashboard(visible, { animateCharts: true });
       renderTable(visible);
     }
   });
@@ -1404,7 +1545,7 @@
     if (smax) smax.value = String(globalGradeMax);
     if (processedRunes.length) {
       const visible = getVisibleRunes();
-      renderDashboard(visible);
+      renderDashboard(visible, { animateCharts: true });
       renderTable(visible);
     }
   });
@@ -1423,7 +1564,7 @@
     if (smin) smin.value = String(globalGradeMin);
     if (processedRunes.length) {
       const visible = getVisibleRunes();
-      renderDashboard(visible);
+      renderDashboard(visible, { animateCharts: true });
       renderTable(visible);
     }
   });
@@ -1751,6 +1892,224 @@
 
   SWRM_NS.processRunesAsync = processRunesAsync;
 
+  const PROCESSED_CACHE_KEY_PREFIX = '__proc_v1__';
+  const PROCESSED_CACHE_SCHEMA = 1;
+
+  /** First hydrate after F5/navigation: skip chart tweens and defer table/monsters. */
+  let swrmColdBootPending = true;
+  /** True while bootstrap is loading the primary SWEX slot (blocks eager demo). */
+  let swrmPrimaryDatasetRestorePending = false;
+
+  function beginPrimaryDatasetRestore() {
+    swrmColdBootPending = true;
+    swrmPrimaryDatasetRestorePending = true;
+  }
+
+  function endPrimaryDatasetRestore() {
+    swrmPrimaryDatasetRestorePending = false;
+  }
+
+  function isPrimaryDatasetRestorePending() {
+    return swrmPrimaryDatasetRestorePending;
+  }
+
+  function isColdBootUiPending() {
+    return swrmColdBootPending;
+  }
+
+  function consumeColdBootUiOpts() {
+    if (!swrmColdBootPending) return null;
+    swrmColdBootPending = false;
+    return { animateCharts: false, fromZero: false, deferSecondaryUi: true };
+  }
+
+  function scheduleDeferredSecondaryPanels(visible) {
+    const run = () => {
+      if (typeof renderTable === 'function') renderTable(visible);
+      if (typeof renderMonstersPanel === 'function') renderMonstersPanel();
+    };
+    if (typeof requestIdleCallback === 'function') {
+      requestIdleCallback(run, { timeout: 2500 });
+    } else {
+      setTimeout(run, 16);
+    }
+  }
+
+  /**
+   * Dashboard + optional table/monsters after hydrate or reprocess.
+   * @param {{ animateCharts?: boolean, fromZero?: boolean, deferSecondaryUi?: boolean }} [extra]
+   */
+  function renderHydratedAppUi(extra = {}) {
+    const boot = consumeColdBootUiOpts();
+    const animateCharts = extra.animateCharts ?? boot?.animateCharts ?? true;
+    const fromZero = extra.fromZero ?? boot?.fromZero ?? false;
+    const deferSecondary =
+      extra.deferSecondaryUi ?? boot?.deferSecondaryUi ?? false;
+    const visible =
+      typeof getVisibleRunes === 'function' ? getVisibleRunes() : processedRunes;
+    if (typeof renderDashboard === 'function') {
+      renderDashboard(visible, { animateCharts, fromZero });
+    }
+    if (deferSecondary) scheduleDeferredSecondaryPanels(visible);
+    else {
+      if (typeof renderTable === 'function') renderTable(visible);
+      if (typeof renderMonstersPanel === 'function') renderMonstersPanel();
+    }
+  }
+
+  function processedCacheStorageKey(cacheId) {
+    return `${PROCESSED_CACHE_KEY_PREFIX}${cacheId}`;
+  }
+
+  function hashStringDjb2(text) {
+    let h = 5381;
+    const s = String(text || '');
+    for (let i = 0; i < s.length; i++) {
+      h = ((h << 5) + h) ^ s.charCodeAt(i);
+    }
+    return (h >>> 0).toString(36);
+  }
+
+  function stableStringify(value) {
+    if (value == null || typeof value !== 'object') return JSON.stringify(value);
+    if (Array.isArray(value)) {
+      return '[' + value.map((v) => stableStringify(v)).join(',') + ']';
+    }
+    const keys = Object.keys(value).sort();
+    return (
+      '{' +
+      keys.map((k) => JSON.stringify(k) + ':' + stableStringify(value[k])).join(',') +
+      '}'
+    );
+  }
+
+  function pickSettingsForFingerprint(settings) {
+    if (!settings || typeof settings !== 'object') return {};
+    return {
+      policy: settings.policy,
+      formulas: settings.formulas,
+      roles: settings.roles,
+      constants: settings.statConstants || settings.constants,
+      thresholds: settings.thresholds,
+      reapp: settings.reapp,
+      grind: settings.grind,
+      gem: settings.gemMeta || settings.gem,
+      rolePriority: settings.rolePriority,
+    };
+  }
+
+  function buildProcessFingerprint(jsonText, runStage, settings) {
+    const appVer = (window.SWRM && window.SWRM.APP_VERSION) || '';
+    const swexKey = hashStringDjb2(String(jsonText || ''));
+    const cfgKey = hashStringDjb2(
+      stableStringify(pickSettingsForFingerprint(settings || {})),
+    );
+    const stageKey = String(runStage || '');
+    return `${appVer}|${PROCESSED_CACHE_SCHEMA}|${stageKey}|${swexKey}|${cfgKey}`;
+  }
+
+  function getProcessCacheId(explicitId) {
+    if (explicitId != null && String(explicitId).trim() !== '') {
+      return String(explicitId);
+    }
+    if (typeof isUsingDemoDataset === 'function' && isUsingDemoDataset()) {
+      return typeof DEMO_IDB_KEY === 'string' ? DEMO_IDB_KEY : '__swrm_embedded_demo__';
+    }
+    try {
+      const slots = typeof loadDbSlots === 'function' ? loadDbSlots() : [];
+      const active = slots.find((s) => s.active && s.name && String(s.name).trim());
+      if (active) return String(active.id);
+      const named = slots.find((s) => s.name && String(s.name).trim());
+      if (named) return String(named.id);
+    } catch (e) {
+      /* ignore */
+    }
+    return 'legacy';
+  }
+
+  async function loadProcessedRunesCache(cacheId, fingerprint) {
+    if (!fingerprint || typeof loadSlotData !== 'function') return null;
+    try {
+      const raw = await loadSlotData(processedCacheStorageKey(cacheId));
+      if (!raw) return null;
+      const payload = JSON.parse(raw);
+      if (!payload || payload.fingerprint !== fingerprint) return null;
+      if (!Array.isArray(payload.runes) || !payload.runes.length) return null;
+      return payload.runes;
+    } catch (e) {
+      console.warn('loadProcessedRunesCache', e);
+      return null;
+    }
+  }
+
+  async function saveProcessedRunesCache(cacheId, fingerprint, runes) {
+    if (
+      !fingerprint ||
+      !Array.isArray(runes) ||
+      !runes.length ||
+      typeof saveSlotData !== 'function'
+    ) {
+      return;
+    }
+    try {
+      const payload = {
+        v: PROCESSED_CACHE_SCHEMA,
+        fingerprint,
+        at: Date.now(),
+        runes,
+      };
+      await saveSlotData(
+        processedCacheStorageKey(cacheId),
+        JSON.stringify(payload),
+      );
+    } catch (e) {
+      console.warn('saveProcessedRunesCache', e);
+    }
+  }
+
+  async function deleteProcessedRunesCache(cacheId) {
+    if (typeof deleteSlotDataRobust !== 'function') return;
+    try {
+      await deleteSlotDataRobust(processedCacheStorageKey(cacheId));
+    } catch (e) {
+      /* ignore */
+    }
+  }
+
+  async function getActiveSwexJsonTextForCache(cacheId) {
+    const id = getProcessCacheId(cacheId);
+    if (typeof loadSlotData === 'function') {
+      const fromIdb = await loadSlotData(id);
+      if (fromIdb) return fromIdb;
+    }
+    try {
+      const ls = localStorage.getItem('loadedRunes');
+      if (ls) return ls;
+    } catch (e) {
+      /* ignore */
+    }
+    if (activeSwexJson) return JSON.stringify(activeSwexJson);
+    return '';
+  }
+
+  async function tryRestoreProcessedFromCache(jsonText, cacheId) {
+    const settings = window.SWRM && window.SWRM.settings;
+    const fp = buildProcessFingerprint(jsonText, stage, settings);
+    const id = getProcessCacheId(cacheId);
+    const runes = await loadProcessedRunesCache(id, fp);
+    if (!runes) return false;
+    processedRunes = runes;
+    if (typeof attachForgeScoresToRunes === 'function') {
+      attachForgeScoresToRunes(processedRunes);
+    }
+    if (typeof bumpProcessedRev === 'function') bumpProcessedRev();
+    if (typeof renderHydratedAppUi === 'function') {
+      renderHydratedAppUi({ animateCharts: false, fromZero: false });
+    }
+    console.log('[SWRM] Restored %s processed runes from cache (slot %s)', runes.length, id);
+    return true;
+  }
+
   // ===================== FILE UPLOAD =====================
   // Initial SWEX load (file picker + drag-and-drop on #upload-prompt): see loadSwexJsonFromFile below.
 
@@ -1777,17 +2136,33 @@
     if (!demoOk) uiShowUploadPrompt();
   });
 
-  async function reprocess() {
+  async function reprocess(options = {}) {
     const settings = window.SWRM.settings;
     if (typeof window.SWRM.processRunesAsync === 'function') {
       processedRunes = await window.SWRM.processRunesAsync(allRunes, stage, settings);
     } else {
       processedRunes = processAll(allRunes, stage, settings);
     }
-    const visible = getVisibleRunes();
-    renderDashboard(visible, { animateCharts: true });
-    renderTable(visible);
-    renderMonstersPanel();
+    if (typeof attachForgeScoresToRunes === 'function') attachForgeScoresToRunes(processedRunes);
+    if (typeof bumpProcessedRev === 'function') bumpProcessedRev();
+    if (typeof saveProcessedRunesCache === 'function' && options.skipCacheSave !== true) {
+      const cacheId = getProcessCacheId(options.cacheId);
+      const jsonText = await getActiveSwexJsonTextForCache(cacheId);
+      const fp = buildProcessFingerprint(jsonText, stage, settings);
+      await saveProcessedRunesCache(cacheId, fp, processedRunes);
+    }
+    if (typeof renderHydratedAppUi === 'function') {
+      const cold =
+        typeof isColdBootUiPending === 'function' && isColdBootUiPending();
+      renderHydratedAppUi(
+        cold ? {} : { animateCharts: true, fromZero: true },
+      );
+    } else {
+      const visible = getVisibleRunes();
+      renderDashboard(visible, { animateCharts: true, fromZero: true });
+      renderTable(visible);
+      renderMonstersPanel();
+    }
   }
 
   const LS_USING_DEMO = 'swrm_using_demo_dataset_v1';
@@ -1840,6 +2215,7 @@
 
   async function loadDemoDatasetInMemory(jsonText, jsonObj, label) {
     allRunes = parseSWEX(jsonObj);
+    if (typeof bumpAllRunesRev === 'function') bumpAllRunesRev();
     rebuildUnitsFromSwex(jsonObj);
     reprocess();
     try {
@@ -1853,7 +2229,7 @@
     markUsingDemoDataset(true);
   }
 
-  async function restoreEmbeddedDemoFromStorage() {
+  async function restoreEmbeddedDemoFromStorage(options = {}) {
     try {
       const jsonText = await loadSlotData(DEMO_IDB_KEY);
       if (!jsonText) return false;
@@ -1864,10 +2240,14 @@
       const label = t.demoDatasetSlotLabel || 'Demo';
       await loadDemoDatasetInMemory(jsonText, json, label);
       if (typeof syncDemoTeamsWithDatasetMode === 'function') syncDemoTeamsWithDatasetMode();
-      uiAfterSuccessfulRuneRestore({ name: label }, { keepTab: true });
+      if (options.skipUiAfter !== true) {
+        uiAfterSuccessfulRuneRestore({ name: label }, { keepTab: true });
+      }
       applyDemoBannerTextFromTranslations();
       syncDemoBannerVisibility();
-      if (typeof renderTeamsPanel === 'function') renderTeamsPanel();
+      if (options.skipUiAfter !== true && typeof renderTeamsPanel === 'function') {
+        renderTeamsPanel();
+      }
       return true;
     } catch (e) {
       console.warn('restoreEmbeddedDemoFromStorage failed:', e);
@@ -1880,6 +2260,184 @@
       return localStorage.getItem(LS_USER_LOADED_REAL) === '1';
     } catch (e) {
       return false;
+    }
+  }
+
+  /** Do not auto-load embedded demo while a real export/slot is expected. */
+  function shouldSkipEmbeddedDemoBootstrap() {
+    if (typeof isPrimaryDatasetRestorePending === 'function' && isPrimaryDatasetRestorePending()) {
+      return true;
+    }
+    if (userHasLoadedRealExport()) return true;
+    try {
+      const slots = typeof loadDbSlots === 'function' ? loadDbSlots() : [];
+      if (
+        slots.some(
+          (s) =>
+            s.name &&
+            String(s.name).trim() &&
+            !slotNameLooksLikeDemo(s.name),
+        )
+      ) {
+        return true;
+      }
+    } catch (e) {
+      /* ignore */
+    }
+    return false;
+  }
+
+  /**
+   * Load active database slot / legacy backup / demo fallback (no tab switch).
+   * @returns {Promise<{ restored: boolean, meta?: { name?: string, id?: number } }>}
+   */
+  async function restorePrimaryRunesDatasetOnBoot() {
+    const savedRunes = localStorage.getItem('loadedRunes');
+    try {
+      const slots = loadDbSlots();
+      const hasSlotMeta = slots.some((s) => s.name && s.name.trim() !== '');
+      const realSlot = (s) =>
+        s.name &&
+        s.name.trim() !== '' &&
+        !slotNameLooksLikeDemo(s.name);
+      const targetSlot =
+        slots.find((s) => s.active && realSlot(s)) || slots.find((s) => realSlot(s));
+
+      console.log('=== INITIALIZATION DEBUG ===');
+      console.log('Slots from loadDbSlots():', slots);
+      console.log('hasSlotMeta:', hasSlotMeta, 'targetSlot:', targetSlot);
+
+      if (!Array.isArray(slots) || slots.length === 0) {
+        console.error('Invalid slots array:', slots);
+        if (!userHasLoadedRealExport()) {
+          const demoOk = await installEmbeddedDemoDataset({ skipUiAfter: true });
+          if (!demoOk) return { restored: false };
+          const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en || {};
+          return {
+            restored: true,
+            meta: { name: t.demoDatasetSlotLabel || 'Demo' },
+          };
+        }
+        return { restored: false };
+      }
+
+      console.log(
+        'Slots metadata key present:',
+        !!localStorage.getItem(DB_SLOTS_META_KEY),
+      );
+
+      let restored = false;
+      let meta = null;
+
+      if (targetSlot) {
+        const jsonText = await loadSlotData(targetSlot.id);
+        if (await tryHydrateRunesFromJsonText(jsonText, { cacheId: targetSlot.id })) {
+          markUsingDemoDataset(false);
+          meta = targetSlot;
+          restored = true;
+        } else if (
+          savedRunes &&
+          (await tryHydrateRunesFromJsonText(savedRunes, { cacheId: targetSlot.id }))
+        ) {
+          console.log(
+            `IndexedDB empty for Data ${targetSlot.id}; restored from localStorage backup`,
+          );
+          markUsingDemoDataset(false);
+          meta = targetSlot;
+          restored = true;
+        }
+      }
+
+      if (!restored && savedRunes && (await tryHydrateRunesFromJsonText(savedRunes, { cacheId: 1 }))) {
+        if (!hasSlotMeta) {
+          const migrated = loadDbSlots();
+          const name = localStorage.getItem('loadedRunesName') || 'Saved export';
+          const dateRaw = localStorage.getItem('loadedRunesDate') || '';
+          let parsedObj = null;
+          try {
+            parsedObj = JSON.parse(savedRunes);
+          } catch (e) {
+            /* ignore */
+          }
+          migrated.forEach((s) => {
+            if (s.id === 1) {
+              if (parsedObj) {
+                applySlotSummaryFromJson(s, name, parsedObj);
+              } else {
+                s.name = name;
+                s.uploadedAt = dateRaw
+                  ? new Date(dateRaw).toLocaleString()
+                  : new Date().toLocaleString();
+                s.wizardName = '';
+                s.wizardLevel = null;
+                s.wizardId = '';
+                s.monsterCount = null;
+                s.inventoryRuneCount = null;
+                s.runeCount = allRunes.length;
+              }
+            }
+            s.active = s.id === 1;
+          });
+          saveDbSlots(migrated);
+          try {
+            await saveSlotData(1, savedRunes);
+          } catch (e) {
+            console.warn('Could not mirror JSON to IndexedDB slot 1:', e);
+          }
+        }
+        markUsingDemoDataset(false);
+        meta = {
+          name: localStorage.getItem('loadedRunesName') || 'Saved export',
+          id: 1,
+        };
+        restored = true;
+      }
+
+      if (restored && meta) return { restored: true, meta };
+
+      if (userHasLoadedRealExport()) {
+        if (hasSlotMeta && targetSlot) {
+          console.log(
+            `Slot ${targetSlot.id} has metadata but no readable JSON; showing upload prompt`,
+          );
+        } else {
+          console.log('No saved runes found; showing upload prompt');
+        }
+        return { restored: false };
+      }
+
+      if (hasSlotMeta && targetSlot) {
+        console.log(
+          `Slot ${targetSlot.id} has metadata but no readable JSON; trying embedded demo`,
+        );
+      } else {
+        console.log('No saved runes found; trying embedded demo');
+      }
+      let demoOk = false;
+      if (typeof restoreEmbeddedDemoFromStorage === 'function') {
+        demoOk = await restoreEmbeddedDemoFromStorage({ skipUiAfter: true });
+      }
+      if (!demoOk) {
+        demoOk = await installEmbeddedDemoDataset({ skipUiAfter: true });
+      }
+      if (!demoOk) return { restored: false };
+      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en || {};
+      return {
+        restored: true,
+        meta: { name: t.demoDatasetSlotLabel || 'Demo' },
+      };
+    } catch (err) {
+      console.error('Error during restore:', err);
+      if (!userHasLoadedRealExport()) {
+        const demoOk = await installEmbeddedDemoDataset({ skipUiAfter: true });
+        if (!demoOk) return { restored: false };
+        const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en || {};
+        return {
+          restored: true,
+          meta: { name: t.demoDatasetSlotLabel || 'Demo' },
+        };
+      }
+      return { restored: false };
     }
   }
 
@@ -2006,6 +2564,7 @@
    */
   async function persistSwexPayloadToSlots(jsonText, displayNameForSlot, jsonObj) {
     allRunes = parseSWEX(jsonObj);
+    if (typeof bumpAllRunesRev === 'function') bumpAllRunesRev();
     rebuildUnitsFromSwex(jsonObj);
     reprocess();
 
@@ -2082,10 +2641,14 @@
       const label = t.demoDatasetSlotLabel || 'Demo';
       await loadDemoDatasetInMemory(jsonText, json, label);
       if (typeof syncDemoTeamsWithDatasetMode === 'function') syncDemoTeamsWithDatasetMode();
-      uiAfterSuccessfulRuneRestore({ name: label }, { keepTab: options.keepTab === true });
+      if (options.skipUiAfter !== true) {
+        uiAfterSuccessfulRuneRestore({ name: label }, { keepTab: options.keepTab === true });
+      }
       applyDemoBannerTextFromTranslations();
       syncDemoBannerVisibility();
-      if (typeof renderTeamsPanel === 'function') renderTeamsPanel();
+      if (options.skipUiAfter !== true && typeof renderTeamsPanel === 'function') {
+        renderTeamsPanel();
+      }
       return true;
     } catch (e) {
       console.warn('Embedded demo persist/load failed:', e);
@@ -2243,8 +2806,12 @@
   initUploadPromptDragDrop();
   initSiteWideSwexDragDrop();
 
-  /** Parse stored SWEX JSON (string or object) and populate allRunes. */
-  function tryHydrateRunesFromJsonText(raw) {
+  /**
+   * Parse stored SWEX JSON (string or object) and populate allRunes.
+   * @param {string|object} raw
+   * @param {{ cacheId?: string|number }} [options] IndexedDB slot id for processed-run cache
+   */
+  async function tryHydrateRunesFromJsonText(raw, options = {}) {
     if (raw == null) return false;
     if (typeof raw === 'string' && raw.trim() === '') return false;
     let obj;
@@ -2258,8 +2825,14 @@
     const runes = parseSWEX(obj);
     if (!runes.length) return false;
     allRunes = runes;
+    if (typeof bumpAllRunesRev === 'function') bumpAllRunesRev();
     rebuildUnitsFromSwex(obj);
-    reprocess();
+    const jsonText = typeof raw === 'string' ? raw : JSON.stringify(raw);
+    if (typeof tryRestoreProcessedFromCache === 'function') {
+      const restored = await tryRestoreProcessedFromCache(jsonText, options.cacheId);
+      if (restored) return true;
+    }
+    await reprocess();
     return true;
   }
 
@@ -2337,13 +2910,15 @@
   function uiEmptyRuneApplicationState(options = {}) {
     const keepTab = options.keepTab === true;
     allRunes = [];
+    if (typeof bumpAllRunesRev === 'function') bumpAllRunesRev();
     allUnits = [];
     activeSwexJson = null;
+    processedRunes = [];
+    if (typeof bumpProcessedRev === 'function') bumpProcessedRev();
     if (window.SWRM) {
       window.SWRM.accountTotemSpdPct = 0;
       window.SWRM.accountTotemLevel = 0;
     }
-    processedRunes = [];
     if (!keepTab) {
       showMainTab('guide', { writeHash: true });
       document.getElementById('upload-prompt').classList.remove('hidden');
@@ -3965,11 +4540,11 @@
       if (si >= 1 && si <= 6 && !Number.isNaN(si)) slotEff[si].push(eff);
       effVals.push(eff);
       effBuckets[Math.min(19, Math.floor(eff / 5))]++;
-      const sc =
-        typeof computeRuneScore === 'function'
-          ? Number(computeRuneScore(r))
-          : NaN;
-      const scoreNum = Number.isFinite(sc) ? sc : 0;
+      let scoreNum = Number.isFinite(r.forgeScore) ? r.forgeScore : NaN;
+      if (!Number.isFinite(scoreNum) && typeof computeRuneScore === 'function') {
+        scoreNum = Number(computeRuneScore(r));
+      }
+      if (!Number.isFinite(scoreNum)) scoreNum = 0;
       scoreVals.push(scoreNum);
       scoreBuckets[Math.min(19, Math.floor(scoreNum / 5))]++;
     }
@@ -4108,6 +4683,67 @@
   }
 
   // ===================== DASHBOARD =====================
+  let swrmAllRunesRev = 0;
+  let swrmProcessedRev = 0;
+  const dashboardRenderCache = { key: '', built: false };
+  let gameStageMetricsCache = { key: '', value: null };
+
+  function invalidateDashboardRenderCache() {
+    dashboardRenderCache.key = '';
+    dashboardRenderCache.built = false;
+  }
+
+  function invalidateGameStageMetricsCache() {
+    gameStageMetricsCache.key = '';
+    gameStageMetricsCache.value = null;
+  }
+
+  function bumpAllRunesRev() {
+    swrmAllRunesRev += 1;
+    invalidateGameStageMetricsCache();
+    invalidateDashboardRenderCache();
+  }
+
+  function bumpProcessedRev() {
+    swrmProcessedRev += 1;
+    invalidateDashboardRenderCache();
+  }
+
+  function dashboardRenderCacheKey(runes) {
+    const vis = Array.isArray(runes) ? runes : [];
+    return [
+      swrmAllRunesRev,
+      swrmProcessedRev,
+      stage,
+      globalMinLevel,
+      globalGradeMin,
+      globalGradeMax,
+      currentLang,
+      vis.length,
+      allRunes.length,
+    ].join('\u0001');
+  }
+
+  function getCachedGameStageMetrics(runes) {
+    const key = `${swrmAllRunesRev}:${Array.isArray(runes) ? runes.length : 0}`;
+    if (gameStageMetricsCache.key === key && gameStageMetricsCache.value) {
+      return gameStageMetricsCache.value;
+    }
+    const value = analyzeGameStage(runes);
+    gameStageMetricsCache.key = key;
+    gameStageMetricsCache.value = value;
+    return value;
+  }
+
+  function attachForgeScoresToRunes(runes) {
+    if (!Array.isArray(runes) || typeof computeRuneScore !== 'function') return;
+    for (let i = 0; i < runes.length; i++) {
+      const r = runes[i];
+      if (!r) continue;
+      r.forgeScore = computeRuneScore(r);
+    }
+  }
+
   /** Scale so the largest bar uses ~75% of track width (25% headroom). */
   function dashChartScaleMax(counts) {
     const maxV = Math.max(0, ...(counts.length ? counts : [0]));
@@ -4132,7 +4768,10 @@
   }
 
   function scheduleDashboardChartReplay(options) {
-    const fromZero = !!(options && options.fromZero);
+    const opts = options || {};
+    const tabSwitch = !!opts.tabSwitch;
+    const fromZero = !!opts.fromZero && !tabSwitch;
+    const animateCharts = opts.animateCharts !== false;
     rafTwice(() => {
       const hub = document.getElementById('tab-runes');
       if (hub && hub.classList.contains('hidden')) return;
@@ -4143,25 +4782,43 @@
       ) {
         return;
       }
-      if (fromZero) {
-        if (typeof renderDashboard === 'function' && typeof getVisibleRunes === 'function') {
-          renderDashboard(getVisibleRunes(), { animateCharts: true, fromZero: true });
-        }
+      if (typeof getVisibleRunes !== 'function' || typeof renderDashboard !== 'function') return;
+      const visible = getVisibleRunes();
+      const cacheKey = dashboardRenderCacheKey(visible);
+      const cacheHit = dashboardRenderCache.built && dashboardRenderCache.key === cacheKey;
+
+      if (tabSwitch && cacheHit) {
+        if (animateCharts && replayDashboardDistributionAnimations()) return;
         return;
       }
-      if (!replayDashboardDistributionAnimations()) {
-        if (typeof renderDashboard === 'function' && typeof getVisibleRunes === 'function') {
-          renderDashboard(getVisibleRunes(), { animateCharts: true });
-        }
+
+      if (fromZero) {
+        renderDashboard(visible, { animateCharts: true, fromZero: true });
+        return;
       }
+      if (cacheHit && animateCharts && replayDashboardDistributionAnimations()) return;
+      renderDashboard(visible, { animateCharts, fromZero: false });
     });
   }
 
   function renderDashboard(runes, opts) {
-    const animateCharts = !!(opts && opts.animateCharts);
-    const chartFromZero = !!(opts && opts.fromZero);
-    // Account progression: full export rune list, absolute counts + top-N eff (not affected by preset / Min Lvl).
-    const metrics = analyzeGameStage(allRunes);
+    const o = opts || {};
+    const animateCharts = !!o.animateCharts;
+    const chartFromZero = !!o.fromZero;
+    const cacheKey = dashboardRenderCacheKey(runes);
+    if (o.skipIfCached && dashboardRenderCache.built && dashboardRenderCache.key === cacheKey) {
+      if (animateCharts) {
+        rafTwice(() => {
+          if (!replayDashboardDistributionAnimations()) {
+            renderDashboard(runes, { ...o, skipIfCached: false, animateCharts: true });
+          }
+        });
+      }
+      return;
+    }
+
+    // Account progression: full export rune list (cached while allRunes unchanged).
+    const metrics = getCachedGameStageMetrics(allRunes);
     const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const recStage = getRecommendedStage(
       parseFloat(metrics.score),
@@ -4651,6 +5308,9 @@
         }
       });
     }
+
+    dashboardRenderCache.key = cacheKey;
+    dashboardRenderCache.built = allRunes.length > 0;
   }
 
   function setText(id, val, sel) {
@@ -5372,8 +6032,11 @@
         ? window.SWRM.ingameScoreBreakdown(r).join('\n')
         : tScore.tableIngameScoreHeaderTitle || '';
     const ingameTipAttr = ingameTip ? ` data-swrm-tip="${escapeAttr(ingameTip)}"` : '';
-    const scoreNum =
-      typeof computeRuneScore === 'function' ? computeRuneScore(r, tScore) : 0;
+    const scoreNum = Number.isFinite(r.forgeScore)
+      ? r.forgeScore
+      : typeof computeRuneScore === 'function'
+        ? computeRuneScore(r, tScore)
+        : 0;
     const scoreTier = typeof runeScoreTier === 'function' ? runeScoreTier(scoreNum) : 'stat-chip--score-lo';
     const scoreShown = String(scoreNum);
     const scoreTip =
@@ -8128,14 +8791,6 @@
   document.addEventListener('DOMContentLoaded', async () => {
     initSwrmFloatingTips();
     initTheme();
-    await updateLanguage(currentLang);
-    initDashboardUnifiedTabs();
-    initRuneTablePrefsFromStorage();
-    if (typeof initTableKindTabs === 'function') initTableKindTabs();
-    initRulesSubtabs();
-    initChangelogSubtabs();
-    initGuideSubtabs();
-    showMainTab(mainTabIdFromHash() || 'runes');
 
     const shareIdInUrl =
       typeof getShareIdFromUrl === 'function' ? getShareIdFromUrl() : '';
@@ -8145,132 +8800,46 @@
       profileInUrl && (profileInUrl.profileUrl || profileInUrl.dataBlob);
     if ((shareIdInUrl || hasProfileLink) && typeof initShareProfile === 'function') {
       await initShareProfile();
+      await updateLanguage(currentLang);
+      initDashboardUnifiedTabs();
+      initRuneTablePrefsFromStorage();
+      if (typeof initTableKindTabs === 'function') initTableKindTabs();
+      initRulesSubtabs();
+      initChangelogSubtabs();
+      initGuideSubtabs();
+      showMainTab(mainTabIdFromHash() || 'runes');
       renderDbSlots();
       if (typeof applyShareUrlTabFromLocation === 'function') applyShareUrlTabFromLocation();
       return;
     }
+
+    if (typeof beginPrimaryDatasetRestore === 'function') beginPrimaryDatasetRestore();
     if (typeof initShareProfile === 'function') {
       await initShareProfile();
     }
-
     if (typeof scrubDemoFromUserSlots === 'function') {
       await scrubDemoFromUserSlots();
     }
 
-    const savedRunes = localStorage.getItem('loadedRunes');
+    let boot = { restored: false };
+    if (typeof restorePrimaryRunesDatasetOnBoot === 'function') {
+      boot = await restorePrimaryRunesDatasetOnBoot();
+    }
+    if (typeof endPrimaryDatasetRestore === 'function') endPrimaryDatasetRestore();
 
-    try {
-      const slots = loadDbSlots();
-      const hasSlotMeta = slots.some(s => s.name && s.name.trim() !== '');
-      const realSlot = (s) => s.name && s.name.trim() !== '' && !(typeof slotNameLooksLikeDemo === 'function' && slotNameLooksLikeDemo(s.name));
-      const targetSlot =
-        slots.find(s => s.active && realSlot(s)) ||
-        slots.find(s => realSlot(s));
+    await updateLanguage(currentLang);
+    initDashboardUnifiedTabs();
+    initRuneTablePrefsFromStorage();
+    if (typeof initTableKindTabs === 'function') initTableKindTabs();
+    initRulesSubtabs();
+    initChangelogSubtabs();
+    initGuideSubtabs();
+    showMainTab(mainTabIdFromHash() || 'runes');
 
-      console.log('=== INITIALIZATION DEBUG ===');
-      console.log('Slots from loadDbSlots():', slots);
-      console.log('hasSlotMeta:', hasSlotMeta, 'targetSlot:', targetSlot);
-
-      if (!Array.isArray(slots) || slots.length === 0) {
-        console.error('Invalid slots array:', slots);
-        if (!userHasLoadedRealExport()) {
-          const demoOk = await installEmbeddedDemoDataset();
-          if (!demoOk) uiShowUploadPrompt();
-        } else {
-          uiShowUploadPrompt();
-        }
-      } else {
-        console.log('Slots metadata key present:', !!localStorage.getItem(DB_SLOTS_META_KEY));
-
-        let restored = false;
-
-        if (targetSlot) {
-          const jsonText = await loadSlotData(targetSlot.id);
-          if (tryHydrateRunesFromJsonText(jsonText)) {
-            if (typeof markUsingDemoDataset === 'function') markUsingDemoDataset(false);
-            uiAfterSuccessfulRuneRestore(targetSlot);
-            restored = true;
-          } else if (savedRunes && tryHydrateRunesFromJsonText(savedRunes)) {
-            console.log(`IndexedDB empty for Data ${targetSlot.id}; restored from localStorage backup`);
-            if (typeof markUsingDemoDataset === 'function') markUsingDemoDataset(false);
-            uiAfterSuccessfulRuneRestore(targetSlot);
-            restored = true;
-          }
-        }
-
-        if (!restored && savedRunes && tryHydrateRunesFromJsonText(savedRunes)) {
-          if (!hasSlotMeta) {
-            const migrated = loadDbSlots();
-            const name = localStorage.getItem('loadedRunesName') || 'Saved export';
-            const dateRaw = localStorage.getItem('loadedRunesDate') || '';
-            let parsedObj = null;
-            try {
-              parsedObj = JSON.parse(savedRunes);
-            } catch (e) { /* ignore */ }
-            migrated.forEach(s => {
-              if (s.id === 1) {
-                if (parsedObj) {
-                  applySlotSummaryFromJson(s, name, parsedObj);
-                } else {
-                  s.name = name;
-                  s.uploadedAt = dateRaw ? new Date(dateRaw).toLocaleString() : new Date().toLocaleString();
-                  s.wizardName = '';
-                  s.wizardLevel = null;
-                  s.wizardId = '';
-                  s.monsterCount = null;
-                  s.inventoryRuneCount = null;
-                  s.runeCount = allRunes.length;
-                }
-              }
-              s.active = s.id === 1;
-            });
-            saveDbSlots(migrated);
-            try {
-              await saveSlotData(1, savedRunes);
-            } catch (e) {
-              console.warn('Could not mirror JSON to IndexedDB slot 1:', e);
-            }
-          }
-          if (typeof markUsingDemoDataset === 'function') markUsingDemoDataset(false);
-          uiAfterSuccessfulRuneRestore({ name: localStorage.getItem('loadedRunesName') || 'Saved export', id: 1 });
-          restored = true;
-        }
-
-        if (!restored) {
-          if (userHasLoadedRealExport()) {
-            if (hasSlotMeta && targetSlot) {
-              console.log(`Slot ${targetSlot.id} has metadata but no readable JSON; showing upload prompt`);
-            } else {
-              console.log('No saved runes found; showing upload prompt');
-            }
-            uiShowUploadPrompt();
-          } else {
-            if (hasSlotMeta && targetSlot) {
-              console.log(`Slot ${targetSlot.id} has metadata but no readable JSON; trying embedded demo`);
-            } else {
-              console.log('No saved runes found; trying embedded demo');
-            }
-            let demoOk = false;
-            if (typeof restoreEmbeddedDemoFromStorage === 'function') {
-              demoOk = await restoreEmbeddedDemoFromStorage();
-            }
-            if (!demoOk) demoOk = await installEmbeddedDemoDataset();
-            if (!demoOk) uiShowUploadPrompt();
-          }
-        }
-      }
-    } catch (err) {
-      console.error('Error during restore:', err);
-      try {
-        if (!userHasLoadedRealExport()) {
-          const demoOk = await installEmbeddedDemoDataset();
-          if (!demoOk) uiShowUploadPrompt();
-        } else {
-          uiShowUploadPrompt();
-        }
-      } catch (e2) {
-        uiShowUploadPrompt();
-      }
+    if (boot.restored && boot.meta) {
+      uiAfterSuccessfulRuneRestore(boot.meta);
+    } else {
+      uiShowUploadPrompt();
     }
 
     document.getElementById('demo-banner-dismiss')?.addEventListener('click', () => {
@@ -8697,9 +9266,12 @@
   }
 
   async function clearAllIndexedDbRunePayloads() {
-    for (const id of [1, 2, 3, 4, 'current-runes', '__swrm_embedded_demo__']) {
+    for (const id of [1, 2, 3, 4, 'current-runes', '__swrm_embedded_demo__', 'legacy', 'share']) {
       try {
         await deleteSlotDataRobust(id);
+        if (typeof deleteProcessedRunesCache === 'function') {
+          await deleteProcessedRunesCache(id);
+        }
       } catch (e) {
         console.warn('clearAllIndexedDbRunePayloads', id, e);
       }
@@ -8961,6 +9533,9 @@
       try {
         const wasActive = slot.active;
         await deleteSlotDataRobust(slotId);
+        if (typeof deleteProcessedRunesCache === 'function') {
+          await deleteProcessedRunesCache(slotId);
+        }
         slots[idx] = normalizeDbSlot({ id: slot.id, name: '', uploadedAt: '', active: false });
 
         const namedSlots = slots.filter(s => s.name && s.name.trim() !== '');
@@ -8991,7 +9566,7 @@
           saveDbSlots(slots);
           clearLocalStorageRuneBackup();
           const jsonText = await loadSlotData(next.id);
-          if (!jsonText || !tryHydrateRunesFromJsonText(jsonText)) {
+          if (!jsonText || !(await tryHydrateRunesFromJsonText(jsonText, { cacheId: next.id }))) {
             resetDemoAndRealPersistenceFlags();
             await clearAllIndexedDbRunePayloads();
             clearLocalStorageRuneBackup();
@@ -9157,7 +9732,7 @@
     return null;
   }
 
-  function applyReadOnlyProfilePayload(parsed, wizardName) {
+  async function applyReadOnlyProfilePayload(parsed, wizardName) {
     const root = normalizeProfileSwexRoot(parsed);
     if (!root) return false;
     const name =
@@ -9167,7 +9742,9 @@
           root.wizard_name ||
           '',
       ).trim();
-    if (!tryHydrateRunesFromJsonText(JSON.stringify(root))) return false;
+    if (!(await tryHydrateRunesFromJsonText(JSON.stringify(root), { cacheId: 'share' }))) {
+      return false;
+    }
     shareReadOnly = true;
     persistShareSession(true);
     shareViewLoadFailed = false;
@@ -9209,7 +9786,7 @@
         text = await res.text();
       }
       const parsed = JSON.parse(text);
-      return applyReadOnlyProfilePayload(parsed);
+      return await applyReadOnlyProfilePayload(parsed);
     } catch (e) {
       console.warn('Profile link load failed', e);
       shareViewLoadFailed = true;
@@ -9791,7 +10368,7 @@
         shareViewLoadFailed = true;
         return false;
       }
-      if (!applyReadOnlyProfilePayload({ ...root, teams: parsed.teams }, wizardName)) {
+      if (!(await applyReadOnlyProfilePayload({ ...root, teams: parsed.teams }, wizardName))) {
         shareViewLoadFailed = true;
         return false;
       }
@@ -15556,6 +16133,12 @@
 
   async function ensureMonstersDataset() {
     if (allUnits.length) return true;
+    if (
+      typeof shouldSkipEmbeddedDemoBootstrap === 'function' &&
+      shouldSkipEmbeddedDemoBootstrap()
+    ) {
+      return false;
+    }
     if (typeof installEmbeddedDemoDataset !== 'function') return false;
     return installEmbeddedDemoDataset({ keepTab: true });
   }

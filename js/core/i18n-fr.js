@@ -1,8 +1,28 @@
 // js/core/i18n-fr.js — French UI strings (lazy-loaded on language switch)
 window.SWRM_I18N_FR = {
   donateShort: 'Soutenir',
-  donateTitle: 'Soutenir le projet — ouvre la page de paiement Lava.top',
-  donateAria: 'Soutenir le projet (page externe)',
+  donateTitle: 'Soutenir le développement',
+  donateAria: 'Soutenir — options de paiement',
+  donateDialogTitle: 'Soutenir le développement',
+  donateDialogLead:
+    'Votre soutien permet de garder cet outil gratuit et à jour. Choisissez la méthode qui vous convient :',
+  donateSectionBoostyTitle: '1. Cartes bancaires / Apple Pay (via Boosty)',
+  donateSectionBoostyDesc:
+    'Une plateforme dédiée aux créateurs, avec paiements internationaux par carte.',
+  donateBtnBoosty: 'Payer via Boosty',
+  donateSectionLavaTitle: '2. Passerelle de paiement universelle (via Lava.top)',
+  donateSectionLavaDesc:
+    'Une plateforme rapide et pratique, avec plusieurs moyens de paiement.',
+  donateBtnLava: 'Payer via Lava.top',
+  donateSectionCryptoTitle: '3. Virement crypto direct',
+  donateSectionCryptoDesc:
+    'Idéal pour les transferts P2P directs, sans intermédiaires.',
+  donateCryptoPrefix: 'USDT (TRC-20) :',
+  donateCryptoNetworkHint: 'Veuillez utiliser le réseau TRC-20.',
+  donateCryptoEmpty: 'Adresse du portefeuille non configurée.',
+  donateCopyAddress: 'Copier l’adresse',
+  donateCopied: 'Copié',
+  donateClose: 'Fermer',
   footerDisclaimer:
     'Summoners War™ est une marque de Com2uS Corp. Ce site n’est pas affilié ni approuvé par Com2uS Corp.',
   dashboard: 'Runes',

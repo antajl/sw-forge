@@ -25,17 +25,33 @@
     if (!demoOk) uiShowUploadPrompt();
   });
 
-  async function reprocess() {
+  async function reprocess(options = {}) {
     const settings = window.SWRM.settings;
     if (typeof window.SWRM.processRunesAsync === 'function') {
       processedRunes = await window.SWRM.processRunesAsync(allRunes, stage, settings);
     } else {
       processedRunes = processAll(allRunes, stage, settings);
     }
-    const visible = getVisibleRunes();
-    renderDashboard(visible, { animateCharts: true });
-    renderTable(visible);
-    renderMonstersPanel();
+    if (typeof attachForgeScoresToRunes === 'function') attachForgeScoresToRunes(processedRunes);
+    if (typeof bumpProcessedRev === 'function') bumpProcessedRev();
+    if (typeof saveProcessedRunesCache === 'function' && options.skipCacheSave !== true) {
+      const cacheId = getProcessCacheId(options.cacheId);
+      const jsonText = await getActiveSwexJsonTextForCache(cacheId);
+      const fp = buildProcessFingerprint(jsonText, stage, settings);
+      await saveProcessedRunesCache(cacheId, fp, processedRunes);
+    }
+    if (typeof renderHydratedAppUi === 'function') {
+      const cold =
+        typeof isColdBootUiPending === 'function' && isColdBootUiPending();
+      renderHydratedAppUi(
+        cold ? {} : { animateCharts: true, fromZero: true },
+      );
+    } else {
+      const visible = getVisibleRunes();
+      renderDashboard(visible, { animateCharts: true, fromZero: true });
+      renderTable(visible);
+      renderMonstersPanel();
+    }
   }
 
   const LS_USING_DEMO = 'swrm_using_demo_dataset_v1';
@@ -88,6 +104,7 @@
 
   async function loadDemoDatasetInMemory(jsonText, jsonObj, label) {
     allRunes = parseSWEX(jsonObj);
+    if (typeof bumpAllRunesRev === 'function') bumpAllRunesRev();
     rebuildUnitsFromSwex(jsonObj);
     reprocess();
     try {
@@ -101,7 +118,7 @@
     markUsingDemoDataset(true);
   }
 
-  async function restoreEmbeddedDemoFromStorage() {
+  async function restoreEmbeddedDemoFromStorage(options = {}) {
     try {
       const jsonText = await loadSlotData(DEMO_IDB_KEY);
       if (!jsonText) return false;
@@ -112,10 +129,14 @@
       const label = t.demoDatasetSlotLabel || 'Demo';
       await loadDemoDatasetInMemory(jsonText, json, label);
       if (typeof syncDemoTeamsWithDatasetMode === 'function') syncDemoTeamsWithDatasetMode();
-      uiAfterSuccessfulRuneRestore({ name: label }, { keepTab: true });
+      if (options.skipUiAfter !== true) {
+        uiAfterSuccessfulRuneRestore({ name: label }, { keepTab: true });
+      }
       applyDemoBannerTextFromTranslations();
       syncDemoBannerVisibility();
-      if (typeof renderTeamsPanel === 'function') renderTeamsPanel();
+      if (options.skipUiAfter !== true && typeof renderTeamsPanel === 'function') {
+        renderTeamsPanel();
+      }
       return true;
     } catch (e) {
       console.warn('restoreEmbeddedDemoFromStorage failed:', e);
@@ -128,6 +149,184 @@
       return localStorage.getItem(LS_USER_LOADED_REAL) === '1';
     } catch (e) {
       return false;
+    }
+  }
+
+  /** Do not auto-load embedded demo while a real export/slot is expected. */
+  function shouldSkipEmbeddedDemoBootstrap() {
+    if (typeof isPrimaryDatasetRestorePending === 'function' && isPrimaryDatasetRestorePending()) {
+      return true;
+    }
+    if (userHasLoadedRealExport()) return true;
+    try {
+      const slots = typeof loadDbSlots === 'function' ? loadDbSlots() : [];
+      if (
+        slots.some(
+          (s) =>
+            s.name &&
+            String(s.name).trim() &&
+            !slotNameLooksLikeDemo(s.name),
+        )
+      ) {
+        return true;
+      }
+    } catch (e) {
+      /* ignore */
+    }
+    return false;
+  }
+
+  /**
+   * Load active database slot / legacy backup / demo fallback (no tab switch).
+   * @returns {Promise<{ restored: boolean, meta?: { name?: string, id?: number } }>}
+   */
+  async function restorePrimaryRunesDatasetOnBoot() {
+    const savedRunes = localStorage.getItem('loadedRunes');
+    try {
+      const slots = loadDbSlots();
+      const hasSlotMeta = slots.some((s) => s.name && s.name.trim() !== '');
+      const realSlot = (s) =>
+        s.name &&
+        s.name.trim() !== '' &&
+        !slotNameLooksLikeDemo(s.name);
+      const targetSlot =
+        slots.find((s) => s.active && realSlot(s)) || slots.find((s) => realSlot(s));
+
+      console.log('=== INITIALIZATION DEBUG ===');
+      console.log('Slots from loadDbSlots():', slots);
+      console.log('hasSlotMeta:', hasSlotMeta, 'targetSlot:', targetSlot);
+
+      if (!Array.isArray(slots) || slots.length === 0) {
+        console.error('Invalid slots array:', slots);
+        if (!userHasLoadedRealExport()) {
+          const demoOk = await installEmbeddedDemoDataset({ skipUiAfter: true });
+          if (!demoOk) return { restored: false };
+          const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en || {};
+          return {
+            restored: true,
+            meta: { name: t.demoDatasetSlotLabel || 'Demo' },
+          };
+        }
+        return { restored: false };
+      }
+
+      console.log(
+        'Slots metadata key present:',
+        !!localStorage.getItem(DB_SLOTS_META_KEY),
+      );
+
+      let restored = false;
+      let meta = null;
+
+      if (targetSlot) {
+        const jsonText = await loadSlotData(targetSlot.id);
+        if (await tryHydrateRunesFromJsonText(jsonText, { cacheId: targetSlot.id })) {
+          markUsingDemoDataset(false);
+          meta = targetSlot;
+          restored = true;
+        } else if (
+          savedRunes &&
+          (await tryHydrateRunesFromJsonText(savedRunes, { cacheId: targetSlot.id }))
+        ) {
+          console.log(
+            `IndexedDB empty for Data ${targetSlot.id}; restored from localStorage backup`,
+          );
+          markUsingDemoDataset(false);
+          meta = targetSlot;
+          restored = true;
+        }
+      }
+
+      if (!restored && savedRunes && (await tryHydrateRunesFromJsonText(savedRunes, { cacheId: 1 }))) {
+        if (!hasSlotMeta) {
+          const migrated = loadDbSlots();
+          const name = localStorage.getItem('loadedRunesName') || 'Saved export';
+          const dateRaw = localStorage.getItem('loadedRunesDate') || '';
+          let parsedObj = null;
+          try {
+            parsedObj = JSON.parse(savedRunes);
+          } catch (e) {
+            /* ignore */
+          }
+          migrated.forEach((s) => {
+            if (s.id === 1) {
+              if (parsedObj) {
+                applySlotSummaryFromJson(s, name, parsedObj);
+              } else {
+                s.name = name;
+                s.uploadedAt = dateRaw
+                  ? new Date(dateRaw).toLocaleString()
+                  : new Date().toLocaleString();
+                s.wizardName = '';
+                s.wizardLevel = null;
+                s.wizardId = '';
+                s.monsterCount = null;
+                s.inventoryRuneCount = null;
+                s.runeCount = allRunes.length;
+              }
+            }
+            s.active = s.id === 1;
+          });
+          saveDbSlots(migrated);
+          try {
+            await saveSlotData(1, savedRunes);
+          } catch (e) {
+            console.warn('Could not mirror JSON to IndexedDB slot 1:', e);
+          }
+        }
+        markUsingDemoDataset(false);
+        meta = {
+          name: localStorage.getItem('loadedRunesName') || 'Saved export',
+          id: 1,
+        };
+        restored = true;
+      }
+
+      if (restored && meta) return { restored: true, meta };
+
+      if (userHasLoadedRealExport()) {
+        if (hasSlotMeta && targetSlot) {
+          console.log(
+            `Slot ${targetSlot.id} has metadata but no readable JSON; showing upload prompt`,
+          );
+        } else {
+          console.log('No saved runes found; showing upload prompt');
+        }
+        return { restored: false };
+      }
+
+      if (hasSlotMeta && targetSlot) {
+        console.log(
+          `Slot ${targetSlot.id} has metadata but no readable JSON; trying embedded demo`,
+        );
+      } else {
+        console.log('No saved runes found; trying embedded demo');
+      }
+      let demoOk = false;
+      if (typeof restoreEmbeddedDemoFromStorage === 'function') {
+        demoOk = await restoreEmbeddedDemoFromStorage({ skipUiAfter: true });
+      }
+      if (!demoOk) {
+        demoOk = await installEmbeddedDemoDataset({ skipUiAfter: true });
+      }
+      if (!demoOk) return { restored: false };
+      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en || {};
+      return {
+        restored: true,
+        meta: { name: t.demoDatasetSlotLabel || 'Demo' },
+      };
+    } catch (err) {
+      console.error('Error during restore:', err);
+      if (!userHasLoadedRealExport()) {
+        const demoOk = await installEmbeddedDemoDataset({ skipUiAfter: true });
+        if (!demoOk) return { restored: false };
+        const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en || {};
+        return {
+          restored: true,
+          meta: { name: t.demoDatasetSlotLabel || 'Demo' },
+        };
+      }
+      return { restored: false };
     }
   }
 
@@ -254,6 +453,7 @@
    */
   async function persistSwexPayloadToSlots(jsonText, displayNameForSlot, jsonObj) {
     allRunes = parseSWEX(jsonObj);
+    if (typeof bumpAllRunesRev === 'function') bumpAllRunesRev();
     rebuildUnitsFromSwex(jsonObj);
     reprocess();
 
@@ -330,10 +530,14 @@
       const label = t.demoDatasetSlotLabel || 'Demo';
       await loadDemoDatasetInMemory(jsonText, json, label);
       if (typeof syncDemoTeamsWithDatasetMode === 'function') syncDemoTeamsWithDatasetMode();
-      uiAfterSuccessfulRuneRestore({ name: label }, { keepTab: options.keepTab === true });
+      if (options.skipUiAfter !== true) {
+        uiAfterSuccessfulRuneRestore({ name: label }, { keepTab: options.keepTab === true });
+      }
       applyDemoBannerTextFromTranslations();
       syncDemoBannerVisibility();
-      if (typeof renderTeamsPanel === 'function') renderTeamsPanel();
+      if (options.skipUiAfter !== true && typeof renderTeamsPanel === 'function') {
+        renderTeamsPanel();
+      }
       return true;
     } catch (e) {
       console.warn('Embedded demo persist/load failed:', e);

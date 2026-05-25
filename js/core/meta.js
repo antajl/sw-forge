@@ -67,6 +67,19 @@ const SWRM_API = 'https://sw-backend.antajltube.workers.dev';
 /** Set true after Worker exposes GET /swarfarm/* (static proxy). Until then, images use swarfarm.com directly. */
 const SWRM_SWARFARM_PROXY_STATIC = true;
 
+/** Donate modal — edit profile / wallet links here */
+const DONATE_BOOSTY_URL = 'https://boosty.to/antajl/donate';
+const DONATE_LAVA_URL = 'https://app.lava.top/antajl?tabId=donate';
+/** USDT (TRC-20) wallet for the “Direct Crypto” block */
+const DONATE_CRYPTO_USDT_TRC20 = 'TBwBtxxcYFQceogrUCnZxZWGWVJKjWyahR';
+
+if (typeof window !== 'undefined') {
+  window.SWRM = window.SWRM || {};
+  window.SWRM.DONATE_BOOSTY_URL = DONATE_BOOSTY_URL;
+  window.SWRM.DONATE_LAVA_URL = DONATE_LAVA_URL;
+  window.SWRM.DONATE_CRYPTO_USDT_TRC20 = DONATE_CRYPTO_USDT_TRC20;
+}
+
 /**
  * Debug / post-migration: when true, image URLs use only bundled files under assets/
  * (no SWARFARM CDN fallback). Missing files show as broken/placeholder.

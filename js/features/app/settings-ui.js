@@ -72,9 +72,12 @@
   }
 
   async function clearAllIndexedDbRunePayloads() {
-    for (const id of [1, 2, 3, 4, 'current-runes', '__swrm_embedded_demo__']) {
+    for (const id of [1, 2, 3, 4, 'current-runes', '__swrm_embedded_demo__', 'legacy', 'share']) {
       try {
         await deleteSlotDataRobust(id);
+        if (typeof deleteProcessedRunesCache === 'function') {
+          await deleteProcessedRunesCache(id);
+        }
       } catch (e) {
         console.warn('clearAllIndexedDbRunePayloads', id, e);
       }
@@ -336,6 +339,9 @@
       try {
         const wasActive = slot.active;
         await deleteSlotDataRobust(slotId);
+        if (typeof deleteProcessedRunesCache === 'function') {
+          await deleteProcessedRunesCache(slotId);
+        }
         slots[idx] = normalizeDbSlot({ id: slot.id, name: '', uploadedAt: '', active: false });
 
         const namedSlots = slots.filter(s => s.name && s.name.trim() !== '');
@@ -366,7 +372,7 @@
           saveDbSlots(slots);
           clearLocalStorageRuneBackup();
           const jsonText = await loadSlotData(next.id);
-          if (!jsonText || !tryHydrateRunesFromJsonText(jsonText)) {
+          if (!jsonText || !(await tryHydrateRunesFromJsonText(jsonText, { cacheId: next.id }))) {
             resetDemoAndRealPersistenceFlags();
             await clearAllIndexedDbRunePayloads();
             clearLocalStorageRuneBackup();

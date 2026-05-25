@@ -10,6 +10,7 @@ const outPath = path.join(root, 'css/dist/app.css');
 const FILES = [
   'css/foundation/base.css',
   'css/foundation/header.css',
+  'css/features/shell/donate-dialog.css',
   'css/foundation/overlays.css',
   'css/foundation/toasts.css',
   'css/foundation/action-chrome.css',

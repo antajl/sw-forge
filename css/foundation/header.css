@@ -250,7 +250,7 @@
   border: 1px solid var(--border);
 }
 
-#header-donate-link .header-donate-heart {
+#header-donate-btn .header-donate-heart {
   color: var(--red);
 }
 
@@ -269,6 +269,23 @@
 html[lang="ru"] .header-theme-btn.header-theme-btn--wide {
   letter-spacing: 0.03em;
   font-size: 0.68rem;
+}
+
+/* Donate label — same typography as main nav tabs (.tab) */
+#header-donate-btn.header-theme-btn--wide {
+  font-size: var(--tab-font-size, 0.82rem);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+
+#header-donate-btn #lbl-header-donate {
+  line-height: 1.2;
+}
+
+html[lang="ru"] #header-donate-btn.header-theme-btn--wide {
+  font-size: var(--tab-font-size, 0.82rem);
+  letter-spacing: 0.04em;
 }
 
 .header-theme-btn {

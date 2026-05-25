@@ -4,16 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SW Forge</title>
-  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png" />
-  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16.png" />
-  <link rel="shortcut icon" href="/assets/favicon-32.png" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png" />
+  <link rel="shortcut icon" href="assets/favicon-32.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png" />
   <!-- Inline: SVGs have a huge default intrinsic size before css/dist/app.css loads (e.g. live reload). -->
   <style>
     .logo__img { height: 42px; max-width: min(220px, 48vw); }
     .header-theme-icon, .tab__icon-svg, .tab__icon-mask, .theme-toggle__icon { width: 22px; height: 22px; max-width: 22px; max-height: 22px; display: block; flex-shrink: 0; }
     /* Avoid default link purple (currentColor) until css/dist/app.css loads */
-    #header-donate-link .header-donate-heart { color: #d04356; }
+    #header-donate-btn .header-donate-heart { color: #d04356; }
     /* Stage metric SVGs are huge by default — clip collapsed progression panel until CSS loads */
     .stage-metric-icon svg { width: 18px; height: 18px; max-width: 18px; max-height: 18px; display: block; }
     #stage-advisor.is-compact .stage-advisor-expanded-wrap { max-height: 0 !important; overflow: hidden !important; visibility: hidden; }
@@ -110,12 +110,12 @@
             </select>
           </div>
           <div class="header-donate-group">
-            <a href="https://app.lava.top/antajl?tabId=donate" class="header-theme-btn header-theme-btn--wide" id="header-donate-link" target="_blank" rel="noopener noreferrer">
+            <button type="button" class="header-theme-btn header-theme-btn--wide" id="header-donate-btn">
               <svg class="header-theme-icon header-donate-heart" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <path fill="currentColor" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
               </svg>
               <span id="lbl-header-donate">Donate</span>
-            </a>
+            </button>
           </div>
           <div class="header-theme-group" id="header-theme-group">
             <button type="button" class="theme-toggle is-dark" id="theme-toggle" aria-pressed="false" title="Light theme" aria-label="Light theme">
@@ -1556,7 +1556,7 @@
               <ul class="guide-strict-ladder">
                 <li><span class="guide-strict-ladder__n">1</span><span><strong>Very forgiving</strong> — many runes get a role; weak subs and near-miss lines often pass. Good while farming and powering up.</span></li>
                 <li><span class="guide-strict-ladder__n">2</span><span><strong>Relaxed</strong> — still friendly; more Keep than Sell on mid-tier runes.</span></li>
-                <li><span class="guide-strict-ladder__n">3</span><span><strong>Balanced</strong> — default for your chosen stage. Second-chance check can mark a rune <strong>(Relaxed)</strong> in Reason.</span></li>
+                <li><span class="guide-strict-ladder__n">3</span><span><strong>Balanced</strong> — default for your chosen stage. Second-chance check can mark a rune <strong>(Relaxed)</strong> in the Verdict tooltip.</span></li>
                 <li><span class="guide-strict-ladder__n">4</span><span><strong>Strict</strong> — needs more real stat lines and stronger rolls; fewer “almost good” Keep. No second-chance pass.</span></li>
                 <li><span class="guide-strict-ladder__n">5</span><span><strong>Very strict</strong> — only strong, clean runes keep roles; borderline pieces move to Sell faster. For trimmed inventories.</span></li>
               </ul>
@@ -1599,7 +1599,7 @@
               <ul class="guide-strict-ladder">
                 <li><span class="guide-strict-ladder__n">1</span><span><strong>Очень мягко</strong> — больше рун получают роль; слабые сабы и «почти сошлось» часто проходят. Для фарма и прокачки.</span></li>
                 <li><span class="guide-strict-ladder__n">2</span><span><strong>Мягко</strong> — дружелюбно; больше Keep, меньше Sell на средних рунах.</span></li>
-                <li><span class="guide-strict-ladder__n">3</span><span><strong>Баланс</strong> — база для выбранной стадии. Возможна вторая попытка — в «Причине» будет <strong>(Relaxed)</strong>.</span></li>
+                <li><span class="guide-strict-ladder__n">3</span><span><strong>Баланс</strong> — база для выбранной стадии. Возможна вторая попытка — в тултипе Verdict будет <strong>(Relaxed)</strong>.</span></li>
                 <li><span class="guide-strict-ladder__n">4</span><span><strong>Строго</strong> — нужно больше сильных линий; меньше «почти хороших» Keep. Без второй попытки.</span></li>
                 <li><span class="guide-strict-ladder__n">5</span><span><strong>Очень строго</strong> — роли только у реально сильных рун; пограничные чаще Sell. Для жёсткой чистки коробки.</span></li>
               </ul>
@@ -1718,25 +1718,25 @@
           <div class="guide-lang guide-lang--en guide-list">
             <section class="guide-section guide-section--hero" aria-labelledby="guide-h-table-en">
               <h3 id="guide-h-table-en">Rune Table</h3>
-              <p class="guide-lead">Your action list: every rune with <strong>Role</strong>, <strong>Verdict</strong>, stats, and a short <strong>Reason</strong> line when the app has a specific next step.</p>
+              <p class="guide-lead">Your action list: every rune with stats, <strong>Ingame</strong> and <strong>Forge</strong> ratings, <strong>Verdict</strong>, <strong>Role</strong>, and <strong>Location</strong>. Hover <strong>Verdict</strong> for the plain-language reason (Keep quality, Grind/Gem hints, why Sell).</p>
             </section>
             <section class="guide-section" aria-labelledby="guide-h-table-cols-en">
               <h3 id="guide-h-table-cols-en">Columns that matter</h3>
               <div class="guide-col-map">
+                <div class="guide-col-map__item"><span class="guide-verdict-chip upgrade">Ingame</span><span><strong>In-game Rating</strong> — Com2uS score from innate + subs (roll + grind); main ignored; matches the game rune list</span></div>
+                <div class="guide-col-map__item"><span class="guide-verdict-chip keep">Forge</span><span><strong>Primary sort.</strong> Forge Score 0–100 — meta combat value (synergies, archetypes, grinds)</span></div>
+                <div class="guide-col-map__item"><span class="guide-verdict-chip finish">Verdict</span><span>Upgrade · Finish · Keep · Gem · Grind · Reapp · Sell — hover for reason</span></div>
                 <div class="guide-col-map__item"><span class="guide-verdict-chip keep">Role</span><span>Build the rune fits (or Universal)</span></div>
-                <div class="guide-col-map__item"><span class="guide-verdict-chip finish">Verdict</span><span>Upgrade · Finish · Keep · Gem · Grind · Reapp · Sell</span></div>
-                <div class="guide-col-map__item"><span class="guide-verdict-chip keep">Score</span><span><strong>Primary.</strong> Forge Score — meta combat value (synergies, archetypes, grinds)</span></div>
-                <div class="guide-col-map__item"><span class="guide-verdict-chip upgrade">Eff%</span><span><strong>Reference.</strong> SWOP classic efficiency (base rolls only) — table caps display at 100%</span></div>
-                <div class="guide-col-map__item"><span class="guide-verdict-chip gem">Reason</span><span>Why Sell, what to grind, or Keep quality line</span></div>
+                <div class="guide-col-map__item"><span class="guide-verdict-chip gem">Location</span><span>Monster name when equipped, or <strong>Inventory</strong>; filter Inventory / Equipped in More Filters</span></div>
               </div>
             </section>
             <section class="guide-section" aria-labelledby="guide-h-table-toolbar-en">
               <h3 id="guide-h-table-toolbar-en">Toolbar &amp; summary chips</h3>
               <ul class="guide-checklist">
                 <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Chips above the grid</strong> — quick counts: total shown, Ancient, equipped, +15, Keep (for the current filter).</span></li>
-                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>More Filters</strong> — Ancient only, hide Reason column, reset filters.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>More Filters</strong> — Ancient only, <strong>Location</strong> (Inventory / Equipped), reset filters.</span></li>
                 <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Active filter chips</strong> — click the × on a chip to drop one filter without clearing everything.</span></li>
-                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Reason column</strong> — hidden by default; turn off “hide Reason” to see Keep quality lines and Grind/Gem hints in-grid.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Verdict tooltips</strong> — hover the verdict tag for Keep quality, Grind/Gem targets, or Sell reasons (no separate Reason column).</span></li>
               </ul>
             </section>
             <section class="guide-section" aria-labelledby="guide-h-table-forge-en">
@@ -1744,30 +1744,14 @@
               <p class="guide-lead">The table shows <strong>two independent numbers</strong>. They answer different questions — use both, do not expect them to match.</p>
 
               <div class="guide-metric-panels">
-              <article class="guide-metric-panel guide-metric-panel--eff" aria-labelledby="guide-h-table-eff-en">
-              <h4 class="guide-metric-panel__title" id="guide-h-table-eff-en">Eff%</h4>
-              <p class="guide-metric-panel__tagline">SWOP-classic roll density — blind to stat type (no meta tiers, no grinds).</p>
-              <p>Computed in-app from SWEX (not verdict). Matches SWOP: every line uses the same formula; flats and % stats are not halved.</p>
-              <p class="guide-formula"><code>score = 1.0 (main) + innateTerm + Σ subTerm</code><br>
-                <code>lineTerm = baseRoll ÷ (maxPerRoll × 5)</code> — <strong>base roll only</strong> (<code>val</code>), grind excluded.<br>
-                <code>innateTerm</code> uses the same formula as a sub line (no ×0.5).<br>
-                <code>Eff% = round(score ÷ 2.8 × 100, 1 decimal)</code> — can exceed 100% in data; <strong>table column displays min(100, Eff%)</strong>.</p>
-              <p><strong>Legend 6★ max per single roll</strong> (denominator uses ×5 for five upgrades on subs/innate):</p>
-              <div class="guide-stat-table-wrap">
-                <table class="guide-stat-table">
-                  <thead><tr><th>Stat</th><th>Max / roll</th></tr></thead>
-                  <tbody>
-                    <tr><td>SPD</td><td>6</td></tr>
-                    <tr><td>CRate</td><td>6</td></tr>
-                    <tr><td>CDmg</td><td>7</td></tr>
-                    <tr><td>HP% · ATK% · DEF% · RES · ACC</td><td>8</td></tr>
-                    <tr><td>ATK flat</td><td>100</td></tr>
-                    <tr><td>DEF flat</td><td>100</td></tr>
-                    <tr><td>HP flat</td><td>1875</td></tr>
-                  </tbody>
-                </table>
-              </div>
-              <p class="guide-note">Depth / account metrics use <strong>uncapped</strong> Eff%. The rune table shows a capped label for quick scanning; sort by <strong>Score</strong> by default for meta value.</p>
+              <article class="guide-metric-panel guide-metric-panel--eff" aria-labelledby="guide-h-table-ingame-en">
+              <h4 class="guide-metric-panel__title" id="guide-h-table-ingame-en">Ingame Score</h4>
+              <p class="guide-metric-panel__tagline">Com2uS in-game <strong>Rating</strong> — same idea as the rune list inside Summoners War.</p>
+              <p>From SWEX <code>prefix_eff</code> (innate, base value only) and <code>sec_eff</code> lines (base + grind). <strong>Main stat is not scored</strong> (treated as perfect at +15). Duplicate innate lines on subs are skipped.</p>
+              <p class="guide-formula">Per line: raw points from stat type and total value (flats HP/ATK/DEF use ÷3 in the game formula).<br>
+                <code>Ingame = round( Σ raw line points )</code> — sum first, round once (not per-line rounding).<br>
+                Hover the number for a line-by-line breakdown.</p>
+              <p class="guide-note">Sorting by <strong>Ingame</strong>: slots <strong>1 → 6</strong>, then score high → low within each slot (like the in-game rune inventory). Default table sort is still <strong>Forge</strong> ↓.</p>
               </article>
 
               <article class="guide-metric-panel guide-metric-panel--forge" aria-labelledby="guide-h-table-score-formula-en">
@@ -1867,49 +1851,50 @@
               </div>
               <p><strong>Cross-stat duplicate (<code>dupSub</code>):</strong> ×<strong>0.88</strong> per overlap of the same <em>base</em> type across zones (<code>ATK</code> + <code>ATK%</code> count as one type). Overlaps: main↔any sub · main↔innate · innate↔any sub. Formula: <code>dupSub = 0.88^(overlaps)</code> or <strong>1.00</strong> if none. (Two SPD subs on one rune is impossible in-game.)</p>
               <p><strong>Golden triplet (<code>archetypeMul</code>):</strong> if main + subs + qualifying innate (innate roll quality <strong>&gt; 50%</strong>) contain any <strong>3 stats</strong> from one archetype → ×<strong>1.04</strong> once: <em>Nuker</em> (ATK/ATK%, CRate, CDmg) · <em>Fast Tank</em> (HP/HP%, DEF/DEF%, SPD) · <em>Control</em> (SPD, ACC, HP/HP%) · <em>Bruiser</em> (HP/HP%, CRate, CDmg).</p>
-              <p class="guide-note">Hover <strong>Score</strong> for live breakdown (pts + all multipliers, including archetype name when ×1.04). Chip color: ≥88 high · ≥72 mid · below low.</p>
+              <p class="guide-note">Hover <strong>Forge</strong> for live breakdown (pts + all multipliers, including archetype name when ×1.04). Chip color: ≥88 high · ≥72 mid · below low.</p>
               </article>
               </div>
+              <p class="guide-note"><strong>SWOP Eff%</strong> is still computed for <strong>account progression</strong> (Depth elite bar) and dashboard efficiency charts — it is <em>not</em> a table column anymore.</p>
             </section>
             <section class="guide-section" aria-labelledby="guide-h-table-read-en">
               <h3 id="guide-h-table-read-en">Reading a row</h3>
               <ul class="guide-checklist">
-                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Colored chips</strong> — grade, role, verdict, Eff%, Score. Set / main / subs are plain text.</span></li>
-                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Equipped</strong> — search can find the monster name in the row; useful for “what is this rune on?”</span></li>
-                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Ancient</strong> — A-with-dot before grade; <strong>Ancient only</strong> in More Filters.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Colored chips</strong> — grade, verdict, role, Forge. <strong>Ingame</strong> is a plain number (hover for breakdown). Set / main / subs are text.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Location</strong> — monster name or Inventory; also findable via search.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Ancient</strong> — ancient icon on Hero/Legend grade chips; <strong>Ancient only</strong> in More Filters.</span></li>
                 <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>HP% 13 [3]</strong> — total on rune; bracket = grind bonus only. Gem = circular-arrows icon.</span></li>
-                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Header filters</strong> — verdict / role / grade / set / slot / main under column titles; click column headers to sort (default <strong>Score</strong> down).</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Header filters</strong> — verdict / role / grade / set / slot / main / location; sort headers (default <strong>Forge</strong> ↓).</span></li>
               </ul>
               <p class="guide-note">Huge exports: first <strong>500 rows</strong> for speed — <strong>Load all …</strong> for the full filtered list. Search highlights matches in the row.</p>
             </section>
             <section class="guide-section" aria-labelledby="guide-h-table-link-en">
               <h3 id="guide-h-table-link-en">Share &amp; export</h3>
-              <p><strong>Export CSV</strong> — spreadsheet of the filtered list. <strong>Share</strong> (toolbar) — read-only link for monsters/runes (see App Settings for modes).</p>
+              <p><strong>Export CSV</strong> — filtered list with Forge, Ingame, Role, Verdict, and a <strong>Reason</strong> text column (same text as the Verdict tooltip). <strong>Share</strong> (toolbar) — read-only link for monsters/runes (see App Settings for modes).</p>
               <p>Filters update the URL to <strong>#runetable?…</strong> — bookmark or send the link to reopen the same view in this browser.</p>
             </section>
           </div>
           <div class="guide-lang guide-lang--ru guide-list">
             <section class="guide-section guide-section--hero" aria-labelledby="guide-h-table-ru">
               <h3 id="guide-h-table-ru">Таблица рун</h3>
-              <p class="guide-lead">Список действий: у каждой руны <strong>Role</strong>, <strong>Verdict</strong>, статы и короткая <strong>причина</strong>, если есть конкретный шаг.</p>
+              <p class="guide-lead">Список действий: статы, <strong>Ingame</strong> и <strong>Forge</strong>, <strong>Verdict</strong>, <strong>Role</strong>, <strong>Location</strong>. Наведите на <strong>Verdict</strong> — короткая причина (качество Keep, Grind/Gem, почему Sell).</p>
             </section>
             <section class="guide-section" aria-labelledby="guide-h-table-cols-ru">
               <h3 id="guide-h-table-cols-ru">Главные колонки</h3>
               <div class="guide-col-map">
+                <div class="guide-col-map__item"><span class="guide-verdict-chip upgrade">Ingame</span><span><strong>Рейтинг в игре</strong> — Com2uS: innate + сабы (кат + гринд); main не считается</span></div>
+                <div class="guide-col-map__item"><span class="guide-verdict-chip keep">Forge</span><span><strong>Сортировка по умолчанию.</strong> Forge Score 0–100 — мета, синергии, архетипы, гринды</span></div>
+                <div class="guide-col-map__item"><span class="guide-verdict-chip finish">Verdict</span><span>Upgrade · Finish · Keep · Gem · Grind · Reapp · Sell — причина при наведении</span></div>
                 <div class="guide-col-map__item"><span class="guide-verdict-chip keep">Role</span><span>Билд или Universal</span></div>
-                <div class="guide-col-map__item"><span class="guide-verdict-chip finish">Verdict</span><span>Upgrade · Finish · Keep · Gem · Grind · Reapp · Sell</span></div>
-                <div class="guide-col-map__item"><span class="guide-verdict-chip keep">Score</span><span><strong>Главная.</strong> Forge Score — боевая ценность в мете (синергии, архетипы, гринды)</span></div>
-                <div class="guide-col-map__item"><span class="guide-verdict-chip upgrade">Eff%</span><span><strong>Справка.</strong> SWOP Eff% (только базовый ролл) — в таблице отображение до 100%</span></div>
-                <div class="guide-col-map__item"><span class="guide-verdict-chip gem">Причина</span><span>Почему Sell, куда гринд, качество Keep</span></div>
+                <div class="guide-col-map__item"><span class="guide-verdict-chip gem">Location</span><span>Имя монстра или <strong>Inventory</strong>; фильтр в «Ещё фильтры»</span></div>
               </div>
             </section>
             <section class="guide-section" aria-labelledby="guide-h-table-toolbar-ru">
               <h3 id="guide-h-table-toolbar-ru">Панель и чипы сводки</h3>
               <ul class="guide-checklist">
                 <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Чипы над таблицей</strong> — всего в выборке, древние, на монстрах, +15, Keep.</span></li>
-                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Ещё фильтры</strong> — только древние, скрыть причину, сброс.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Ещё фильтры</strong> — только древние, <strong>Location</strong> (склад / на монстре), сброс.</span></li>
                 <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Чипы активных фильтров</strong> — крестик снимает один фильтр, не все сразу.</span></li>
-                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Колонка «Причина»</strong> — по умолчанию скрыта; снимите «скрыть причину», чтобы видеть качество Keep и подсказки Grind/Gem.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Тултип Verdict</strong> — качество Keep, Grind/Gem, причина Sell (отдельной колонки «Причина» нет).</span></li>
               </ul>
             </section>
             <section class="guide-section" aria-labelledby="guide-h-table-forge-ru">
@@ -1917,30 +1902,14 @@
               <p class="guide-lead">В таблице <strong>два независимых числа</strong>. Они отвечают на разные вопросы — смотри оба, не жди совпадения.</p>
 
               <div class="guide-metric-panels">
-              <article class="guide-metric-panel guide-metric-panel--eff" aria-labelledby="guide-h-table-eff-ru">
-              <h4 class="guide-metric-panel__title" id="guide-h-table-eff-ru">Eff%</h4>
-              <p class="guide-metric-panel__tagline">Классическая SWOP-плотность роллов — без тиров меты и без гриндов.</p>
-              <p>Считается в приложении из SWEX (не вердикт). Как в SWOP: одна формула на все типы статов, flat не делятся пополам.</p>
-              <p class="guide-formula"><code>score = 1.0 (main) + innateTerm + Σ subTerm</code><br>
-                <code>lineTerm = базовыйРолл ÷ (максЗаРолл × 5)</code> — только <code>val</code>, гринд не входит.<br>
-                <code>innateTerm</code> = та же формула, что у саба (без ×0.5).<br>
-                <code>Eff% = round(score ÷ 2.8 × 100, 1 знак)</code> — в данных может быть &gt;100%; <strong>в таблице min(100, Eff%)</strong>.</p>
-              <p><strong>Макс Legend 6★ за один ролл</strong> (в знаменателе ×5 для пяти апгрейдов саба/innate):</p>
-              <div class="guide-stat-table-wrap">
-                <table class="guide-stat-table">
-                  <thead><tr><th>Стат</th><th>Макс / ролл</th></tr></thead>
-                  <tbody>
-                    <tr><td>SPD</td><td>6</td></tr>
-                    <tr><td>CRate</td><td>6</td></tr>
-                    <tr><td>CDmg</td><td>7</td></tr>
-                    <tr><td>HP% · ATK% · DEF% · RES · ACC</td><td>8</td></tr>
-                    <tr><td>ATK flat</td><td>100</td></tr>
-                    <tr><td>DEF flat</td><td>100</td></tr>
-                    <tr><td>HP flat</td><td>1875</td></tr>
-                  </tbody>
-                </table>
-              </div>
-              <p class="guide-note">Depth / прогрессия — <strong>uncapped</strong> Eff%. В таблице подпись до 100%; сортировка по умолчанию — <strong>Score</strong>.</p>
+              <article class="guide-metric-panel guide-metric-panel--eff" aria-labelledby="guide-h-table-ingame-ru">
+              <h4 class="guide-metric-panel__title" id="guide-h-table-ingame-ru">Ingame Score</h4>
+              <p class="guide-metric-panel__tagline">Игровой <strong>Rating</strong> Com2uS — как в списке рун в клиенте.</p>
+              <p>Из SWEX: <code>prefix_eff</code> (innate, только база) и <code>sec_eff</code> (база + гринд). <strong>Main не входит в сумму.</strong> Дубликат innate на сабах не считается дважды.</p>
+              <p class="guide-formula">За линию — сырые очки по типу стата и итогу (flat HP/ATK/DEF с ÷3 как в игре).<br>
+                <code>Ingame = round( Σ сырых очков )</code> — сначала сумма, потом одно округление.<br>
+                Наведение на число — разбивка по линиям.</p>
+              <p class="guide-note">Сортировка по <strong>Ingame</strong>: слоты <strong>1 → 6</strong>, внутри слота score ↓. По умолчанию таблица сортируется по <strong>Forge</strong> ↓.</p>
               </article>
 
               <article class="guide-metric-panel guide-metric-panel--forge" aria-labelledby="guide-h-table-score-formula-ru">
@@ -2040,24 +2009,25 @@
               </div>
               <p><strong>Кросс-дубль (<code>dupSub</code>):</strong> ×0.88 за каждое совпадение <em>базового</em> типа между main, innate и сабами (<code>ATK</code> + <code>ATK%</code> — один тип). Зоны: main↔sub · main↔innate · innate↔sub. <code>dupSub = 0.88^(число совпадений)</code>.</p>
               <p><strong>Золотой триплет (<code>archetypeMul</code>):</strong> любые 3 стата одного архетипа (innate только если качество ролла <strong>&gt; 50%</strong>) → ×<strong>1.04</strong> один раз: <em>Нюкер</em> · <em>Быстрый танк</em> · <em>Контроль</em> · <em>Бруйзер</em>.</p>
-              <p class="guide-note">Наведи на <strong>Score</strong> — разбивка очков и множителей, включая архетип. Цвет: ≥88 · ≥72 · ниже.</p>
+              <p class="guide-note">Наведи на <strong>Forge</strong> — разбивка очков и множителей, включая архетип. Цвет: ≥88 · ≥72 · ниже.</p>
               </article>
               </div>
+              <p class="guide-note"><strong>SWOP Eff%</strong> остаётся для <strong>прогрессии аккаунта</strong> (элита в Depth) и графиков eff на панели — в таблице рун колонки Eff% нет.</p>
             </section>
             <section class="guide-section" aria-labelledby="guide-h-table-read-ru">
               <h3 id="guide-h-table-read-ru">Как читать строку</h3>
               <ul class="guide-checklist">
-                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Цветные чипы</strong> — грейд, роль, вердикт, Eff%, Score. Сет / мейн / сабы — текст.</span></li>
-                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>На монстре</strong> — поиск находит имя юнита в строке.</span></li>
-                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Древняя</strong> — «A с точкой»; <strong>Только древние</strong> в «Ещё фильтры».</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Цветные чипы</strong> — грейд, вердикт, роль, Forge. <strong>Ingame</strong> — число (hover = разбивка). Сет / мейн / сабы — текст.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Location</strong> — имя монстра или Inventory; ищется поиском.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Древняя</strong> — иконка на чипе Hero/Legend; <strong>Только древние</strong> в «Ещё фильтры».</span></li>
                 <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>HP% 13 [3]</strong> — итого на руне; в скобках только гринд. Гем — стрелки.</span></li>
-                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Фильтры в заголовке</strong> — вердикт / роль / грейд / сет / слот / мейн; сортировка по умолчанию — <strong>Score</strong> ↓.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Фильтры в заголовке</strong> — вердикт / роль / грейд / сет / слот / мейн / location; по умолчанию сортировка <strong>Forge</strong> ↓.</span></li>
               </ul>
               <p class="guide-note">Огромный экспорт: сначала <strong>500 строк</strong> — <strong>Загрузить все …</strong> для полного списка. Поиск подсвечивает совпадения.</p>
             </section>
             <section class="guide-section" aria-labelledby="guide-h-table-link-ru">
               <h3 id="guide-h-table-link-ru">Поделиться и экспорт</h3>
-              <p><strong>Export CSV</strong> — таблица отфильтрованного списка. <strong>Share</strong> в панели — ссылка только для чтения (режимы в Настройках приложения).</p>
+              <p><strong>Export CSV</strong> — Forge, Ingame, Role, Verdict и колонка <strong>Reason</strong> (тот же текст, что в тултипе Verdict). <strong>Share</strong> — ссылка только для чтения (режимы в Настройках).</p>
               <p>Фильтры попадают в URL <strong>#runetable?…</strong> — закладка или ссылка для того же вида в этом браузере.</p>
             </section>
           </div>
@@ -2101,8 +2071,8 @@
                 <div class="guide-flow__step" role="listitem">
                   <span class="guide-flow__num">4</span>
                   <div class="guide-flow__body">
-                    <strong>Verdict + Reason</strong>
-                    <span>Keep, Gem, Grind, Sell, … and a plain sentence when something is Sell.</span>
+                    <strong>Verdict (+ tooltip)</strong>
+                    <span>Keep, Gem, Grind, Sell, … Hover Verdict for the plain sentence (Sell why, Grind target, Keep quality).</span>
                   </div>
                 </div>
               </div>
@@ -2151,10 +2121,10 @@
                 <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Overall stat strength</strong> — substats should be reasonably close to strong lines for that stage, not just present.</span></li>
               </ul>
               <div class="guide-callout guide-callout--calm">
-                <p><strong>Relaxed retry</strong> — if the strict checklist fails, the app tries once more with softer rules (when Strictness is 1–3). A rune that passes only then shows <strong>(Relaxed)</strong> in Reason on Keep — common on Mid accounts, not a bug.</p>
+                <p><strong>Relaxed retry</strong> — if the strict checklist fails, the app tries once more with softer rules (when Strictness is 1–3). A rune that passes only then shows <strong>(Relaxed)</strong> in the Verdict tooltip on Keep — common on Mid accounts, not a bug.</p>
               </div>
               <div class="guide-callout guide-callout--warn">
-                <p><strong>Efficiency %</strong> sorts the table; it does <em>not</em> pick the role alone. A 84% rune can still be Sell.</p>
+                <p><strong>Forge Score</strong> is the default table sort; it does <em>not</em> pick Role by itself. <strong>Ingame</strong> matches the game client — a high Ingame rune can still be Sell. SWOP Eff% is only used inside verdict rules and account Depth, not as a table column.</p>
               </div>
             </section>
 
@@ -2171,7 +2141,7 @@
                 </article>
               </div>
               <div class="guide-callout guide-callout--calm">
-                <p>If <strong>no build role</strong> matched but God or Duo did, Role shows <strong>Universal (High Value)</strong> — great rune, not tied to one current team. Reason may say <strong>High Value · God</strong> or <strong>· Duo</strong>.</p>
+                <p>If <strong>no build role</strong> matched but God or Duo did, Role shows <strong>Universal (High Value)</strong> — great rune, not tied to one current team. The Verdict tooltip may say <strong>High Value · God</strong> or <strong>· Duo</strong>.</p>
               </div>
             </section>
 
@@ -2182,7 +2152,7 @@
                 <span class="guide-fit-scale__zone guide-fit-scale__zone--mid">Good 60–74</span>
                 <span class="guide-fit-scale__zone guide-fit-scale__zone--hi">Excellent 75+</span>
               </div>
-              <p><strong>0–100</strong> — how closely substats match the chosen role. It does <strong>not</strong> change Verdict; use it to compare two Keep runes for the same build. Shown in Reason on Keep as <strong>Fit 67</strong> etc.</p>
+              <p><strong>0–100</strong> — how closely substats match the chosen role. It does <strong>not</strong> change Verdict; use it to compare two Keep runes for the same build. On Keep, hover Verdict to see <strong>Fit 67</strong> etc.</p>
             </section>
 
             <section class="guide-section" aria-labelledby="guide-h-eval-verdicts-en">
@@ -2220,7 +2190,8 @@
             </section>
 
             <section class="guide-section" aria-labelledby="guide-h-eval-target-en">
-              <h3 id="guide-h-eval-target-en">Reason column</h3>
+              <h3 id="guide-h-eval-target-en">Verdict tooltips (and CSV Reason)</h3>
+              <p class="guide-lead">There is no separate Reason column in the grid — hover <strong>Verdict</strong> (or export CSV) for the same text.</p>
               <div class="guide-target-grid">
                 <article class="guide-target-card"><span class="guide-verdict-chip keep">Keep</span><p>Role · <strong>Excellent / Good / Usable</strong> · <strong>Strict</strong>, <strong>Flexible</strong>, or <strong>Relaxed</strong> · optional <strong>Fit N</strong></p></article>
                 <article class="guide-target-card"><span class="guide-verdict-chip grind">Grind</span><p>Which stat to push with a grindstone (SPD, HP%, …)</p></article>
@@ -2289,8 +2260,8 @@
                 <div class="guide-flow__step" role="listitem">
                   <span class="guide-flow__num">4</span>
                   <div class="guide-flow__body">
-                    <strong>Вердикт + причина</strong>
-                    <span>Keep, Gem, Grind, Sell… и понятная фраза, почему Sell.</span>
+                    <strong>Вердикт (+ тултип)</strong>
+                    <span>Keep, Gem, Grind, Sell… Наведите на Verdict — фраза с причиной.</span>
                   </div>
                 </div>
               </div>
@@ -2339,10 +2310,10 @@
                 <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Сила статов в целом</strong> — сабы близки к сильным линиям стадии, а не просто «есть на руне».</span></li>
               </ul>
               <div class="guide-callout guide-callout--calm">
-                <p><strong>Relaxed retry</strong> — если строгий чеклист не прошёл, вторая попытка с мягче правилами (при Strictness 1–3). В «Причине» на Keep будет <strong>(Relaxed)</strong> — нормально для Mid, не ошибка.</p>
+                <p><strong>Relaxed retry</strong> — если строгий чеклист не прошёл, вторая попытка с мягче правилами (при Strictness 1–3). В тултипе Verdict на Keep будет <strong>(Relaxed)</strong> — нормально для Mid, не ошибка.</p>
               </div>
               <div class="guide-callout guide-callout--warn">
-                <p><strong>Efficiency %</strong> — для сортировки; <em>роль</em> одной eff не ставится. 84% может быть Sell.</p>
+                <p>По умолчанию таблица сортируется по <strong>Forge</strong>; роль от одной цифры не ставится. Высокий <strong>Ingame</strong> ≠ Keep. SWOP Eff% — внутри правил и Depth, не колонка таблицы.</p>
               </div>
             </section>
 
@@ -2359,7 +2330,7 @@
                 </article>
               </div>
               <div class="guide-callout guide-callout--calm">
-                <p>Если <strong>ни один билд</strong> не подошёл, но есть God или Duo — Role <strong>Universal (High Value)</strong>: руна ценная, но не под конкретную команду. Причина: <strong>High Value · God</strong> или <strong>· Duo</strong>.</p>
+                <p>Если <strong>ни один билд</strong> не подошёл, но есть God или Duo — Role <strong>Universal (High Value)</strong>. В тултипе Verdict: <strong>High Value · God</strong> или <strong>· Duo</strong>.</p>
               </div>
             </section>
 
@@ -2370,7 +2341,7 @@
                 <span class="guide-fit-scale__zone guide-fit-scale__zone--mid">Good 60–74</span>
                 <span class="guide-fit-scale__zone guide-fit-scale__zone--hi">Excellent 75+</span>
               </div>
-              <p><strong>0–100</strong> — насколько сабы похожи на идеал для роли. <strong>Не меняет Verdict</strong> — только сравнение рун одной роли. В «Причине» на Keep: <strong>Fit 67</strong> и т.д.</p>
+              <p><strong>0–100</strong> — насколько сабы похожи на идеал для роли. <strong>Не меняет Verdict</strong>. На Keep смотрите <strong>Fit 67</strong> в тултипе Verdict.</p>
             </section>
 
             <section class="guide-section" aria-labelledby="guide-h-eval-verdicts-ru">
@@ -2408,7 +2379,8 @@
             </section>
 
             <section class="guide-section" aria-labelledby="guide-h-eval-target-ru">
-              <h3 id="guide-h-eval-target-ru">Колонка «Причина»</h3>
+              <h3 id="guide-h-eval-target-ru">Тултипы Verdict (и CSV Reason)</h3>
+              <p class="guide-lead">Отдельной колонки «Причина» в таблице нет — наведите на <strong>Verdict</strong> или смотрите CSV.</p>
               <div class="guide-target-grid">
                 <article class="guide-target-card"><span class="guide-verdict-chip keep">Keep</span><p>Роль · <strong>Excellent / Good / Usable</strong> · <strong>Strict</strong>, <strong>Flexible</strong> или <strong>Relaxed</strong> · <strong>Fit N</strong></p></article>
                 <article class="guide-target-card"><span class="guide-verdict-chip grind">Grind</span><p>Какой стат грайндить (SPD, HP%, …)</p></article>
@@ -2498,7 +2470,7 @@
                   </div>
                 </div>
               </div>
-              <p class="guide-note">Result → <strong>Role</strong>, <strong>Verdict</strong>, <strong>Reason</strong> in the Rune Table. Plain overview → <strong>How scoring works</strong> in this Guide.</p>
+              <p class="guide-note">Result → <strong>Role</strong>, <strong>Verdict</strong> (hover for reason) in the Rune Table. Plain overview → <strong>How scoring works</strong> in this Guide.</p>
             </section>
 
             <section class="guide-section" aria-labelledby="guide-h-rules-engine-en">
@@ -2569,7 +2541,7 @@
                 <article class="guide-duo-card">
                   <span class="guide-duo-card__kicker">Gem suggestions</span>
                   <p class="guide-duo-card__title">Bad flat subs</p>
-                  <p>When enabled, +12+ runes with weak flat HP/ATK/DEF subs can get <strong>Gem</strong> — Reason lists which flat to replace. Enchant only rerolls subs, not innate.</p>
+                  <p>When enabled, +12+ runes with weak flat HP/ATK/DEF subs can get <strong>Gem</strong> — the Verdict tooltip lists which flat to replace. Enchant only rerolls subs, not innate.</p>
                 </article>
                 <article class="guide-duo-card">
                   <span class="guide-duo-card__kicker">Grind suggestions</span>
@@ -2648,7 +2620,7 @@
                   </div>
                 </div>
               </div>
-              <p class="guide-note">Итог — <strong>Role</strong>, <strong>Verdict</strong>, <strong>причина</strong> в таблице. Обзор простым языком → <strong>Оценка рун</strong> в Справке.</p>
+              <p class="guide-note">Итог — <strong>Role</strong>, <strong>Verdict</strong> (причина в тултипе) в таблице. Обзор → <strong>Оценка рун</strong> в Справке.</p>
             </section>
 
             <section class="guide-section" aria-labelledby="guide-h-rules-engine-ru">
@@ -2719,7 +2691,7 @@
                 <article class="guide-duo-card">
                   <span class="guide-duo-card__kicker">Gem</span>
                   <p class="guide-duo-card__title">Плоские сабы</p>
-                  <p>Если включено — на +12+ с слабыми flat HP/ATK/DEF может быть <strong>Gem</strong>; в «Причине» пишет, что заменить. Гем меняет только сабы, не innate.</p>
+                  <p>Если включено — на +12+ с слабыми flat HP/ATK/DEF может быть <strong>Gem</strong>; в тултипе Verdict — что заменить. Гем меняет только сабы, не innate.</p>
                 </article>
                 <article class="guide-duo-card">
                   <span class="guide-duo-card__kicker">Grind</span>
@@ -2893,6 +2865,38 @@
       <p class="footer-version"><span id="lbl-footer-version">Build</span> <span id="footer-app-version">—</span></p>
     </div>
   </footer>
+
+  <dialog id="donate-dialog" class="donate-dialog" aria-labelledby="donate-dialog-title">
+    <form method="dialog" class="donate-dialog__form">
+      <header class="donate-dialog__head">
+        <h2 class="donate-dialog__title" id="donate-dialog-title">Support the development</h2>
+        <button type="button" class="donate-dialog__close" id="donate-dialog-close" aria-label="Close">×</button>
+      </header>
+      <div class="donate-dialog__body">
+        <p class="donate-dialog__lead" id="lbl-donate-dialog-lead">Your support helps me keep this tool free and updated. Please choose the method that works best for you:</p>
+
+        <section class="donate-dialog__section">
+          <h3 class="donate-dialog__section-title" id="lbl-donate-section-boosty-title">1. Credit Cards / Apple Pay (via Boosty)</h3>
+          <p class="donate-dialog__section-desc" id="lbl-donate-section-boosty-desc">A dedicated creator platform that supports international card payments.</p>
+          <a class="btn-primary donate-dialog__pay-btn" id="donate-link-boosty" href="https://boosty.to/antajl/donate" target="_blank" rel="noopener noreferrer"><span id="lbl-donate-btn-boosty">Pay via Boosty</span></a>
+        </section>
+
+        <section class="donate-dialog__section">
+          <h3 class="donate-dialog__section-title" id="lbl-donate-section-lava-title">2. Universal Payment Gateway (via Lava.top)</h3>
+          <p class="donate-dialog__section-desc" id="lbl-donate-section-lava-desc">A fast and convenient platform that supports various payment methods.</p>
+          <a class="btn-primary donate-dialog__pay-btn" id="donate-link-lava" href="https://app.lava.top/antajl?tabId=donate" target="_blank" rel="noopener noreferrer"><span id="lbl-donate-btn-lava">Pay via Lava.top</span></a>
+        </section>
+
+        <section class="donate-dialog__section">
+          <h3 class="donate-dialog__section-title" id="lbl-donate-section-crypto-title">3. Direct Crypto Transfer</h3>
+          <p class="donate-dialog__section-desc" id="lbl-donate-section-crypto-desc">Best for those who prefer direct, peer-to-peer transfers without intermediaries.</p>
+          <p class="donate-dialog__crypto" id="donate-crypto-address">USDT (TRC-20): TBwBtxxcYFQceogrUCnZxZWGWVJKjWyahR</p>
+          <p class="donate-dialog__crypto-hint" id="lbl-donate-crypto-hint">Please ensure you are using the TRC-20 network.</p>
+          <button type="button" class="btn-secondary btn-sm" id="donate-copy-crypto"><span id="lbl-donate-copy-crypto">Copy address</span></button>
+        </section>
+      </div>
+    </form>
+  </dialog>
 
   <!-- UPLOAD PROMPT OVERLAY (shown when no data) -->
   <section id="upload-prompt" class="upload-prompt hidden" role="dialog" aria-modal="true" aria-labelledby="upload-prompt-title">

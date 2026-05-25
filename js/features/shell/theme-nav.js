@@ -335,7 +335,7 @@
     }
 
     if (id === 'dashboard' && typeof scheduleDashboardChartReplay === 'function') {
-      scheduleDashboardChartReplay({ fromZero: true });
+      scheduleDashboardChartReplay({ tabSwitch: true, animateCharts: false });
     }
 
     if (id === 'runetable') {

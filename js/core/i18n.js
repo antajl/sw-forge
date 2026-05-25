@@ -5,8 +5,28 @@ const TRANSLATIONS = {
     // Header
     title: 'SW-Forge',
     donateShort: 'Donate',
-    donateTitle: 'Support the project — opens Lava.top payment page',
-    donateAria: 'Donate — support the project (external page)',
+    donateTitle: 'Support the development',
+    donateAria: 'Donate — support options',
+    donateDialogTitle: 'Support the development',
+    donateDialogLead:
+      'Your support helps me keep this tool free and updated. Please choose the method that works best for you:',
+    donateSectionBoostyTitle: '1. Credit Cards / Apple Pay (via Boosty)',
+    donateSectionBoostyDesc:
+      'A dedicated creator platform that supports international card payments.',
+    donateBtnBoosty: 'Pay via Boosty',
+    donateSectionLavaTitle: '2. Universal Payment Gateway (via Lava.top)',
+    donateSectionLavaDesc:
+      'A fast and convenient platform that supports various payment methods.',
+    donateBtnLava: 'Pay via Lava.top',
+    donateSectionCryptoTitle: '3. Direct Crypto Transfer',
+    donateSectionCryptoDesc:
+      'Best for those who prefer direct, peer-to-peer transfers without intermediaries.',
+    donateCryptoPrefix: 'USDT (TRC-20):',
+    donateCryptoNetworkHint: 'Please ensure you are using the TRC-20 network.',
+    donateCryptoEmpty: 'Wallet address is not configured yet.',
+    donateCopyAddress: 'Copy address',
+    donateCopied: 'Copied',
+    donateClose: 'Close',
     footerDisclaimer:
       'Summoners War™ is a trademark of Com2uS Corp. This site is not affiliated with or endorsed by Com2uS Corp.',
     footerVersionLabel: 'Build',
@@ -763,8 +783,28 @@ const TRANSLATIONS = {
     // Header
     title: 'SW-Forge',
     donateShort: 'Донат',
-    donateTitle: 'Поддержать проект — откроется страница оплаты Lava.top',
-    donateAria: 'Донат — поддержать проект (внешняя страница)',
+    donateTitle: 'Поддержать разработку',
+    donateAria: 'Донат — способы поддержки',
+    donateDialogTitle: 'Поддержать разработку',
+    donateDialogLead:
+      'Ваша поддержка помогает держать инструмент бесплатным и обновлять его. Выберите удобный способ:',
+    donateSectionBoostyTitle: '1. Банковские карты / Apple Pay (через Boosty)',
+    donateSectionBoostyDesc:
+      'Платформа для авторов с поддержкой международных платежей картой.',
+    donateBtnBoosty: 'Оплатить через Boosty',
+    donateSectionLavaTitle: '2. Универсальный платёжный шлюз (через Lava.top)',
+    donateSectionLavaDesc:
+      'Быстрая и удобная платформа с разными способами оплаты.',
+    donateBtnLava: 'Оплатить через Lava.top',
+    donateSectionCryptoTitle: '3. Прямой крипто-перевод',
+    donateSectionCryptoDesc:
+      'Лучший вариант для прямых P2P-переводов без посредников.',
+    donateCryptoPrefix: 'USDT (TRC-20):',
+    donateCryptoNetworkHint: 'Убедитесь, что используете сеть TRC-20.',
+    donateCryptoEmpty: 'Адрес кошелька ещё не указан.',
+    donateCopyAddress: 'Скопировать адрес',
+    donateCopied: 'Скопировано',
+    donateClose: 'Закрыть',
     footerDisclaimer:
       'Summoners War™ — торговая марка Com2uS Corp. Этот сайт не аффилирован с Com2uS Corp. и не одобрен ею.',
     footerVersionLabel: 'Сборка',

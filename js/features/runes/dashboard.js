@@ -1,5 +1,66 @@
 // js/features/runes/dashboard.js — dashboard rendering
   // ===================== DASHBOARD =====================
+  let swrmAllRunesRev = 0;
+  let swrmProcessedRev = 0;
+  const dashboardRenderCache = { key: '', built: false };
+  let gameStageMetricsCache = { key: '', value: null };
+
+  function invalidateDashboardRenderCache() {
+    dashboardRenderCache.key = '';
+    dashboardRenderCache.built = false;
+  }
+
+  function invalidateGameStageMetricsCache() {
+    gameStageMetricsCache.key = '';
+    gameStageMetricsCache.value = null;
+  }
+
+  function bumpAllRunesRev() {
+    swrmAllRunesRev += 1;
+    invalidateGameStageMetricsCache();
+    invalidateDashboardRenderCache();
+  }
+
+  function bumpProcessedRev() {
+    swrmProcessedRev += 1;
+    invalidateDashboardRenderCache();
+  }
+
+  function dashboardRenderCacheKey(runes) {
+    const vis = Array.isArray(runes) ? runes : [];
+    return [
+      swrmAllRunesRev,
+      swrmProcessedRev,
+      stage,
+      globalMinLevel,
+      globalGradeMin,
+      globalGradeMax,
+      currentLang,
+      vis.length,
+      allRunes.length,
+    ].join('\u0001');
+  }
+
+  function getCachedGameStageMetrics(runes) {
+    const key = `${swrmAllRunesRev}:${Array.isArray(runes) ? runes.length : 0}`;
+    if (gameStageMetricsCache.key === key && gameStageMetricsCache.value) {
+      return gameStageMetricsCache.value;
+    }
+    const value = analyzeGameStage(runes);
+    gameStageMetricsCache.key = key;
+    gameStageMetricsCache.value = value;
+    return value;
+  }
+
+  function attachForgeScoresToRunes(runes) {
+    if (!Array.isArray(runes) || typeof computeRuneScore !== 'function') return;
+    for (let i = 0; i < runes.length; i++) {
+      const r = runes[i];
+      if (!r) continue;
+      r.forgeScore = computeRuneScore(r);
+    }
+  }
+
   /** Scale so the largest bar uses ~75% of track width (25% headroom). */
   function dashChartScaleMax(counts) {
     const maxV = Math.max(0, ...(counts.length ? counts : [0]));
@@ -24,7 +85,10 @@
   }
 
   function scheduleDashboardChartReplay(options) {
-    const fromZero = !!(options && options.fromZero);
+    const opts = options || {};
+    const tabSwitch = !!opts.tabSwitch;
+    const fromZero = !!opts.fromZero && !tabSwitch;
+    const animateCharts = opts.animateCharts !== false;
     rafTwice(() => {
       const hub = document.getElementById('tab-runes');
       if (hub && hub.classList.contains('hidden')) return;
@@ -35,25 +99,43 @@
       ) {
         return;
       }
-      if (fromZero) {
-        if (typeof renderDashboard === 'function' && typeof getVisibleRunes === 'function') {
-          renderDashboard(getVisibleRunes(), { animateCharts: true, fromZero: true });
-        }
+      if (typeof getVisibleRunes !== 'function' || typeof renderDashboard !== 'function') return;
+      const visible = getVisibleRunes();
+      const cacheKey = dashboardRenderCacheKey(visible);
+      const cacheHit = dashboardRenderCache.built && dashboardRenderCache.key === cacheKey;
+
+      if (tabSwitch && cacheHit) {
+        if (animateCharts && replayDashboardDistributionAnimations()) return;
         return;
       }
-      if (!replayDashboardDistributionAnimations()) {
-        if (typeof renderDashboard === 'function' && typeof getVisibleRunes === 'function') {
-          renderDashboard(getVisibleRunes(), { animateCharts: true });
-        }
+
+      if (fromZero) {
+        renderDashboard(visible, { animateCharts: true, fromZero: true });
+        return;
       }
+      if (cacheHit && animateCharts && replayDashboardDistributionAnimations()) return;
+      renderDashboard(visible, { animateCharts, fromZero: false });
     });
   }
 
   function renderDashboard(runes, opts) {
-    const animateCharts = !!(opts && opts.animateCharts);
-    const chartFromZero = !!(opts && opts.fromZero);
-    // Account progression: full export rune list, absolute counts + top-N eff (not affected by preset / Min Lvl).
-    const metrics = analyzeGameStage(allRunes);
+    const o = opts || {};
+    const animateCharts = !!o.animateCharts;
+    const chartFromZero = !!o.fromZero;
+    const cacheKey = dashboardRenderCacheKey(runes);
+    if (o.skipIfCached && dashboardRenderCache.built && dashboardRenderCache.key === cacheKey) {
+      if (animateCharts) {
+        rafTwice(() => {
+          if (!replayDashboardDistributionAnimations()) {
+            renderDashboard(runes, { ...o, skipIfCached: false, animateCharts: true });
+          }
+        });
+      }
+      return;
+    }
+
+    // Account progression: full export rune list (cached while allRunes unchanged).
+    const metrics = getCachedGameStageMetrics(allRunes);
     const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const recStage = getRecommendedStage(
       parseFloat(metrics.score),
@@ -543,6 +625,9 @@
         }
       });
     }
+
+    dashboardRenderCache.key = cacheKey;
+    dashboardRenderCache.built = allRunes.length > 0;
   }
 
   function setText(id, val, sel) {

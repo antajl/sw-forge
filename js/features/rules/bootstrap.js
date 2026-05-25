@@ -147,14 +147,6 @@
   document.addEventListener('DOMContentLoaded', async () => {
     initSwrmFloatingTips();
     initTheme();
-    await updateLanguage(currentLang);
-    initDashboardUnifiedTabs();
-    initRuneTablePrefsFromStorage();
-    if (typeof initTableKindTabs === 'function') initTableKindTabs();
-    initRulesSubtabs();
-    initChangelogSubtabs();
-    initGuideSubtabs();
-    showMainTab(mainTabIdFromHash() || 'runes');
 
     const shareIdInUrl =
       typeof getShareIdFromUrl === 'function' ? getShareIdFromUrl() : '';
@@ -164,132 +156,46 @@
       profileInUrl && (profileInUrl.profileUrl || profileInUrl.dataBlob);
     if ((shareIdInUrl || hasProfileLink) && typeof initShareProfile === 'function') {
       await initShareProfile();
+      await updateLanguage(currentLang);
+      initDashboardUnifiedTabs();
+      initRuneTablePrefsFromStorage();
+      if (typeof initTableKindTabs === 'function') initTableKindTabs();
+      initRulesSubtabs();
+      initChangelogSubtabs();
+      initGuideSubtabs();
+      showMainTab(mainTabIdFromHash() || 'runes');
       renderDbSlots();
       if (typeof applyShareUrlTabFromLocation === 'function') applyShareUrlTabFromLocation();
       return;
     }
+
+    if (typeof beginPrimaryDatasetRestore === 'function') beginPrimaryDatasetRestore();
     if (typeof initShareProfile === 'function') {
       await initShareProfile();
     }
-
     if (typeof scrubDemoFromUserSlots === 'function') {
       await scrubDemoFromUserSlots();
     }
 
-    const savedRunes = localStorage.getItem('loadedRunes');
+    let boot = { restored: false };
+    if (typeof restorePrimaryRunesDatasetOnBoot === 'function') {
+      boot = await restorePrimaryRunesDatasetOnBoot();
+    }
+    if (typeof endPrimaryDatasetRestore === 'function') endPrimaryDatasetRestore();
 
-    try {
-      const slots = loadDbSlots();
-      const hasSlotMeta = slots.some(s => s.name && s.name.trim() !== '');
-      const realSlot = (s) => s.name && s.name.trim() !== '' && !(typeof slotNameLooksLikeDemo === 'function' && slotNameLooksLikeDemo(s.name));
-      const targetSlot =
-        slots.find(s => s.active && realSlot(s)) ||
-        slots.find(s => realSlot(s));
+    await updateLanguage(currentLang);
+    initDashboardUnifiedTabs();
+    initRuneTablePrefsFromStorage();
+    if (typeof initTableKindTabs === 'function') initTableKindTabs();
+    initRulesSubtabs();
+    initChangelogSubtabs();
+    initGuideSubtabs();
+    showMainTab(mainTabIdFromHash() || 'runes');
 
-      console.log('=== INITIALIZATION DEBUG ===');
-      console.log('Slots from loadDbSlots():', slots);
-      console.log('hasSlotMeta:', hasSlotMeta, 'targetSlot:', targetSlot);
-
-      if (!Array.isArray(slots) || slots.length === 0) {
-        console.error('Invalid slots array:', slots);
-        if (!userHasLoadedRealExport()) {
-          const demoOk = await installEmbeddedDemoDataset();
-          if (!demoOk) uiShowUploadPrompt();
-        } else {
-          uiShowUploadPrompt();
-        }
-      } else {
-        console.log('Slots metadata key present:', !!localStorage.getItem(DB_SLOTS_META_KEY));
-
-        let restored = false;
-
-        if (targetSlot) {
-          const jsonText = await loadSlotData(targetSlot.id);
-          if (tryHydrateRunesFromJsonText(jsonText)) {
-            if (typeof markUsingDemoDataset === 'function') markUsingDemoDataset(false);
-            uiAfterSuccessfulRuneRestore(targetSlot);
-            restored = true;
-          } else if (savedRunes && tryHydrateRunesFromJsonText(savedRunes)) {
-            console.log(`IndexedDB empty for Data ${targetSlot.id}; restored from localStorage backup`);
-            if (typeof markUsingDemoDataset === 'function') markUsingDemoDataset(false);
-            uiAfterSuccessfulRuneRestore(targetSlot);
-            restored = true;
-          }
-        }
-
-        if (!restored && savedRunes && tryHydrateRunesFromJsonText(savedRunes)) {
-          if (!hasSlotMeta) {
-            const migrated = loadDbSlots();
-            const name = localStorage.getItem('loadedRunesName') || 'Saved export';
-            const dateRaw = localStorage.getItem('loadedRunesDate') || '';
-            let parsedObj = null;
-            try {
-              parsedObj = JSON.parse(savedRunes);
-            } catch (e) { /* ignore */ }
-            migrated.forEach(s => {
-              if (s.id === 1) {
-                if (parsedObj) {
-                  applySlotSummaryFromJson(s, name, parsedObj);
-                } else {
-                  s.name = name;
-                  s.uploadedAt = dateRaw ? new Date(dateRaw).toLocaleString() : new Date().toLocaleString();
-                  s.wizardName = '';
-                  s.wizardLevel = null;
-                  s.wizardId = '';
-                  s.monsterCount = null;
-                  s.inventoryRuneCount = null;
-                  s.runeCount = allRunes.length;
-                }
-              }
-              s.active = s.id === 1;
-            });
-            saveDbSlots(migrated);
-            try {
-              await saveSlotData(1, savedRunes);
-            } catch (e) {
-              console.warn('Could not mirror JSON to IndexedDB slot 1:', e);
-            }
-          }
-          if (typeof markUsingDemoDataset === 'function') markUsingDemoDataset(false);
-          uiAfterSuccessfulRuneRestore({ name: localStorage.getItem('loadedRunesName') || 'Saved export', id: 1 });
-          restored = true;
-        }
-
-        if (!restored) {
-          if (userHasLoadedRealExport()) {
-            if (hasSlotMeta && targetSlot) {
-              console.log(`Slot ${targetSlot.id} has metadata but no readable JSON; showing upload prompt`);
-            } else {
-              console.log('No saved runes found; showing upload prompt');
-            }
-            uiShowUploadPrompt();
-          } else {
-            if (hasSlotMeta && targetSlot) {
-              console.log(`Slot ${targetSlot.id} has metadata but no readable JSON; trying embedded demo`);
-            } else {
-              console.log('No saved runes found; trying embedded demo');
-            }
-            let demoOk = false;
-            if (typeof restoreEmbeddedDemoFromStorage === 'function') {
-              demoOk = await restoreEmbeddedDemoFromStorage();
-            }
-            if (!demoOk) demoOk = await installEmbeddedDemoDataset();
-            if (!demoOk) uiShowUploadPrompt();
-          }
-        }
-      }
-    } catch (err) {
-      console.error('Error during restore:', err);
-      try {
-        if (!userHasLoadedRealExport()) {
-          const demoOk = await installEmbeddedDemoDataset();
-          if (!demoOk) uiShowUploadPrompt();
-        } else {
-          uiShowUploadPrompt();
-        }
-      } catch (e2) {
-        uiShowUploadPrompt();
-      }
+    if (boot.restored && boot.meta) {
+      uiAfterSuccessfulRuneRestore(boot.meta);
+    } else {
+      uiShowUploadPrompt();
     }
 
     document.getElementById('demo-banner-dismiss')?.addEventListener('click', () => {

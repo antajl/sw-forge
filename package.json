@@ -4,6 +4,7 @@
   "scripts": {
     "build:ui": "node tools/build-ui.mjs",
     "build:css": "node tools/build-css.mjs",
+    "build:favicons": "node tools/build-favicons.mjs",
     "build": "npm run build:css && npm run build:ui",
     "fetch:static-bundle": "node tools/fetch-static-bundle.mjs",
     "fetch:skills-icons": "node tools/fetch-skills-icons.mjs",

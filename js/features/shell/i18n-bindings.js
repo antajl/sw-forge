@@ -109,13 +109,7 @@
     if (chNav) chNav.setAttribute('aria-label', t.changelogSubtabsAria || 'Changelog');
     setMainNavTabLabel(document.querySelector('[data-tab="app-settings"]'), t.appSettings);
 
-    const donateLbl = document.getElementById('lbl-header-donate');
-    if (donateLbl) donateLbl.textContent = t.donateShort || 'Donate';
-    const donateLink = document.getElementById('header-donate-link');
-    if (donateLink) {
-      donateLink.setAttribute('title', t.donateTitle || '');
-      donateLink.setAttribute('aria-label', t.donateAria || t.donateShort || 'Donate');
-    }
+    if (typeof updateDonateDialogTexts === 'function') updateDonateDialogTexts();
 
     const footDisc = document.getElementById('lbl-footer-disclaimer');
     if (footDisc) footDisc.textContent = t.footerDisclaimer || '';
@@ -188,7 +182,14 @@
     renderChangelog();
     renderRoadmap();
     syncMonstersFilterLabels(t);
-    renderMonstersPanel();
+    if (allUnits.length || processedRunes.length) {
+      renderMonstersPanel();
+    } else if (
+      typeof shouldSkipEmbeddedDemoBootstrap !== 'function' ||
+      !shouldSkipEmbeddedDemoBootstrap()
+    ) {
+      renderMonstersPanel();
+    }
     applyDemoBannerTextFromTranslations();
     syncDemoBannerVisibility();
     if (typeof renderShareViewBanner === 'function') renderShareViewBanner();

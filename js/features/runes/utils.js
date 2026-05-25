@@ -1,6 +1,10 @@
 // js/features/runes/utils.js — shared UI helpers
-  /** Parse stored SWEX JSON (string or object) and populate allRunes. */
-  function tryHydrateRunesFromJsonText(raw) {
+  /**
+   * Parse stored SWEX JSON (string or object) and populate allRunes.
+   * @param {string|object} raw
+   * @param {{ cacheId?: string|number }} [options] IndexedDB slot id for processed-run cache
+   */
+  async function tryHydrateRunesFromJsonText(raw, options = {}) {
     if (raw == null) return false;
     if (typeof raw === 'string' && raw.trim() === '') return false;
     let obj;
@@ -14,8 +18,14 @@
     const runes = parseSWEX(obj);
     if (!runes.length) return false;
     allRunes = runes;
+    if (typeof bumpAllRunesRev === 'function') bumpAllRunesRev();
     rebuildUnitsFromSwex(obj);
-    reprocess();
+    const jsonText = typeof raw === 'string' ? raw : JSON.stringify(raw);
+    if (typeof tryRestoreProcessedFromCache === 'function') {
+      const restored = await tryRestoreProcessedFromCache(jsonText, options.cacheId);
+      if (restored) return true;
+    }
+    await reprocess();
     return true;
   }
 
@@ -93,13 +103,15 @@
   function uiEmptyRuneApplicationState(options = {}) {
     const keepTab = options.keepTab === true;
     allRunes = [];
+    if (typeof bumpAllRunesRev === 'function') bumpAllRunesRev();
     allUnits = [];
     activeSwexJson = null;
+    processedRunes = [];
+    if (typeof bumpProcessedRev === 'function') bumpProcessedRev();
     if (window.SWRM) {
       window.SWRM.accountTotemSpdPct = 0;
       window.SWRM.accountTotemLevel = 0;
     }
-    processedRunes = [];
     if (!keepTab) {
       showMainTab('guide', { writeHash: true });
       document.getElementById('upload-prompt').classList.remove('hidden');

@@ -7,6 +7,42 @@
  */
 const STATIC_CHANGELOG = [
   {
+    date: '2026-05-24',
+    items: {
+      en: [
+        'Rune Table: Ingame column — Com2uS Rating from SWEX (innate + subs with grind, main ignored), same sum-then-round logic as the game; hover for line breakdown. Sort Ingame by slot 1→6 like the in-game rune list.',
+        'Rune Table: Location column and filter — monster names when equipped, Inventory otherwise (runes, same idea as artifacts).',
+        'Rune Table: default sort stays Forge Score; verdict reasons on hover (no separate Reason column); CSV still exports a Reason field.',
+        'Guide (EN/RU) and developer docs updated for Ingame vs Forge vs SWOP Eff% (Eff% only for Depth/dashboard charts).',
+        'Header: Donate opens support options (Boosty, Lava.top, USDT TRC-20).',
+        'Dashboard: faster return from Table — skips full rebuild when data unchanged; Forge Score cached during processing; Min Lvl / Grade filter changes animate charts like preset switches.',
+        'Reload (F5): if SWEX file and verdict settings are unchanged, restores processed runes from IndexedDB instead of re-running the full pipeline.',
+        'Reload: dashboard charts appear at full size immediately (no grow animation); Rune Table fills in shortly after via idle scheduling.',
+        'Boot: no longer loads embedded demo before your active database slot (fixes double render on F5).',
+      ],
+      ru: [
+        'Таблица рун: колонка Ingame — игровой Rating из SWEX (innate + сабы с гриндом, main не считается), сумма и одно округление как в клиенте; hover — разбивка по линиям. Сортировка Ingame: слоты 1→6 как в игре.',
+        'Таблица рун: колонка Location и фильтр — имена монстров / Inventory (как у артефактов).',
+        'Таблица рун: сортировка по умолчанию — Forge; причина в тултипе Verdict (отдельной колонки «Причина» нет); в CSV колонка Reason остаётся.',
+        'Справка (EN/RU) и docs/ синхронизированы: Ingame vs Forge vs SWOP Eff% (Eff% только для прогрессии и графиков).',
+        'Шапка: Donate — Boosty, Lava.top, USDT TRC-20.',
+        'Dashboard: быстрый возврат с Таблицы — без полной пересборки при тех же данных; Forge Score кэшируется при обработке; Min Lvl / Grade — анимация графиков как при смене пресета.',
+        'F5: при тех же SWEX и настройках вердиктов — восстановление обработанных рун из IndexedDB без полного processAll.',
+        'F5: графики Dashboard сразу в финальном виде; таблица рун догружается чуть позже в idle.',
+        'Старт: демо не подгружается раньше активного слота — один рендер вместо трёх при F5.',
+      ],
+      fr: [
+        'Table runes : colonne Ingame (Rating Com2uS, comme en jeu) ; tri par slot 1→6.',
+        'Table runes : colonne Location + filtre (noms des monstres / inventaire).',
+        'Tri par défaut : Forge ; raisons au survol du verdict ; CSV Reason conservé.',
+        'Guide et docs mis à jour (Ingame vs Forge vs Eff% SWOP).',
+        'En-tête : Donate (Boosty, Lava, crypto USDT TRC-20).',
+        'Dashboard : retour rapide depuis la table ; Forge Score mis en cache ; filtres Min Lvl / Grade animés.',
+        'Rechargement : si SWEX et réglages inchangés, restauration depuis IndexedDB sans retraitement complet.',
+      ],
+    },
+  },
+  {
     date: '2026-05-23',
     items: {
       en: [
@@ -59,21 +95,21 @@ const STATIC_CHANGELOG = [
     items: {
       en: [
         'Forge Score column in the Rune Table: separate 0–100 rating from main-tier values, sub-tier values (different ranking), main↔sub synergy (+/−), sub↔sub pairs, duplicate-sub penalty, and a small innate term — not Eff% and not verdict.',
-        'Guide → Rune Table documents Forge Score vs Eff%; hover Score for a point breakdown.',
+        'Guide → Rune Table documents Forge Score vs Ingame Rating; hover Forge for a point breakdown.',
         'Monsters → Roster: Box overview strip with clickable tiles (unruned, incomplete sets, 6/6, skill-ups, storage) and a readiness summary line.',
         'Fix: a JavaScript syntax error in the score module could block the whole app (tabs and UI frozen) until reload after rebuild.',
         'Project layout: UI split into gear/ (artifact & relic tables), teams/, and monsters/box-overview modules; docs in docs/FEATURES.md.',
       ],
       ru: [
         'Колонка Forge Score в таблице рун: отдельная шкала 0–100 — ценность main и sub (разные рейтинги), синергии main↔sub (+/−), пары сабов, штраф за дубли, слабый innate; не Eff% и не вердикт.',
-        'Guide → Таблица рун: раздел Forge Score vs Eff%; подсказка при наведении на Score.',
+        'Guide → Таблица рун: Forge Score vs Ingame; подсказка при наведении на Forge.',
         'Монстры → Roster: полоса «обзор коробки» с плитками (без рун, неполный сет, 6/6, skill-ups, склад) и строка готовности.',
         'Исправление: синтаксическая ошибка в модуле Score могла ломать весь интерфейс (вкладки не переключались) до пересборки.',
         'Структура: модули gear/, teams/, monsters/box-overview; описание в docs/FEATURES.md.',
       ],
       fr: [
         'Colonne Forge Score : note 0–100 séparée (tiers main/sub, synergies, paires, doublons, innate léger) — pas Eff% ni verdict.',
-        'Guide → Table runes : Forge Score vs Eff% ; infobulle sur Score.',
+        'Guide → Table runes : Forge Score vs Ingame ; infobulle sur Forge.',
         'Monstres → Roster : bandeau « vue boîte » avec tuiles cliquables et ligne de readiness.',
         'Correctif : erreur de syntaxe JS dans le module Score pouvait bloquer toute l’app.',
         'Découpe des sources : dossiers gear/, teams/, box-overview.',

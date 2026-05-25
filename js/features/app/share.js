@@ -121,7 +121,7 @@
     return null;
   }
 
-  function applyReadOnlyProfilePayload(parsed, wizardName) {
+  async function applyReadOnlyProfilePayload(parsed, wizardName) {
     const root = normalizeProfileSwexRoot(parsed);
     if (!root) return false;
     const name =
@@ -131,7 +131,9 @@
           root.wizard_name ||
           '',
       ).trim();
-    if (!tryHydrateRunesFromJsonText(JSON.stringify(root))) return false;
+    if (!(await tryHydrateRunesFromJsonText(JSON.stringify(root), { cacheId: 'share' }))) {
+      return false;
+    }
     shareReadOnly = true;
     persistShareSession(true);
     shareViewLoadFailed = false;
@@ -173,7 +175,7 @@
         text = await res.text();
       }
       const parsed = JSON.parse(text);
-      return applyReadOnlyProfilePayload(parsed);
+      return await applyReadOnlyProfilePayload(parsed);
     } catch (e) {
       console.warn('Profile link load failed', e);
       shareViewLoadFailed = true;
@@ -755,7 +757,7 @@
         shareViewLoadFailed = true;
         return false;
       }
-      if (!applyReadOnlyProfilePayload({ ...root, teams: parsed.teams }, wizardName)) {
+      if (!(await applyReadOnlyProfilePayload({ ...root, teams: parsed.teams }, wizardName))) {
         shareViewLoadFailed = true;
         return false;
       }

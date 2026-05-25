@@ -255,11 +255,11 @@
       if (si >= 1 && si <= 6 && !Number.isNaN(si)) slotEff[si].push(eff);
       effVals.push(eff);
       effBuckets[Math.min(19, Math.floor(eff / 5))]++;
-      const sc =
-        typeof computeRuneScore === 'function'
-          ? Number(computeRuneScore(r))
-          : NaN;
-      const scoreNum = Number.isFinite(sc) ? sc : 0;
+      let scoreNum = Number.isFinite(r.forgeScore) ? r.forgeScore : NaN;
+      if (!Number.isFinite(scoreNum) && typeof computeRuneScore === 'function') {
+        scoreNum = Number(computeRuneScore(r));
+      }
+      if (!Number.isFinite(scoreNum)) scoreNum = 0;
       scoreVals.push(scoreNum);
       scoreBuckets[Math.min(19, Math.floor(scoreNum / 5))]++;
     }

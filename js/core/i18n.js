@@ -148,7 +148,7 @@ const TRANSLATIONS = {
     monstersBoxTileHint: 'Show matching monsters',
     runeGrindQueueBtn: 'Grind queue ({n})',
     runeGrindQueueHint: 'Show all runes marked Grind, sorted by score',
-    tableScoreHeader: 'Score',
+    tableScoreHeader: 'Forge Score',
     tableScoreHint:
       'Forge Score: combat value for 2026 meta. Synergies, archetypes, grinds — not SWOP Eff% or verdict.',
     forgeScoreTooltip:
@@ -424,9 +424,15 @@ const TRANSLATIONS = {
     runeChipKeep: 'Keep',
     roleGodRoll: 'God Roll',
     tableAncientOnly: 'Ancient only',
+    tableIngameScoreHeader: 'Ingame Score',
+    tableIngameScoreHeaderTitle:
+      'Com2uS in-game Rating: prefix_eff[1] + sec_eff[1]+[3] per line, main ignored; sum raw line scores, then round once. Hover a cell for breakdown.',
+    tableIngameScoreSortTitle:
+      'Sort: Slot 1→6 first, then Ingame Score (high→low within each slot) — same order as the in-game rune list. Click again to flip score direction within slots.',
+    tableSearchRunes: 'Search set, role, stat values (e.g. HP 28 finds HP% 28% [+7])…',
     tableEffHeaderCapped: 'Eff%',
     tableEffHeaderCappedTitle:
-      'Classic Efficiency: raw roll density per SWOP (base rolls only, no grinds). Table shows up to 100%; charts may exceed 100%.',
+      'SWOP efficiency (internal rules/charts only; not shown in the rune table).',
     tableSubGrindTooltip: 'Grindstones contributed +{n} on this sub.',
     tableSubGemTooltip: 'Enchanted substat (magic gem).',
     tableAncientBadge: 'Ancient',
@@ -460,7 +466,6 @@ const TRANSLATIONS = {
     tableKindRunes: 'Runes',
     tableKindArtifacts: 'Artifacts',
     tableKindRelics: 'Relics',
-    tableSearchRunes: 'Search by set, stat, role…',
     tableSearchArtifacts: 'Search artifacts…',
     tableSearchRelics: 'Search relics…',
     tableCountArtifacts: '{n} artifacts',
@@ -892,9 +897,15 @@ const TRANSLATIONS = {
     monstersBoxTileHint: 'Показать таких монстров',
     runeGrindQueueBtn: 'Очередь гринда ({n})',
     runeGrindQueueHint: 'Все руны с вердиктом Grind, сортировка по Score',
-    tableScoreHeader: 'Оценка',
+    tableScoreHeader: 'Forge Score',
     tableScoreHint:
-      'Forge Score: боевая ценность в мете 2026. Синергии, архетипы, гринды — не SWOP Eff% и не вердикт.',
+      'Forge Score: боевая ценность в мете 2026. Синергии, архетипы, гринды — не Ingame Score и не вердикт.',
+    tableIngameScoreHeader: 'Ingame Score',
+    tableIngameScoreHeaderTitle:
+      'Игровой рейтинг: prefix_eff[1], сабы sec_eff[1]+[3], main не считается; сумма сырых очков, округление один раз. Наведение на ячейку — разбивка.',
+    tableIngameScoreSortTitle:
+      'Сортировка: сначала слот 1→6, затем Ingame Score (в слоте от большего к меньшему) — как в игре. Повторный клик меняет направление Score внутри слота.',
+    tableSearchRunes: 'Поиск: сет, роль, статы (HP 28 найдёт HP% 28% [+7])…',
     forgeScoreTooltip:
       'Main {mainPts} · Subs {subPts} · Innate {innatePts}. Синергия main↔sub ×{ms} · sub↔sub ×{ss} · кросс-дубль ×{dup}{archetypeSuffix}. Не Eff% и не вердикт.',
     forgeScoreTooltipArchetype: ' · архетип ×{mul} ({name})',
@@ -1154,7 +1165,7 @@ const TRANSLATIONS = {
     tableAncientOnly: 'Только древние',
     tableEffHeaderCapped: 'Eff%',
     tableEffHeaderCappedTitle:
-      'Classic Efficiency: плотность роллов по SWOP (только базовый ролл, без гриндов). В таблице до 100%; на графиках может быть выше.',
+      'SWOP efficiency (только внутренние правила и графики; в таблице рун не показывается).',
     tableSubGrindTooltip: 'Гринд даёт +{n} к этой строке.',
     tableSubGemTooltip: 'Строка зачарована гемом (замена саба).',
     tableAncientBadge: 'Древняя',
@@ -1188,7 +1199,6 @@ const TRANSLATIONS = {
     tableKindRunes: 'Руны',
     tableKindArtifacts: 'Артефакты',
     tableKindRelics: 'Реликвии',
-    tableSearchRunes: 'Поиск: сет, стат, роль…',
     tableSearchArtifacts: 'Поиск артефактов…',
     tableSearchRelics: 'Поиск реликвий…',
     tableCountArtifacts: '{n} артефактов',

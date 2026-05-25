@@ -120,7 +120,7 @@
       else runeTableShowAll = false;
     } finally {
       runeTableApplyingHash = false;
-      applyRuneTableEffHeader();
+      applyRuneTableIngameScoreHeader();
     }
   }
 
@@ -158,6 +158,98 @@
     if (f.location) n += 1;
     if (f.ancientOnly) n += 1;
     return n;
+  }
+
+  function runeTableHasActiveFiltersOrSearch() {
+    const q = (document.getElementById('search-box')?.value || '').trim();
+    if (q) return true;
+    if (runeTableMonsterMasterId != null) return true;
+    return countRuneTableActiveFilters(readRuneTableFiltersFromDom()) > 0;
+  }
+
+  function updateRuneTableResetButton() {
+    const btn = document.getElementById('btn-table-reset-filters');
+    if (!btn) return;
+    const active = runeTableHasActiveFiltersOrSearch();
+    btn.disabled = !active;
+    btn.classList.toggle('btn-toolbar--inactive', !active);
+    btn.setAttribute('aria-disabled', active ? 'false' : 'true');
+  }
+
+  /** Loose match text: lowercase, % and grind brackets → spaces. */
+  function normalizeRuneSearchText(s) {
+    return String(s || '')
+      .toLowerCase()
+      .replace(/%/g, ' ')
+      .replace(/\[\+\d+\]/g, ' ')
+      .replace(/[^a-z0-9\s]/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function runeSearchStatTokens(statName, typeId, val, grind, total) {
+    const base =
+      typeof runeStatBaseName === 'function' ? runeStatBaseName(statName) : String(statName || '').replace(/%$/, '');
+    const v = Number.isFinite(Number(val)) ? Number(val) : 0;
+    const g = Number.isFinite(Number(grind)) ? Number(grind) : 0;
+    const t = Number.isFinite(Number(total)) ? Number(total) : v + g;
+    const parts = [base, String(v), String(t)];
+    if (g > 0) parts.push(String(g), `${v} ${g}`, `${base} ${t}`, `${base} ${v} ${g}`);
+    if (typeof formatRuneStatPlainText === 'function') {
+      parts.push(
+        formatRuneStatPlainText({ type: typeId, name: statName, val: v, grind: g, total: t }),
+      );
+    }
+    return normalizeRuneSearchText(parts.join(' '));
+  }
+
+  function buildRuneSearchHaystack(r, tTable) {
+    const parts = [
+      r.setName,
+      r.mainName,
+      r.gradeStr,
+      r.role,
+      r.verdict,
+      r.innate_name,
+      String(r.innate_val ?? ''),
+      String(r.slot),
+      String(r.level),
+      String(
+        (typeof getRuneIngameScore === 'function' ? getRuneIngameScore(r) : null) ??
+          r.ingameScore ??
+          '',
+      ),
+      typeof computeRuneScore === 'function' ? String(computeRuneScore(r)) : '',
+    ];
+    if (r.mainName) {
+      parts.push(
+        runeSearchStatTokens(r.mainName, r.mainType, r.mainVal, 0, r.mainVal),
+      );
+    }
+    if (r.innate_name) {
+      parts.push(runeSearchStatTokens(r.innate_name, r.innate_type, r.innate_val, 0, r.innate_val));
+    }
+    for (const s of r.substats || []) {
+      if (!s || !s.name) continue;
+      const total = typeof subLineTotal === 'function' ? subLineTotal(s) : (Number(s.val) || 0) + (Number(s.grind) || 0);
+      parts.push(runeSearchStatTokens(s.name, s.type, s.val, s.grind, total));
+    }
+    if (r.isAncient) {
+      parts.push(String(tTable.tableAncientBadge || 'Ancient'), 'ancient');
+    }
+    if (typeof runeLocationLabel === 'function') {
+      parts.push(runeLocationLabel(r, tTable));
+    }
+    return normalizeRuneSearchText(parts.join(' '));
+  }
+
+  function runeMatchesSearchQuery(r, rawQuery, tTable) {
+    const q = normalizeRuneSearchText(rawQuery);
+    if (!q) return true;
+    const hay = buildRuneSearchHaystack(r, tTable);
+    if (hay.includes(q)) return true;
+    const tokens = q.split(' ').filter(Boolean);
+    return tokens.length > 0 && tokens.every((tok) => hay.includes(tok));
   }
 
   function runeTableFilterChipDefs(f, t) {
@@ -250,6 +342,7 @@
     }
     if (moreBtn) moreBtn.classList.toggle('monsters-toolbar-btn--filters-active', n > 0);
     renderRuneTableActiveFilterChips();
+    updateRuneTableResetButton();
   }
 
   function updateRuneTableFilterIndicators() {
@@ -292,6 +385,7 @@
     if (typeof setRuneTableMonsterMasterId === 'function') setRuneTableMonsterMasterId(null);
     updateSortHeaderClasses();
     updateRuneTableFilterIndicators();
+    updateRuneTableResetButton();
     applyFiltersAndSort(getVisibleRunes());
   }
 
@@ -301,6 +395,7 @@
   function setRuneTableMonsterMasterId(masterId) {
     runeTableMonsterMasterId =
       masterId != null && Number.isFinite(Number(masterId)) ? Number(masterId) : null;
+    updateRuneTableResetButton();
   }
 
   function clearRuneTableMonsterMasterId() {
@@ -342,28 +437,7 @@
       if (mainVal && r.mainName !== mainVal) return false;
       if (locVal === 'inventory' && isRuneEquipped(r)) return false;
       if (locVal === 'equipped' && !isRuneEquipped(r)) return false;
-      if (search) {
-        const subParts = (r.substats || []).flatMap((s) => {
-          const total = subLineTotal(s);
-          const grind = Number(s.grind) || 0;
-          return [s.name, String(total), grind > 0 ? String(s.val ?? '') : ''];
-        });
-        const ancientTokens = r.isAncient
-          ? [String(tTable.tableAncientBadge || 'Ancient'), 'ancient']
-          : [];
-        const locLabel =
-          typeof runeLocationLabel === 'function'
-            ? runeLocationLabel(r, tTable)
-            : '';
-        const haystack = [
-          r.setName, r.mainName, r.gradeStr, r.role, r.verdict,
-          r.innate_name, String(r.innate_val ?? ''),
-          locLabel,
-          ...ancientTokens,
-          ...subParts,
-        ].join(' ').toLowerCase();
-        if (!haystack.includes(search)) return false;
-      }
+      if (search && !runeMatchesSearchQuery(r, search, tTable)) return false;
       return true;
     });
 
@@ -426,3 +500,4 @@
   }
 
   bindRuneTableFiltersDrawer();
+  updateRuneTableResetButton();

@@ -272,11 +272,20 @@
     const grade = `<span class="grade-tag ${gradeClass}${r.isAncient ? ' grade-tag--ancient' : ''}"${ancientTipAttr}${gradeAria}><span class="grade-tag__lbl">${gradeLabelHtml}</span></span>`;
 
     const tScore = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-    const effDisplay =
-      typeof getRuneDisplayEff === 'function'
-        ? getRuneDisplayEff(r)
-        : Math.min(100, Number(r.eff) || 0);
-    const effShown = `${(Math.round(effDisplay * 10) / 10).toFixed(1)}%`;
+    const ingameScore =
+      typeof getRuneIngameScore === 'function'
+        ? getRuneIngameScore(r)
+        : Number.isFinite(r.ingameScore)
+          ? r.ingameScore
+          : typeof window.SWRM?.calcIngameScore === 'function'
+            ? window.SWRM.calcIngameScore(r)
+            : 0;
+    const ingameShown = String(ingameScore);
+    const ingameTitle = escapeAttr(
+      typeof window.SWRM?.ingameScoreBreakdown === 'function'
+        ? window.SWRM.ingameScoreBreakdown(r).join('\n')
+        : tScore.tableIngameScoreHeaderTitle || '',
+    );
     const scoreNum =
       typeof computeRuneScore === 'function' ? computeRuneScore(r, tScore) : 0;
     const scoreTier = typeof runeScoreTier === 'function' ? runeScoreTier(scoreNum) : 'stat-chip--score-lo';
@@ -334,7 +343,7 @@
       ${subCell(subs[1], false)}
       ${subCell(subs[2], false)}
       ${subCell(subs[3], false)}
-      <td class="col-num td-num td-num--eff col-block-gap"><span class="rune-eff-muted">${highlightSearchInPlain(effShown, tableSearchHighlight)}</span></td>
+      <td class="col-num td-num td-num--ingame col-block-gap" title="${ingameTitle}"><span class="rune-ingame-score">${highlightSearchInPlain(ingameShown, tableSearchHighlight)}</span></td>
       <td class="col-num td-num td-num--score" title="${scoreTitle}"><span class="stat-chip stat-chip--score ${scoreTier}">${highlightSearchInPlain(scoreShown, tableSearchHighlight)}</span></td>
       <td class="col-text">${verdictHtml}</td>
       <td class="col-text">${roleHtml}</td>

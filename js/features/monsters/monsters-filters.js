@@ -517,7 +517,8 @@
       const esc = String(uid).replace(/"/g, '\\"');
       const card =
         document.querySelector(`.monsters-card[data-unit-id="${esc}"]`) ||
-        document.querySelector(`.monsters-table__row[data-unit-id="${esc}"]`);
+        document.querySelector(`.monsters-table__row[data-unit-id="${esc}"]`) ||
+        document.querySelector(`.team-card__slot[data-unit-id="${esc}"]`);
       if (card && !aside.hidden) positionMonstersDetailFloat(card);
     };
     window.addEventListener('scroll', reposition, true);

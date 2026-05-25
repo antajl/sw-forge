@@ -297,6 +297,36 @@
     return summary;
   }
 
+  /** Community reference rune → in-game Score 132 (see ingame-score.js). */
+  function runIngameScoreSelfTest() {
+    const calc = window.SWRM && window.SWRM.calcIngameScore;
+    if (typeof calc !== 'function') {
+      console.warn('[INGAME-SCORE-TEST] calcIngameScore not loaded');
+      return { ok: false, score: null, expected: 132 };
+    }
+    const rune = {
+      innate_type: 4,
+      innate_name: 'ATK%',
+      innate_val: 4,
+      substats: [
+        { type: 8, name: 'SPD', val: 18, grind: 0, gem: 0, source: 'sub' },
+        { type: 2, name: 'HP%', val: 15, grind: 0, gem: 0, source: 'sub' },
+        { type: 9, name: 'CRate', val: 6, grind: 0, gem: 0, source: 'sub' },
+        { type: 1, name: 'HP', val: 250, grind: 0, gem: 0, source: 'sub' },
+      ],
+    };
+    const score = calc(rune);
+    const ok = score === 132;
+    const breakdown =
+      typeof window.SWRM.ingameScoreBreakdown === 'function'
+        ? window.SWRM.ingameScoreBreakdown(rune)
+        : [];
+    console.log(`[INGAME-SCORE-TEST] score=${score} expected=132 ${ok ? 'PASS' : 'FAIL'}`);
+    if (breakdown.length) console.log(breakdown.join('\n'));
+    return { ok, score, expected: 132, breakdown };
+  }
+
   window.SWRM = window.SWRM || {};
   window.SWRM.runSelfTests = runSelfTests;
+  window.SWRM.runIngameScoreSelfTest = runIngameScoreSelfTest;
 })();

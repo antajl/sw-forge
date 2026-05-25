@@ -158,7 +158,8 @@
     } else if (pin) {
       monstersDetailHoverUnitId = null;
     }
-    const u = monstersEnrichedCache.find((x) => String(x.unitId) === String(unitId));
+    let u = monstersEnrichedCache.find((x) => String(x.unitId) === String(unitId));
+    if (!u && typeof teamUnitRecord === 'function') u = teamUnitRecord(unitId);
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     cancelMonstersDetailHide();
     syncMonsterRowHighlight(unitId);

@@ -4,25 +4,27 @@
     applyFiltersAndSort(runes);
   }
 
-  /** SWOP Eff% (uncapped) — used for sort, CSV, depth charts. */
-  function getRuneNumericEff(r) {
+  /** In-game Score (Com2uS Rating) — table column, sort, CSV. */
+  function getRuneIngameScore(r) {
     if (!r) return 0;
-    if (Number.isFinite(r.eff)) return r.eff;
-    const calc = window.SWRM?.calcEfficiencyUncapped;
+    if (Number.isFinite(r.ingameScore)) return r.ingameScore;
+    const calc = window.SWRM?.calcIngameScore;
     return typeof calc === 'function' ? calc(r) : 0;
   }
 
-  /** Table display only — cap at 100% like SWOP column UI. */
-  function getRuneDisplayEff(r) {
-    return Math.min(100, getRuneNumericEff(r));
-  }
-
-  function applyRuneTableEffHeader() {
+  function applyRuneTableIngameScoreHeader() {
     const lbl = document.getElementById('lbl-th-eff');
+    const th = document.querySelector('#rune-table th[data-sort="eff"]');
     if (!lbl) return;
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-    lbl.textContent = t.tableEffHeaderCapped || 'Eff%';
-    lbl.setAttribute('title', t.tableEffHeaderCappedTitle || '');
+    lbl.textContent = t.tableIngameScoreHeader || 'Ingame Score';
+    const title = [t.tableIngameScoreHeaderTitle || '', t.tableIngameScoreSortTitle || '']
+      .filter(Boolean)
+      .join('\n\n');
+    if (title) {
+      lbl.setAttribute('title', title);
+      if (th) th.setAttribute('title', title);
+    }
   }
 
   function applyRuneTableScoreHeader() {
@@ -34,7 +36,7 @@
   }
 
   function initRuneTablePrefsFromStorage() {
-    applyRuneTableEffHeader();
+    applyRuneTableIngameScoreHeader();
     applyRuneTableScoreHeader();
     const ancient = document.getElementById('toggle-ancient-only');
     if (ancient) {
@@ -44,7 +46,22 @@
     }
   }
 
+  /** In-game rune list: slot 1→6, then Score high→low within each slot. */
+  function compareIngameScoreCascade(a, b, dir) {
+    const slotA = Number(a?.slot) || 0;
+    const slotB = Number(b?.slot) || 0;
+    if (slotA !== slotB) return slotA - slotB;
+    const scoreA = getRuneIngameScore(a);
+    const scoreB = getRuneIngameScore(b);
+    const diff = scoreB - scoreA;
+    return dir === 'asc' ? -diff : diff;
+  }
+
   function sortRunesInPlace(arr, key, dir) {
+    if (key === 'eff') {
+      arr.sort((a, b) => compareIngameScoreCascade(a, b, dir));
+      return;
+    }
     arr.sort((a, b) => {
       let av;
       let bv;
@@ -54,7 +71,6 @@
         case 'grade':   av = a.grade;   bv = b.grade;   break;
         case 'level':   av = a.level;   bv = b.level;   break;
         case 'main':    av = a.mainName;bv = b.mainName;break;
-        case 'eff':     av = getRuneNumericEff(a); bv = getRuneNumericEff(b); break;
         case 'score':
           av = typeof computeRuneScore === 'function' ? computeRuneScore(a) : 0;
           bv = typeof computeRuneScore === 'function' ? computeRuneScore(b) : 0;
@@ -121,7 +137,7 @@
     const headers = [
       'Grade',
       tloc.csvHeaderAncient || 'Ancient',
-      'Set', 'Lvl', 'Slot', 'Main', 'Innate', 'Sub1', 'Sub2', 'Sub3', 'Sub4', 'Score', 'Eff%', 'Role', 'Verdict',
+      'Set', 'Lvl', 'Slot', 'Main', 'Innate', 'Sub1', 'Sub2', 'Sub3', 'Sub4', 'Forge Score', 'Ingame Score', 'Role', 'Verdict',
       tloc.csvHeaderReason || 'Reason',
     ];
     function cellPart(s) {
@@ -164,7 +180,7 @@
         subcell(subs[2]),
         subcell(subs[3]),
         String(typeof computeRuneScore === 'function' ? computeRuneScore(r) : ''),
-        `${getRuneNumericEff(r).toFixed(1)}`,
+        String(getRuneIngameScore(r)),
         roleDisplayName(r.role || ''),
         r.verdict || '',
         runeVerdictTipText(r) || runeTargetText(r) || '',
@@ -213,6 +229,7 @@
   });
 
   document.getElementById('search-box')?.addEventListener('input', () => {
+    if (typeof updateRuneTableResetButton === 'function') updateRuneTableResetButton();
     clearTimeout(searchDebounceTimer);
     searchDebounceTimer = setTimeout(() => {
       searchDebounceTimer = null;

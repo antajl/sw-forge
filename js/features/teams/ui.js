@@ -100,6 +100,11 @@
       slot.dataset.teamsDetailHover = '1';
       slot.addEventListener('mouseenter', () => {
         if (monstersDetailPinnedUnitId) return;
+        const u = teamUnitRecord(uid);
+        if (!u && typeof ensureTeamsUnitCache === 'function') {
+          void ensureTeamsUnitCache().then(() => showMonsterDetailForCard(uid, slot));
+          return;
+        }
         showMonsterDetailForCard(uid, slot);
       });
       slot.addEventListener('mouseleave', () => {
@@ -107,6 +112,11 @@
       });
       slot.addEventListener('focus', () => {
         if (monstersDetailPinnedUnitId) return;
+        const u = teamUnitRecord(uid);
+        if (!u && typeof ensureTeamsUnitCache === 'function') {
+          void ensureTeamsUnitCache().then(() => showMonsterDetailForCard(uid, slot));
+          return;
+        }
         showMonsterDetailForCard(uid, slot);
       });
       slot.addEventListener('blur', () => {
@@ -231,9 +241,10 @@
         const inner = imgFile
           ? `<img class="team-card__portrait" data-img-file="${escapeAttr(imgFile)}" alt="" width="52" height="52" loading="lazy" decoding="async" />`
           : '<span class="team-card__slot-empty">+</span>';
-        const tip = uid ? escapeHtml(teamUnitLabel(uid)) : '';
+        const label = uid ? teamUnitLabel(uid) : '';
         const unitAttr = uid ? ` data-unit-id="${escapeHtml(String(uid))}"` : '';
-        return `<div class="team-card__slot${leader ? ' team-card__slot--leader' : ''}${missing ? ' team-card__slot--missing' : ''}" data-slot-idx="${i}"${unitAttr} title="${tip}" tabindex="${uid ? '0' : '-1'}">
+        const aria = label ? ` aria-label="${escapeHtml(label)}"` : '';
+        return `<div class="team-card__slot${leader ? ' team-card__slot--leader' : ''}${missing ? ' team-card__slot--missing' : ''}" data-slot-idx="${i}"${unitAttr}${aria} tabindex="${uid ? '0' : '-1'}">
           ${leader ? '<span class="team-card__crown" aria-hidden="true">👑</span>' : ''}
           ${inner}
           ${spdBadge}

@@ -457,7 +457,7 @@
               <div class="table-toolbar__row table-toolbar__row--controls" id="rune-table-rune-only-ui">
                 <div class="table-toolbar__group table-toolbar__group--actions">
                   <div class="table-toolbar__buttons">
-                    <button type="button" id="btn-table-reset-filters" class="btn-ghost btn-toolbar">Reset filters</button>
+                    <button type="button" id="btn-table-reset-filters" class="btn-ghost btn-toolbar btn-toolbar--inactive" disabled>Reset filters</button>
                     <div class="filters-popover-host">
                       <button type="button" class="monsters-toolbar-btn monsters-toolbar-btn--filters" id="rune-more-filters-btn" aria-haspopup="true" aria-controls="rune-filters-popover" aria-expanded="false">
                         <span id="lbl-rune-more-filters">More Filters ⚙</span>
@@ -530,6 +530,10 @@
                         </div>
                       </div>
                     </div>
+                  </div>
+                </div>
+                <div class="table-toolbar__aside">
+                  <div class="table-toolbar__buttons table-toolbar__buttons--end">
                     <button type="button" id="btn-export-csv" class="btn-ghost btn-toolbar">Export CSV</button>
                     <div class="share-split share-split--compact" data-share-split>
                       <button type="button" class="share-split__main" id="runetable-share-main">
@@ -549,9 +553,9 @@
                       </div>
                     </div>
                   </div>
-                </div>
-                <div class="table-toolbar__count table-count-block">
-                  <span id="table-count" class="table-count" aria-live="polite">0 runes</span>
+                  <div class="table-toolbar__count table-count-block">
+                    <span id="table-count" class="table-count" aria-live="polite">0 runes</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -672,14 +676,14 @@
               </div>
             </div>
           </div>
-          <div id="rune-table-roster-meta" class="monsters-roster-meta rune-table-roster-meta" data-gear-roster-meta="runes">
-            <div class="monsters-chips monsters-chips--stats" id="rune-table-roster-chips" aria-live="polite"></div>
-            <p class="rune-table-verdict-hint" id="lbl-rune-verdict-hint">Hover a Verdict tag for details.</p>
-          </div>
           <div id="rune-table-active-filters" class="rune-table-active-filters" hidden>
             <div id="rune-table-filter-chips" class="rune-table-filter-chips"></div>
           </div>
           <div class="table-kind-pane is-active" data-table-kind-pane="runes">
+            <div id="rune-table-roster-meta" class="monsters-roster-meta rune-table-roster-meta" data-gear-roster-meta="runes">
+              <div class="monsters-chips monsters-chips--stats" id="rune-table-roster-chips" aria-live="polite"></div>
+              <p class="rune-table-verdict-hint" id="lbl-rune-verdict-hint">Hover a Verdict tag for details.</p>
+            </div>
             <div class="table-wrap" id="rune-table-scroll" tabindex="0" role="region" aria-label="Rune table">
               <table id="rune-table">
                 <thead>
@@ -694,7 +698,7 @@
                     <th data-sort="s2" class="col-sub">Sub 2</th>
                     <th data-sort="s3" class="col-sub">Sub 3</th>
                     <th data-sort="s4" class="col-sub">Sub 4</th>
-                    <th data-sort="eff" class="th-num col-num th-col-secondary col-block-gap"><span id="lbl-th-eff">Eff%</span></th>
+                    <th data-sort="eff" class="th-num col-num th-col-secondary col-block-gap"><span id="lbl-th-eff">Ingame Score</span></th>
                     <th data-sort="score" class="th-num col-num th-col-primary"><span class="th-text" id="lbl-th-score">Score</span></th>
                     <th data-sort="verdict" class="col-text" data-filter-key="verdict"><span class="th-text" id="lbl-th-verdict">Verdict</span></th>
                     <th data-sort="role" class="col-text" data-filter-key="role"><span class="th-text" id="lbl-th-role">Role</span></th>
@@ -1306,12 +1310,13 @@
           </div>
         </div>
         <div id="monsters-grid" class="monsters-grid monsters-grid--cards"></div>
-          <aside id="monsters-detail" class="monsters-detail monsters-detail--float" aria-labelledby="monsters-detail-title" hidden>
-            <div class="monsters-detail__body" id="monsters-detail-body" hidden></div>
-          </aside>
           </div>
         </div>
         </div>
+
+        <aside id="monsters-detail" class="monsters-detail monsters-detail--float" aria-labelledby="monsters-detail-title" hidden>
+          <div class="monsters-detail__body" id="monsters-detail-body" hidden></div>
+        </aside>
 
         <p class="monsters-attrib" id="lbl-monsters-attrib"></p>
       </div>
@@ -2908,6 +2913,7 @@
   <script defer src="js/data/gear/parse.js"></script>
   <script defer src="js/data/gear/icons.js"></script>
   <script defer src="js/data/parser.js"></script>
+  <script defer src="js/data/ingame-score.js"></script>
   <script defer src="js/data/local-assets.js"></script>
   <script defer src="js/data/skill-db.js"></script>
   <script defer src="js/data/monster-db.js"></script>

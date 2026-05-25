@@ -92,8 +92,14 @@ window.SWRM_I18N_FR = {
   tableScoreHeader: 'Score',
   tableScoreHint:
     'Forge Score : valeur combat métas 2026. Synergies, archétypes, grinds — pas Eff% SWOP ni verdict.',
+  tableIngameScoreHeader: 'Ingame Score',
+  tableIngameScoreSortTitle:
+    'Tri : emplacement 1→6, puis Score in-game (décroissant par slot), comme en jeu.',
+  tableSearchRunes: 'Recherche : set, rôle, stats (ex. HP 28 trouve HP% 28% [+7])…',
+  tableIngameScoreHeaderTitle:
+    'Score in-game Com2uS (formule communautaire) : roll max = 20 pts, main ignoré, innate + subs (base+grind+gem). Survol = détail.',
   tableEffHeaderCappedTitle:
-    'Efficience SWOP : densité des rolls de base (sans grinds). Table max 100 % ; graphiques peuvent dépasser 100 %.',
+    'Efficience SWOP (règles internes / graphiques uniquement ; plus dans le tableau des runes).',
   forgeScoreTooltip:
     'Main {mainPts} · Subs {subPts} · Innate {innatePts}. Synergies ×{ms} ×{ss} · cross-dup ×{dup}{archetypeSuffix}.',
   forgeScoreTooltipArchetype: ' · archétype ×{mul} ({name})',

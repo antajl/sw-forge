@@ -212,7 +212,11 @@
     if (raw.occupied_id != null && Number(raw.occupied_id) !== 0) {
       rune.equipped_to = Number(raw.occupied_id);
     }
+    /** SWOP Eff% — kept for rules / dashboard charts (not the rune table column). */
     rune.eff = calcEfficiency(rune);
+    const calcIngame =
+      window.SWRM?.calculateIngameScore || window.SWRM?.calcIngameScore;
+    rune.ingameScore = typeof calcIngame === 'function' ? calcIngame(rune) : 0;
     return rune;
   }
 

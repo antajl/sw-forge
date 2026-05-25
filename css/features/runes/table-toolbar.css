@@ -34,11 +34,18 @@
 }
 
 .rune-table-verdict-hint {
-  flex: 1 1 100%;
+  flex: 0 0 auto;
   margin: 0;
+  padding: 0;
   font-size: 0.72rem;
   line-height: 1.35;
   color: var(--text-dim);
+  white-space: nowrap;
+  text-align: right;
+}
+
+.table-kind-pane > .rune-table-roster-meta + .table-wrap {
+  margin-top: 0;
 }
 
 #tab-runetable .table-toolbar .monsters-toolbar-btn--filters {
@@ -130,9 +137,26 @@
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 16px 24px;
+  justify-content: space-between;
+  gap: 12px 20px;
   padding-top: 0;
   border-top: none;
+}
+.table-toolbar__group--actions {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.table-toolbar__aside {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 10px 16px;
+  flex: 0 1 auto;
+  margin-left: auto;
+}
+.table-toolbar__buttons--end {
+  justify-content: flex-end;
 }
 .table-toolbar__group {
   display: flex;
@@ -159,6 +183,19 @@
   font-weight: 600;
 }
 
+.btn-toolbar.btn-toolbar--inactive,
+.btn-toolbar:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+  pointer-events: none;
+  color: var(--text-dim);
+}
+
+#btn-table-reset-filters:not(:disabled):not(.btn-toolbar--inactive) {
+  color: var(--text-hi);
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border2));
+}
+
 .btn-toolbar--sm {
   min-height: 28px;
   padding: 5px 10px;
@@ -171,13 +208,13 @@
   align-items: center;
   gap: 14px 18px;
 }
-.table-toolbar__count.table-count-block {
-  margin-left: auto;
-}
 @media (max-width: 720px) {
-  .table-toolbar__count.table-count-block {
-    margin-left: 0;
+  .table-toolbar__aside {
     width: 100%;
+    margin-left: 0;
+    justify-content: space-between;
+  }
+  .table-toolbar__count.table-count-block {
     align-items: flex-start;
     text-align: left;
   }

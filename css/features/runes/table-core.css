@@ -138,7 +138,8 @@ td {
 }
 #rune-table td.td-num-plain,
 #rune-table td.td-num--score,
-#rune-table td.td-num--eff {
+#rune-table td.td-num--eff,
+#rune-table td.td-num--ingame {
   font-family: var(--font-ui);
   font-variant-numeric: tabular-nums;
 }

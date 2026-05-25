@@ -941,7 +941,7 @@
       filterSet.innerHTML = `<option value="">All Sets</option>${sets.map(s => `<option value="${s}">${s}</option>`).join('')}`;
       if (sets.includes(current)) filterSet.value = current;
     }
-    applyRuneTableEffHeader();
+    applyRuneTableIngameScoreHeader();
     if (typeof applyRuneTableScoreHeader === 'function') applyRuneTableScoreHeader();
 
     const filterSlot = document.getElementById('filter-slot');
@@ -5337,11 +5337,20 @@
     const grade = `<span class="grade-tag ${gradeClass}${r.isAncient ? ' grade-tag--ancient' : ''}"${ancientTipAttr}${gradeAria}><span class="grade-tag__lbl">${gradeLabelHtml}</span></span>`;
 
     const tScore = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-    const effDisplay =
-      typeof getRuneDisplayEff === 'function'
-        ? getRuneDisplayEff(r)
-        : Math.min(100, Number(r.eff) || 0);
-    const effShown = `${(Math.round(effDisplay * 10) / 10).toFixed(1)}%`;
+    const ingameScore =
+      typeof getRuneIngameScore === 'function'
+        ? getRuneIngameScore(r)
+        : Number.isFinite(r.ingameScore)
+          ? r.ingameScore
+          : typeof window.SWRM?.calcIngameScore === 'function'
+            ? window.SWRM.calcIngameScore(r)
+            : 0;
+    const ingameShown = String(ingameScore);
+    const ingameTitle = escapeAttr(
+      typeof window.SWRM?.ingameScoreBreakdown === 'function'
+        ? window.SWRM.ingameScoreBreakdown(r).join('\n')
+        : tScore.tableIngameScoreHeaderTitle || '',
+    );
     const scoreNum =
       typeof computeRuneScore === 'function' ? computeRuneScore(r, tScore) : 0;
     const scoreTier = typeof runeScoreTier === 'function' ? runeScoreTier(scoreNum) : 'stat-chip--score-lo';
@@ -5399,7 +5408,7 @@
       ${subCell(subs[1], false)}
       ${subCell(subs[2], false)}
       ${subCell(subs[3], false)}
-      <td class="col-num td-num td-num--eff col-block-gap"><span class="rune-eff-muted">${highlightSearchInPlain(effShown, tableSearchHighlight)}</span></td>
+      <td class="col-num td-num td-num--ingame col-block-gap" title="${ingameTitle}"><span class="rune-ingame-score">${highlightSearchInPlain(ingameShown, tableSearchHighlight)}</span></td>
       <td class="col-num td-num td-num--score" title="${scoreTitle}"><span class="stat-chip stat-chip--score ${scoreTier}">${highlightSearchInPlain(scoreShown, tableSearchHighlight)}</span></td>
       <td class="col-text">${verdictHtml}</td>
       <td class="col-text">${roleHtml}</td>
@@ -5528,7 +5537,7 @@
       else runeTableShowAll = false;
     } finally {
       runeTableApplyingHash = false;
-      applyRuneTableEffHeader();
+      applyRuneTableIngameScoreHeader();
     }
   }
 
@@ -5566,6 +5575,98 @@
     if (f.location) n += 1;
     if (f.ancientOnly) n += 1;
     return n;
+  }
+
+  function runeTableHasActiveFiltersOrSearch() {
+    const q = (document.getElementById('search-box')?.value || '').trim();
+    if (q) return true;
+    if (runeTableMonsterMasterId != null) return true;
+    return countRuneTableActiveFilters(readRuneTableFiltersFromDom()) > 0;
+  }
+
+  function updateRuneTableResetButton() {
+    const btn = document.getElementById('btn-table-reset-filters');
+    if (!btn) return;
+    const active = runeTableHasActiveFiltersOrSearch();
+    btn.disabled = !active;
+    btn.classList.toggle('btn-toolbar--inactive', !active);
+    btn.setAttribute('aria-disabled', active ? 'false' : 'true');
+  }
+
+  /** Loose match text: lowercase, % and grind brackets → spaces. */
+  function normalizeRuneSearchText(s) {
+    return String(s || '')
+      .toLowerCase()
+      .replace(/%/g, ' ')
+      .replace(/\[\+\d+\]/g, ' ')
+      .replace(/[^a-z0-9\s]/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function runeSearchStatTokens(statName, typeId, val, grind, total) {
+    const base =
+      typeof runeStatBaseName === 'function' ? runeStatBaseName(statName) : String(statName || '').replace(/%$/, '');
+    const v = Number.isFinite(Number(val)) ? Number(val) : 0;
+    const g = Number.isFinite(Number(grind)) ? Number(grind) : 0;
+    const t = Number.isFinite(Number(total)) ? Number(total) : v + g;
+    const parts = [base, String(v), String(t)];
+    if (g > 0) parts.push(String(g), `${v} ${g}`, `${base} ${t}`, `${base} ${v} ${g}`);
+    if (typeof formatRuneStatPlainText === 'function') {
+      parts.push(
+        formatRuneStatPlainText({ type: typeId, name: statName, val: v, grind: g, total: t }),
+      );
+    }
+    return normalizeRuneSearchText(parts.join(' '));
+  }
+
+  function buildRuneSearchHaystack(r, tTable) {
+    const parts = [
+      r.setName,
+      r.mainName,
+      r.gradeStr,
+      r.role,
+      r.verdict,
+      r.innate_name,
+      String(r.innate_val ?? ''),
+      String(r.slot),
+      String(r.level),
+      String(
+        (typeof getRuneIngameScore === 'function' ? getRuneIngameScore(r) : null) ??
+          r.ingameScore ??
+          '',
+      ),
+      typeof computeRuneScore === 'function' ? String(computeRuneScore(r)) : '',
+    ];
+    if (r.mainName) {
+      parts.push(
+        runeSearchStatTokens(r.mainName, r.mainType, r.mainVal, 0, r.mainVal),
+      );
+    }
+    if (r.innate_name) {
+      parts.push(runeSearchStatTokens(r.innate_name, r.innate_type, r.innate_val, 0, r.innate_val));
+    }
+    for (const s of r.substats || []) {
+      if (!s || !s.name) continue;
+      const total = typeof subLineTotal === 'function' ? subLineTotal(s) : (Number(s.val) || 0) + (Number(s.grind) || 0);
+      parts.push(runeSearchStatTokens(s.name, s.type, s.val, s.grind, total));
+    }
+    if (r.isAncient) {
+      parts.push(String(tTable.tableAncientBadge || 'Ancient'), 'ancient');
+    }
+    if (typeof runeLocationLabel === 'function') {
+      parts.push(runeLocationLabel(r, tTable));
+    }
+    return normalizeRuneSearchText(parts.join(' '));
+  }
+
+  function runeMatchesSearchQuery(r, rawQuery, tTable) {
+    const q = normalizeRuneSearchText(rawQuery);
+    if (!q) return true;
+    const hay = buildRuneSearchHaystack(r, tTable);
+    if (hay.includes(q)) return true;
+    const tokens = q.split(' ').filter(Boolean);
+    return tokens.length > 0 && tokens.every((tok) => hay.includes(tok));
   }
 
   function runeTableFilterChipDefs(f, t) {
@@ -5658,6 +5759,7 @@
     }
     if (moreBtn) moreBtn.classList.toggle('monsters-toolbar-btn--filters-active', n > 0);
     renderRuneTableActiveFilterChips();
+    updateRuneTableResetButton();
   }
 
   function updateRuneTableFilterIndicators() {
@@ -5700,6 +5802,7 @@
     if (typeof setRuneTableMonsterMasterId === 'function') setRuneTableMonsterMasterId(null);
     updateSortHeaderClasses();
     updateRuneTableFilterIndicators();
+    updateRuneTableResetButton();
     applyFiltersAndSort(getVisibleRunes());
   }
 
@@ -5709,6 +5812,7 @@
   function setRuneTableMonsterMasterId(masterId) {
     runeTableMonsterMasterId =
       masterId != null && Number.isFinite(Number(masterId)) ? Number(masterId) : null;
+    updateRuneTableResetButton();
   }
 
   function clearRuneTableMonsterMasterId() {
@@ -5750,28 +5854,7 @@
       if (mainVal && r.mainName !== mainVal) return false;
       if (locVal === 'inventory' && isRuneEquipped(r)) return false;
       if (locVal === 'equipped' && !isRuneEquipped(r)) return false;
-      if (search) {
-        const subParts = (r.substats || []).flatMap((s) => {
-          const total = subLineTotal(s);
-          const grind = Number(s.grind) || 0;
-          return [s.name, String(total), grind > 0 ? String(s.val ?? '') : ''];
-        });
-        const ancientTokens = r.isAncient
-          ? [String(tTable.tableAncientBadge || 'Ancient'), 'ancient']
-          : [];
-        const locLabel =
-          typeof runeLocationLabel === 'function'
-            ? runeLocationLabel(r, tTable)
-            : '';
-        const haystack = [
-          r.setName, r.mainName, r.gradeStr, r.role, r.verdict,
-          r.innate_name, String(r.innate_val ?? ''),
-          locLabel,
-          ...ancientTokens,
-          ...subParts,
-        ].join(' ').toLowerCase();
-        if (!haystack.includes(search)) return false;
-      }
+      if (search && !runeMatchesSearchQuery(r, search, tTable)) return false;
       return true;
     });
 
@@ -5834,6 +5917,7 @@
   }
 
   bindRuneTableFiltersDrawer();
+  updateRuneTableResetButton();
 
   const TABLE_KIND_IDS = ['runes', 'artifacts', 'relics'];
   const TABLE_KIND_STORAGE_KEY = 'swrm_table_kind_v1';
@@ -6485,25 +6569,27 @@
     applyFiltersAndSort(runes);
   }
 
-  /** SWOP Eff% (uncapped) — used for sort, CSV, depth charts. */
-  function getRuneNumericEff(r) {
+  /** In-game Score (Com2uS Rating) — table column, sort, CSV. */
+  function getRuneIngameScore(r) {
     if (!r) return 0;
-    if (Number.isFinite(r.eff)) return r.eff;
-    const calc = window.SWRM?.calcEfficiencyUncapped;
+    if (Number.isFinite(r.ingameScore)) return r.ingameScore;
+    const calc = window.SWRM?.calcIngameScore;
     return typeof calc === 'function' ? calc(r) : 0;
   }
 
-  /** Table display only — cap at 100% like SWOP column UI. */
-  function getRuneDisplayEff(r) {
-    return Math.min(100, getRuneNumericEff(r));
-  }
-
-  function applyRuneTableEffHeader() {
+  function applyRuneTableIngameScoreHeader() {
     const lbl = document.getElementById('lbl-th-eff');
+    const th = document.querySelector('#rune-table th[data-sort="eff"]');
     if (!lbl) return;
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-    lbl.textContent = t.tableEffHeaderCapped || 'Eff%';
-    lbl.setAttribute('title', t.tableEffHeaderCappedTitle || '');
+    lbl.textContent = t.tableIngameScoreHeader || 'Ingame Score';
+    const title = [t.tableIngameScoreHeaderTitle || '', t.tableIngameScoreSortTitle || '']
+      .filter(Boolean)
+      .join('\n\n');
+    if (title) {
+      lbl.setAttribute('title', title);
+      if (th) th.setAttribute('title', title);
+    }
   }
 
   function applyRuneTableScoreHeader() {
@@ -6515,7 +6601,7 @@
   }
 
   function initRuneTablePrefsFromStorage() {
-    applyRuneTableEffHeader();
+    applyRuneTableIngameScoreHeader();
     applyRuneTableScoreHeader();
     const ancient = document.getElementById('toggle-ancient-only');
     if (ancient) {
@@ -6525,7 +6611,22 @@
     }
   }
 
+  /** In-game rune list: slot 1→6, then Score high→low within each slot. */
+  function compareIngameScoreCascade(a, b, dir) {
+    const slotA = Number(a?.slot) || 0;
+    const slotB = Number(b?.slot) || 0;
+    if (slotA !== slotB) return slotA - slotB;
+    const scoreA = getRuneIngameScore(a);
+    const scoreB = getRuneIngameScore(b);
+    const diff = scoreB - scoreA;
+    return dir === 'asc' ? -diff : diff;
+  }
+
   function sortRunesInPlace(arr, key, dir) {
+    if (key === 'eff') {
+      arr.sort((a, b) => compareIngameScoreCascade(a, b, dir));
+      return;
+    }
     arr.sort((a, b) => {
       let av;
       let bv;
@@ -6535,7 +6636,6 @@
         case 'grade':   av = a.grade;   bv = b.grade;   break;
         case 'level':   av = a.level;   bv = b.level;   break;
         case 'main':    av = a.mainName;bv = b.mainName;break;
-        case 'eff':     av = getRuneNumericEff(a); bv = getRuneNumericEff(b); break;
         case 'score':
           av = typeof computeRuneScore === 'function' ? computeRuneScore(a) : 0;
           bv = typeof computeRuneScore === 'function' ? computeRuneScore(b) : 0;
@@ -6602,7 +6702,7 @@
     const headers = [
       'Grade',
       tloc.csvHeaderAncient || 'Ancient',
-      'Set', 'Lvl', 'Slot', 'Main', 'Innate', 'Sub1', 'Sub2', 'Sub3', 'Sub4', 'Score', 'Eff%', 'Role', 'Verdict',
+      'Set', 'Lvl', 'Slot', 'Main', 'Innate', 'Sub1', 'Sub2', 'Sub3', 'Sub4', 'Forge Score', 'Ingame Score', 'Role', 'Verdict',
       tloc.csvHeaderReason || 'Reason',
     ];
     function cellPart(s) {
@@ -6645,7 +6745,7 @@
         subcell(subs[2]),
         subcell(subs[3]),
         String(typeof computeRuneScore === 'function' ? computeRuneScore(r) : ''),
-        `${getRuneNumericEff(r).toFixed(1)}`,
+        String(getRuneIngameScore(r)),
         roleDisplayName(r.role || ''),
         r.verdict || '',
         runeVerdictTipText(r) || runeTargetText(r) || '',
@@ -6694,6 +6794,7 @@
   });
 
   document.getElementById('search-box')?.addEventListener('input', () => {
+    if (typeof updateRuneTableResetButton === 'function') updateRuneTableResetButton();
     clearTimeout(searchDebounceTimer);
     searchDebounceTimer = setTimeout(() => {
       searchDebounceTimer = null;
@@ -10944,6 +11045,11 @@
       slot.dataset.teamsDetailHover = '1';
       slot.addEventListener('mouseenter', () => {
         if (monstersDetailPinnedUnitId) return;
+        const u = teamUnitRecord(uid);
+        if (!u && typeof ensureTeamsUnitCache === 'function') {
+          void ensureTeamsUnitCache().then(() => showMonsterDetailForCard(uid, slot));
+          return;
+        }
         showMonsterDetailForCard(uid, slot);
       });
       slot.addEventListener('mouseleave', () => {
@@ -10951,6 +11057,11 @@
       });
       slot.addEventListener('focus', () => {
         if (monstersDetailPinnedUnitId) return;
+        const u = teamUnitRecord(uid);
+        if (!u && typeof ensureTeamsUnitCache === 'function') {
+          void ensureTeamsUnitCache().then(() => showMonsterDetailForCard(uid, slot));
+          return;
+        }
         showMonsterDetailForCard(uid, slot);
       });
       slot.addEventListener('blur', () => {
@@ -11075,9 +11186,10 @@
         const inner = imgFile
           ? `<img class="team-card__portrait" data-img-file="${escapeAttr(imgFile)}" alt="" width="52" height="52" loading="lazy" decoding="async" />`
           : '<span class="team-card__slot-empty">+</span>';
-        const tip = uid ? escapeHtml(teamUnitLabel(uid)) : '';
+        const label = uid ? teamUnitLabel(uid) : '';
         const unitAttr = uid ? ` data-unit-id="${escapeHtml(String(uid))}"` : '';
-        return `<div class="team-card__slot${leader ? ' team-card__slot--leader' : ''}${missing ? ' team-card__slot--missing' : ''}" data-slot-idx="${i}"${unitAttr} title="${tip}" tabindex="${uid ? '0' : '-1'}">
+        const aria = label ? ` aria-label="${escapeHtml(label)}"` : '';
+        return `<div class="team-card__slot${leader ? ' team-card__slot--leader' : ''}${missing ? ' team-card__slot--missing' : ''}" data-slot-idx="${i}"${unitAttr}${aria} tabindex="${uid ? '0' : '-1'}">
           ${leader ? '<span class="team-card__crown" aria-hidden="true">👑</span>' : ''}
           ${inner}
           ${spdBadge}
@@ -12401,7 +12513,8 @@
       const esc = String(uid).replace(/"/g, '\\"');
       const card =
         document.querySelector(`.monsters-card[data-unit-id="${esc}"]`) ||
-        document.querySelector(`.monsters-table__row[data-unit-id="${esc}"]`);
+        document.querySelector(`.monsters-table__row[data-unit-id="${esc}"]`) ||
+        document.querySelector(`.team-card__slot[data-unit-id="${esc}"]`);
       if (card && !aside.hidden) positionMonstersDetailFloat(card);
     };
     window.addEventListener('scroll', reposition, true);
@@ -15016,7 +15129,8 @@
     } else if (pin) {
       monstersDetailHoverUnitId = null;
     }
-    const u = monstersEnrichedCache.find((x) => String(x.unitId) === String(unitId));
+    let u = monstersEnrichedCache.find((x) => String(x.unitId) === String(unitId));
+    if (!u && typeof teamUnitRecord === 'function') u = teamUnitRecord(unitId);
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     cancelMonstersDetailHide();
     syncMonsterRowHighlight(unitId);

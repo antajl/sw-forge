@@ -196,7 +196,8 @@
   cursor: help;
 }
 
-#rune-table .rune-eff-muted {
+#rune-table .rune-eff-muted,
+#rune-table .rune-ingame-score {
   font-family: var(--font-ui);
   font-size: 0.68rem;
   font-weight: 400;

@@ -34,8 +34,22 @@
   user-select: none;
 }
 
-.rune-table-roster-meta {
-  margin-bottom: 8px;
+.monsters-roster-meta.rune-table-roster-meta {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin: 0 0 6px;
+}
+
+.rune-table-roster-meta .monsters-chips--stats {
+  flex: 1 1 auto;
+  min-width: 0;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: thin;
 }
 
 #tab-monsters-roster .search-hit,

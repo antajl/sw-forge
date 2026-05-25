@@ -404,7 +404,7 @@
       filterSet.innerHTML = `<option value="">All Sets</option>${sets.map(s => `<option value="${s}">${s}</option>`).join('')}`;
       if (sets.includes(current)) filterSet.value = current;
     }
-    applyRuneTableEffHeader();
+    applyRuneTableIngameScoreHeader();
     if (typeof applyRuneTableScoreHeader === 'function') applyRuneTableScoreHeader();
 
     const filterSlot = document.getElementById('filter-slot');

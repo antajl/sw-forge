@@ -295,6 +295,16 @@
   font-size: 0.72rem;
   color: var(--text-dim);
   line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.monsters-detail__meta-line .monsters-card__loc {
+  display: inline-flex;
+  vertical-align: middle;
+  margin-left: 0.15rem;
 }
 
 .monsters-detail__nat-pill {
@@ -652,6 +662,11 @@
 .monsters-detail__stats-grid:not(.monsters-detail__stats-grid--total-view)
   .monsters-detail__stat-row--core [data-col='total'] {
   display: none !important;
+  visibility: hidden;
+  width: 0;
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
 }
 
 .monsters-gear-item__body--stack {

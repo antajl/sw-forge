@@ -457,7 +457,6 @@
               <div class="table-toolbar__row table-toolbar__row--controls" id="rune-table-rune-only-ui">
                 <div class="table-toolbar__group table-toolbar__group--actions">
                   <div class="table-toolbar__buttons">
-                    <button type="button" id="btn-table-reset-filters" class="btn-ghost btn-toolbar btn-toolbar--inactive" disabled>Reset filters</button>
                     <div class="filters-popover-host">
                       <button type="button" class="monsters-toolbar-btn monsters-toolbar-btn--filters" id="rune-more-filters-btn" aria-haspopup="true" aria-controls="rune-filters-popover" aria-expanded="false">
                         <span id="lbl-rune-more-filters">More Filters ⚙</span>
@@ -530,6 +529,7 @@
                         </div>
                       </div>
                     </div>
+                    <button type="button" id="btn-table-reset-filters" class="btn-ghost btn-toolbar btn-toolbar--inactive" disabled>Reset filters</button>
                   </div>
                 </div>
                 <div class="table-toolbar__aside">
@@ -571,7 +571,6 @@
               <div class="table-toolbar__row table-toolbar__row--controls">
                 <div class="table-toolbar__group table-toolbar__group--actions">
                   <div class="table-toolbar__buttons">
-                    <button type="button" id="btn-artifact-reset-filters" class="btn-ghost btn-toolbar">Reset filters</button>
                     <div class="filters-popover-host">
                       <button type="button" class="monsters-toolbar-btn monsters-toolbar-btn--filters" id="artifact-more-filters-btn" aria-haspopup="true" aria-controls="artifact-filters-popover" aria-expanded="false">
                         <span id="lbl-artifact-more-filters">More Filters ⚙</span>
@@ -614,10 +613,13 @@
                         </div>
                       </div>
                     </div>
+                    <button type="button" id="btn-artifact-reset-filters" class="btn-ghost btn-toolbar btn-toolbar--inactive" disabled>Reset filters</button>
                   </div>
                 </div>
-                <div class="table-toolbar__count table-count-block">
-                  <span id="artifact-table-count" class="table-count" aria-live="polite">0 artifacts</span>
+                <div class="table-toolbar__aside">
+                  <div class="table-toolbar__count table-count-block">
+                    <span id="artifact-table-count" class="table-count" aria-live="polite">0 artifacts</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -633,7 +635,6 @@
               <div class="table-toolbar__row table-toolbar__row--controls">
                 <div class="table-toolbar__group table-toolbar__group--actions">
                   <div class="table-toolbar__buttons">
-                    <button type="button" id="btn-relic-reset-filters" class="btn-ghost btn-toolbar">Reset filters</button>
                     <div class="filters-popover-host">
                       <button type="button" class="monsters-toolbar-btn monsters-toolbar-btn--filters" id="relic-more-filters-btn" aria-haspopup="true" aria-controls="relic-filters-popover" aria-expanded="false">
                         <span id="lbl-relic-more-filters">More Filters ⚙</span>
@@ -668,10 +669,13 @@
                         </div>
                       </div>
                     </div>
+                    <button type="button" id="btn-relic-reset-filters" class="btn-ghost btn-toolbar btn-toolbar--inactive" disabled>Reset filters</button>
                   </div>
                 </div>
-                <div class="table-toolbar__count table-count-block">
-                  <span id="relic-table-count" class="table-count" aria-live="polite">0 relics</span>
+                <div class="table-toolbar__aside">
+                  <div class="table-toolbar__count table-count-block">
+                    <span id="relic-table-count" class="table-count" aria-live="polite">0 relics</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -686,23 +690,40 @@
             </div>
             <div class="table-wrap" id="rune-table-scroll" tabindex="0" role="region" aria-label="Rune table">
               <table id="rune-table">
+                <colgroup>
+                  <col class="col-slot" />
+                  <col class="col-set" />
+                  <col class="col-main" />
+                  <col class="col-grade" />
+                  <col class="col-lvl" />
+                  <col class="col-innate" />
+                  <col class="col-sub" />
+                  <col class="col-sub" />
+                  <col class="col-sub" />
+                  <col class="col-sub" />
+                  <col class="col-ingame" />
+                  <col class="col-score" />
+                  <col class="col-verdict" />
+                  <col class="col-role" />
+                  <col class="col-location" />
+                </colgroup>
                 <thead>
                   <tr>
-                    <th data-sort="slot" class="col-slot th-num col-num" data-filter-key="slot"><span class="th-text" id="lbl-th-slot">Slot</span></th>
-                    <th data-sort="set" class="col-set col-text" data-filter-key="set"><span class="th-text" id="lbl-th-set">Set</span></th>
-                    <th data-sort="main" class="col-main col-text" data-filter-key="main"><span class="th-text" id="lbl-th-main">Main</span></th>
-                    <th data-sort="grade" class="col-grade" data-filter-key="grade"><span class="th-text" id="lbl-th-grade">Grade</span></th>
-                    <th data-sort="level" class="col-lvl th-num col-num">Lvl</th>
-                    <th class="col-text col-innate col-block-gap">Innate</th>
-                    <th data-sort="s1" class="col-sub col-sub-first">Sub 1</th>
-                    <th data-sort="s2" class="col-sub">Sub 2</th>
-                    <th data-sort="s3" class="col-sub">Sub 3</th>
-                    <th data-sort="s4" class="col-sub">Sub 4</th>
-                    <th data-sort="eff" class="th-num col-num th-col-secondary col-block-gap"><span id="lbl-th-eff">Ingame Score</span></th>
-                    <th data-sort="score" class="th-num col-num th-col-primary"><span class="th-text" id="lbl-th-score">Score</span></th>
-                    <th data-sort="verdict" class="col-text" data-filter-key="verdict"><span class="th-text" id="lbl-th-verdict">Verdict</span></th>
-                    <th data-sort="role" class="col-text" data-filter-key="role"><span class="th-text" id="lbl-th-role">Role</span></th>
-                    <th class="col-text col-location" data-filter-key="location"><span class="th-text" id="lbl-th-rune-location">Location</span></th>
+                    <th data-sort="slot" class="col-slot th-num col-num" data-filter-key="slot"><span class="th-text th-text--plain" id="lbl-th-slot">Slot</span></th>
+                    <th data-sort="set" class="col-set col-text" data-filter-key="set"><span class="th-text th-text--plain" id="lbl-th-set">Set</span></th>
+                    <th data-sort="main" class="col-main col-text" data-filter-key="main"><span class="th-text th-text--plain" id="lbl-th-main">Main</span></th>
+                    <th data-sort="grade" class="col-grade" data-filter-key="grade"><span class="th-text th-text--plain" id="lbl-th-grade">Grade</span></th>
+                    <th data-sort="level" class="col-lvl th-num col-num"><span class="th-text th-text--plain" id="lbl-th-level">Lvl</span></th>
+                    <th class="col-text col-innate col-block-gap"><span class="th-text th-text--plain" id="lbl-th-innate">Innate</span></th>
+                    <th data-sort="s1" class="col-sub col-sub-first"><span class="th-text th-text--plain" id="lbl-th-sub1">Sub 1</span></th>
+                    <th data-sort="s2" class="col-sub"><span class="th-text th-text--plain" id="lbl-th-sub2">Sub 2</span></th>
+                    <th data-sort="s3" class="col-sub"><span class="th-text th-text--plain" id="lbl-th-sub3">Sub 3</span></th>
+                    <th data-sort="s4" class="col-sub"><span class="th-text th-text--plain" id="lbl-th-sub4">Sub 4</span></th>
+                    <th data-sort="eff" class="th-num col-num col-ingame th-col-secondary col-block-gap"><span class="th-text th-text--plain" id="lbl-th-eff">Ingame</span></th>
+                    <th data-sort="score" class="th-num col-num col-score th-col-primary"><span class="th-text th-text--plain" id="lbl-th-score">Forge</span></th>
+                    <th data-sort="verdict" class="col-text col-verdict col-block-gap" data-filter-key="verdict"><span class="th-text th-text--plain" id="lbl-th-verdict">Verdict</span></th>
+                    <th data-sort="role" class="col-text col-role" data-filter-key="role"><span class="th-text th-text--plain" id="lbl-th-role">Role</span></th>
+                    <th class="col-text col-location" data-filter-key="location"><span class="th-text th-text--plain" id="lbl-th-rune-location">Location</span></th>
                   </tr>
                 </thead>
                 <tbody id="rune-tbody"></tbody>
@@ -1007,13 +1028,13 @@
             data-monsters-hub="roster" aria-selected="true" aria-controls="tab-monsters-roster" tabindex="0">
             <span class="rules-subtab__label" id="lbl-monsters-hub-roster">Roster</span>
           </button>
-          <button type="button" role="tab" class="rules-subtab monsters-hub-tab" id="monsters-hub-tab-teams"
-            data-monsters-hub="teams" aria-selected="false" aria-controls="tab-monsters-teams" tabindex="-1">
-            <span class="rules-subtab__label" id="lbl-monsters-hub-teams">Teams</span>
-          </button>
           <button type="button" role="tab" class="rules-subtab monsters-hub-tab" id="monsters-hub-tab-planner"
             data-monsters-hub="planner" aria-selected="false" aria-controls="tab-monsters-planner" tabindex="-1">
             <span class="rules-subtab__label" id="lbl-monsters-hub-planner">Skill plan</span>
+          </button>
+          <button type="button" role="tab" class="rules-subtab monsters-hub-tab" id="monsters-hub-tab-teams"
+            data-monsters-hub="teams" aria-selected="false" aria-controls="tab-monsters-teams" tabindex="-1">
+            <span class="rules-subtab__label" id="lbl-monsters-hub-teams">Teams</span>
           </button>
         </nav>
         <div id="tab-monsters-planner" class="monsters-hub-pane" data-monsters-pane="planner" role="tabpanel" aria-labelledby="monsters-hub-tab-planner" hidden>
@@ -1032,6 +1053,9 @@
               </label>
               <button type="button" class="btn-ghost btn-toolbar skill-planner__toggle" id="skill-planner-exclude-storage" aria-pressed="true">
                 <span id="lbl-skill-planner-exclude-storage">Exclude Storage</span>
+              </button>
+              <button type="button" class="btn-ghost btn-toolbar skill-planner__toggle" id="skill-planner-second-awakened-only" aria-pressed="false" data-swrm-tip="">
+                <span id="lbl-skill-planner-second-awakened-only">Second Awakening only</span>
               </button>
             </div>
             <p class="skill-planner__empty" id="skill-planner-empty" hidden></p>
@@ -1147,7 +1171,6 @@
             <div class="table-toolbar__row table-toolbar__row--controls">
               <div class="table-toolbar__group table-toolbar__group--actions">
                 <div class="table-toolbar__buttons">
-                  <button type="button" id="monsters-toolbar-reset-filters" class="btn-ghost btn-toolbar">Reset filters</button>
                   <div class="filters-popover-host">
                     <button type="button" class="monsters-toolbar-btn monsters-toolbar-btn--filters" id="monsters-more-filters-btn" aria-haspopup="true" aria-controls="monsters-filters-popover" aria-expanded="false">
                       <span id="lbl-monsters-more-filters">More Filters ⚙</span>
@@ -1251,6 +1274,11 @@
                       </div>
                     </div>
                   </div>
+                  <button type="button" id="monsters-toolbar-reset-filters" class="btn-ghost btn-toolbar btn-toolbar--inactive" disabled>Reset filters</button>
+                </div>
+              </div>
+              <div class="table-toolbar__aside">
+                <div class="table-toolbar__buttons table-toolbar__buttons--end">
                   <button type="button" id="btn-monsters-export-csv" class="btn-ghost btn-toolbar">Export CSV</button>
                   <div class="share-split share-split--compact" data-share-split>
                     <button type="button" class="share-split__main" id="monsters-share-main">

@@ -9,12 +9,19 @@
 }
 
 .monsters-card__loc-icon {
-  display: block;
-  width: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 11px;
   height: 11px;
+  padding: 0 1px;
   border-radius: 2px;
   border: 1px solid var(--border2);
   background: var(--bg3);
+  font-size: 0.58rem;
+  line-height: 1;
+  font-weight: 700;
+  color: var(--text-dim);
 }
 
 .monsters-card__loc--active .monsters-card__loc-icon {
@@ -31,12 +38,7 @@
 }
 
 .monsters-card__loc-text {
-  margin-left: 3px;
-  font-size: 0.58rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  color: var(--orange, #c8863a);
+  display: none;
 }
 
 .monsters-grid--cards .monsters-card.monsters-card--bulk-on,

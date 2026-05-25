@@ -346,7 +346,11 @@
         if (query) applyRuneTableQueryParams(new URLSearchParams(query));
         updateSortHeaderClasses();
         updateRuneTableFilterIndicators();
-        applyFiltersAndSort(getVisibleRunes(), { preserveTableExpansion: true });
+        if (typeof flushRuneTableRenderIfNeeded === 'function') {
+          flushRuneTableRenderIfNeeded();
+        } else {
+          applyFiltersAndSort(getVisibleRunes(), { preserveTableExpansion: true });
+        }
       } else if (typeof showTableKind === 'function') {
         showTableKind(kind);
       }

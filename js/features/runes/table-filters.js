@@ -1,5 +1,19 @@
 // js/features/runes/table-filters.js — rune table filtering logic
   let filteredRunes = [];
+  let runeTableRenderPending = false;
+
+  function isRuneTableRunesTabActive() {
+    if (typeof isRuneTablePaneVisible === 'function' && !isRuneTablePaneVisible()) return false;
+    if (typeof readTableKind === 'function' && readTableKind() !== 'runes') return false;
+    return true;
+  }
+
+  function flushRuneTableRenderIfNeeded() {
+    if (!runeTableRenderPending && !isRuneTableRunesTabActive()) return;
+    if (!isRuneTableRunesTabActive()) return;
+    runeTableRenderPending = false;
+    applyFiltersAndSort(getVisibleRunes(), { preserveTableExpansion: true });
+  }
 
   function isRuneEquipped(r) {
     const uid = r.equipped_to != null ? Number(r.equipped_to) : NaN;
@@ -168,12 +182,109 @@
   }
 
   function updateRuneTableResetButton() {
-    const btn = document.getElementById('btn-table-reset-filters');
-    if (!btn) return;
-    const active = runeTableHasActiveFiltersOrSearch();
-    btn.disabled = !active;
-    btn.classList.toggle('btn-toolbar--inactive', !active);
-    btn.setAttribute('aria-disabled', active ? 'false' : 'true');
+    if (typeof updateToolbarResetButton === 'function') {
+      updateToolbarResetButton('btn-table-reset-filters', runeTableHasActiveFiltersOrSearch());
+    }
+  }
+
+  const RUNE_SEARCH_STAT_KEYS = new Set(['hp', 'atk', 'def', 'spd', 'crate', 'cdmg', 'res', 'acc']);
+
+  function canonRuneSearchStatKey(tok) {
+    const t = String(tok || '')
+      .toLowerCase()
+      .replace(/%$/, '')
+      .trim();
+    const map = {
+      hp: 'hp',
+      health: 'hp',
+      atk: 'atk',
+      attack: 'atk',
+      def: 'def',
+      defense: 'def',
+      defence: 'def',
+      spd: 'spd',
+      speed: 'spd',
+      crate: 'crate',
+      cr: 'crate',
+      cdmg: 'cdmg',
+      cd: 'cdmg',
+      cdamage: 'cdmg',
+      res: 'res',
+      resistance: 'res',
+      acc: 'acc',
+      accuracy: 'acc',
+    };
+    if (map[t]) return map[t];
+    return RUNE_SEARCH_STAT_KEYS.has(t) ? t : null;
+  }
+
+  function parseRuneSearchQuery(rawQuery) {
+    const norm = normalizeRuneSearchText(rawQuery);
+    if (!norm) return { pairs: [], free: [] };
+    const tokens = norm.split(' ').filter(Boolean);
+    const pairs = [];
+    const free = [];
+    let i = 0;
+    while (i < tokens.length) {
+      const key = canonRuneSearchStatKey(tokens[i]);
+      const next = tokens[i + 1];
+      if (key && next !== undefined && /^\d+$/.test(next)) {
+        pairs.push({ stat: key, value: Number(next) });
+        i += 2;
+        continue;
+      }
+      if (/^\d+$/.test(tokens[i]) && canonRuneSearchStatKey(next)) {
+        pairs.push({ stat: canonRuneSearchStatKey(next), value: Number(tokens[i]) });
+        i += 2;
+        continue;
+      }
+      if (key && (next === undefined || !/^\d+$/.test(next))) {
+        free.push(key);
+        i += 1;
+        continue;
+      }
+      free.push(tokens[i]);
+      i += 1;
+    }
+    return { pairs, free };
+  }
+
+  function runeStatValueLines(r) {
+    const lines = [];
+    const add = (name, total) => {
+      if (!name) return;
+      const base =
+        typeof runeStatBaseName === 'function' ? runeStatBaseName(name) : String(name).replace(/%$/, '');
+      const key = canonRuneSearchStatKey(base);
+      const val = Number(total);
+      if (!key || !Number.isFinite(val)) return;
+      lines.push({ key, value: Math.round(val) });
+    };
+    if (r.mainName) add(r.mainName, r.mainVal);
+    if (r.innate_name) add(r.innate_name, r.innate_val);
+    for (const s of r.substats || []) {
+      if (!s || !s.name) continue;
+      const total =
+        typeof subLineTotal === 'function' ? subLineTotal(s) : (Number(s.val) || 0) + (Number(s.grind) || 0);
+      add(s.name, total);
+    }
+    return lines;
+  }
+
+  function runeHaystackWords(hay) {
+    return hay.split(' ').filter(Boolean);
+  }
+
+  function runeFreeTokensMatchHaystack(hay, free) {
+    if (!free.length) return true;
+    const words = runeHaystackWords(hay);
+    const full = free.join(' ');
+    if (full.length >= 2 && hay.includes(full)) return true;
+    return free.every((tok) => {
+      const stat = canonRuneSearchStatKey(tok);
+      if (stat) return words.includes(stat);
+      return words.includes(tok) || hay.includes(tok);
+    });
   }
 
   /** Loose match text: lowercase, % and grind brackets → spaces. */
@@ -244,12 +355,19 @@
   }
 
   function runeMatchesSearchQuery(r, rawQuery, tTable) {
-    const q = normalizeRuneSearchText(rawQuery);
-    if (!q) return true;
+    const norm = normalizeRuneSearchText(rawQuery);
+    if (!norm) return true;
+    const { pairs, free } = parseRuneSearchQuery(rawQuery);
+    const statLines = runeStatValueLines(r);
+    for (const p of pairs) {
+      const hit = statLines.some((ln) => ln.key === p.stat && ln.value === p.value);
+      if (!hit) return false;
+    }
+    if (pairs.length && !free.length) return true;
     const hay = buildRuneSearchHaystack(r, tTable);
-    if (hay.includes(q)) return true;
-    const tokens = q.split(' ').filter(Boolean);
-    return tokens.length > 0 && tokens.every((tok) => hay.includes(tok));
+    if (!pairs.length && !free.length) return true;
+    if (!free.length) return hay.includes(norm);
+    return runeFreeTokensMatchHaystack(hay, free);
   }
 
   function runeTableFilterChipDefs(f, t) {
@@ -443,30 +561,44 @@
 
     sortRunesInPlace(filteredRunes, sortKey, sortDir);
 
+    if (!isRuneTableRunesTabActive()) {
+      runeTableRenderPending = true;
+      updateRuneTableFilterIndicators();
+      return;
+    }
+    runeTableRenderPending = false;
+
     const tbody = document.getElementById('rune-tbody');
     if (!tbody) return;
     const total = filteredRunes.length;
-    const cap = runeTableShowAll ? total : Math.min(RUNE_TABLE_PAGE, total);
-    const rows = filteredRunes.slice(0, cap);
 
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const countEl = document.getElementById('table-count');
-    if (countEl) {
-      if (!runeTableShowAll && total > RUNE_TABLE_PAGE) {
-        const tmpl = t.runeTableCountCapped || '{shown} / {total}';
-        countEl.textContent = tmpl
-          .replace(/\{shown\}/g, String(cap))
-          .replace(/\{total\}/g, String(total));
-      } else {
-        countEl.textContent = `${total} ${t.runes}`;
-      }
-    }
+    if (countEl) countEl.textContent = `${total} ${t.runes}`;
 
-    tbody.innerHTML = rows.map(r => runeRow(r)).join('');
-    setupRuneTableMoreUi(total, rows.length);
+    if (!opts || !opts.preserveTableExpansion) {
+      if (typeof resetRuneTableVirtualScroll === 'function') resetRuneTableVirtualScroll();
+    }
+    if (typeof bindRuneTableVirtualScroll === 'function') bindRuneTableVirtualScroll();
+    if (typeof paintRuneTableVirtualBody === 'function') {
+      runeVirtualLastKey = '';
+      paintRuneTableVirtualBody(filteredRunes);
+    } else {
+      const cap = runeTableShowAll ? total : Math.min(RUNE_TABLE_PAGE, total);
+      const rows = filteredRunes.slice(0, cap);
+      tbody.innerHTML = rows.map((r, i) => runeRow(r, { rowIndex: i })).join('');
+      setupRuneTableMoreUi(total, rows.length);
+    }
+    const loadStrip = document.getElementById('rune-table-load-strip');
+    if (loadStrip) {
+      loadStrip.classList.add('hidden');
+      loadStrip.setAttribute('aria-hidden', 'true');
+    }
     updateRuneTableFilterIndicators();
     if (typeof renderRuneTableRosterChips === 'function') renderRuneTableRosterChips();
-    replaceRuneTableLocationFromState();
+    if (typeof paintRuneTableVirtualBody !== 'function' && typeof replaceRuneTableLocationFromState === 'function') {
+      replaceRuneTableLocationFromState();
+    }
   }
 
   function bindRuneTableFiltersDrawer() {

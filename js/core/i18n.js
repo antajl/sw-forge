@@ -148,9 +148,15 @@ const TRANSLATIONS = {
     monstersBoxTileHint: 'Show matching monsters',
     runeGrindQueueBtn: 'Grind queue ({n})',
     runeGrindQueueHint: 'Show all runes marked Grind, sorted by score',
-    tableScoreHeader: 'Forge Score',
+    tableScoreHeader: 'Forge',
+    tableScoreHeaderTip:
+      'Forge Score: SW Forge combat rating (synergies, archetypes, grinds). Not the in-game Rating column and not the Verdict label.',
     tableScoreHint:
       'Forge Score: combat value for 2026 meta. Synergies, archetypes, grinds — not SWOP Eff% or verdict.',
+    tableVerdictHeaderTip:
+      'Keep / Grind / Sell / Reapp / Gem from your rules. Hover a row tag for that rune’s reason and engine detail.',
+    tableRoleHeaderTip:
+      'Build role from stats and sets (e.g. God Roll = rescue line). Used with filters and dashboards — not the same as Verdict.',
     forgeScoreTooltip:
       'Main {mainPts} pts · Subs {subPts} · Innate {innatePts}. Synergy main↔sub ×{ms} · sub↔sub ×{ss} · cross-stat dup ×{dup}{archetypeSuffix}. Stat tiers + roll size — not Eff% or verdict.',
     forgeScoreTooltipArchetype: ' · archetype ×{mul} ({name})',
@@ -296,6 +302,9 @@ const TRANSLATIONS = {
     skillPlannerNat3: 'Nat 3 only',
     skillPlannerHideStorage: 'Exclude Storage',
     skillPlannerShowStorage: 'Include Storage',
+    skillPlannerSecondAwakenedOnly: 'Second Awakening only',
+    skillPlannerSecondAwakenedOnlyTip:
+      'Only monsters whose species can Second Awaken (from monster database). Does not check whether your copy is already 2A.',
     monstersFilterSkillAll: 'All skills',
     monstersFilterSkillNeeds: 'Not maxed (skill-ups needed)',
     monstersFilterSkillMaxed: 'Max skills',
@@ -424,12 +433,12 @@ const TRANSLATIONS = {
     runeChipKeep: 'Keep',
     roleGodRoll: 'God Roll',
     tableAncientOnly: 'Ancient only',
-    tableIngameScoreHeader: 'Ingame Score',
+    tableIngameScoreHeader: 'Ingame',
     tableIngameScoreHeaderTitle:
-      'Com2uS in-game Rating: prefix_eff[1] + sec_eff[1]+[3] per line, main ignored; sum raw line scores, then round once. Hover a cell for breakdown.',
+      'Ingame Score — Com2uS in-game Rating: prefix_eff[1] + sec_eff[1]+[3] per line, main ignored; sum raw line scores, then round once. Hover a cell for breakdown.',
     tableIngameScoreSortTitle:
       'Sort: Slot 1→6 first, then Ingame Score (high→low within each slot) — same order as the in-game rune list. Click again to flip score direction within slots.',
-    tableSearchRunes: 'Search set, role, stat values (e.g. HP 28 finds HP% 28% [+7])…',
+    tableSearchRunes: 'Search set, role, stats (Def 8 = DEF flat 8 only; Def = any DEF)…',
     tableEffHeaderCapped: 'Eff%',
     tableEffHeaderCappedTitle:
       'SWOP efficiency (internal rules/charts only; not shown in the rune table).',
@@ -897,15 +906,21 @@ const TRANSLATIONS = {
     monstersBoxTileHint: 'Показать таких монстров',
     runeGrindQueueBtn: 'Очередь гринда ({n})',
     runeGrindQueueHint: 'Все руны с вердиктом Grind, сортировка по Score',
-    tableScoreHeader: 'Forge Score',
+    tableScoreHeader: 'Forge',
+    tableScoreHeaderTip:
+      'Forge Score: оценка SW Forge (синергии, архетип, гринды). Не колонка Ingame Score и не Verdict.',
     tableScoreHint:
       'Forge Score: боевая ценность в мете 2026. Синергии, архетипы, гринды — не Ingame Score и не вердикт.',
-    tableIngameScoreHeader: 'Ingame Score',
+    tableVerdictHeaderTip:
+      'Keep / Grind / Sell / Reapp / Gem по вашим правилам. Наведите на тег в строке — причина и детали движка.',
+    tableRoleHeaderTip:
+      'Роль сборки по статам и сетам (God Roll — линия спасения). Для фильтров и дашборда, не то же что Verdict.',
+    tableIngameScoreHeader: 'Ingame',
     tableIngameScoreHeaderTitle:
-      'Игровой рейтинг: prefix_eff[1], сабы sec_eff[1]+[3], main не считается; сумма сырых очков, округление один раз. Наведение на ячейку — разбивка.',
+      'Ingame Score — игровой рейтинг: prefix_eff[1], сабы sec_eff[1]+[3], main не считается; сумма сырых очков, округление один раз. Наведение на ячейку — разбивка.',
     tableIngameScoreSortTitle:
       'Сортировка: сначала слот 1→6, затем Ingame Score (в слоте от большего к меньшему) — как в игре. Повторный клик меняет направление Score внутри слота.',
-    tableSearchRunes: 'Поиск: сет, роль, статы (HP 28 найдёт HP% 28% [+7])…',
+    tableSearchRunes: 'Поиск: сет, роль, статы (Def 8 — только DEF +8; Def — любой DEF)…',
     forgeScoreTooltip:
       'Main {mainPts} · Subs {subPts} · Innate {innatePts}. Синергия main↔sub ×{ms} · sub↔sub ×{ss} · кросс-дубль ×{dup}{archetypeSuffix}. Не Eff% и не вердикт.',
     forgeScoreTooltipArchetype: ' · архетип ×{mul} ({name})',
@@ -1053,6 +1068,9 @@ const TRANSLATIONS = {
     skillPlannerNat4Only: 'Только Nat 4',
     skillPlannerNat3: 'Только Nat 3',
     skillPlannerHideStorage: 'Без Storage',
+    skillPlannerSecondAwakenedOnly: 'Только 2-е пробуждение',
+    skillPlannerSecondAwakenedOnlyTip:
+      'Только виды с Second Awakening (по базе монстров). Не проверяет, пробуждён ли уже ваш экземпляр.',
     skillPlannerShowStorage: 'Показать Storage',
     monstersFilterSkillAll: 'Все скиллы',
     monstersFilterSkillNeeds: 'Не на макс. (нужны skill-up)',

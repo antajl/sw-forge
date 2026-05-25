@@ -751,6 +751,24 @@
   background: var(--monsters-el-dark);
 }
 
+.monsters-card__level {
+  font-variant-numeric: tabular-nums;
+  color: #f7f5f1;
+  background: color-mix(in srgb, #121110 82%, transparent);
+  border: 1px solid color-mix(in srgb, #000 55%, var(--border2));
+  box-shadow: 0 1px 4px color-mix(in srgb, #000 45%, transparent);
+  padding: 2px 6px;
+  border-radius: 4px;
+  line-height: 1.2;
+  pointer-events: none;
+}
+
+.light-theme .monsters-card__level {
+  color: #f7f5f1;
+  background: color-mix(in srgb, #1a1918 88%, transparent);
+  border-color: color-mix(in srgb, #000 40%, var(--border));
+}
+
 .monsters-card--grid .monsters-card__level {
   position: absolute;
   right: 6px;
@@ -758,11 +776,6 @@
   z-index: 2;
   font-size: 0.72rem;
   font-weight: 700;
-  color: var(--text-hi);
-  background: color-mix(in srgb, var(--bg) 72%, transparent);
-  padding: 2px 5px;
-  border-radius: 4px;
-  pointer-events: none;
 }
 
 .monsters-card--grid .monsters-card__bulk-btn {

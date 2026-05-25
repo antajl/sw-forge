@@ -92,7 +92,7 @@ window.SWRM_I18N_FR = {
   tableScoreHeader: 'Score',
   tableScoreHint:
     'Forge Score : valeur combat métas 2026. Synergies, archétypes, grinds — pas Eff% SWOP ni verdict.',
-  tableIngameScoreHeader: 'Ingame Score',
+  tableIngameScoreHeader: 'Ingame',
   tableIngameScoreSortTitle:
     'Tri : emplacement 1→6, puis Score in-game (décroissant par slot), comme en jeu.',
   tableSearchRunes: 'Recherche : set, rôle, stats (ex. HP 28 trouve HP% 28% [+7])…',

@@ -1,9 +1,11 @@
 // js/features/monsters/skill-planner.js — devilmon / skill-up planner (account-wide)
   const SKILL_PLANNER_STORAGE_KEY = 'swrm_skill_planner_exclude_storage_v1';
+  const SKILL_PLANNER_2A_KEY = 'swrm_skill_planner_second_awakened_v1';
 
   let skillPlannerBound = false;
   let skillPlannerNatFilter = 'all';
   let skillPlannerExcludeStorage = true;
+  let skillPlannerSecondAwakenedOnly = false;
   let skillPlannerView = 'queue';
   /** @type {{ col: string, dir: 'asc'|'desc' }|null} */
   let skillPlannerQueueSort = null;
@@ -31,6 +33,29 @@
     } catch (e) { /* ignore */ }
   }
 
+  function readSkillPlannerSecondAwakenedOnly() {
+    try {
+      const v = localStorage.getItem(SKILL_PLANNER_2A_KEY);
+      if (v === '0' || v === 'false') return false;
+      if (v === '1' || v === 'true') return true;
+    } catch (e) { /* ignore */ }
+    return false;
+  }
+
+  function writeSkillPlannerSecondAwakenedOnly(on) {
+    try {
+      localStorage.setItem(SKILL_PLANNER_2A_KEY, on ? '1' : '0');
+    } catch (e) { /* ignore */ }
+  }
+
+  function plannerMonsterHasSecondAwakening(u) {
+    const db = window.SWRM_MONSTER_DB;
+    if (db && typeof db.monsterHasSecondAwakening === 'function') {
+      return db.monsterHasSecondAwakening(u.masterId, u.meta);
+    }
+    return !!(u.meta && Number(u.meta.awaken_level) >= 2);
+  }
+
   function syncSkillPlannerExcludeStorageButton(t) {
     const btn = document.getElementById('skill-planner-exclude-storage');
     if (!btn) return;
@@ -38,10 +63,23 @@
     btn.classList.toggle('is-active', hiding);
     btn.setAttribute('aria-pressed', hiding ? 'true' : 'false');
     const lbl = document.getElementById('lbl-skill-planner-exclude-storage');
-    if (lbl) {
-      lbl.textContent = hiding
-        ? t.skillPlannerShowStorage || 'Include Storage'
-        : t.skillPlannerHideStorage || 'Exclude Storage';
+    if (lbl) lbl.textContent = t.skillPlannerHideStorage || 'Exclude Storage';
+  }
+
+  function syncSkillPlannerSecondAwakenedButton(t) {
+    const btn = document.getElementById('skill-planner-second-awakened-only');
+    if (!btn) return;
+    const on = !!skillPlannerSecondAwakenedOnly;
+    btn.classList.toggle('is-active', on);
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    const lbl = document.getElementById('lbl-skill-planner-second-awakened-only');
+    if (lbl) lbl.textContent = t.skillPlannerSecondAwakenedOnly || 'Second Awakening only';
+    const tip = t.skillPlannerSecondAwakenedOnlyTip || '';
+    if (tip) {
+      btn.setAttribute('data-swrm-tip', tip);
+      btn.removeAttribute('title');
+    } else {
+      btn.removeAttribute('data-swrm-tip');
     }
   }
 
@@ -274,7 +312,8 @@
   function filterPlannerRosterUnits(units) {
     return (units || []).filter((u) => {
       if (typeof isTechnicalFodderMonster === 'function' && isTechnicalFodderMonster(u)) return false;
-      if (skillPlannerExcludeStorage && u.inStorage) return false;
+      if (skillPlannerExcludeStorage && (u.inStorage || u.storageMark)) return false;
+      if (skillPlannerSecondAwakenedOnly && !plannerMonsterHasSecondAwakening(u)) return false;
       return true;
     });
   }
@@ -740,6 +779,7 @@
     if (!root || skillPlannerBound) return;
     skillPlannerBound = true;
     skillPlannerExcludeStorage = readSkillPlannerExcludeStorage();
+    skillPlannerSecondAwakenedOnly = readSkillPlannerSecondAwakenedOnly();
 
     root.addEventListener('click', (ev) => {
       const sortTh = ev.target.closest('[data-sort-col][data-sort-table]');
@@ -793,6 +833,17 @@
       });
     }
 
+    const secondAwBtn = document.getElementById('skill-planner-second-awakened-only');
+    if (secondAwBtn) {
+      secondAwBtn.addEventListener('click', () => {
+        skillPlannerSecondAwakenedOnly = !skillPlannerSecondAwakenedOnly;
+        writeSkillPlannerSecondAwakenedOnly(skillPlannerSecondAwakenedOnly);
+        const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+        syncSkillPlannerSecondAwakenedButton(t);
+        void renderSkillPlannerPanel();
+      });
+    }
+
     document.querySelectorAll('.skill-planner__tab').forEach((btn) => {
       btn.addEventListener('click', () => {
         const v = btn.getAttribute('data-planner-view');
@@ -813,6 +864,7 @@
 
     bindSkillPlannerPanel(root);
     syncSkillPlannerExcludeStorageButton(t);
+    syncSkillPlannerSecondAwakenedButton(t);
     showSkillPlannerView(skillPlannerView);
 
     const tabsNav = document.getElementById('skill-planner-view-tabs');
@@ -881,3 +933,4 @@
   window.SWRM.filterPlannerRosterUnits = filterPlannerRosterUnits;
 
   skillPlannerExcludeStorage = readSkillPlannerExcludeStorage();
+  skillPlannerSecondAwakenedOnly = readSkillPlannerSecondAwakenedOnly();

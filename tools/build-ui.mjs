@@ -30,6 +30,7 @@ const CHUNKS = [
   'runes/dashboard.js',
   'runes/rune-score.js',
   'runes/table-row-render.js',
+  'runes/table-virtual.js',
   'runes/table-filters.js',
   'gear/table-kind.js',
   'gear/gear-roster-chips.js',

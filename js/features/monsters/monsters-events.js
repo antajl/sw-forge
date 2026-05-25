@@ -351,6 +351,10 @@
       countEl.hidden = !n;
     }
     if (moreBtn) moreBtn.classList.toggle('monsters-toolbar-btn--filters-active', n > 0);
+    const qActive = !!(f.q || '').trim();
+    if (typeof updateToolbarResetButton === 'function') {
+      updateToolbarResetButton('monsters-toolbar-reset-filters', qActive || n > 0);
+    }
     renderMonstersActiveFilterChips();
   }
 

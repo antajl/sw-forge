@@ -5,6 +5,7 @@
   min-width: 72px;
 }
 #rune-table th.col-text.th-has-filter .th-text {
+  margin-left: auto;
   margin-right: auto;
 }
 
@@ -47,6 +48,47 @@
   background: var(--bg3);
   border-color: var(--accent);
   color: var(--accent);
+}
+
+/* Sortable / static labels without header filter pill */
+#rune-table thead th .th-text.th-text--plain {
+  padding: 0;
+  border: none;
+  background: none;
+  border-radius: 0;
+  cursor: pointer;
+  display: block;
+  width: 100%;
+  text-align: center;
+  gap: 0;
+}
+
+#rune-table .th-text.th-text--plain::after {
+  display: none;
+}
+
+#rune-table .th-text.th-text--plain:hover {
+  background: none;
+  border-color: transparent;
+  color: var(--accent);
+}
+
+#rune-table .th-text.th-text--plain.th-text--filtered {
+  border: none;
+  background: none;
+  color: var(--accent);
+}
+
+.light-theme #rune-table .th-text.th-text--plain,
+.light-theme #rune-table .th-text.th-text--plain:hover,
+.light-theme #rune-table .th-text.th-text--plain.th-text--filtered {
+  background: none;
+  border-color: transparent;
+}
+
+#rune-table thead th.th-has-tip,
+#rune-table thead th.th-has-tip .th-text {
+  cursor: help;
 }
 
 .th-text.th-text--filtered {

@@ -18,26 +18,57 @@
     if (!lbl) return;
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     lbl.textContent = t.tableIngameScoreHeader || 'Ingame Score';
-    const title = [t.tableIngameScoreHeaderTitle || '', t.tableIngameScoreSortTitle || '']
+    const tip = [t.tableIngameScoreHeaderTitle || '', t.tableIngameScoreSortTitle || '']
       .filter(Boolean)
       .join('\n\n');
-    if (title) {
-      lbl.setAttribute('title', title);
-      if (th) th.setAttribute('title', title);
+    applyRuneTableColumnHeaderTip('#rune-table th[data-sort="eff"]', 'lbl-th-eff', tip);
+  }
+
+  function applyRuneTableColumnHeaderTip(thSel, lblId, tip) {
+    const text = (tip || '').trim();
+    const th = thSel ? document.querySelector(thSel) : null;
+    const lbl = lblId ? document.getElementById(lblId) : null;
+    for (const el of [th, lbl]) {
+      if (!el) continue;
+      el.removeAttribute('title');
+      if (text) {
+        el.setAttribute('data-swrm-tip', text);
+        el.classList.add('th-has-tip');
+      } else {
+        el.removeAttribute('data-swrm-tip');
+        el.classList.remove('th-has-tip');
+      }
     }
   }
 
   function applyRuneTableScoreHeader() {
     const lbl = document.getElementById('lbl-th-score');
+    const th = document.querySelector('#rune-table th[data-sort="score"]');
     if (!lbl) return;
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-    lbl.textContent = t.tableScoreHeader || 'Score';
-    lbl.setAttribute('title', t.tableScoreHint || '');
+    lbl.textContent = t.tableScoreHeader || 'Forge Score';
+    const tip = t.tableScoreHeaderTip || t.tableScoreHint || '';
+    applyRuneTableColumnHeaderTip('#rune-table th[data-sort="score"]', 'lbl-th-score', tip);
+  }
+
+  function applyRuneTableVerdictRoleHeaderTips() {
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    applyRuneTableColumnHeaderTip(
+      '#rune-table th[data-sort="verdict"]',
+      'lbl-th-verdict',
+      t.tableVerdictHeaderTip || '',
+    );
+    applyRuneTableColumnHeaderTip(
+      '#rune-table th[data-sort="role"]',
+      'lbl-th-role',
+      t.tableRoleHeaderTip || '',
+    );
   }
 
   function initRuneTablePrefsFromStorage() {
     applyRuneTableIngameScoreHeader();
     applyRuneTableScoreHeader();
+    applyRuneTableVerdictRoleHeaderTips();
     const ancient = document.getElementById('toggle-ancient-only');
     if (ancient) {
       const v = localStorage.getItem(RUNE_TABLE_ANCIENT_ONLY_KEY);

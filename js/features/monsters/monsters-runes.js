@@ -146,7 +146,27 @@
   function buildLocationIconHtml(u, t) {
     if (!u.inStorage) return '';
     const label = t.monstersLocationStorage || 'Storage';
-    return `<span class="monsters-card__loc monsters-card__loc--storage monsters-card__loc--on" title="${escapeHtml(label)}" aria-label="${escapeHtml(label)}"><span class="monsters-card__loc-icon" aria-hidden="true"></span><span class="monsters-card__loc-text">${escapeHtml(label)}</span></span>`;
+    return `<span class="monsters-card__loc monsters-card__loc--storage monsters-card__loc--on" title="${escapeHtml(label)}" aria-label="${escapeHtml(label)}"><span class="monsters-card__loc-icon" aria-hidden="true">▣</span></span>`;
+  }
+
+  function buildMonsterTableMarkBtn(u, kind, t) {
+    if (typeof isShareReadOnly === 'function' && isShareReadOnly()) return '—';
+    const uid = escapeHtml(String(u.unitId));
+    if (kind === 'favorite') {
+      return `<button type="button" class="monsters-table__mark-btn monsters-tag-btn monsters-tag-btn--sm${u.favorite ? ' monsters-tag-btn--on' : ''}" data-unit-tag="favorite" data-unit-id="${uid}" aria-pressed="${u.favorite ? 'true' : 'false'}" title="${escapeHtml(t.monstersFavorite || 'Favorite')}">★</button>`;
+    }
+    if (kind === 'food') {
+      return `<button type="button" class="monsters-table__mark-btn monsters-tag-btn monsters-tag-btn--sm${u.food ? ' monsters-tag-btn--on' : ''}" data-unit-tag="food" data-unit-id="${uid}" aria-pressed="${u.food ? 'true' : 'false'}" title="${escapeHtml(t.monstersFood || 'Food')}">🍖</button>`;
+    }
+    if (kind === 'storage') {
+      const storageOn = isStorageMarked(u);
+      const storageTitle = u.inStorage
+        ? t.monstersStorageSwex || t.monstersLocationStorage || 'Storage (SWEX)'
+        : t.monstersStorageMark || 'Storage tag';
+      const storageDisabled = u.inStorage ? ' disabled' : '';
+      return `<button type="button" class="monsters-table__mark-btn monsters-tag-btn monsters-tag-btn--sm${storageOn ? ' monsters-tag-btn--on' : ''}${u.inStorage ? ' monsters-tag-btn--swex' : ''}" data-unit-tag="storageMark" data-unit-id="${uid}" aria-pressed="${storageOn ? 'true' : 'false'}" title="${escapeHtml(storageTitle)}"${storageDisabled}>▣</button>`;
+    }
+    return '—';
   }
 
   function buildCustomTagsHtml(tags) {
@@ -258,7 +278,7 @@
           <span class="monsters-detail__stat-k">${escapeHtml(label)}</span>
           <span class="monsters-detail__stat-num monsters-detail__stat-num--base" data-col="base">${escapeHtml(fmtVal(key, 'base', false))}</span>
           <span class="monsters-detail__stat-num monsters-detail__stat-num--rune" data-col="bonus">${escapeHtml(bonusStr)}</span>
-          <span class="monsters-detail__stat-num monsters-detail__stat-num--total-green" data-col="total" hidden>${escapeHtml(fmtVal(key, 'total', false))}</span>
+          <span class="monsters-detail__stat-num monsters-detail__stat-num--total-green" data-col="total" hidden aria-hidden="true">${escapeHtml(fmtVal(key, 'total', false))}</span>
         </div>`;
     }
     function pctRow(label, key) {

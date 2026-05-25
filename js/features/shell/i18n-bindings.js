@@ -406,6 +406,8 @@
     }
     applyRuneTableIngameScoreHeader();
     if (typeof applyRuneTableScoreHeader === 'function') applyRuneTableScoreHeader();
+    if (typeof applyRuneTableVerdictRoleHeaderTips === 'function') applyRuneTableVerdictRoleHeaderTips();
+    if (typeof applyRuneTableScoreHeader === 'function') applyRuneTableScoreHeader();
 
     const filterSlot = document.getElementById('filter-slot');
     if (filterSlot) {
@@ -593,13 +595,14 @@
     if (spTabQueue) spTabQueue.textContent = t.skillPlannerTabQueue || 'Priority queue';
     const spTabStuck = document.getElementById('lbl-skill-planner-tab-stuck');
     if (spTabStuck) spTabStuck.textContent = t.skillPlannerTabStuck || 'CD −1 goals';
-    const spExclude = document.getElementById('lbl-skill-planner-exclude-storage');
-    if (spExclude) {
-      const hiding = document.getElementById('skill-planner-exclude-storage')?.getAttribute('aria-pressed') === 'true';
-      spExclude.textContent = hiding
-        ? t.skillPlannerShowStorage || 'Include Storage'
-        : t.skillPlannerHideStorage || 'Exclude Storage';
+    const sp2a = document.getElementById('lbl-skill-planner-second-awakened-only');
+    if (sp2a) sp2a.textContent = t.skillPlannerSecondAwakenedOnly || 'Second Awakening only';
+    const sp2aBtn = document.getElementById('skill-planner-second-awakened-only');
+    if (sp2aBtn && typeof syncSkillPlannerSecondAwakenedButton === 'function') {
+      syncSkillPlannerSecondAwakenedButton(t);
     }
+    const spExclude = document.getElementById('lbl-skill-planner-exclude-storage');
+    if (spExclude) spExclude.textContent = t.skillPlannerHideStorage || 'Exclude Storage';
     const skillNeedsOpt = document.getElementById('lbl-monsters-filter-skill-needs');
     if (skillNeedsOpt) skillNeedsOpt.textContent = t.monstersFilterSkillNeeds || 'Not maxed (skill-ups needed)';
     const skillAllOpt = document.getElementById('lbl-monsters-filter-skill-all');

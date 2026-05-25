@@ -8,7 +8,9 @@
     { id: 'role', labelKey: 'monstersColRole', fallback: 'Archetype', sortable: true },
     { id: 'runes', labelKey: 'monstersColRunes', fallback: 'Runes', sortable: true },
     { id: 'skills', labelKey: 'monstersColDevilmons', fallback: 'Devilmons', sortable: true },
-    { id: 'marks', labelKey: 'monstersColMarks', fallback: 'Marks', sortable: true },
+    { id: 'favorite', labelKey: 'monstersColFavorite', fallback: '★', sortable: true },
+    { id: 'food', labelKey: 'monstersColFood', fallback: '🍖', sortable: true },
+    { id: 'storage', labelKey: 'monstersColStorage', fallback: '▣', sortable: true },
     { id: 'tags', labelKey: 'monstersColTags', fallback: 'Tags', sortable: true },
   ];
 
@@ -20,15 +22,6 @@
     const tags = (u.customTags || []).slice(0, 3);
     if (!tags.length) return '—';
     return tags.map((tag) => escapeHtml(tag)).join(', ');
-  }
-
-  function monsterTableCellMarks(u) {
-    const bits = [];
-    if (u.favorite) bits.push('★');
-    if (u.food) bits.push('🍖');
-    if (u.inStorage) bits.push('▣');
-    else if (u.storageMark) bits.push('▣*');
-    return bits.length ? bits.join(' ') : '—';
   }
 
   function monsterTableThumbHtml(u) {
@@ -110,10 +103,21 @@
         const sb = Number(b.skillUpsNeeded) || 0;
         return mul * (sa - sb) || mul * String(a.displayName).localeCompare(String(b.displayName));
       }
-      case 'marks': {
-        const score = (u) =>
-          (u.favorite ? 4 : 0) + (u.food ? 2 : 0) + (u.inStorage || u.storageMark ? 1 : 0);
-        return mul * (score(a) - score(b)) || mul * String(a.displayName).localeCompare(String(b.displayName));
+      case 'favorite':
+        return (
+          mul * ((u.favorite ? 1 : 0) - (b.favorite ? 1 : 0)) ||
+          mul * String(a.displayName).localeCompare(String(b.displayName))
+        );
+      case 'food':
+        return (
+          mul * ((u.food ? 1 : 0) - (b.food ? 1 : 0)) ||
+          mul * String(a.displayName).localeCompare(String(b.displayName))
+        );
+      case 'storage': {
+        const score = (unit) => (unit.inStorage || unit.storageMark ? 1 : 0);
+        return (
+          mul * (score(a) - score(b)) || mul * String(a.displayName).localeCompare(String(b.displayName))
+        );
       }
       case 'tags':
         return (
@@ -180,19 +184,18 @@
             : u.skillsMaxed
               ? '✓'
               : '—';
-        const storageBadge = u.inStorage
-          ? `<span class="monsters-table__storage-badge">${escapeHtml(t.monstersStorageBadge || 'Storage')}</span>`
-          : '';
         return `<tr class="monsters-table__row${rowCls ? ` ${rowCls}` : ''}" data-unit-id="${uid}" tabindex="0">
           <td data-col="bulk" class="monsters-table__td-bulk"><input type="checkbox" class="monsters-table__bulk-cb" data-unit-id="${uid}" ${bulkSel ? 'checked' : ''} aria-label="${escapeHtml(t.monstersBulkSelectOne || 'Select')}" /></td>
-          <td data-col="name"><div class="monsters-table__name-cell">${monsterTableThumbHtml(u)}<span class="monsters-table__name">${name}</span>${storageBadge}</div></td>
+          <td data-col="name"><div class="monsters-table__name-cell">${monsterTableThumbHtml(u)}<span class="monsters-table__name">${name}</span></div></td>
           <td data-col="stars">${monsterTableCellStars(u)}</td>
           <td data-col="level">${highlightMonstersSearchInPlain(String(u.level), q)}</td>
           <td data-col="element">${monsterTableElementCell(u)}</td>
           <td data-col="role">${highlightMonstersSearchInPlain(u.metaArchetype || '—', q)}</td>
           <td data-col="runes">${runes}</td>
           <td data-col="skills">${skills}</td>
-          <td data-col="marks">${monsterTableCellMarks(u)}</td>
+          <td data-col="favorite" class="monsters-table__td-mark">${buildMonsterTableMarkBtn(u, 'favorite', t)}</td>
+          <td data-col="food" class="monsters-table__td-mark">${buildMonsterTableMarkBtn(u, 'food', t)}</td>
+          <td data-col="storage" class="monsters-table__td-mark">${buildMonsterTableMarkBtn(u, 'storage', t)}</td>
           <td data-col="tags">${monsterTableCellTags(u)}</td>
         </tr>`;
       })
@@ -235,6 +238,7 @@
       row.addEventListener('blur', scheduleMonstersDetailHide);
       row.addEventListener('click', (e) => {
         if (e.target.closest('a')) return;
+        if (e.target.closest('[data-unit-tag]')) return;
         if (e.target.closest('.monsters-table__td-bulk') || e.target.classList.contains('monsters-table__bulk-cb')) {
           return;
         }

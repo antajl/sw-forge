@@ -465,3 +465,12 @@
       if (swrmFloatTipAnchor) positionSwrmFloatTip(swrmFloatTipAnchor);
     });
   }
+
+  function updateToolbarResetButton(btnId, isActive) {
+    const btn = typeof btnId === 'string' ? document.getElementById(btnId) : btnId;
+    if (!btn) return;
+    const active = !!isActive;
+    btn.disabled = !active;
+    btn.classList.toggle('btn-toolbar--inactive', !active);
+    btn.setAttribute('aria-disabled', active ? 'false' : 'true');
+  }

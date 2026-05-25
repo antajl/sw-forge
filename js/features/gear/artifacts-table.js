@@ -20,9 +20,22 @@
       .trim()
       .toLowerCase();
     const artSrc = (allArtifacts || []).filter(artifactPassesFilters);
+    const rawQ = document.getElementById('search-box-artifacts')?.value || '';
     filteredArtifacts = !artQ
       ? artSrc.slice()
-      : artSrc.filter((a) => gearSearchHay(a).includes(artQ));
+      : artSrc.filter((a) => gearMatchesSearchQuery(a, rawQ));
+  }
+
+  function artifactToolbarHasActiveFilters() {
+    const q = (document.getElementById('search-box-artifacts')?.value || '').trim();
+    if (q) return true;
+    return countActiveArtifactFilters() > 0;
+  }
+
+  function updateArtifactResetButton() {
+    if (typeof updateToolbarResetButton === 'function') {
+      updateToolbarResetButton('btn-artifact-reset-filters', artifactToolbarHasActiveFilters());
+    }
   }
 
   function countActiveArtifactFilters() {
@@ -43,6 +56,7 @@
     } else {
       badge.hidden = true;
     }
+    updateArtifactResetButton();
   }
 
   function resetArtifactTableFilters() {
@@ -58,6 +72,7 @@
     if (c) c.value = '';
     if (l) l.value = '';
     updateArtifactFilterBadge();
+    updateArtifactResetButton();
     renderGearTables();
   }
 
@@ -149,6 +164,10 @@
     let artDebounce = null;
     document.getElementById('search-box-artifacts')?.addEventListener('input', () => {
       clearTimeout(artDebounce);
-      artDebounce = setTimeout(() => renderGearTables(), 280);
+      artDebounce = setTimeout(() => {
+        updateArtifactResetButton();
+        renderGearTables();
+      }, 280);
     });
+    updateArtifactResetButton();
   }

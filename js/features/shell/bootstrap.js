@@ -18,7 +18,7 @@
   let sortKey  = 'score';
   let sortDir  = 'desc';
   /** First paint of Rune Table: this many rows; user can load the rest explicitly. */
-  const RUNE_TABLE_PAGE = 500;
+  const RUNE_TABLE_PAGE = 200;
   const RUNE_TABLE_SORT_KEYS = new Set([
     'grade', 'set', 'level', 'slot', 'main', 'eff', 'score', 'role', 'verdict', 's1', 's2', 's3', 's4',
   ]);

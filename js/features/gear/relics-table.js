@@ -12,7 +12,20 @@
   function applyRelicTableSearch() {
     const relQ = (document.getElementById('search-box-relics')?.value || '').trim().toLowerCase();
     const relSrc = (allRelics || []).filter(relicPassesFilters);
-    filteredRelics = !relQ ? relSrc.slice() : relSrc.filter((r) => gearSearchHay(r).includes(relQ));
+    const rawQ = document.getElementById('search-box-relics')?.value || '';
+    filteredRelics = !relQ ? relSrc.slice() : relSrc.filter((r) => gearMatchesSearchQuery(r, rawQ));
+  }
+
+  function relicToolbarHasActiveFilters() {
+    const q = (document.getElementById('search-box-relics')?.value || '').trim();
+    if (q) return true;
+    return countActiveRelicFilters() > 0;
+  }
+
+  function updateRelicResetButton() {
+    if (typeof updateToolbarResetButton === 'function') {
+      updateToolbarResetButton('btn-relic-reset-filters', relicToolbarHasActiveFilters());
+    }
   }
 
   function countActiveRelicFilters() {
@@ -32,6 +45,7 @@
     } else {
       badge.hidden = true;
     }
+    updateRelicResetButton();
   }
 
   function resetRelicTableFilters() {
@@ -44,6 +58,7 @@
     if (g) g.value = '';
     if (c) c.value = '';
     updateRelicFilterBadge();
+    updateRelicResetButton();
     renderGearTables();
   }
 
@@ -125,6 +140,10 @@
     let relDebounce = null;
     document.getElementById('search-box-relics')?.addEventListener('input', () => {
       clearTimeout(relDebounce);
-      relDebounce = setTimeout(() => renderGearTables(), 280);
+      relDebounce = setTimeout(() => {
+        updateRelicResetButton();
+        renderGearTables();
+      }, 280);
     });
+    updateRelicResetButton();
   }

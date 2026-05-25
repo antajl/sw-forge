@@ -17,8 +17,6 @@
     const meta = u.meta;
     const elCls = elementClass(u.metaElement);
     const natLbl = t.monstersNatShort || 'nat';
-    const lvlLbl = t.monstersLevelShort || 'Lv';
-    const storageLbl = t.monstersStorageBadge || 'Storage';
     const bestiaryHref = db && u.bestiarySlug ? db.bestiaryUrl(u.bestiarySlug) : '';
     const skillDb = window.SWRM_SKILL_DB;
     const skillRows = skillDb
@@ -56,10 +54,7 @@
         : u.stars != null
           ? u.stars
           : '';
-    const subBits = [
-      u.metaElement ? escapeHtml(u.metaElement) : '',
-      u.metaArchetype ? escapeHtml(u.metaArchetype) : '',
-    ].filter(Boolean);
+    const subBits = [u.metaArchetype ? escapeHtml(u.metaArchetype) : ''].filter(Boolean);
     const rankStars = typeof buildMonsterStarsBadge === 'function' ? buildMonsterStarsBadge(u) : '';
     const elementBadge =
       typeof buildMonsterElementBadge === 'function' ? buildMonsterElementBadge(u) : '';
@@ -73,6 +68,9 @@
     const closeBtn = pinned
       ? `<button type="button" class="monsters-detail__unpin btn-secondary btn-sm" data-unpin-detail="1" title="${escapeHtml(t.monstersDetailUnpin || 'Close')}">×</button>`
       : '';
+    const storageIcon =
+      u.inStorage && typeof buildLocationIconHtml === 'function' ? buildLocationIconHtml(u, t) : '';
+    const metaParts = [natLine, subBits.join(' · ')].filter(Boolean);
 
     body.innerHTML = `
       <header class="monsters-detail__head">
@@ -84,7 +82,7 @@
         </div>
         <div class="monsters-detail__head-text">
           <h3 class="monsters-detail__title" id="monsters-detail-title">${bestiaryHref ? `<a href="${escapeHtml(bestiaryHref)}" target="_blank" rel="noopener noreferrer">${escapeHtml(u.displayName)}</a>` : escapeHtml(u.displayName)}</h3>
-          <p class="monsters-detail__meta-line">${[natLine, subBits.join(' · '), `${escapeHtml(lvlLbl)} <strong>${u.level}</strong>`].filter(Boolean).join(' · ')}${u.inStorage ? ` · <span class="monsters-detail__storage">${escapeHtml(storageLbl)}</span>` : ''}</p>
+          <p class="monsters-detail__meta-line">${metaParts.join(' · ')}${storageIcon}</p>
           <button type="button" class="btn-secondary btn-sm monsters-detail__open-runes" data-open-runes-all="1">${escapeHtml(t.monstersOpenRunes || 'Open runes in table')}</button>
         </div>
         ${closeBtn}

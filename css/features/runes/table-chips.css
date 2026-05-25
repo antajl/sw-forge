@@ -11,6 +11,7 @@
 #rune-table .table-stat {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 3px;
   padding: 0;
   border: none;
@@ -125,6 +126,12 @@
   text-underline-offset: 2px;
 }
 
+.stat-chip--has-tip,
+.rune-ingame-score[data-swrm-tip],
+.grade-tag[data-swrm-tip] {
+  cursor: help;
+}
+
 /* Eff%: chip formula; hi/mid a bit stronger */
 .stat-chip.stat-chip--eff {
   font-family: var(--font-ui);
@@ -177,11 +184,18 @@
   color: var(--text-dim);
 }
 
-/* Eff% — secondary SWOP reference (muted plain text) */
-#rune-table th.th-col-secondary {
-  font-weight: 400;
+/* Ingame Score — same header weight as other columns */
+#rune-table th.th-col-secondary,
+#rune-table th.th-col-secondary .th-text {
+  font-weight: 700;
+  font-size: 0.75rem;
   color: var(--text-dim);
-  font-size: 0.72rem;
+}
+
+#rune-table th.th-col-primary,
+#rune-table th.th-col-primary .th-text {
+  font-weight: 700;
+  font-size: 0.75rem;
 }
 
 #rune-table .rune-god-potential-hint {
@@ -206,7 +220,7 @@
   opacity: 0.82;
 }
 
-/* Ancient: strong glow, kept inside the grade cell (no filter — it bleeds into the next row). */
+/* Ancient: border glow only (no text-shadow — avoids bleed into adjacent cells). */
 .grade-tag--ancient {
   box-shadow:
     0 0 0 1px color-mix(in srgb, var(--chip-tint) 40%, transparent),
@@ -214,13 +228,16 @@
     0 0 11px color-mix(in srgb, var(--chip-tint) 50%, transparent);
 }
 
-.grade-tag--ancient .grade-tag__lbl {
-  text-shadow:
-    0 0 2px color-mix(in srgb, var(--chip-tint) 100%, transparent),
-    0 0 5px color-mix(in srgb, var(--chip-tint) 95%, transparent),
-    0 0 9px color-mix(in srgb, var(--chip-tint) 72%, transparent);
-}
-
 .grade-tag__lbl {
   min-width: 0;
+}
+
+.grade-tag__ancient-icon {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 0.95em;
+  height: 0.95em;
+  background-color: currentColor;
+  mask: url('../../assets/ancient.svg') center / contain no-repeat;
+  -webkit-mask: url('../../assets/ancient.svg') center / contain no-repeat;
 }

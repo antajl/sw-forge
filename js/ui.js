@@ -22,7 +22,7 @@
   let sortKey  = 'score';
   let sortDir  = 'desc';
   /** First paint of Rune Table: this many rows; user can load the rest explicitly. */
-  const RUNE_TABLE_PAGE = 500;
+  const RUNE_TABLE_PAGE = 200;
   const RUNE_TABLE_SORT_KEYS = new Set([
     'grade', 'set', 'level', 'slot', 'main', 'eff', 'score', 'role', 'verdict', 's1', 's2', 's3', 's4',
   ]);
@@ -423,7 +423,11 @@
         if (query) applyRuneTableQueryParams(new URLSearchParams(query));
         updateSortHeaderClasses();
         updateRuneTableFilterIndicators();
-        applyFiltersAndSort(getVisibleRunes(), { preserveTableExpansion: true });
+        if (typeof flushRuneTableRenderIfNeeded === 'function') {
+          flushRuneTableRenderIfNeeded();
+        } else {
+          applyFiltersAndSort(getVisibleRunes(), { preserveTableExpansion: true });
+        }
       } else if (typeof showTableKind === 'function') {
         showTableKind(kind);
       }
@@ -943,6 +947,8 @@
     }
     applyRuneTableIngameScoreHeader();
     if (typeof applyRuneTableScoreHeader === 'function') applyRuneTableScoreHeader();
+    if (typeof applyRuneTableVerdictRoleHeaderTips === 'function') applyRuneTableVerdictRoleHeaderTips();
+    if (typeof applyRuneTableScoreHeader === 'function') applyRuneTableScoreHeader();
 
     const filterSlot = document.getElementById('filter-slot');
     if (filterSlot) {
@@ -1130,13 +1136,14 @@
     if (spTabQueue) spTabQueue.textContent = t.skillPlannerTabQueue || 'Priority queue';
     const spTabStuck = document.getElementById('lbl-skill-planner-tab-stuck');
     if (spTabStuck) spTabStuck.textContent = t.skillPlannerTabStuck || 'CD −1 goals';
-    const spExclude = document.getElementById('lbl-skill-planner-exclude-storage');
-    if (spExclude) {
-      const hiding = document.getElementById('skill-planner-exclude-storage')?.getAttribute('aria-pressed') === 'true';
-      spExclude.textContent = hiding
-        ? t.skillPlannerShowStorage || 'Include Storage'
-        : t.skillPlannerHideStorage || 'Exclude Storage';
+    const sp2a = document.getElementById('lbl-skill-planner-second-awakened-only');
+    if (sp2a) sp2a.textContent = t.skillPlannerSecondAwakenedOnly || 'Second Awakening only';
+    const sp2aBtn = document.getElementById('skill-planner-second-awakened-only');
+    if (sp2aBtn && typeof syncSkillPlannerSecondAwakenedButton === 'function') {
+      syncSkillPlannerSecondAwakenedButton(t);
     }
+    const spExclude = document.getElementById('lbl-skill-planner-exclude-storage');
+    if (spExclude) spExclude.textContent = t.skillPlannerHideStorage || 'Exclude Storage';
     const skillNeedsOpt = document.getElementById('lbl-monsters-filter-skill-needs');
     if (skillNeedsOpt) skillNeedsOpt.textContent = t.monstersFilterSkillNeeds || 'Not maxed (skill-ups needed)';
     const skillAllOpt = document.getElementById('lbl-monsters-filter-skill-all');
@@ -2701,6 +2708,15 @@
     window.addEventListener('resize', () => {
       if (swrmFloatTipAnchor) positionSwrmFloatTip(swrmFloatTipAnchor);
     });
+  }
+
+  function updateToolbarResetButton(btnId, isActive) {
+    const btn = typeof btnId === 'string' ? document.getElementById(btnId) : btnId;
+    if (!btn) return;
+    const active = !!isActive;
+    btn.disabled = !active;
+    btn.classList.toggle('btn-toolbar--inactive', !active);
+    btn.setAttribute('aria-disabled', active ? 'false' : 'true');
   }
 
   function getVisibleRunes() {
@@ -5324,17 +5340,22 @@
     return inv;
   }
 
-  function runeRow(r) {
+  function runeRow(r, opts) {
     const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const gradeKey = r.gradeStr;
     const gradeClass = { Legend: 'legend', Hero: 'hero', Rare: 'rare' }[gradeKey] || 'grade-tag--other';
     const gradeLabel = { Legend: 'Legend', Hero: 'Hero', Rare: 'Rare' }[gradeKey] || String(r.gradeStr);
     const gradeLabelHtml = highlightSearchInPlain(gradeLabel, tableSearchHighlight);
     const ancientTipRaw = tloc.tableAncientBadgeTitle || '';
-    const ancientTipAttr = r.isAncient && ancientTipRaw ? ` title="${escapeAttr(ancientTipRaw)}"` : '';
+    const ancientTipAttr =
+      r.isAncient && ancientTipRaw ? ` data-swrm-tip="${escapeAttr(ancientTipRaw)}"` : '';
     const ancientLbl = escapeAttr(tloc.tableAncientBadge || 'Ancient');
     const gradeAria = r.isAncient ? ` aria-label="${ancientLbl}, ${escapeAttr(gradeLabel)}"` : '';
-    const grade = `<span class="grade-tag ${gradeClass}${r.isAncient ? ' grade-tag--ancient' : ''}"${ancientTipAttr}${gradeAria}><span class="grade-tag__lbl">${gradeLabelHtml}</span></span>`;
+    const ancientIcon =
+      r.isAncient && (gradeKey === 'Hero' || gradeKey === 'Legend')
+        ? '<span class="grade-tag__ancient-icon" aria-hidden="true"></span>'
+        : '';
+    const grade = `<span class="grade-tag ${gradeClass}${r.isAncient ? ' grade-tag--ancient' : ''}"${ancientTipAttr}${gradeAria}>${ancientIcon}<span class="grade-tag__lbl">${gradeLabelHtml}</span></span>`;
 
     const tScore = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const ingameScore =
@@ -5346,20 +5367,20 @@
             ? window.SWRM.calcIngameScore(r)
             : 0;
     const ingameShown = String(ingameScore);
-    const ingameTitle = escapeAttr(
+    const ingameTip =
       typeof window.SWRM?.ingameScoreBreakdown === 'function'
         ? window.SWRM.ingameScoreBreakdown(r).join('\n')
-        : tScore.tableIngameScoreHeaderTitle || '',
-    );
+        : tScore.tableIngameScoreHeaderTitle || '';
+    const ingameTipAttr = ingameTip ? ` data-swrm-tip="${escapeAttr(ingameTip)}"` : '';
     const scoreNum =
       typeof computeRuneScore === 'function' ? computeRuneScore(r, tScore) : 0;
     const scoreTier = typeof runeScoreTier === 'function' ? runeScoreTier(scoreNum) : 'stat-chip--score-lo';
     const scoreShown = String(scoreNum);
-    const scoreTitle = escapeAttr(
+    const scoreTip =
       typeof runeScoreTooltip === 'function'
         ? runeScoreTooltip(r, tScore)
-        : tScore.tableScoreHint || '',
-    );
+        : tScore.tableScoreHint || '';
+    const scoreTipAttr = scoreTip ? ` data-swrm-tip="${escapeAttr(scoreTip)}"` : '';
     const rCls = roleClass(r.role);
     const subs = r.substats.slice(0, 4);
     const innatePlain = r.innate_name
@@ -5397,7 +5418,9 @@
       return `<td class="${cls}">${inner}</td>`;
     };
 
-    return `<tr>
+    const rowIndex = opts && Number.isFinite(opts.rowIndex) ? opts.rowIndex : -1;
+    const evenCls = rowIndex >= 0 && rowIndex % 2 === 1 ? ' rune-table__data-row--even' : '';
+    return `<tr class="rune-table__data-row${evenCls}">
       <td class="col-slot col-num td-num-plain">${highlightSearchInPlain(String(r.slot), tableSearchHighlight)}</td>
       <td class="col-set col-text">${tableStatLine(highlightSearchInPlain(r.setName, tableSearchHighlight), { set: true })}</td>
       <td class="col-main col-text">${tableStatLine(mainInner)}</td>
@@ -5408,15 +5431,170 @@
       ${subCell(subs[1], false)}
       ${subCell(subs[2], false)}
       ${subCell(subs[3], false)}
-      <td class="col-num td-num td-num--ingame col-block-gap" title="${ingameTitle}"><span class="rune-ingame-score">${highlightSearchInPlain(ingameShown, tableSearchHighlight)}</span></td>
-      <td class="col-num td-num td-num--score" title="${scoreTitle}"><span class="stat-chip stat-chip--score ${scoreTier}">${highlightSearchInPlain(scoreShown, tableSearchHighlight)}</span></td>
-      <td class="col-text">${verdictHtml}</td>
-      <td class="col-text">${roleHtml}</td>
+      <td class="col-num col-ingame td-num td-num--ingame col-block-gap"><span class="rune-ingame-score${ingameTip ? ' rune-ingame-score--tip' : ''}"${ingameTipAttr}>${highlightSearchInPlain(ingameShown, tableSearchHighlight)}</span></td>
+      <td class="col-num col-score td-num td-num--score"><span class="stat-chip stat-chip--score ${scoreTier}${scoreTip ? ' stat-chip--has-tip' : ''}"${scoreTipAttr}>${highlightSearchInPlain(scoreShown, tableSearchHighlight)}</span></td>
+      <td class="col-text col-verdict col-block-gap">${verdictHtml}</td>
+      <td class="col-text col-role">${roleHtml}</td>
       <td class="col-text col-location">${locHtml}</td>
     </tr>`;
   }
 
+  const RUNE_TABLE_VIRTUAL_COLS = 15;
+  const RUNE_TABLE_VIRTUAL_OVERSCAN = 12;
+  const RUNE_TABLE_VIRTUAL_ROW_FALLBACK = 44;
+  const RUNE_TABLE_VIRTUAL_SPACER_COL_CLASSES = [
+    'col-slot',
+    'col-set',
+    'col-main',
+    'col-grade',
+    'col-lvl',
+    'col-innate',
+    'col-sub',
+    'col-sub',
+    'col-sub',
+    'col-sub',
+    'col-ingame',
+    'col-score',
+    'col-verdict',
+    'col-role',
+    'col-location',
+  ];
+
+  let runeVirtualRowHeight = 0;
+  let runeVirtualScrollRaf = 0;
+  let runeVirtualBound = false;
+  let runeVirtualLastKey = '';
+
+  function runeTableVirtualScroller() {
+    return document.getElementById('rune-table-scroll');
+  }
+
+  function runeTableVirtualSpacerRow(heightPx) {
+    const h = Math.max(0, Math.round(heightPx));
+    if (h <= 0) return '';
+    const cells = RUNE_TABLE_VIRTUAL_SPACER_COL_CLASSES.map(
+      (cls) =>
+        `<td class="${cls}" style="height:${h}px;padding:0;border:none;line-height:0" aria-hidden="true"></td>`,
+    ).join('');
+    return `<tr class="rune-table__spacer" aria-hidden="true">${cells}</tr>`;
+  }
+
+  function measureRuneVirtualRowHeight(tbody) {
+    const row = tbody && tbody.querySelector('tr.rune-table__data-row');
+    if (!row) return 0;
+    const h = row.getBoundingClientRect().height;
+    return h > 0 ? Math.ceil(h) : 0;
+  }
+
+  function runeVirtualRangeKey(start, end, total) {
+    return `${total}:${start}:${end}:${runeVirtualRowHeight}`;
+  }
+
+  function resetRuneTableVirtualScroll() {
+    const scroller = runeTableVirtualScroller();
+    if (scroller) scroller.scrollTop = 0;
+    runeVirtualLastKey = '';
+  }
+
+  function scheduleRuneTableVirtualRepaint() {
+    if (runeVirtualScrollRaf) return;
+    runeVirtualScrollRaf = requestAnimationFrame(() => {
+      runeVirtualScrollRaf = 0;
+      if (typeof paintRuneTableVirtualBody === 'function') {
+        paintRuneTableVirtualBody(filteredRunes);
+      }
+    });
+  }
+
+  function paintRuneTableVirtualBody(rows) {
+    const tbody = document.getElementById('rune-tbody');
+    const scroller = runeTableVirtualScroller();
+    if (!tbody || !scroller) return;
+
+    const list = rows || [];
+    const total = list.length;
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+
+    if (!total) {
+      runeVirtualLastKey = 'empty';
+      tbody.innerHTML = `<tr><td colspan="${RUNE_TABLE_VIRTUAL_COLS}" class="table-empty">${escapeHtml(t.tableShownDetailEmpty || 'No runes match the current filters.')}</td></tr>`;
+      return;
+    }
+
+    let rowH = runeVirtualRowHeight;
+    if (!rowH) rowH = RUNE_TABLE_VIRTUAL_ROW_FALLBACK;
+
+    const viewH = Math.max(scroller.clientHeight, 120);
+    const scrollTop = Math.max(0, scroller.scrollTop);
+    const start = Math.max(0, Math.floor(scrollTop / rowH) - RUNE_TABLE_VIRTUAL_OVERSCAN);
+    const visibleCount = Math.ceil(viewH / rowH) + RUNE_TABLE_VIRTUAL_OVERSCAN * 2;
+    const end = Math.min(total, start + visibleCount);
+
+    const key = runeVirtualRangeKey(start, end, total);
+    if (key === runeVirtualLastKey) return;
+    runeVirtualLastKey = key;
+
+    const topPad = start * rowH;
+    const bottomPad = (total - end) * rowH;
+    const slice = list.slice(start, end);
+
+    tbody.innerHTML =
+      runeTableVirtualSpacerRow(topPad) +
+      slice.map((r, i) => runeRow(r, { rowIndex: start + i })).join('') +
+      runeTableVirtualSpacerRow(bottomPad);
+
+    const measured = measureRuneVirtualRowHeight(tbody);
+    if (measured && measured !== runeVirtualRowHeight) {
+      runeVirtualRowHeight = measured;
+      scroller.style.setProperty('--rune-virtual-row-h', `${measured}px`);
+      runeVirtualLastKey = '';
+      scheduleRuneTableVirtualRepaint();
+      return;
+    }
+    if (!runeVirtualRowHeight && measured) {
+      runeVirtualRowHeight = measured;
+      scroller.style.setProperty('--rune-virtual-row-h', `${measured}px`);
+    }
+
+    if (typeof replaceRuneTableLocationFromState === 'function') {
+      replaceRuneTableLocationFromState();
+    }
+  }
+
+  function bindRuneTableVirtualScroll() {
+    if (runeVirtualBound) return;
+    const scroller = runeTableVirtualScroller();
+    if (!scroller) return;
+    runeVirtualBound = true;
+    scroller.classList.add('table-wrap--virtual');
+    scroller.addEventListener(
+      'scroll',
+      () => {
+        scheduleRuneTableVirtualRepaint();
+      },
+      { passive: true },
+    );
+    window.addEventListener('resize', () => {
+      runeVirtualLastKey = '';
+      scheduleRuneTableVirtualRepaint();
+    });
+  }
+
   let filteredRunes = [];
+  let runeTableRenderPending = false;
+
+  function isRuneTableRunesTabActive() {
+    if (typeof isRuneTablePaneVisible === 'function' && !isRuneTablePaneVisible()) return false;
+    if (typeof readTableKind === 'function' && readTableKind() !== 'runes') return false;
+    return true;
+  }
+
+  function flushRuneTableRenderIfNeeded() {
+    if (!runeTableRenderPending && !isRuneTableRunesTabActive()) return;
+    if (!isRuneTableRunesTabActive()) return;
+    runeTableRenderPending = false;
+    applyFiltersAndSort(getVisibleRunes(), { preserveTableExpansion: true });
+  }
 
   function isRuneEquipped(r) {
     const uid = r.equipped_to != null ? Number(r.equipped_to) : NaN;
@@ -5585,12 +5763,109 @@
   }
 
   function updateRuneTableResetButton() {
-    const btn = document.getElementById('btn-table-reset-filters');
-    if (!btn) return;
-    const active = runeTableHasActiveFiltersOrSearch();
-    btn.disabled = !active;
-    btn.classList.toggle('btn-toolbar--inactive', !active);
-    btn.setAttribute('aria-disabled', active ? 'false' : 'true');
+    if (typeof updateToolbarResetButton === 'function') {
+      updateToolbarResetButton('btn-table-reset-filters', runeTableHasActiveFiltersOrSearch());
+    }
+  }
+
+  const RUNE_SEARCH_STAT_KEYS = new Set(['hp', 'atk', 'def', 'spd', 'crate', 'cdmg', 'res', 'acc']);
+
+  function canonRuneSearchStatKey(tok) {
+    const t = String(tok || '')
+      .toLowerCase()
+      .replace(/%$/, '')
+      .trim();
+    const map = {
+      hp: 'hp',
+      health: 'hp',
+      atk: 'atk',
+      attack: 'atk',
+      def: 'def',
+      defense: 'def',
+      defence: 'def',
+      spd: 'spd',
+      speed: 'spd',
+      crate: 'crate',
+      cr: 'crate',
+      cdmg: 'cdmg',
+      cd: 'cdmg',
+      cdamage: 'cdmg',
+      res: 'res',
+      resistance: 'res',
+      acc: 'acc',
+      accuracy: 'acc',
+    };
+    if (map[t]) return map[t];
+    return RUNE_SEARCH_STAT_KEYS.has(t) ? t : null;
+  }
+
+  function parseRuneSearchQuery(rawQuery) {
+    const norm = normalizeRuneSearchText(rawQuery);
+    if (!norm) return { pairs: [], free: [] };
+    const tokens = norm.split(' ').filter(Boolean);
+    const pairs = [];
+    const free = [];
+    let i = 0;
+    while (i < tokens.length) {
+      const key = canonRuneSearchStatKey(tokens[i]);
+      const next = tokens[i + 1];
+      if (key && next !== undefined && /^\d+$/.test(next)) {
+        pairs.push({ stat: key, value: Number(next) });
+        i += 2;
+        continue;
+      }
+      if (/^\d+$/.test(tokens[i]) && canonRuneSearchStatKey(next)) {
+        pairs.push({ stat: canonRuneSearchStatKey(next), value: Number(tokens[i]) });
+        i += 2;
+        continue;
+      }
+      if (key && (next === undefined || !/^\d+$/.test(next))) {
+        free.push(key);
+        i += 1;
+        continue;
+      }
+      free.push(tokens[i]);
+      i += 1;
+    }
+    return { pairs, free };
+  }
+
+  function runeStatValueLines(r) {
+    const lines = [];
+    const add = (name, total) => {
+      if (!name) return;
+      const base =
+        typeof runeStatBaseName === 'function' ? runeStatBaseName(name) : String(name).replace(/%$/, '');
+      const key = canonRuneSearchStatKey(base);
+      const val = Number(total);
+      if (!key || !Number.isFinite(val)) return;
+      lines.push({ key, value: Math.round(val) });
+    };
+    if (r.mainName) add(r.mainName, r.mainVal);
+    if (r.innate_name) add(r.innate_name, r.innate_val);
+    for (const s of r.substats || []) {
+      if (!s || !s.name) continue;
+      const total =
+        typeof subLineTotal === 'function' ? subLineTotal(s) : (Number(s.val) || 0) + (Number(s.grind) || 0);
+      add(s.name, total);
+    }
+    return lines;
+  }
+
+  function runeHaystackWords(hay) {
+    return hay.split(' ').filter(Boolean);
+  }
+
+  function runeFreeTokensMatchHaystack(hay, free) {
+    if (!free.length) return true;
+    const words = runeHaystackWords(hay);
+    const full = free.join(' ');
+    if (full.length >= 2 && hay.includes(full)) return true;
+    return free.every((tok) => {
+      const stat = canonRuneSearchStatKey(tok);
+      if (stat) return words.includes(stat);
+      return words.includes(tok) || hay.includes(tok);
+    });
   }
 
   /** Loose match text: lowercase, % and grind brackets → spaces. */
@@ -5661,12 +5936,19 @@
   }
 
   function runeMatchesSearchQuery(r, rawQuery, tTable) {
-    const q = normalizeRuneSearchText(rawQuery);
-    if (!q) return true;
+    const norm = normalizeRuneSearchText(rawQuery);
+    if (!norm) return true;
+    const { pairs, free } = parseRuneSearchQuery(rawQuery);
+    const statLines = runeStatValueLines(r);
+    for (const p of pairs) {
+      const hit = statLines.some((ln) => ln.key === p.stat && ln.value === p.value);
+      if (!hit) return false;
+    }
+    if (pairs.length && !free.length) return true;
     const hay = buildRuneSearchHaystack(r, tTable);
-    if (hay.includes(q)) return true;
-    const tokens = q.split(' ').filter(Boolean);
-    return tokens.length > 0 && tokens.every((tok) => hay.includes(tok));
+    if (!pairs.length && !free.length) return true;
+    if (!free.length) return hay.includes(norm);
+    return runeFreeTokensMatchHaystack(hay, free);
   }
 
   function runeTableFilterChipDefs(f, t) {
@@ -5860,30 +6142,44 @@
 
     sortRunesInPlace(filteredRunes, sortKey, sortDir);
 
+    if (!isRuneTableRunesTabActive()) {
+      runeTableRenderPending = true;
+      updateRuneTableFilterIndicators();
+      return;
+    }
+    runeTableRenderPending = false;
+
     const tbody = document.getElementById('rune-tbody');
     if (!tbody) return;
     const total = filteredRunes.length;
-    const cap = runeTableShowAll ? total : Math.min(RUNE_TABLE_PAGE, total);
-    const rows = filteredRunes.slice(0, cap);
 
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const countEl = document.getElementById('table-count');
-    if (countEl) {
-      if (!runeTableShowAll && total > RUNE_TABLE_PAGE) {
-        const tmpl = t.runeTableCountCapped || '{shown} / {total}';
-        countEl.textContent = tmpl
-          .replace(/\{shown\}/g, String(cap))
-          .replace(/\{total\}/g, String(total));
-      } else {
-        countEl.textContent = `${total} ${t.runes}`;
-      }
-    }
+    if (countEl) countEl.textContent = `${total} ${t.runes}`;
 
-    tbody.innerHTML = rows.map(r => runeRow(r)).join('');
-    setupRuneTableMoreUi(total, rows.length);
+    if (!opts || !opts.preserveTableExpansion) {
+      if (typeof resetRuneTableVirtualScroll === 'function') resetRuneTableVirtualScroll();
+    }
+    if (typeof bindRuneTableVirtualScroll === 'function') bindRuneTableVirtualScroll();
+    if (typeof paintRuneTableVirtualBody === 'function') {
+      runeVirtualLastKey = '';
+      paintRuneTableVirtualBody(filteredRunes);
+    } else {
+      const cap = runeTableShowAll ? total : Math.min(RUNE_TABLE_PAGE, total);
+      const rows = filteredRunes.slice(0, cap);
+      tbody.innerHTML = rows.map((r, i) => runeRow(r, { rowIndex: i })).join('');
+      setupRuneTableMoreUi(total, rows.length);
+    }
+    const loadStrip = document.getElementById('rune-table-load-strip');
+    if (loadStrip) {
+      loadStrip.classList.add('hidden');
+      loadStrip.setAttribute('aria-hidden', 'true');
+    }
     updateRuneTableFilterIndicators();
     if (typeof renderRuneTableRosterChips === 'function') renderRuneTableRosterChips();
-    replaceRuneTableLocationFromState();
+    if (typeof paintRuneTableVirtualBody !== 'function' && typeof replaceRuneTableLocationFromState === 'function') {
+      replaceRuneTableLocationFromState();
+    }
   }
 
   function bindRuneTableFiltersDrawer() {
@@ -6011,6 +6307,24 @@
       for (const s of gear.secs || []) parts.push(fmtSub(s));
     }
     return parts.join(' ').toLowerCase();
+  }
+
+  function normalizeGearSearchText(raw) {
+    return String(raw || '')
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, ' ');
+  }
+
+  function gearMatchesSearchQuery(gear, rawQuery) {
+    const norm = normalizeGearSearchText(rawQuery);
+    if (!norm) return true;
+    const hay = gearSearchHay(gear);
+    const tokens = norm.split(' ').filter(Boolean);
+    const full = tokens.join(' ');
+    if (full.length >= 2 && hay.includes(full)) return true;
+    const words = hay.split(' ').filter(Boolean);
+    return tokens.every((tok) => words.includes(tok) || hay.includes(tok));
   }
 
   function populateGearFilterSelects() {
@@ -6141,6 +6455,10 @@
     updateTableKindTabIndicator();
     if (id === 'runes') {
       if (options && options.skipRuneRender) return;
+      if (typeof flushRuneTableRenderIfNeeded === 'function') {
+        flushRuneTableRenderIfNeeded();
+        return;
+      }
       applyFiltersAndSort(getVisibleRunes(), { preserveTableExpansion: true });
     } else {
       renderGearTables();
@@ -6301,9 +6619,22 @@
       .trim()
       .toLowerCase();
     const artSrc = (allArtifacts || []).filter(artifactPassesFilters);
+    const rawQ = document.getElementById('search-box-artifacts')?.value || '';
     filteredArtifacts = !artQ
       ? artSrc.slice()
-      : artSrc.filter((a) => gearSearchHay(a).includes(artQ));
+      : artSrc.filter((a) => gearMatchesSearchQuery(a, rawQ));
+  }
+
+  function artifactToolbarHasActiveFilters() {
+    const q = (document.getElementById('search-box-artifacts')?.value || '').trim();
+    if (q) return true;
+    return countActiveArtifactFilters() > 0;
+  }
+
+  function updateArtifactResetButton() {
+    if (typeof updateToolbarResetButton === 'function') {
+      updateToolbarResetButton('btn-artifact-reset-filters', artifactToolbarHasActiveFilters());
+    }
   }
 
   function countActiveArtifactFilters() {
@@ -6324,6 +6655,7 @@
     } else {
       badge.hidden = true;
     }
+    updateArtifactResetButton();
   }
 
   function resetArtifactTableFilters() {
@@ -6339,6 +6671,7 @@
     if (c) c.value = '';
     if (l) l.value = '';
     updateArtifactFilterBadge();
+    updateArtifactResetButton();
     renderGearTables();
   }
 
@@ -6430,8 +6763,12 @@
     let artDebounce = null;
     document.getElementById('search-box-artifacts')?.addEventListener('input', () => {
       clearTimeout(artDebounce);
-      artDebounce = setTimeout(() => renderGearTables(), 280);
+      artDebounce = setTimeout(() => {
+        updateArtifactResetButton();
+        renderGearTables();
+      }, 280);
     });
+    updateArtifactResetButton();
   }
 
   let filteredRelics = [];
@@ -6447,7 +6784,20 @@
   function applyRelicTableSearch() {
     const relQ = (document.getElementById('search-box-relics')?.value || '').trim().toLowerCase();
     const relSrc = (allRelics || []).filter(relicPassesFilters);
-    filteredRelics = !relQ ? relSrc.slice() : relSrc.filter((r) => gearSearchHay(r).includes(relQ));
+    const rawQ = document.getElementById('search-box-relics')?.value || '';
+    filteredRelics = !relQ ? relSrc.slice() : relSrc.filter((r) => gearMatchesSearchQuery(r, rawQ));
+  }
+
+  function relicToolbarHasActiveFilters() {
+    const q = (document.getElementById('search-box-relics')?.value || '').trim();
+    if (q) return true;
+    return countActiveRelicFilters() > 0;
+  }
+
+  function updateRelicResetButton() {
+    if (typeof updateToolbarResetButton === 'function') {
+      updateToolbarResetButton('btn-relic-reset-filters', relicToolbarHasActiveFilters());
+    }
   }
 
   function countActiveRelicFilters() {
@@ -6467,6 +6817,7 @@
     } else {
       badge.hidden = true;
     }
+    updateRelicResetButton();
   }
 
   function resetRelicTableFilters() {
@@ -6479,6 +6830,7 @@
     if (g) g.value = '';
     if (c) c.value = '';
     updateRelicFilterBadge();
+    updateRelicResetButton();
     renderGearTables();
   }
 
@@ -6560,8 +6912,12 @@
     let relDebounce = null;
     document.getElementById('search-box-relics')?.addEventListener('input', () => {
       clearTimeout(relDebounce);
-      relDebounce = setTimeout(() => renderGearTables(), 280);
+      relDebounce = setTimeout(() => {
+        updateRelicResetButton();
+        renderGearTables();
+      }, 280);
     });
+    updateRelicResetButton();
   }
 
   // ===================== TABLE =====================
@@ -6583,26 +6939,57 @@
     if (!lbl) return;
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     lbl.textContent = t.tableIngameScoreHeader || 'Ingame Score';
-    const title = [t.tableIngameScoreHeaderTitle || '', t.tableIngameScoreSortTitle || '']
+    const tip = [t.tableIngameScoreHeaderTitle || '', t.tableIngameScoreSortTitle || '']
       .filter(Boolean)
       .join('\n\n');
-    if (title) {
-      lbl.setAttribute('title', title);
-      if (th) th.setAttribute('title', title);
+    applyRuneTableColumnHeaderTip('#rune-table th[data-sort="eff"]', 'lbl-th-eff', tip);
+  }
+
+  function applyRuneTableColumnHeaderTip(thSel, lblId, tip) {
+    const text = (tip || '').trim();
+    const th = thSel ? document.querySelector(thSel) : null;
+    const lbl = lblId ? document.getElementById(lblId) : null;
+    for (const el of [th, lbl]) {
+      if (!el) continue;
+      el.removeAttribute('title');
+      if (text) {
+        el.setAttribute('data-swrm-tip', text);
+        el.classList.add('th-has-tip');
+      } else {
+        el.removeAttribute('data-swrm-tip');
+        el.classList.remove('th-has-tip');
+      }
     }
   }
 
   function applyRuneTableScoreHeader() {
     const lbl = document.getElementById('lbl-th-score');
+    const th = document.querySelector('#rune-table th[data-sort="score"]');
     if (!lbl) return;
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-    lbl.textContent = t.tableScoreHeader || 'Score';
-    lbl.setAttribute('title', t.tableScoreHint || '');
+    lbl.textContent = t.tableScoreHeader || 'Forge Score';
+    const tip = t.tableScoreHeaderTip || t.tableScoreHint || '';
+    applyRuneTableColumnHeaderTip('#rune-table th[data-sort="score"]', 'lbl-th-score', tip);
+  }
+
+  function applyRuneTableVerdictRoleHeaderTips() {
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    applyRuneTableColumnHeaderTip(
+      '#rune-table th[data-sort="verdict"]',
+      'lbl-th-verdict',
+      t.tableVerdictHeaderTip || '',
+    );
+    applyRuneTableColumnHeaderTip(
+      '#rune-table th[data-sort="role"]',
+      'lbl-th-role',
+      t.tableRoleHeaderTip || '',
+    );
   }
 
   function initRuneTablePrefsFromStorage() {
     applyRuneTableIngameScoreHeader();
     applyRuneTableScoreHeader();
+    applyRuneTableVerdictRoleHeaderTips();
     const ancient = document.getElementById('toggle-ancient-only');
     if (ancient) {
       const v = localStorage.getItem(RUNE_TABLE_ANCIENT_ONLY_KEY);
@@ -12670,10 +13057,12 @@
   }
 
   const SKILL_PLANNER_STORAGE_KEY = 'swrm_skill_planner_exclude_storage_v1';
+  const SKILL_PLANNER_2A_KEY = 'swrm_skill_planner_second_awakened_v1';
 
   let skillPlannerBound = false;
   let skillPlannerNatFilter = 'all';
   let skillPlannerExcludeStorage = true;
+  let skillPlannerSecondAwakenedOnly = false;
   let skillPlannerView = 'queue';
   /** @type {{ col: string, dir: 'asc'|'desc' }|null} */
   let skillPlannerQueueSort = null;
@@ -12701,6 +13090,29 @@
     } catch (e) { /* ignore */ }
   }
 
+  function readSkillPlannerSecondAwakenedOnly() {
+    try {
+      const v = localStorage.getItem(SKILL_PLANNER_2A_KEY);
+      if (v === '0' || v === 'false') return false;
+      if (v === '1' || v === 'true') return true;
+    } catch (e) { /* ignore */ }
+    return false;
+  }
+
+  function writeSkillPlannerSecondAwakenedOnly(on) {
+    try {
+      localStorage.setItem(SKILL_PLANNER_2A_KEY, on ? '1' : '0');
+    } catch (e) { /* ignore */ }
+  }
+
+  function plannerMonsterHasSecondAwakening(u) {
+    const db = window.SWRM_MONSTER_DB;
+    if (db && typeof db.monsterHasSecondAwakening === 'function') {
+      return db.monsterHasSecondAwakening(u.masterId, u.meta);
+    }
+    return !!(u.meta && Number(u.meta.awaken_level) >= 2);
+  }
+
   function syncSkillPlannerExcludeStorageButton(t) {
     const btn = document.getElementById('skill-planner-exclude-storage');
     if (!btn) return;
@@ -12708,10 +13120,23 @@
     btn.classList.toggle('is-active', hiding);
     btn.setAttribute('aria-pressed', hiding ? 'true' : 'false');
     const lbl = document.getElementById('lbl-skill-planner-exclude-storage');
-    if (lbl) {
-      lbl.textContent = hiding
-        ? t.skillPlannerShowStorage || 'Include Storage'
-        : t.skillPlannerHideStorage || 'Exclude Storage';
+    if (lbl) lbl.textContent = t.skillPlannerHideStorage || 'Exclude Storage';
+  }
+
+  function syncSkillPlannerSecondAwakenedButton(t) {
+    const btn = document.getElementById('skill-planner-second-awakened-only');
+    if (!btn) return;
+    const on = !!skillPlannerSecondAwakenedOnly;
+    btn.classList.toggle('is-active', on);
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    const lbl = document.getElementById('lbl-skill-planner-second-awakened-only');
+    if (lbl) lbl.textContent = t.skillPlannerSecondAwakenedOnly || 'Second Awakening only';
+    const tip = t.skillPlannerSecondAwakenedOnlyTip || '';
+    if (tip) {
+      btn.setAttribute('data-swrm-tip', tip);
+      btn.removeAttribute('title');
+    } else {
+      btn.removeAttribute('data-swrm-tip');
     }
   }
 
@@ -12944,7 +13369,8 @@
   function filterPlannerRosterUnits(units) {
     return (units || []).filter((u) => {
       if (typeof isTechnicalFodderMonster === 'function' && isTechnicalFodderMonster(u)) return false;
-      if (skillPlannerExcludeStorage && u.inStorage) return false;
+      if (skillPlannerExcludeStorage && (u.inStorage || u.storageMark)) return false;
+      if (skillPlannerSecondAwakenedOnly && !plannerMonsterHasSecondAwakening(u)) return false;
       return true;
     });
   }
@@ -13410,6 +13836,7 @@
     if (!root || skillPlannerBound) return;
     skillPlannerBound = true;
     skillPlannerExcludeStorage = readSkillPlannerExcludeStorage();
+    skillPlannerSecondAwakenedOnly = readSkillPlannerSecondAwakenedOnly();
 
     root.addEventListener('click', (ev) => {
       const sortTh = ev.target.closest('[data-sort-col][data-sort-table]');
@@ -13463,6 +13890,17 @@
       });
     }
 
+    const secondAwBtn = document.getElementById('skill-planner-second-awakened-only');
+    if (secondAwBtn) {
+      secondAwBtn.addEventListener('click', () => {
+        skillPlannerSecondAwakenedOnly = !skillPlannerSecondAwakenedOnly;
+        writeSkillPlannerSecondAwakenedOnly(skillPlannerSecondAwakenedOnly);
+        const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+        syncSkillPlannerSecondAwakenedButton(t);
+        void renderSkillPlannerPanel();
+      });
+    }
+
     document.querySelectorAll('.skill-planner__tab').forEach((btn) => {
       btn.addEventListener('click', () => {
         const v = btn.getAttribute('data-planner-view');
@@ -13483,6 +13921,7 @@
 
     bindSkillPlannerPanel(root);
     syncSkillPlannerExcludeStorageButton(t);
+    syncSkillPlannerSecondAwakenedButton(t);
     showSkillPlannerView(skillPlannerView);
 
     const tabsNav = document.getElementById('skill-planner-view-tabs');
@@ -13551,6 +13990,7 @@
   window.SWRM.filterPlannerRosterUnits = filterPlannerRosterUnits;
 
   skillPlannerExcludeStorage = readSkillPlannerExcludeStorage();
+  skillPlannerSecondAwakenedOnly = readSkillPlannerSecondAwakenedOnly();
 
   function gearEffectLines(gear, t) {
     const lines = [];
@@ -13870,7 +14310,27 @@
   function buildLocationIconHtml(u, t) {
     if (!u.inStorage) return '';
     const label = t.monstersLocationStorage || 'Storage';
-    return `<span class="monsters-card__loc monsters-card__loc--storage monsters-card__loc--on" title="${escapeHtml(label)}" aria-label="${escapeHtml(label)}"><span class="monsters-card__loc-icon" aria-hidden="true"></span><span class="monsters-card__loc-text">${escapeHtml(label)}</span></span>`;
+    return `<span class="monsters-card__loc monsters-card__loc--storage monsters-card__loc--on" title="${escapeHtml(label)}" aria-label="${escapeHtml(label)}"><span class="monsters-card__loc-icon" aria-hidden="true">▣</span></span>`;
+  }
+
+  function buildMonsterTableMarkBtn(u, kind, t) {
+    if (typeof isShareReadOnly === 'function' && isShareReadOnly()) return '—';
+    const uid = escapeHtml(String(u.unitId));
+    if (kind === 'favorite') {
+      return `<button type="button" class="monsters-table__mark-btn monsters-tag-btn monsters-tag-btn--sm${u.favorite ? ' monsters-tag-btn--on' : ''}" data-unit-tag="favorite" data-unit-id="${uid}" aria-pressed="${u.favorite ? 'true' : 'false'}" title="${escapeHtml(t.monstersFavorite || 'Favorite')}">★</button>`;
+    }
+    if (kind === 'food') {
+      return `<button type="button" class="monsters-table__mark-btn monsters-tag-btn monsters-tag-btn--sm${u.food ? ' monsters-tag-btn--on' : ''}" data-unit-tag="food" data-unit-id="${uid}" aria-pressed="${u.food ? 'true' : 'false'}" title="${escapeHtml(t.monstersFood || 'Food')}">🍖</button>`;
+    }
+    if (kind === 'storage') {
+      const storageOn = isStorageMarked(u);
+      const storageTitle = u.inStorage
+        ? t.monstersStorageSwex || t.monstersLocationStorage || 'Storage (SWEX)'
+        : t.monstersStorageMark || 'Storage tag';
+      const storageDisabled = u.inStorage ? ' disabled' : '';
+      return `<button type="button" class="monsters-table__mark-btn monsters-tag-btn monsters-tag-btn--sm${storageOn ? ' monsters-tag-btn--on' : ''}${u.inStorage ? ' monsters-tag-btn--swex' : ''}" data-unit-tag="storageMark" data-unit-id="${uid}" aria-pressed="${storageOn ? 'true' : 'false'}" title="${escapeHtml(storageTitle)}"${storageDisabled}>▣</button>`;
+    }
+    return '—';
   }
 
   function buildCustomTagsHtml(tags) {
@@ -13982,7 +14442,7 @@
           <span class="monsters-detail__stat-k">${escapeHtml(label)}</span>
           <span class="monsters-detail__stat-num monsters-detail__stat-num--base" data-col="base">${escapeHtml(fmtVal(key, 'base', false))}</span>
           <span class="monsters-detail__stat-num monsters-detail__stat-num--rune" data-col="bonus">${escapeHtml(bonusStr)}</span>
-          <span class="monsters-detail__stat-num monsters-detail__stat-num--total-green" data-col="total" hidden>${escapeHtml(fmtVal(key, 'total', false))}</span>
+          <span class="monsters-detail__stat-num monsters-detail__stat-num--total-green" data-col="total" hidden aria-hidden="true">${escapeHtml(fmtVal(key, 'total', false))}</span>
         </div>`;
     }
     function pctRow(label, key) {
@@ -14685,8 +15145,6 @@
     const meta = u.meta;
     const elCls = elementClass(u.metaElement);
     const natLbl = t.monstersNatShort || 'nat';
-    const lvlLbl = t.monstersLevelShort || 'Lv';
-    const storageLbl = t.monstersStorageBadge || 'Storage';
     const bestiaryHref = db && u.bestiarySlug ? db.bestiaryUrl(u.bestiarySlug) : '';
     const skillDb = window.SWRM_SKILL_DB;
     const skillRows = skillDb
@@ -14724,10 +15182,7 @@
         : u.stars != null
           ? u.stars
           : '';
-    const subBits = [
-      u.metaElement ? escapeHtml(u.metaElement) : '',
-      u.metaArchetype ? escapeHtml(u.metaArchetype) : '',
-    ].filter(Boolean);
+    const subBits = [u.metaArchetype ? escapeHtml(u.metaArchetype) : ''].filter(Boolean);
     const rankStars = typeof buildMonsterStarsBadge === 'function' ? buildMonsterStarsBadge(u) : '';
     const elementBadge =
       typeof buildMonsterElementBadge === 'function' ? buildMonsterElementBadge(u) : '';
@@ -14741,6 +15196,9 @@
     const closeBtn = pinned
       ? `<button type="button" class="monsters-detail__unpin btn-secondary btn-sm" data-unpin-detail="1" title="${escapeHtml(t.monstersDetailUnpin || 'Close')}">×</button>`
       : '';
+    const storageIcon =
+      u.inStorage && typeof buildLocationIconHtml === 'function' ? buildLocationIconHtml(u, t) : '';
+    const metaParts = [natLine, subBits.join(' · ')].filter(Boolean);
 
     body.innerHTML = `
       <header class="monsters-detail__head">
@@ -14752,7 +15210,7 @@
         </div>
         <div class="monsters-detail__head-text">
           <h3 class="monsters-detail__title" id="monsters-detail-title">${bestiaryHref ? `<a href="${escapeHtml(bestiaryHref)}" target="_blank" rel="noopener noreferrer">${escapeHtml(u.displayName)}</a>` : escapeHtml(u.displayName)}</h3>
-          <p class="monsters-detail__meta-line">${[natLine, subBits.join(' · '), `${escapeHtml(lvlLbl)} <strong>${u.level}</strong>`].filter(Boolean).join(' · ')}${u.inStorage ? ` · <span class="monsters-detail__storage">${escapeHtml(storageLbl)}</span>` : ''}</p>
+          <p class="monsters-detail__meta-line">${metaParts.join(' · ')}${storageIcon}</p>
           <button type="button" class="btn-secondary btn-sm monsters-detail__open-runes" data-open-runes-all="1">${escapeHtml(t.monstersOpenRunes || 'Open runes in table')}</button>
         </div>
         ${closeBtn}
@@ -15157,7 +15615,9 @@
     { id: 'role', labelKey: 'monstersColRole', fallback: 'Archetype', sortable: true },
     { id: 'runes', labelKey: 'monstersColRunes', fallback: 'Runes', sortable: true },
     { id: 'skills', labelKey: 'monstersColDevilmons', fallback: 'Devilmons', sortable: true },
-    { id: 'marks', labelKey: 'monstersColMarks', fallback: 'Marks', sortable: true },
+    { id: 'favorite', labelKey: 'monstersColFavorite', fallback: '★', sortable: true },
+    { id: 'food', labelKey: 'monstersColFood', fallback: '🍖', sortable: true },
+    { id: 'storage', labelKey: 'monstersColStorage', fallback: '▣', sortable: true },
     { id: 'tags', labelKey: 'monstersColTags', fallback: 'Tags', sortable: true },
   ];
 
@@ -15169,15 +15629,6 @@
     const tags = (u.customTags || []).slice(0, 3);
     if (!tags.length) return '—';
     return tags.map((tag) => escapeHtml(tag)).join(', ');
-  }
-
-  function monsterTableCellMarks(u) {
-    const bits = [];
-    if (u.favorite) bits.push('★');
-    if (u.food) bits.push('🍖');
-    if (u.inStorage) bits.push('▣');
-    else if (u.storageMark) bits.push('▣*');
-    return bits.length ? bits.join(' ') : '—';
   }
 
   function monsterTableThumbHtml(u) {
@@ -15259,10 +15710,21 @@
         const sb = Number(b.skillUpsNeeded) || 0;
         return mul * (sa - sb) || mul * String(a.displayName).localeCompare(String(b.displayName));
       }
-      case 'marks': {
-        const score = (u) =>
-          (u.favorite ? 4 : 0) + (u.food ? 2 : 0) + (u.inStorage || u.storageMark ? 1 : 0);
-        return mul * (score(a) - score(b)) || mul * String(a.displayName).localeCompare(String(b.displayName));
+      case 'favorite':
+        return (
+          mul * ((u.favorite ? 1 : 0) - (b.favorite ? 1 : 0)) ||
+          mul * String(a.displayName).localeCompare(String(b.displayName))
+        );
+      case 'food':
+        return (
+          mul * ((u.food ? 1 : 0) - (b.food ? 1 : 0)) ||
+          mul * String(a.displayName).localeCompare(String(b.displayName))
+        );
+      case 'storage': {
+        const score = (unit) => (unit.inStorage || unit.storageMark ? 1 : 0);
+        return (
+          mul * (score(a) - score(b)) || mul * String(a.displayName).localeCompare(String(b.displayName))
+        );
       }
       case 'tags':
         return (
@@ -15329,19 +15791,18 @@
             : u.skillsMaxed
               ? '✓'
               : '—';
-        const storageBadge = u.inStorage
-          ? `<span class="monsters-table__storage-badge">${escapeHtml(t.monstersStorageBadge || 'Storage')}</span>`
-          : '';
         return `<tr class="monsters-table__row${rowCls ? ` ${rowCls}` : ''}" data-unit-id="${uid}" tabindex="0">
           <td data-col="bulk" class="monsters-table__td-bulk"><input type="checkbox" class="monsters-table__bulk-cb" data-unit-id="${uid}" ${bulkSel ? 'checked' : ''} aria-label="${escapeHtml(t.monstersBulkSelectOne || 'Select')}" /></td>
-          <td data-col="name"><div class="monsters-table__name-cell">${monsterTableThumbHtml(u)}<span class="monsters-table__name">${name}</span>${storageBadge}</div></td>
+          <td data-col="name"><div class="monsters-table__name-cell">${monsterTableThumbHtml(u)}<span class="monsters-table__name">${name}</span></div></td>
           <td data-col="stars">${monsterTableCellStars(u)}</td>
           <td data-col="level">${highlightMonstersSearchInPlain(String(u.level), q)}</td>
           <td data-col="element">${monsterTableElementCell(u)}</td>
           <td data-col="role">${highlightMonstersSearchInPlain(u.metaArchetype || '—', q)}</td>
           <td data-col="runes">${runes}</td>
           <td data-col="skills">${skills}</td>
-          <td data-col="marks">${monsterTableCellMarks(u)}</td>
+          <td data-col="favorite" class="monsters-table__td-mark">${buildMonsterTableMarkBtn(u, 'favorite', t)}</td>
+          <td data-col="food" class="monsters-table__td-mark">${buildMonsterTableMarkBtn(u, 'food', t)}</td>
+          <td data-col="storage" class="monsters-table__td-mark">${buildMonsterTableMarkBtn(u, 'storage', t)}</td>
           <td data-col="tags">${monsterTableCellTags(u)}</td>
         </tr>`;
       })
@@ -15384,6 +15845,7 @@
       row.addEventListener('blur', scheduleMonstersDetailHide);
       row.addEventListener('click', (e) => {
         if (e.target.closest('a')) return;
+        if (e.target.closest('[data-unit-tag]')) return;
         if (e.target.closest('.monsters-table__td-bulk') || e.target.classList.contains('monsters-table__bulk-cb')) {
           return;
         }
@@ -15975,6 +16437,10 @@
       countEl.hidden = !n;
     }
     if (moreBtn) moreBtn.classList.toggle('monsters-toolbar-btn--filters-active', n > 0);
+    const qActive = !!(f.q || '').trim();
+    if (typeof updateToolbarResetButton === 'function') {
+      updateToolbarResetButton('monsters-toolbar-reset-filters', qActive || n > 0);
+    }
     renderMonstersActiveFilterChips();
   }
 

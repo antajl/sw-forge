@@ -164,6 +164,34 @@
   accent-color: var(--accent, #6a9);
 }
 
+.monsters-table__td-mark {
+  text-align: center;
+  width: 2.35rem;
+  min-width: 2.35rem;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+.monsters-table__mark-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.65rem;
+  min-height: 1.65rem;
+  padding: 0;
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.monsters-table th[data-col='favorite'],
+.monsters-table th[data-col='food'],
+.monsters-table th[data-col='storage'] {
+  text-align: center;
+  width: 2.35rem;
+  min-width: 2.35rem;
+}
+
 .monsters-table__storage-badge {
   display: inline-block;
   font-size: 0.58rem;

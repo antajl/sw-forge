@@ -259,17 +259,22 @@
     return inv;
   }
 
-  function runeRow(r) {
+  function runeRow(r, opts) {
     const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const gradeKey = r.gradeStr;
     const gradeClass = { Legend: 'legend', Hero: 'hero', Rare: 'rare' }[gradeKey] || 'grade-tag--other';
     const gradeLabel = { Legend: 'Legend', Hero: 'Hero', Rare: 'Rare' }[gradeKey] || String(r.gradeStr);
     const gradeLabelHtml = highlightSearchInPlain(gradeLabel, tableSearchHighlight);
     const ancientTipRaw = tloc.tableAncientBadgeTitle || '';
-    const ancientTipAttr = r.isAncient && ancientTipRaw ? ` title="${escapeAttr(ancientTipRaw)}"` : '';
+    const ancientTipAttr =
+      r.isAncient && ancientTipRaw ? ` data-swrm-tip="${escapeAttr(ancientTipRaw)}"` : '';
     const ancientLbl = escapeAttr(tloc.tableAncientBadge || 'Ancient');
     const gradeAria = r.isAncient ? ` aria-label="${ancientLbl}, ${escapeAttr(gradeLabel)}"` : '';
-    const grade = `<span class="grade-tag ${gradeClass}${r.isAncient ? ' grade-tag--ancient' : ''}"${ancientTipAttr}${gradeAria}><span class="grade-tag__lbl">${gradeLabelHtml}</span></span>`;
+    const ancientIcon =
+      r.isAncient && (gradeKey === 'Hero' || gradeKey === 'Legend')
+        ? '<span class="grade-tag__ancient-icon" aria-hidden="true"></span>'
+        : '';
+    const grade = `<span class="grade-tag ${gradeClass}${r.isAncient ? ' grade-tag--ancient' : ''}"${ancientTipAttr}${gradeAria}>${ancientIcon}<span class="grade-tag__lbl">${gradeLabelHtml}</span></span>`;
 
     const tScore = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const ingameScore =
@@ -281,20 +286,20 @@
             ? window.SWRM.calcIngameScore(r)
             : 0;
     const ingameShown = String(ingameScore);
-    const ingameTitle = escapeAttr(
+    const ingameTip =
       typeof window.SWRM?.ingameScoreBreakdown === 'function'
         ? window.SWRM.ingameScoreBreakdown(r).join('\n')
-        : tScore.tableIngameScoreHeaderTitle || '',
-    );
+        : tScore.tableIngameScoreHeaderTitle || '';
+    const ingameTipAttr = ingameTip ? ` data-swrm-tip="${escapeAttr(ingameTip)}"` : '';
     const scoreNum =
       typeof computeRuneScore === 'function' ? computeRuneScore(r, tScore) : 0;
     const scoreTier = typeof runeScoreTier === 'function' ? runeScoreTier(scoreNum) : 'stat-chip--score-lo';
     const scoreShown = String(scoreNum);
-    const scoreTitle = escapeAttr(
+    const scoreTip =
       typeof runeScoreTooltip === 'function'
         ? runeScoreTooltip(r, tScore)
-        : tScore.tableScoreHint || '',
-    );
+        : tScore.tableScoreHint || '';
+    const scoreTipAttr = scoreTip ? ` data-swrm-tip="${escapeAttr(scoreTip)}"` : '';
     const rCls = roleClass(r.role);
     const subs = r.substats.slice(0, 4);
     const innatePlain = r.innate_name
@@ -332,7 +337,9 @@
       return `<td class="${cls}">${inner}</td>`;
     };
 
-    return `<tr>
+    const rowIndex = opts && Number.isFinite(opts.rowIndex) ? opts.rowIndex : -1;
+    const evenCls = rowIndex >= 0 && rowIndex % 2 === 1 ? ' rune-table__data-row--even' : '';
+    return `<tr class="rune-table__data-row${evenCls}">
       <td class="col-slot col-num td-num-plain">${highlightSearchInPlain(String(r.slot), tableSearchHighlight)}</td>
       <td class="col-set col-text">${tableStatLine(highlightSearchInPlain(r.setName, tableSearchHighlight), { set: true })}</td>
       <td class="col-main col-text">${tableStatLine(mainInner)}</td>
@@ -343,10 +350,10 @@
       ${subCell(subs[1], false)}
       ${subCell(subs[2], false)}
       ${subCell(subs[3], false)}
-      <td class="col-num td-num td-num--ingame col-block-gap" title="${ingameTitle}"><span class="rune-ingame-score">${highlightSearchInPlain(ingameShown, tableSearchHighlight)}</span></td>
-      <td class="col-num td-num td-num--score" title="${scoreTitle}"><span class="stat-chip stat-chip--score ${scoreTier}">${highlightSearchInPlain(scoreShown, tableSearchHighlight)}</span></td>
-      <td class="col-text">${verdictHtml}</td>
-      <td class="col-text">${roleHtml}</td>
+      <td class="col-num col-ingame td-num td-num--ingame col-block-gap"><span class="rune-ingame-score${ingameTip ? ' rune-ingame-score--tip' : ''}"${ingameTipAttr}>${highlightSearchInPlain(ingameShown, tableSearchHighlight)}</span></td>
+      <td class="col-num col-score td-num td-num--score"><span class="stat-chip stat-chip--score ${scoreTier}${scoreTip ? ' stat-chip--has-tip' : ''}"${scoreTipAttr}>${highlightSearchInPlain(scoreShown, tableSearchHighlight)}</span></td>
+      <td class="col-text col-verdict col-block-gap">${verdictHtml}</td>
+      <td class="col-text col-role">${roleHtml}</td>
       <td class="col-text col-location">${locHtml}</td>
     </tr>`;
   }

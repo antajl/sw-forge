@@ -91,6 +91,13 @@
     return false;
   }
 
+  /** Species supports Second Awakening (SWARFARM index: awaken_level ≥ 2). */
+  function monsterHasSecondAwakening(masterId, metaRow) {
+    const row = metaRow || lookupMonster(masterId);
+    if (!row) return false;
+    return Number(row.awaken_level) >= 2;
+  }
+
   function scaleStat(base, max, level, maxLevel) {
     const b = Number(base);
     const m = Number(max);
@@ -409,6 +416,7 @@
     swarfarmAssetUrl,
     elementIconUrl,
     isMonsterAwakened,
+    monsterHasSecondAwakening,
     monsterBaseStatsAtLevel,
     hasUsableBaseStats,
     monsterHasBundledDetail,

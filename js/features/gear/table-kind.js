@@ -93,6 +93,24 @@
     return parts.join(' ').toLowerCase();
   }
 
+  function normalizeGearSearchText(raw) {
+    return String(raw || '')
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, ' ');
+  }
+
+  function gearMatchesSearchQuery(gear, rawQuery) {
+    const norm = normalizeGearSearchText(rawQuery);
+    if (!norm) return true;
+    const hay = gearSearchHay(gear);
+    const tokens = norm.split(' ').filter(Boolean);
+    const full = tokens.join(' ');
+    if (full.length >= 2 && hay.includes(full)) return true;
+    const words = hay.split(' ').filter(Boolean);
+    return tokens.every((tok) => words.includes(tok) || hay.includes(tok));
+  }
+
   function populateGearFilterSelects() {
     const arts = allArtifacts || [];
     const rels = allRelics || [];
@@ -221,6 +239,10 @@
     updateTableKindTabIndicator();
     if (id === 'runes') {
       if (options && options.skipRuneRender) return;
+      if (typeof flushRuneTableRenderIfNeeded === 'function') {
+        flushRuneTableRenderIfNeeded();
+        return;
+      }
       applyFiltersAndSort(getVisibleRunes(), { preserveTableExpansion: true });
     } else {
       renderGearTables();

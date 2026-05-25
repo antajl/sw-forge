@@ -37,6 +37,7 @@ const CHUNKS = [
   'gear/table-kind.js',
   'gear/gear-roster-chips.js',
   'gear/artifacts-table.js',
+  'gear/artifacts-virtual.js',
   'gear/relics-table.js',
   'runes/table.js',
   'rules/formulas-ui.js',

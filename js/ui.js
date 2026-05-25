@@ -175,8 +175,16 @@
       btn.setAttribute('aria-selected', on ? 'true' : 'false');
       btn.tabIndex = on ? 0 : -1;
     });
-    const panels = Array.from(document.querySelectorAll('#tab-settings .rules-subpanel'));
+
     const motionApi = window.SWRM_MOTION;
+    if (motionApi && typeof motionApi.positionRulesSubtabIndicator === 'function') {
+      const nav = document.getElementById('rules-subtabs');
+      if (nav) {
+        motionApi.positionRulesSubtabIndicator({ nav, activeKey: v, instant: !!instant });
+      }
+    }
+
+    const panels = Array.from(document.querySelectorAll('#tab-settings .rules-subpanel'));
     if (motionApi) {
       motionApi.swapSubpanels(panels, (p) => p.dataset.rulesSubtab === v, !!instant);
     } else {
@@ -196,6 +204,14 @@
     let saved = 'engine';
     try { saved = sessionStorage.getItem(RULES_SUBTAB_KEY) || 'engine'; } catch (e) { /* ignore */ }
     setRulesSubtab(saved, true);
+    
+    // Position indicator on initial load
+    const motionApi = window.SWRM_MOTION;
+    if (motionApi && typeof motionApi.positionRulesSubtabIndicator === 'function') {
+      rafTwice(() => {
+        motionApi.positionRulesSubtabIndicator({ nav, activeKey: saved, instant: true });
+      });
+    }
   }
 
   const CHANGELOG_SUBTAB_KEY = 'swrm_changelog_subtab_v1';
@@ -406,6 +422,14 @@
       else pane.setAttribute('hidden', '');
     });
 
+    const motionApi = window.SWRM_MOTION;
+    if (motionApi && typeof motionApi.positionRunesHubTabIndicator === 'function') {
+      const nav = document.getElementById('runes-hub-tabs');
+      if (nav) {
+        motionApi.positionRunesHubTabIndicator({ nav, activeKey: id, instant: false });
+      }
+    }
+
     if (id === 'settings') {
       const rulesRoot = document.getElementById('tab-settings');
       if (rulesRoot) rulesRoot.scrollTop = 0;
@@ -445,6 +469,17 @@
         showMainTab('runes', { runesSubtab: sub, writeHash: true });
       });
     });
+    
+    // Position indicator on initial load
+    const motionApi = window.SWRM_MOTION;
+    if (motionApi && typeof motionApi.positionRunesHubTabIndicator === 'function') {
+      rafTwice(() => {
+        const activeTab = nav.querySelector('.runes-hub-tab.is-active');
+        if (activeTab) {
+          motionApi.positionRunesHubTabIndicator({ nav, activeKey: activeTab.dataset.runesHub, instant: true });
+        }
+      });
+    }
   }
 
   /**
@@ -4298,14 +4333,14 @@
       plus15DepthCap: 600,
       plus15DepthWeight: 35,
       eliteTopN: 50,
-      eliteEffBaseline: 80,
-      eliteEffSpan: 30,
+      eliteEffBaseline: 75,
+      eliteEffSpan: 10,
       eliteWeight: 30,
       stageMidMin: 45,
       stageLateMin: 85,
     };
 
-    const effUncapped = window.SWRM.calcEfficiencyUncapped;
+    const calcIngameScore = window.SWRM.calcIngameScore;
 
     function runeSpdSubTotal(r) {
       let s = 0;
@@ -4344,16 +4379,16 @@
       if (starsNum === 6 && (r.level | 0) === 15) plus15DepthCount++;
     }
 
-    const effScores = [];
+    const ingameScores = [];
     for (const r of list) {
-      effScores.push(effUncapped ? effUncapped(r) : r.eff || 0);
+      ingameScores.push(calcIngameScore ? calcIngameScore(r) : r.ingameScore || 0);
     }
-    effScores.sort((a, b) => b - a);
-    const eliteK = Math.min(CFG.eliteTopN, effScores.length);
+    ingameScores.sort((a, b) => b - a);
+    const eliteK = Math.min(CFG.eliteTopN, ingameScores.length);
     let eliteAvgUncapped = 0;
     if (eliteK > 0) {
       let sumE = 0;
-      for (let i = 0; i < eliteK; i++) sumE += effScores[i];
+      for (let i = 0; i < eliteK; i++) sumE += ingameScores[i];
       eliteAvgUncapped = sumE / eliteK;
     }
 
@@ -4509,37 +4544,36 @@
     const slotCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
     const slotEff = { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] };
     const slotMain = { 1: {}, 2: {}, 3: {}, 4: {}, 5: {}, 6: {} };
-    const effBuckets = new Array(20).fill(0);
-    const scoreBuckets = new Array(20).fill(0);
+    
     const effVals = [];
     const scoreVals = [];
     const verdictEff = {};
+    const scoreBuckets = new Array(20).fill(0);
     for (let i = 0; i < runes.length; i++) {
       const r = runes[i];
       counts[r.verdict] = (counts[r.verdict] || 0) + 1;
       const rv = r.verdict || '';
       if (rv) {
         verdictEff[rv] = verdictEff[rv] || [];
-        verdictEff[rv].push(Number.isFinite(r.eff) ? r.eff : 0);
+        verdictEff[rv].push(Number.isFinite(r.ingameScore) ? r.ingameScore : 0);
       }
       if (r.role) {
         roleCounts[r.role] = (roleCounts[r.role] || 0) + 1;
         roleEff[r.role] = roleEff[r.role] || [];
-        roleEff[r.role].push(r.eff);
+        roleEff[r.role].push(r.ingameScore);
       }
       setCounts[r.setName] = (setCounts[r.setName] || 0) + 1;
       setEff[r.setName] = setEff[r.setName] || [];
-      setEff[r.setName].push(r.eff);
-      const eff = Number.isFinite(r.eff) ? r.eff : 0;
+      setEff[r.setName].push(r.ingameScore);
+      const ingame = Number.isFinite(r.ingameScore) ? r.ingameScore : 0;
       slotCounts[r.slot] = (slotCounts[r.slot] || 0) + 1;
       slotMain[r.slot][r.mainName] = (slotMain[r.slot][r.mainName] || 0) + 1;
       const si =
         typeof r.slot === 'number' && Number.isFinite(r.slot)
           ? r.slot
           : parseInt(String(r.slot), 10);
-      if (si >= 1 && si <= 6 && !Number.isNaN(si)) slotEff[si].push(eff);
-      effVals.push(eff);
-      effBuckets[Math.min(19, Math.floor(eff / 5))]++;
+      if (si >= 1 && si <= 6 && !Number.isNaN(si)) slotEff[si].push(ingame);
+      effVals.push(ingame);
       let scoreNum = Number.isFinite(r.forgeScore) ? r.forgeScore : NaN;
       if (!Number.isFinite(scoreNum) && typeof computeRuneScore === 'function') {
         scoreNum = Number(computeRuneScore(r));
@@ -4550,6 +4584,24 @@
     }
     effVals.sort((a, b) => a - b);
     scoreVals.sort((a, b) => a - b);
+    
+    // Calculate min/max for Ingame Score chart scale
+    const minEff = effVals.length > 0 ? effVals[0] : 0;
+    const maxEff = effVals.length > 0 ? effVals[effVals.length - 1] : 100;
+    
+    // Round min/max to nearest 5 for cleaner scale
+    const xMin = Math.floor(minEff / 5) * 5;
+    const xMax = Math.ceil(maxEff / 5) * 5;
+    
+    // Create distribution histogram with dynamic bins
+    const binSize = 5;
+    const binCount = Math.max(1, Math.ceil((xMax - xMin) / binSize));
+    const effBuckets = new Array(binCount).fill(0);
+    for (const val of effVals) {
+      const binIndex = Math.min(binCount - 1, Math.floor((val - xMin) / binSize));
+      effBuckets[binIndex]++;
+    }
+    
     return {
       counts,
       roleCounts,
@@ -4561,6 +4613,10 @@
       slotMain,
       effBuckets,
       scoreBuckets,
+      effXMin: xMin,
+      effXMax: xMax,
+      effBinSize: binSize,
+      effBinCount: binCount,
       medianEff: medianSorted(effVals),
       medianScore: medianSorted(scoreVals),
       verdictEff,
@@ -5155,9 +5211,15 @@
     const maxBucket = Math.max(...effBuckets, 1);
     const medEff = medianEff;
     const medLine = document.getElementById('eff-median-line');
-    const medianTipTpl = tloc.effMedianCaption || 'Median efficiency (filtered): {pct}%';
+    const medianTipTpl = tloc.effMedianCaption || 'Median Ingame Score (filtered): {pct}';
+    const xMin = agg.effXMin || 0;
+    const xMax = agg.effXMax || 100;
+    const binSize = agg.effBinSize || 5;
+    const binCount = agg.effBinCount || 20;
+    const range = xMax - xMin;
+    
     if (medEff != null && runes.length) {
-      const pos = Math.min(100, Math.max(0, medEff));
+      const pos = Math.min(100, Math.max(0, ((medEff - xMin) / range) * 100));
       if (medLine) {
         medLine.style.left = `calc(${pos}% - 1px)`;
         medLine.hidden = false;
@@ -5174,16 +5236,18 @@
     }
     if (effEl) {
       effBarTargets = [];
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < binCount; i++) {
         const h = Math.max(4, (effBuckets[i] / maxBucket) * 80);
         effBarTargets[i] = h;
         const h0 = !animateCharts ? h : chartFromZero ? 0 : prevEffHeights && prevEffHeights[i] != null ? prevEffHeights[i] : 0;
-        const label = `${i * 5}-${i * 5 + 4}`;
-        const cls = i >= 18 ? 'great' : i >= 14 ? 'good' : '';
+        const labelStart = xMin + i * binSize;
+        const labelEnd = labelStart + binSize - 1;
+        const label = `${labelStart}-${labelEnd}`;
+        const cls = i >= binCount - 2 ? 'great' : i >= binCount - 4 ? 'good' : '';
         effEl.innerHTML += `
-        <div class="eff-bar-wrap" title="${label}%: ${effBuckets[i]} runes">
+        <div class="eff-bar-wrap" title="${label}: ${effBuckets[i]} runes">
           <div class="eff-bar ${cls}" style="height:${h0}px"></div>
-          <div class="eff-label">${i * 5}</div>
+          <div class="eff-label">${labelStart}</div>
         </div>`;
       }
     }
@@ -7362,39 +7426,46 @@
       if (typeof renderArtifactTableRosterChips === 'function') renderArtifactTableRosterChips();
       return;
     }
-    const rows = filteredArtifacts
-      .slice()
-      .sort(
-        (a, b) =>
-          String(a.category).localeCompare(String(b.category)) ||
-          String(a.gradeStr).localeCompare(String(b.gradeStr)),
-      )
-      .map((a) => {
-        const main = a.pri && fmt ? fmt(a.pri, { kind: 'artifact' }) : '—';
-        const catFn = window.SWRM && window.SWRM.gearCategoryCellHtml;
-        const iconUrl =
-          window.SWRM && typeof window.SWRM.artifactIconUrl === 'function'
-            ? window.SWRM.artifactIconUrl(a)
-            : '';
-        const catCell =
-          typeof catFn === 'function'
-            ? catFn(iconUrl, a.category || '—')
-            : escapeHtml(a.category || '—');
-        const gradeFn = window.SWRM && typeof window.SWRM.gearGradeTagHtml === 'function'
-          ? window.SWRM.gearGradeTagHtml
-          : null;
-        const gradeCell = gradeFn
-          ? gradeFn(a.gradeStr)
-          : escapeHtml(a.gradeStr || '—');
-        return `<tr>
-          <td class="col-grade">${gradeCell}</td>
-          <td class="col-category">${catCell}</td>
-          <td>${escapeHtml(main)}</td>
-          <td class="col-subs-stack"><div class="gear-table-subs">${artifactSubStack(a, fmtSub)}</div></td>
-          <td>${escapeHtml(gearLocationLabel(a.occupiedId, t))}</td>
-        </tr>`;
-      });
-    tbody.innerHTML = rows.join('');
+    if (typeof bindArtifactTableVirtualScroll === 'function') bindArtifactTableVirtualScroll();
+    if (typeof paintArtifactTableVirtualBody === 'function') {
+      artifactVirtualLastKey = '';
+      paintArtifactTableVirtualBody(filteredArtifacts);
+    } else {
+      const rows = filteredArtifacts
+        .slice()
+        .sort(
+          (a, b) =>
+            String(a.category).localeCompare(String(b.category)) ||
+            String(a.gradeStr).localeCompare(String(b.gradeStr)),
+        )
+        .map((a, i) => {
+          const main = a.pri && fmt ? fmt(a.pri, { kind: 'artifact' }) : '—';
+          const catFn = window.SWRM && window.SWRM.gearCategoryCellHtml;
+          const iconUrl =
+            window.SWRM && typeof window.SWRM.artifactIconUrl === 'function'
+              ? window.SWRM.artifactIconUrl(a)
+              : '';
+          const catCell =
+            typeof catFn === 'function'
+              ? catFn(iconUrl, a.category || '—')
+              : escapeHtml(a.category || '—');
+          const gradeFn = window.SWRM && typeof window.SWRM.gearGradeTagHtml === 'function'
+            ? window.SWRM.gearGradeTagHtml
+            : null;
+          const gradeCell = gradeFn
+            ? gradeFn(a.gradeStr)
+            : escapeHtml(a.gradeStr || '—');
+          const evenClass = i % 2 === 0 ? 'gear-table__data-row--even' : '';
+          return `<tr class="gear-table__data-row ${evenClass}">
+            <td class="col-grade">${gradeCell}</td>
+            <td class="col-category">${catCell}</td>
+            <td class="col-main">${escapeHtml(main)}</td>
+            <td class="col-subs-stack"><div class="gear-table-subs">${artifactSubStack(a, fmtSub)}</div></td>
+            <td class="col-location">${escapeHtml(gearLocationLabel(a.occupiedId, t))}</td>
+          </tr>`;
+        });
+      tbody.innerHTML = rows.join('');
+    }
     if (typeof renderArtifactTableRosterChips === 'function') renderArtifactTableRosterChips();
   }
 
@@ -7432,6 +7503,164 @@
       }, 280);
     });
     updateArtifactResetButton();
+  }
+
+  const ARTIFACT_TABLE_VIRTUAL_COLS = 5;
+  const ARTIFACT_TABLE_VIRTUAL_OVERSCAN = 8;
+  const ARTIFACT_TABLE_VIRTUAL_ROW_FALLBACK = 44;
+  const ARTIFACT_TABLE_VIRTUAL_SPACER_COL_CLASSES = [
+    'col-grade',
+    'col-category',
+    'col-main',
+    'col-subs-stack',
+    'col-location',
+  ];
+
+  let artifactVirtualRowHeight = 0;
+  let artifactVirtualScrollRaf = 0;
+  let artifactVirtualBound = false;
+  let artifactVirtualLastKey = '';
+
+  function artifactTableVirtualScroller() {
+    return document.getElementById('artifact-table-scroll');
+  }
+
+  function artifactTableVirtualSpacerRow(heightPx) {
+    const h = Math.max(0, Math.round(heightPx));
+    if (h <= 0) return '';
+    const cells = ARTIFACT_TABLE_VIRTUAL_SPACER_COL_CLASSES.map(
+      (cls) =>
+        `<td class="${cls}" style="height:${h}px;padding:0;border:none;line-height:0" aria-hidden="true"></td>`,
+    ).join('');
+    return `<tr class="gear-table__spacer" aria-hidden="true">${cells}</tr>`;
+  }
+
+  function measureArtifactVirtualRowHeight(tbody) {
+    const row = tbody && tbody.querySelector('tr.gear-table__data-row');
+    if (!row) return 0;
+    const h = row.getBoundingClientRect().height;
+    return h > 0 ? Math.ceil(h) : 0;
+  }
+
+  function artifactVirtualRangeKey(start, end, total) {
+    return `${total}:${start}:${end}:${artifactVirtualRowHeight}`;
+  }
+
+  function resetArtifactTableVirtualScroll() {
+    const scroller = artifactTableVirtualScroller();
+    if (scroller) scroller.scrollTop = 0;
+    artifactVirtualLastKey = '';
+  }
+
+  function scheduleArtifactTableVirtualRepaint() {
+    if (artifactVirtualScrollRaf) return;
+    artifactVirtualScrollRaf = requestAnimationFrame(() => {
+      artifactVirtualScrollRaf = 0;
+      if (typeof paintArtifactTableVirtualBody === 'function') {
+        paintArtifactTableVirtualBody(filteredArtifacts);
+      }
+    });
+  }
+
+  function paintArtifactTableVirtualBody(rows) {
+    const tbody = document.getElementById('artifact-tbody');
+    const scroller = artifactTableVirtualScroller();
+    if (!tbody || !scroller) return;
+
+    const list = rows || [];
+    const total = list.length;
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+
+    if (!total) {
+      artifactVirtualLastKey = 'empty';
+      tbody.innerHTML = `<tr><td colspan="${ARTIFACT_TABLE_VIRTUAL_COLS}" class="table-empty">${escapeHtml(t.tableGearEmpty || 'No artifacts')}</td></tr>`;
+      if (typeof renderArtifactTableRosterChips === 'function') renderArtifactTableRosterChips();
+      return;
+    }
+
+    let rowH = artifactVirtualRowHeight;
+    if (!rowH) rowH = ARTIFACT_TABLE_VIRTUAL_ROW_FALLBACK;
+
+    const viewH = Math.max(scroller.clientHeight, 120);
+    const scrollTop = Math.max(0, scroller.scrollTop);
+    const start = Math.max(0, Math.floor(scrollTop / rowH) - ARTIFACT_TABLE_VIRTUAL_OVERSCAN);
+    const visibleCount = Math.ceil(viewH / rowH) + ARTIFACT_TABLE_VIRTUAL_OVERSCAN * 2;
+    const end = Math.min(total, start + visibleCount);
+
+    const key = artifactVirtualRangeKey(start, end, total);
+    if (key === artifactVirtualLastKey) return;
+    artifactVirtualLastKey = key;
+
+    const topPad = start * rowH;
+    const bottomPad = (total - end) * rowH;
+    const slice = list.slice(start, end);
+
+    const fmt = window.SWRM && window.SWRM.formatGearEffectLine;
+    const fmtSub = window.SWRM && window.SWRM.formatArtifactSubLine;
+
+    tbody.innerHTML =
+      artifactTableVirtualSpacerRow(topPad) +
+      slice.map((a, i) => {
+        const main = a.pri && fmt ? fmt(a.pri, { kind: 'artifact' }) : '—';
+        const catFn = window.SWRM && window.SWRM.gearCategoryCellHtml;
+        const iconUrl =
+          window.SWRM && typeof window.SWRM.artifactIconUrl === 'function'
+            ? window.SWRM.artifactIconUrl(a)
+            : '';
+        const catCell =
+          typeof catFn === 'function'
+            ? catFn(iconUrl, a.category || '—')
+            : escapeHtml(a.category || '—');
+        const gradeFn = window.SWRM && typeof window.SWRM.gearGradeTagHtml === 'function'
+          ? window.SWRM.gearGradeTagHtml
+          : null;
+        const gradeCell = gradeFn
+          ? gradeFn(a.gradeStr)
+          : escapeHtml(a.gradeStr || '—');
+        const evenClass = (start + i) % 2 === 0 ? 'gear-table__data-row--even' : '';
+        return `<tr class="gear-table__data-row ${evenClass}">
+          <td class="col-grade">${gradeCell}</td>
+          <td class="col-category">${catCell}</td>
+          <td class="col-main">${escapeHtml(main)}</td>
+          <td class="col-subs-stack"><div class="gear-table-subs">${artifactSubStack(a, fmtSub)}</div></td>
+          <td class="col-location">${escapeHtml(gearLocationLabel(a.occupiedId, t))}</td>
+        </tr>`;
+      }).join('') +
+      artifactTableVirtualSpacerRow(bottomPad);
+
+    const measured = measureArtifactVirtualRowHeight(tbody);
+    if (measured && measured !== artifactVirtualRowHeight) {
+      artifactVirtualRowHeight = measured;
+      scroller.style.setProperty('--artifact-virtual-row-h', `${measured}px`);
+      artifactVirtualLastKey = '';
+      scheduleArtifactTableVirtualRepaint();
+      return;
+    }
+    if (!artifactVirtualRowHeight && measured) {
+      artifactVirtualRowHeight = measured;
+      scroller.style.setProperty('--artifact-virtual-row-h', `${measured}px`);
+    }
+
+    if (typeof renderArtifactTableRosterChips === 'function') renderArtifactTableRosterChips();
+  }
+
+  function bindArtifactTableVirtualScroll() {
+    if (artifactVirtualBound) return;
+    const scroller = artifactTableVirtualScroller();
+    if (!scroller) return;
+    artifactVirtualBound = true;
+    scroller.classList.add('table-wrap--virtual');
+    scroller.addEventListener(
+      'scroll',
+      () => {
+        scheduleArtifactTableVirtualRepaint();
+      },
+      { passive: true },
+    );
+    window.addEventListener('resize', () => {
+      artifactVirtualLastKey = '';
+      scheduleArtifactTableVirtualRepaint();
+    });
   }
 
   let filteredRelics = [];
@@ -7519,7 +7748,7 @@
           String(a.category).localeCompare(String(b.category)) ||
           (b.level || 0) - (a.level || 0),
       )
-      .map((r) => {
+      .map((r, i) => {
         const main = r.pri && fmt ? fmt(r.pri, { kind: 'relic' }) : '—';
         const sec = fmtSec ? fmtSec(r) : '—';
         const dur = fmtDur ? fmtDur(r) : '—';
@@ -7536,13 +7765,14 @@
             : [];
         const catCell =
           typeof catFn === 'function' ? catFn('', category, paths) : escapeHtml(category);
-        return `<tr>
+        const evenClass = i % 2 === 0 ? 'gear-table__data-row--even' : '';
+        return `<tr class="gear-table__data-row ${evenClass}">
           <td class="col-category">${catCell}</td>
-          <td class="th-num">+${escapeHtml(String(r.level || 0))}</td>
-          <td class="th-num">${escapeHtml(dur)}</td>
-          <td>${escapeHtml(main)}</td>
-          <td class="col-text">${escapeHtml(sec)}</td>
-          <td class="th-num">${escapeHtml(wear)}</td>
+          <td class="col-lvl th-num">+${escapeHtml(String(r.level || 0))}</td>
+          <td class="col-durability th-num">${escapeHtml(dur)}</td>
+          <td class="col-main">${escapeHtml(main)}</td>
+          <td class="col-sec">${escapeHtml(sec)}</td>
+          <td class="col-equipped th-num">${escapeHtml(wear)}</td>
         </tr>`;
       });
     tbody.innerHTML = rows.join('');
@@ -13638,6 +13868,7 @@
 
   let skillPlannerBound = false;
   let skillPlannerNatFilter = 'all';
+  let skillPlannerSearchQuery = '';
   let skillPlannerExcludeStorage = true;
   let skillPlannerSecondAwakenedOnly = false;
   let skillPlannerView = 'queue';
@@ -13940,6 +14171,10 @@
     if (skillPlannerNatFilter === 'nat4') return nat === 4;
     if (skillPlannerNatFilter === 'nat3') return nat === 3;
     if (skillPlannerNatFilter === 'nat4plus') return nat >= 4;
+    if (skillPlannerSearchQuery) {
+      const q = skillPlannerSearchQuery.toLowerCase();
+      if (!(u.displayName || '').toLowerCase().includes(q)) return false;
+    }
     return true;
   }
 
@@ -14456,6 +14691,14 @@
       });
     }
 
+    const searchEl = document.getElementById('skill-planner-search');
+    if (searchEl) {
+      searchEl.addEventListener('input', () => {
+        skillPlannerSearchQuery = searchEl.value.trim();
+        void renderSkillPlannerPanel();
+      });
+    }
+
     const storageBtn = document.getElementById('skill-planner-exclude-storage');
     if (storageBtn) {
       storageBtn.addEventListener('click', () => {
@@ -14506,6 +14749,9 @@
 
     const natSel = document.getElementById('skill-planner-nat-filter');
     if (natSel && natSel.value !== skillPlannerNatFilter) natSel.value = skillPlannerNatFilter;
+
+    const searchEl = document.getElementById('skill-planner-search');
+    if (searchEl && searchEl.value !== skillPlannerSearchQuery) searchEl.value = skillPlannerSearchQuery;
 
     const renderTask = (async () => {
       const skillDb = window.SWRM_SKILL_DB;

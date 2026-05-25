@@ -320,6 +320,7 @@ const TRANSLATIONS = {
     skillPlannerNat4Plus: 'Nat 4+',
     skillPlannerNat4Only: 'Nat 4 only',
     skillPlannerNat3: 'Nat 3 only',
+    skillPlannerSearch: 'Search monster…',
     skillPlannerHideStorage: 'Exclude Storage',
     skillPlannerShowStorage: 'Include Storage',
     skillPlannerSecondAwakenedOnly: 'Second Awakening only',
@@ -688,9 +689,9 @@ const TRANSLATIONS = {
     stageCardMetaName: 'Elite Quality',
     stageCardMetaWeight: '30%',
     stageCardMetaDesc:
-      'Average efficiency on your best runes (up to 50). Baseline 80%, span 30 percentage points for the full 30-point term.',
+      'Average Ingame Score on your best runes (up to 50). Baseline 75, span 10 points for the full 30-point term.',
 
-    stageEliteValFormat: '{eff}% ({n})',
+    stageEliteValFormat: '{eff} (n={n})',
 
     stageFormulaExpl: '',
 
@@ -707,7 +708,7 @@ const TRANSLATIONS = {
     dashboardDistRoles: 'Roles',
     dashboardDistSets: 'Sets',
     dashboardDistSlots: 'Slot',
-    dashboardDistEff: 'Efficiency',
+    dashboardDistEff: 'Ingame Score',
     dashboardDistScore: 'Forge Score',
     scoreMedianCaption: 'Median Forge Score (filtered): {score}',
     scoreDistribution: 'Forge Score distribution',
@@ -776,7 +777,7 @@ const TRANSLATIONS = {
     stageCompactExpand: 'Show full progression details',
     stageCompactCollapse: 'Compact progression view',
     stageMetricContribTpl: '+{pts} / {cap} pts',
-    effMedianCaption: 'Median efficiency (filtered): {pct}%',
+    effMedianCaption: 'Median Ingame Score (filtered): {pct}',
     dashboardExportEffBuckets: 'Histogram (5% buckets):',
   },
   ru: {
@@ -1107,6 +1108,7 @@ const TRANSLATIONS = {
     skillPlannerNat4Plus: 'Nat 4+',
     skillPlannerNat4Only: 'Только Nat 4',
     skillPlannerNat3: 'Только Nat 3',
+    skillPlannerSearch: 'Поиск монстра…',
     skillPlannerHideStorage: 'Без Storage',
     skillPlannerSecondAwakenedOnly: 'Только 2-е пробуждение',
     skillPlannerSecondAwakenedOnlyTip:
@@ -1448,12 +1450,12 @@ const TRANSLATIONS = {
     stageCardKeepDesc:
       'Сколько 6★ рун на ровно +15. До 35 баллов, полный вклад при 600+.',
 
-    stageCardMetaName: 'Элита по eff',
+    stageCardMetaName: 'Элита по Ingame',
     stageCardMetaWeight: '30%',
     stageCardMetaDesc:
-      'Средняя эффективность по лучшим рунам (до 50). База 80%, диапазон 30 п.п. для полных 30 баллов.',
+      'Средняя Игровая оценка по лучшим рунам (до 50). База 75, диапазон 10 пунктов для полных 30 баллов.',
 
-    stageEliteValFormat: '{eff}% ({n})',
+    stageEliteValFormat: '{eff} (n={n})',
 
     stageFormulaExpl: '',
 
@@ -1470,7 +1472,7 @@ const TRANSLATIONS = {
     dashboardDistRoles: 'Роли',
     dashboardDistSets: 'Сеты',
     dashboardDistSlots: 'Слот',
-    dashboardDistEff: 'Эффективность',
+    dashboardDistEff: 'Игровая оценка',
     dashboardDistScore: 'Forge Score',
     scoreMedianCaption: 'Медиана Forge Score (фильтр): {score}',
     scoreDistribution: 'Распределение Forge Score',
@@ -1539,7 +1541,7 @@ const TRANSLATIONS = {
     stageCompactExpand: 'Показать детали прогресса',
     stageCompactCollapse: 'Компактный вид прогресса',
     stageMetricContribTpl: '+{pts} / {cap} балл.',
-    effMedianCaption: 'Медиана eff (с фильтром): {pct}%',
+    effMedianCaption: 'Медиана Игровой оценки (с фильтром): {pct}',
     dashboardExportEffBuckets: 'Гистограмма (корзины по 5%):',
   },
 };

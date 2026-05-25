@@ -85,7 +85,7 @@ if (typeof window !== 'undefined') {
  * (no SWARFARM CDN fallback). Missing files show as broken/placeholder.
  * Runtime monster/skill API calls are skipped when the bundled index already has the row.
  */
-const SWRM_LOCAL_ASSETS_ONLY = false;
+const SWRM_LOCAL_ASSETS_ONLY = true;
 
 
 // Slot mains (odd slots) — after i18n in monolith, kept here for load order with thresholds.

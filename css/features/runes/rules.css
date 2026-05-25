@@ -57,9 +57,11 @@
   gap: 8px;
   margin-bottom: 22px;
   padding: 4px;
+  padding-bottom: 8px;
   border-radius: var(--radius-lg);
   background: color-mix(in srgb, var(--bg3) 55%, transparent);
   border: 1px solid var(--border);
+  position: relative;
 }
 .rules-subtab {
   flex: 1 1 160px;

@@ -100,39 +100,46 @@
       if (typeof renderArtifactTableRosterChips === 'function') renderArtifactTableRosterChips();
       return;
     }
-    const rows = filteredArtifacts
-      .slice()
-      .sort(
-        (a, b) =>
-          String(a.category).localeCompare(String(b.category)) ||
-          String(a.gradeStr).localeCompare(String(b.gradeStr)),
-      )
-      .map((a) => {
-        const main = a.pri && fmt ? fmt(a.pri, { kind: 'artifact' }) : '—';
-        const catFn = window.SWRM && window.SWRM.gearCategoryCellHtml;
-        const iconUrl =
-          window.SWRM && typeof window.SWRM.artifactIconUrl === 'function'
-            ? window.SWRM.artifactIconUrl(a)
-            : '';
-        const catCell =
-          typeof catFn === 'function'
-            ? catFn(iconUrl, a.category || '—')
-            : escapeHtml(a.category || '—');
-        const gradeFn = window.SWRM && typeof window.SWRM.gearGradeTagHtml === 'function'
-          ? window.SWRM.gearGradeTagHtml
-          : null;
-        const gradeCell = gradeFn
-          ? gradeFn(a.gradeStr)
-          : escapeHtml(a.gradeStr || '—');
-        return `<tr>
-          <td class="col-grade">${gradeCell}</td>
-          <td class="col-category">${catCell}</td>
-          <td>${escapeHtml(main)}</td>
-          <td class="col-subs-stack"><div class="gear-table-subs">${artifactSubStack(a, fmtSub)}</div></td>
-          <td>${escapeHtml(gearLocationLabel(a.occupiedId, t))}</td>
-        </tr>`;
-      });
-    tbody.innerHTML = rows.join('');
+    if (typeof bindArtifactTableVirtualScroll === 'function') bindArtifactTableVirtualScroll();
+    if (typeof paintArtifactTableVirtualBody === 'function') {
+      artifactVirtualLastKey = '';
+      paintArtifactTableVirtualBody(filteredArtifacts);
+    } else {
+      const rows = filteredArtifacts
+        .slice()
+        .sort(
+          (a, b) =>
+            String(a.category).localeCompare(String(b.category)) ||
+            String(a.gradeStr).localeCompare(String(b.gradeStr)),
+        )
+        .map((a, i) => {
+          const main = a.pri && fmt ? fmt(a.pri, { kind: 'artifact' }) : '—';
+          const catFn = window.SWRM && window.SWRM.gearCategoryCellHtml;
+          const iconUrl =
+            window.SWRM && typeof window.SWRM.artifactIconUrl === 'function'
+              ? window.SWRM.artifactIconUrl(a)
+              : '';
+          const catCell =
+            typeof catFn === 'function'
+              ? catFn(iconUrl, a.category || '—')
+              : escapeHtml(a.category || '—');
+          const gradeFn = window.SWRM && typeof window.SWRM.gearGradeTagHtml === 'function'
+            ? window.SWRM.gearGradeTagHtml
+            : null;
+          const gradeCell = gradeFn
+            ? gradeFn(a.gradeStr)
+            : escapeHtml(a.gradeStr || '—');
+          const evenClass = i % 2 === 0 ? 'gear-table__data-row--even' : '';
+          return `<tr class="gear-table__data-row ${evenClass}">
+            <td class="col-grade">${gradeCell}</td>
+            <td class="col-category">${catCell}</td>
+            <td class="col-main">${escapeHtml(main)}</td>
+            <td class="col-subs-stack"><div class="gear-table-subs">${artifactSubStack(a, fmtSub)}</div></td>
+            <td class="col-location">${escapeHtml(gearLocationLabel(a.occupiedId, t))}</td>
+          </tr>`;
+        });
+      tbody.innerHTML = rows.join('');
+    }
     if (typeof renderArtifactTableRosterChips === 'function') renderArtifactTableRosterChips();
   }
 

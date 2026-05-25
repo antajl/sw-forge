@@ -7,6 +7,52 @@
  */
 const STATIC_CHANGELOG = [
   {
+    date: '2026-05-26',
+    items: {
+      en: [
+        'Tabs: GSAP animations added to main tabs (Dashboard, Table, Rules) and Rules sub-tabs (Engine, Roles, Verdict rules).',
+        'Dashboard: Efficiency tab renamed to Ingame Score — now displays Ingame Score distribution instead of SWOP Eff%.',
+        'Account progression: Elite Quality metric updated to use Ingame Score instead of Efficiency — thresholds now 85+ (elite), 75-84 (good), <75 (needs improvement).',
+      ],
+      ru: [
+        'Вкладки: добавлена анимация GSAP для основных вкладок (Dashboard, Table, Rules) и под-вкладок Rules (Engine, Roles, Verdict rules).',
+        'Dashboard: вкладка Efficiency переименована в Ingame Score — теперь показывает распределение Игровой оценки вместо SWOP Eff%.',
+        'Прогресс аккаунта: метрика Elite Quality обновлена на Игровую оценку вместо Efficiency — пороги теперь 85+ (элита), 75-84 (хорошо), <75 (нужно улучшить).',
+      ],
+      fr: [
+        'Onglets : animations GSAP ajoutées aux onglets principaux (Dashboard, Table, Rules) et sous-onglets Rules (Engine, Roles, Verdict rules).',
+        'Dashboard : l\'onglet Efficiency renommé en Ingame Score — affiche désormais la distribution Ingame Score au lieu de SWOP Eff%.',
+        'Progression du compte : la métrique Elite Quality mise à jour pour utiliser Ingame Score au lieu d\'Efficiency — seuils désormais 85+ (élite), 75-84 (bon), <75 (à améliorer).',
+      ],
+    },
+  },
+  {
+    date: '2026-05-25',
+    items: {
+      en: [
+        'Artifacts / Relics tables: visual alignment with Rune Table — sticky headers, zebra striping, colgroup-based column widths.',
+        'Artifacts table: virtual scrolling (like Rune Table) — renders only visible rows for large datasets.',
+        'Artifacts / Relics tables: row classes updated for zebra striping (gear-table__data-row, gear-table__data-row--even).',
+        'Skill Plan: search field added to toolbar — filters monsters by name (EN/RU i18n).',
+        'Docs: removed PLANS-LOCAL-ASSETS.md and archive/MASTER-TASKS-DONE.md; updated README.md, MASTER.md, PLANS.md.',
+      ],
+      ru: [
+        'Таблицы Артефактов / Релик: визуальное выравнивание с Таблицей рун — sticky headers, зебра, colgroup для ширин колонок.',
+        'Таблица Артефактов: virtual scrolling (как у рун) — рендер только видимых строк для больших наборов данных.',
+        'Таблицы Артефактов / Релик: классы строк для зебры (gear-table__data-row, gear-table__data-row--even).',
+        'Skill Plan: поле поиска в тулбаре — фильтр монстров по имени (i18n EN/RU).',
+        'Docs: удалены PLANS-LOCAL-ASSETS.md и archive/MASTER-TASKS-DONE.md; обновлены README.md, MASTER.md, PLANS.md.',
+      ],
+      fr: [
+        'Tables Artifacts / Relics : alignement visuel avec la Table des runes — sticky headers, zebra, colgroup pour les largeurs de colonnes.',
+        'Table Artifacts : virtual scrolling (comme les runes) — rendu uniquement des lignes visibles pour les grands jeux de données.',
+        'Tables Artifacts / Relics : classes de lignes pour zebra (gear-table__data-row, gear-table__data-row--even).',
+        'Skill Plan : champ de recherche dans la barre d\'outils — filtre des monstres par nom.',
+        'Docs : suppression de PLANS-LOCAL-ASSETS.md et archive/MASTER-TASKS-DONE.md ; mise à jour de README.md, MASTER.md, PLANS.md.',
+      ],
+    },
+  },
+  {
     date: '2026-05-24',
     items: {
       en: [

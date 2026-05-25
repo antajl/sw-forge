@@ -41,20 +41,15 @@
 1. Движок правил Keep/Sell для gear (отдельно от рун).
 2. Опционально отдельная верхняя вкладка (vs только Runes → Table).
 3. Больше подтверждённых подписей типов реликтов.
-4. **Иконки реликтов** — вручную: скриншоты из игры → PNG в `assets/relics/` (имена по README в папке); подключение в UI уже заложено.
 
 ## 7. Guide & i18n
 
 1. FR Guide для Monsters (позже Artifacts).
 2. Дополнительные FR-строки UI Monsters.
 
-## 9. Локальные ассеты (вместо SWARFARM CDN)
+## 9. Локальные ассеты
 
-**Статус: эпик закрыт в коде** (A–F + fetch-скрипты). Осталось по желанию: проверить лимит Pages, деплой `assets/` + JSON, опционально `SWRM_LOCAL_ASSETS_ONLY`.
-
-**Детали:** [`PLANS-LOCAL-ASSETS.md`](PLANS-LOCAL-ASSETS.md) · поддержка: `npm run fetch:data`, `fetch:assets`, `diagnose:missing-assets`.
-
-Опционально позже: lazy-портреты только из SWEX; R2 вместо git для PNG.
+Эпик закрыт. `SWRM_LOCAL_ASSETS_ONLY = true`. Все ассеты локальны.
 
 ## 8. Долгий горизонт
 

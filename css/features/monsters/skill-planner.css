@@ -69,6 +69,28 @@
   min-width: 10rem;
 }
 
+.skill-planner__search {
+  min-width: 12rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: 6px;
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.12));
+  background: var(--surface-raised, rgba(255, 255, 255, 0.04));
+  color: var(--text-primary, #e8ecf1);
+  font-size: 0.82rem;
+  font-family: inherit;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.skill-planner__search:focus {
+  outline: none;
+  border-color: var(--accent, #6eb5ff);
+  background: var(--surface-raised, rgba(255, 255, 255, 0.06));
+}
+
+.skill-planner__search::placeholder {
+  color: var(--text-muted, #9aa3b2);
+}
+
 .skill-planner__hint {
   margin: -0.35rem 0 0;
   font-size: 0.82rem;

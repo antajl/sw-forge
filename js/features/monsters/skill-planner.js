@@ -4,6 +4,7 @@
 
   let skillPlannerBound = false;
   let skillPlannerNatFilter = 'all';
+  let skillPlannerSearchQuery = '';
   let skillPlannerExcludeStorage = true;
   let skillPlannerSecondAwakenedOnly = false;
   let skillPlannerView = 'queue';
@@ -306,6 +307,10 @@
     if (skillPlannerNatFilter === 'nat4') return nat === 4;
     if (skillPlannerNatFilter === 'nat3') return nat === 3;
     if (skillPlannerNatFilter === 'nat4plus') return nat >= 4;
+    if (skillPlannerSearchQuery) {
+      const q = skillPlannerSearchQuery.toLowerCase();
+      if (!(u.displayName || '').toLowerCase().includes(q)) return false;
+    }
     return true;
   }
 
@@ -822,6 +827,14 @@
       });
     }
 
+    const searchEl = document.getElementById('skill-planner-search');
+    if (searchEl) {
+      searchEl.addEventListener('input', () => {
+        skillPlannerSearchQuery = searchEl.value.trim();
+        void renderSkillPlannerPanel();
+      });
+    }
+
     const storageBtn = document.getElementById('skill-planner-exclude-storage');
     if (storageBtn) {
       storageBtn.addEventListener('click', () => {
@@ -872,6 +885,9 @@
 
     const natSel = document.getElementById('skill-planner-nat-filter');
     if (natSel && natSel.value !== skillPlannerNatFilter) natSel.value = skillPlannerNatFilter;
+
+    const searchEl = document.getElementById('skill-planner-search');
+    if (searchEl && searchEl.value !== skillPlannerSearchQuery) searchEl.value = skillPlannerSearchQuery;
 
     const renderTask = (async () => {
       const skillDb = window.SWRM_SKILL_DB;

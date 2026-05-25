@@ -206,6 +206,70 @@
     return true;
   }
 
+  /**
+   * Sliding underline under Runes Hub tabs (Dashboard / Table / Rules).
+   * @param {{ nav: HTMLElement|null, activeKey: string, instant?: boolean }} opts
+   * @returns {boolean} true when a GSAP tween ran
+   */
+  function positionRunesHubTabIndicator(opts) {
+    const { nav, activeKey, instant } = opts || {};
+    const ind = nav && nav.querySelector('.runes-hub-tabs__indicator');
+    const key = ['dashboard', 'runetable', 'settings'].includes(activeKey) ? activeKey : 'dashboard';
+    const btn = document.getElementById(`runes-hub-tab-${key}`);
+    if (!nav || !ind || !btn) return false;
+    const x = btn.offsetLeft;
+    const w = Math.max(0, btn.offsetWidth);
+    killTweensOf(ind);
+    const snap = () => {
+      ind.style.left = `${x}px`;
+      ind.style.width = `${w}px`;
+    };
+    if (instant || !enabled()) {
+      snap();
+      return false;
+    }
+    gsap.to(ind, {
+      left: x,
+      width: w,
+      duration: 0.32,
+      ease: 'power3.out',
+      overwrite: 'auto',
+    });
+    return true;
+  }
+
+  /**
+   * Sliding underline under Rules sub-tabs (Engine / Roles / Verdict rules).
+   * @param {{ nav: HTMLElement|null, activeKey: string, instant?: boolean }} opts
+   * @returns {boolean} true when a GSAP tween ran
+   */
+  function positionRulesSubtabIndicator(opts) {
+    const { nav, activeKey, instant } = opts || {};
+    const ind = nav && nav.querySelector('.rules-subtabs__indicator');
+    const key = ['engine', 'roles', 'verdict'].includes(activeKey) ? activeKey : 'engine';
+    const btn = document.getElementById(`rules-subtab-${key}`);
+    if (!nav || !ind || !btn) return false;
+    const x = btn.offsetLeft;
+    const w = Math.max(0, btn.offsetWidth);
+    killTweensOf(ind);
+    const snap = () => {
+      ind.style.left = `${x}px`;
+      ind.style.width = `${w}px`;
+    };
+    if (instant || !enabled()) {
+      snap();
+      return false;
+    }
+    gsap.to(ind, {
+      left: x,
+      width: w,
+      duration: 0.32,
+      ease: 'power3.out',
+      overwrite: 'auto',
+    });
+    return true;
+  }
+
   const subpanelTimelines = new WeakMap();
 
   /**
@@ -497,6 +561,8 @@
     cancelDashUnifiedTab,
     animateDashUnifiedTab,
     positionDashUnifiedTabIndicator,
+    positionRunesHubTabIndicator,
+    positionRulesSubtabIndicator,
     swapSubpanels,
     toastIn,
     toastOut,

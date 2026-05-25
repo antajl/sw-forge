@@ -13,14 +13,14 @@
       plus15DepthCap: 600,
       plus15DepthWeight: 35,
       eliteTopN: 50,
-      eliteEffBaseline: 80,
-      eliteEffSpan: 30,
+      eliteEffBaseline: 75,
+      eliteEffSpan: 10,
       eliteWeight: 30,
       stageMidMin: 45,
       stageLateMin: 85,
     };
 
-    const effUncapped = window.SWRM.calcEfficiencyUncapped;
+    const calcIngameScore = window.SWRM.calcIngameScore;
 
     function runeSpdSubTotal(r) {
       let s = 0;
@@ -59,16 +59,16 @@
       if (starsNum === 6 && (r.level | 0) === 15) plus15DepthCount++;
     }
 
-    const effScores = [];
+    const ingameScores = [];
     for (const r of list) {
-      effScores.push(effUncapped ? effUncapped(r) : r.eff || 0);
+      ingameScores.push(calcIngameScore ? calcIngameScore(r) : r.ingameScore || 0);
     }
-    effScores.sort((a, b) => b - a);
-    const eliteK = Math.min(CFG.eliteTopN, effScores.length);
+    ingameScores.sort((a, b) => b - a);
+    const eliteK = Math.min(CFG.eliteTopN, ingameScores.length);
     let eliteAvgUncapped = 0;
     if (eliteK > 0) {
       let sumE = 0;
-      for (let i = 0; i < eliteK; i++) sumE += effScores[i];
+      for (let i = 0; i < eliteK; i++) sumE += ingameScores[i];
       eliteAvgUncapped = sumE / eliteK;
     }
 
@@ -224,37 +224,36 @@
     const slotCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
     const slotEff = { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] };
     const slotMain = { 1: {}, 2: {}, 3: {}, 4: {}, 5: {}, 6: {} };
-    const effBuckets = new Array(20).fill(0);
-    const scoreBuckets = new Array(20).fill(0);
+    
     const effVals = [];
     const scoreVals = [];
     const verdictEff = {};
+    const scoreBuckets = new Array(20).fill(0);
     for (let i = 0; i < runes.length; i++) {
       const r = runes[i];
       counts[r.verdict] = (counts[r.verdict] || 0) + 1;
       const rv = r.verdict || '';
       if (rv) {
         verdictEff[rv] = verdictEff[rv] || [];
-        verdictEff[rv].push(Number.isFinite(r.eff) ? r.eff : 0);
+        verdictEff[rv].push(Number.isFinite(r.ingameScore) ? r.ingameScore : 0);
       }
       if (r.role) {
         roleCounts[r.role] = (roleCounts[r.role] || 0) + 1;
         roleEff[r.role] = roleEff[r.role] || [];
-        roleEff[r.role].push(r.eff);
+        roleEff[r.role].push(r.ingameScore);
       }
       setCounts[r.setName] = (setCounts[r.setName] || 0) + 1;
       setEff[r.setName] = setEff[r.setName] || [];
-      setEff[r.setName].push(r.eff);
-      const eff = Number.isFinite(r.eff) ? r.eff : 0;
+      setEff[r.setName].push(r.ingameScore);
+      const ingame = Number.isFinite(r.ingameScore) ? r.ingameScore : 0;
       slotCounts[r.slot] = (slotCounts[r.slot] || 0) + 1;
       slotMain[r.slot][r.mainName] = (slotMain[r.slot][r.mainName] || 0) + 1;
       const si =
         typeof r.slot === 'number' && Number.isFinite(r.slot)
           ? r.slot
           : parseInt(String(r.slot), 10);
-      if (si >= 1 && si <= 6 && !Number.isNaN(si)) slotEff[si].push(eff);
-      effVals.push(eff);
-      effBuckets[Math.min(19, Math.floor(eff / 5))]++;
+      if (si >= 1 && si <= 6 && !Number.isNaN(si)) slotEff[si].push(ingame);
+      effVals.push(ingame);
       let scoreNum = Number.isFinite(r.forgeScore) ? r.forgeScore : NaN;
       if (!Number.isFinite(scoreNum) && typeof computeRuneScore === 'function') {
         scoreNum = Number(computeRuneScore(r));
@@ -265,6 +264,24 @@
     }
     effVals.sort((a, b) => a - b);
     scoreVals.sort((a, b) => a - b);
+    
+    // Calculate min/max for Ingame Score chart scale
+    const minEff = effVals.length > 0 ? effVals[0] : 0;
+    const maxEff = effVals.length > 0 ? effVals[effVals.length - 1] : 100;
+    
+    // Round min/max to nearest 5 for cleaner scale
+    const xMin = Math.floor(minEff / 5) * 5;
+    const xMax = Math.ceil(maxEff / 5) * 5;
+    
+    // Create distribution histogram with dynamic bins
+    const binSize = 5;
+    const binCount = Math.max(1, Math.ceil((xMax - xMin) / binSize));
+    const effBuckets = new Array(binCount).fill(0);
+    for (const val of effVals) {
+      const binIndex = Math.min(binCount - 1, Math.floor((val - xMin) / binSize));
+      effBuckets[binIndex]++;
+    }
+    
     return {
       counts,
       roleCounts,
@@ -276,6 +293,10 @@
       slotMain,
       effBuckets,
       scoreBuckets,
+      effXMin: xMin,
+      effXMax: xMax,
+      effBinSize: binSize,
+      effBinCount: binCount,
       medianEff: medianSorted(effVals),
       medianScore: medianSorted(scoreVals),
       verdictEff,

@@ -13,8 +13,6 @@
 | Порядок скриптов и сборка UI/CSS | [`ARCHITECTURE.md`](ARCHITECTURE.md) |
 | Папки `js/features/*` | [`FEATURES.md`](FEATURES.md) |
 | Справка для игроков (EN/RU в HTML) | **`index.html`** → `#tab-guide` (не в `docs/`) |
-| История крупных миграций | [`archive/MASTER-TASKS-DONE.md`](archive/MASTER-TASKS-DONE.md) |
-| Локальные ассеты / SWARFARM | [`PLANS-LOCAL-ASSETS.md`](PLANS-LOCAL-ASSETS.md) |
 
 **Правило:** сделанное для игроков → новый пункт в `changelog-data.js` (дата = сегодня); закрытое из планов → убрать из `PLANS.md` и Roadmap.
 

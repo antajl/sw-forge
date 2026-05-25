@@ -84,7 +84,7 @@
           String(a.category).localeCompare(String(b.category)) ||
           (b.level || 0) - (a.level || 0),
       )
-      .map((r) => {
+      .map((r, i) => {
         const main = r.pri && fmt ? fmt(r.pri, { kind: 'relic' }) : '—';
         const sec = fmtSec ? fmtSec(r) : '—';
         const dur = fmtDur ? fmtDur(r) : '—';
@@ -101,13 +101,14 @@
             : [];
         const catCell =
           typeof catFn === 'function' ? catFn('', category, paths) : escapeHtml(category);
-        return `<tr>
+        const evenClass = i % 2 === 0 ? 'gear-table__data-row--even' : '';
+        return `<tr class="gear-table__data-row ${evenClass}">
           <td class="col-category">${catCell}</td>
-          <td class="th-num">+${escapeHtml(String(r.level || 0))}</td>
-          <td class="th-num">${escapeHtml(dur)}</td>
-          <td>${escapeHtml(main)}</td>
-          <td class="col-text">${escapeHtml(sec)}</td>
-          <td class="th-num">${escapeHtml(wear)}</td>
+          <td class="col-lvl th-num">+${escapeHtml(String(r.level || 0))}</td>
+          <td class="col-durability th-num">${escapeHtml(dur)}</td>
+          <td class="col-main">${escapeHtml(main)}</td>
+          <td class="col-sec">${escapeHtml(sec)}</td>
+          <td class="col-equipped th-num">${escapeHtml(wear)}</td>
         </tr>`;
       });
     tbody.innerHTML = rows.join('');

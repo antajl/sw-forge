@@ -102,6 +102,26 @@ html:not(.swrm-has-gsap) .dash-unified-tabs__indicator {
   display: none;
 }
 
+.runes-hub-tabs__indicator,
+.rules-subtabs__indicator {
+  position: absolute;
+  left: 0;
+  bottom: 4px;
+  height: 3px;
+  width: 0;
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 4;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 40%, transparent);
+  opacity: 0.95;
+}
+
+html:not(.swrm-has-gsap) .runes-hub-tabs__indicator,
+html:not(.swrm-has-gsap) .rules-subtabs__indicator {
+  display: none;
+}
+
 .dash-unified-tab.rules-subtab {
   flex: 1 1 0;
   min-width: 5.5rem;

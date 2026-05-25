@@ -156,6 +156,7 @@
     <section id="tab-runes" class="tab-content hidden">
       <nav class="rules-subtabs runes-hub-tabs" id="runes-hub-tabs" role="tablist" aria-labelledby="lbl-runes-hub-title">
         <span id="lbl-runes-hub-title" class="visually-hidden">Runes</span>
+        <span class="dash-unified-tabs__indicator runes-hub-tabs__indicator" aria-hidden="true"></span>
         <button type="button" role="tab" class="rules-subtab runes-hub-tab is-active" id="runes-hub-tab-dashboard"
           data-runes-hub="dashboard" aria-selected="true" aria-controls="tab-dashboard" tabindex="0">
           <span class="rules-subtab__label" id="lbl-runes-hub-dashboard">Dashboard</span>
@@ -351,7 +352,7 @@
             </button>
             <button type="button" class="rules-subtab dash-unified-tab" role="tab" id="dash-unified-tab-eff"
               aria-controls="dash-pane-eff" aria-selected="false" data-dash-uni="eff" tabindex="-1">
-              <span class="rules-subtab__label">Efficiency</span>
+              <span class="rules-subtab__label">Ingame Score</span>
             </button>
             <button type="button" class="rules-subtab dash-unified-tab" role="tab" id="dash-unified-tab-score"
               aria-controls="dash-pane-score" aria-selected="false" data-dash-uni="score" tabindex="-1">
@@ -735,14 +736,21 @@
               <div class="monsters-chips monsters-chips--stats" id="artifact-table-roster-chips" aria-live="polite"></div>
             </div>
             <div class="table-wrap" id="artifact-table-scroll" tabindex="0" role="region" aria-label="Artifact table">
-              <table id="artifact-table" class="gear-table swrm-table-zebra">
+              <table id="artifact-table" class="gear-table">
+                <colgroup>
+                  <col class="col-grade">
+                  <col class="col-category">
+                  <col class="col-main">
+                  <col class="col-subs-stack">
+                  <col class="col-location">
+                </colgroup>
                 <thead>
                   <tr>
                     <th class="col-grade" id="lbl-th-art-grade">Grade</th>
-                    <th id="lbl-th-art-category">Category</th>
-                    <th id="lbl-th-art-main">Main</th>
+                    <th class="col-category" id="lbl-th-art-category">Category</th>
+                    <th class="col-main" id="lbl-th-art-main">Main</th>
                     <th class="col-subs-stack" id="lbl-th-art-subs">Subs</th>
-                    <th id="lbl-th-art-location">Location</th>
+                    <th class="col-location" id="lbl-th-art-location">Location</th>
                   </tr>
                 </thead>
                 <tbody id="artifact-tbody"></tbody>
@@ -754,15 +762,23 @@
               <div class="monsters-chips monsters-chips--stats" id="relic-table-roster-chips" aria-live="polite"></div>
             </div>
             <div class="table-wrap" id="relic-table-scroll" tabindex="0" role="region" aria-label="Relic table">
-              <table id="relic-table" class="gear-table swrm-table-zebra">
+              <table id="relic-table" class="gear-table">
+                <colgroup>
+                  <col class="col-category">
+                  <col class="col-lvl">
+                  <col class="col-durability">
+                  <col class="col-main">
+                  <col class="col-sec">
+                  <col class="col-equipped">
+                </colgroup>
                 <thead>
                   <tr>
-                    <th id="lbl-th-rel-category">Category</th>
-                    <th class="th-num col-num" id="lbl-th-rel-level">Lvl</th>
-                    <th class="th-num col-num" id="lbl-th-rel-durability">Durability</th>
-                    <th id="lbl-th-rel-main">Main</th>
-                    <th class="col-text" id="lbl-th-rel-sec">Secondary</th>
-                    <th class="th-num col-num" id="lbl-th-rel-wearers">Equipped</th>
+                    <th class="col-category" id="lbl-th-rel-category">Category</th>
+                    <th class="col-lvl th-num" id="lbl-th-rel-level">Lvl</th>
+                    <th class="col-durability th-num" id="lbl-th-rel-durability">Durability</th>
+                    <th class="col-main" id="lbl-th-rel-main">Main</th>
+                    <th class="col-sec" id="lbl-th-rel-sec">Secondary</th>
+                    <th class="col-equipped th-num" id="lbl-th-rel-wearers">Equipped</th>
                   </tr>
                 </thead>
                 <tbody id="relic-tbody"></tbody>
@@ -785,6 +801,7 @@
         </header>
 
         <nav class="rules-subtabs" id="rules-subtabs" role="tablist" aria-label="Rune Rules">
+          <span class="dash-unified-tabs__indicator rules-subtabs__indicator" aria-hidden="true"></span>
           <button type="button" role="tab" class="rules-subtab is-active" id="rules-subtab-engine"
             data-rules-subtab="engine" aria-selected="true" aria-controls="rules-panel-engine" tabindex="0">
             <span class="rules-subtab__label" id="lbl-rules-subtab-engine">Engine</span>
@@ -1051,6 +1068,15 @@
                   <option value="nat3" id="lbl-skill-planner-nat3">Nat 3 only</option>
                 </select>
               </label>
+              <input
+                type="search"
+                id="skill-planner-search"
+                class="skill-planner__search"
+                placeholder="Search monster…"
+                autocomplete="off"
+                aria-label="Search monster"
+                data-i18n-placeholder="skillPlannerSearch"
+              />
               <button type="button" class="btn-ghost btn-toolbar skill-planner__toggle" id="skill-planner-exclude-storage" aria-pressed="true">
                 <span id="lbl-skill-planner-exclude-storage">Exclude Storage</span>
               </button>

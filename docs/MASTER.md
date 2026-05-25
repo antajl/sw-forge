@@ -217,10 +217,8 @@ SW Forge — статический сайт на **Cloudflare Pages**: анал
 | `PROJECT-CONTEXT.md` | Короткий вход |
 | `MASTER.md` | Этот справочник |
 | `PLANS.md` | Открытый продуктовый backlog |
-| `PLANS-LOCAL-ASSETS.md` | Эпик: локальные JSON + картинки вместо SWARFARM CDN |
 | `ARCHITECTURE.md` | Runtime / build схема |
 | `FEATURES.md` | Карта фич по папкам |
-| `archive/MASTER-TASKS-DONE.md` | Архив блоков A/B/C (выполнено) |
 
 ### worker/
 Cloudflare Worker + D1 — Share API (`worker/src/index.js`, `wrangler.toml`).
@@ -395,9 +393,7 @@ Dev: `css/style.css` (только локально; prod использует `
 
 ## ЧАСТЬ 5: АРХИВ ИСПОЛНЯЕМЫХ ЗАДАЧ (A / B / C)
 
-Блоки **A** (критичные), **B** (важные), **C** (build/worker/fonts) **выполнены**.  
-Подробные инструкции «было / стало» с номерами строк — в [`docs/archive/MASTER-TASKS-DONE.md`](archive/MASTER-TASKS-DONE.md).  
-Итог для пользователей: **Changelog → 2026-05-22**.
+Блоки A / B / C выполнены. Детали в Changelog → Releases (2026-05-22).
 
 **Не искать новые задачи в MASTER** — только [`PLANS.md`](PLANS.md).
 

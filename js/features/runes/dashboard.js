@@ -472,9 +472,15 @@
     const maxBucket = Math.max(...effBuckets, 1);
     const medEff = medianEff;
     const medLine = document.getElementById('eff-median-line');
-    const medianTipTpl = tloc.effMedianCaption || 'Median efficiency (filtered): {pct}%';
+    const medianTipTpl = tloc.effMedianCaption || 'Median Ingame Score (filtered): {pct}';
+    const xMin = agg.effXMin || 0;
+    const xMax = agg.effXMax || 100;
+    const binSize = agg.effBinSize || 5;
+    const binCount = agg.effBinCount || 20;
+    const range = xMax - xMin;
+    
     if (medEff != null && runes.length) {
-      const pos = Math.min(100, Math.max(0, medEff));
+      const pos = Math.min(100, Math.max(0, ((medEff - xMin) / range) * 100));
       if (medLine) {
         medLine.style.left = `calc(${pos}% - 1px)`;
         medLine.hidden = false;
@@ -491,16 +497,18 @@
     }
     if (effEl) {
       effBarTargets = [];
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < binCount; i++) {
         const h = Math.max(4, (effBuckets[i] / maxBucket) * 80);
         effBarTargets[i] = h;
         const h0 = !animateCharts ? h : chartFromZero ? 0 : prevEffHeights && prevEffHeights[i] != null ? prevEffHeights[i] : 0;
-        const label = `${i * 5}-${i * 5 + 4}`;
-        const cls = i >= 18 ? 'great' : i >= 14 ? 'good' : '';
+        const labelStart = xMin + i * binSize;
+        const labelEnd = labelStart + binSize - 1;
+        const label = `${labelStart}-${labelEnd}`;
+        const cls = i >= binCount - 2 ? 'great' : i >= binCount - 4 ? 'good' : '';
         effEl.innerHTML += `
-        <div class="eff-bar-wrap" title="${label}%: ${effBuckets[i]} runes">
+        <div class="eff-bar-wrap" title="${label}: ${effBuckets[i]} runes">
           <div class="eff-bar ${cls}" style="height:${h0}px"></div>
-          <div class="eff-label">${i * 5}</div>
+          <div class="eff-label">${labelStart}</div>
         </div>`;
       }
     }

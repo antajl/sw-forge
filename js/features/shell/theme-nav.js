@@ -98,8 +98,16 @@
       btn.setAttribute('aria-selected', on ? 'true' : 'false');
       btn.tabIndex = on ? 0 : -1;
     });
-    const panels = Array.from(document.querySelectorAll('#tab-settings .rules-subpanel'));
+
     const motionApi = window.SWRM_MOTION;
+    if (motionApi && typeof motionApi.positionRulesSubtabIndicator === 'function') {
+      const nav = document.getElementById('rules-subtabs');
+      if (nav) {
+        motionApi.positionRulesSubtabIndicator({ nav, activeKey: v, instant: !!instant });
+      }
+    }
+
+    const panels = Array.from(document.querySelectorAll('#tab-settings .rules-subpanel'));
     if (motionApi) {
       motionApi.swapSubpanels(panels, (p) => p.dataset.rulesSubtab === v, !!instant);
     } else {
@@ -119,6 +127,14 @@
     let saved = 'engine';
     try { saved = sessionStorage.getItem(RULES_SUBTAB_KEY) || 'engine'; } catch (e) { /* ignore */ }
     setRulesSubtab(saved, true);
+    
+    // Position indicator on initial load
+    const motionApi = window.SWRM_MOTION;
+    if (motionApi && typeof motionApi.positionRulesSubtabIndicator === 'function') {
+      rafTwice(() => {
+        motionApi.positionRulesSubtabIndicator({ nav, activeKey: saved, instant: true });
+      });
+    }
   }
 
   const CHANGELOG_SUBTAB_KEY = 'swrm_changelog_subtab_v1';
@@ -329,6 +345,14 @@
       else pane.setAttribute('hidden', '');
     });
 
+    const motionApi = window.SWRM_MOTION;
+    if (motionApi && typeof motionApi.positionRunesHubTabIndicator === 'function') {
+      const nav = document.getElementById('runes-hub-tabs');
+      if (nav) {
+        motionApi.positionRunesHubTabIndicator({ nav, activeKey: id, instant: false });
+      }
+    }
+
     if (id === 'settings') {
       const rulesRoot = document.getElementById('tab-settings');
       if (rulesRoot) rulesRoot.scrollTop = 0;
@@ -368,6 +392,17 @@
         showMainTab('runes', { runesSubtab: sub, writeHash: true });
       });
     });
+    
+    // Position indicator on initial load
+    const motionApi = window.SWRM_MOTION;
+    if (motionApi && typeof motionApi.positionRunesHubTabIndicator === 'function') {
+      rafTwice(() => {
+        const activeTab = nav.querySelector('.runes-hub-tab.is-active');
+        if (activeTab) {
+          motionApi.positionRunesHubTabIndicator({ nav, activeKey: activeTab.dataset.runesHub, instant: true });
+        }
+      });
+    }
   }
 
   /**

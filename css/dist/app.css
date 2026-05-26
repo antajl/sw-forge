@@ -4246,6 +4246,110 @@ select:not(#stage-select):focus { border-color: var(--accent); }
   color: var(--text-dim);
 }
 
+.rules-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 720px) {
+  .rules-split {
+    grid-template-columns: 1fr;
+  }
+}
+
+.rules-split__heading {
+  margin: 0 0 10px;
+  font-family: var(--font-head);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.rules-subtabs--stacked {
+  flex-direction: column;
+  flex-wrap: nowrap;
+}
+
+.rules-subtabs--stacked .rules-subtab {
+  flex: 0 0 auto;
+  width: 100%;
+}
+
+.artifact-role-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.artifact-role-card {
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.artifact-role-card__name {
+  margin: 0 0 4px;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.artifact-role-card__meta {
+  margin: 0 0 8px;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+.artifact-role-card__actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.artifact-role-editor {
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border2);
+  background: color-mix(in srgb, var(--bg3) 40%, var(--surface));
+}
+
+.artifact-role-editor__title {
+  margin: 0 0 12px;
+  font-size: 0.95rem;
+}
+
+.artifact-role-editor__foot {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.artifact-rules-checks--tall {
+  max-height: 18rem;
+}
+
+.artifact-sub-id {
+  color: var(--text-dim);
+  font-size: 0.72rem;
+}
+
+.artifact-synergy-bonus {
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.btn-sm {
+  padding: 4px 8px;
+  font-size: 0.78rem;
+}
+
 .rules-subtabs {
   display: flex;
   flex-wrap: wrap;
@@ -7724,8 +7828,10 @@ html:not(.swrm-has-gsap) .table-kind-tabs__indicator {
   --art-c-grade: 5rem;
   --art-c-category: 8rem;
   --art-c-main: 8rem;
-  --art-c-subs: 14rem;
-  --art-c-location: 8rem;
+  --art-c-subs: 12rem;
+  --art-c-role: 7rem;
+  --art-c-verdict: 5.5rem;
+  --art-c-location: 7rem;
   --rel-c-category: 8rem;
   --rel-c-lvl: 3rem;
   --rel-c-durability: 4.5rem;
@@ -7735,6 +7841,28 @@ html:not(.swrm-has-gsap) .table-kind-tabs__indicator {
   --gear-row-bg: var(--bg2);
   --gear-row-bg-even: color-mix(in srgb, var(--surface) 40%, var(--bg2));
   --gear-row-bg-hover: var(--surface);
+}
+
+@media (min-width: 1200px) {
+  #artifact-table thead th,
+  #relic-table thead th {
+    padding: 6px 8px;
+    font-size: 0.7rem;
+  }
+  #artifact-table tbody td,
+  #relic-table tbody td {
+    padding: 5px 8px;
+    font-size: 0.78rem;
+  }
+  #artifact-table .gear-table-subs,
+  #relic-table .gear-table-subs {
+    font-size: 0.68rem;
+  }
+  #artifact-table .verdict-tag,
+  #artifact-table .grade-tag {
+    font-size: 0.66rem;
+    padding: 1px 5px;
+  }
 }
 
 thead tr {
@@ -7826,6 +7954,20 @@ thead tr {
   width: var(--art-c-subs);
   min-width: var(--art-c-subs);
   max-width: var(--art-c-subs);
+}
+#artifact-table col.col-art-role,
+#artifact-table th.col-art-role,
+#artifact-table td.col-art-role {
+  width: var(--art-c-role);
+  min-width: var(--art-c-role);
+  max-width: var(--art-c-role);
+}
+#artifact-table col.col-art-verdict,
+#artifact-table th.col-art-verdict,
+#artifact-table td.col-art-verdict {
+  width: var(--art-c-verdict);
+  min-width: var(--art-c-verdict);
+  max-width: var(--art-c-verdict);
 }
 #artifact-table col.col-location,
 #artifact-table th.col-location,
@@ -7929,7 +8071,7 @@ thead tr {
 #artifact-table td,
 #relic-table td {
   padding: 6px 8px;
-  font-size: 0.79rem;
+  font-size: 0.78rem;
   color: var(--text);
   white-space: nowrap;
   overflow-wrap: anywhere;
@@ -7981,6 +8123,87 @@ thead tr {
 
 .gear-table .col-subs-stack {
   vertical-align: top;
+}
+
+#artifact-table col.col-art-role,
+#artifact-table th.col-art-role,
+#artifact-table td.col-art-role {
+  width: var(--art-c-role);
+}
+
+#artifact-table col.col-art-verdict,
+#artifact-table th.col-art-verdict,
+#artifact-table td.col-art-verdict {
+  width: var(--art-c-verdict);
+}
+
+.artifact-rules-intro {
+  margin-bottom: 0.75rem;
+}
+
+.artifact-rules-intro__lead {
+  margin: 0 0 0.5rem;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.artifact-rules-intro__note {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: var(--text-dim);
+}
+
+.artifact-rules-type-block__hint {
+  margin: 0 0 0.4rem;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+.artifact-rules-subhead {
+  margin: 0.75rem 0 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.artifact-rules-subhead:first-child {
+  margin-top: 0;
+}
+
+.artifact-rules-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+}
+
+.artifact-rules-type-block h4 {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+}
+
+.artifact-rules-checks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-height: 14rem;
+  overflow: auto;
+  padding-right: 0.25rem;
+}
+
+.artifact-rules-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  line-height: 1.3;
+}
+
+.artifact-rules-check input {
+  margin-top: 0.15rem;
+  flex-shrink: 0;
 }
 
 

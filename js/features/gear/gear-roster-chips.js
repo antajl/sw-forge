@@ -21,12 +21,16 @@
     let hero = 0;
     let equipped = 0;
     let locked = 0;
+    let keep = 0;
+    let sell = 0;
     for (let i = 0; i < items.length; i++) {
       const a = items[i];
       if (a.gradeStr === 'Legend') legend += 1;
       else if (a.gradeStr === 'Hero') hero += 1;
       if (a.occupiedId != null && Number(a.occupiedId) !== 0) equipped += 1;
       if (a.locked) locked += 1;
+      if (a.artifactVerdict === 'keep') keep += 1;
+      else if (a.artifactVerdict === 'sell') sell += 1;
     }
     return {
       total: items.length,
@@ -35,6 +39,8 @@
       equipped,
       inventory: items.length - equipped,
       locked,
+      keep,
+      sell,
     };
   }
 
@@ -78,11 +84,13 @@
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const parts = [
       { label: t.artChipTotal || 'Artifacts', value: sum.total },
-      { label: t.artChipLegend || 'Legend', value: sum.legend },
-      { label: t.artChipHero || 'Hero', value: sum.hero },
+      { label: t.artChipKeep || 'Keep', value: sum.keep },
+      { label: t.artChipSell || 'Sell', value: sum.sell },
       { label: t.artChipEquipped || 'Equipped', value: sum.equipped },
       { label: t.artChipInventory || 'Inventory', value: sum.inventory },
     ];
+    if (sum.legend > 0) parts.push({ label: t.artChipLegend || 'Legend', value: sum.legend });
+    if (sum.hero > 0) parts.push({ label: t.artChipHero || 'Hero', value: sum.hero });
     if (sum.locked > 0) {
       parts.push({ label: t.artChipLocked || 'Locked', value: sum.locked });
     }

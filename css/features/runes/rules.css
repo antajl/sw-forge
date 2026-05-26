@@ -51,6 +51,110 @@
   color: var(--text-dim);
 }
 
+.rules-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 720px) {
+  .rules-split {
+    grid-template-columns: 1fr;
+  }
+}
+
+.rules-split__heading {
+  margin: 0 0 10px;
+  font-family: var(--font-head);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.rules-subtabs--stacked {
+  flex-direction: column;
+  flex-wrap: nowrap;
+}
+
+.rules-subtabs--stacked .rules-subtab {
+  flex: 0 0 auto;
+  width: 100%;
+}
+
+.artifact-role-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.artifact-role-card {
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.artifact-role-card__name {
+  margin: 0 0 4px;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.artifact-role-card__meta {
+  margin: 0 0 8px;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+.artifact-role-card__actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.artifact-role-editor {
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border2);
+  background: color-mix(in srgb, var(--bg3) 40%, var(--surface));
+}
+
+.artifact-role-editor__title {
+  margin: 0 0 12px;
+  font-size: 0.95rem;
+}
+
+.artifact-role-editor__foot {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.artifact-rules-checks--tall {
+  max-height: 18rem;
+}
+
+.artifact-sub-id {
+  color: var(--text-dim);
+  font-size: 0.72rem;
+}
+
+.artifact-synergy-bonus {
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.btn-sm {
+  padding: 4px 8px;
+  font-size: 0.78rem;
+}
+
 .rules-subtabs {
   display: flex;
   flex-wrap: wrap;

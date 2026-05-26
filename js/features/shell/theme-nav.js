@@ -84,9 +84,23 @@
   const RULES_SUBTAB_KEY = 'swrm_rules_subtab_v1';
   let rulesSubtabsBound = false;
 
+  const RULES_SUBTAB_IDS = [
+    'engine',
+    'roles',
+    'verdict',
+    'artifact-roles',
+    'artifact-verdict',
+    'artifact-synergies',
+  ];
+
   function normalizeRulesSubtabId(id) {
-    if (id === 'verdict' || id === 'roles' || id === 'engine') return id;
-    return 'engine';
+    if (id === 'artifacts') return 'artifact-roles';
+    return RULES_SUBTAB_IDS.includes(id) ? id : 'engine';
+  }
+
+  function rulesNavForSubtab(subtabId) {
+    const btn = document.getElementById(`rules-subtab-${subtabId}`);
+    return btn && btn.closest('.rules-subtabs');
   }
 
   function setRulesSubtab(id, instant) {
@@ -101,7 +115,7 @@
 
     const motionApi = window.SWRM_MOTION;
     if (motionApi && typeof motionApi.positionRulesSubtabIndicator === 'function') {
-      const nav = document.getElementById('rules-subtabs');
+      const nav = rulesNavForSubtab(v);
       if (nav) {
         motionApi.positionRulesSubtabIndicator({ nav, activeKey: v, instant: !!instant });
       }
@@ -118,21 +132,21 @@
   }
 
   function initRulesSubtabs() {
-    const nav = document.getElementById('rules-subtabs');
-    if (!nav || rulesSubtabsBound) return;
+    const root = document.getElementById('tab-settings');
+    if (!root || rulesSubtabsBound) return;
     rulesSubtabsBound = true;
-    nav.querySelectorAll('.rules-subtab').forEach((btn) => {
+    root.querySelectorAll('.rules-subtab[data-rules-subtab]').forEach((btn) => {
       btn.addEventListener('click', () => setRulesSubtab(btn.dataset.rulesSubtab));
     });
     let saved = 'engine';
-    try { saved = sessionStorage.getItem(RULES_SUBTAB_KEY) || 'engine'; } catch (e) { /* ignore */ }
+    try { saved = normalizeRulesSubtabId(sessionStorage.getItem(RULES_SUBTAB_KEY) || 'engine'); } catch (e) { /* ignore */ }
     setRulesSubtab(saved, true);
-    
-    // Position indicator on initial load
+
     const motionApi = window.SWRM_MOTION;
     if (motionApi && typeof motionApi.positionRulesSubtabIndicator === 'function') {
       rafTwice(() => {
-        motionApi.positionRulesSubtabIndicator({ nav, activeKey: saved, instant: true });
+        const nav = rulesNavForSubtab(saved);
+        if (nav) motionApi.positionRulesSubtabIndicator({ nav, activeKey: saved, instant: true });
       });
     }
   }

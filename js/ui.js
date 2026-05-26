@@ -161,9 +161,23 @@
   const RULES_SUBTAB_KEY = 'swrm_rules_subtab_v1';
   let rulesSubtabsBound = false;
 
+  const RULES_SUBTAB_IDS = [
+    'engine',
+    'roles',
+    'verdict',
+    'artifact-roles',
+    'artifact-verdict',
+    'artifact-synergies',
+  ];
+
   function normalizeRulesSubtabId(id) {
-    if (id === 'verdict' || id === 'roles' || id === 'engine') return id;
-    return 'engine';
+    if (id === 'artifacts') return 'artifact-roles';
+    return RULES_SUBTAB_IDS.includes(id) ? id : 'engine';
+  }
+
+  function rulesNavForSubtab(subtabId) {
+    const btn = document.getElementById(`rules-subtab-${subtabId}`);
+    return btn && btn.closest('.rules-subtabs');
   }
 
   function setRulesSubtab(id, instant) {
@@ -178,7 +192,7 @@
 
     const motionApi = window.SWRM_MOTION;
     if (motionApi && typeof motionApi.positionRulesSubtabIndicator === 'function') {
-      const nav = document.getElementById('rules-subtabs');
+      const nav = rulesNavForSubtab(v);
       if (nav) {
         motionApi.positionRulesSubtabIndicator({ nav, activeKey: v, instant: !!instant });
       }
@@ -195,21 +209,21 @@
   }
 
   function initRulesSubtabs() {
-    const nav = document.getElementById('rules-subtabs');
-    if (!nav || rulesSubtabsBound) return;
+    const root = document.getElementById('tab-settings');
+    if (!root || rulesSubtabsBound) return;
     rulesSubtabsBound = true;
-    nav.querySelectorAll('.rules-subtab').forEach((btn) => {
+    root.querySelectorAll('.rules-subtab[data-rules-subtab]').forEach((btn) => {
       btn.addEventListener('click', () => setRulesSubtab(btn.dataset.rulesSubtab));
     });
     let saved = 'engine';
-    try { saved = sessionStorage.getItem(RULES_SUBTAB_KEY) || 'engine'; } catch (e) { /* ignore */ }
+    try { saved = normalizeRulesSubtabId(sessionStorage.getItem(RULES_SUBTAB_KEY) || 'engine'); } catch (e) { /* ignore */ }
     setRulesSubtab(saved, true);
-    
-    // Position indicator on initial load
+
     const motionApi = window.SWRM_MOTION;
     if (motionApi && typeof motionApi.positionRulesSubtabIndicator === 'function') {
       rafTwice(() => {
-        motionApi.positionRulesSubtabIndicator({ nav, activeKey: saved, instant: true });
+        const nav = rulesNavForSubtab(saved);
+        if (nav) motionApi.positionRulesSubtabIndicator({ nav, activeKey: saved, instant: true });
       });
     }
   }
@@ -896,6 +910,7 @@
       applyFiltersAndSort(getVisibleRunes(), { preserveTableExpansion: runeTableShowAll });
     }
     renderChangelog();
+    if (typeof refreshArtifactRulesPanelTexts === 'function') refreshArtifactRulesPanelTexts();
     renderRoadmap();
     syncMonstersFilterLabels(t);
     if (allUnits.length || processedRunes.length) {
@@ -1174,18 +1189,56 @@
     const roleNavHdr = document.getElementById('lbl-role-nav-header');
     if (roleNavHdr) roleNavHdr.textContent = t.rolesNavTitle || 'Roles';
 
-    const subNav = document.getElementById('rules-subtabs');
-    if (subNav) subNav.setAttribute('aria-label', t.rulesSubtabsAria || 'Rune Rules sections');
+    const runesNav = document.getElementById('rules-subtabs-runes');
+    if (runesNav) runesNav.setAttribute('aria-label', t.rulesRunesSection || 'Runes');
+    const artNav = document.getElementById('rules-subtabs-artifacts');
+    if (artNav) artNav.setAttribute('aria-label', t.rulesArtifactsSection || 'Artifacts');
     const setSubLbl = (id, text) => {
       const el = document.getElementById(id);
       if (el) el.textContent = text || '';
     };
+    setSubLbl('lbl-rules-runes-section', t.rulesRunesSection);
+    setSubLbl('lbl-rules-artifacts-section', t.rulesArtifactsSection);
     setSubLbl('lbl-rules-subtab-engine', t.rulesSubtabEngine);
     setSubLbl('lbl-rules-subtab-engine-hint', t.rulesSubtabEngineDesc);
     setSubLbl('lbl-rules-subtab-verdict', t.rulesSubtabVerdict);
     setSubLbl('lbl-rules-subtab-verdict-hint', t.rulesSubtabVerdictDesc);
     setSubLbl('lbl-rules-subtab-roles', t.rulesSubtabRoles);
     setSubLbl('lbl-rules-subtab-roles-hint', t.rulesSubtabRolesDesc);
+    setSubLbl('lbl-rules-subtab-artifact-roles', t.rulesSubtabArtifactRoles);
+    setSubLbl('lbl-rules-subtab-artifact-roles-hint', t.rulesSubtabArtifactRolesDesc);
+    setSubLbl('lbl-rules-subtab-artifact-verdict', t.rulesSubtabArtifactVerdict);
+    setSubLbl('lbl-rules-subtab-artifact-verdict-hint', t.rulesSubtabArtifactVerdictDesc);
+    setSubLbl('lbl-rules-subtab-artifact-synergies', t.rulesSubtabArtifactSynergies);
+    setSubLbl('lbl-rules-subtab-artifact-synergies-hint', t.rulesSubtabArtifactSynergiesDesc);
+    setSubLbl('lbl-artifact-roles-title', t.artifactRolesTitle);
+    setSubLbl('lbl-artifact-roles-lead', t.artifactRolesLead);
+    setSubLbl('lbl-artifact-verdict-rules-title', t.artifactVerdictRulesTitle);
+    setSubLbl('lbl-artifact-verdict-rules-lead', t.artifactVerdictRulesLead);
+    setSubLbl('lbl-artifact-synergies-title', t.artifactSynergiesTitle);
+    setSubLbl('lbl-artifact-synergies-lead', t.artifactSynergiesLead);
+    const thArtRole = document.getElementById('lbl-th-art-role');
+    if (thArtRole) thArtRole.textContent = t.thArtRole || t.artifactRoleLabel || '';
+    const thArtVerdict = document.getElementById('lbl-th-art-verdict');
+    if (thArtVerdict) thArtVerdict.textContent = t.thArtVerdict || t.artifactFilterVerdict || '';
+    const artFv = document.getElementById('lbl-artifact-filter-verdict');
+    if (artFv) artFv.textContent = t.artifactFilterVerdict || '';
+    const artKeepOpt = document.getElementById('lbl-artifact-filter-keep-opt');
+    if (artKeepOpt) artKeepOpt.textContent = t.artifactVerdictKeep || '';
+    const artSellOpt = document.getElementById('lbl-artifact-filter-sell-opt');
+    if (artSellOpt) artSellOpt.textContent = t.artifactVerdictSell || '';
+    const reappOddLbl = document.getElementById('lbl-reapp-odd-slots');
+    if (reappOddLbl) reappOddLbl.textContent = t.reappOddSlots || '';
+    const reappOddHint = document.getElementById('lbl-reapp-odd-slots-hint');
+    if (reappOddHint) reappOddHint.textContent = t.reappOddSlotsHint || '';
+    const reappOddInnLbl = document.getElementById('lbl-reapp-odd-innate');
+    if (reappOddInnLbl) reappOddInnLbl.textContent = t.reappOddInnate || '';
+    const reappOddInnHint = document.getElementById('lbl-reapp-odd-innate-hint');
+    if (reappOddInnHint) reappOddInnHint.textContent = t.reappOddInnateHint || '';
+    const btnArtCsv = document.getElementById('btn-artifact-export-csv');
+    if (btnArtCsv) btnArtCsv.textContent = t.exportTableCsv || 'Export CSV';
+    const btnRelCsv = document.getElementById('btn-relic-export-csv');
+    if (btnRelCsv) btnRelCsv.textContent = t.exportTableCsv || 'Export CSV';
 
     setSubLbl('policy-simple-lead', t.rulesPolicySimpleLead);
     setSubLbl('policy-expert-lead', t.rulesPolicyExpertLead);
@@ -2887,6 +2940,7 @@
       window.SWRM_ACCOUNT_GEAR = bag;
       allArtifacts = bag.artifacts || [];
       allRelics = bag.relics || [];
+      if (typeof attachArtifactVerdicts === 'function') attachArtifactVerdicts(allArtifacts);
     } else {
       window.SWRM_ACCOUNT_GEAR = null;
       allArtifacts = [];
@@ -7235,12 +7289,16 @@
     let hero = 0;
     let equipped = 0;
     let locked = 0;
+    let keep = 0;
+    let sell = 0;
     for (let i = 0; i < items.length; i++) {
       const a = items[i];
       if (a.gradeStr === 'Legend') legend += 1;
       else if (a.gradeStr === 'Hero') hero += 1;
       if (a.occupiedId != null && Number(a.occupiedId) !== 0) equipped += 1;
       if (a.locked) locked += 1;
+      if (a.artifactVerdict === 'keep') keep += 1;
+      else if (a.artifactVerdict === 'sell') sell += 1;
     }
     return {
       total: items.length,
@@ -7249,6 +7307,8 @@
       equipped,
       inventory: items.length - equipped,
       locked,
+      keep,
+      sell,
     };
   }
 
@@ -7292,11 +7352,13 @@
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const parts = [
       { label: t.artChipTotal || 'Artifacts', value: sum.total },
-      { label: t.artChipLegend || 'Legend', value: sum.legend },
-      { label: t.artChipHero || 'Hero', value: sum.hero },
+      { label: t.artChipKeep || 'Keep', value: sum.keep },
+      { label: t.artChipSell || 'Sell', value: sum.sell },
       { label: t.artChipEquipped || 'Equipped', value: sum.equipped },
       { label: t.artChipInventory || 'Inventory', value: sum.inventory },
     ];
+    if (sum.legend > 0) parts.push({ label: t.artChipLegend || 'Legend', value: sum.legend });
+    if (sum.hero > 0) parts.push({ label: t.artChipHero || 'Hero', value: sum.hero });
     if (sum.locked > 0) {
       parts.push({ label: t.artChipLocked || 'Locked', value: sum.locked });
     }
@@ -7325,187 +7387,281 @@
     renderGearSummaryChips('relic-table-roster-chips', parts);
   }
 
-  let filteredArtifacts = [];
-  let artifactFilterGrade = '';
-  let artifactFilterCategory = '';
-  let artifactFilterLocation = '';
 
-  function artifactPassesFilters(a) {
-    if (artifactFilterGrade && String(a.gradeStr || '') !== artifactFilterGrade) return false;
-    if (artifactFilterCategory && String(a.category || '') !== artifactFilterCategory) return false;
-    if (artifactFilterLocation === 'inventory') {
-      if (a.occupiedId != null && Number(a.occupiedId) !== 0) return false;
-    } else if (artifactFilterLocation === 'equipped') {
-      if (a.occupiedId == null || Number(a.occupiedId) === 0) return false;
-    }
-    return true;
-  }
-
-  function applyArtifactTableSearch() {
-    const artQ = (document.getElementById('search-box-artifacts')?.value || '')
-      .trim()
-      .toLowerCase();
-    const artSrc = (allArtifacts || []).filter(artifactPassesFilters);
-    const rawQ = document.getElementById('search-box-artifacts')?.value || '';
-    filteredArtifacts = !artQ
-      ? artSrc.slice()
-      : artSrc.filter((a) => gearMatchesSearchQuery(a, rawQ));
-  }
-
-  function artifactToolbarHasActiveFilters() {
-    const q = (document.getElementById('search-box-artifacts')?.value || '').trim();
-    if (q) return true;
-    return countActiveArtifactFilters() > 0;
-  }
-
-  function updateArtifactResetButton() {
-    if (typeof updateToolbarResetButton === 'function') {
-      updateToolbarResetButton('btn-artifact-reset-filters', artifactToolbarHasActiveFilters());
-    }
-  }
-
-  function countActiveArtifactFilters() {
-    let n = 0;
-    if (artifactFilterGrade) n++;
-    if (artifactFilterCategory) n++;
-    if (artifactFilterLocation) n++;
-    return n;
-  }
-
-  function updateArtifactFilterBadge() {
-    const badge = document.getElementById('artifact-filters-active-count');
-    if (!badge) return;
-    const n = countActiveArtifactFilters();
-    if (n > 0) {
-      badge.textContent = String(n);
-      badge.hidden = false;
-    } else {
-      badge.hidden = true;
-    }
-    updateArtifactResetButton();
-  }
-
-  function resetArtifactTableFilters() {
-    artifactFilterGrade = '';
-    artifactFilterCategory = '';
-    artifactFilterLocation = '';
-    const sb = document.getElementById('search-box-artifacts');
-    if (sb) sb.value = '';
-    const g = document.getElementById('filter-artifact-grade');
-    const c = document.getElementById('filter-artifact-category');
-    const l = document.getElementById('filter-artifact-location');
-    if (g) g.value = '';
-    if (c) c.value = '';
-    if (l) l.value = '';
-    updateArtifactFilterBadge();
-    updateArtifactResetButton();
-    renderGearTables();
-  }
-
-  function artifactSubStack(a, fmtSub) {
-    const subs = (a.secs || []).slice(0, 4);
-    if (!subs.length) {
-      return '<span class="gear-table-subs__empty">—</span>';
-    }
-    return subs
-      .map((s) => {
-        const text = s && fmtSub ? fmtSub(s) : '—';
-        return `<span class="gear-table-subs__line">${escapeHtml(text)}</span>`;
-      })
-      .join('');
-  }
-
-  function renderArtifactTableBody() {
-    const tbody = document.getElementById('artifact-tbody');
-    if (!tbody) return;
-    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-    const fmt = window.SWRM && window.SWRM.formatGearEffectLine;
-    const fmtSub = window.SWRM && window.SWRM.formatArtifactSubLine;
-    if (!filteredArtifacts.length) {
-      tbody.innerHTML = `<tr><td colspan="5" class="table-empty">${escapeHtml(t.tableGearEmpty || 'No artifacts')}</td></tr>`;
-      if (typeof renderArtifactTableRosterChips === 'function') renderArtifactTableRosterChips();
+  function attachArtifactVerdicts(artifacts) {
+    if (!Array.isArray(artifacts) || !window.SWRM || typeof window.SWRM.getArtifactVerdict !== 'function') {
       return;
     }
-    if (typeof bindArtifactTableVirtualScroll === 'function') bindArtifactTableVirtualScroll();
-    if (typeof paintArtifactTableVirtualBody === 'function') {
-      artifactVirtualLastKey = '';
-      paintArtifactTableVirtualBody(filteredArtifacts);
-    } else {
-      const rows = filteredArtifacts
-        .slice()
-        .sort(
-          (a, b) =>
-            String(a.category).localeCompare(String(b.category)) ||
-            String(a.gradeStr).localeCompare(String(b.gradeStr)),
-        )
-        .map((a, i) => {
-          const main = a.pri && fmt ? fmt(a.pri, { kind: 'artifact' }) : '—';
-          const catFn = window.SWRM && window.SWRM.gearCategoryCellHtml;
-          const iconUrl =
-            window.SWRM && typeof window.SWRM.artifactIconUrl === 'function'
-              ? window.SWRM.artifactIconUrl(a)
-              : '';
-          const catCell =
-            typeof catFn === 'function'
-              ? catFn(iconUrl, a.category || '—')
-              : escapeHtml(a.category || '—');
-          const gradeFn = window.SWRM && typeof window.SWRM.gearGradeTagHtml === 'function'
-            ? window.SWRM.gearGradeTagHtml
-            : null;
-          const gradeCell = gradeFn
-            ? gradeFn(a.gradeStr)
-            : escapeHtml(a.gradeStr || '—');
-          const evenClass = i % 2 === 0 ? 'gear-table__data-row--even' : '';
-          return `<tr class="gear-table__data-row ${evenClass}">
-            <td class="col-grade">${gradeCell}</td>
-            <td class="col-category">${catCell}</td>
-            <td class="col-main">${escapeHtml(main)}</td>
-            <td class="col-subs-stack"><div class="gear-table-subs">${artifactSubStack(a, fmtSub)}</div></td>
-            <td class="col-location">${escapeHtml(gearLocationLabel(a.occupiedId, t))}</td>
-          </tr>`;
-        });
-      tbody.innerHTML = rows.join('');
+    const settings = window.SWRM.settings;
+    for (let i = 0; i < artifacts.length; i++) {
+      const a = artifacts[i];
+      if (!a) continue;
+      const v = window.SWRM.getArtifactVerdict(a, settings);
+      a.artifactVerdict = v ? v.verdict : null;
+      a.artifactRole = v ? v.role : null;
+      a.artifactScore = v ? v.score : null;
+      a.artifactSynergies = v && v.synergies ? v.synergies.slice() : [];
     }
-    if (typeof renderArtifactTableRosterChips === 'function') renderArtifactTableRosterChips();
   }
 
-  function bindArtifactTableFilters() {
-    if (bindArtifactTableFilters._done) return;
-    bindArtifactTableFilters._done = true;
-
-    const onArtifactFilterChange = () => {
-      artifactFilterGrade = document.getElementById('filter-artifact-grade')?.value || '';
-      artifactFilterCategory = document.getElementById('filter-artifact-category')?.value || '';
-      artifactFilterLocation = document.getElementById('filter-artifact-location')?.value || '';
-      updateArtifactFilterBadge();
-      renderGearTables();
-    };
-
-    if (typeof bindFiltersPopover === 'function') {
-      bindFiltersPopover('artifact-more-filters-btn', 'artifact-filters-popover', {
-        onClose: onArtifactFilterChange,
-      });
+  function refreshArtifactVerdictsAndTable() {
+    if (typeof attachArtifactVerdicts === 'function' && Array.isArray(allArtifacts)) {
+      attachArtifactVerdicts(allArtifacts);
     }
-
-    document.getElementById('btn-artifact-reset-filters')?.addEventListener('click', resetArtifactTableFilters);
-    document.getElementById('artifact-filters-drawer-reset')?.addEventListener('click', resetArtifactTableFilters);
-
-    document.getElementById('filter-artifact-grade')?.addEventListener('change', onArtifactFilterChange);
-    document.getElementById('filter-artifact-category')?.addEventListener('change', onArtifactFilterChange);
-    document.getElementById('filter-artifact-location')?.addEventListener('change', onArtifactFilterChange);
-
-    let artDebounce = null;
-    document.getElementById('search-box-artifacts')?.addEventListener('input', () => {
-      clearTimeout(artDebounce);
-      artDebounce = setTimeout(() => {
-        updateArtifactResetButton();
-        renderGearTables();
-      }, 280);
-    });
-    updateArtifactResetButton();
+    if (typeof renderGearTables === 'function') renderGearTables();
   }
 
-  const ARTIFACT_TABLE_VIRTUAL_COLS = 5;
+  let filteredArtifacts = [];
+  let artifactFilterGrade = '';
+  let artifactFilterCategory = '';
+  let artifactFilterLocation = '';
+  let artifactFilterVerdict = '';
+
+  function artifactPassesFilters(a) {
+    if (artifactFilterVerdict && a.artifactVerdict !== artifactFilterVerdict) return false;
+    if (artifactFilterGrade && String(a.gradeStr || '') !== artifactFilterGrade) return false;
+    if (artifactFilterCategory && String(a.category || '') !== artifactFilterCategory) return false;
+    if (artifactFilterLocation === 'inventory') {
+      if (a.occupiedId != null && Number(a.occupiedId) !== 0) return false;
+    } else if (artifactFilterLocation === 'equipped') {
+      if (a.occupiedId == null || Number(a.occupiedId) === 0) return false;
+    }
+    return true;
+  }
+
+  function exportArtifactsCsv() {
+    const rows = filteredArtifacts || [];
+    if (!rows.length) return;
+    const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const fmt = window.SWRM && window.SWRM.formatGearEffectLine;
+    const fmtSub = window.SWRM && window.SWRM.formatArtifactSubLine;
+    const headers = [
+      tloc.thArtGrade || 'Grade',
+      tloc.thArtCategory || 'Category',
+      tloc.thArtMain || 'Main',
+      tloc.thArtSubs || 'Subs',
+      tloc.thArtRole || 'Role',
+      tloc.thArtVerdict || 'Verdict',
+      tloc.thArtLocation || 'Location',
+    ];
+    const cellPart = (s) => {
+      const raw = String(s ?? '');
+      if (/[,"\n\r]/.test(raw)) return `"${raw.replace(/"/g, '""')}"`;
+      return raw;
+    };
+    const lines = [headers.map(cellPart).join(',')];
+    rows.forEach((a) => {
+      const main = a.pri && fmt ? fmt(a.pri, { kind: 'artifact' }) : '';
+      const subs = (a.secs || [])
+        .map((s) => (fmtSub ? fmtSub(s) : ''))
+        .filter(Boolean)
+        .join(' | ');
+      lines.push(
+        [
+          a.gradeStr || '',
+          a.category || '',
+          main,
+          subs,
+          a.artifactRole || '',
+          a.artifactVerdict || '',
+          gearLocationLabel(a.occupiedId, tloc),
+        ]
+          .map(cellPart)
+          .join(','),
+      );
+    });
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'sw-forge-artifacts.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function applyArtifactTableSearch() {
+    const artQ = (document.getElementById('search-box-artifacts')?.value || '')
+      .trim()
+      .toLowerCase();
+    const artSrc = (allArtifacts || []).filter(artifactPassesFilters);
+    const rawQ = document.getElementById('search-box-artifacts')?.value || '';
+    filteredArtifacts = !artQ
+      ? artSrc.slice()
+      : artSrc.filter((a) => gearMatchesSearchQuery(a, rawQ));
+  }
+
+  function artifactToolbarHasActiveFilters() {
+    const q = (document.getElementById('search-box-artifacts')?.value || '').trim();
+    if (q) return true;
+    return countActiveArtifactFilters() > 0;
+  }
+
+  function updateArtifactResetButton() {
+    if (typeof updateToolbarResetButton === 'function') {
+      updateToolbarResetButton('btn-artifact-reset-filters', artifactToolbarHasActiveFilters());
+    }
+  }
+
+  function countActiveArtifactFilters() {
+    let n = 0;
+    if (artifactFilterVerdict) n++;
+    if (artifactFilterGrade) n++;
+    if (artifactFilterCategory) n++;
+    if (artifactFilterLocation) n++;
+    return n;
+  }
+
+  function updateArtifactFilterBadge() {
+    const badge = document.getElementById('artifact-filters-active-count');
+    if (!badge) return;
+    const n = countActiveArtifactFilters();
+    if (n > 0) {
+      badge.textContent = String(n);
+      badge.hidden = false;
+    } else {
+      badge.hidden = true;
+    }
+    updateArtifactResetButton();
+  }
+
+  function resetArtifactTableFilters() {
+    artifactFilterGrade = '';
+    artifactFilterCategory = '';
+    artifactFilterLocation = '';
+    artifactFilterVerdict = '';
+    const sb = document.getElementById('search-box-artifacts');
+    if (sb) sb.value = '';
+    const g = document.getElementById('filter-artifact-grade');
+    const c = document.getElementById('filter-artifact-category');
+    const l = document.getElementById('filter-artifact-location');
+    const v = document.getElementById('filter-artifact-verdict');
+    if (g) g.value = '';
+    if (c) c.value = '';
+    if (l) l.value = '';
+    if (v) v.value = '';
+    updateArtifactFilterBadge();
+    updateArtifactResetButton();
+    renderGearTables();
+  }
+
+  function artifactSubStack(a, fmtSub) {
+    const subs = (a.secs || []).slice(0, 4);
+    if (!subs.length) {
+      return '<span class="gear-table-subs__empty">—</span>';
+    }
+    return subs
+      .map((s) => {
+        const text = s && fmtSub ? fmtSub(s) : '—';
+        return `<span class="gear-table-subs__line">${escapeHtml(text)}</span>`;
+      })
+      .join('');
+  }
+
+  function renderArtifactTableBody() {
+    const tbody = document.getElementById('artifact-tbody');
+    if (!tbody) return;
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const fmt = window.SWRM && window.SWRM.formatGearEffectLine;
+    const fmtSub = window.SWRM && window.SWRM.formatArtifactSubLine;
+    if (!filteredArtifacts.length) {
+      tbody.innerHTML = `<tr><td colspan="7" class="table-empty">${escapeHtml(t.tableGearEmpty || 'No artifacts')}</td></tr>`;
+      if (typeof renderArtifactTableRosterChips === 'function') renderArtifactTableRosterChips();
+      return;
+    }
+    if (typeof bindArtifactTableVirtualScroll === 'function') bindArtifactTableVirtualScroll();
+    if (typeof paintArtifactTableVirtualBody === 'function') {
+      artifactVirtualLastKey = '';
+      paintArtifactTableVirtualBody(filteredArtifacts);
+    } else {
+      const rows = filteredArtifacts
+        .slice()
+        .sort(
+          (a, b) =>
+            String(a.category).localeCompare(String(b.category)) ||
+            String(a.gradeStr).localeCompare(String(b.gradeStr)),
+        )
+        .map((a, i) => {
+          const main = a.pri && fmt ? fmt(a.pri, { kind: 'artifact' }) : '—';
+          const catFn = window.SWRM && window.SWRM.gearCategoryCellHtml;
+          const iconUrl =
+            window.SWRM && typeof window.SWRM.artifactIconUrl === 'function'
+              ? window.SWRM.artifactIconUrl(a)
+              : '';
+          const catCell =
+            typeof catFn === 'function'
+              ? catFn(iconUrl, a.category || '—')
+              : escapeHtml(a.category || '—');
+          const gradeFn = window.SWRM && typeof window.SWRM.gearGradeTagHtml === 'function'
+            ? window.SWRM.gearGradeTagHtml
+            : null;
+          const gradeCell = gradeFn
+            ? gradeFn(a.gradeStr)
+            : escapeHtml(a.gradeStr || '—');
+          const verdict = a.artifactVerdict || null;
+          const role = a.artifactRole || null;
+          const verdictClass =
+            verdict === 'keep' ? 'verdict-tag keep' : verdict === 'sell' ? 'verdict-tag sell' : '';
+          const verdictLabel = verdict
+            ? verdict === 'keep'
+              ? t.artifactVerdictKeep || 'Keep'
+              : t.artifactVerdictSell || 'Sell'
+            : '—';
+          const evenClass = i % 2 === 0 ? 'gear-table__data-row--even' : '';
+          return `<tr class="gear-table__data-row ${evenClass}">
+            <td class="col-grade">${gradeCell}</td>
+            <td class="col-category">${catCell}</td>
+            <td class="col-main">${escapeHtml(main)}</td>
+            <td class="col-subs-stack"><div class="gear-table-subs">${artifactSubStack(a, fmtSub)}</div></td>
+            <td class="col-art-role">${escapeHtml(role || '—')}</td>
+            <td class="col-art-verdict">${verdict ? `<span class="${escapeHtml(verdictClass)}">${escapeHtml(verdictLabel)}</span>` : '—'}</td>
+            <td class="col-location">${escapeHtml(gearLocationLabel(a.occupiedId, t))}</td>
+          </tr>`;
+        });
+      tbody.innerHTML = rows.join('');
+    }
+    if (typeof renderArtifactTableRosterChips === 'function') renderArtifactTableRosterChips();
+  }
+
+  function bindArtifactTableFilters() {
+    if (bindArtifactTableFilters._done) return;
+    bindArtifactTableFilters._done = true;
+
+    const onArtifactFilterChange = () => {
+      artifactFilterGrade = document.getElementById('filter-artifact-grade')?.value || '';
+      artifactFilterCategory = document.getElementById('filter-artifact-category')?.value || '';
+      artifactFilterLocation = document.getElementById('filter-artifact-location')?.value || '';
+      artifactFilterVerdict = document.getElementById('filter-artifact-verdict')?.value || '';
+      updateArtifactFilterBadge();
+      renderGearTables();
+    };
+
+    if (typeof bindFiltersPopover === 'function') {
+      bindFiltersPopover('artifact-more-filters-btn', 'artifact-filters-popover', {
+        onClose: onArtifactFilterChange,
+      });
+    }
+
+    document.getElementById('btn-artifact-reset-filters')?.addEventListener('click', resetArtifactTableFilters);
+    document.getElementById('artifact-filters-drawer-reset')?.addEventListener('click', resetArtifactTableFilters);
+    document.getElementById('btn-artifact-export-csv')?.addEventListener('click', exportArtifactsCsv);
+
+    document.getElementById('filter-artifact-grade')?.addEventListener('change', onArtifactFilterChange);
+    document.getElementById('filter-artifact-category')?.addEventListener('change', onArtifactFilterChange);
+    document.getElementById('filter-artifact-location')?.addEventListener('change', onArtifactFilterChange);
+    document.getElementById('filter-artifact-verdict')?.addEventListener('change', onArtifactFilterChange);
+
+    let artDebounce = null;
+    document.getElementById('search-box-artifacts')?.addEventListener('input', () => {
+      clearTimeout(artDebounce);
+      artDebounce = setTimeout(() => {
+        updateArtifactResetButton();
+        renderGearTables();
+      }, 280);
+    });
+    updateArtifactResetButton();
+  }
+
+  const ARTIFACT_TABLE_VIRTUAL_COLS = 7;
   const ARTIFACT_TABLE_VIRTUAL_OVERSCAN = 8;
   const ARTIFACT_TABLE_VIRTUAL_ROW_FALLBACK = 44;
   const ARTIFACT_TABLE_VIRTUAL_SPACER_COL_CLASSES = [
@@ -7513,6 +7669,8 @@
     'col-category',
     'col-main',
     'col-subs-stack',
+    'col-art-role',
+    'col-art-verdict',
     'col-location',
   ];
 
@@ -7617,12 +7775,23 @@
         const gradeCell = gradeFn
           ? gradeFn(a.gradeStr)
           : escapeHtml(a.gradeStr || '—');
+        const verdict = a.artifactVerdict || null;
+        const role = a.artifactRole || null;
+        const verdictClass =
+          verdict === 'keep' ? 'verdict-tag keep' : verdict === 'sell' ? 'verdict-tag sell' : '';
+        const verdictLabel = verdict
+          ? verdict === 'keep'
+            ? t.artifactVerdictKeep || 'Keep'
+            : t.artifactVerdictSell || 'Sell'
+          : '—';
         const evenClass = (start + i) % 2 === 0 ? 'gear-table__data-row--even' : '';
         return `<tr class="gear-table__data-row ${evenClass}">
           <td class="col-grade">${gradeCell}</td>
           <td class="col-category">${catCell}</td>
           <td class="col-main">${escapeHtml(main)}</td>
           <td class="col-subs-stack"><div class="gear-table-subs">${artifactSubStack(a, fmtSub)}</div></td>
+          <td class="col-art-role">${escapeHtml(role || '—')}</td>
+          <td class="col-art-verdict"><span class="${escapeHtml(verdictClass)}">${escapeHtml(verdictLabel)}</span></td>
           <td class="col-location">${escapeHtml(gearLocationLabel(a.occupiedId, t))}</td>
         </tr>`;
       }).join('') +
@@ -7712,6 +7881,59 @@
     updateRelicResetButton();
   }
 
+  function exportRelicsCsv() {
+    const rows = filteredRelics || [];
+    if (!rows.length) return;
+    const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const fmt = window.SWRM && window.SWRM.formatGearEffectLine;
+    const fmtSec = window.SWRM && window.SWRM.formatRelicSecLine;
+    const fmtDur =
+      window.SWRM && typeof window.SWRM.formatRelicDurability === 'function'
+        ? window.SWRM.formatRelicDurability
+        : null;
+    const fmtWear =
+      window.SWRM && typeof window.SWRM.formatRelicWearCount === 'function'
+        ? window.SWRM.formatRelicWearCount
+        : null;
+    const headers = [
+      tloc.thRelCategory || 'Category',
+      tloc.thRelGrade || 'Grade',
+      'Level',
+      tloc.thRelDurability || 'Durability',
+      tloc.thRelLocation || 'Main',
+      'Secondary',
+      tloc.thRelWearers || 'Equipped',
+    ];
+    const cellPart = (s) => {
+      const raw = String(s ?? '');
+      if (/[,"\n\r]/.test(raw)) return `"${raw.replace(/"/g, '""')}"`;
+      return raw;
+    };
+    const lines = [headers.map(cellPart).join(',')];
+    rows.forEach((r) => {
+      lines.push(
+        [
+          r.category || '',
+          r.gradeStr || '',
+          r.level || 0,
+          fmtDur ? fmtDur(r) : '',
+          r.pri && fmt ? fmt(r.pri, { kind: 'relic' }) : '',
+          fmtSec ? fmtSec(r) : '',
+          fmtWear ? fmtWear(r) : '',
+        ]
+          .map(cellPart)
+          .join(','),
+      );
+    });
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'sw-forge-relics.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   function resetRelicTableFilters() {
     relicFilterGrade = '';
     relicFilterCategory = '';
@@ -7798,6 +8020,7 @@
 
     document.getElementById('btn-relic-reset-filters')?.addEventListener('click', resetRelicTableFilters);
     document.getElementById('relic-filters-drawer-reset')?.addEventListener('click', resetRelicTableFilters);
+    document.getElementById('btn-relic-export-csv')?.addEventListener('click', exportRelicsCsv);
 
     document.getElementById('filter-relic-grade')?.addEventListener('change', onRelicFilterChange);
     document.getElementById('filter-relic-category')?.addEventListener('change', onRelicFilterChange);
@@ -8876,6 +9099,7 @@
 
   buildStatConstantsTable();
   refreshEnginePreviews();
+  if (typeof initArtifactRulesPanel === 'function') initArtifactRulesPanel();
 
   refreshRoleFilterOptions();
   renderRoleSettings();
@@ -8937,6 +9161,10 @@
   document.getElementById('reapp-main4').value = (reapp.mainBySlot?.[4] || []).join(', ');
   document.getElementById('reapp-main6').value = (reapp.mainBySlot?.[6] || []).join(', ');
   document.getElementById('reapp-max-eff').value = reapp.maxEff ?? 65;
+  const oddSlotsEl = document.getElementById('reapp-odd-slots');
+  if (oddSlotsEl) oddSlotsEl.checked = reapp.oddSlots !== false;
+  const oddInnateEl = document.getElementById('reapp-odd-innate');
+  if (oddInnateEl) oddInnateEl.value = (reapp.oddSlotInnate || []).join(', ');
   document.getElementById('grind-gap').value = Number.isFinite(Number(grind.gap)) ? Number(grind.gap) : 1;
 
   hydrateGemMetaFields(window.SWRM.settings.gemMeta);
@@ -8975,7 +9203,9 @@
         2: parseList(document.getElementById('reapp-main2').value),
         4: parseList(document.getElementById('reapp-main4').value),
         6: parseList(document.getElementById('reapp-main6').value),
-      }
+      },
+      oddSlots: document.getElementById('reapp-odd-slots')?.checked !== false,
+      oddSlotInnate: parseList(document.getElementById('reapp-odd-innate')?.value || ''),
     };
     s.grind = {
       gap: Number.isFinite(Number(document.getElementById('grind-gap').value))
@@ -9422,6 +9652,319 @@
   initPolicyControls();
   initPolicySimpleExpertUx();
   initThresholdPreviewsToggle();
+
+
+  let artifactRoleEditId = null;
+
+  function artifactSubLabel(typeId) {
+    const fmt = window.SWRM && window.SWRM.formatArtifactSubLine;
+    if (fmt) {
+      const line = fmt({ type: typeId, value: 0 });
+      return line.replace(/\+0%?$/, '').replace(/\s+0%$/, '').trim() || `t${typeId}`;
+    }
+    return `t${typeId}`;
+  }
+
+  function allArtifactSubIds() {
+    const fmt = window.SWRM && window.SWRM.ARTIFACT_SUB_FORMAT || {};
+    return Object.keys(fmt)
+      .map(Number)
+      .filter((n) => Number.isFinite(n))
+      .sort((a, b) => a - b);
+  }
+
+  function currentArtifactRules() {
+    return window.SWRM.mergeArtifactRules(window.SWRM.settings.artifactRules);
+  }
+
+  function persistArtifactRules(rules) {
+    const merged = window.SWRM.mergeArtifactRules(rules);
+    window.SWRM.settings.artifactRules = merged;
+    if (typeof window.SWRM.saveArtifactRulesStorage === 'function') {
+      window.SWRM.saveArtifactRulesStorage(merged);
+    }
+    const persist = JSON.parse(JSON.stringify(window.SWRM.settings));
+    delete persist.hrThresholds;
+    delete persist.duoThresholds;
+    delete persist.godConstants;
+    delete persist.hrCoeff;
+    if (typeof saveSettings === 'function') saveSettings(persist);
+    if (typeof refreshArtifactVerdictsAndTable === 'function') refreshArtifactVerdictsAndTable();
+  }
+
+  function onArtifactRulesChanged() {
+    persistArtifactRules(collectArtifactRulesFromOpenPanels());
+  }
+
+  function collectArtifactRulesFromOpenPanels() {
+    const base = currentArtifactRules();
+    const verdictHost = document.getElementById('artifact-verdict-rules-form');
+    if (verdictHost) {
+      base.minUsefulLegend =
+        parseInt(document.getElementById('artifact-min-useful-legend')?.value, 10) ||
+        base.minUsefulLegend;
+      base.minUsefulHero =
+        parseInt(document.getElementById('artifact-min-useful-hero')?.value, 10) ||
+        base.minUsefulHero;
+      const synEn = document.getElementById('artifact-synergies-enabled');
+      base.synergiesEnabled = synEn ? synEn.checked : base.synergiesEnabled !== false;
+    }
+    const synHost = document.getElementById('artifact-synergies-form');
+    if (synHost) {
+      base.synergyPairs.forEach((pair, i) => {
+        const cb = synHost.querySelector(`input[data-art-synergy-idx="${i}"]`);
+        if (cb) pair.enabled = cb.checked;
+      });
+      Object.keys(base.mainSubSynergy).forEach((mainKey) => {
+        const cb = synHost.querySelector(`input[data-art-main-synergy="${mainKey}"]`);
+        if (cb) base.mainSubSynergy[mainKey].enabled = cb.checked;
+      });
+    }
+    return base;
+  }
+
+  function slugRoleId(name) {
+    return String(name || 'role')
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '') || `role-${Date.now()}`;
+  }
+
+  function collectRoleFromEditor() {
+    const name = document.getElementById('artifact-role-edit-name')?.value.trim();
+    if (!name) return null;
+    const mainSel = document.getElementById('artifact-role-edit-main')?.value || '';
+    const mainStat = mainSel === 'ATK' || mainSel === 'DEF' || mainSel === 'HP' ? mainSel : null;
+    const usefulSubs = [];
+    document.querySelectorAll('#artifact-role-subs-list input[data-art-role-sub]:checked').forEach((inp) => {
+      const id = Number(inp.dataset.artRoleSub);
+      if (Number.isFinite(id)) usefulSubs.push(id);
+    });
+    return {
+      id: artifactRoleEditId || slugRoleId(name),
+      name,
+      mainStat,
+      usefulSubs,
+    };
+  }
+
+  function saveRoleFromEditor() {
+    const role = collectRoleFromEditor();
+    if (!role) return;
+    const rules = currentArtifactRules();
+    const roles = rules.artifactRoles?.roles ? rules.artifactRoles.roles.slice() : [];
+    const idx = roles.findIndex((r) => r.id === role.id || r.name === role.name);
+    if (idx >= 0) roles[idx] = role;
+    else roles.push(role);
+    rules.artifactRoles = { roles };
+    artifactRoleEditId = role.id;
+    persistArtifactRules(rules);
+    renderArtifactRolesPanel(true);
+  }
+
+  function deleteArtifactRole(roleId) {
+    const rules = currentArtifactRules();
+    const roles = (rules.artifactRoles?.roles || []).filter((r) => r.id !== roleId);
+    if (roles.length < 1) return;
+    rules.artifactRoles = { roles };
+    if (artifactRoleEditId === roleId) artifactRoleEditId = null;
+    persistArtifactRules(rules);
+    renderArtifactRolesPanel(true);
+  }
+
+  function openRoleEditor(roleDef) {
+    artifactRoleEditId = roleDef ? roleDef.id : null;
+    const editor = document.getElementById('artifact-role-editor');
+    if (!editor) return;
+    editor.hidden = false;
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const title = document.getElementById('artifact-role-editor-title');
+    if (title) {
+      title.textContent = roleDef
+        ? t.artifactRolesEdit || 'Edit role'
+        : t.artifactRolesAdd || 'Add role';
+    }
+    document.getElementById('artifact-role-edit-name').value = roleDef ? roleDef.name : '';
+    document.getElementById('artifact-role-edit-main').value = roleDef?.mainStat || '';
+    const enabled = new Set((roleDef?.usefulSubs || []).map(Number));
+    document.querySelectorAll('#artifact-role-subs-list input[data-art-role-sub]').forEach((inp) => {
+      const id = Number(inp.dataset.artRoleSub);
+      inp.checked = enabled.has(id);
+    });
+    editor.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+
+  function renderArtifactRolesPanel(force) {
+    const host = document.getElementById('artifact-roles-form');
+    if (!host) return;
+    if (!force && host.dataset.rendered === '1') return;
+    const rules = currentArtifactRules();
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const roles = rules.artifactRoles?.roles || [];
+
+    let cards = '';
+    roles.forEach((r) => {
+      const mainLabel = r.mainStat || t.artifactRoleMainStatNone || 'Any main';
+      cards += `<article class="artifact-role-card" data-role-id="${escapeHtml(r.id)}">
+        <h4 class="artifact-role-card__name">${escapeHtml(r.name)}</h4>
+        <p class="artifact-role-card__meta">${escapeHtml(mainLabel)} · ${(r.usefulSubs || []).length} ${escapeHtml(t.artifactRoleUsefulSubs || 'useful subs')}</p>
+        <div class="artifact-role-card__actions">
+          <button type="button" class="btn-ghost btn-sm" data-art-role-edit="${escapeHtml(r.id)}">${escapeHtml(t.artifactRolesEdit || 'Edit')}</button>
+          <button type="button" class="btn-ghost btn-sm artifact-role-card__delete" data-art-role-delete="${escapeHtml(r.id)}" ${roles.length <= 1 ? 'disabled' : ''}>×</button>
+        </div>
+      </article>`;
+    });
+
+    const subChecks = allArtifactSubIds()
+      .map((subId) => {
+        return `<label class="artifact-rules-check"><input type="checkbox" data-art-role-sub="${subId}" /><span>${escapeHtml(artifactSubLabel(subId))} <span class="artifact-sub-id">(${subId})</span></span></label>`;
+      })
+      .join('');
+
+    host.innerHTML = `
+      <p class="rules-card__desc">${escapeHtml(t.artifactRolesPanelDesc || '')}</p>
+      <div class="artifact-role-cards">${cards}</div>
+      <button type="button" class="btn-ghost" id="btn-artifact-role-add">+ ${escapeHtml(t.artifactRolesAdd || 'Add role')}</button>
+      <div id="artifact-role-editor" class="artifact-role-editor" hidden>
+        <h4 id="artifact-role-editor-title" class="artifact-role-editor__title"></h4>
+        <div class="settings-row">
+          <label for="artifact-role-edit-name">${escapeHtml(t.artifactRoleName || 'Role name')}</label>
+          <input type="text" id="artifact-role-edit-name" />
+        </div>
+        <div class="settings-row">
+          <label for="artifact-role-edit-main">${escapeHtml(t.artifactRoleMainStat || 'Expected main stat')}</label>
+          <select id="artifact-role-edit-main">
+            <option value="">${escapeHtml(t.artifactRoleMainStatNone || 'Any / no requirement')}</option>
+            <option value="ATK">ATK</option>
+            <option value="DEF">DEF</option>
+            <option value="HP">HP</option>
+          </select>
+        </div>
+        <p class="artifact-rules-subhead">${escapeHtml(t.artifactRoleSubList || 'Useful sub-stats')}</p>
+        <div id="artifact-role-subs-list" class="artifact-rules-checks artifact-rules-checks--tall">${subChecks}</div>
+        <div class="artifact-role-editor__foot">
+          <button type="button" class="btn-primary" id="btn-artifact-role-save">Save role</button>
+          <button type="button" class="btn-ghost" id="btn-artifact-role-cancel">Close</button>
+        </div>
+      </div>`;
+
+    host.dataset.rendered = '1';
+
+    host.querySelectorAll('[data-art-role-edit]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-art-role-edit');
+        const role = roles.find((r) => r.id === id);
+        if (role) openRoleEditor(role);
+      });
+    });
+    host.querySelectorAll('[data-art-role-delete]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-art-role-delete');
+        if (id) deleteArtifactRole(id);
+      });
+    });
+    document.getElementById('btn-artifact-role-add')?.addEventListener('click', () => openRoleEditor(null));
+    document.getElementById('btn-artifact-role-save')?.addEventListener('click', saveRoleFromEditor);
+    document.getElementById('btn-artifact-role-cancel')?.addEventListener('click', () => {
+      const ed = document.getElementById('artifact-role-editor');
+      if (ed) ed.hidden = true;
+      artifactRoleEditId = null;
+    });
+  }
+
+  function renderArtifactVerdictRulesPanel(force) {
+    const host = document.getElementById('artifact-verdict-rules-form');
+    if (!host) return;
+    if (!force && host.dataset.rendered === '1') return;
+    const rules = currentArtifactRules();
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    host.innerHTML = `
+      <p class="rules-card__desc">${escapeHtml(t.artifactVerdictRulesDesc || '')}</p>
+      <div class="settings-row">
+        <label for="artifact-min-useful-legend">${escapeHtml(t.artifactMinUsefulLegend || t.artifactRulesMinUsefulLegend || 'Min useful subs (Legend)')}</label>
+        <input type="number" id="artifact-min-useful-legend" min="0" max="4" step="1" value="${rules.minUsefulLegend ?? 2}" />
+      </div>
+      <div class="settings-row">
+        <label for="artifact-min-useful-hero">${escapeHtml(t.artifactMinUsefulHero || t.artifactRulesMinUsefulHero || 'Min useful subs (Hero)')}</label>
+        <input type="number" id="artifact-min-useful-hero" min="0" max="4" step="1" value="${rules.minUsefulHero ?? 1}" />
+      </div>
+      <div class="settings-row">
+        <label><input type="checkbox" id="artifact-synergies-enabled" ${rules.synergiesEnabled !== false ? 'checked' : ''} /> ${escapeHtml(t.artifactSynergiesEnable || 'Apply synergy bonuses to Keep/Sell score')}</label>
+      </div>`;
+    host.dataset.rendered = '1';
+    host.querySelectorAll('input').forEach((el) => el.addEventListener('change', onArtifactRulesChanged));
+  }
+
+  function renderArtifactSynergiesPanel(force) {
+    const host = document.getElementById('artifact-synergies-form');
+    if (!host) return;
+    if (!force && host.dataset.rendered === '1') return;
+    const rules = currentArtifactRules();
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    let pairs = '';
+    (rules.synergyPairs || []).forEach((pair, i) => {
+      const bonus = Number(pair.bonus) || 0;
+      pairs += `<label class="artifact-rules-check artifact-synergy-row">
+        <input type="checkbox" data-art-synergy-idx="${i}" ${pair.enabled !== false ? 'checked' : ''} />
+        <span>${escapeHtml(pair.label || pair.subs.join('+'))} <span class="artifact-synergy-bonus">+${bonus}</span></span>
+      </label>`;
+    });
+    let mains = '';
+    Object.entries(rules.mainSubSynergy || {}).forEach(([mainKey, ms]) => {
+      const bonus = Number(ms.bonus) || 0;
+      mains += `<label class="artifact-rules-check artifact-synergy-row">
+        <input type="checkbox" data-art-main-synergy="${mainKey}" ${ms.enabled !== false ? 'checked' : ''} />
+        <span>${escapeHtml(ms.label || `Main ${mainKey}`)} <span class="artifact-synergy-bonus">+${bonus}</span></span>
+      </label>`;
+    });
+    host.innerHTML = `
+      <p class="rules-card__desc">${escapeHtml(t.artifactSynergiesPanelDesc || '')}</p>
+      <p class="artifact-rules-subhead">${escapeHtml(t.artifactRulesSynergyPairsLabel || 'Sub-stat pairs')}</p>
+      <div class="artifact-rules-checks">${pairs}</div>
+      <p class="artifact-rules-subhead">${escapeHtml(t.artifactRulesMainSubLabel || 'Main + sub combos')}</p>
+      <div class="artifact-rules-checks">${mains}</div>`;
+    host.dataset.rendered = '1';
+    host.querySelectorAll('input').forEach((el) => el.addEventListener('change', onArtifactRulesChanged));
+  }
+
+  function renderActiveArtifactRulesPanel() {
+    const panel = document.querySelector('#tab-settings .rules-subpanel.is-active[data-rules-subtab^="artifact"]');
+    if (!panel) return;
+    const id = panel.dataset.rulesSubtab;
+    if (id === 'artifact-roles') renderArtifactRolesPanel(true);
+    else if (id === 'artifact-verdict') renderArtifactVerdictRulesPanel(true);
+    else if (id === 'artifact-synergies') renderArtifactSynergiesPanel(true);
+  }
+
+  function refreshArtifactRulesPanels() {
+    ['artifact-roles-form', 'artifact-verdict-rules-form', 'artifact-synergies-form'].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.dataset.rendered = '';
+    });
+    renderActiveArtifactRulesPanel();
+  }
+
+  function initArtifactRulesPanel() {
+    const root = document.getElementById('tab-settings');
+    if (!root) return;
+    const obs = new MutationObserver(() => {
+      const active = root.querySelector('.rules-subpanel.is-active');
+      if (!active) return;
+      const st = active.dataset.rulesSubtab;
+      if (st === 'artifact-roles') renderArtifactRolesPanel();
+      else if (st === 'artifact-verdict') renderArtifactVerdictRulesPanel();
+      else if (st === 'artifact-synergies') renderArtifactSynergiesPanel();
+    });
+    root.querySelectorAll('.rules-subpanel').forEach((p) => {
+      obs.observe(p, { attributes: true, attributeFilter: ['class'] });
+    });
+    renderActiveArtifactRulesPanel();
+  }
+
+  function refreshArtifactRulesPanelTexts() {
+    refreshArtifactRulesPanels();
+  }
 
   // ===================== APP SETTINGS =====================
   const DB_SLOTS_META_KEY = 'swrm_db_slots_meta_v1';
@@ -10767,6 +11310,17 @@
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;');
   }
+  function formatChangelogDate(isoDate) {
+    if (!isoDate) return isoDate;
+    const parts = isoDate.split('-');
+    if (parts.length !== 3) return isoDate;
+    const [year, month, day] = parts;
+    const lang = typeof currentLang !== 'undefined' ? currentLang : 'en';
+    if (lang === 'ru') return `${day}.${month}.${year}`;
+    if (lang === 'fr') return `${day}/${month}/${year}`;
+    return `${month}/${day}/${year}`;
+  }
+
   function changelogItemsForLang(rel, lang) {
     const pack = (rel.items && rel.items[lang]) || rel.items?.en;
     if (!pack) return [];
@@ -10840,7 +11394,7 @@
       const ul = items.length
         ? `<ul class="changelog-bullets">${items.map((tx) => `<li>${escapeChangelogText(tx)}</li>`).join('')}</ul>`
         : `<p class="settings-desc">${escapeChangelogText(t.changelogEmpty || '')}</p>`;
-      return `<article class="changelog-release"><h3 class="changelog-release-date">${escapeChangelogText(rel.date)}</h3>${ul}</article>`;
+      return `<article class="changelog-release"><h3 class="changelog-release-date">${escapeChangelogText(formatChangelogDate(rel.date))}</h3>${ul}</article>`;
     }).join('');
   }
 

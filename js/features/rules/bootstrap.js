@@ -2,6 +2,7 @@
 
   buildStatConstantsTable();
   refreshEnginePreviews();
+  if (typeof initArtifactRulesPanel === 'function') initArtifactRulesPanel();
 
   refreshRoleFilterOptions();
   renderRoleSettings();
@@ -63,6 +64,10 @@
   document.getElementById('reapp-main4').value = (reapp.mainBySlot?.[4] || []).join(', ');
   document.getElementById('reapp-main6').value = (reapp.mainBySlot?.[6] || []).join(', ');
   document.getElementById('reapp-max-eff').value = reapp.maxEff ?? 65;
+  const oddSlotsEl = document.getElementById('reapp-odd-slots');
+  if (oddSlotsEl) oddSlotsEl.checked = reapp.oddSlots !== false;
+  const oddInnateEl = document.getElementById('reapp-odd-innate');
+  if (oddInnateEl) oddInnateEl.value = (reapp.oddSlotInnate || []).join(', ');
   document.getElementById('grind-gap').value = Number.isFinite(Number(grind.gap)) ? Number(grind.gap) : 1;
 
   hydrateGemMetaFields(window.SWRM.settings.gemMeta);
@@ -101,7 +106,9 @@
         2: parseList(document.getElementById('reapp-main2').value),
         4: parseList(document.getElementById('reapp-main4').value),
         6: parseList(document.getElementById('reapp-main6').value),
-      }
+      },
+      oddSlots: document.getElementById('reapp-odd-slots')?.checked !== false,
+      oddSlotInnate: parseList(document.getElementById('reapp-odd-innate')?.value || ''),
     };
     s.grind = {
       gap: Number.isFinite(Number(document.getElementById('grind-gap').value))

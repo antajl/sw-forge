@@ -1,7 +1,7 @@
 # SW Forge — MASTER (справочник для AI и разработчика)
 
 > **Назначение:** карта репозитория, контракты загрузки, правила правок.  
-> **Не backlog:** открытые фичи → [`PLANS.md`](PLANS.md); сделанное → Changelog в приложении.  
+> **Не backlog:** открытые фичи → [`PLANS.md`](PLANS.md); сделанное → Updates в приложении.  
 > **Быстрый вход:** [`PROJECT-CONTEXT.md`](PROJECT-CONTEXT.md) · **Индекс docs:** [`README.md`](README.md)
 
 ---
@@ -133,7 +133,7 @@ SW Forge — статический сайт на **Cloudflare Pages**: анал
 | `shell/i18n-bindings.js` | Привязка `TRANSLATIONS` к DOM, lazy FR |
 | `shell/mobile-nav.js` | Мобильная навигация |
 | `shell/filters-popover.js` | Поповеры фильтров |
-| `shell/main-tabs.js` | Runes / Monsters / Guide / Changelog |
+| `shell/main-tabs.js` | Runes / Monsters / Guide / Updates |
 
 **Runes**
 | Файл | Роль |
@@ -175,7 +175,7 @@ SW Forge — статический сайт на **Cloudflare Pages**: анал
 |------|------|
 | `app/settings-ui.js` | App Settings |
 | `app/share.js` | Share Profile, `?s=`, `?profile=`, `?data=` |
-| `app/changelog.js` | Changelog / Roadmap UI |
+| `app/changelog.js` | Updates / Roadmap UI |
 
 **Monsters** (`MONSTER_PARTS` + `monsters/bootstrap.js`)
 | Файл | Роль |
@@ -349,7 +349,7 @@ Dev: `css/style.css` (только локально; prod использует `
 
 ## ЧАСТЬ 4: ПРАВИЛА ДЛЯ КАЖДОГО ИЗМЕНЕНИЯ
 
-### 1. Changelog (`js/core/changelog-data.js`)
+### 1. Updates (`js/core/changelog-data.js`)
 
 - Только блок **сегодняшней даты**; один день = один блок; новые пункты **в начало** `en[]` / `ru[]`.
 - **EN и RU:** одинаковое число пунктов, один порядок.
@@ -393,7 +393,7 @@ Dev: `css/style.css` (только локально; prod использует `
 
 ## ЧАСТЬ 5: АРХИВ ИСПОЛНЯЕМЫХ ЗАДАЧ (A / B / C)
 
-Блоки A / B / C выполнены. Детали в Changelog → Releases (2026-05-22).
+Блоки A / B / C выполнены. Детали в Updates → Releases (2026-05-22).
 
 **Не искать новые задачи в MASTER** — только [`PLANS.md`](PLANS.md).
 
@@ -404,7 +404,7 @@ Dev: `css/style.css` (только локально; prod использует `
 1. **CSS** — файл в `css/features/[feature]/`, строка в `tools/build-css.mjs`, `npm run build:css`
 2. **JS** — файл в `js/features/`, строка в `tools/build-ui.mjs`, `npm run build:ui`
 3. **i18n** — EN + RU (+ FR при необходимости)
-4. **Changelog** — сегодняшний блок, игровой язык
+4. **Updates** — сегодняшний блок, игровой язык
 5. **PLANS** — убрать выполненный пункт
 
 ### Данные монстров / скиллов
@@ -464,7 +464,7 @@ rg "#[0-9a-fA-F]{6}" css/features/ -g "*.css"
 | Быстрый старт AI | `PROJECT-CONTEXT.md` |
 | Как устроен runtime | `ARCHITECTURE.md` |
 | Где код фичи | `FEATURES.md` |
-| **Что делать дальше в продукте** | **`PLANS.md`** + Changelog → Roadmap |
+| **Что делать дальше в продукте** | **`PLANS.md`** + Updates → Roadmap |
 | История задач A/B/C | `archive/MASTER-TASKS-DONE.md` |
 
 ---

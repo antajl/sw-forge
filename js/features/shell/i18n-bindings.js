@@ -180,6 +180,7 @@
       applyFiltersAndSort(getVisibleRunes(), { preserveTableExpansion: runeTableShowAll });
     }
     renderChangelog();
+    if (typeof refreshArtifactRulesPanelTexts === 'function') refreshArtifactRulesPanelTexts();
     renderRoadmap();
     syncMonstersFilterLabels(t);
     if (allUnits.length || processedRunes.length) {
@@ -458,18 +459,56 @@
     const roleNavHdr = document.getElementById('lbl-role-nav-header');
     if (roleNavHdr) roleNavHdr.textContent = t.rolesNavTitle || 'Roles';
 
-    const subNav = document.getElementById('rules-subtabs');
-    if (subNav) subNav.setAttribute('aria-label', t.rulesSubtabsAria || 'Rune Rules sections');
+    const runesNav = document.getElementById('rules-subtabs-runes');
+    if (runesNav) runesNav.setAttribute('aria-label', t.rulesRunesSection || 'Runes');
+    const artNav = document.getElementById('rules-subtabs-artifacts');
+    if (artNav) artNav.setAttribute('aria-label', t.rulesArtifactsSection || 'Artifacts');
     const setSubLbl = (id, text) => {
       const el = document.getElementById(id);
       if (el) el.textContent = text || '';
     };
+    setSubLbl('lbl-rules-runes-section', t.rulesRunesSection);
+    setSubLbl('lbl-rules-artifacts-section', t.rulesArtifactsSection);
     setSubLbl('lbl-rules-subtab-engine', t.rulesSubtabEngine);
     setSubLbl('lbl-rules-subtab-engine-hint', t.rulesSubtabEngineDesc);
     setSubLbl('lbl-rules-subtab-verdict', t.rulesSubtabVerdict);
     setSubLbl('lbl-rules-subtab-verdict-hint', t.rulesSubtabVerdictDesc);
     setSubLbl('lbl-rules-subtab-roles', t.rulesSubtabRoles);
     setSubLbl('lbl-rules-subtab-roles-hint', t.rulesSubtabRolesDesc);
+    setSubLbl('lbl-rules-subtab-artifact-roles', t.rulesSubtabArtifactRoles);
+    setSubLbl('lbl-rules-subtab-artifact-roles-hint', t.rulesSubtabArtifactRolesDesc);
+    setSubLbl('lbl-rules-subtab-artifact-verdict', t.rulesSubtabArtifactVerdict);
+    setSubLbl('lbl-rules-subtab-artifact-verdict-hint', t.rulesSubtabArtifactVerdictDesc);
+    setSubLbl('lbl-rules-subtab-artifact-synergies', t.rulesSubtabArtifactSynergies);
+    setSubLbl('lbl-rules-subtab-artifact-synergies-hint', t.rulesSubtabArtifactSynergiesDesc);
+    setSubLbl('lbl-artifact-roles-title', t.artifactRolesTitle);
+    setSubLbl('lbl-artifact-roles-lead', t.artifactRolesLead);
+    setSubLbl('lbl-artifact-verdict-rules-title', t.artifactVerdictRulesTitle);
+    setSubLbl('lbl-artifact-verdict-rules-lead', t.artifactVerdictRulesLead);
+    setSubLbl('lbl-artifact-synergies-title', t.artifactSynergiesTitle);
+    setSubLbl('lbl-artifact-synergies-lead', t.artifactSynergiesLead);
+    const thArtRole = document.getElementById('lbl-th-art-role');
+    if (thArtRole) thArtRole.textContent = t.thArtRole || t.artifactRoleLabel || '';
+    const thArtVerdict = document.getElementById('lbl-th-art-verdict');
+    if (thArtVerdict) thArtVerdict.textContent = t.thArtVerdict || t.artifactFilterVerdict || '';
+    const artFv = document.getElementById('lbl-artifact-filter-verdict');
+    if (artFv) artFv.textContent = t.artifactFilterVerdict || '';
+    const artKeepOpt = document.getElementById('lbl-artifact-filter-keep-opt');
+    if (artKeepOpt) artKeepOpt.textContent = t.artifactVerdictKeep || '';
+    const artSellOpt = document.getElementById('lbl-artifact-filter-sell-opt');
+    if (artSellOpt) artSellOpt.textContent = t.artifactVerdictSell || '';
+    const reappOddLbl = document.getElementById('lbl-reapp-odd-slots');
+    if (reappOddLbl) reappOddLbl.textContent = t.reappOddSlots || '';
+    const reappOddHint = document.getElementById('lbl-reapp-odd-slots-hint');
+    if (reappOddHint) reappOddHint.textContent = t.reappOddSlotsHint || '';
+    const reappOddInnLbl = document.getElementById('lbl-reapp-odd-innate');
+    if (reappOddInnLbl) reappOddInnLbl.textContent = t.reappOddInnate || '';
+    const reappOddInnHint = document.getElementById('lbl-reapp-odd-innate-hint');
+    if (reappOddInnHint) reappOddInnHint.textContent = t.reappOddInnateHint || '';
+    const btnArtCsv = document.getElementById('btn-artifact-export-csv');
+    if (btnArtCsv) btnArtCsv.textContent = t.exportTableCsv || 'Export CSV';
+    const btnRelCsv = document.getElementById('btn-relic-export-csv');
+    if (btnRelCsv) btnRelCsv.textContent = t.exportTableCsv || 'Export CSV';
 
     setSubLbl('policy-simple-lead', t.rulesPolicySimpleLead);
     setSubLbl('policy-expert-lead', t.rulesPolicyExpertLead);

@@ -246,7 +246,16 @@
   function positionRulesSubtabIndicator(opts) {
     const { nav, activeKey, instant } = opts || {};
     const ind = nav && nav.querySelector('.rules-subtabs__indicator');
-    const key = ['engine', 'roles', 'verdict'].includes(activeKey) ? activeKey : 'engine';
+    const key = [
+      'engine',
+      'roles',
+      'verdict',
+      'artifact-roles',
+      'artifact-verdict',
+      'artifact-synergies',
+    ].includes(activeKey)
+      ? activeKey
+      : 'engine';
     const btn = document.getElementById(`rules-subtab-${key}`);
     if (!nav || !ind || !btn) return false;
     const x = btn.offsetLeft;

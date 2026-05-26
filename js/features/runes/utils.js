@@ -45,6 +45,7 @@
       window.SWRM_ACCOUNT_GEAR = bag;
       allArtifacts = bag.artifacts || [];
       allRelics = bag.relics || [];
+      if (typeof attachArtifactVerdicts === 'function') attachArtifactVerdicts(allArtifacts);
     } else {
       window.SWRM_ACCOUNT_GEAR = null;
       allArtifacts = [];

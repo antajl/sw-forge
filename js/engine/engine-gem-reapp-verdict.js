@@ -157,6 +157,12 @@
 
     if (rune.innate_name && ['ATK', 'DEF', 'HP'].includes(rune.innate_name)) return false;
 
+    const isOdd = [1, 3, 5].includes(rune.slot);
+    if (isOdd && rc.oddSlots === false) return false;
+    if (isOdd && rc.oddSlotInnate && rc.oddSlotInnate.length) {
+      if (!rune.innate_name || !rc.oddSlotInnate.includes(rune.innate_name)) return false;
+    }
+
     if ([2, 4, 6].includes(rune.slot)) {
       const allowed = rc.mainBySlot?.[rune.slot] || [];
       if (allowed.length && !allowed.includes(rune.mainName)) return false;

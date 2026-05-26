@@ -495,9 +495,254 @@ const DEFAULT_REAPP = {
   mainBySlot: {
     2: ['SPD'],
     4: ['CDmg'],
-    6: ['ATK%', 'HP%']
-  }
+    6: ['ATK%', 'HP%'],
+  },
+  oddSlots: true,
+  oddSlotInnate: [],
 };
+
+const ARTIFACT_RULES_STORAGE_KEY = 'swrm_artifact_rules';
+const ARTIFACT_ROLES_STORAGE_KEY = 'swrm_artifact_roles';
+const ARTIFACT_SYNERGIES_STORAGE_KEY = 'swrm_artifact_synergies';
+const ARTIFACT_VERDICT_STORAGE_KEY = 'swrm_artifact_verdict';
+
+const ARTIFACT_PRI_MAIN = { 100: 'HP', 101: 'ATK', 102: 'DEF' };
+
+const DEFAULT_ARTIFACT_TYPE_USEFUL = {
+  attack: [218, 219, 220, 221, 208, 209, 210, 212, 222, 223, 224, 225, 400, 401, 402, 403, 410],
+  defense: [213, 214, 201, 205, 211, 216],
+  hp: [213, 216, 217, 218, 201, 404, 405, 406],
+  support: [203, 206, 407, 408, 409, 404, 405, 406],
+};
+
+function buildDefaultArtifactRoles() {
+  return {
+    roles: [
+      {
+        id: 'classic-dps',
+        name: 'Classic DPS',
+        mainStat: 'ATK',
+        usefulSubs: DEFAULT_ARTIFACT_TYPE_USEFUL.attack.slice(),
+      },
+      {
+        id: 'tank',
+        name: 'Tank',
+        mainStat: 'DEF',
+        usefulSubs: DEFAULT_ARTIFACT_TYPE_USEFUL.defense.slice(),
+      },
+      {
+        id: 'bruiser',
+        name: 'Bruiser',
+        mainStat: 'HP',
+        usefulSubs: DEFAULT_ARTIFACT_TYPE_USEFUL.hp.slice(),
+      },
+      {
+        id: 'fast-cc',
+        name: 'Fast CC',
+        mainStat: null,
+        usefulSubs: DEFAULT_ARTIFACT_TYPE_USEFUL.support.slice(),
+      },
+      {
+        id: 'bomber',
+        name: 'Bomber',
+        mainStat: null,
+        usefulSubs: [210, 219, 218, 220, 209, 300, 301, 302, 303, 304],
+      },
+    ],
+  };
+}
+
+const DEFAULT_ARTIFACT_ROLES = buildDefaultArtifactRoles();
+
+const DEFAULT_ARTIFACT_ELEMENT_USEFUL = [
+  300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 219, 218, 213, 214,
+];
+
+const DEFAULT_ARTIFACT_SYNERGY_PAIRS = [
+  { subs: [219, 400], bonus: 0.5, role: 'Classic DPS', label: 'ATK dmg + S1 CRIT', enabled: true },
+  { subs: [219, 401], bonus: 0.5, role: 'Classic DPS', label: 'ATK dmg + S2 CRIT', enabled: true },
+  { subs: [219, 402], bonus: 0.5, role: 'Classic DPS', label: 'ATK dmg + S3 CRIT', enabled: true },
+  { subs: [219, 410], bonus: 0.5, role: 'Classic DPS', label: 'ATK dmg + S3/4 CRIT', enabled: true },
+  { subs: [218, 400], bonus: 0.5, role: 'Classic DPS', label: 'HP dmg + S1 CRIT', enabled: true },
+  { subs: [218, 402], bonus: 0.5, role: 'Classic DPS', label: 'HP dmg + S3 CRIT', enabled: true },
+  { subs: [210, 219], bonus: 0.5, role: 'Bomber', label: 'Bomb + ATK dmg', enabled: true },
+  { subs: [208, 219], bonus: 0.5, role: 'Bruiser', label: 'Counter + ATK dmg', enabled: true },
+  { subs: [213, 214], bonus: 0.5, role: 'Tank', label: 'DMG received -% + Crit DMG -', enabled: true },
+  { subs: [213, 205], bonus: 0.3, role: 'Tank', label: 'DMG received + DEF UP effect', enabled: true },
+  { subs: [300, 301], bonus: 0.3, role: 'Classic DPS', label: 'Fire+Water dmg', enabled: true },
+  { subs: [219, 300], bonus: 0.5, role: 'Classic DPS', label: 'ATK dmg + Element dmg', enabled: true },
+];
+
+const DEFAULT_ARTIFACT_MAIN_SUB_SYNERGY = {
+  101: {
+    goodSubs: [219, 222, 223, 224, 400, 401, 402, 403, 410, 411, 208, 209, 210],
+    bonus: 0.3,
+    label: 'ATK main + damage subs',
+    enabled: true,
+  },
+  102: {
+    goodSubs: [213, 214, 205, 201, 211],
+    bonus: 0.3,
+    label: 'DEF main + defensive subs',
+    enabled: true,
+  },
+  100: {
+    goodSubs: [213, 216, 217, 218, 201],
+    bonus: 0.3,
+    label: 'HP main + bulk subs',
+    enabled: true,
+  },
+};
+
+const DEFAULT_ARTIFACT_RULES = {
+  minUsefulLegend: 2,
+  minUsefulHero: 1,
+  synergiesEnabled: true,
+  artifactRoles: JSON.parse(JSON.stringify(DEFAULT_ARTIFACT_ROLES)),
+  synergyPairs: JSON.parse(JSON.stringify(DEFAULT_ARTIFACT_SYNERGY_PAIRS)),
+  mainSubSynergy: JSON.parse(JSON.stringify(DEFAULT_ARTIFACT_MAIN_SUB_SYNERGY)),
+  typeUseful: JSON.parse(JSON.stringify(DEFAULT_ARTIFACT_TYPE_USEFUL)),
+  elementUseful: DEFAULT_ARTIFACT_ELEMENT_USEFUL.slice(),
+};
+
+function loadJsonStorage(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw) return JSON.parse(raw);
+  } catch (e) { /* ignore */ }
+  return null;
+}
+
+function loadArtifactRulesStorage() {
+  return loadJsonStorage(ARTIFACT_RULES_STORAGE_KEY);
+}
+
+function loadArtifactRolesStorage() {
+  return loadJsonStorage(ARTIFACT_ROLES_STORAGE_KEY);
+}
+
+function loadArtifactSynergiesStorage() {
+  return loadJsonStorage(ARTIFACT_SYNERGIES_STORAGE_KEY);
+}
+
+function loadArtifactVerdictStorage() {
+  return loadJsonStorage(ARTIFACT_VERDICT_STORAGE_KEY);
+}
+
+function loadArtifactRulesBundle() {
+  const legacy = loadArtifactRulesStorage();
+  const roles = loadArtifactRolesStorage();
+  const synergies = loadArtifactSynergiesStorage();
+  const verdict = loadArtifactVerdictStorage();
+  return { legacy, roles, synergies, verdict };
+}
+
+function saveArtifactRulesStorage(rules) {
+  const r = rules && typeof rules === 'object' ? rules : {};
+  try {
+    localStorage.setItem(
+      ARTIFACT_VERDICT_STORAGE_KEY,
+      JSON.stringify({
+        minUsefulLegend: r.minUsefulLegend,
+        minUsefulHero: r.minUsefulHero,
+        synergiesEnabled: r.synergiesEnabled !== false,
+      }),
+    );
+    localStorage.setItem(
+      ARTIFACT_SYNERGIES_STORAGE_KEY,
+      JSON.stringify({
+        synergyPairs: r.synergyPairs,
+        mainSubSynergy: r.mainSubSynergy,
+      }),
+    );
+    const roleList = r.artifactRoles?.roles || r.roles;
+    if (Array.isArray(roleList)) {
+      localStorage.setItem(ARTIFACT_ROLES_STORAGE_KEY, JSON.stringify({ roles: roleList }));
+    }
+    localStorage.setItem(ARTIFACT_RULES_STORAGE_KEY, JSON.stringify(r));
+  } catch (e) { /* ignore */ }
+}
+
+function mergeArtifactRoles(savedRoles) {
+  const base = JSON.parse(JSON.stringify(DEFAULT_ARTIFACT_ROLES));
+  const list = savedRoles?.roles;
+  if (!Array.isArray(list) || !list.length) return base;
+  base.roles = list
+    .filter((r) => r && String(r.name || '').trim())
+    .map((r) => ({
+      id: String(r.id || r.name).trim() || `role-${Math.random().toString(36).slice(2, 8)}`,
+      name: String(r.name).trim(),
+      mainStat: r.mainStat === 'ATK' || r.mainStat === 'DEF' || r.mainStat === 'HP' ? r.mainStat : null,
+      usefulSubs: Array.isArray(r.usefulSubs)
+        ? [...new Set(r.usefulSubs.map(Number).filter((n) => Number.isFinite(n)))]
+        : [],
+    }));
+  if (!base.roles.length) return JSON.parse(JSON.stringify(DEFAULT_ARTIFACT_ROLES));
+  return base;
+}
+
+function mergeArtifactRules(saved) {
+  const bundle = loadArtifactRulesBundle();
+  const merged = { legacy: bundle.legacy, ...(saved && typeof saved === 'object' ? saved : {}) };
+  if (bundle.verdict) Object.assign(merged, bundle.verdict);
+  if (bundle.synergies) Object.assign(merged, bundle.synergies);
+  if (bundle.roles) merged.artifactRoles = bundle.roles;
+  if (bundle.legacy) Object.assign(merged, bundle.legacy);
+
+  const d = JSON.parse(JSON.stringify(DEFAULT_ARTIFACT_RULES));
+  if (Number.isFinite(Number(merged.minUsefulLegend))) d.minUsefulLegend = Number(merged.minUsefulLegend);
+  if (Number.isFinite(Number(merged.minUsefulHero))) d.minUsefulHero = Number(merged.minUsefulHero);
+  if (merged.synergiesEnabled === false) d.synergiesEnabled = false;
+  d.artifactRoles = mergeArtifactRoles(merged.artifactRoles || { roles: merged.roles });
+  if (Array.isArray(merged.synergyPairs)) {
+    d.synergyPairs = merged.synergyPairs.map((p) => ({ ...p }));
+  }
+  if (merged.mainSubSynergy && typeof merged.mainSubSynergy === 'object') {
+    Object.keys(d.mainSubSynergy).forEach((k) => {
+      if (merged.mainSubSynergy[k]) {
+        d.mainSubSynergy[k] = { ...d.mainSubSynergy[k], ...merged.mainSubSynergy[k] };
+      }
+    });
+  }
+  if (merged.typeUseful && typeof merged.typeUseful === 'object') {
+    Object.keys(d.typeUseful).forEach((k) => {
+      if (Array.isArray(merged.typeUseful[k])) d.typeUseful[k] = merged.typeUseful[k].slice();
+    });
+  }
+  if (Array.isArray(merged.elementUseful)) d.elementUseful = merged.elementUseful.slice();
+
+  if (!bundle.roles && !merged.artifactRoles?.roles?.length && merged.typeUseful) {
+    d.artifactRoles = mergeArtifactRoles({
+      roles: [
+        {
+          id: 'classic-dps',
+          name: 'Classic DPS',
+          mainStat: 'ATK',
+          usefulSubs: (merged.typeUseful.attack || d.typeUseful.attack).slice(),
+        },
+        {
+          id: 'tank',
+          name: 'Tank',
+          mainStat: 'DEF',
+          usefulSubs: (merged.typeUseful.defense || d.typeUseful.defense).slice(),
+        },
+        {
+          id: 'bruiser',
+          name: 'Bruiser',
+          mainStat: 'HP',
+          usefulSubs: (merged.typeUseful.hp || d.typeUseful.hp).slice(),
+        },
+        {
+          id: 'fast-cc',
+          name: 'Fast CC',
+          mainStat: null,
+          usefulSubs: (merged.typeUseful.support || d.typeUseful.support).slice(),
+        },
+      ],
+    });
+  }
+  return d;
+}
 
 // Grind recommendation: always targets Late×grade High Roll line (same hrThresholds as role anchors).
 // gap: allowed distance multiplier (threshold - current <= gain * gap)
@@ -1013,6 +1258,10 @@ function getSettings() {
     statConstants = mergeStatConstants(null);
   }
   // v14: narrower Reapp sets; tightened Fast CC + Bomber presets (spreadsheet).
+  if (presetVersion < 18) {
+    if (reapp.oddSlots === undefined) reapp.oddSlots = DEFAULT_REAPP.oddSlots !== false;
+    if (!Array.isArray(reapp.oddSlotInnate)) reapp.oddSlotInnate = DEFAULT_REAPP.oddSlotInnate.slice();
+  }
   if (presetVersion < 14) {
     reapp.sets = DEFAULT_REAPP.sets.slice();
     if (DEFAULT_FORMULAS['Fast CC']) {
@@ -1051,6 +1300,19 @@ function getSettings() {
     formulas[name] = legacyRoleToFormula(roleCfg, name);
   }
 
+  let artifactRules = saved?.artifactRules || null;
+  if (!artifactRules) {
+    const bundle = loadArtifactRulesBundle();
+    artifactRules = mergeArtifactRules({
+      ...(bundle.legacy || {}),
+      ...(bundle.verdict || {}),
+      ...(bundle.synergies || {}),
+      artifactRoles: bundle.roles,
+    });
+  } else {
+    artifactRules = mergeArtifactRules(artifactRules);
+  }
+
   return {
     thresholds:    saved?.thresholds    || JSON.parse(JSON.stringify(DEFAULT_THRESHOLDS)),
     statConstants,
@@ -1060,13 +1322,14 @@ function getSettings() {
     roles,
     formulas,
     rolePriority,
-    presetVersion: 17,
+    presetVersion: 18,
     reapp,
     grind,
     gemMeta,
     policy,
     fitModel,
     borderlinePolicy,
+    artifactRules,
   };
 }
 

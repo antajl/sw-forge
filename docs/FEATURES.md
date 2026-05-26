@@ -30,11 +30,11 @@ How UI and data are split after the gear/teams redistribution.
 |--------|--------|------------|
 | `shell/` | App chrome, tabs, i18n bindings | `bootstrap.js`, `i18n-bindings.js`, `main-tabs.js` |
 | `runes/` | Dashboard, rune table, filters, upload | `table.js`, `table-row-render.js`, `table-virtual.js`, `dashboard.js`, … |
-| `gear/` | Artifact & relic inventory tables + Runes/Artifacts/Relics sub-tabs | `table-kind.js`, `artifacts-table.js`, `relics-table.js` |
+| `gear/` | Artifact & relic inventory tables + Runes/Artifacts/Relics sub-tabs; artifact Keep/Sell verdicts | `table-kind.js`, `artifact-verdict.js`, `artifacts-table.js`, `relics-table.js` |
 | `teams/` | Team sets builder (Monsters → Teams hub pane); combat SPD badges | `storage.js`, `ui.js` |
 | `monsters/` | Roster, cards, detail, gear on unit | `monsters-gear.js`, `monsters-detail.js`, … |
-| `rules/` | Rune rules panels | `panel.js`, `bootstrap.js`, … |
-| `app/` | Settings, share, changelog | `settings-ui.js`, `share.js` |
+| `rules/` | Runes rules (Engine / Roles / Verdict) + Artifacts rules (Roles / Verdict / Synergies) | `panel.js`, `bootstrap.js`, `artifact-rules-ui.js`, … |
+| `app/` | Settings, share, Updates tab | `settings-ui.js`, `share.js`, `changelog.js` |
 
 **Build order** (`tools/build-ui.mjs`): `shell` → `runes` → `gear/table-kind.js` → `gear/artifacts-table.js` → `gear/relics-table.js` → `runes/table.js` → `rules` → `app` → monster modules → `teams` → `monsters/bootstrap.js`.
 
@@ -46,6 +46,17 @@ How UI and data are split after the gear/teams redistribution.
 | `artifacts/effects.js` | Artifact sub-stat labels (SW-Exporter mapping) |
 | `relics/effects.js` | Relic category / secondary labels (user-confirmed types only) |
 | `parser.js`, `monster-db.js`, `skill-db.js` | Shared import / monsters |
+
+## Rules tab layout
+
+Two columns at the top of **Runes hub → Rules**:
+
+| Column | Sub-tabs | Purpose |
+|--------|----------|---------|
+| **Runes** | Engine, Roles, Verdict rules | Stat constants, rune role formulas, Gem / Grind / Reapp |
+| **Artifacts** | Roles, Verdict rules, Synergies | Editable artifact roles (useful subs + expected ATK/DEF/HP main), Keep thresholds, synergy toggles |
+
+Artifact **Role** in the inventory table is auto-detected: best matching configured role (main stat must match when set). Settings persist in `localStorage`: `swrm_artifact_roles`, `swrm_artifact_synergies`, `swrm_artifact_verdict` (merged into `settings.artifactRules`).
 
 ## CSS (`css/features/`)
 

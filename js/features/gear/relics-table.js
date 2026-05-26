@@ -48,6 +48,59 @@
     updateRelicResetButton();
   }
 
+  function exportRelicsCsv() {
+    const rows = filteredRelics || [];
+    if (!rows.length) return;
+    const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const fmt = window.SWRM && window.SWRM.formatGearEffectLine;
+    const fmtSec = window.SWRM && window.SWRM.formatRelicSecLine;
+    const fmtDur =
+      window.SWRM && typeof window.SWRM.formatRelicDurability === 'function'
+        ? window.SWRM.formatRelicDurability
+        : null;
+    const fmtWear =
+      window.SWRM && typeof window.SWRM.formatRelicWearCount === 'function'
+        ? window.SWRM.formatRelicWearCount
+        : null;
+    const headers = [
+      tloc.thRelCategory || 'Category',
+      tloc.thRelGrade || 'Grade',
+      'Level',
+      tloc.thRelDurability || 'Durability',
+      tloc.thRelLocation || 'Main',
+      'Secondary',
+      tloc.thRelWearers || 'Equipped',
+    ];
+    const cellPart = (s) => {
+      const raw = String(s ?? '');
+      if (/[,"\n\r]/.test(raw)) return `"${raw.replace(/"/g, '""')}"`;
+      return raw;
+    };
+    const lines = [headers.map(cellPart).join(',')];
+    rows.forEach((r) => {
+      lines.push(
+        [
+          r.category || '',
+          r.gradeStr || '',
+          r.level || 0,
+          fmtDur ? fmtDur(r) : '',
+          r.pri && fmt ? fmt(r.pri, { kind: 'relic' }) : '',
+          fmtSec ? fmtSec(r) : '',
+          fmtWear ? fmtWear(r) : '',
+        ]
+          .map(cellPart)
+          .join(','),
+      );
+    });
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'sw-forge-relics.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   function resetRelicTableFilters() {
     relicFilterGrade = '';
     relicFilterCategory = '';
@@ -134,6 +187,7 @@
 
     document.getElementById('btn-relic-reset-filters')?.addEventListener('click', resetRelicTableFilters);
     document.getElementById('relic-filters-drawer-reset')?.addEventListener('click', resetRelicTableFilters);
+    document.getElementById('btn-relic-export-csv')?.addEventListener('click', exportRelicsCsv);
 
     document.getElementById('filter-relic-grade')?.addEventListener('change', onRelicFilterChange);
     document.getElementById('filter-relic-category')?.addEventListener('change', onRelicFilterChange);

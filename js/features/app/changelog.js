@@ -6,6 +6,17 @@
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;');
   }
+  function formatChangelogDate(isoDate) {
+    if (!isoDate) return isoDate;
+    const parts = isoDate.split('-');
+    if (parts.length !== 3) return isoDate;
+    const [year, month, day] = parts;
+    const lang = typeof currentLang !== 'undefined' ? currentLang : 'en';
+    if (lang === 'ru') return `${day}.${month}.${year}`;
+    if (lang === 'fr') return `${day}/${month}/${year}`;
+    return `${month}/${day}/${year}`;
+  }
+
   function changelogItemsForLang(rel, lang) {
     const pack = (rel.items && rel.items[lang]) || rel.items?.en;
     if (!pack) return [];
@@ -79,7 +90,7 @@
       const ul = items.length
         ? `<ul class="changelog-bullets">${items.map((tx) => `<li>${escapeChangelogText(tx)}</li>`).join('')}</ul>`
         : `<p class="settings-desc">${escapeChangelogText(t.changelogEmpty || '')}</p>`;
-      return `<article class="changelog-release"><h3 class="changelog-release-date">${escapeChangelogText(rel.date)}</h3>${ul}</article>`;
+      return `<article class="changelog-release"><h3 class="changelog-release-date">${escapeChangelogText(formatChangelogDate(rel.date))}</h3>${ul}</article>`;
     }).join('');
   }
 

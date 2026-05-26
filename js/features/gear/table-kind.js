@@ -115,49 +115,68 @@
     const arts = allArtifacts || [];
     const rels = allRelics || [];
     const artGrades = [...new Set(arts.map((a) => a.gradeStr).filter(Boolean))].sort();
-    const artCats = [...new Set(arts.map((a) => a.category).filter(Boolean))].sort();
+    const artRoles = [
+      ...new Set(arts.map((a) => String(a.artifactRole || '').trim()).filter(Boolean)),
+    ].sort();
     const relGrades = [...new Set(rels.map((r) => r.gradeStr).filter(Boolean))].sort();
     const relCats = [...new Set(rels.map((r) => r.category).filter(Boolean))].sort();
-    const fill = (sel, values, current) => {
-      if (!sel) return;
-      const keep = current || sel.value || '';
-      sel.innerHTML = '<option value="">All</option>';
-      for (const v of values) {
-        const opt = document.createElement('option');
-        opt.value = v;
-        opt.textContent = v;
-        sel.appendChild(opt);
-      }
-      sel.value = keep;
-    };
-    fill(
+
+    if (typeof initArtifactTypeAttributeFilterOptions === 'function') {
+      initArtifactTypeAttributeFilterOptions();
+    }
+    if (typeof syncArtifactTypeAttributeSelectLabels === 'function') {
+      syncArtifactTypeAttributeSelectLabels();
+    }
+
+    fillGearFilterSelect(
       document.getElementById('filter-artifact-grade'),
       artGrades,
       typeof artifactFilterGrade !== 'undefined' ? artifactFilterGrade : '',
     );
-    fill(
-      document.getElementById('filter-artifact-category'),
-      artCats,
-      typeof artifactFilterCategory !== 'undefined' ? artifactFilterCategory : '',
+    fillGearFilterSelect(
+      document.getElementById('filter-artifact-role'),
+      artRoles,
+      typeof artifactFilterRole !== 'undefined' ? artifactFilterRole : '',
     );
-    fill(
+    fillGearFilterSelect(
       document.getElementById('filter-relic-grade'),
       relGrades,
       typeof relicFilterGrade !== 'undefined' ? relicFilterGrade : '',
     );
-    fill(
+    fillGearFilterSelect(
       document.getElementById('filter-relic-category'),
       relCats,
       typeof relicFilterCategory !== 'undefined' ? relicFilterCategory : '',
     );
+
+    const typeSel = document.getElementById('filter-artifact-type');
+    const attrSel = document.getElementById('filter-artifact-attribute');
+    if (typeSel && typeof artifactFilterType !== 'undefined') {
+      if ([...typeSel.options].some((o) => o.value === artifactFilterType)) {
+        typeSel.value = artifactFilterType;
+      }
+    }
+    if (attrSel && typeof artifactFilterAttribute !== 'undefined') {
+      if ([...attrSel.options].some((o) => o.value === artifactFilterAttribute)) {
+        attrSel.value = artifactFilterAttribute;
+      }
+    }
   }
 
   function renderGearTables() {
+    if (typeof applyArtifactFiltersFromDom === 'function') applyArtifactFiltersFromDom();
+    if (typeof applyRelicFiltersFromDom === 'function') applyRelicFiltersFromDom();
     applyArtifactTableSearch();
     applyRelicTableSearch();
     renderArtifactTableBody();
     renderRelicTableBody();
     updateGearTableCount();
+    const kind = typeof readTableKind === 'function' ? readTableKind() : 'runes';
+    if (kind === 'artifacts' && typeof updateArtifactFilterBadge === 'function') {
+      updateArtifactFilterBadge();
+    } else if (kind === 'relics' && typeof updateRelicFilterBadge === 'function') {
+      updateRelicFilterBadge();
+    }
   }
 
   function updateGearTableCount() {
@@ -231,6 +250,8 @@
     });
     const runeChips = document.getElementById('rune-table-active-filters');
     if (runeChips) runeChips.classList.toggle('hidden', id !== 'runes');
+    const gearChips = document.getElementById('gear-table-active-filters');
+    if (gearChips) gearChips.classList.toggle('hidden', id === 'runes');
     const search = document.getElementById('search-box');
     if (search) {
       const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;

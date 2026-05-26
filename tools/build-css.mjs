@@ -25,6 +25,7 @@ const FILES = [
   'css/features/runes/chrome.css',
   'css/features/runes/stat-cards.css',
   'css/features/runes/panel.css',
+  'css/features/runes/dashboard-artifacts.css',
   'css/features/runes/chart-bars.css',
   'css/features/runes/slot-distribution.css',
   'css/features/runes/top-spd.css',
@@ -37,6 +38,7 @@ const FILES = [
   'css/features/runes/table-chips.css',
   // gear/index.css
   'css/features/gear/table-kind.css',
+  'css/features/gear/table-filters.css',
   // teams/index.css
   'css/features/teams/teams.css',
   'css/features/teams/teams-v2.css',

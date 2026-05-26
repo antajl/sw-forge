@@ -46,10 +46,12 @@
       allArtifacts = bag.artifacts || [];
       allRelics = bag.relics || [];
       if (typeof attachArtifactVerdicts === 'function') attachArtifactVerdicts(allArtifacts);
+      if (typeof bumpAllArtifactsRev === 'function') bumpAllArtifactsRev();
     } else {
       window.SWRM_ACCOUNT_GEAR = null;
       allArtifacts = [];
       allRelics = [];
+      if (typeof bumpAllArtifactsRev === 'function') bumpAllArtifactsRev();
     }
     if (typeof onGearDataHydrated === 'function') onGearDataHydrated();
     if (typeof refreshAccountTotemFromSwex === 'function') {

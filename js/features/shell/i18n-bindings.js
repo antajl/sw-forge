@@ -215,6 +215,34 @@
     const unifiedBlockTitle = document.getElementById('lbl-dash-unified-block-title');
     if (unifiedBlockTitle) unifiedBlockTitle.textContent = t.dashboardUnifiedBlockTitle || '';
     if (uniTabs) uniTabs.setAttribute('aria-label', t.dashboardUnifiedDistAria || '');
+    const lblKindRunes = document.getElementById('lbl-dash-dist-kind-runes');
+    if (lblKindRunes) lblKindRunes.textContent = t.dashboardRunesTab || 'Runes';
+    const lblKindArt = document.getElementById('lbl-dash-dist-kind-artifacts');
+    if (lblKindArt) lblKindArt.textContent = t.dashboardArtifactsTab || 'Artifacts';
+    const kindTabs = document.getElementById('dash-dist-kind-tabs');
+    if (kindTabs) {
+      kindTabs.setAttribute(
+        'aria-label',
+        `${t.dashboardRunesTab || 'Runes'} / ${t.dashboardArtifactsTab || 'Artifacts'}`,
+      );
+    }
+    const setArtCellTitle = (id, key) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = t[key] || '';
+    };
+    setArtCellTitle('lbl-dash-art-verdict', 'dashboardArtifactVerdict');
+    setArtCellTitle('lbl-dash-art-grade', 'dashboardArtifactGrade');
+    setArtCellTitle('lbl-dash-art-type', 'dashboardArtifactType');
+    setArtCellTitle('lbl-dash-art-role', 'dashboardArtifactRole');
+    setArtCellTitle('lbl-dash-art-attribute', 'dashboardArtifactAttribute');
+    setArtCellTitle('lbl-dash-art-score', 'dashboardArtifactScore');
+    const artEmpty = document.getElementById('dash-artifact-empty');
+    if (artEmpty && !artEmpty.hidden) artEmpty.textContent = t.dashboardNoArtifacts || '';
+    if (typeof renderArtifactDashboardDistributions === 'function') {
+      renderArtifactDashboardDistributions({ animateCharts: false, skipIfCached: false });
+    }
+    if (typeof updateArtifactFilterBadge === 'function') updateArtifactFilterBadge();
+    if (typeof updateRelicFilterBadge === 'function') updateRelicFilterBadge();
 
     const lblTopSpd = document.getElementById('lbl-top-spd-title');
     if (lblTopSpd) lblTopSpd.textContent = t.dashboardTopSpdTitle || '';
@@ -238,7 +266,14 @@
     }
 
     const chartHint = document.getElementById('lbl-dash-unified-chart-hint');
-    if (chartHint) chartHint.textContent = t.dashboardVerdictStackHint || '';
+    if (chartHint) {
+      const kind =
+        typeof readDashboardDistKind === 'function' ? readDashboardDistKind() : 'runes';
+      chartHint.textContent =
+        kind === 'artifacts'
+          ? t.dashboardArtifactDistHint || ''
+          : t.dashboardVerdictStackHint || '';
+    }
 
     const slotShareTitle = document.getElementById('lbl-dash-slot-share-title');
     if (slotShareTitle) slotShareTitle.textContent = t.dashboardSlotShareTitle || '';
@@ -341,8 +376,12 @@
     if (lblRelDrawer) lblRelDrawer.textContent = t.relicFiltersDrawerTitle || 'Relic filters';
     const lblArtFg = document.getElementById('lbl-artifact-filter-grade');
     if (lblArtFg) lblArtFg.textContent = t.artifactFilterGrade || 'Grade';
-    const lblArtFc = document.getElementById('lbl-artifact-filter-category');
-    if (lblArtFc) lblArtFc.textContent = t.artifactFilterCategory || 'Category';
+    const lblArtFt = document.getElementById('lbl-artifact-filter-type');
+    if (lblArtFt) lblArtFt.textContent = t.artifactFilterType || 'Type';
+    const lblArtFa = document.getElementById('lbl-artifact-filter-attribute');
+    if (lblArtFa) lblArtFa.textContent = t.artifactFilterAttribute || 'Attribute';
+    const lblArtFr = document.getElementById('lbl-artifact-filter-role');
+    if (lblArtFr) lblArtFr.textContent = t.artifactFilterRole || 'Role';
     const lblArtFl = document.getElementById('lbl-artifact-filter-location');
     if (lblArtFl) lblArtFl.textContent = t.artifactFilterLocation || 'Location';
     const lblArtInv = document.getElementById('lbl-artifact-filter-inventory-opt');
@@ -353,6 +392,18 @@
     if (lblRelFg) lblRelFg.textContent = t.relicFilterGrade || 'Grade';
     const lblRelFc = document.getElementById('lbl-relic-filter-category');
     if (lblRelFc) lblRelFc.textContent = t.relicFilterCategory || 'Category';
+    const lblRelFl = document.getElementById('lbl-relic-filter-location');
+    if (lblRelFl) lblRelFl.textContent = t.relicFilterLocation || 'Location';
+    const lblRelInv = document.getElementById('lbl-relic-filter-inventory-opt');
+    if (lblRelInv) lblRelInv.textContent = t.relicFilterInventory || t.artifactFilterInventory || 'Inventory';
+    const lblRelEq = document.getElementById('lbl-relic-filter-equipped-opt');
+    if (lblRelEq) lblRelEq.textContent = t.relicFilterEquipped || t.artifactFilterEquipped || 'Equipped';
+    if (typeof syncArtifactTypeAttributeSelectLabels === 'function') {
+      syncArtifactTypeAttributeSelectLabels();
+    }
+    document.querySelectorAll('#artifact-filters-popover [data-filters-popover-done], #relic-filters-popover [data-filters-popover-done]').forEach((btn) => {
+      btn.textContent = t.tableFilterDone || 'Done';
+    });
     const lblThGrade = document.getElementById('lbl-th-grade');
     if (lblThGrade) lblThGrade.textContent = t.runeFilterGrade || 'Grade';
     const lblThSet = document.getElementById('lbl-th-set');

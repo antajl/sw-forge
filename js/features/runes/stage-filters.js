@@ -217,6 +217,7 @@
         } catch (e) { /* ignore */ }
       });
     });
+    if (typeof initDashboardDistKindTabs === 'function') initDashboardDistKindTabs();
   }
 
   document.getElementById('btn-dashboard-export-summary')?.addEventListener('click', async () => {

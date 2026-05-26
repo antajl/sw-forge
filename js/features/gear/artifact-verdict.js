@@ -20,5 +20,9 @@
     if (typeof attachArtifactVerdicts === 'function' && Array.isArray(allArtifacts)) {
       attachArtifactVerdicts(allArtifacts);
     }
+    if (typeof bumpAllArtifactsRev === 'function') bumpAllArtifactsRev();
+    if (typeof renderArtifactDashboardDistributions === 'function') {
+      renderArtifactDashboardDistributions({ animateCharts: true });
+    }
     if (typeof renderGearTables === 'function') renderGearTables();
   }

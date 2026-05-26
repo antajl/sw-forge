@@ -74,6 +74,12 @@
   }
 
   function replayDashboardDistributionAnimations() {
+    if (typeof readDashboardDistKind === 'function' && readDashboardDistKind() === 'artifacts') {
+      if (typeof replayArtifactDashboardAnimations === 'function') {
+        return replayArtifactDashboardAnimations();
+      }
+      return false;
+    }
     const motionApi = window.SWRM_MOTION;
     if (!motionApi || !motionApi.enabled()) return false;
     let played = false;
@@ -97,6 +103,12 @@
         dashPane &&
         (dashPane.hidden || !dashPane.classList.contains('is-active'))
       ) {
+        return;
+      }
+      if (typeof readDashboardDistKind === 'function' && readDashboardDistKind() === 'artifacts') {
+        if (typeof renderArtifactDashboardDistributions === 'function') {
+          renderArtifactDashboardDistributions({ animateCharts, fromZero });
+        }
         return;
       }
       if (typeof getVisibleRunes !== 'function' || typeof renderDashboard !== 'function') return;
@@ -636,6 +648,10 @@
 
     dashboardRenderCache.key = cacheKey;
     dashboardRenderCache.built = allRunes.length > 0;
+
+    if (typeof renderArtifactDashboardDistributions === 'function') {
+      renderArtifactDashboardDistributions({ animateCharts: false, skipIfCached: true });
+    }
   }
 
   function setText(id, val, sel) {

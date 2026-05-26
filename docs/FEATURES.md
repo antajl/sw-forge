@@ -24,13 +24,24 @@ How UI and data are split after the gear/teams redistribution.
 
 **SWOP Eff%** (`calcEfficiency` in `parser.js`) — account Depth elite metric and dashboard efficiency chart only; not shown in the rune grid.
 
+### Dashboard distributions
+
+**Runes hub → Dashboard → Distributions** has a **Runes | Artifacts** toggle (default Runes).
+
+| Mode | Charts |
+|------|--------|
+| **Runes** | Verdict, Roles, Sets, Slot mains, Ingame Score, Forge Score (existing sub-tabs; respects dashboard grade/level filters) |
+| **Artifacts** | Six panels: **Verdict**, **Grade**, **Type** (HP/Attack/Defense/Support — SWEX `type`=2 + `unit_style`), **Role**, **Attribute** (Fire–Dark — SWEX `type`=1 + `attribute`), **Score** (0.5 steps, 0–5+) |
+
+Artifact charts use the full `allArtifacts` list from SWEX (`parseAccountGear`). Empty state: upload prompt when no artifacts. Charts refresh on SWEX load and when artifact verdict rules change. Kind preference: `localStorage` key `swrm_dashboard_dist_kind_v1`.
+
 ## JavaScript (`js/features/`)
 
 | Folder | Scope | Main files |
 |--------|--------|------------|
 | `shell/` | App chrome, tabs, i18n bindings | `bootstrap.js`, `i18n-bindings.js`, `main-tabs.js` |
 | `runes/` | Dashboard, rune table, filters, upload | `table.js`, `table-row-render.js`, `table-virtual.js`, `dashboard.js`, … |
-| `gear/` | Artifact & relic inventory tables + Runes/Artifacts/Relics sub-tabs; artifact Keep/Sell verdicts | `table-kind.js`, `artifact-verdict.js`, `artifacts-table.js`, `relics-table.js` |
+| `gear/` | Artifact & relic tables; Dashboard artifact distributions; Keep/Sell verdicts | `dashboard-artifacts.js`, `artifact-verdict.js`, `artifacts-table.js`, `relics-table.js`, … |
 | `teams/` | Team sets builder (Monsters → Teams hub pane); combat SPD badges | `storage.js`, `ui.js` |
 | `monsters/` | Roster, cards, detail, gear on unit | `monsters-gear.js`, `monsters-detail.js`, … |
 | `rules/` | Runes rules (Engine / Roles / Verdict) + Artifacts rules (Roles / Verdict / Synergies) | `panel.js`, `bootstrap.js`, `artifact-rules-ui.js`, … |

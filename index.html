@@ -329,9 +329,22 @@
 
         <div class="panel panel-wide panel-dash-distributions" id="panel-dash-distributions">
           <header class="panel-dash-distributions-head">
-            <h2 class="rules-page-title" id="lbl-dash-unified-block-title">Distributions</h2>
+            <div class="panel-dash-distributions-head-row">
+              <h2 class="rules-page-title" id="lbl-dash-unified-block-title">Distributions</h2>
+              <nav class="dash-dist-kind-tabs" role="tablist" id="dash-dist-kind-tabs" aria-label="">
+                <button type="button" class="dash-dist-kind-tab is-active" role="tab" id="dash-dist-kind-runes"
+                  data-dash-dist-kind="runes" aria-selected="true" tabindex="0">
+                  <span class="dash-dist-kind-tab__label" id="lbl-dash-dist-kind-runes">Runes</span>
+                </button>
+                <button type="button" class="dash-dist-kind-tab" role="tab" id="dash-dist-kind-artifacts"
+                  data-dash-dist-kind="artifacts" aria-selected="false" tabindex="-1">
+                  <span class="dash-dist-kind-tab__label" id="lbl-dash-dist-kind-artifacts">Artifacts</span>
+                </button>
+              </nav>
+            </div>
             <p class="rules-page-lead dash-unified-block-hint" id="lbl-dash-unified-chart-hint"></p>
           </header>
+          <div id="dash-dist-runes-wrap" class="dash-dist-runes-wrap">
           <nav class="rules-subtabs dash-unified-tabs" role="tablist" id="dash-unified-tabs" aria-label="">
             <span class="dash-unified-tabs__indicator" aria-hidden="true"></span>
             <button type="button" class="rules-subtab dash-unified-tab is-active" role="tab" id="dash-unified-tab-verdict"
@@ -387,6 +400,38 @@
               <div id="score-chart" class="eff-chart eff-chart--score"></div>
             </div>
           </div>
+          </div>
+          </div>
+          <div id="dash-dist-artifacts-wrap" class="dash-dist-artifacts-wrap" hidden>
+            <p class="dash-artifact-empty" id="dash-artifact-empty" hidden></p>
+            <div id="dash-artifact-grid" class="dash-artifact-grid" hidden>
+              <section class="dash-artifact-cell" aria-labelledby="lbl-dash-art-verdict">
+                <h3 class="dash-artifact-cell__title" id="lbl-dash-art-verdict">Artifact Verdict</h3>
+                <div id="dash-art-verdict-chart" class="role-chart verdict-chart dash-artifact-verdict-chart"></div>
+              </section>
+              <section class="dash-artifact-cell" aria-labelledby="lbl-dash-art-grade">
+                <h3 class="dash-artifact-cell__title" id="lbl-dash-art-grade">Grade</h3>
+                <div id="dash-art-grade-chart" class="role-chart"></div>
+              </section>
+              <section class="dash-artifact-cell" aria-labelledby="lbl-dash-art-type">
+                <h3 class="dash-artifact-cell__title" id="lbl-dash-art-type">Type</h3>
+                <div id="dash-art-type-chart" class="role-chart"></div>
+              </section>
+              <section class="dash-artifact-cell" aria-labelledby="lbl-dash-art-role">
+                <h3 class="dash-artifact-cell__title" id="lbl-dash-art-role">Role</h3>
+                <div id="dash-art-role-chart" class="role-chart"></div>
+              </section>
+              <section class="dash-artifact-cell" aria-labelledby="lbl-dash-art-attribute">
+                <h3 class="dash-artifact-cell__title" id="lbl-dash-art-attribute">Attribute</h3>
+                <div id="dash-art-attribute-chart" class="role-chart"></div>
+              </section>
+              <section class="dash-artifact-cell" aria-labelledby="lbl-dash-art-score">
+                <h3 class="dash-artifact-cell__title" id="lbl-dash-art-score">Score Distribution</h3>
+                <div class="eff-histo-host eff-histo-host--dash-pane eff-histo-host--artifact-score">
+                  <div id="dash-art-score-chart" class="eff-chart eff-chart--artifact-score"></div>
+                </div>
+              </section>
+            </div>
           </div>
         </div>
 
@@ -577,7 +622,7 @@
                         <span id="lbl-artifact-more-filters">More Filters ⚙</span>
                         <span class="monsters-toolbar-btn__badge" id="artifact-filters-active-count" hidden></span>
                       </button>
-                      <div id="artifact-filters-popover" class="filters-popover" role="dialog" aria-labelledby="lbl-artifact-filters-drawer-title" hidden data-anchor-btn="artifact-more-filters-btn">
+                      <div id="artifact-filters-popover" class="filters-popover filters-popover--wide" role="dialog" aria-labelledby="lbl-artifact-filters-drawer-title" hidden data-anchor-btn="artifact-more-filters-btn">
                         <div class="filters-popover__panel">
                           <header class="filters-popover__head">
                             <h3 class="filters-popover__title" id="lbl-artifact-filters-drawer-title">Artifact filters</h3>
@@ -592,8 +637,20 @@
                                 </select>
                               </label>
                               <label>
-                                <span id="lbl-artifact-filter-category">Category</span>
-                                <select id="filter-artifact-category">
+                                <span id="lbl-artifact-filter-type">Type</span>
+                                <select id="filter-artifact-type">
+                                  <option value="">All</option>
+                                </select>
+                              </label>
+                              <label>
+                                <span id="lbl-artifact-filter-attribute">Attribute</span>
+                                <select id="filter-artifact-attribute">
+                                  <option value="">All</option>
+                                </select>
+                              </label>
+                              <label>
+                                <span id="lbl-artifact-filter-role">Role</span>
+                                <select id="filter-artifact-role">
                                   <option value="">All</option>
                                 </select>
                               </label>
@@ -650,7 +707,7 @@
                         <span id="lbl-relic-more-filters">More Filters ⚙</span>
                         <span class="monsters-toolbar-btn__badge" id="relic-filters-active-count" hidden></span>
                       </button>
-                      <div id="relic-filters-popover" class="filters-popover" role="dialog" aria-labelledby="lbl-relic-filters-drawer-title" hidden data-anchor-btn="relic-more-filters-btn">
+                      <div id="relic-filters-popover" class="filters-popover filters-popover--wide" role="dialog" aria-labelledby="lbl-relic-filters-drawer-title" hidden data-anchor-btn="relic-more-filters-btn">
                         <div class="filters-popover__panel">
                           <header class="filters-popover__head">
                             <h3 class="filters-popover__title" id="lbl-relic-filters-drawer-title">Relic filters</h3>
@@ -668,6 +725,14 @@
                                 <span id="lbl-relic-filter-category">Category</span>
                                 <select id="filter-relic-category">
                                   <option value="">All</option>
+                                </select>
+                              </label>
+                              <label>
+                                <span id="lbl-relic-filter-location">Location</span>
+                                <select id="filter-relic-location">
+                                  <option value="">All</option>
+                                  <option value="inventory" id="lbl-relic-filter-inventory-opt">Inventory</option>
+                                  <option value="equipped" id="lbl-relic-filter-equipped-opt">Equipped</option>
                                 </select>
                               </label>
                             </div>
@@ -693,6 +758,10 @@
           </div>
           <div id="rune-table-active-filters" class="rune-table-active-filters" hidden>
             <div id="rune-table-filter-chips" class="rune-table-filter-chips"></div>
+          </div>
+          <div id="gear-table-active-filters" class="rune-table-active-filters gear-table-active-filters" hidden>
+            <div id="gear-table-filter-chips" class="rune-table-filter-chips"></div>
+            <button type="button" class="rune-table-active-filters__clear" id="gear-table-filter-chips-clear" hidden>Clear all</button>
           </div>
           <div class="table-kind-pane is-active" data-table-kind-pane="runes">
             <div id="rune-table-roster-meta" class="monsters-roster-meta rune-table-roster-meta" data-gear-roster-meta="runes">

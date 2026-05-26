@@ -18,6 +18,7 @@
     3: 'defense',
     4: 'support',
     5: 'support',
+    98: 'support',
   };
 
   function assetUrl(relativePath) {
@@ -31,13 +32,19 @@
 
   function artifactIconKey(artifact) {
     if (!artifact) return '';
-    const slot = Number(artifact.slot);
-    const gearType = Number(artifact.gearType);
+    const pieceType = Number(artifact.pieceType != null ? artifact.pieceType : artifact.gearType);
+    const unitStyle = Number(artifact.unitStyle);
     const attr = Number(artifact.attribute);
-    if (slot === 2 || gearType === 2 || gearType === 5) {
-      return ARTIFACT_ARCHETYPE_KEY[gearType] || '';
+    if (pieceType === 2) {
+      return ARTIFACT_ARCHETYPE_KEY[unitStyle] || '';
     }
-    if (attr === 6 || gearType === 5) return 'dark';
+    if (pieceType === 1) {
+      if (attr === 6 || attr === 98) return 'dark';
+      return ARTIFACT_ELEMENT_KEY[attr] || '';
+    }
+    const slot = Number(artifact.slot);
+    if (slot === 2) return ARTIFACT_ARCHETYPE_KEY[unitStyle] || '';
+    if (attr === 6 || attr === 98) return 'dark';
     return ARTIFACT_ELEMENT_KEY[attr] || '';
   }
 

@@ -2,50 +2,74 @@
   let filteredRelics = [];
   let relicFilterGrade = '';
   let relicFilterCategory = '';
+  let relicFilterLocation = '';
 
   function relicPassesFilters(r) {
     if (relicFilterGrade && String(r.gradeStr || '') !== relicFilterGrade) return false;
     if (relicFilterCategory && String(r.category || '') !== relicFilterCategory) return false;
+    if (relicFilterLocation === 'inventory') {
+      if (r.occupiedId != null && Number(r.occupiedId) !== 0) return false;
+    } else if (relicFilterLocation === 'equipped') {
+      if (r.occupiedId == null || Number(r.occupiedId) === 0) return false;
+    }
     return true;
   }
 
-  function applyRelicTableSearch() {
-    const relQ = (document.getElementById('search-box-relics')?.value || '').trim().toLowerCase();
-    const relSrc = (allRelics || []).filter(relicPassesFilters);
-    const rawQ = document.getElementById('search-box-relics')?.value || '';
-    filteredRelics = !relQ ? relSrc.slice() : relSrc.filter((r) => gearMatchesSearchQuery(r, rawQ));
+  function readRelicFiltersFromDom() {
+    return {
+      grade: document.getElementById('filter-relic-grade')?.value || '',
+      category: document.getElementById('filter-relic-category')?.value || '',
+      location: document.getElementById('filter-relic-location')?.value || '',
+    };
   }
 
-  function relicToolbarHasActiveFilters() {
-    const q = (document.getElementById('search-box-relics')?.value || '').trim();
-    if (q) return true;
-    return countActiveRelicFilters() > 0;
-  }
-
-  function updateRelicResetButton() {
-    if (typeof updateToolbarResetButton === 'function') {
-      updateToolbarResetButton('btn-relic-reset-filters', relicToolbarHasActiveFilters());
-    }
+  function applyRelicFiltersFromDom() {
+    const f = readRelicFiltersFromDom();
+    relicFilterGrade = f.grade;
+    relicFilterCategory = f.category;
+    relicFilterLocation = f.location;
   }
 
   function countActiveRelicFilters() {
     let n = 0;
     if (relicFilterGrade) n++;
     if (relicFilterCategory) n++;
+    if (relicFilterLocation) n++;
     return n;
   }
 
-  function updateRelicFilterBadge() {
-    const badge = document.getElementById('relic-filters-active-count');
-    if (!badge) return;
-    const n = countActiveRelicFilters();
-    if (n > 0) {
-      badge.textContent = String(n);
-      badge.hidden = false;
-    } else {
-      badge.hidden = true;
+  function relicFilterChipDefs() {
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const chips = [];
+    const push = (key, label) => {
+      if (label) chips.push({ key, label });
+    };
+    if (relicFilterGrade) push('grade', `${t.relicFilterGrade || 'Grade'}: ${relicFilterGrade}`);
+    if (relicFilterCategory) {
+      push('category', `${t.relicFilterCategory || 'Category'}: ${relicFilterCategory}`);
     }
-    updateRelicResetButton();
+    if (relicFilterLocation) {
+      const locLbl =
+        relicFilterLocation === 'inventory'
+          ? t.relicFilterInventory || t.artifactFilterInventory || 'Inventory'
+          : t.relicFilterEquipped || t.artifactFilterEquipped || 'Equipped';
+      push('location', `${t.relicFilterLocation || 'Location'}: ${locLbl}`);
+    }
+    return chips;
+  }
+
+  function clearRelicFilterChip(key) {
+    const map = {
+      grade: 'filter-relic-grade',
+      category: 'filter-relic-category',
+      location: 'filter-relic-location',
+    };
+    const id = map[key];
+    const el = id ? document.getElementById(id) : null;
+    if (el) el.value = '';
+    applyRelicFiltersFromDom();
+    updateRelicFilterBadge();
+    renderGearTables();
   }
 
   function exportRelicsCsv() {
@@ -101,15 +125,42 @@
     URL.revokeObjectURL(url);
   }
 
+  function applyRelicTableSearch() {
+    const relQ = (document.getElementById('search-box-relics')?.value || '').trim().toLowerCase();
+    const relSrc = (allRelics || []).filter(relicPassesFilters);
+    const rawQ = document.getElementById('search-box-relics')?.value || '';
+    filteredRelics = !relQ ? relSrc.slice() : relSrc.filter((r) => gearMatchesSearchQuery(r, rawQ));
+  }
+
+  function relicToolbarHasActiveFilters() {
+    const q = (document.getElementById('search-box-relics')?.value || '').trim();
+    if (q) return true;
+    return countActiveRelicFilters() > 0;
+  }
+
+  function updateRelicResetButton() {
+    if (typeof updateToolbarResetButton === 'function') {
+      updateToolbarResetButton('btn-relic-reset-filters', relicToolbarHasActiveFilters());
+    }
+  }
+
+  function updateRelicFilterBadge() {
+    const n = countActiveRelicFilters();
+    updateGearFiltersButtonState('relic-more-filters-btn', 'relic-filters-active-count', n);
+    renderGearFilterChips(relicFilterChipDefs());
+    updateRelicResetButton();
+  }
+
   function resetRelicTableFilters() {
     relicFilterGrade = '';
     relicFilterCategory = '';
+    relicFilterLocation = '';
     const sb = document.getElementById('search-box-relics');
     if (sb) sb.value = '';
-    const g = document.getElementById('filter-relic-grade');
-    const c = document.getElementById('filter-relic-category');
-    if (g) g.value = '';
-    if (c) c.value = '';
+    ['filter-relic-grade', 'filter-relic-category', 'filter-relic-location'].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
     updateRelicFilterBadge();
     updateRelicResetButton();
     renderGearTables();
@@ -172,9 +223,10 @@
     if (bindRelicTableFilters._done) return;
     bindRelicTableFilters._done = true;
 
+    if (typeof bindGearFilterChipsClear === 'function') bindGearFilterChipsClear();
+
     const onRelicFilterChange = () => {
-      relicFilterGrade = document.getElementById('filter-relic-grade')?.value || '';
-      relicFilterCategory = document.getElementById('filter-relic-category')?.value || '';
+      applyRelicFiltersFromDom();
       updateRelicFilterBadge();
       renderGearTables();
     };
@@ -189,16 +241,17 @@
     document.getElementById('relic-filters-drawer-reset')?.addEventListener('click', resetRelicTableFilters);
     document.getElementById('btn-relic-export-csv')?.addEventListener('click', exportRelicsCsv);
 
-    document.getElementById('filter-relic-grade')?.addEventListener('change', onRelicFilterChange);
-    document.getElementById('filter-relic-category')?.addEventListener('change', onRelicFilterChange);
+    ['filter-relic-grade', 'filter-relic-category', 'filter-relic-location'].forEach((id) => {
+      document.getElementById(id)?.addEventListener('change', onRelicFilterChange);
+    });
 
     let relDebounce = null;
     document.getElementById('search-box-relics')?.addEventListener('input', () => {
       clearTimeout(relDebounce);
       relDebounce = setTimeout(() => {
-        updateRelicResetButton();
+        updateRelicFilterBadge();
         renderGearTables();
       }, 280);
     });
-    updateRelicResetButton();
+    updateRelicFilterBadge();
   }

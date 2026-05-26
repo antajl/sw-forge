@@ -25,15 +25,23 @@
     4: 'Light',
     5: 'Dark',
     6: 'Intangible',
+    98: 'Intangible',
   };
 
-  /** SWEX type on archetype artifacts (slot 2). */
+  /**
+   * SWEX `type` on the artifact record: 1 = Attribute piece, 2 = Type piece (not HP/ATK/DEF/Support).
+   * Archetype for Type pieces is `unit_style` (1–4; 98 = Intangible in newer exports).
+   */
+  const ARTIFACT_PIECE_TYPE = { ATTRIBUTE: 1, TYPE: 2 };
+
+  /** Monster archetype on Type artifacts (`unit_style`). */
   const ARTIFACT_ARCHETYPE = {
     1: 'HP',
     2: 'Attack',
     3: 'Defense',
     4: 'Support',
     5: 'Intangible',
+    98: 'Intangible',
   };
 
   const RELIC_WEAR_MAX = 100;
@@ -69,16 +77,27 @@
     return `t${typeId}`;
   }
 
-  function artifactCategory(raw) {
+  function artifactPieceKind(raw) {
+    const pieceType = Number(raw.type);
+    if (pieceType === ARTIFACT_PIECE_TYPE.TYPE) return 'type';
+    if (pieceType === ARTIFACT_PIECE_TYPE.ATTRIBUTE) return 'attribute';
     const slot = Number(raw.slot);
-    const gearType = Number(raw.type);
+    if (slot === 2) return 'type';
+    if (slot === 1) return 'attribute';
+    return '';
+  }
+
+  function artifactCategory(raw) {
+    const kind = artifactPieceKind(raw);
     const attr = Number(raw.attribute);
-    if (slot === 2 || gearType === 2) {
-      if (gearType === 5) return 'Intangible';
-      return ARTIFACT_ARCHETYPE[gearType] || `Archetype ${gearType}`;
+    const unitStyle = Number(raw.unit_style);
+    if (kind === 'type') {
+      return ARTIFACT_ARCHETYPE[unitStyle] || (Number.isFinite(unitStyle) ? `Type ${unitStyle}` : 'Type');
     }
-    if (attr === 6) return 'Intangible';
-    return ARTIFACT_ELEMENT[attr] || (Number.isFinite(attr) ? `Element ${attr}` : 'Element');
+    if (kind === 'attribute') {
+      return ARTIFACT_ELEMENT[attr] || (Number.isFinite(attr) ? `Element ${attr}` : 'Element');
+    }
+    return 'Artifact';
   }
 
   function relicCategory(relicType) {
@@ -106,12 +125,17 @@
       raw.natural_rank != null && raw.natural_rank !== ''
         ? raw.natural_rank
         : raw.rank;
+    const pieceType = Number(raw.type) || 0;
+    const unitStyle = Number(raw.unit_style) || 0;
     return {
       kind: 'artifact',
       rid: raw.rid,
       occupiedId: raw.occupied_id != null ? Number(raw.occupied_id) : null,
       slot,
-      gearType: Number(raw.type) || 0,
+      pieceType,
+      unitStyle,
+      /** @deprecated use pieceType — kept for callers expecting raw SWEX `type`. */
+      gearType: pieceType,
       attribute: Number(raw.attribute) || 0,
       category: artifactCategory(raw),
       grade: normalizeGradeRank(rankRaw),
@@ -289,4 +313,7 @@
   window.SWRM.formatRelicWearCount = formatRelicWearCount;
   window.SWRM.RELIC_WEAR_MAX = RELIC_WEAR_MAX;
   window.SWRM.artifactCategoryName = artifactCategory;
+  window.SWRM.ARTIFACT_PIECE_TYPE = ARTIFACT_PIECE_TYPE;
+  window.SWRM.ARTIFACT_ARCHETYPE = ARTIFACT_ARCHETYPE;
+  window.SWRM.ARTIFACT_ELEMENT = ARTIFACT_ELEMENT;
 })();

@@ -1,0 +1,16 @@
+/* gear/table-filters.css — More Filters popover + active chips for artifact/relic tables */
+
+.table-toolbar__card:has(.filters-popover-host.is-open),
+.table-toolbar:has(.filters-popover-host.is-open) {
+  overflow: visible;
+  position: relative;
+  z-index: 25;
+}
+
+.filters-popover-host.is-open .filters-popover {
+  z-index: 70;
+}
+
+.gear-table-active-filters {
+  margin-top: -4px;
+}

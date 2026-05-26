@@ -10,6 +10,10 @@ const STATIC_CHANGELOG = [
     date: '2026-05-26',
     items: {
       en: [
+        'Artifacts: fix Type category parsing (SWEX type=piece kind, unit_style=archetype). Dashboard artifact Verdict chart restyled; Grade/Type/Attribute sorted by count.',
+        'Artifacts / Relics table: More Filters — Type and Attribute split, Role filter, active filter chips; relics get Location (Inventory / Equipped).',
+        'Dashboard → Distributions: Runes | Artifacts toggle. Type chart counts slot-2 pieces only (HP/Attack/Defense/Support); Attribute chart counts slot-1 by element.',
+        'Dashboard → Distributions: Runes | Artifacts toggle. Artifact charts: Verdict (donut), Grade, Type, Role, Attribute, and Score histogram (0–5+).',
         'Rules: split into Runes (Engine / Roles / Verdict) and Artifacts (Roles / Verdict / Synergies). Artifact roles are fully editable with expected main stat and useful sub list.',
         'Artifacts: DEF main on Attack-type pieces no longer auto-assigns Classic DPS when that role requires ATK main — role Unknown or a better match instead.',
         'Artifacts table: one list again (no Type/Attribute split) — same layout as Runes and Relics.',
@@ -26,6 +30,10 @@ const STATIC_CHANGELOG = [
         'Monsters: artifacts and relics on the detail panel; Share Profile links; Ancient rune glow.',
       ],
       ru: [
+        'Артефакты: исправлен разбор Type (SWEX: type — вид слота, unit_style — архетип). Dashboard: Verdict в стиле сайта; Grade/Type/Attribute по убыванию.',
+        'Таблицы артефактов / реликвий: More Filters — Type и Attribute отдельно, фильтр Role, чипы активных фильтров; у реликвий — Location.',
+        'Dashboard → Распределения: график Type только для слота 2 (HP/Attack/Defense/Support); Attribute — слот 1 по стихии.',
+        'Dashboard → Распределения: переключатель Руны | Артефакты. Графики: вердикт, грейд, тип, роль, стихия, оценка (0–5+).',
         'Rules: разделение на Runes (Engine / Roles / Verdict) и Artifacts (Roles / Verdict / Synergies). Роли артефактов настраиваются: main и список полезных сабов.',
         'Артефакты: DEF main на Attack-типе больше не даёт Classic DPS, если у роли задан ATK main — Unknown или другая роль.',
         'Таблица артефактов: снова один общий список (без Type/Attribute), как у рун и реликвий.',
@@ -42,6 +50,10 @@ const STATIC_CHANGELOG = [
         'Монстры: артефакты и реликвии в деталях; Share Profile; свечение Ancient.',
       ],
       fr: [
+        'Artefacts : parsing Type corrigé (SWEX type/unit_style). Dashboard : Verdict refait ; Grade/Type/Attribut triés par quantité.',
+        'Tables artéfacts / reliques : More Filters — Type et Attribut séparés, filtre Rôle, puces ; reliques : emplacement.',
+        'Dashboard → Distributions : graphique Type (emplacement 2) et Attribut (emplacement 1) comptés séparément.',
+        'Dashboard → Distributions : bascule Runes | Artefacts. Graphiques verdict, grade, type, rôle, attribut, score (0–5+).',
         'Rules : Runes (Engine / Roles / Verdict) et Artifacts (Roles / Verdict / Synergies). Rôles artefacts éditables avec main attendu et sous-stats utiles.',
         'Artefacts : main DEF sur type Attack n’obtient plus Classic DPS si le rôle exige ATK — Unknown ou autre rôle.',
         'Table artefacts : une seule liste (plus de split Type/Attribute), comme runes et reliques.',

@@ -1,4 +1,30 @@
 /* Top SPD sort and radar */
+.dash-unified-pane .panel-top-spd {
+  margin-top: 14px;
+  padding: 12px 14px 14px;
+  border: 1px solid color-mix(in srgb, var(--border2) 82%, var(--accent));
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--dash-inner-well) 82%, var(--surface));
+}
+
+.dash-unified-pane .panel-top-spd .rules-page-title {
+  font-size: 0.95rem;
+}
+
+.dash-unified-pane .panel-top-spd-head {
+  margin-bottom: 8px;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.dash-unified-pane .panel-top-spd .top-spd-radar-col {
+  flex-basis: clamp(130px, 24%, 230px);
+}
+
+.dash-unified-pane .panel-top-spd .top-spd-radar-stage {
+  max-height: min(30vh, 230px);
+}
+
 .top-spd-sort {
   display: inline-flex;
   flex-wrap: wrap;

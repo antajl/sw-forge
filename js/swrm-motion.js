@@ -182,11 +182,18 @@
   function positionDashUnifiedTabIndicator(opts) {
     const { nav, activeKey, instant } = opts || {};
     const ind = nav && nav.querySelector('.dash-unified-tabs__indicator');
-    const key = ['verdict', 'roles', 'sets', 'slots', 'eff', 'score'].includes(activeKey) ? activeKey : 'verdict';
-    const btn = document.getElementById(`dash-unified-tab-${key}`);
+    const key = String(activeKey || '').trim();
+    const btn =
+      (key && document.getElementById(`dash-unified-tab-${key}`)) ||
+      (key && nav && nav.querySelector(`[data-dash-uni="${key}"]`)) ||
+      (key && nav && nav.querySelector(`[data-dash-art-tab="${key}"]`)) ||
+      (nav && nav.querySelector('.is-active')) ||
+      null;
     if (!nav || !ind || !btn) return false;
-    const x = btn.offsetLeft;
-    const w = Math.max(0, btn.offsetWidth);
+    const navRect = nav.getBoundingClientRect();
+    const btnRect = btn.getBoundingClientRect();
+    const x = Math.max(0, btnRect.left - navRect.left);
+    const w = Math.max(0, btnRect.width);
     killTweensOf(ind);
     const snap = () => {
       ind.style.left = `${x}px`;
@@ -258,8 +265,11 @@
       : 'engine';
     const btn = document.getElementById(`rules-subtab-${key}`);
     if (!nav || !ind || !btn) return false;
-    const x = btn.offsetLeft;
-    const w = Math.max(0, btn.offsetWidth);
+    const label = btn.querySelector('.rules-subtab__label');
+    const navRect = nav.getBoundingClientRect();
+    const targetRect = (label || btn).getBoundingClientRect();
+    const x = Math.max(0, targetRect.left - navRect.left);
+    const w = Math.max(0, targetRect.width);
     killTweensOf(ind);
     const snap = () => {
       ind.style.left = `${x}px`;

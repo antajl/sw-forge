@@ -62,7 +62,12 @@
 
   function slotNameLooksLikeDemo(name) {
     const n = String(name || '').trim().toLowerCase();
-    return n === 'demo' || n.startsWith('demo ') || n.includes('(demo)');
+    return (
+      n === 'demo' ||
+      n === 'demo.json' ||
+      n.startsWith('demo ') ||
+      n.includes('(demo)')
+    );
   }
 
   function isUsingDemoDataset() {
@@ -102,7 +107,7 @@
     if (dirty) saveDbSlots(slots);
   }
 
-  async function loadDemoDatasetInMemory(jsonText, jsonObj, label) {
+  async function loadDemoDatasetInMemory(jsonText, jsonObj, label, options = {}) {
     allRunes = parseSWEX(jsonObj);
     if (typeof bumpAllRunesRev === 'function') bumpAllRunesRev();
     rebuildUnitsFromSwex(jsonObj);
@@ -112,7 +117,7 @@
     } catch (e) {
       console.warn('Could not persist embedded demo to IndexedDB:', e);
     }
-    if (!userHasLoadedRealExport()) {
+    if (!options.preserveSlotMeta && !userHasLoadedRealExport()) {
       saveDbSlots(defaultEmptyDbSlotsMeta());
     }
     markUsingDemoDataset(true);
@@ -127,7 +132,9 @@
       if (!runesProbe.length) return false;
       const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en || {};
       const label = t.demoDatasetSlotLabel || 'Demo';
-      await loadDemoDatasetInMemory(jsonText, json, label);
+      await loadDemoDatasetInMemory(jsonText, json, label, {
+        preserveSlotMeta: options.preserveSlotMeta === true,
+      });
       if (typeof syncDemoTeamsWithDatasetMode === 'function') syncDemoTeamsWithDatasetMode();
       if (options.skipUiAfter !== true) {
         uiAfterSuccessfulRuneRestore({ name: label }, { keepTab: true });
@@ -185,16 +192,14 @@
     try {
       const slots = loadDbSlots();
       const hasSlotMeta = slots.some((s) => s.name && s.name.trim() !== '');
-      const realSlot = (s) =>
-        s.name &&
-        s.name.trim() !== '' &&
-        !slotNameLooksLikeDemo(s.name);
-      const targetSlot =
-        slots.find((s) => s.active && realSlot(s)) || slots.find((s) => realSlot(s));
+      const activeSlot =
+        slots.find((s) => s && s.active) ||
+        slots.find((s) => s && Number.isFinite(Number(s.id))) ||
+        null;
 
       console.log('=== INITIALIZATION DEBUG ===');
       console.log('Slots from loadDbSlots():', slots);
-      console.log('hasSlotMeta:', hasSlotMeta, 'targetSlot:', targetSlot);
+      console.log('hasSlotMeta:', hasSlotMeta, 'activeSlot:', activeSlot);
 
       if (!Array.isArray(slots) || slots.length === 0) {
         console.error('Invalid slots array:', slots);
@@ -218,21 +223,22 @@
       let restored = false;
       let meta = null;
 
-      if (targetSlot) {
-        const jsonText = await loadSlotData(targetSlot.id);
-        if (await tryHydrateRunesFromJsonText(jsonText, { cacheId: targetSlot.id })) {
+      if (activeSlot && Number.isFinite(Number(activeSlot.id))) {
+        const jsonText = await loadSlotData(activeSlot.id);
+        if (await tryHydrateRunesFromJsonText(jsonText, { cacheId: activeSlot.id })) {
           markUsingDemoDataset(false);
-          meta = targetSlot;
+          meta = activeSlot;
           restored = true;
         } else if (
           savedRunes &&
-          (await tryHydrateRunesFromJsonText(savedRunes, { cacheId: targetSlot.id }))
+          Number(activeSlot.id) === 1 &&
+          (await tryHydrateRunesFromJsonText(savedRunes, { cacheId: activeSlot.id }))
         ) {
           console.log(
-            `IndexedDB empty for Data ${targetSlot.id}; restored from localStorage backup`,
+            `IndexedDB empty for Data ${activeSlot.id}; restored from localStorage backup`,
           );
           markUsingDemoDataset(false);
-          meta = targetSlot;
+          meta = activeSlot;
           restored = true;
         }
       }
@@ -284,20 +290,9 @@
 
       if (restored && meta) return { restored: true, meta };
 
-      if (userHasLoadedRealExport()) {
-        if (hasSlotMeta && targetSlot) {
-          console.log(
-            `Slot ${targetSlot.id} has metadata but no readable JSON; showing upload prompt`,
-          );
-        } else {
-          console.log('No saved runes found; showing upload prompt');
-        }
-        return { restored: false };
-      }
-
-      if (hasSlotMeta && targetSlot) {
+      if (hasSlotMeta && activeSlot) {
         console.log(
-          `Slot ${targetSlot.id} has metadata but no readable JSON; trying embedded demo`,
+          `Slot ${activeSlot.id} has no readable JSON; trying embedded demo`,
         );
       } else {
         console.log('No saved runes found; trying embedded demo');
@@ -438,8 +433,7 @@
     try {
       dismissed = sessionStorage.getItem(SS_DEMO_BANNER_DISMISS) === '1';
     } catch (e2) { /* ignore */ }
-    const show =
-      Boolean(usingDemo && allRunes.length && !userHasLoadedRealExport() && !dismissed);
+    const show = Boolean(usingDemo && allRunes.length && !dismissed);
     if (show) aside.removeAttribute('hidden');
     else aside.setAttribute('hidden', '');
     aside.setAttribute('aria-hidden', show ? 'false' : 'true');
@@ -528,7 +522,9 @@
       }
       const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en || {};
       const label = t.demoDatasetSlotLabel || 'Demo';
-      await loadDemoDatasetInMemory(jsonText, json, label);
+      await loadDemoDatasetInMemory(jsonText, json, label, {
+        preserveSlotMeta: options.preserveSlotMeta === true,
+      });
       if (typeof syncDemoTeamsWithDatasetMode === 'function') syncDemoTeamsWithDatasetMode();
       if (options.skipUiAfter !== true) {
         uiAfterSuccessfulRuneRestore({ name: label }, { keepTab: options.keepTab === true });

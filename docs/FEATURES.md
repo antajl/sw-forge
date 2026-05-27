@@ -24,16 +24,20 @@ How UI and data are split after the gear/teams redistribution.
 
 **SWOP Eff%** (`calcEfficiency` in `parser.js`) — account Depth elite metric and dashboard efficiency chart only; not shown in the rune grid.
 
+### Artifact and relic table columns
+
+Artifacts and relics reuse the Rune Table interaction model: sticky headers, zebra rows, vertical block separators, and click-to-sort headers. Artifact score columns are split into **Ingame** (`calcArtifactIngameScore`) and **Forge** (`calcArtifactForgeScoreDisplay`); relics sort by category, level, durability, main, secondary, and equipped location.
+
 ### Dashboard distributions
 
 **Runes hub → Dashboard → Distributions** has a **Runes | Artifacts** toggle (default Runes).
 
 | Mode | Charts |
 |------|--------|
-| **Runes** | Verdict, Roles, Sets, Slot mains, Ingame Score, Forge Score (existing sub-tabs; respects dashboard grade/level filters) |
-| **Artifacts** | Six panels: **Verdict**, **Grade**, **Type** (HP/Attack/Defense/Support — SWEX `type`=2 + `unit_style`), **Role**, **Attribute** (Fire–Dark — SWEX `type`=1 + `attribute`), **Score** (0.5 steps, 0–5+) |
+| **Runes** | Verdict, Roles, Sets, Slot mains, Ingame Score, Forge Score, plus Top SPD inside the Slots pane (respects dashboard grade/level filters) |
+| **Artifacts** | Six panels: **Verdict**, **Grade**, **Type** (HP/Attack/Defense/Support — SWEX `type`=2 + `unit_style`), **Role**, **Attribute** (Fire–Dark — SWEX `type`=1 + `attribute`), **Ingame / Forge Score** histograms |
 
-Artifact charts use the full `allArtifacts` list from SWEX (`parseAccountGear`). Empty state: upload prompt when no artifacts. Charts refresh on SWEX load and when artifact verdict rules change. Kind preference: `localStorage` key `swrm_dashboard_dist_kind_v1`.
+Artifact charts use the full `allArtifacts` list from SWEX (`parseAccountGear`). Artifact Ingame Score comes from coefficient weights in `js/data/artifact-ingame-score.js`; `artifactIngameScoreBreakdown()` exposes the value × coefficient diagnostic surface. Empty state: upload prompt when no artifacts. Charts refresh on SWEX load and when artifact verdict rules change. Kind preference: `localStorage` key `swrm_dashboard_dist_kind_v1`.
 
 ## JavaScript (`js/features/`)
 
@@ -54,6 +58,7 @@ Artifact charts use the full `allArtifacts` list from SWEX (`parseAccountGear`).
 | Path | Scope |
 |------|--------|
 | `gear/parse.js` | SWEX artifacts & relics → normalized objects + panel stat bonuses |
+| `artifact-ingame-score.js` | Artifact Ingame Score coefficients: `ARTIFACT_INGAME_WEIGHTS`, `calcArtifactIngameScore()`, `artifactIngameScoreBreakdown()` |
 | `artifacts/effects.js` | Artifact sub-stat labels (SW-Exporter mapping) |
 | `relics/effects.js` | Relic category / secondary labels (user-confirmed types only) |
 | `parser.js`, `monster-db.js`, `skill-db.js` | Shared import / monsters |

@@ -326,7 +326,34 @@
     return { ok, score, expected: 132, breakdown };
   }
 
+  /** Calibration anchor for coefficient-based artifact Ingame Score. */
+  function runArtifactIngameScoreSelfTest() {
+    const calc = window.SWRM && window.SWRM.calcArtifactIngameScore;
+    if (typeof calc !== 'function') {
+      console.warn('[ARTIFACT-INGAME-SCORE-TEST] calcArtifactIngameScore not loaded');
+      return { ok: false, score: null, expected: 83 };
+    }
+    const artifact = {
+      secs: [
+        { type: 301, value: 7 },
+        { type: 220, value: 2 },
+        { type: 200, value: 14 },
+        { type: 201, value: 6 },
+      ],
+    };
+    const score = calc(artifact);
+    const ok = score === 83;
+    const breakdown =
+      typeof window.SWRM.artifactIngameScoreBreakdown === 'function'
+        ? window.SWRM.artifactIngameScoreBreakdown(artifact)
+        : [];
+    console.log(`[ARTIFACT-INGAME-SCORE-TEST] score=${score} expected=83 ${ok ? 'PASS' : 'FAIL'}`);
+    if (breakdown.length) console.log(breakdown.join('\n'));
+    return { ok, score, expected: 83, breakdown };
+  }
+
   window.SWRM = window.SWRM || {};
   window.SWRM.runSelfTests = runSelfTests;
   window.SWRM.runIngameScoreSelfTest = runIngameScoreSelfTest;
+  window.SWRM.runArtifactIngameScoreSelfTest = runArtifactIngameScoreSelfTest;
 })();

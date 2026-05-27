@@ -426,18 +426,21 @@
       const deficit = hasMax && level < maxLv ? maxLv - level : 0;
       const upgradeable = isUpgradeableSkill({ hasMax, maxLevel: maxLv });
       if (upgradeable) {
+        // Slot 1 (auto-attack) is not counted in “skill-ups needed” UX hints.
+        const countsTowardHint = idx > 0;
         if (hasMax) {
-          skillUpsNeeded += deficit;
-          if (!isMaxed) allMaxed = false;
+          if (countsTowardHint) skillUpsNeeded += deficit;
+          if (countsTowardHint && !isMaxed) allMaxed = false;
         } else {
           skillsKnown = false;
-          allMaxed = false;
+          if (countsTowardHint) allMaxed = false;
         }
       }
       return attachSkillMetaToRow({
         skillId,
         level,
         slot: idx + 1,
+        origSlot: idx + 1,
         maxLevel: maxLv,
         hasMax,
         isMaxed,
@@ -446,7 +449,9 @@
       });
     });
 
-    const displayable = enriched.filter((s) => s.upgradeable).map((s, i) => attachSkillMetaToRow({ ...s, slot: i + 1 }));
+    const displayable = enriched
+      .filter((s) => s.upgradeable)
+      .map((s, i) => attachSkillMetaToRow({ ...s, slot: i + 1 }));
 
     if (!list.length) {
       skillsKnown = false;

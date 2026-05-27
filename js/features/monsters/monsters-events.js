@@ -196,8 +196,8 @@
     if (btnTable) btnTable.title = t.monstersViewTable || 'Table';
     const lblGridSel = document.getElementById('lbl-monsters-grid-select-all');
     if (lblGridSel) lblGridSel.textContent = t.monstersTableSelectAll || 'Select all visible';
-    const resetToolbar = document.getElementById('monsters-toolbar-reset-filters');
-    if (resetToolbar) resetToolbar.textContent = t.tableResetFilters || 'Reset filters';
+    const resetDrawer = document.getElementById('monsters-filters-drawer-reset');
+    if (resetDrawer) resetDrawer.textContent = t.tableResetFilters || 'Reset filters';
     const exportBtn = document.getElementById('btn-monsters-export-csv');
     if (exportBtn) exportBtn.textContent = t.exportTableCsv || 'Export CSV';
     const emptyClear = document.getElementById('monsters-empty-clear-filters');
@@ -236,6 +236,7 @@
     if (f.tagFilter) n += 1;
     if (f.roleFilter) n += 1;
     if (f.markFilter) n += 1;
+    if (f.attentionOnly) n += 1;
     if (f.fullSixOnly) n += 1;
     if (f.minLevelMin > 0) n += 1;
     return n;
@@ -263,6 +264,9 @@
     if (f.markFilter) {
       const markMap = { favorite: '★', food: '🍖' };
       chips.push({ key: 'markFilter', label: markMap[f.markFilter] || f.markFilter });
+    }
+    if (f.attentionOnly) {
+      chips.push({ key: 'attentionOnly', label: t.shareReviewUnitsLabel || 'Needs attention' });
     }
     return chips;
   }
@@ -313,6 +317,13 @@
       case 'markFilter':
         document.getElementById('monsters-filter-mark').value = '';
         break;
+      case 'attentionOnly': {
+        const f = readMonstersFiltersFromDom();
+        f.attentionOnly = false;
+        if (f.sort === 'skills-closest') f.sort = 'name';
+        writeMonstersFilters(f);
+        return;
+      }
       default:
         break;
     }
@@ -353,7 +364,7 @@
     if (moreBtn) moreBtn.classList.toggle('monsters-toolbar-btn--filters-active', n > 0);
     const qActive = !!(f.q || '').trim();
     if (typeof updateToolbarResetButton === 'function') {
-      updateToolbarResetButton('monsters-toolbar-reset-filters', qActive || n > 0);
+      updateToolbarResetButton('monsters-filters-drawer-reset', qActive || n > 0);
     }
     renderMonstersActiveFilterChips();
   }
@@ -379,6 +390,7 @@
       markFilter: document.getElementById('monsters-filter-mark')?.value || '',
       fullSixOnly,
       minLevelMin,
+      attentionOnly: !!readMonstersFilters().attentionOnly,
     };
   }
 
@@ -454,11 +466,6 @@
     document.getElementById('monsters-filter-min-level')?.addEventListener('input', onFilter);
     document.getElementById('monsters-filter-min-level')?.addEventListener('change', onFilter);
     document.getElementById('monsters-filter-location')?.addEventListener('change', onFilter);
-    document.getElementById('monsters-toolbar-reset-filters')?.addEventListener('click', () => {
-      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-      resetMonstersToolbarFilters(t);
-      renderMonstersPanel();
-    });
     document.getElementById('btn-monsters-export-csv')?.addEventListener('click', exportMonstersCsv);
     document.getElementById('monsters-filter-skill')?.addEventListener('change', onFilter);
     document.getElementById('monsters-filter-rune')?.addEventListener('change', onFilter);

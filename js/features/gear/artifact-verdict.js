@@ -12,6 +12,16 @@
       a.artifactVerdict = v ? v.verdict : null;
       a.artifactRole = v ? v.role : null;
       a.artifactScore = v ? v.score : null;
+      if (typeof window.SWRM.calcArtifactIngameScore === 'function') {
+        a.artifactIngameScore = window.SWRM.calcArtifactIngameScore(a);
+      } else {
+        a.artifactIngameScore = null;
+      }
+      if (typeof window.SWRM.calcArtifactForgeScoreDisplay === 'function') {
+        a.artifactForgeScore = window.SWRM.calcArtifactForgeScoreDisplay(a);
+      } else {
+        a.artifactForgeScore = null;
+      }
       a.artifactSynergies = v && v.synergies ? v.synergies.slice() : [];
     }
   }

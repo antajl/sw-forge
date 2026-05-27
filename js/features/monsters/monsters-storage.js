@@ -25,6 +25,7 @@
       tagFilter: '',
       roleFilter: '',
       markFilter: '',
+      attentionOnly: false,
     };
     try {
       const raw = localStorage.getItem(MONSTERS_FILTER_STORAGE_KEY);
@@ -48,6 +49,7 @@
         tagFilter: o.tagFilter != null ? String(o.tagFilter) : '',
         roleFilter: o.roleFilter != null ? String(o.roleFilter) : '',
         markFilter: o.markFilter != null ? String(o.markFilter) : '',
+        attentionOnly: !!o.attentionOnly,
       };
     } catch (e) {
       return defaults;

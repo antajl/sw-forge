@@ -1,6 +1,6 @@
 /* Table toolbar */
 .table-toolbar {
-  margin-bottom: 14px;
+  margin-bottom: 8px;
 }
 
 .rune-table-active-filters {
@@ -65,6 +65,44 @@
   flex-wrap: wrap;
   align-items: flex-start;
   gap: 12px 16px;
+}
+
+/* One-line table toolbar (Monsters-like) */
+.table-toolbar__row--table-inline {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 12px;
+}
+
+.table-toolbar__search--table {
+  flex: 1 1 14rem;
+  min-width: 10rem;
+  max-width: 28rem;
+}
+
+.table-toolbar__group--table-filters {
+  flex: 0 0 auto;
+}
+
+.table-toolbar__hint-inline {
+  margin: 0 0 0 10px;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .table-toolbar__row--table-inline {
+    flex-wrap: wrap;
+  }
+  .table-toolbar__search--table {
+    max-width: none;
+    flex: 1 1 100%;
+    order: 3;
+  }
 }
 .table-toolbar__search {
   flex: 1 1 220px;
@@ -176,6 +214,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  align-items: center;
 }
 .btn-toolbar {
   padding: 8px 14px;
@@ -262,3 +301,35 @@
   cursor: pointer;
 }
 .table-count { font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-dim); }
+
+.table-pane-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin: 0 0 8px;
+}
+
+.table-pane-meta__count {
+  flex: 0 0 auto;
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.table-pane-meta__aside {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.table-pane-meta .monsters-chips--stats {
+  flex: 1 1 auto;
+  min-width: 0;
+}

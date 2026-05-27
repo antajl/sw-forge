@@ -1,6 +1,6 @@
 /* Roster toolbar — table-toolbar card layout (matches Runes table) */
 #tab-monsters-roster .table-toolbar {
-  margin-bottom: 10px;
+  margin-bottom: 6px;
 }
 
 #tab-monsters-roster .table-toolbar__row--search-roster {
@@ -41,7 +41,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px 12px;
-  margin: 0 0 6px;
+  margin: 0 0 4px;
 }
 
 .rune-table-roster-meta .monsters-chips--stats {
@@ -136,7 +136,13 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  margin: 0 0 8px;
+  margin: 0 0 4px;
+}
+
+#rune-table-roster-meta,
+#artifact-table-roster-meta,
+#relic-table-roster-meta {
+  margin: 0 0 4px;
 }
 
 .monsters-roster-meta .monsters-grid-head {
@@ -454,8 +460,66 @@
 }
 
 .filters-popover--wide {
-  min-width: min(22rem, calc(100vw - 24px));
-  max-width: min(360px, calc(100vw - 24px));
+  min-width: min(28rem, calc(100vw - 24px));
+  max-width: min(520px, calc(100vw - 24px));
+}
+
+.filters-popover__sections {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 18px;
+}
+
+.filters-popover__section-title {
+  margin: 0 0 8px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.filters-popover__section .filters-popover__toggles {
+  margin-top: 8px;
+  padding-top: 8px;
+}
+
+@media (max-width: 480px) {
+  .filters-popover__sections {
+    grid-template-columns: 1fr;
+  }
+}
+
+#tab-monsters-roster .table-toolbar__row--roster-inline {
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 10px 12px;
+}
+
+#tab-monsters-roster .table-toolbar__search--roster {
+  flex: 1 1 12rem;
+  min-width: 8rem;
+  max-width: 20rem;
+}
+
+#tab-monsters-roster .table-toolbar__group--roster-filters {
+  flex: 0 0 auto;
+}
+
+#tab-monsters-roster .table-toolbar__row--roster-inline .table-toolbar__aside {
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+
+@media (max-width: 900px) {
+  #tab-monsters-roster .table-toolbar__row--roster-inline {
+    flex-wrap: wrap;
+  }
+  #tab-monsters-roster .table-toolbar__search--roster {
+    max-width: none;
+    flex: 1 1 100%;
+    order: 3;
+  }
 }
 
 .filters-popover__panel {

@@ -205,12 +205,13 @@
       const lbl = btn && btn.querySelector('.rules-subtab__label');
       if (lbl) lbl.textContent = text || '';
     };
-    setDashUniTabLabel('dash-unified-tab-verdict', t.dashboardDistVerdict);
-    setDashUniTabLabel('dash-unified-tab-roles', t.dashboardDistRoles);
-    setDashUniTabLabel('dash-unified-tab-sets', t.dashboardDistSets);
+    setDashUniTabLabel('dash-unified-tab-breakdown', t.dashUnifiedTabBreakdown || 'Breakdown');
     setDashUniTabLabel('dash-unified-tab-slots', t.dashboardDistSlots);
-    setDashUniTabLabel('dash-unified-tab-eff', t.dashboardDistEff);
-    setDashUniTabLabel('dash-unified-tab-score', t.dashboardDistScore);
+    setDashUniTabLabel('dash-unified-tab-score', t.dashUnifiedTabScore || 'Score');
+    const lblScoreIngame = document.getElementById('lbl-dash-score-ingame');
+    if (lblScoreIngame) lblScoreIngame.textContent = t.dashboardDistEff || 'Ingame Score';
+    const lblScoreForge = document.getElementById('lbl-dash-score-forge');
+    if (lblScoreForge) lblScoreForge.textContent = t.dashboardDistScore || 'Forge Score';
     const uniTabs = document.getElementById('dash-unified-tabs');
     const unifiedBlockTitle = document.getElementById('lbl-dash-unified-block-title');
     if (unifiedBlockTitle) unifiedBlockTitle.textContent = t.dashboardUnifiedBlockTitle || '';
@@ -235,7 +236,14 @@
     setArtCellTitle('lbl-dash-art-type', 'dashboardArtifactType');
     setArtCellTitle('lbl-dash-art-role', 'dashboardArtifactRole');
     setArtCellTitle('lbl-dash-art-attribute', 'dashboardArtifactAttribute');
-    setArtCellTitle('lbl-dash-art-score', 'dashboardArtifactScore');
+    setArtCellTitle('lbl-dash-art-score-ingame', 'tableIngameScoreHeader');
+    setArtCellTitle('lbl-dash-art-score-forge', 'dashboardDistScore');
+    const lblArtTabBreak = document.getElementById('lbl-dash-art-tab-breakdown');
+    if (lblArtTabBreak) lblArtTabBreak.textContent = t.dashArtifactTabBreakdown || t.dashUnifiedTabBreakdown || 'Breakdown';
+    const lblArtTabType = document.getElementById('lbl-dash-art-tab-type');
+    if (lblArtTabType) lblArtTabType.textContent = t.dashArtifactTabType || 'Type';
+    const lblArtTabScore = document.getElementById('lbl-dash-art-tab-score');
+    if (lblArtTabScore) lblArtTabScore.textContent = t.dashArtifactTabScore || t.dashUnifiedTabScore || 'Score';
     const artEmpty = document.getElementById('dash-artifact-empty');
     if (artEmpty && !artEmpty.hidden) artEmpty.textContent = t.dashboardNoArtifacts || '';
     if (typeof renderArtifactDashboardDistributions === 'function') {
@@ -346,6 +354,8 @@
     bindTh('lbl-th-art-category', 'thArtCategory', 'Category');
     bindTh('lbl-th-art-main', 'monstersGearMain', 'Main');
     bindTh('lbl-th-art-subs', 'thArtSubs', 'Subs');
+    bindTh('lbl-th-art-ingame', 'tableIngameScoreHeader', 'Ingame');
+    bindTh('lbl-th-art-forge', 'dashboardDistScore', 'Forge');
     bindTh('lbl-th-art-location', 'thArtLocation', 'Location');
     bindTh('lbl-th-rel-icon', 'thRelIcon', 'Icon');
     bindTh('lbl-th-rel-category', 'thRelCategory', 'Category');
@@ -355,16 +365,16 @@
     bindTh('lbl-th-rel-sec', 'monstersGearSecondary', 'Secondary');
     bindTh('lbl-th-rel-wearers', 'thRelWearers', 'Equipped');
     const artSearch = document.getElementById('search-box-artifacts');
-    if (artSearch) artSearch.placeholder = t.tableSearchArtifacts || 'Search artifacts…';
+    if (artSearch) artSearch.placeholder = t.tableSearchArtifacts || t.searchPlaceholder || 'Search…';
     const relSearch = document.getElementById('search-box-relics');
-    if (relSearch) relSearch.placeholder = t.tableSearchRelics || 'Search relics…';
+    if (relSearch) relSearch.placeholder = t.tableSearchRelics || t.searchPlaceholder || 'Search…';
     const lblArtSearch = document.getElementById('lbl-search-box-artifacts');
     if (lblArtSearch) lblArtSearch.textContent = t.tableSearchArtifacts || 'Search artifacts';
     const lblRelSearch = document.getElementById('lbl-search-box-relics');
     if (lblRelSearch) lblRelSearch.textContent = t.tableSearchRelics || 'Search relics';
-    const btnArtReset = document.getElementById('btn-artifact-reset-filters');
+    const btnArtReset = document.getElementById('artifact-filters-drawer-reset');
     if (btnArtReset) btnArtReset.textContent = t.tableResetFilters || 'Reset filters';
-    const btnRelReset = document.getElementById('btn-relic-reset-filters');
+    const btnRelReset = document.getElementById('relic-filters-drawer-reset');
     if (btnRelReset) btnRelReset.textContent = t.tableResetFilters || 'Reset filters';
     const lblArtMore = document.getElementById('lbl-artifact-more-filters');
     if (lblArtMore) lblArtMore.textContent = t.runeTableMoreFilters || 'More Filters';
@@ -398,6 +408,10 @@
     if (lblRelInv) lblRelInv.textContent = t.relicFilterInventory || t.artifactFilterInventory || 'Inventory';
     const lblRelEq = document.getElementById('lbl-relic-filter-equipped-opt');
     if (lblRelEq) lblRelEq.textContent = t.relicFilterEquipped || t.artifactFilterEquipped || 'Equipped';
+    const lblDashArtScoreIngame = document.getElementById('lbl-dash-art-score-ingame');
+    if (lblDashArtScoreIngame) lblDashArtScoreIngame.textContent = t.tableIngameScoreHeader || 'Ingame Score';
+    const lblDashArtScoreForge = document.getElementById('lbl-dash-art-score-forge');
+    if (lblDashArtScoreForge) lblDashArtScoreForge.textContent = t.dashboardDistScore || 'Forge Score';
     if (typeof syncArtifactTypeAttributeSelectLabels === 'function') {
       syncArtifactTypeAttributeSelectLabels();
     }
@@ -436,12 +450,10 @@
 
     const btnExport = document.getElementById('btn-export-csv');
     if (btnExport) btnExport.textContent = t.exportTableCsv || 'Export CSV';
-    const btnResetTbl = document.getElementById('btn-table-reset-filters');
+    const btnResetTbl = document.getElementById('rune-filters-drawer-reset');
     if (btnResetTbl) btnResetTbl.textContent = t.tableResetFilters || 'Reset filters';
     const lblAncientOnly = document.getElementById('lbl-toggle-ancient-only');
     if (lblAncientOnly) lblAncientOnly.textContent = t.tableAncientOnly || 'Ancient only';
-    const lblVerdictHint = document.getElementById('lbl-rune-verdict-hint');
-    if (lblVerdictHint) lblVerdictHint.textContent = t.runeTableVerdictHint || 'Hover a Verdict tag for details.';
 
     const filterGrade = document.getElementById('filter-grade');
     if (filterGrade) {
@@ -648,7 +660,7 @@
     if (typeof syncShareSplitLabels === 'function') syncShareSplitLabels();
     const moreFilters = document.getElementById('lbl-monsters-more-filters');
     if (moreFilters) moreFilters.textContent = t.monstersMoreFilters || 'More Filters';
-    const monstersReset = document.getElementById('monsters-toolbar-reset-filters');
+    const monstersReset = document.getElementById('monsters-filters-drawer-reset');
     if (monstersReset) monstersReset.textContent = t.tableResetFilters || 'Reset filters';
     const monstersExport = document.getElementById('btn-monsters-export-csv');
     if (monstersExport) monstersExport.textContent = t.exportTableCsv || 'Export CSV';

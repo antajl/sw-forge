@@ -10,21 +10,21 @@
           </div>`;
   }
 
-  /** Right column: count value + labeled avg line (no prefix letter before count). */
-  function chartRowStatsHtml(cnt, avgDisplay, tloc) {
-    const la = escapeHtml((tloc && tloc.dashboardChartLblAvg) || 'avg');
+  /** Right column: count value + optional ingame score line. */
+  function chartRowStatsHtml(cnt, ingameDisplay, tloc) {
+    const li = escapeHtml((tloc && tloc.dashboardChartLblAvgIngame) || 'Avg Ingame Score');
     const countLine = `<div class="chart-stat-line chart-stat-line--count">
       <span class="chart-stat-val">${cnt}</span>
     </div>`;
-    if (avgDisplay === undefined) {
+    if (ingameDisplay === undefined) {
       return `<div class="chart-row-stats chart-row-stats--solo">${countLine}</div>`;
     }
-    const avgInner = avgDisplay === '-' ? '\u2014' : `${escapeHtml(String(avgDisplay))}%`;
-    const avgLine = `<div class="chart-stat-line chart-stat-line--avg">
-      <span class="chart-stat-lbl">${la}</span>
-      <span class="chart-stat-val">${avgInner}</span>
+    const ingameInner = ingameDisplay === '-' ? '\u2014' : escapeHtml(String(ingameDisplay));
+    const ingameLine = `<div class="chart-stat-line chart-stat-line--ingame">
+      <span class="chart-stat-lbl">${li}</span>
+      <span class="chart-stat-val">${ingameInner}</span>
     </div>`;
-    return `<div class="chart-row-stats">${countLine}${avgLine}</div>`;
+    return `<div class="chart-row-stats">${countLine}${ingameLine}</div>`;
   }
 
   function subLineTotal(s) {

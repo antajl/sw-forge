@@ -47,8 +47,9 @@ html:not(.swrm-has-gsap) .table-kind-tabs__indicator {
 #artifact-table-scroll,
 #relic-table-scroll {
   width: 100%;
-  max-height: min(70vh, 720px);
+  max-height: min(82vh, 980px);
   overflow: auto;
+  overscroll-behavior: contain;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
 }
@@ -68,10 +69,12 @@ html:not(.swrm-has-gsap) .table-kind-tabs__indicator {
   --art-c-grade: 5rem;
   --art-c-category: 8rem;
   --art-c-main: 8rem;
-  --art-c-subs: 12rem;
+  --art-c-subs: 15rem;
+  --art-c-ingame: 4.5rem;
+  --art-c-forge: 4.5rem;
   --art-c-role: 7rem;
   --art-c-verdict: 5.5rem;
-  --art-c-location: 7rem;
+  --art-c-location: 8.35rem;
   --rel-c-category: 8rem;
   --rel-c-lvl: 3rem;
   --rel-c-durability: 4.5rem;
@@ -109,6 +112,11 @@ thead tr {
   background: var(--bg3);
   border-bottom: 1px solid var(--border2);
 }
+#artifact-table-scroll.table-wrap,
+#relic-table-scroll.table-wrap {
+  scrollbar-gutter: stable;
+}
+
 #artifact-table thead th,
 #relic-table thead th {
   position: sticky;
@@ -117,6 +125,39 @@ thead tr {
   background: var(--bg3);
   box-shadow: 0 1px 0 var(--border2);
   text-align: center;
+}
+
+#artifact-table th.col-category,
+#artifact-table th.col-main,
+#artifact-table th.col-subs-stack,
+#artifact-table td.col-category,
+#artifact-table td.col-main,
+#artifact-table td.col-subs-stack {
+  text-align: left;
+}
+
+#artifact-table th.col-grade,
+#artifact-table th.col-art-ingame,
+#artifact-table th.col-art-forge,
+#artifact-table th.col-art-role,
+#artifact-table th.col-art-verdict,
+#artifact-table th.col-location,
+#artifact-table td.col-grade,
+#artifact-table td.col-art-ingame,
+#artifact-table td.col-art-forge,
+#artifact-table td.col-art-role,
+#artifact-table td.col-art-verdict,
+#artifact-table td.col-location {
+  text-align: center;
+}
+
+#artifact-table th.col-block-gap,
+#artifact-table td.col-block-gap,
+#relic-table th.col-block-gap,
+#relic-table td.col-block-gap {
+  border-left: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+  padding-left: 10px;
+  padding-right: 8px;
 }
 
 #artifact-table tbody tr,
@@ -201,6 +242,20 @@ thead tr {
   width: var(--art-c-role);
   min-width: var(--art-c-role);
   max-width: var(--art-c-role);
+}
+#artifact-table col.col-art-ingame,
+#artifact-table th.col-art-ingame,
+#artifact-table td.col-art-ingame {
+  width: var(--art-c-ingame);
+  min-width: var(--art-c-ingame);
+  max-width: var(--art-c-ingame);
+}
+#artifact-table col.col-art-forge,
+#artifact-table th.col-art-forge,
+#artifact-table td.col-art-forge {
+  width: var(--art-c-forge);
+  min-width: var(--art-c-forge);
+  max-width: var(--art-c-forge);
 }
 #artifact-table col.col-art-verdict,
 #artifact-table th.col-art-verdict,
@@ -303,9 +358,84 @@ thead tr {
   user-select: none;
   transition: color 0.15s;
 }
-#artifact-table th:hover,
-#relic-table th:hover {
+#artifact-table thead th:hover,
+#artifact-table thead th:hover .th-text,
+#relic-table thead th:hover,
+#relic-table thead th:hover .th-text {
   color: var(--accent);
+}
+
+/* Match Rune Table: plain header labels are not framed pills */
+#artifact-table thead th .th-text.th-text--plain,
+#relic-table thead th .th-text.th-text--plain {
+  padding: 0;
+  border: none;
+  background: none;
+  border-radius: 0;
+  cursor: pointer;
+  display: block;
+  width: 100%;
+  text-align: center;
+  gap: 0;
+}
+#artifact-table thead th .th-text.th-text--plain::after,
+#relic-table thead th .th-text.th-text--plain::after {
+  display: none;
+}
+
+#artifact-table thead th[data-sort] .th-text.th-text--plain,
+#relic-table thead th[data-sort] .th-text.th-text--plain {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  max-width: 100%;
+  min-width: 0;
+  color: inherit;
+}
+
+#artifact-table thead th[data-sort] .th-text.th-text--plain::after,
+#relic-table thead th[data-sort] .th-text.th-text--plain::after {
+  content: '';
+  flex: 0 0 auto;
+  width: 0;
+  height: 0;
+  border-left: 3.5px solid transparent;
+  border-right: 3.5px solid transparent;
+  border-top: 5px solid currentColor;
+  opacity: 0;
+  transform: translateY(1px);
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
+}
+
+#artifact-table thead th[data-sort]:hover .th-text.th-text--plain::after,
+#relic-table thead th[data-sort]:hover .th-text.th-text--plain::after {
+  opacity: 0.32;
+}
+
+#artifact-table thead th.sort-asc,
+#artifact-table thead th.sort-desc,
+#artifact-table thead th.sort-asc .th-text,
+#artifact-table thead th.sort-desc .th-text,
+#relic-table thead th.sort-asc,
+#relic-table thead th.sort-desc,
+#relic-table thead th.sort-asc .th-text,
+#relic-table thead th.sort-desc .th-text {
+  color: var(--accent);
+}
+
+#artifact-table thead th.sort-asc .th-text.th-text--plain::after,
+#artifact-table thead th.sort-desc .th-text.th-text--plain::after,
+#relic-table thead th.sort-asc .th-text.th-text--plain::after,
+#relic-table thead th.sort-desc .th-text.th-text--plain::after {
+  opacity: 0.9;
+}
+
+#artifact-table thead th.sort-asc .th-text.th-text--plain::after,
+#relic-table thead th.sort-asc .th-text.th-text--plain::after {
+  transform: translateY(-1px) rotate(180deg);
 }
 
 #artifact-table td,
@@ -325,9 +455,23 @@ thead tr {
 
 #artifact-table th.col-grade,
 #artifact-table td.col-grade,
+#artifact-table th.col-art-ingame,
+#artifact-table td.col-art-ingame,
+#artifact-table th.col-art-forge,
+#artifact-table td.col-art-forge,
 #relic-table th.th-num,
 #relic-table td.th-num {
   white-space: nowrap;
+}
+
+#artifact-table th.col-art-ingame,
+#artifact-table td.col-art-ingame,
+#artifact-table th.col-art-forge,
+#artifact-table td.col-art-forge,
+#relic-table th.th-num,
+#relic-table td.th-num {
+  font-family: var(--font-ui);
+  font-variant-numeric: tabular-nums;
 }
 
 #artifact-table .col-subs-stack,
@@ -336,6 +480,16 @@ thead tr {
 #relic-table td.col-text {
   white-space: normal;
   line-height: 1.35;
+}
+
+#artifact-table td.col-category,
+#artifact-table td.col-main,
+#artifact-table td.col-location,
+#relic-table td.col-category,
+#relic-table td.col-main,
+#relic-table td.col-sec {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .gear-table .table-empty {

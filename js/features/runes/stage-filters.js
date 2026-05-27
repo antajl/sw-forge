@@ -93,21 +93,28 @@
     } catch (err) { /* ignore */ }
   });
 
+  function normalizeDashboardUnifiedTab(raw) {
+    const v = String(raw || '').trim();
+    if (v === 'verdict' || v === 'roles' || v === 'sets') return 'breakdown';
+    if (v === 'eff') return 'score';
+    if (['breakdown', 'slots', 'score'].includes(v)) return v;
+    return 'breakdown';
+  }
+
   function readDashboardUnifiedTab() {
     try {
       let v = localStorage.getItem(DASH_UNIFIED_DIST_KEY);
       if (!v) {
         const legacy = localStorage.getItem(DASH_DIST_TAB_LEGACY_KEY);
-        if (legacy === 'sets') v = 'sets';
-        else if (legacy === 'roles') v = 'roles';
+        if (legacy === 'sets' || legacy === 'roles') v = 'breakdown';
       }
-      if (['verdict', 'roles', 'sets', 'slots', 'eff', 'score'].includes(v)) return v;
+      return normalizeDashboardUnifiedTab(v);
     } catch (e) { /* ignore */ }
-    return 'verdict';
+    return 'breakdown';
   }
 
   function syncDashboardUnifiedTabButtons(active) {
-    const keys = ['verdict', 'roles', 'sets', 'slots', 'eff', 'score'];
+    const keys = ['breakdown', 'slots', 'score'];
     keys.forEach((k) => {
       const btn = document.getElementById(`dash-unified-tab-${k}`);
       if (!btn) return;
@@ -132,8 +139,8 @@
   }
 
   function applyDashboardUnifiedTab(which) {
-    const keys = ['verdict', 'roles', 'sets', 'slots', 'eff', 'score'];
-    const active = keys.includes(which) ? which : 'verdict';
+    const keys = ['breakdown', 'slots', 'score'];
+    const active = normalizeDashboardUnifiedTab(which);
     const host = document.getElementById('dash-unified-panes');
     const next = document.getElementById(`dash-pane-${active}`);
     if (!next) return;
@@ -187,7 +194,7 @@
   function initDashboardUnifiedTabs() {
     const host = document.getElementById('dash-unified-panes');
     const initial = readDashboardUnifiedTab();
-    const keys = ['verdict', 'roles', 'sets', 'slots', 'eff', 'score'];
+    const keys = ['breakdown', 'slots', 'score'];
     keys.forEach((k) => {
       setDashboardUnifiedPaneState(document.getElementById(`dash-pane-${k}`), k === initial);
     });
@@ -209,8 +216,8 @@
     });
     document.querySelectorAll('.dash-unified-tab[data-dash-uni]').forEach((btn) => {
       btn.addEventListener('click', () => {
-        const raw = btn.getAttribute('data-dash-uni') || 'verdict';
-        const w = ['verdict', 'roles', 'sets', 'slots', 'eff', 'score'].includes(raw) ? raw : 'verdict';
+        const raw = btn.getAttribute('data-dash-uni') || 'breakdown';
+        const w = normalizeDashboardUnifiedTab(raw);
         applyDashboardUnifiedTab(w);
         try {
           localStorage.setItem(DASH_UNIFIED_DIST_KEY, w);
@@ -218,6 +225,7 @@
       });
     });
     if (typeof initDashboardDistKindTabs === 'function') initDashboardDistKindTabs();
+    if (typeof initArtifactDashTabs === 'function') initArtifactDashTabs();
   }
 
   document.getElementById('btn-dashboard-export-summary')?.addEventListener('click', async () => {

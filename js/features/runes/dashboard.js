@@ -83,7 +83,7 @@
     const motionApi = window.SWRM_MOTION;
     if (!motionApi || !motionApi.enabled()) return false;
     let played = false;
-    for (const k of ['verdict', 'roles', 'sets', 'slots', 'eff', 'score']) {
+    for (const k of ['breakdown', 'slots', 'score']) {
       const pane = document.getElementById(`dash-pane-${k}`);
       if (pane && motionApi.animateDashboardPaneBars(pane)) played = true;
     }

@@ -5371,9 +5371,9 @@ html[lang="ru"] #tab-dashboard .btn-dash-open-all-inline {
 }
 
 .panel-top-spd-head {
-  margin-bottom: 14px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid var(--border);
+  margin-bottom: 8px;
+  padding-bottom: 0;
+  border-bottom: none;
 }
 
 .panel-top-spd-head__row {
@@ -5595,8 +5595,21 @@ html:not(.swrm-has-gsap) .rules-subtabs__indicator {
   margin-top: 8px;
 }
 
+/* Artifacts: Breakdown should mirror Rune Breakdown (3→2→1 columns). */
+#dash-artifact-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px 14px;
+}
+
+@media (max-width: 1100px) {
+  #dash-artifact-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 720px) {
-  .dash-artifact-grid {
+  .dash-artifact-grid,
+  #dash-artifact-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -5610,7 +5623,20 @@ html:not(.swrm-has-gsap) .rules-subtabs__indicator {
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--text-muted, #9aa3b2);
+  text-align: center;
   letter-spacing: 0.02em;
+}
+
+#dash-art-tabs .dash-art-tab.rules-subtab {
+  justify-content: center;
+  text-align: center;
+}
+
+#dash-art-tabs .dash-art-tab.rules-subtab .rules-subtab__label {
+  width: 100%;
+  display: inline-flex;
+  justify-content: center;
+  text-align: center;
 }
 
 .dash-artifact-cell__muted {
@@ -5652,13 +5678,45 @@ html:not(.swrm-has-gsap) .rules-subtabs__indicator {
 }
 
 .dash-artifact-verdict-pill--keep {
-  border-color: color-mix(in srgb, #2d9a6a 45%, transparent);
-  background: color-mix(in srgb, #2d9a6a 12%, var(--bg3, #1a1f2e));
+  border-color: color-mix(in srgb, var(--tint-keep) 45%, transparent);
+  background: color-mix(in srgb, var(--tint-keep) 12%, var(--bg3, #1a1f2e));
 }
 
 .dash-artifact-verdict-pill--sell {
-  border-color: color-mix(in srgb, #c45c5c 45%, transparent);
-  background: color-mix(in srgb, #c45c5c 12%, var(--bg3, #1a1f2e));
+  border-color: color-mix(in srgb, var(--tint-sell) 45%, transparent);
+  background: color-mix(in srgb, var(--tint-sell) 12%, var(--bg3, #1a1f2e));
+}
+
+.dash-runes-breakdown-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px 14px;
+}
+
+.dash-runes-breakdown-grid .dash-artifact-cell--sets {
+  grid-column: auto;
+}
+
+.dash-score-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.dash-score-stack__block .dash-artifact-cell__title {
+  margin-bottom: 8px;
+}
+
+@media (max-width: 720px) {
+  .dash-runes-breakdown-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1100px) {
+  .dash-runes-breakdown-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .dash-artifact-verdict-pill__lbl {
@@ -5682,24 +5740,17 @@ html:not(.swrm-has-gsap) .rules-subtabs__indicator {
   margin-top: 0;
 }
 
-.eff-histo-host--artifact-score {
-  min-height: 100px;
-}
-
-.eff-chart--artifact-score .eff-label {
-  font-size: 0.65rem;
-}
 
 
 /* === css/features/runes/chart-bars.css === */
 /* Chart bars and rows */
-.role-chart, .set-chart, .slot-chart { display: flex; flex-direction: column; gap: 8px; }
+.role-chart, .set-chart, .slot-chart { display: flex; flex-direction: column; gap: 6px; }
 
 .chart-scroll--sets {
-  max-height: clamp(20rem, 52vh, 40rem);
-  overflow-y: auto;
+  max-height: none;
+  overflow-y: visible;
   overflow-x: hidden;
-  overscroll-behavior: contain;
+  overscroll-behavior: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -5708,7 +5759,7 @@ html:not(.swrm-has-gsap) .rules-subtabs__indicator {
   width: 0;
   height: 0;
 }
-.chart-row { display: flex; align-items: center; gap: 12px; }
+.chart-row { display: flex; align-items: center; gap: 9px; }
 .chart-row--slot {
   align-items: flex-start;
 }
@@ -5791,11 +5842,12 @@ html.swrm-has-gsap .slot-main-card-bar {
   flex-direction: column;
   align-items: flex-end;
   justify-content: center;
-  gap: 5px;
-  min-width: 4.75rem;
-  padding-left: 12px;
-  margin-left: 2px;
-  border-left: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
+  gap: 4px;
+  min-width: 7.25rem;
+  width: 7.25rem;
+  padding-left: 8px;
+  margin-left: 0;
+  border-left: none;
 }
 .chart-row-stats--solo {
   gap: 0;
@@ -5803,12 +5855,15 @@ html.swrm-has-gsap .slot-main-card-bar {
 .chart-stat-line {
   display: flex;
   align-items: baseline;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 7px;
   line-height: 1.15;
+  width: 100%;
+  white-space: nowrap;
 }
 .chart-stat-line--count {
   gap: 0;
+  justify-content: flex-end;
 }
 .chart-stat-lbl {
   font-family: var(--font-head);
@@ -5826,15 +5881,15 @@ html.swrm-has-gsap .slot-main-card-bar {
   font-variant-numeric: tabular-nums;
   color: var(--text-dim);
 }
-.chart-stat-line--avg .chart-stat-val {
+.chart-stat-line--ingame .chart-stat-val {
   color: color-mix(in srgb, var(--text) 72%, var(--text-dim));
 }
 
 .chart-row--clickable {
   cursor: pointer;
   border-radius: var(--radius);
-  padding: 2px 2px 2px 0;
-  margin: 2px 0;
+  padding: 1px 1px 1px 0;
+  margin: 1px 0;
   transition: background 0.15s ease;
 }
 .chart-row--clickable:hover {
@@ -6124,6 +6179,32 @@ html[lang='ru'] .slot-share-slot-lbl {
 
 /* === css/features/runes/top-spd.css === */
 /* Top SPD sort and radar */
+.dash-unified-pane .panel-top-spd {
+  margin-top: 14px;
+  padding: 12px 14px 14px;
+  border: 1px solid color-mix(in srgb, var(--border2) 82%, var(--accent));
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--dash-inner-well) 82%, var(--surface));
+}
+
+.dash-unified-pane .panel-top-spd .rules-page-title {
+  font-size: 0.95rem;
+}
+
+.dash-unified-pane .panel-top-spd-head {
+  margin-bottom: 8px;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.dash-unified-pane .panel-top-spd .top-spd-radar-col {
+  flex-basis: clamp(130px, 24%, 230px);
+}
+
+.dash-unified-pane .panel-top-spd .top-spd-radar-stage {
+  max-height: min(30vh, 230px);
+}
+
 .top-spd-sort {
   display: inline-flex;
   flex-wrap: wrap;
@@ -6516,6 +6597,7 @@ html[lang='ru'] .slot-share-slot-lbl {
   border: 1.5px solid color-mix(in srgb, var(--orange) 62%, var(--border2));
 }
 
+
 /* === css/features/runes/eff-histo.css === */
 /* Efficiency histogram */
 .eff-histo-host {
@@ -6573,7 +6655,8 @@ html[lang='ru'] .slot-share-slot-lbl {
   bottom: 26px;
 }
 
-#dash-pane-score .eff-histo-host--dash-pane {
+#dash-pane-score .eff-histo-host--dash-pane,
+#dash-art-pane-score .eff-histo-host--dash-pane {
   position: relative;
   margin-top: 0;
   padding: 14px 14px 16px;
@@ -6582,11 +6665,13 @@ html[lang='ru'] .slot-share-slot-lbl {
   border: 1px solid color-mix(in srgb, var(--border2) 82%, var(--accent));
 }
 
-#dash-pane-score .eff-chart {
+#dash-pane-score .eff-chart,
+#dash-art-pane-score .eff-chart {
   height: 88px;
 }
 
-#dash-pane-score .eff-median-line {
+#dash-pane-score .eff-median-line,
+#dash-art-pane-score .eff-median-line {
   bottom: 26px;
 }
 
@@ -6863,7 +6948,7 @@ html.swrm-has-gsap .swrm-floating-tip {
 /* === css/features/runes/table-toolbar.css === */
 /* Table toolbar */
 .table-toolbar {
-  margin-bottom: 14px;
+  margin-bottom: 8px;
 }
 
 .rune-table-active-filters {
@@ -6928,6 +7013,44 @@ html.swrm-has-gsap .swrm-floating-tip {
   flex-wrap: wrap;
   align-items: flex-start;
   gap: 12px 16px;
+}
+
+/* One-line table toolbar (Monsters-like) */
+.table-toolbar__row--table-inline {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 12px;
+}
+
+.table-toolbar__search--table {
+  flex: 1 1 14rem;
+  min-width: 10rem;
+  max-width: 28rem;
+}
+
+.table-toolbar__group--table-filters {
+  flex: 0 0 auto;
+}
+
+.table-toolbar__hint-inline {
+  margin: 0 0 0 10px;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .table-toolbar__row--table-inline {
+    flex-wrap: wrap;
+  }
+  .table-toolbar__search--table {
+    max-width: none;
+    flex: 1 1 100%;
+    order: 3;
+  }
 }
 .table-toolbar__search {
   flex: 1 1 220px;
@@ -7039,6 +7162,7 @@ html.swrm-has-gsap .swrm-floating-tip {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  align-items: center;
 }
 .btn-toolbar {
   padding: 8px 14px;
@@ -7125,6 +7249,38 @@ html.swrm-has-gsap .swrm-floating-tip {
   cursor: pointer;
 }
 .table-count { font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-dim); }
+
+.table-pane-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin: 0 0 8px;
+}
+
+.table-pane-meta__count {
+  flex: 0 0 auto;
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.table-pane-meta__aside {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.table-pane-meta .monsters-chips--stats {
+  flex: 1 1 auto;
+  min-width: 0;
+}
 
 /* === css/features/runes/table-core.css === */
 /* Table core */
@@ -7962,8 +8118,9 @@ html:not(.swrm-has-gsap) .table-kind-tabs__indicator {
 #artifact-table-scroll,
 #relic-table-scroll {
   width: 100%;
-  max-height: min(70vh, 720px);
+  max-height: min(82vh, 980px);
   overflow: auto;
+  overscroll-behavior: contain;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
 }
@@ -7983,10 +8140,12 @@ html:not(.swrm-has-gsap) .table-kind-tabs__indicator {
   --art-c-grade: 5rem;
   --art-c-category: 8rem;
   --art-c-main: 8rem;
-  --art-c-subs: 12rem;
+  --art-c-subs: 15rem;
+  --art-c-ingame: 4.5rem;
+  --art-c-forge: 4.5rem;
   --art-c-role: 7rem;
   --art-c-verdict: 5.5rem;
-  --art-c-location: 7rem;
+  --art-c-location: 8.35rem;
   --rel-c-category: 8rem;
   --rel-c-lvl: 3rem;
   --rel-c-durability: 4.5rem;
@@ -8024,6 +8183,11 @@ thead tr {
   background: var(--bg3);
   border-bottom: 1px solid var(--border2);
 }
+#artifact-table-scroll.table-wrap,
+#relic-table-scroll.table-wrap {
+  scrollbar-gutter: stable;
+}
+
 #artifact-table thead th,
 #relic-table thead th {
   position: sticky;
@@ -8032,6 +8196,39 @@ thead tr {
   background: var(--bg3);
   box-shadow: 0 1px 0 var(--border2);
   text-align: center;
+}
+
+#artifact-table th.col-category,
+#artifact-table th.col-main,
+#artifact-table th.col-subs-stack,
+#artifact-table td.col-category,
+#artifact-table td.col-main,
+#artifact-table td.col-subs-stack {
+  text-align: left;
+}
+
+#artifact-table th.col-grade,
+#artifact-table th.col-art-ingame,
+#artifact-table th.col-art-forge,
+#artifact-table th.col-art-role,
+#artifact-table th.col-art-verdict,
+#artifact-table th.col-location,
+#artifact-table td.col-grade,
+#artifact-table td.col-art-ingame,
+#artifact-table td.col-art-forge,
+#artifact-table td.col-art-role,
+#artifact-table td.col-art-verdict,
+#artifact-table td.col-location {
+  text-align: center;
+}
+
+#artifact-table th.col-block-gap,
+#artifact-table td.col-block-gap,
+#relic-table th.col-block-gap,
+#relic-table td.col-block-gap {
+  border-left: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+  padding-left: 10px;
+  padding-right: 8px;
 }
 
 #artifact-table tbody tr,
@@ -8116,6 +8313,20 @@ thead tr {
   width: var(--art-c-role);
   min-width: var(--art-c-role);
   max-width: var(--art-c-role);
+}
+#artifact-table col.col-art-ingame,
+#artifact-table th.col-art-ingame,
+#artifact-table td.col-art-ingame {
+  width: var(--art-c-ingame);
+  min-width: var(--art-c-ingame);
+  max-width: var(--art-c-ingame);
+}
+#artifact-table col.col-art-forge,
+#artifact-table th.col-art-forge,
+#artifact-table td.col-art-forge {
+  width: var(--art-c-forge);
+  min-width: var(--art-c-forge);
+  max-width: var(--art-c-forge);
 }
 #artifact-table col.col-art-verdict,
 #artifact-table th.col-art-verdict,
@@ -8218,9 +8429,84 @@ thead tr {
   user-select: none;
   transition: color 0.15s;
 }
-#artifact-table th:hover,
-#relic-table th:hover {
+#artifact-table thead th:hover,
+#artifact-table thead th:hover .th-text,
+#relic-table thead th:hover,
+#relic-table thead th:hover .th-text {
   color: var(--accent);
+}
+
+/* Match Rune Table: plain header labels are not framed pills */
+#artifact-table thead th .th-text.th-text--plain,
+#relic-table thead th .th-text.th-text--plain {
+  padding: 0;
+  border: none;
+  background: none;
+  border-radius: 0;
+  cursor: pointer;
+  display: block;
+  width: 100%;
+  text-align: center;
+  gap: 0;
+}
+#artifact-table thead th .th-text.th-text--plain::after,
+#relic-table thead th .th-text.th-text--plain::after {
+  display: none;
+}
+
+#artifact-table thead th[data-sort] .th-text.th-text--plain,
+#relic-table thead th[data-sort] .th-text.th-text--plain {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  max-width: 100%;
+  min-width: 0;
+  color: inherit;
+}
+
+#artifact-table thead th[data-sort] .th-text.th-text--plain::after,
+#relic-table thead th[data-sort] .th-text.th-text--plain::after {
+  content: '';
+  flex: 0 0 auto;
+  width: 0;
+  height: 0;
+  border-left: 3.5px solid transparent;
+  border-right: 3.5px solid transparent;
+  border-top: 5px solid currentColor;
+  opacity: 0;
+  transform: translateY(1px);
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
+}
+
+#artifact-table thead th[data-sort]:hover .th-text.th-text--plain::after,
+#relic-table thead th[data-sort]:hover .th-text.th-text--plain::after {
+  opacity: 0.32;
+}
+
+#artifact-table thead th.sort-asc,
+#artifact-table thead th.sort-desc,
+#artifact-table thead th.sort-asc .th-text,
+#artifact-table thead th.sort-desc .th-text,
+#relic-table thead th.sort-asc,
+#relic-table thead th.sort-desc,
+#relic-table thead th.sort-asc .th-text,
+#relic-table thead th.sort-desc .th-text {
+  color: var(--accent);
+}
+
+#artifact-table thead th.sort-asc .th-text.th-text--plain::after,
+#artifact-table thead th.sort-desc .th-text.th-text--plain::after,
+#relic-table thead th.sort-asc .th-text.th-text--plain::after,
+#relic-table thead th.sort-desc .th-text.th-text--plain::after {
+  opacity: 0.9;
+}
+
+#artifact-table thead th.sort-asc .th-text.th-text--plain::after,
+#relic-table thead th.sort-asc .th-text.th-text--plain::after {
+  transform: translateY(-1px) rotate(180deg);
 }
 
 #artifact-table td,
@@ -8240,9 +8526,23 @@ thead tr {
 
 #artifact-table th.col-grade,
 #artifact-table td.col-grade,
+#artifact-table th.col-art-ingame,
+#artifact-table td.col-art-ingame,
+#artifact-table th.col-art-forge,
+#artifact-table td.col-art-forge,
 #relic-table th.th-num,
 #relic-table td.th-num {
   white-space: nowrap;
+}
+
+#artifact-table th.col-art-ingame,
+#artifact-table td.col-art-ingame,
+#artifact-table th.col-art-forge,
+#artifact-table td.col-art-forge,
+#relic-table th.th-num,
+#relic-table td.th-num {
+  font-family: var(--font-ui);
+  font-variant-numeric: tabular-nums;
 }
 
 #artifact-table .col-subs-stack,
@@ -8251,6 +8551,16 @@ thead tr {
 #relic-table td.col-text {
   white-space: normal;
   line-height: 1.35;
+}
+
+#artifact-table td.col-category,
+#artifact-table td.col-main,
+#artifact-table td.col-location,
+#relic-table td.col-category,
+#relic-table td.col-main,
+#relic-table td.col-sec {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .gear-table .table-empty {
@@ -9522,7 +9832,7 @@ thead tr {
 /* === css/features/monsters/toolbar-v2.css === */
 /* Roster toolbar — table-toolbar card layout (matches Runes table) */
 #tab-monsters-roster .table-toolbar {
-  margin-bottom: 10px;
+  margin-bottom: 6px;
 }
 
 #tab-monsters-roster .table-toolbar__row--search-roster {
@@ -9563,7 +9873,7 @@ thead tr {
   align-items: center;
   justify-content: space-between;
   gap: 8px 12px;
-  margin: 0 0 6px;
+  margin: 0 0 4px;
 }
 
 .rune-table-roster-meta .monsters-chips--stats {
@@ -9658,7 +9968,13 @@ thead tr {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  margin: 0 0 8px;
+  margin: 0 0 4px;
+}
+
+#rune-table-roster-meta,
+#artifact-table-roster-meta,
+#relic-table-roster-meta {
+  margin: 0 0 4px;
 }
 
 .monsters-roster-meta .monsters-grid-head {
@@ -9976,8 +10292,66 @@ thead tr {
 }
 
 .filters-popover--wide {
-  min-width: min(22rem, calc(100vw - 24px));
-  max-width: min(360px, calc(100vw - 24px));
+  min-width: min(28rem, calc(100vw - 24px));
+  max-width: min(520px, calc(100vw - 24px));
+}
+
+.filters-popover__sections {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 18px;
+}
+
+.filters-popover__section-title {
+  margin: 0 0 8px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.filters-popover__section .filters-popover__toggles {
+  margin-top: 8px;
+  padding-top: 8px;
+}
+
+@media (max-width: 480px) {
+  .filters-popover__sections {
+    grid-template-columns: 1fr;
+  }
+}
+
+#tab-monsters-roster .table-toolbar__row--roster-inline {
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 10px 12px;
+}
+
+#tab-monsters-roster .table-toolbar__search--roster {
+  flex: 1 1 12rem;
+  min-width: 8rem;
+  max-width: 20rem;
+}
+
+#tab-monsters-roster .table-toolbar__group--roster-filters {
+  flex: 0 0 auto;
+}
+
+#tab-monsters-roster .table-toolbar__row--roster-inline .table-toolbar__aside {
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+
+@media (max-width: 900px) {
+  #tab-monsters-roster .table-toolbar__row--roster-inline {
+    flex-wrap: wrap;
+  }
+  #tab-monsters-roster .table-toolbar__search--roster {
+    max-width: none;
+    flex: 1 1 100%;
+    order: 3;
+  }
 }
 
 .filters-popover__panel {

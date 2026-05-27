@@ -347,124 +347,161 @@
           <div id="dash-dist-runes-wrap" class="dash-dist-runes-wrap">
           <nav class="rules-subtabs dash-unified-tabs" role="tablist" id="dash-unified-tabs" aria-label="">
             <span class="dash-unified-tabs__indicator" aria-hidden="true"></span>
-            <button type="button" class="rules-subtab dash-unified-tab is-active" role="tab" id="dash-unified-tab-verdict"
-              aria-controls="dash-pane-verdict" aria-selected="true" data-dash-uni="verdict" tabindex="0">
-              <span class="rules-subtab__label">Verdict</span>
-            </button>
-            <button type="button" class="rules-subtab dash-unified-tab" role="tab" id="dash-unified-tab-roles"
-              aria-controls="dash-pane-roles" aria-selected="false" data-dash-uni="roles" tabindex="-1">
-              <span class="rules-subtab__label">Roles</span>
-            </button>
-            <button type="button" class="rules-subtab dash-unified-tab" role="tab" id="dash-unified-tab-sets"
-              aria-controls="dash-pane-sets" aria-selected="false" data-dash-uni="sets" tabindex="-1">
-              <span class="rules-subtab__label">Sets</span>
+            <button type="button" class="rules-subtab dash-unified-tab is-active" role="tab" id="dash-unified-tab-breakdown"
+              aria-controls="dash-pane-breakdown" aria-selected="true" data-dash-uni="breakdown" tabindex="0">
+              <span class="rules-subtab__label" id="lbl-dash-unified-tab-breakdown">Breakdown</span>
             </button>
             <button type="button" class="rules-subtab dash-unified-tab" role="tab" id="dash-unified-tab-slots"
               aria-controls="dash-pane-slots" aria-selected="false" data-dash-uni="slots" tabindex="-1">
               <span class="rules-subtab__label">Slot</span>
             </button>
-            <button type="button" class="rules-subtab dash-unified-tab" role="tab" id="dash-unified-tab-eff"
-              aria-controls="dash-pane-eff" aria-selected="false" data-dash-uni="eff" tabindex="-1">
-              <span class="rules-subtab__label">Ingame Score</span>
-            </button>
             <button type="button" class="rules-subtab dash-unified-tab" role="tab" id="dash-unified-tab-score"
               aria-controls="dash-pane-score" aria-selected="false" data-dash-uni="score" tabindex="-1">
-              <span class="rules-subtab__label">Forge Score</span>
+              <span class="rules-subtab__label" id="lbl-dash-unified-tab-score">Score</span>
             </button>
           </nav>
           <div class="dash-unified-panes" id="dash-unified-panes">
-          <div id="dash-pane-verdict" class="dash-unified-pane is-active" role="tabpanel" aria-labelledby="dash-unified-tab-verdict">
-            <div id="verdict-chart" class="role-chart verdict-chart"></div>
-          </div>
-          <div id="dash-pane-roles" class="dash-unified-pane" role="tabpanel" aria-labelledby="dash-unified-tab-roles" hidden>
-            <div id="role-chart" class="role-chart"></div>
-          </div>
-          <div id="dash-pane-sets" class="dash-unified-pane" role="tabpanel" aria-labelledby="dash-unified-tab-sets" hidden>
-            <div id="set-chart-scroll" class="chart-scroll chart-scroll--sets">
-              <div id="set-chart" class="set-chart"></div>
+          <div id="dash-pane-breakdown" class="dash-unified-pane is-active" role="tabpanel" aria-labelledby="dash-unified-tab-breakdown">
+            <div id="dash-runes-breakdown-grid" class="dash-runes-breakdown-grid">
+              <section class="dash-artifact-cell" aria-labelledby="lbl-dash-rune-verdict">
+                <h3 class="dash-artifact-cell__title" id="lbl-dash-rune-verdict">Verdict</h3>
+                <div id="verdict-chart" class="role-chart verdict-chart"></div>
+              </section>
+              <section class="dash-artifact-cell" aria-labelledby="lbl-dash-rune-roles">
+                <h3 class="dash-artifact-cell__title" id="lbl-dash-rune-roles">Roles</h3>
+                <div id="role-chart" class="role-chart"></div>
+              </section>
+              <section class="dash-artifact-cell dash-artifact-cell--sets" aria-labelledby="lbl-dash-rune-sets">
+                <h3 class="dash-artifact-cell__title" id="lbl-dash-rune-sets">Sets</h3>
+                <div id="set-chart-scroll" class="chart-scroll chart-scroll--sets">
+                  <div id="set-chart" class="set-chart"></div>
+                </div>
+              </section>
             </div>
           </div>
           <div id="dash-pane-slots" class="dash-unified-pane" role="tabpanel" aria-labelledby="dash-unified-tab-slots" hidden>
             <h3 class="slot-pane-title" id="lbl-dash-slot-share-title"></h3>
             <div id="slot-main-cards-root" class="slot-main-cards-root"></div>
-          </div>
-          <div id="dash-pane-eff" class="dash-unified-pane" role="tabpanel" aria-labelledby="dash-unified-tab-eff" hidden>
-            <div class="eff-histo-host eff-histo-host--dash-pane">
-              <div class="eff-median-line" id="eff-median-line" hidden role="img" tabindex="0"></div>
-              <div id="eff-chart" class="eff-chart"></div>
-            </div>
+            <section class="panel-top-spd" id="panel-top-spd">
+              <header class="panel-top-spd-head">
+                <div class="panel-top-spd-head__row">
+                  <h2 class="rules-page-title" id="lbl-top-spd-title">Top SPD by slot</h2>
+                  <div class="panel-top-spd-head__tools">
+                    <select id="top-spd-set-select" class="top-spd-set-select" aria-label="Rune set"></select>
+                    <div class="top-spd-sort" id="top-spd-sort" role="group" aria-labelledby="lbl-top-spd-sort">
+                      <span id="lbl-top-spd-sort" class="visually-hidden">Sort top list</span>
+                      <div class="top-spd-sort-metric" id="top-spd-sort-metric" role="group" aria-label="">
+                        <button type="button" class="top-spd-sort-btn is-active" id="btn-top-spd-sort-cur" data-top-spd-metric="cur">Current</button>
+                        <button type="button" class="top-spd-sort-btn" id="btn-top-spd-sort-pot" data-top-spd-metric="pot">Potential</button>
+                      </div>
+                      <button type="button" class="top-spd-sort-dir" id="btn-top-spd-sort-dir" data-dir="desc" aria-pressed="true" title="">
+                        <span class="top-spd-sort-dir__label" id="lbl-top-spd-sort-dir" aria-hidden="true">↓</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </header>
+              <div class="top-spd-body">
+                <div class="top-spd-radar-col">
+                  <div class="top-spd-radar-stage">
+                    <div id="top-spd-radar-host" class="top-spd-radar-host" aria-hidden="true"></div>
+                    <div class="top-spd-radar-legend" id="top-spd-radar-legend" hidden aria-hidden="true">
+                      <span class="top-spd-radar-legend__item top-spd-radar-legend__item--cur" id="lbl-top-spd-legend-cur"></span>
+                      <span class="top-spd-radar-legend__item top-spd-radar-legend__item--pot" id="lbl-top-spd-legend-pot"></span>
+                    </div>
+                  </div>
+                </div>
+                <div id="top-spd-grid" class="top-spd-grid"></div>
+              </div>
+            </section>
           </div>
           <div id="dash-pane-score" class="dash-unified-pane" role="tabpanel" aria-labelledby="dash-unified-tab-score" hidden>
-            <div class="eff-histo-host eff-histo-host--dash-pane eff-histo-host--score-pane">
-              <div class="eff-median-line" id="score-median-line" hidden role="img" tabindex="0"></div>
-              <div id="score-chart" class="eff-chart eff-chart--score"></div>
+            <div class="dash-score-stack">
+              <section class="dash-score-stack__block" aria-labelledby="lbl-dash-score-ingame">
+                <h3 class="dash-artifact-cell__title" id="lbl-dash-score-ingame">Ingame Score</h3>
+                <div class="eff-histo-host eff-histo-host--dash-pane">
+                  <div class="eff-median-line" id="eff-median-line" hidden role="img" tabindex="0"></div>
+                  <div id="eff-chart" class="eff-chart"></div>
+                </div>
+              </section>
+              <section class="dash-score-stack__block" aria-labelledby="lbl-dash-score-forge">
+                <h3 class="dash-artifact-cell__title" id="lbl-dash-score-forge">Forge Score</h3>
+                <div class="eff-histo-host eff-histo-host--dash-pane eff-histo-host--score-pane">
+                  <div class="eff-median-line" id="score-median-line" hidden role="img" tabindex="0"></div>
+                  <div id="score-chart" class="eff-chart eff-chart--score"></div>
+                </div>
+              </section>
             </div>
           </div>
           </div>
           </div>
           <div id="dash-dist-artifacts-wrap" class="dash-dist-artifacts-wrap" hidden>
             <p class="dash-artifact-empty" id="dash-artifact-empty" hidden></p>
-            <div id="dash-artifact-grid" class="dash-artifact-grid" hidden>
-              <section class="dash-artifact-cell" aria-labelledby="lbl-dash-art-verdict">
-                <h3 class="dash-artifact-cell__title" id="lbl-dash-art-verdict">Artifact Verdict</h3>
-                <div id="dash-art-verdict-chart" class="role-chart verdict-chart dash-artifact-verdict-chart"></div>
-              </section>
-              <section class="dash-artifact-cell" aria-labelledby="lbl-dash-art-grade">
-                <h3 class="dash-artifact-cell__title" id="lbl-dash-art-grade">Grade</h3>
-                <div id="dash-art-grade-chart" class="role-chart"></div>
-              </section>
-              <section class="dash-artifact-cell" aria-labelledby="lbl-dash-art-type">
-                <h3 class="dash-artifact-cell__title" id="lbl-dash-art-type">Type</h3>
-                <div id="dash-art-type-chart" class="role-chart"></div>
-              </section>
-              <section class="dash-artifact-cell" aria-labelledby="lbl-dash-art-role">
-                <h3 class="dash-artifact-cell__title" id="lbl-dash-art-role">Role</h3>
-                <div id="dash-art-role-chart" class="role-chart"></div>
-              </section>
-              <section class="dash-artifact-cell" aria-labelledby="lbl-dash-art-attribute">
-                <h3 class="dash-artifact-cell__title" id="lbl-dash-art-attribute">Attribute</h3>
-                <div id="dash-art-attribute-chart" class="role-chart"></div>
-              </section>
-              <section class="dash-artifact-cell" aria-labelledby="lbl-dash-art-score">
-                <h3 class="dash-artifact-cell__title" id="lbl-dash-art-score">Score Distribution</h3>
-                <div class="eff-histo-host eff-histo-host--dash-pane eff-histo-host--artifact-score">
-                  <div id="dash-art-score-chart" class="eff-chart eff-chart--artifact-score"></div>
+            <nav class="rules-subtabs dash-unified-tabs" role="tablist" id="dash-art-tabs" aria-label="">
+              <span class="dash-unified-tabs__indicator" aria-hidden="true"></span>
+              <button type="button" class="rules-subtab dash-art-tab is-active" role="tab" id="dash-art-tab-breakdown"
+                aria-controls="dash-art-pane-breakdown" aria-selected="true" data-dash-art-tab="breakdown" tabindex="0">
+                <span class="rules-subtab__label" id="lbl-dash-art-tab-breakdown">Breakdown</span>
+              </button>
+              <button type="button" class="rules-subtab dash-art-tab" role="tab" id="dash-art-tab-type"
+                aria-controls="dash-art-pane-type" aria-selected="false" data-dash-art-tab="type" tabindex="-1">
+                <span class="rules-subtab__label" id="lbl-dash-art-tab-type">Type</span>
+              </button>
+              <button type="button" class="rules-subtab dash-art-tab" role="tab" id="dash-art-tab-score"
+                aria-controls="dash-art-pane-score" aria-selected="false" data-dash-art-tab="score" tabindex="-1">
+                <span class="rules-subtab__label" id="lbl-dash-art-tab-score">Score</span>
+              </button>
+            </nav>
+            <div id="dash-art-panes" class="dash-unified-panes">
+              <div id="dash-art-pane-breakdown" class="dash-unified-pane is-active" role="tabpanel" aria-labelledby="dash-art-tab-breakdown">
+                <div id="dash-artifact-grid" class="dash-artifact-grid" hidden>
+                  <section class="dash-artifact-cell" aria-labelledby="lbl-dash-art-verdict">
+                    <h3 class="dash-artifact-cell__title" id="lbl-dash-art-verdict">Artifact Verdict</h3>
+                    <div id="dash-art-verdict-chart" class="role-chart verdict-chart dash-artifact-verdict-chart"></div>
+                  </section>
+                  <section class="dash-artifact-cell" aria-labelledby="lbl-dash-art-role">
+                    <h3 class="dash-artifact-cell__title" id="lbl-dash-art-role">Role</h3>
+                    <div id="dash-art-role-chart" class="role-chart"></div>
+                  </section>
+                  <section class="dash-artifact-cell" aria-labelledby="lbl-dash-art-grade">
+                    <h3 class="dash-artifact-cell__title" id="lbl-dash-art-grade">Grade</h3>
+                    <div id="dash-art-grade-chart" class="role-chart"></div>
+                  </section>
                 </div>
-              </section>
-            </div>
-          </div>
-        </div>
-
-        <div class="panel panel-wide panel-top-spd" id="panel-top-spd">
-          <header class="panel-top-spd-head">
-            <div class="panel-top-spd-head__row">
-              <h2 class="rules-page-title" id="lbl-top-spd-title">Top SPD by slot</h2>
-              <div class="panel-top-spd-head__tools">
-                <select id="top-spd-set-select" class="top-spd-set-select" aria-label="Rune set"></select>
-                <div class="top-spd-sort" id="top-spd-sort" role="group" aria-labelledby="lbl-top-spd-sort">
-                  <span id="lbl-top-spd-sort" class="visually-hidden">Sort top list</span>
-                  <div class="top-spd-sort-metric" id="top-spd-sort-metric" role="group" aria-label="">
-                    <button type="button" class="top-spd-sort-btn is-active" id="btn-top-spd-sort-cur" data-top-spd-metric="cur">Current</button>
-                    <button type="button" class="top-spd-sort-btn" id="btn-top-spd-sort-pot" data-top-spd-metric="pot">Potential</button>
+              </div>
+              <div id="dash-art-pane-type" class="dash-unified-pane" role="tabpanel" aria-labelledby="dash-art-tab-type" hidden>
+                <div class="dash-artifact-grid" id="dash-artifact-grid-type" hidden>
+                  <section class="dash-artifact-cell" aria-labelledby="lbl-dash-art-type">
+                    <h3 class="dash-artifact-cell__title" id="lbl-dash-art-type">Type</h3>
+                    <div id="dash-art-type-chart" class="role-chart"></div>
+                  </section>
+                  <section class="dash-artifact-cell" aria-labelledby="lbl-dash-art-attribute">
+                    <h3 class="dash-artifact-cell__title" id="lbl-dash-art-attribute">Attribute</h3>
+                    <div id="dash-art-attribute-chart" class="role-chart"></div>
+                  </section>
+                </div>
+              </div>
+              <div id="dash-art-pane-score" class="dash-unified-pane" role="tabpanel" aria-labelledby="dash-art-tab-score" hidden>
+                <div id="dash-artifact-grid-score" hidden>
+                  <div class="dash-score-stack">
+                    <section class="dash-score-stack__block" aria-labelledby="lbl-dash-art-score-ingame">
+                      <h3 class="dash-artifact-cell__title" id="lbl-dash-art-score-ingame">Ingame Score</h3>
+                      <div class="eff-histo-host eff-histo-host--dash-pane eff-histo-host--artifact-score">
+                        <div class="eff-median-line" id="dash-art-ingame-median-line" hidden role="img" tabindex="0"></div>
+                        <div id="dash-art-score-ingame-chart" class="eff-chart"></div>
+                      </div>
+                    </section>
+                    <section class="dash-score-stack__block" aria-labelledby="lbl-dash-art-score-forge">
+                      <h3 class="dash-artifact-cell__title" id="lbl-dash-art-score-forge">Forge Score</h3>
+                      <div class="eff-histo-host eff-histo-host--dash-pane eff-histo-host--score-pane eff-histo-host--artifact-score">
+                        <div class="eff-median-line" id="dash-art-forge-median-line" hidden role="img" tabindex="0"></div>
+                        <div id="dash-art-score-forge-chart" class="eff-chart eff-chart--score"></div>
+                      </div>
+                    </section>
                   </div>
-                  <button type="button" class="top-spd-sort-dir" id="btn-top-spd-sort-dir" data-dir="desc" aria-pressed="true" title="">
-                    <span class="top-spd-sort-dir__label" id="lbl-top-spd-sort-dir" aria-hidden="true">↓</span>
-                  </button>
                 </div>
               </div>
             </div>
-          </header>
-          <div class="top-spd-body">
-            <div class="top-spd-radar-col">
-              <div class="top-spd-radar-stage">
-                <div id="top-spd-radar-host" class="top-spd-radar-host" aria-hidden="true"></div>
-                <div class="top-spd-radar-legend" id="top-spd-radar-legend" hidden aria-hidden="true">
-                  <span class="top-spd-radar-legend__item top-spd-radar-legend__item--cur" id="lbl-top-spd-legend-cur"></span>
-                  <span class="top-spd-radar-legend__item top-spd-radar-legend__item--pot" id="lbl-top-spd-legend-pot"></span>
-                </div>
-              </div>
-            </div>
-            <div id="top-spd-grid" class="top-spd-grid"></div>
           </div>
         </div>
 
@@ -488,84 +525,91 @@
           </nav>
           <div class="table-toolbar" id="rune-table-toolbar" data-table-toolbar="runes" aria-label="Rune table tools">
             <div class="table-toolbar__card">
-              <div class="table-toolbar__row table-toolbar__row--search">
-                <div class="table-toolbar__search">
+              <div class="table-toolbar__row table-toolbar__row--controls table-toolbar__row--table-inline" id="rune-table-rune-only-ui">
+                <div class="table-toolbar__search table-toolbar__search--table">
                   <label class="visually-hidden" for="search-box" id="lbl-search-box">Search</label>
-                  <input type="text" id="search-box" class="table-toolbar__input" placeholder="Search by set, stat, role..." autocomplete="off" />
+                  <input type="text" id="search-box" class="table-toolbar__input" placeholder="Search…" autocomplete="off" />
                 </div>
-                <div id="rune-table-load-strip" class="table-toolbar__load hidden" aria-live="polite">
-                  <div class="table-toolbar__load-inner">
-                    <button type="button" id="btn-rune-table-show-all" class="btn-primary btn-toolbar-primary"></button>
-                    <p class="table-toolbar__load-hint" id="lbl-rune-table-more-hint"></p>
-                  </div>
-                </div>
-              </div>
-              <div class="table-toolbar__row table-toolbar__row--controls" id="rune-table-rune-only-ui">
-                <div class="table-toolbar__group table-toolbar__group--actions">
+                <div class="table-toolbar__group table-toolbar__group--actions table-toolbar__group--table-filters">
                   <div class="table-toolbar__buttons">
                     <div class="filters-popover-host">
                       <button type="button" class="monsters-toolbar-btn monsters-toolbar-btn--filters" id="rune-more-filters-btn" aria-haspopup="true" aria-controls="rune-filters-popover" aria-expanded="false">
                         <span id="lbl-rune-more-filters">More Filters ⚙</span>
                         <span class="monsters-toolbar-btn__badge" id="rune-filters-active-count" hidden></span>
                       </button>
-                      <div id="rune-filters-popover" class="filters-popover" role="dialog" aria-labelledby="lbl-rune-filters-drawer-title" hidden data-anchor-btn="rune-more-filters-btn">
+                      <div id="rune-filters-popover" class="filters-popover filters-popover--wide" role="dialog" aria-labelledby="lbl-rune-filters-drawer-title" hidden data-anchor-btn="rune-more-filters-btn">
                         <div class="filters-popover__panel">
                           <header class="filters-popover__head">
                             <h3 class="filters-popover__title" id="lbl-rune-filters-drawer-title">More filters</h3>
                             <button type="button" class="filters-popover__close" data-filters-popover-close aria-label="Close">✕</button>
                           </header>
                           <div class="filters-popover__body">
-                            <div class="monsters-toolbar__filters-grid monsters-toolbar__filters-grid--primary">
-                              <label>
-                                <span id="lbl-rune-filter-verdict">Verdict</span>
-                                <select id="filter-verdict">
-                                  <option value="">All</option>
-                                </select>
-                              </label>
-                              <label>
-                                <span id="lbl-rune-filter-role">Role</span>
-                                <select id="filter-role">
-                                  <option value="">All</option>
-                                </select>
-                              </label>
-                              <label>
-                                <span id="lbl-rune-filter-grade">Grade</span>
-                                <select id="filter-grade">
-                                  <option value="">All</option>
-                                </select>
-                              </label>
-                              <label>
-                                <span id="lbl-rune-filter-set">Set</span>
-                                <select id="filter-set">
-                                  <option value="">All</option>
-                                </select>
-                              </label>
-                              <label>
-                                <span id="lbl-rune-filter-slot">Slot</span>
-                                <select id="filter-slot">
-                                  <option value="">All</option>
-                                </select>
-                              </label>
-                              <label>
-                                <span id="lbl-rune-filter-main">Main stat</span>
-                                <select id="filter-main">
-                                  <option value="">All</option>
-                                </select>
-                              </label>
-                              <label>
-                                <span id="lbl-rune-filter-location">Location</span>
-                                <select id="filter-rune-location">
-                                  <option value="">All</option>
-                                  <option value="inventory" id="lbl-rune-filter-inventory-opt">Inventory</option>
-                                  <option value="equipped" id="lbl-rune-filter-equipped-opt">Equipped</option>
-                                </select>
-                              </label>
-                            </div>
-                            <div class="filters-popover__toggles">
-                              <label class="toggle-target">
-                                <input type="checkbox" id="toggle-ancient-only" />
-                                <span id="lbl-toggle-ancient-only">Ancient only</span>
-                              </label>
+                            <div class="filters-popover__sections">
+                              <section class="filters-popover__section">
+                                <h4 class="filters-popover__section-title" id="lbl-rune-filters-verdict-group">Verdict &amp; role</h4>
+                                <div class="monsters-toolbar__filters-grid monsters-toolbar__filters-grid--primary">
+                                  <label>
+                                    <span id="lbl-rune-filter-verdict">Verdict</span>
+                                    <select id="filter-verdict">
+                                      <option value="">All</option>
+                                    </select>
+                                  </label>
+                                  <label>
+                                    <span id="lbl-rune-filter-role">Role</span>
+                                    <select id="filter-role">
+                                      <option value="">All</option>
+                                    </select>
+                                  </label>
+                                </div>
+                              </section>
+                              <section class="filters-popover__section">
+                                <h4 class="filters-popover__section-title" id="lbl-rune-filters-stats-group">Rune stats</h4>
+                                <div class="monsters-toolbar__filters-grid monsters-toolbar__filters-grid--primary">
+                                  <label>
+                                    <span id="lbl-rune-filter-grade">Grade</span>
+                                    <select id="filter-grade">
+                                      <option value="">All</option>
+                                    </select>
+                                  </label>
+                                  <label>
+                                    <span id="lbl-rune-filter-set">Set</span>
+                                    <select id="filter-set">
+                                      <option value="">All</option>
+                                    </select>
+                                  </label>
+                                  <label>
+                                    <span id="lbl-rune-filter-slot">Slot</span>
+                                    <select id="filter-slot">
+                                      <option value="">All</option>
+                                    </select>
+                                  </label>
+                                  <label>
+                                    <span id="lbl-rune-filter-main">Main stat</span>
+                                    <select id="filter-main">
+                                      <option value="">All</option>
+                                    </select>
+                                  </label>
+                                </div>
+                              </section>
+                              <section class="filters-popover__section">
+                                <h4 class="filters-popover__section-title" id="lbl-rune-filters-location-group">Location</h4>
+                                <div class="monsters-toolbar__filters-grid monsters-toolbar__filters-grid--primary">
+                                  <label>
+                                    <span id="lbl-rune-filter-location">Location</span>
+                                    <select id="filter-rune-location">
+                                      <option value="">All</option>
+                                      <option value="inventory" id="lbl-rune-filter-inventory-opt">Inventory</option>
+                                      <option value="equipped" id="lbl-rune-filter-equipped-opt">Equipped</option>
+                                    </select>
+                                  </label>
+                                </div>
+                                <div class="filters-popover__toggles">
+                                  <label class="toggle-target">
+                                    <input type="checkbox" id="toggle-ancient-only" />
+                                    <span id="lbl-toggle-ancient-only">Ancient only</span>
+                                  </label>
+                                </div>
+                              </section>
                             </div>
                           </div>
                           <footer class="filters-popover__foot">
@@ -575,7 +619,6 @@
                         </div>
                       </div>
                     </div>
-                    <button type="button" id="btn-table-reset-filters" class="btn-ghost btn-toolbar btn-toolbar--inactive" disabled>Reset filters</button>
                   </div>
                 </div>
                 <div class="table-toolbar__aside">
@@ -599,23 +642,24 @@
                       </div>
                     </div>
                   </div>
-                  <div class="table-toolbar__count table-count-block">
-                    <span id="table-count" class="table-count" aria-live="polite">0 runes</span>
-                  </div>
+                </div>
+              </div>
+              <div id="rune-table-load-strip" class="table-toolbar__load hidden" aria-live="polite">
+                <div class="table-toolbar__load-inner">
+                  <button type="button" id="btn-rune-table-show-all" class="btn-primary btn-toolbar-primary"></button>
+                  <p class="table-toolbar__load-hint" id="lbl-rune-table-more-hint"></p>
                 </div>
               </div>
             </div>
           </div>
           <div class="table-toolbar hidden" id="artifact-table-toolbar" data-table-toolbar="artifacts" aria-label="Artifact table tools" hidden>
             <div class="table-toolbar__card">
-              <div class="table-toolbar__row table-toolbar__row--search">
-                <div class="table-toolbar__search">
-                  <label class="visually-hidden" for="search-box-artifacts" id="lbl-search-box-artifacts">Search artifacts</label>
-                  <input type="text" id="search-box-artifacts" class="table-toolbar__input" placeholder="Search artifacts…" autocomplete="off" />
+              <div class="table-toolbar__row table-toolbar__row--controls table-toolbar__row--table-inline">
+                <div class="table-toolbar__search table-toolbar__search--table">
+                  <label class="visually-hidden" for="search-box-artifacts" id="lbl-search-box-artifacts">Search</label>
+                  <input type="text" id="search-box-artifacts" class="table-toolbar__input" placeholder="Search…" autocomplete="off" />
                 </div>
-              </div>
-              <div class="table-toolbar__row table-toolbar__row--controls">
-                <div class="table-toolbar__group table-toolbar__group--actions">
+                <div class="table-toolbar__group table-toolbar__group--actions table-toolbar__group--table-filters">
                   <div class="table-toolbar__buttons">
                     <div class="filters-popover-host">
                       <button type="button" class="monsters-toolbar-btn monsters-toolbar-btn--filters" id="artifact-more-filters-btn" aria-haspopup="true" aria-controls="artifact-filters-popover" aria-expanded="false">
@@ -629,47 +673,62 @@
                             <button type="button" class="filters-popover__close" data-filters-popover-close aria-label="Close">✕</button>
                           </header>
                           <div class="filters-popover__body">
-                            <div class="monsters-toolbar__filters-grid monsters-toolbar__filters-grid--primary">
-                              <label>
-                                <span id="lbl-artifact-filter-grade">Grade</span>
-                                <select id="filter-artifact-grade">
-                                  <option value="">All</option>
-                                </select>
-                              </label>
-                              <label>
-                                <span id="lbl-artifact-filter-type">Type</span>
-                                <select id="filter-artifact-type">
-                                  <option value="">All</option>
-                                </select>
-                              </label>
-                              <label>
-                                <span id="lbl-artifact-filter-attribute">Attribute</span>
-                                <select id="filter-artifact-attribute">
-                                  <option value="">All</option>
-                                </select>
-                              </label>
-                              <label>
-                                <span id="lbl-artifact-filter-role">Role</span>
-                                <select id="filter-artifact-role">
-                                  <option value="">All</option>
-                                </select>
-                              </label>
-                              <label>
-                                <span id="lbl-artifact-filter-location">Location</span>
-                                <select id="filter-artifact-location">
-                                  <option value="">All</option>
-                                  <option value="inventory" id="lbl-artifact-filter-inventory-opt">Inventory</option>
-                                  <option value="equipped" id="lbl-artifact-filter-equipped-opt">Equipped</option>
-                                </select>
-                              </label>
-                              <label>
-                                <span id="lbl-artifact-filter-verdict">Verdict</span>
-                                <select id="filter-artifact-verdict">
-                                  <option value="">All</option>
-                                  <option value="keep" id="lbl-artifact-filter-keep-opt">Keep</option>
-                                  <option value="sell" id="lbl-artifact-filter-sell-opt">Sell</option>
-                                </select>
-                              </label>
+                            <div class="filters-popover__sections">
+                              <section class="filters-popover__section">
+                                <h4 class="filters-popover__section-title" id="lbl-artifact-filters-piece-group">Piece</h4>
+                                <div class="monsters-toolbar__filters-grid monsters-toolbar__filters-grid--primary">
+                                  <label>
+                                    <span id="lbl-artifact-filter-grade">Grade</span>
+                                    <select id="filter-artifact-grade">
+                                      <option value="">All</option>
+                                    </select>
+                                  </label>
+                                  <label>
+                                    <span id="lbl-artifact-filter-type">Type</span>
+                                    <select id="filter-artifact-type">
+                                      <option value="">All</option>
+                                    </select>
+                                  </label>
+                                  <label>
+                                    <span id="lbl-artifact-filter-attribute">Attribute</span>
+                                    <select id="filter-artifact-attribute">
+                                      <option value="">All</option>
+                                    </select>
+                                  </label>
+                                </div>
+                              </section>
+                              <section class="filters-popover__section">
+                                <h4 class="filters-popover__section-title" id="lbl-artifact-filters-eval-group">Evaluation</h4>
+                                <div class="monsters-toolbar__filters-grid monsters-toolbar__filters-grid--primary">
+                                  <label>
+                                    <span id="lbl-artifact-filter-role">Role</span>
+                                    <select id="filter-artifact-role">
+                                      <option value="">All</option>
+                                    </select>
+                                  </label>
+                                  <label>
+                                    <span id="lbl-artifact-filter-verdict">Verdict</span>
+                                    <select id="filter-artifact-verdict">
+                                      <option value="">All</option>
+                                      <option value="keep" id="lbl-artifact-filter-keep-opt">Keep</option>
+                                      <option value="sell" id="lbl-artifact-filter-sell-opt">Sell</option>
+                                    </select>
+                                  </label>
+                                </div>
+                              </section>
+                              <section class="filters-popover__section">
+                                <h4 class="filters-popover__section-title" id="lbl-artifact-filters-loc-group">Location</h4>
+                                <div class="monsters-toolbar__filters-grid monsters-toolbar__filters-grid--primary">
+                                  <label>
+                                    <span id="lbl-artifact-filter-location">Location</span>
+                                    <select id="filter-artifact-location">
+                                      <option value="">All</option>
+                                      <option value="inventory" id="lbl-artifact-filter-inventory-opt">Inventory</option>
+                                      <option value="equipped" id="lbl-artifact-filter-equipped-opt">Equipped</option>
+                                    </select>
+                                  </label>
+                                </div>
+                              </section>
                             </div>
                           </div>
                           <footer class="filters-popover__foot">
@@ -679,13 +738,28 @@
                         </div>
                       </div>
                     </div>
-                    <button type="button" id="btn-artifact-reset-filters" class="btn-ghost btn-toolbar btn-toolbar--inactive" disabled>Reset filters</button>
-                    <button type="button" id="btn-artifact-export-csv" class="btn-ghost btn-toolbar">Export CSV</button>
                   </div>
                 </div>
                 <div class="table-toolbar__aside">
-                  <div class="table-toolbar__count table-count-block">
-                    <span id="artifact-table-count" class="table-count" aria-live="polite">0 artifacts</span>
+                  <div class="table-toolbar__buttons table-toolbar__buttons--end">
+                    <button type="button" id="btn-artifact-export-csv" class="btn-ghost btn-toolbar">Export CSV</button>
+                    <div class="share-split share-split--compact" data-share-split>
+                      <button type="button" class="share-split__main" id="artifacttable-share-main">
+                        <span class="share-split__icon" aria-hidden="true">🔗</span>
+                        <span class="share-split__label" data-share-split-label>Share</span>
+                      </button>
+                      <button type="button" class="share-split__caret" aria-expanded="false" aria-haspopup="true" aria-controls="artifacttable-share-menu" title="Share options">▼</button>
+                      <div class="share-split__menu" id="artifacttable-share-menu" role="menu" hidden>
+                        <p class="share-split__menu-title">Share roster</p>
+                        <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="all">All monsters + all runes</button>
+                        <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="equipped-monsters">Equipped monsters only</button>
+                        <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="equipped-runes">Equipped runes only</button>
+                        <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="equipped-both">Equipped monsters + equipped runes</button>
+                        <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="selected">Selected monsters only</button>
+                        <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="favorites">Favorites only</button>
+                        <button type="button" class="share-split__menu-copy" data-share-copy-link>Copy link</button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -693,14 +767,12 @@
           </div>
           <div class="table-toolbar hidden" id="relic-table-toolbar" data-table-toolbar="relics" aria-label="Relic table tools" hidden>
             <div class="table-toolbar__card">
-              <div class="table-toolbar__row table-toolbar__row--search">
-                <div class="table-toolbar__search">
-                  <label class="visually-hidden" for="search-box-relics" id="lbl-search-box-relics">Search relics</label>
-                  <input type="text" id="search-box-relics" class="table-toolbar__input" placeholder="Search relics…" autocomplete="off" />
+              <div class="table-toolbar__row table-toolbar__row--controls table-toolbar__row--table-inline">
+                <div class="table-toolbar__search table-toolbar__search--table">
+                  <label class="visually-hidden" for="search-box-relics" id="lbl-search-box-relics">Search</label>
+                  <input type="text" id="search-box-relics" class="table-toolbar__input" placeholder="Search…" autocomplete="off" />
                 </div>
-              </div>
-              <div class="table-toolbar__row table-toolbar__row--controls">
-                <div class="table-toolbar__group table-toolbar__group--actions">
+                <div class="table-toolbar__group table-toolbar__group--actions table-toolbar__group--table-filters">
                   <div class="table-toolbar__buttons">
                     <div class="filters-popover-host">
                       <button type="button" class="monsters-toolbar-btn monsters-toolbar-btn--filters" id="relic-more-filters-btn" aria-haspopup="true" aria-controls="relic-filters-popover" aria-expanded="false">
@@ -714,27 +786,37 @@
                             <button type="button" class="filters-popover__close" data-filters-popover-close aria-label="Close">✕</button>
                           </header>
                           <div class="filters-popover__body">
-                            <div class="monsters-toolbar__filters-grid monsters-toolbar__filters-grid--primary">
-                              <label>
-                                <span id="lbl-relic-filter-grade">Grade</span>
-                                <select id="filter-relic-grade">
-                                  <option value="">All</option>
-                                </select>
-                              </label>
-                              <label>
-                                <span id="lbl-relic-filter-category">Category</span>
-                                <select id="filter-relic-category">
-                                  <option value="">All</option>
-                                </select>
-                              </label>
-                              <label>
-                                <span id="lbl-relic-filter-location">Location</span>
-                                <select id="filter-relic-location">
-                                  <option value="">All</option>
-                                  <option value="inventory" id="lbl-relic-filter-inventory-opt">Inventory</option>
-                                  <option value="equipped" id="lbl-relic-filter-equipped-opt">Equipped</option>
-                                </select>
-                              </label>
+                            <div class="filters-popover__sections">
+                              <section class="filters-popover__section">
+                                <h4 class="filters-popover__section-title" id="lbl-relic-filters-piece-group">Piece</h4>
+                                <div class="monsters-toolbar__filters-grid monsters-toolbar__filters-grid--primary">
+                                  <label>
+                                    <span id="lbl-relic-filter-grade">Grade</span>
+                                    <select id="filter-relic-grade">
+                                      <option value="">All</option>
+                                    </select>
+                                  </label>
+                                  <label>
+                                    <span id="lbl-relic-filter-category">Category</span>
+                                    <select id="filter-relic-category">
+                                      <option value="">All</option>
+                                    </select>
+                                  </label>
+                                </div>
+                              </section>
+                              <section class="filters-popover__section">
+                                <h4 class="filters-popover__section-title" id="lbl-relic-filters-loc-group">Location</h4>
+                                <div class="monsters-toolbar__filters-grid monsters-toolbar__filters-grid--primary">
+                                  <label>
+                                    <span id="lbl-relic-filter-location">Location</span>
+                                    <select id="filter-relic-location">
+                                      <option value="">All</option>
+                                      <option value="inventory" id="lbl-relic-filter-inventory-opt">Inventory</option>
+                                      <option value="equipped" id="lbl-relic-filter-equipped-opt">Equipped</option>
+                                    </select>
+                                  </label>
+                                </div>
+                              </section>
                             </div>
                           </div>
                           <footer class="filters-popover__foot">
@@ -744,13 +826,28 @@
                         </div>
                       </div>
                     </div>
-                    <button type="button" id="btn-relic-reset-filters" class="btn-ghost btn-toolbar btn-toolbar--inactive" disabled>Reset filters</button>
-                    <button type="button" id="btn-relic-export-csv" class="btn-ghost btn-toolbar">Export CSV</button>
                   </div>
                 </div>
                 <div class="table-toolbar__aside">
-                  <div class="table-toolbar__count table-count-block">
-                    <span id="relic-table-count" class="table-count" aria-live="polite">0 relics</span>
+                  <div class="table-toolbar__buttons table-toolbar__buttons--end">
+                    <button type="button" id="btn-relic-export-csv" class="btn-ghost btn-toolbar">Export CSV</button>
+                    <div class="share-split share-split--compact" data-share-split>
+                      <button type="button" class="share-split__main" id="relictable-share-main">
+                        <span class="share-split__icon" aria-hidden="true">🔗</span>
+                        <span class="share-split__label" data-share-split-label>Share</span>
+                      </button>
+                      <button type="button" class="share-split__caret" aria-expanded="false" aria-haspopup="true" aria-controls="relictable-share-menu" title="Share options">▼</button>
+                      <div class="share-split__menu" id="relictable-share-menu" role="menu" hidden>
+                        <p class="share-split__menu-title">Share roster</p>
+                        <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="all">All monsters + all runes</button>
+                        <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="equipped-monsters">Equipped monsters only</button>
+                        <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="equipped-runes">Equipped runes only</button>
+                        <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="equipped-both">Equipped monsters + equipped runes</button>
+                        <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="selected">Selected monsters only</button>
+                        <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="favorites">Favorites only</button>
+                        <button type="button" class="share-split__menu-copy" data-share-copy-link>Copy link</button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -764,9 +861,11 @@
             <button type="button" class="rune-table-active-filters__clear" id="gear-table-filter-chips-clear" hidden>Clear all</button>
           </div>
           <div class="table-kind-pane is-active" data-table-kind-pane="runes">
-            <div id="rune-table-roster-meta" class="monsters-roster-meta rune-table-roster-meta" data-gear-roster-meta="runes">
+            <div id="rune-table-roster-meta" class="monsters-roster-meta rune-table-roster-meta table-pane-meta" data-gear-roster-meta="runes">
               <div class="monsters-chips monsters-chips--stats" id="rune-table-roster-chips" aria-live="polite"></div>
-              <p class="rune-table-verdict-hint" id="lbl-rune-verdict-hint">Hover a Verdict tag for details.</p>
+              <div class="table-pane-meta__aside">
+                <span id="table-count" class="table-count table-pane-meta__count" aria-live="polite">0 runes</span>
+              </div>
             </div>
             <div class="table-wrap" id="rune-table-scroll" tabindex="0" role="region" aria-label="Rune table">
               <table id="rune-table">
@@ -811,8 +910,9 @@
             </div>
           </div>
           <div class="table-kind-pane" data-table-kind-pane="artifacts" hidden>
-            <div id="artifact-table-roster-meta" class="monsters-roster-meta rune-table-roster-meta" data-gear-roster-meta="artifacts" hidden>
+            <div id="artifact-table-roster-meta" class="monsters-roster-meta rune-table-roster-meta table-pane-meta" data-gear-roster-meta="artifacts" hidden>
               <div class="monsters-chips monsters-chips--stats" id="artifact-table-roster-chips" aria-live="polite"></div>
+              <span id="artifact-table-count" class="table-count table-pane-meta__count" aria-live="polite">0 artifacts</span>
             </div>
             <div class="table-wrap" id="artifact-table-scroll" tabindex="0" role="region" aria-label="Artifact table">
               <table id="artifact-table" class="gear-table">
@@ -821,19 +921,23 @@
                   <col class="col-category">
                   <col class="col-main">
                   <col class="col-subs-stack">
+                  <col class="col-art-ingame">
+                  <col class="col-art-forge">
                   <col class="col-art-role">
                   <col class="col-art-verdict">
                   <col class="col-location">
                 </colgroup>
                 <thead>
                   <tr>
-                    <th class="col-grade" id="lbl-th-art-grade">Grade</th>
-                    <th class="col-category" id="lbl-th-art-category">Category</th>
-                    <th class="col-main" id="lbl-th-art-main">Main</th>
-                    <th class="col-subs-stack" id="lbl-th-art-subs">Subs</th>
-                    <th class="col-art-role" id="lbl-th-art-role">Role</th>
-                    <th class="col-art-verdict" id="lbl-th-art-verdict">Verdict</th>
-                    <th class="col-location" id="lbl-th-art-location">Location</th>
+                    <th class="col-grade" data-sort="grade"><span class="th-text th-text--plain" id="lbl-th-art-grade">Grade</span></th>
+                    <th class="col-category" data-sort="category"><span class="th-text th-text--plain" id="lbl-th-art-category">Category</span></th>
+                    <th class="col-main" data-sort="main"><span class="th-text th-text--plain" id="lbl-th-art-main">Main</span></th>
+                    <th class="col-subs-stack" data-sort="subs"><span class="th-text th-text--plain" id="lbl-th-art-subs">Subs</span></th>
+                    <th class="col-art-ingame th-num col-block-gap" data-sort="ingame"><span class="th-text th-text--plain" id="lbl-th-art-ingame">Ingame</span></th>
+                    <th class="col-art-forge th-num" data-sort="forge"><span class="th-text th-text--plain" id="lbl-th-art-forge">Forge</span></th>
+                    <th class="col-art-role col-block-gap" data-sort="role"><span class="th-text th-text--plain" id="lbl-th-art-role">Role</span></th>
+                    <th class="col-art-verdict" data-sort="verdict"><span class="th-text th-text--plain" id="lbl-th-art-verdict">Verdict</span></th>
+                    <th class="col-location col-block-gap" data-sort="location"><span class="th-text th-text--plain" id="lbl-th-art-location">Location</span></th>
                   </tr>
                 </thead>
                 <tbody id="artifact-tbody"></tbody>
@@ -841,8 +945,9 @@
             </div>
           </div>
           <div class="table-kind-pane" data-table-kind-pane="relics" hidden>
-            <div id="relic-table-roster-meta" class="monsters-roster-meta rune-table-roster-meta" data-gear-roster-meta="relics" hidden>
+            <div id="relic-table-roster-meta" class="monsters-roster-meta rune-table-roster-meta table-pane-meta" data-gear-roster-meta="relics" hidden>
               <div class="monsters-chips monsters-chips--stats" id="relic-table-roster-chips" aria-live="polite"></div>
+              <span id="relic-table-count" class="table-count table-pane-meta__count" aria-live="polite">0 relics</span>
             </div>
             <div class="table-wrap" id="relic-table-scroll" tabindex="0" role="region" aria-label="Relic table">
               <table id="relic-table" class="gear-table">
@@ -856,12 +961,12 @@
                 </colgroup>
                 <thead>
                   <tr>
-                    <th class="col-category" id="lbl-th-rel-category">Category</th>
-                    <th class="col-lvl th-num" id="lbl-th-rel-level">Lvl</th>
-                    <th class="col-durability th-num" id="lbl-th-rel-durability">Durability</th>
-                    <th class="col-main" id="lbl-th-rel-main">Main</th>
-                    <th class="col-sec" id="lbl-th-rel-sec">Secondary</th>
-                    <th class="col-equipped th-num" id="lbl-th-rel-wearers">Equipped</th>
+                    <th class="col-category" data-sort="category"><span class="th-text th-text--plain" id="lbl-th-rel-category">Category</span></th>
+                    <th class="col-lvl th-num" data-sort="level"><span class="th-text th-text--plain" id="lbl-th-rel-level">Lvl</span></th>
+                    <th class="col-durability th-num" data-sort="durability"><span class="th-text th-text--plain" id="lbl-th-rel-durability">Durability</span></th>
+                    <th class="col-main col-block-gap" data-sort="main"><span class="th-text th-text--plain" id="lbl-th-rel-main">Main</span></th>
+                    <th class="col-sec" data-sort="secondary"><span class="th-text th-text--plain" id="lbl-th-rel-sec">Secondary</span></th>
+                    <th class="col-equipped th-num col-block-gap" data-sort="equipped"><span class="th-text th-text--plain" id="lbl-th-rel-wearers">Equipped</span></th>
                   </tr>
                 </thead>
                 <tbody id="relic-tbody"></tbody>
@@ -1330,24 +1435,22 @@
                 <div class="monsters-toolbar-sticky">
         <div class="table-toolbar" aria-label="Monster roster tools">
           <div class="table-toolbar__card">
-            <div class="table-toolbar__row table-toolbar__row--search table-toolbar__row--search-roster">
+            <div class="table-toolbar__row table-toolbar__row--controls table-toolbar__row--roster-inline">
               <div class="monsters-view-toggle" role="group" aria-label="View">
-                <button type="button" id="monsters-view-cards" class="monsters-view-btn monsters-view-btn--active" aria-pressed="true" title="Cards">
-                  <svg class="monsters-toolbar-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg>
-                  <span class="sr-only" id="lbl-monsters-view-cards">Cards</span>
-                </button>
-                <button type="button" id="monsters-view-table" class="monsters-view-btn" aria-pressed="false" title="Table">
+                <button type="button" id="monsters-view-table" class="monsters-view-btn monsters-view-btn--active" aria-pressed="true" title="Table">
                   <svg class="monsters-toolbar-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="16" width="18" height="4" rx="1"/></svg>
                   <span class="sr-only" id="lbl-monsters-view-table">Table</span>
                 </button>
+                <button type="button" id="monsters-view-cards" class="monsters-view-btn" aria-pressed="false" title="Cards">
+                  <svg class="monsters-toolbar-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg>
+                  <span class="sr-only" id="lbl-monsters-view-cards">Cards</span>
+                </button>
               </div>
-              <div class="table-toolbar__search">
+              <div class="table-toolbar__search table-toolbar__search--roster">
                 <label class="visually-hidden" for="monsters-filter-q" id="lbl-monsters-filter-q">Search</label>
                 <input type="search" id="monsters-filter-q" class="table-toolbar__input" autocomplete="off" spellcheck="false" placeholder="Search monsters…" aria-labelledby="lbl-monsters-filter-q" />
               </div>
-            </div>
-            <div class="table-toolbar__row table-toolbar__row--controls">
-              <div class="table-toolbar__group table-toolbar__group--actions">
+              <div class="table-toolbar__group table-toolbar__group--actions table-toolbar__group--roster-filters">
                 <div class="table-toolbar__buttons">
                   <div class="filters-popover-host">
                     <button type="button" class="monsters-toolbar-btn monsters-toolbar-btn--filters" id="monsters-more-filters-btn" aria-haspopup="true" aria-controls="monsters-filters-popover" aria-expanded="false">
@@ -1452,7 +1555,6 @@
                       </div>
                     </div>
                   </div>
-                  <button type="button" id="monsters-toolbar-reset-filters" class="btn-ghost btn-toolbar btn-toolbar--inactive" disabled>Reset filters</button>
                 </div>
               </div>
               <div class="table-toolbar__aside">
@@ -3799,6 +3901,7 @@
   <script defer src="js/core/changelog-data.js"></script>
   <script defer src="js/core/bootstrap.js"></script>
   <script defer src="js/data/artifacts/effects.js"></script>
+  <script defer src="js/data/artifact-ingame-score.js"></script>
   <script defer src="js/data/relics/effects.js"></script>
   <script defer src="js/data/gear/parse.js"></script>
   <script defer src="js/data/gear/icons.js"></script>

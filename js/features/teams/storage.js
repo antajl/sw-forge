@@ -308,6 +308,99 @@
     return JSON.stringify(state, null, 2);
   }
 
+  /** Normalize v2 export, legacy v1, or share-profile `{ sets: [{ teams }] }` payloads. */
+  function parseTeamsImportPayload(parsed) {
+    if (!parsed || typeof parsed !== 'object') return defaultTeamsState();
+    let root = parsed;
+    if (typeof parsed.data === 'string') {
+      try {
+        root = JSON.parse(parsed.data);
+      } catch (e) {
+        return defaultTeamsState();
+      }
+    } else if (parsed.data && typeof parsed.data === 'object') {
+      root = parsed.data;
+    }
+    if (root && root.teams && typeof root.teams === 'object' && !Array.isArray(root.teams) && root.version !== 2) {
+      const shareTeams = root.teams;
+      if (Array.isArray(shareTeams.sets)) root = shareTeams;
+    }
+    if (root && root.version === 2) {
+      return {
+        version: 2,
+        sets: Array.isArray(root.sets) ? root.sets : [],
+        teams: root.teams && typeof root.teams === 'object' ? root.teams : {},
+      };
+    }
+    const shareSets = Array.isArray(root.sets) ? root.sets : null;
+    if (shareSets && shareSets.length && shareSets.some((s) => Array.isArray(s.teams))) {
+      const state = defaultTeamsState();
+      for (const setSpec of shareSets) {
+        const setId = newTeamsId('set');
+        const set = {
+          id: setId,
+          name: String(setSpec.name || 'Imported set').trim() || 'Imported set',
+          collapsed: false,
+          teamIds: [],
+        };
+        for (const teamSpec of setSpec.teams || []) {
+          if (!teamSpec || typeof teamSpec !== 'object') continue;
+          const size = clampTeamSize(
+            teamSpec.size || (teamSpec.unit_ids || teamSpec.slots || []).length || TEAM_SIZE_DEFAULT,
+          );
+          const slots = normalizeTeamSlots(teamSpec.unit_ids || teamSpec.slots, size);
+          const leaderRaw =
+            teamSpec.leader_unit_id != null
+              ? teamSpec.leader_unit_id
+              : teamSpec.leaderUnitId != null
+                ? teamSpec.leaderUnitId
+                : teamSpec.leader;
+          const leader = leaderRaw != null ? Number(leaderRaw) : null;
+          const team = createEmptyTeam(teamSpec.name || 'Team', size);
+          team.notes = String(teamSpec.notes || '').trim();
+          team.tags = Array.isArray(teamSpec.tags) ? teamSpec.tags.map(String) : [];
+          team.slots = slots;
+          team.leaderUnitId = Number.isFinite(leader) && leader > 0 ? leader : null;
+          team.shareInProfile = !!teamSpec.shareInProfile;
+          state.teams[team.id] = team;
+          set.teamIds.push(team.id);
+        }
+        if (set.teamIds.length) state.sets.push(set);
+      }
+      return state;
+    }
+    return migrateLegacyState(root);
+  }
+
+  /** Ensure every team appears in at least one set so the UI can list them. */
+  function repairTeamsState(state) {
+    const st = state || defaultTeamsState();
+    st.version = 2;
+    st.sets = Array.isArray(st.sets) ? st.sets : [];
+    st.teams = st.teams && typeof st.teams === 'object' ? st.teams : {};
+    const linked = new Set();
+    for (const set of st.sets) {
+      set.teamIds = Array.isArray(set.teamIds) ? set.teamIds.filter((tid) => st.teams[tid]) : [];
+      for (const tid of set.teamIds) linked.add(tid);
+    }
+    const orphans = Object.keys(st.teams).filter((tid) => !linked.has(tid));
+    if (!orphans.length) return st;
+    let importSet = st.sets.find((s) => /^imported$/i.test(String(s.name || '').trim()));
+    if (!importSet) {
+      importSet = {
+        id: newTeamsId('set'),
+        name: 'Imported',
+        collapsed: false,
+        teamIds: [],
+      };
+      st.sets.push(importSet);
+    }
+    for (const tid of orphans) {
+      if (!importSet.teamIds.includes(tid)) importSet.teamIds.push(tid);
+    }
+    return st;
+  }
+
   function importTeamsStateFromJson(text, merge) {
     let parsed;
     try {
@@ -315,15 +408,9 @@
     } catch (e) {
       return { ok: false, error: 'invalid_json' };
     }
-    let incoming = defaultTeamsState();
-    if (parsed && parsed.version === 2) {
-      incoming = {
-        version: 2,
-        sets: Array.isArray(parsed.sets) ? parsed.sets : [],
-        teams: parsed.teams && typeof parsed.teams === 'object' ? parsed.teams : {},
-      };
-    } else {
-      incoming = migrateLegacyState(parsed);
+    let incoming = repairTeamsState(parseTeamsImportPayload(parsed));
+    if (!incoming.sets.length && !Object.keys(incoming.teams).length) {
+      return { ok: false, error: 'empty' };
     }
     if (merge) {
       const cur = loadTeamsState();

@@ -127,7 +127,7 @@
           <button type="button" class="btn-ghost" data-db-action="upload" data-slot="${slot.id}">${escapeHtml(t.upload || 'Upload')}</button>
           <button type="button" class="btn-ghost" ${hasData ? '' : 'disabled'} data-db-action="download" data-slot="${slot.id}">${escapeHtml(t.download || 'Download')}</button>
           <button type="button" class="btn-ghost" ${hasData ? '' : 'disabled'} data-db-action="delete" data-slot="${slot.id}">${escapeHtml(t.delete || 'Delete')}</button>
-          ${slot.active || !hasData ? '' : `<button type="button" class="btn-primary" data-db-action="swap" data-slot="${slot.id}">${escapeHtml(t.swap || 'Swap')}</button>`}
+          ${slot.active ? '' : `<button type="button" class="btn-primary" data-db-action="swap" data-slot="${slot.id}">${escapeHtml(t.swap || 'Swap')}</button>`}
         </div>
       </div>`;
     }).join('');
@@ -145,6 +145,32 @@
     else if (typeof removeDemoTeams === 'function') removeDemoTeams();
     syncDemoBannerVisibility();
     document.getElementById('upload-prompt').classList.add('hidden');
+  }
+
+  async function persistActiveSlotBeforeSwap(slots) {
+    if (!Array.isArray(slots) || !slots.length) return;
+    const active = slots.find((s) => s.active);
+    if (!active || !active.id) return;
+    let text = '';
+    try {
+      text = localStorage.getItem('loadedRunes') || '';
+    } catch (e) {
+      text = '';
+    }
+    if (!text && typeof loadSlotData === 'function') {
+      try {
+        text = await loadSlotData('current-runes');
+      } catch (e) {
+        text = '';
+      }
+    }
+    if (!text) return;
+    try {
+      JSON.parse(text);
+    } catch (e) {
+      return;
+    }
+    await saveSlotData(active.id, text);
   }
 
   async function parseAndLoadJson(jsonText) {
@@ -404,11 +430,37 @@
     
     if (action === 'swap') {
       try {
+        await persistActiveSlotBeforeSwap(slots);
         const jsonText = await loadSlotData(slotId);
-        if (!jsonText) return alert(t.slotEmpty || 'Selected slot is empty');
         slots.forEach(s => { s.active = s.id === slot.id; });
         saveDbSlots(slots);
-        await processJsonData(jsonText);
+        if (!jsonText) {
+          uiEmptyRuneApplicationState({ keepTab: true });
+          const demoOk = await installEmbeddedDemoDataset({
+            keepTab: true,
+            preserveSlotMeta: true,
+          });
+          if (demoOk) {
+            const demoFileName = 'demo.json';
+            let demoJson = null;
+            try {
+              const demoText = await loadSlotData('__swrm_embedded_demo__');
+              if (demoText) demoJson = JSON.parse(demoText);
+            } catch (e) { /* ignore */ }
+            applySlotSummaryFromJson(slot, demoFileName, demoJson || {});
+            slot.name = demoFileName;
+            slot.uploadedAt = '';
+            slot.wizardName = '';
+            slot.wizardLevel = null;
+            slot.wizardId = '';
+            slot.demoProfile = true;
+            saveDbSlots(slots);
+            markUsingDemoDataset(true);
+            syncDemoBannerVisibility();
+          }
+        } else {
+          await processJsonData(jsonText);
+        }
       } catch(err) {
         alert((t.parseError || 'Failed to parse slot JSON: ') + err.message);
       }

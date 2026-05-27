@@ -28,13 +28,28 @@
     let equipped = 0;
     let plus15 = 0;
     let keep = 0;
+    let sell = 0;
+    const grades = {};
     for (const r of list) {
       if (r.isAncient) ancient += 1;
       if (isRuneEquipped(r)) equipped += 1;
       if (Number(r.level) >= 15) plus15 += 1;
-      if (r.verdict === 'Keep') keep += 1;
+      const v = (r.verdict || '').trim();
+      if (v === 'Keep') keep += 1;
+      else if (v === 'Sell') sell += 1;
+      const g = String(r.grade || '').trim();
+      if (g) grades[g] = (grades[g] || 0) + 1;
     }
-    return { total: list.length, ancient, equipped, plus15, keep };
+    return {
+      total: list.length,
+      ancient,
+      equipped,
+      inventory: list.length - equipped,
+      plus15,
+      keep,
+      sell,
+      grades,
+    };
   }
 
   function renderRuneTableRosterChips() {
@@ -54,10 +69,18 @@
       { label: t.runeChipTotal || 'Runes', value: sum.total },
       { label: t.runeChipAncient || 'Ancient', value: sum.ancient },
       { label: t.runeChipEquipped || 'Equipped', value: sum.equipped },
+      { label: t.runeChipInventory || 'Inventory', value: sum.inventory },
       { label: t.runeChipPlus15 || '+15', value: sum.plus15 },
+      { label: t.runeChipKeep || 'Keep', value: sum.keep },
     ];
-    if (sum.keep > 0) {
-      parts.push({ label: t.runeChipKeep || 'Keep', value: sum.keep });
+    if (sum.sell > 0) {
+      parts.push({ label: t.runeChipSell || 'Sell', value: sum.sell });
+    }
+    const gradeOrder = ['Legend', 'Hero', 'Rare', 'Magic', 'Common'];
+    for (const g of gradeOrder) {
+      if (sum.grades[g] > 0) {
+        parts.push({ label: g, value: sum.grades[g] });
+      }
     }
     host.innerHTML = parts
       .map(
@@ -183,7 +206,7 @@
 
   function updateRuneTableResetButton() {
     if (typeof updateToolbarResetButton === 'function') {
-      updateToolbarResetButton('btn-table-reset-filters', runeTableHasActiveFiltersOrSearch());
+      updateToolbarResetButton('rune-filters-drawer-reset', runeTableHasActiveFiltersOrSearch());
     }
   }
 

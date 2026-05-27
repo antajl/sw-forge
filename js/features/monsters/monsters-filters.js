@@ -111,6 +111,25 @@
       .toLowerCase();
   }
 
+  /** Roster "Needs attention": runes on unit, not in storage, skill 2+ with ≥1 devilmon invested but not maxed. */
+  function unitSkillAttentionState(u) {
+    if (!u || (Number(u.equippedCount) || 0) <= 0) return { ok: false, total: 0 };
+    if (u.inStorage) return { ok: false, total: 0 };
+    const rows = Array.isArray(u.skillRows) ? u.skillRows : [];
+    let total = 0;
+    let hasPartial = false;
+    for (const s of rows) {
+      if ((Number(s.origSlot) || 0) <= 1) continue;
+      const max = Number(s.maxLevel) || 0;
+      const level = Number(s.level) || 0;
+      if (max <= 1) continue;
+      if (level > 1 && level < max) hasPartial = true;
+      const d = Number(s.deficit) || 0;
+      if (d > 0) total += d;
+    }
+    return { ok: hasPartial && total > 0, total };
+  }
+
   function filterMonstersList(units, filters) {
     const q = (filters.q || '').trim().toLowerCase();
     const el = filters.element || '';
@@ -123,6 +142,7 @@
     const tagFilter = filters.tagFilter || '';
     const roleFilter = filters.roleFilter || '';
     const markFilter = filters.markFilter || '';
+    const attentionOnly = !!filters.attentionOnly;
     return units.filter((u) => {
       if (isTechnicalFodderMonster(u)) return false;
       if (fullSixOnly && !u.hasFullRunes) return false;
@@ -145,6 +165,7 @@
       if (roleFilter && normalizeArchetype(u.metaArchetype) !== roleFilter) return false;
       if (markFilter === 'favorite' && !u.favorite) return false;
       if (markFilter === 'food' && !u.food) return false;
+      if (attentionOnly && !unitSkillAttentionState(u).ok) return false;
       if (q) {
         const hay = monsterUnitSearchHaystack(u);
         if (!hay.includes(q)) return false;
@@ -167,6 +188,16 @@
           return a.level - b.level || String(a.displayName).localeCompare(String(b.displayName));
         case 'runes-desc':
           return b.equippedCount - a.equippedCount || String(a.displayName).localeCompare(String(b.displayName));
+        case 'skills-closest': {
+          const deficitSum = (u) => {
+            const st = unitSkillAttentionState(u);
+            return st.ok ? st.total : 999;
+          };
+          return (
+            deficitSum(a) - deficitSum(b) ||
+            String(a.displayName).localeCompare(String(b.displayName))
+          );
+        }
         case 'element':
           return elIdx(a.metaElement) - elIdx(b.metaElement)
             || String(a.displayName).localeCompare(String(b.displayName));
@@ -191,16 +222,28 @@
   }
 
   function computeMonstersSummary(units) {
-    const total = units.length;
+    let total = 0;
     let anyRune = 0;
     let fullSix = 0;
+    let unruned = 0;
+    let partial = 0;
     let skillUpsTotal = 0;
+    let skillMonsters = 0;
+    let storage = 0;
     for (const u of units) {
+      if (typeof isTechnicalFodderMonster === 'function' && isTechnicalFodderMonster(u)) continue;
+      total += 1;
+      if (u.inStorage) storage += 1;
+      if (u.equippedCount <= 0) unruned += 1;
+      else if (!u.hasFullRunes) partial += 1;
       if (u.equippedCount > 0) anyRune += 1;
       if (u.hasFullRunes) fullSix += 1;
-      if (u.skillUpsNeeded > 0) skillUpsTotal += u.skillUpsNeeded;
+      if (u.skillUpsNeeded > 0) {
+        skillMonsters += 1;
+        skillUpsTotal += u.skillUpsNeeded;
+      }
     }
-    return { total, anyRune, fullSix, skillUpsTotal };
+    return { total, anyRune, fullSix, unruned, partial, skillUpsTotal, skillMonsters, storage };
   }
 
   function renderMonstersChips(sum, t, indexMissing, skillsIndexMissing, chipsHostId) {
@@ -210,13 +253,24 @@
       t.monstersStatsTpl || '{total} six-star · {any} with any rune · {full} with 6 runes';
     const parts = [
       { label: t.monstersChipTotal || '6★', value: sum.total },
+      { label: t.monstersChipFull || 'Full 6/6', value: sum.fullSix },
+      { label: t.monstersChipUnruned || 'No runes', value: sum.unruned },
+      { label: t.monstersChipPartial || 'Incomplete', value: sum.partial },
       { label: t.monstersChipRunes || 'With runes', value: sum.anyRune },
-      { label: t.monstersChipFull || '6/6', value: sum.fullSix },
     ];
+    if (sum.storage > 0) {
+      parts.push({ label: t.monstersChipStorage || 'In storage', value: sum.storage });
+    }
     if (sum.skillUpsTotal > 0) {
       parts.push({
-        label: t.monstersChipSkillUps || 'Skill-ups needed',
+        label: t.monstersChipSkillUps || 'Skill-ups',
         value: sum.skillUpsTotal,
+      });
+    }
+    if (sum.skillMonsters > 0) {
+      parts.push({
+        label: t.monstersChipSkillMons || 'Need skill-ups',
+        value: sum.skillMonsters,
       });
     }
     const bag = window.SWRM_ACCOUNT_GEAR;
@@ -264,9 +318,10 @@
       const v = localStorage.getItem(MONSTERS_VIEW_KEY);
       if (v === 'table') return 'table';
       if (v === 'list') return 'cards';
-      return 'cards';
+      if (v === 'cards') return 'cards';
+      return 'table';
     } catch (e) {
-      return 'cards';
+      return 'table';
     }
   }
 
@@ -328,7 +383,9 @@
       syncMonstersShowAllButton(false, t);
       syncMonstersMinLevelInput(0, t);
     }
-    writeMonstersFilters(readMonstersFiltersFromDom());
+    const next = readMonstersFiltersFromDom();
+    next.attentionOnly = false;
+    writeMonstersFilters(next);
     updateMonstersFilterSummary();
   }
 

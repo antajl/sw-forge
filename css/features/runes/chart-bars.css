@@ -1,11 +1,11 @@
 /* Chart bars and rows */
-.role-chart, .set-chart, .slot-chart { display: flex; flex-direction: column; gap: 8px; }
+.role-chart, .set-chart, .slot-chart { display: flex; flex-direction: column; gap: 6px; }
 
 .chart-scroll--sets {
-  max-height: clamp(20rem, 52vh, 40rem);
-  overflow-y: auto;
+  max-height: none;
+  overflow-y: visible;
   overflow-x: hidden;
-  overscroll-behavior: contain;
+  overscroll-behavior: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -14,7 +14,7 @@
   width: 0;
   height: 0;
 }
-.chart-row { display: flex; align-items: center; gap: 12px; }
+.chart-row { display: flex; align-items: center; gap: 9px; }
 .chart-row--slot {
   align-items: flex-start;
 }
@@ -97,11 +97,12 @@ html.swrm-has-gsap .slot-main-card-bar {
   flex-direction: column;
   align-items: flex-end;
   justify-content: center;
-  gap: 5px;
-  min-width: 4.75rem;
-  padding-left: 12px;
-  margin-left: 2px;
-  border-left: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
+  gap: 4px;
+  min-width: 7.25rem;
+  width: 7.25rem;
+  padding-left: 8px;
+  margin-left: 0;
+  border-left: none;
 }
 .chart-row-stats--solo {
   gap: 0;
@@ -109,12 +110,15 @@ html.swrm-has-gsap .slot-main-card-bar {
 .chart-stat-line {
   display: flex;
   align-items: baseline;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 7px;
   line-height: 1.15;
+  width: 100%;
+  white-space: nowrap;
 }
 .chart-stat-line--count {
   gap: 0;
+  justify-content: flex-end;
 }
 .chart-stat-lbl {
   font-family: var(--font-head);
@@ -132,15 +136,15 @@ html.swrm-has-gsap .slot-main-card-bar {
   font-variant-numeric: tabular-nums;
   color: var(--text-dim);
 }
-.chart-stat-line--avg .chart-stat-val {
+.chart-stat-line--ingame .chart-stat-val {
   color: color-mix(in srgb, var(--text) 72%, var(--text-dim));
 }
 
 .chart-row--clickable {
   cursor: pointer;
   border-radius: var(--radius);
-  padding: 2px 2px 2px 0;
-  margin: 2px 0;
+  padding: 1px 1px 1px 0;
+  margin: 1px 0;
   transition: background 0.15s ease;
 }
 .chart-row--clickable:hover {

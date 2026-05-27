@@ -54,7 +54,8 @@
   bottom: 26px;
 }
 
-#dash-pane-score .eff-histo-host--dash-pane {
+#dash-pane-score .eff-histo-host--dash-pane,
+#dash-art-pane-score .eff-histo-host--dash-pane {
   position: relative;
   margin-top: 0;
   padding: 14px 14px 16px;
@@ -63,11 +64,13 @@
   border: 1px solid color-mix(in srgb, var(--border2) 82%, var(--accent));
 }
 
-#dash-pane-score .eff-chart {
+#dash-pane-score .eff-chart,
+#dash-art-pane-score .eff-chart {
   height: 88px;
 }
 
-#dash-pane-score .eff-median-line {
+#dash-pane-score .eff-median-line,
+#dash-art-pane-score .eff-median-line {
   bottom: 26px;
 }
 

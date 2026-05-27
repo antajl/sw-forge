@@ -9,7 +9,7 @@ SW Forge is a static browser app. Cloudflare Pages serves `index.html`, CSS, dat
 `index.html` is the runtime contract:
 
 1. `js/core/*.js` (meta → i18n → defaults → changelog-data → bootstrap)
-2. `js/data/artifacts/effects.js`, `js/data/relics/effects.js`, `js/data/gear/parse.js`, `js/data/gear/icons.js`
+2. `js/data/artifacts/effects.js`, `js/data/artifact-ingame-score.js`, `js/data/relics/effects.js`, `js/data/gear/parse.js`, `js/data/gear/icons.js`
 3. `js/data/parser.js` (SWEX runes/units, SWOP Eff%)
 4. `js/data/ingame-score.js` (Com2uS Ingame Rating — table column, sort, CSV)
 5. `js/data/local-assets.js`, `js/data/skill-db.js`, `js/data/monster-db.js`
@@ -32,7 +32,8 @@ The app API is exposed through `window.SWRM` and related browser globals. Keep t
 | Runes dashboard | `js/features/runes/dashboard.js`, `charts.js`, `verdict-filters.js`, `stage-advisor-ui.js`, `depth.js`, `copy-summary.js` | `css/features/runes/*` |
 | Rune table | `js/features/runes/table.js`, `table-filters.js`, `table-row-render.js`, `table-virtual.js` | `css/features/runes/table-*.css` |
 | Ingame Rating (data) | `js/data/ingame-score.js` | — |
-| Artifacts & relics tables | `js/features/gear/table-kind.js`, `artifacts-table.js`, `relics-table.js` | `css/features/gear/*` |
+| Artifact Ingame Score (data) | `js/data/artifact-ingame-score.js` (`ARTIFACT_INGAME_WEIGHTS`, `artifactIngameScoreBreakdown`) | — |
+| Artifacts & relics tables | `js/features/gear/table-kind.js`, `artifacts-table.js`, `relics-table.js` (Rune Table-style sorting) | `css/features/gear/*` |
 | Teams | `js/features/teams/*` | `css/features/teams/*` |
 | Account SPD totem | `js/features/monsters/monsters-stats-calc.js` (`getAccountTotemSpdPct`, cached on `rebuildUnitsFromSwex`) | none |
 | Rune rules | `js/features/rules/*` | `css/features/runes/rules.css` |

@@ -1,5 +1,5 @@
 // js/features/gear/artifacts-virtual.js — windowed tbody render for large artifact lists
-  const ARTIFACT_TABLE_VIRTUAL_COLS = 7;
+  const ARTIFACT_TABLE_VIRTUAL_COLS = 9;
   const ARTIFACT_TABLE_VIRTUAL_OVERSCAN = 8;
   const ARTIFACT_TABLE_VIRTUAL_ROW_FALLBACK = 44;
   const ARTIFACT_TABLE_VIRTUAL_SPACER_COL_CLASSES = [
@@ -7,9 +7,11 @@
     'col-category',
     'col-main',
     'col-subs-stack',
+    'col-art-ingame col-block-gap',
+    'col-art-forge',
     'col-art-role',
     'col-art-verdict',
-    'col-location',
+    'col-location col-block-gap',
   ];
 
   let artifactVirtualRowHeight = 0;
@@ -115,6 +117,8 @@
           : escapeHtml(a.gradeStr || '—');
         const verdict = a.artifactVerdict || null;
         const role = a.artifactRole || null;
+        const ingameScore = Number(a.artifactIngameScore);
+        const forgeScore = Number(a.artifactForgeScore);
         const verdictClass =
           verdict === 'keep' ? 'verdict-tag keep' : verdict === 'sell' ? 'verdict-tag sell' : '';
         const verdictLabel = verdict
@@ -128,9 +132,11 @@
           <td class="col-category">${catCell}</td>
           <td class="col-main">${escapeHtml(main)}</td>
           <td class="col-subs-stack"><div class="gear-table-subs">${artifactSubStack(a, fmtSub)}</div></td>
-          <td class="col-art-role">${escapeHtml(role || '—')}</td>
+          <td class="col-art-ingame th-num col-block-gap">${Number.isFinite(ingameScore) ? escapeHtml(String(ingameScore)) : '—'}</td>
+          <td class="col-art-forge th-num">${Number.isFinite(forgeScore) ? escapeHtml(forgeScore.toFixed(1)) : '—'}</td>
+          <td class="col-art-role col-block-gap">${escapeHtml(role || '—')}</td>
           <td class="col-art-verdict"><span class="${escapeHtml(verdictClass)}">${escapeHtml(verdictLabel)}</span></td>
-          <td class="col-location">${escapeHtml(gearLocationLabel(a.occupiedId, t))}</td>
+          <td class="col-location col-block-gap">${escapeHtml(gearLocationLabel(a.occupiedId, t))}</td>
         </tr>`;
       }).join('') +
       artifactTableVirtualSpacerRow(bottomPad);

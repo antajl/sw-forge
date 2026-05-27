@@ -17,6 +17,10 @@
   let stage    = 'Mid';
   let sortKey  = 'score';
   let sortDir  = 'desc';
+  let artifactSortKey = 'forge';
+  let artifactSortDir = 'desc';
+  let relicSortKey = 'category';
+  let relicSortDir = 'asc';
   /** First paint of Rune Table: this many rows; user can load the rest explicitly. */
   const RUNE_TABLE_PAGE = 200;
   const RUNE_TABLE_SORT_KEYS = new Set([

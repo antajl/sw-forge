@@ -4,6 +4,78 @@
   let relicFilterCategory = '';
   let relicFilterLocation = '';
 
+  function compareRelicTableValues(a, b, dir) {
+    const mul = dir === 'asc' ? 1 : -1;
+    const an = Number(a);
+    const bn = Number(b);
+    if (Number.isFinite(an) && Number.isFinite(bn)) {
+      if (an !== bn) return (an - bn) * mul;
+      return 0;
+    }
+    const as = String(a ?? '').trim();
+    const bs = String(b ?? '').trim();
+    return as.localeCompare(bs, currentLang || undefined, { numeric: true, sensitivity: 'base' }) * mul;
+  }
+
+  function relicTableSortValue(r, key) {
+    const fmt = window.SWRM && window.SWRM.formatGearEffectLine;
+    const fmtSec = window.SWRM && window.SWRM.formatRelicSecLine;
+    const fmtDur =
+      window.SWRM && typeof window.SWRM.formatRelicDurability === 'function'
+        ? window.SWRM.formatRelicDurability
+        : null;
+    const fmtWear =
+      window.SWRM && typeof window.SWRM.formatRelicWearCount === 'function'
+        ? window.SWRM.formatRelicWearCount
+        : null;
+    switch (key) {
+      case 'category':
+        return r.category || '';
+      case 'level':
+        return Number(r.level) || 0;
+      case 'durability':
+        return Number(r.durability) || 0;
+      case 'main':
+        return r.pri && fmt ? fmt(r.pri, { kind: 'relic' }) : '';
+      case 'secondary':
+        return fmtSec ? fmtSec(r) : '';
+      case 'equipped':
+        return fmtWear ? fmtWear(r) : '';
+      default:
+        return r.category || '';
+    }
+  }
+
+  function sortRelicTableRows(rows) {
+    if (!Array.isArray(rows)) return rows;
+    const key = relicSortKey || 'category';
+    const dir = relicSortDir === 'desc' ? 'desc' : 'asc';
+    rows.sort((a, b) => {
+      const primary = compareRelicTableValues(
+        relicTableSortValue(a, key),
+        relicTableSortValue(b, key),
+        dir,
+      );
+      if (primary) return primary;
+      const byCategory = compareRelicTableValues(a.category || '', b.category || '', 'asc');
+      if (byCategory) return byCategory;
+      return compareRelicTableValues(Number(a.rid) || 0, Number(b.rid) || 0, 'asc');
+    });
+    return rows;
+  }
+
+  function updateRelicSortHeaderClasses() {
+    document.querySelectorAll('#relic-table thead th[data-sort]').forEach((th) => {
+      th.classList.remove('sort-asc', 'sort-desc');
+      th.removeAttribute('aria-sort');
+      if (th.dataset.sort === relicSortKey) {
+        const cls = relicSortDir === 'asc' ? 'sort-asc' : 'sort-desc';
+        th.classList.add(cls);
+        th.setAttribute('aria-sort', relicSortDir === 'asc' ? 'ascending' : 'descending');
+      }
+    });
+  }
+
   function relicPassesFilters(r) {
     if (relicFilterGrade && String(r.gradeStr || '') !== relicFilterGrade) return false;
     if (relicFilterCategory && String(r.category || '') !== relicFilterCategory) return false;
@@ -140,7 +212,7 @@
 
   function updateRelicResetButton() {
     if (typeof updateToolbarResetButton === 'function') {
-      updateToolbarResetButton('btn-relic-reset-filters', relicToolbarHasActiveFilters());
+      updateToolbarResetButton('relic-filters-drawer-reset', relicToolbarHasActiveFilters());
     }
   }
 
@@ -176,6 +248,8 @@
       window.SWRM && typeof window.SWRM.formatRelicDurability === 'function'
         ? window.SWRM.formatRelicDurability
         : null;
+    sortRelicTableRows(filteredRelics);
+    updateRelicSortHeaderClasses();
     if (!filteredRelics.length) {
       tbody.innerHTML = `<tr><td colspan="6" class="table-empty">${escapeHtml(t.tableGearEmptyRelics || 'No relics')}</td></tr>`;
       if (typeof renderRelicTableRosterChips === 'function') renderRelicTableRosterChips();
@@ -183,11 +257,6 @@
     }
     const rows = filteredRelics
       .slice()
-      .sort(
-        (a, b) =>
-          String(a.category).localeCompare(String(b.category)) ||
-          (b.level || 0) - (a.level || 0),
-      )
       .map((r, i) => {
         const main = r.pri && fmt ? fmt(r.pri, { kind: 'relic' }) : '—';
         const sec = fmtSec ? fmtSec(r) : '—';
@@ -210,9 +279,9 @@
           <td class="col-category">${catCell}</td>
           <td class="col-lvl th-num">+${escapeHtml(String(r.level || 0))}</td>
           <td class="col-durability th-num">${escapeHtml(dur)}</td>
-          <td class="col-main">${escapeHtml(main)}</td>
+          <td class="col-main col-block-gap">${escapeHtml(main)}</td>
           <td class="col-sec">${escapeHtml(sec)}</td>
-          <td class="col-equipped th-num">${escapeHtml(wear)}</td>
+          <td class="col-equipped th-num col-block-gap">${escapeHtml(wear)}</td>
         </tr>`;
       });
     tbody.innerHTML = rows.join('');
@@ -224,6 +293,18 @@
     bindRelicTableFilters._done = true;
 
     if (typeof bindGearFilterChipsClear === 'function') bindGearFilterChipsClear();
+
+    document.querySelectorAll('#relic-table thead th[data-sort]').forEach((th) => {
+      th.addEventListener('click', () => {
+        const key = th.dataset.sort || 'category';
+        if (relicSortKey === key) relicSortDir = relicSortDir === 'asc' ? 'desc' : 'asc';
+        else {
+          relicSortKey = key;
+          relicSortDir = key === 'level' || key === 'durability' || key === 'equipped' ? 'desc' : 'asc';
+        }
+        renderGearTables();
+      });
+    });
 
     const onRelicFilterChange = () => {
       applyRelicFiltersFromDom();
@@ -237,7 +318,6 @@
       });
     }
 
-    document.getElementById('btn-relic-reset-filters')?.addEventListener('click', resetRelicTableFilters);
     document.getElementById('relic-filters-drawer-reset')?.addEventListener('click', resetRelicTableFilters);
     document.getElementById('btn-relic-export-csv')?.addEventListener('click', exportRelicsCsv);
 

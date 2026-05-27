@@ -94,6 +94,7 @@ SW Forge — статический сайт на **Cloudflare Pages**: анал
 |------|------------|
 | `js/data/parser.js` | `parseSWEX`, `parseRune`, `parseUnits`, SWOP Eff% |
 | `js/data/ingame-score.js` | `calcIngameScore`, `ingameScoreBreakdown` — Com2uS Rating (таблица рун, колонка Ingame) |
+| `js/data/artifact-ingame-score.js` | `calcArtifactIngameScore`, `artifactIngameScoreBreakdown`, `ARTIFACT_INGAME_WEIGHTS` — коэффициенты Ingame Score артефактов |
 | `js/data/monster-db.js` | `monsters-index.json`, `SWRM_MONSTER_DB` |
 | `js/data/skill-db.js` | `skills-index.json` + `metaById` (тултипы, Skill plan CD без API) |
 | `js/data/gear/parse.js` | Артефакты/реликты из SWEX |
@@ -158,8 +159,8 @@ SW Forge — статический сайт на **Cloudflare Pages**: анал
 |------|------|
 | `gear/table-kind.js` | Runes / Artifacts / Relics sub-tabs |
 | `gear/gear-roster-chips.js` | Чипы над таблицей gear |
-| `gear/artifacts-table.js` | Таблица артефактов |
-| `gear/relics-table.js` | Таблица реликтов |
+| `gear/artifacts-table.js` | Таблица артефактов, сортировка по заголовкам |
+| `gear/relics-table.js` | Таблица реликтов, сортировка по заголовкам |
 
 **Rules**
 | Файл | Роль |
@@ -237,6 +238,7 @@ Cloudflare Worker + D1 — Share API (`worker/src/index.js`, `wrangler.toml`).
 | `parseSWEX`, `parseRune`, `parseUnits` | parser | SWEX → руны/юниты |
 | `calcEfficiency`, `calcEfficiencyUncapped` | parser | SWOP Eff% (Depth, dashboard charts — **не** колонка таблицы) |
 | `calcIngameScore`, `ingameScoreBreakdown` | ingame-score | Ingame Rating в таблице рун |
+| `calcArtifactIngameScore`, `artifactIngameScoreBreakdown`, `ARTIFACT_INGAME_WEIGHTS` | artifact-ingame-score | Ingame Score артефактов, коэффициенты для калибровки |
 | `parseAccountGear`, `parseArtifact`, `parseRelic` | gear/parse | Gear |
 | `formatGearEffectLine`, `formatArtifactSubLine` | gear/parse | Отображение stat lines |
 | `processAll`, `processRune`, `getRuneVerdict` | engine | Вердикты рун |
@@ -318,24 +320,26 @@ Dev: `css/style.css` (только локально; prod использует `
 
 | # | Файл | Строки `index.html` |
 |---|------|---------------------|
-| 1 | `js/core/meta.js` | 2846 |
-| 2 | `js/core/i18n.js` | 2847 |
-| 3 | `js/core/defaults.js` | 2848 |
-| 4 | `js/core/changelog-data.js` | 2849 |
-| 5 | `js/core/bootstrap.js` | 2850 |
-| 6 | `js/data/artifacts/effects.js` | 2851 |
-| 7 | `js/data/relics/effects.js` | 2852 |
-| 8 | `js/data/gear/parse.js` | 2853 |
-| 9 | `js/data/parser.js` | ~2975 |
-| 10 | `js/data/ingame-score.js` | ~2976 |
-| 11 | `js/data/local-assets.js` | ~2977 |
-| 12 | `js/data/skill-db.js` | ~2978 |
-| 13 | `js/data/monster-db.js` | ~2979 |
-| 14–18 | `js/engine/*`, `advanced-formulas.js` | ~2980–2984 |
-| 19 | `js/self-test.js` | ~2985 |
-| 20 | GSAP CDN | ~2986–2988 |
-| 21 | `js/swrm-motion.js` | ~2989 |
-| 22 | `js/ui.js` | ~2990 |
+| 1 | `js/core/meta.js` | 3868 |
+| 2 | `js/core/i18n.js` | 3869 |
+| 3 | `js/core/defaults.js` | 3870 |
+| 4 | `js/core/changelog-data.js` | 3871 |
+| 5 | `js/core/bootstrap.js` | 3872 |
+| 6 | `js/data/artifacts/effects.js` | ~3873 |
+| 7 | `js/data/artifact-ingame-score.js` | ~3874 |
+| 8 | `js/data/relics/effects.js` | ~3875 |
+| 9 | `js/data/gear/parse.js` | ~3876 |
+| 10 | `js/data/gear/icons.js` | ~3877 |
+| 11 | `js/data/parser.js` | ~3878 |
+| 12 | `js/data/ingame-score.js` | ~3879 |
+| 13 | `js/data/local-assets.js` | ~3880 |
+| 14 | `js/data/skill-db.js` | ~3881 |
+| 15 | `js/data/monster-db.js` | ~3882 |
+| 16–21 | `js/engine/*`, `advanced-formulas.js` | ~3883–3888 |
+| 22 | `js/self-test.js` | 3889 |
+| 23 | GSAP CDN | ~3890–3892 |
+| 24 | `js/swrm-motion.js` | 3893 |
+| 25 | `js/ui.js` | 3894 |
 
 **Lazy (не в HTML):** `js/core/i18n-fr.js` — подгружается при выборе FR в `i18n-bindings.js`.
 

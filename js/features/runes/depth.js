@@ -231,21 +231,21 @@
     const scoreBuckets = new Array(20).fill(0);
     for (let i = 0; i < runes.length; i++) {
       const r = runes[i];
+      const ingame = Number.isFinite(r.ingameScore) ? r.ingameScore : 0;
       counts[r.verdict] = (counts[r.verdict] || 0) + 1;
       const rv = r.verdict || '';
       if (rv) {
         verdictEff[rv] = verdictEff[rv] || [];
-        verdictEff[rv].push(Number.isFinite(r.ingameScore) ? r.ingameScore : 0);
+        verdictEff[rv].push(ingame);
       }
       if (r.role) {
         roleCounts[r.role] = (roleCounts[r.role] || 0) + 1;
         roleEff[r.role] = roleEff[r.role] || [];
-        roleEff[r.role].push(r.ingameScore);
+        roleEff[r.role].push(ingame);
       }
       setCounts[r.setName] = (setCounts[r.setName] || 0) + 1;
       setEff[r.setName] = setEff[r.setName] || [];
-      setEff[r.setName].push(r.ingameScore);
-      const ingame = Number.isFinite(r.ingameScore) ? r.ingameScore : 0;
+      setEff[r.setName].push(ingame);
       slotCounts[r.slot] = (slotCounts[r.slot] || 0) + 1;
       slotMain[r.slot][r.mainName] = (slotMain[r.slot][r.mainName] || 0) + 1;
       const si =

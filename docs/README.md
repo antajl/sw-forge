@@ -48,6 +48,15 @@
 | Вердикты / причина в тултипе | `js/engine/*`, `table-row-render.js` (`runeVerdictTipText`) | Guide → How scoring works |
 | Фильтры, сорт, CSV | `table-filters.js`, `table.js` | Guide → Table toolbar |
 
+### Артефакты / реликвии
+
+| Тема | Код | Заметка |
+|------|-----|---------|
+| Artifact Ingame Score | `js/data/artifact-ingame-score.js` | `ARTIFACT_INGAME_WEIGHTS`, `artifactIngameScoreBreakdown()`; коэффициенты калибруются без denominator/max-roll логики |
+| Таблица артефактов | `js/features/gear/artifacts-table.js`, `css/features/gear/table-kind.css` | Сортировка по заголовкам как у Rune Table; Ingame / Forge / Role / Location отделены визуально |
+| Таблица реликвий | `js/features/gear/relics-table.js`, `css/features/gear/table-kind.css` | Сортировка по заголовкам, единый визуальный стиль с Rune Table |
+| Dashboard артефактов | `js/features/gear/dashboard-artifacts.js` | Аналог rune dashboard: verdict/role/type/attribute/score distributions |
+
 ### Монстры / Teams / Share
 
 | Тема | Код |

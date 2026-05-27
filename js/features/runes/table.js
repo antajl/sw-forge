@@ -255,10 +255,6 @@
     applyFiltersAndSort(getVisibleRunes(), { preserveTableExpansion: true });
   });
 
-  document.getElementById('btn-table-reset-filters')?.addEventListener('click', () => {
-    resetRuneTableFilters();
-  });
-
   document.getElementById('search-box')?.addEventListener('input', () => {
     if (typeof updateRuneTableResetButton === 'function') updateRuneTableResetButton();
     clearTimeout(searchDebounceTimer);

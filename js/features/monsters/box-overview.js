@@ -74,60 +74,8 @@
       return;
     }
     root.hidden = false;
-    if (lead) {
-      const tpl =
-        t.monstersBoxOverviewLead ||
-        '{readiness}% of your 6★ have full rune sets · {unruned} without runes · {partial} incomplete · {skill} skill levels to max';
-      lead.textContent = tpl
-        .replace(/\{readiness\}/g, String(o.readinessPct))
-        .replace(/\{unruned\}/g, String(o.unruned))
-        .replace(/\{partial\}/g, String(o.partial))
-        .replace(/\{skill\}/g, String(o.skillUpsTotal));
-    }
-    const defs = [
-      {
-        kind: 'unruned',
-        label: t.monstersBoxTileUnruned || 'No runes',
-        value: o.unruned,
-        hide: o.unruned === 0,
-      },
-      {
-        kind: 'partial',
-        label: t.monstersBoxTilePartial || 'Incomplete sets',
-        value: o.partial,
-        hide: o.partial === 0,
-      },
-      {
-        kind: 'fullSix',
-        label: t.monstersBoxTileFullSix || 'Full 6/6',
-        value: o.fullSix,
-        hide: false,
-      },
-      {
-        kind: 'skill-ups',
-        label: t.monstersBoxTileSkillUps || 'Need skill-ups',
-        value: o.skillMonsters,
-        sub: o.skillUpsTotal > 0 ? `(${o.skillUpsTotal} lv)` : '',
-        hide: o.skillMonsters === 0,
-      },
-      {
-        kind: 'storage',
-        label: t.monstersBoxTileStorage || 'In storage',
-        value: o.storage,
-        hide: o.storage === 0,
-      },
-    ];
-    tiles.innerHTML = defs
-      .filter((d) => !d.hide)
-      .map(
-        (d) =>
-          `<button type="button" class="monsters-box-tile" data-box-tile="${escapeHtml(d.kind)}" title="${escapeHtml(t.monstersBoxTileHint || 'Show matching monsters')}">
-            <span class="monsters-box-tile__value">${escapeHtml(String(d.value))}${d.sub ? `<span class="monsters-box-tile__sub">${escapeHtml(d.sub)}</span>` : ''}</span>
-            <span class="monsters-box-tile__label">${escapeHtml(d.label)}</span>
-          </button>`,
-      )
-      .join('');
-    bindMonstersBoxOverview();
+    if (lead) lead.hidden = true;
+    tiles.innerHTML = '';
     if (window.SWRM && typeof window.SWRM.renderAccountReviewStrip === 'function') {
       window.SWRM.renderAccountReviewStrip();
     }

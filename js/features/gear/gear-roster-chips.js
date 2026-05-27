@@ -116,5 +116,7 @@
       { label: t.relChipMaxLevel || 'Lvl 15', value: sum.maxLevel },
       { label: t.relChipFullDur || 'Full durability', value: sum.fullDurability },
     ];
+    if (sum.legend > 0) parts.push({ label: t.relChipLegend || 'Legend', value: sum.legend });
+    if (sum.hero > 0) parts.push({ label: t.relChipHero || 'Hero', value: sum.hero });
     renderGearSummaryChips('relic-table-roster-chips', parts);
   }

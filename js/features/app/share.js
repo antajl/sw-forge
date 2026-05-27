@@ -522,11 +522,20 @@
     f.skillFilter = '';
     f.fullSixOnly = false;
     f.location = 'all';
-    if (k === 'skills') f.skillFilter = 'needs-up';
-    else if (k === 'partial') f.runeFilter = 'partial';
+    f.attentionOnly = false;
+    if (k === 'skills') {
+      if (typeof showMainTab === 'function') {
+        showMainTab('monsters', { monstersSubtab: 'planner', writeHash: true });
+      }
+      return;
+    }
+    if (k === 'partial') f.runeFilter = 'partial';
     else if (k === 'unruned') f.runeFilter = 'unruned';
     else if (k === 'attention') {
-      f.skillFilter = 'needs-up';
+      f.skillFilter = '';
+      f.sort = 'skills-closest';
+      f.location = 'active';
+      f.attentionOnly = true;
     }
     if (typeof writeMonstersFilters === 'function') writeMonstersFilters(f);
     syncShareMentorFilterDom(f);
@@ -541,7 +550,10 @@
   function mentorRosterSegment(innerEscaped, kind) {
     if (!kind) return innerEscaped;
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-    const title = escapeHtml(t.shareMentorOpenRoster || 'Open filtered roster');
+    const title =
+      kind === 'skills'
+        ? escapeHtml(t.shareMentorOpenPlanner || 'Open Skill plan')
+        : escapeHtml(t.shareMentorOpenRoster || 'Open filtered roster');
     return `<button type="button" class="account-mentor-btn" data-mentor-roster="${escapeHtml(kind)}" title="${title}">${innerEscaped}</button>`;
   }
 
@@ -561,18 +573,19 @@
     if (!cache.length) return '';
     const scored = [];
     for (const u of cache) {
-      let score = 0;
-      if (u.skillUpsNeeded > 0) score += 3 + Math.min(u.skillUpsNeeded, 9);
-      if (u.equippedCount > 0 && !u.hasFullRunes) score += 2;
-      if (u.equippedCount === 0 && (u.level >= 40 || u.stars >= 6)) score += 1;
-      if (score > 0) {
-        scored.push({
-          score,
-          name: u.displayName && !String(u.displayName).startsWith('#') ? u.displayName : null,
-        });
-      }
+      if (u.inStorage) continue;
+      const st =
+        typeof unitSkillAttentionState === 'function'
+          ? unitSkillAttentionState(u)
+          : { ok: false, total: 0 };
+      if (!st.ok) continue;
+      const total = st.total;
+      scored.push({
+        total,
+        name: u.displayName && !String(u.displayName).startsWith('#') ? u.displayName : null,
+      });
     }
-    scored.sort((a, b) => b.score - a.score);
+    scored.sort((a, b) => a.total - b.total || String(a.name || '').localeCompare(String(b.name || '')));
     const names = [];
     for (const row of scored) {
       if (!row.name) continue;
@@ -599,7 +612,7 @@
     }
 
     const runes = typeof allRunes !== 'undefined' && Array.isArray(allRunes) ? allRunes : [];
-    if (runes.length) {
+    if (runes.length && !o.hideScope) {
       let keep = 0;
       let sell = 0;
       for (const r of runes) {

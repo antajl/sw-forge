@@ -149,6 +149,7 @@
         if (raw.heroRuneCount != null && Number.isFinite(Number(raw.heroRuneCount))) return Number(raw.heroRuneCount);
         return null;
       })(),
+      demoProfile: !!raw.demoProfile,
     };
   }
 
@@ -160,6 +161,7 @@
   function applySlotSummaryFromJson(slot, displayName, jsonObj) {
     slot.name = displayName;
     slot.uploadedAt = new Date().toLocaleString();
+    slot.demoProfile = false;
     const sum = extractSwexSummary(jsonObj);
     if (sum) {
       slot.wizardName = sum.wizardName || '';
@@ -189,6 +191,17 @@
   function formatSlotSummaryLine(slot, t) {
     if (!slot.name) return '';
     const parts = [];
+    if (slot.demoProfile) {
+      parts.push('—');
+      parts.push('—');
+      if (slot.runeCount != null) {
+        parts.push(`${escapeHtml(String(slot.runeCount))}\u00A0${escapeHtml(t.runesWord || t.runesHeroPlus || 'runes')}`);
+      }
+      if (slot.monsterCount != null) {
+        parts.push(`${escapeHtml(String(slot.monsterCount))}\u00A0${escapeHtml(t.monsShort || 'mons')}`);
+      }
+      return `<div class="db-slot-summary">${parts.join(' · ')}</div>`;
+    }
     if (slot.wizardName) parts.push(escapeHtml(slot.wizardName));
     if (slot.wizardLevel != null) {
       parts.push(`${escapeHtml(t.lvAbbr || 'Lv.')}${escapeHtml(slot.wizardLevel)}`);

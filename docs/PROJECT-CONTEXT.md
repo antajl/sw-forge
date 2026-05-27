@@ -30,6 +30,7 @@ Vanilla JS + CSS · **Build:** `npm run build` (`build:css` + `build:ui`) · **P
 | SWEX / indexes | `js/data/` · bundled `data/*.json` (see `data/README.md`) |
 | i18n, changelog | `js/core/` |
 | Ingame rune Rating | `js/data/ingame-score.js` |
+| Artifact Ingame Score | `js/data/artifact-ingame-score.js` · `ARTIFACT_INGAME_WEIGHTS`, `artifactIngameScoreBreakdown()` |
 | Player Guide (EN/RU) | `index.html` `#tab-guide` — sync with code when table/rules change |
 
 ## Правила правок

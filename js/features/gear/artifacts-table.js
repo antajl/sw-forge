@@ -15,6 +15,76 @@
   let artifactFilterVerdict = '';
 
 
+  function compareArtifactTableValues(a, b, dir) {
+    const mul = dir === 'asc' ? 1 : -1;
+    const an = Number(a);
+    const bn = Number(b);
+    if (Number.isFinite(an) && Number.isFinite(bn)) {
+      if (an !== bn) return (an - bn) * mul;
+      return 0;
+    }
+    const as = String(a ?? '').trim();
+    const bs = String(b ?? '').trim();
+    return as.localeCompare(bs, currentLang || undefined, { numeric: true, sensitivity: 'base' }) * mul;
+  }
+
+  function artifactTableSortValue(a, key) {
+    const fmt = window.SWRM && window.SWRM.formatGearEffectLine;
+    const fmtSub = window.SWRM && window.SWRM.formatArtifactSubLine;
+    switch (key) {
+      case 'grade':
+        return Number(a.grade) || 0;
+      case 'category':
+        return a.category || '';
+      case 'main':
+        return a.pri && fmt ? fmt(a.pri, { kind: 'artifact' }) : '';
+      case 'subs':
+        return (a.secs || []).map((s) => (fmtSub ? fmtSub(s) : '')).join(' ');
+      case 'ingame':
+        return Number.isFinite(Number(a.artifactIngameScore)) ? Number(a.artifactIngameScore) : -1;
+      case 'forge':
+        return Number.isFinite(Number(a.artifactForgeScore)) ? Number(a.artifactForgeScore) : -1;
+      case 'role':
+        return a.artifactRole || '';
+      case 'verdict':
+        return a.artifactVerdict || '';
+      case 'location':
+        return gearLocationLabel(a.occupiedId, TRANSLATIONS[currentLang] || TRANSLATIONS.en);
+      default:
+        return Number.isFinite(Number(a.artifactForgeScore)) ? Number(a.artifactForgeScore) : -1;
+    }
+  }
+
+  function sortArtifactTableRows(rows) {
+    if (!Array.isArray(rows)) return rows;
+    const key = artifactSortKey || 'forge';
+    const dir = artifactSortDir === 'asc' ? 'asc' : 'desc';
+    rows.sort((a, b) => {
+      const primary = compareArtifactTableValues(
+        artifactTableSortValue(a, key),
+        artifactTableSortValue(b, key),
+        dir,
+      );
+      if (primary) return primary;
+      const byCategory = compareArtifactTableValues(a.category || '', b.category || '', 'asc');
+      if (byCategory) return byCategory;
+      return compareArtifactTableValues(Number(a.rid) || 0, Number(b.rid) || 0, 'asc');
+    });
+    return rows;
+  }
+
+  function updateArtifactSortHeaderClasses() {
+    document.querySelectorAll('#artifact-table thead th[data-sort]').forEach((th) => {
+      th.classList.remove('sort-asc', 'sort-desc');
+      th.removeAttribute('aria-sort');
+      if (th.dataset.sort === artifactSortKey) {
+        const cls = artifactSortDir === 'asc' ? 'sort-asc' : 'sort-desc';
+        th.classList.add(cls);
+        th.setAttribute('aria-sort', artifactSortDir === 'asc' ? 'ascending' : 'descending');
+      }
+    });
+  }
+
 
   function artifactPassesFilters(a) {
 
@@ -366,7 +436,7 @@
 
     if (typeof updateToolbarResetButton === 'function') {
 
-      updateToolbarResetButton('btn-artifact-reset-filters', artifactToolbarHasActiveFilters());
+      updateToolbarResetButton('artifact-filters-drawer-reset', artifactToolbarHasActiveFilters());
 
     }
 
@@ -478,9 +548,12 @@
 
     const fmtSub = window.SWRM && window.SWRM.formatArtifactSubLine;
 
+    sortArtifactTableRows(filteredArtifacts);
+    updateArtifactSortHeaderClasses();
+
     if (!filteredArtifacts.length) {
 
-      tbody.innerHTML = `<tr><td colspan="7" class="table-empty">${escapeHtml(t.tableGearEmpty || 'No artifacts')}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="9" class="table-empty">${escapeHtml(t.tableGearEmpty || 'No artifacts')}</td></tr>`;
 
       if (typeof renderArtifactTableRosterChips === 'function') renderArtifactTableRosterChips();
 
@@ -501,16 +574,6 @@
       const rows = filteredArtifacts
 
         .slice()
-
-        .sort(
-
-          (a, b) =>
-
-            String(a.category).localeCompare(String(b.category)) ||
-
-            String(a.gradeStr).localeCompare(String(b.gradeStr)),
-
-        )
 
         .map((a, i) => {
 
@@ -549,6 +612,8 @@
           const verdict = a.artifactVerdict || null;
 
           const role = a.artifactRole || null;
+          const ingameScore = Number(a.artifactIngameScore);
+          const forgeScore = Number(a.artifactForgeScore);
 
           const verdictClass =
 
@@ -576,11 +641,15 @@
 
             <td class="col-subs-stack"><div class="gear-table-subs">${artifactSubStack(a, fmtSub)}</div></td>
 
-            <td class="col-art-role">${escapeHtml(role || '—')}</td>
+            <td class="col-art-ingame th-num col-block-gap">${Number.isFinite(ingameScore) ? escapeHtml(String(ingameScore)) : '—'}</td>
+
+            <td class="col-art-forge th-num">${Number.isFinite(forgeScore) ? escapeHtml(forgeScore.toFixed(1)) : '—'}</td>
+
+            <td class="col-art-role col-block-gap">${escapeHtml(role || '—')}</td>
 
             <td class="col-art-verdict">${verdict ? `<span class="${escapeHtml(verdictClass)}">${escapeHtml(verdictLabel)}</span>` : '—'}</td>
 
-            <td class="col-location">${escapeHtml(gearLocationLabel(a.occupiedId, t))}</td>
+            <td class="col-location col-block-gap">${escapeHtml(gearLocationLabel(a.occupiedId, t))}</td>
 
           </tr>`;
 
@@ -612,6 +681,19 @@
 
     if (typeof bindGearFilterChipsClear === 'function') bindGearFilterChipsClear();
 
+    document.querySelectorAll('#artifact-table thead th[data-sort]').forEach((th) => {
+      th.addEventListener('click', () => {
+        const key = th.dataset.sort || 'forge';
+        if (artifactSortKey === key) artifactSortDir = artifactSortDir === 'asc' ? 'desc' : 'asc';
+        else {
+          artifactSortKey = key;
+          artifactSortDir = key === 'category' || key === 'main' || key === 'role' || key === 'location' ? 'asc' : 'desc';
+        }
+        if (typeof resetArtifactTableVirtualScroll === 'function') resetArtifactTableVirtualScroll();
+        renderGearTables();
+      });
+    });
+
 
 
     const onArtifactFilterChange = () => {
@@ -637,8 +719,6 @@
     }
 
 
-
-    document.getElementById('btn-artifact-reset-filters')?.addEventListener('click', resetArtifactTableFilters);
 
     document.getElementById('artifact-filters-drawer-reset')?.addEventListener('click', resetArtifactTableFilters);
 

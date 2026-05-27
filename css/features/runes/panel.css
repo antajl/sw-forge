@@ -25,9 +25,9 @@
 }
 
 .panel-top-spd-head {
-  margin-bottom: 14px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid var(--border);
+  margin-bottom: 8px;
+  padding-bottom: 0;
+  border-bottom: none;
 }
 
 .panel-top-spd-head__row {

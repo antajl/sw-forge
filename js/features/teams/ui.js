@@ -593,7 +593,12 @@
           const res = importTeamsStateFromJson(String(reader.result || ''), !replaceAll);
           if (!res.ok) {
             if (typeof showSwrmToast === 'function') {
-              showSwrmToast(t.teamsImportFailed || 'Import failed — invalid JSON.', { type: 'error' });
+              const msg =
+                res.error === 'empty'
+                  ? t.teamsImportEmpty ||
+                    'No teams found in this file. Use Export from Teams, or a share JSON that includes teams.'
+                  : t.teamsImportFailed || 'Import failed — invalid JSON.';
+              showSwrmToast(msg, { type: 'error' });
             }
             return;
           }

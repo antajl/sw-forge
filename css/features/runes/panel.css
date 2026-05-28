@@ -60,6 +60,10 @@
   border-bottom: 1px solid var(--border);
 }
 
+.panel-dash-distributions-head .dash-dist-kind-tabs {
+  flex: 1 1 100%;
+}
+
 .panel-dash-distributions-head .rules-page-title {
   margin: 0;
   font-size: 1.15rem;

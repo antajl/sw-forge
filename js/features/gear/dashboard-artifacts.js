@@ -949,6 +949,27 @@
     if (kindTabs) {
       positionDashDistKindIndicator({ nav: kindTabs, activeKey: initial, instant: true });
     }
+    if (kindTabs && kindTabs.dataset.bound === '1') {
+      if (initial === 'artifacts') {
+        renderArtifactDashboardDistributions({ animateCharts: false, fromZero: false });
+      }
+      return;
+    }
+    if (kindTabs) kindTabs.dataset.bound = '1';
+    if (kindTabs) {
+      let resizeTimer = null;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+          positionDashDistKindIndicator({ nav: kindTabs, activeKey: readDashboardDistKind(), instant: true });
+        }, 120);
+      });
+      window.addEventListener('pageshow', () => {
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          positionDashDistKindIndicator({ nav: kindTabs, activeKey: readDashboardDistKind(), instant: true });
+        }));
+      });
+    }
     document.querySelectorAll('[data-dash-dist-kind]').forEach((btn) => {
       btn.addEventListener('click', () => {
         const raw = btn.getAttribute('data-dash-dist-kind') || 'runes';

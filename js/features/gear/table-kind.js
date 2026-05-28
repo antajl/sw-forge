@@ -293,6 +293,20 @@
       });
     });
     showTableKind(readTableKind(), { skipRuneRender: true, instantIndicator: true });
+    const snap = () => {
+      if (!nav) return;
+      const r = nav.getBoundingClientRect();
+      if (!r || r.width < 2) return;
+      updateTableKindTabIndicator({ instant: true });
+    };
+    let resizeTimer = null;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(snap, 120);
+    });
+    window.addEventListener('pageshow', () => {
+      requestAnimationFrame(() => requestAnimationFrame(snap));
+    });
   }
 
   function onGearDataHydrated() {

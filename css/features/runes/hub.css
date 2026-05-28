@@ -26,7 +26,7 @@ body.light-theme #tab-runes > .runes-hub-tabs.rules-subtabs {
 .runes-hub-tabs .rules-subtab__label {
   width: 100%;
   text-align: center;
-  font-size: 0.84rem;
+  font-size: var(--runes-fs-tab-main);
   letter-spacing: 0.04em;
 }
 
@@ -76,6 +76,6 @@ body.light-theme #tab-runes > .runes-hub-tabs.rules-subtabs {
     padding: 10px 8px;
   }
   .runes-hub-tabs .rules-subtab__label {
-    font-size: 0.78rem;
+    font-size: 0.84rem;
   }
 }

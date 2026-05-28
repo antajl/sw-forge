@@ -3026,6 +3026,7 @@ body.share-readonly #demo-dataset-banner:not(.share-view-banner) {
   --runes-fs-title: 0.9375rem;
   --runes-fs-section: 1rem;
   --runes-fs-control: 0.8125rem;
+  --runes-fs-tab-main: 0.9rem;
 }
 
 #tab-runes .hint,
@@ -3103,7 +3104,7 @@ body.light-theme #tab-runes > .runes-hub-tabs.rules-subtabs {
 .runes-hub-tabs .rules-subtab__label {
   width: 100%;
   text-align: center;
-  font-size: 0.84rem;
+  font-size: var(--runes-fs-tab-main);
   letter-spacing: 0.04em;
 }
 
@@ -3153,7 +3154,7 @@ body.light-theme #tab-runes > .runes-hub-tabs.rules-subtabs {
     padding: 10px 8px;
   }
   .runes-hub-tabs .rules-subtab__label {
-    font-size: 0.78rem;
+    font-size: 0.84rem;
   }
 }
 
@@ -5406,6 +5407,10 @@ html[lang="ru"] #tab-dashboard .btn-dash-open-all-inline {
   border-bottom: 1px solid var(--border);
 }
 
+.panel-dash-distributions-head .dash-dist-kind-tabs {
+  flex: 1 1 100%;
+}
+
 .panel-dash-distributions-head .rules-page-title {
   margin: 0;
   font-size: 1.15rem;
@@ -5549,6 +5554,7 @@ html:not(.swrm-has-gsap) .rules-subtabs__indicator {
   }
 }
 
+
 /* === css/features/runes/dashboard-artifacts.css === */
 /* dashboard-artifacts.css — artifact distribution grid on Dashboard */
 
@@ -5565,10 +5571,11 @@ html:not(.swrm-has-gsap) .rules-subtabs__indicator {
 }
 
 .dash-dist-kind-tabs {
-  display: inline-flex;
-  gap: 8px;
-  padding: 4px;
-  padding-bottom: 8px;
+  display: flex;
+  width: 100%;
+  gap: 10px;
+  padding: 6px;
+  padding-bottom: 10px;
   border-radius: var(--radius-lg);
   background: color-mix(in srgb, var(--bg3) 55%, transparent);
   border: 1px solid var(--border);
@@ -5599,10 +5606,10 @@ html:not(.swrm-has-gsap) .dash-dist-kind-tabs__indicator {
   background: transparent;
   color: var(--text-dim);
   font-family: var(--font-head);
-  font-size: 0.88rem;
+  font-size: var(--runes-fs-tab-main);
   font-weight: 700;
   letter-spacing: 0.03em;
-  padding: 12px 16px;
+  padding: 14px 18px;
   border-radius: var(--radius);
   cursor: pointer;
   flex: 1 1 0;

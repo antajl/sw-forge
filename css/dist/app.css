@@ -6435,6 +6435,7 @@ html[lang='ru'] .slot-share-slot-lbl {
   width: 100%;
   max-width: none;
   margin-inline: 0;
+  padding: 16px;
   aspect-ratio: 500 / 460;
   max-height: min(36vh, 280px);
   min-height: 140px;
@@ -6445,7 +6446,6 @@ html[lang='ru'] .slot-share-slot-lbl {
   inset: 0;
   width: 100%;
   height: 100%;
-  padding: 16px;
 }
 
 .top-spd-radar-host .top-spd-radar__svg {
@@ -6526,7 +6526,7 @@ html[lang='ru'] .slot-share-slot-lbl {
 .top-spd-radar__slot {
   fill: var(--text-dim);
   font-family: var(--font-head);
-  font-size: 14px;
+  font-size: 21px;
   font-weight: 700;
   letter-spacing: 0.03em;
 }
@@ -6538,7 +6538,7 @@ html[lang='ru'] .slot-share-slot-lbl {
 .top-spd-radar__val {
   fill: var(--text);
   font-family: var(--font-mono);
-  font-size: 15px;
+  font-size: 22px;
   font-weight: 600;
 }
 

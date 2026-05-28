@@ -433,7 +433,10 @@
     const n = TOP_SPD_RADAR_VERTICES;
     let ang = Math.atan2(dy, dx) + Math.PI / 2;
     if (ang < 0) ang += Math.PI * 2;
-    return Math.floor(ang / ((2 * Math.PI) / n)) % n;
+    const sectorAngle = (2 * Math.PI) / n;
+    const halfSector = sectorAngle / 2;
+    ang = (ang + halfSector) % (2 * Math.PI);
+    return Math.floor(ang / sectorAngle) % n;
   }
 
   function readTopSpdSortMetric() {
@@ -517,6 +520,7 @@
         clearHover();
         return;
       }
+      clearHover();
       const slotNum = slots[slotIdx];
       const cur = peaks[slotIdx] || 0;
       const pot = potPeaks[slotIdx] || 0;
@@ -683,7 +687,7 @@
         ? 'top-spd-radar__slot top-spd-radar__slot--weak'
         : 'top-spd-radar__slot';
       svg += `<text class="${slotCls}" data-slot="${i}" x="${lp.x.toFixed(2)}" y="${(lp.y - 5).toFixed(2)}" text-anchor="middle">${escapeHtml(row.slotLbl)}</text>`;
-      svg += `<text class="top-spd-radar__val" data-slot="${i}" x="${lp.x.toFixed(2)}" y="${(lp.y + 11).toFixed(2)}" text-anchor="middle">${escapeHtml(row.valTxt)}</text>`;
+      svg += `<text class="top-spd-radar__val" data-slot="${i}" x="${lp.x.toFixed(2)}" y="${(lp.y + 16).toFixed(2)}" text-anchor="middle">${escapeHtml(row.valTxt)}</text>`;
     }
     svg += '</svg>';
     hostEl.innerHTML = svg;

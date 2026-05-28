@@ -51,7 +51,7 @@ const GRADE_NAMES = { 1:'Common', 2:'Magic', 3:'Rare', 4:'Hero', 5:'Legend' };
 const GRADE_SHORT = { 3:'Rare', 4:'Hero', 5:'Legend' };
 
 /** Shown in footer, changelog, and Copy summary — bump when shipping a user-visible build. */
-const APP_VERSION = '1.2.18';
+const APP_VERSION = '1.2.19';
 
 /**
  * Debug only: when true, the verdict engine skips every check that compares `rune.eff`

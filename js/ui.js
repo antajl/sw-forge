@@ -2105,20 +2105,28 @@
    * @param {{ animateCharts?: boolean, fromZero?: boolean, deferSecondaryUi?: boolean }} [extra]
    */
   function renderHydratedAppUi(extra = {}) {
-    const boot = consumeColdBootUiOpts();
-    const animateCharts = extra.animateCharts ?? boot?.animateCharts ?? true;
-    const fromZero = extra.fromZero ?? boot?.fromZero ?? false;
-    const deferSecondary =
-      extra.deferSecondaryUi ?? boot?.deferSecondaryUi ?? false;
-    const visible =
-      typeof getVisibleRunes === 'function' ? getVisibleRunes() : processedRunes;
-    if (typeof renderDashboard === 'function') {
-      renderDashboard(visible, { animateCharts, fromZero });
-    }
-    if (deferSecondary) scheduleDeferredSecondaryPanels(visible);
-    else {
-      if (typeof renderTable === 'function') renderTable(visible);
-      if (typeof renderMonstersPanel === 'function') renderMonstersPanel();
+    try {
+      const boot = consumeColdBootUiOpts();
+      const animateCharts = extra.animateCharts ?? boot?.animateCharts ?? true;
+      const fromZero = extra.fromZero ?? boot?.fromZero ?? false;
+      const deferSecondary =
+        extra.deferSecondaryUi ?? boot?.deferSecondaryUi ?? false;
+      const visible =
+        typeof getVisibleRunes === 'function' ? getVisibleRunes() : processedRunes;
+      if (typeof renderDashboard === 'function') {
+        renderDashboard(visible, { animateCharts, fromZero });
+      }
+      if (deferSecondary) scheduleDeferredSecondaryPanels(visible);
+      else {
+        if (typeof renderTable === 'function') renderTable(visible);
+        if (typeof renderMonstersPanel === 'function') renderMonstersPanel();
+      }
+    } catch (err) {
+      console.error('renderHydratedAppUi error:', err);
+      // Ensure cold boot flag is cleared even on error to prevent stuck UI
+      if (swrmColdBootPending) {
+        swrmColdBootPending = false;
+      }
     }
   }
 
@@ -2727,6 +2735,11 @@
     rebuildUnitsFromSwex(jsonObj);
     reprocess();
 
+    // Clear processed runes cache to ensure fresh parsing with new data
+    if (typeof deleteProcessedRunesCache === 'function') {
+      await deleteProcessedRunesCache(1);
+    }
+
     const fileSizeKB = Math.round(jsonText.length / 1024);
     const maxLocalStorageSize = 4 * 1024;
 
@@ -3008,6 +3021,9 @@
       if (r && r.id != null) runeById.set(Number(r.id), r);
     }
     allUnits = parseUnits(activeSwexJson, { sixStarOnly: false, runeById });
+    // Clear artifacts before parsing to prevent phantom artifacts from stale data
+    allArtifacts = [];
+    allRelics = [];
     if (window.SWRM && typeof window.SWRM.parseAccountGear === 'function') {
       const bag = window.SWRM.parseAccountGear(activeSwexJson);
       window.SWRM_ACCOUNT_GEAR = bag;
@@ -3017,8 +3033,6 @@
       if (typeof bumpAllArtifactsRev === 'function') bumpAllArtifactsRev();
     } else {
       window.SWRM_ACCOUNT_GEAR = null;
-      allArtifacts = [];
-      allRelics = [];
       if (typeof bumpAllArtifactsRev === 'function') bumpAllArtifactsRev();
     }
     if (typeof onGearDataHydrated === 'function') onGearDataHydrated();

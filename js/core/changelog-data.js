@@ -7,6 +7,29 @@
  */
 const STATIC_CHANGELOG = [
   {
+    date: '2026-05-28',
+    items: {
+      en: [
+        'Fixed artifact Type category mapping (HP/Attack/Defense/Support) to match SWEX unit_style values; icons now match names.',
+        'Fixed artifact Ingame Score calculation for special substats (LifeDrain, Received Crit DMG, Additional Damage by SPD/HP/ATK/DEF).',
+        'Fixed phantom artifacts from previous loads showing in table; artifacts now cleared before parsing new data.',
+        'Fixed rare case where site could show only header after loading data.',
+      ],
+      ru: [
+        'Исправлен маппинг Type категории артефактов (HP/Attack/Defense/Support) для соответствия unit_style из SWEX; иконки теперь соответствуют названиям.',
+        'Исправлен расчёт Ingame Score для артефактов со специальными сабами (LifeDrain, Received Crit DMG, Additional Damage by SPD/HP/ATK/DEF).',
+        'Исправлено отображение фантомных артефактов от предыдущих загрузок; артефакты теперь очищаются перед парсингом новых данных.',
+        'Исправлен редкий случай, когда сайт показывал только шапку после загрузки данных.',
+      ],
+      fr: [
+        'Corrigé le mapping Type des artefacts (HP/Attack/Defense/Support) pour correspondre aux unit_style SWEX; icônes correspondent aux noms.',
+        'Corrigé le calcul Ingame Score pour les sous-stats spéciaux (LifeDrain, Received Crit DMG, Additional Damage by SPD/HP/ATK/DEF).',
+        'Corrigé les artefacts fantômes des chargements précédents ; artefacts effacés avant le nouveau parsing.',
+        'Corrigé le cas rare où seul l\'en-tête s\'affichait après chargement.',
+      ],
+    },
+  },
+  {
     date: '2026-05-27',
     items: {
       en: [

@@ -451,6 +451,11 @@
     rebuildUnitsFromSwex(jsonObj);
     reprocess();
 
+    // Clear processed runes cache to ensure fresh parsing with new data
+    if (typeof deleteProcessedRunesCache === 'function') {
+      await deleteProcessedRunesCache(1);
+    }
+
     const fileSizeKB = Math.round(jsonText.length / 1024);
     const maxLocalStorageSize = 4 * 1024;
 

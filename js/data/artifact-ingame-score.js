@@ -63,22 +63,11 @@
   };
   
   function calcArtifactIngameScoreRaw(artifact) {
-    const secs = artifact && Array.isArray(artifact.secs) ? artifact.secs : [];
-    let score = 0;
-
-    for (let i = 0; i < secs.length; i++) {
-      const sec = secs[i];
-      const type = Number(sec && sec.type);
-      const val = Number(sec && sec.value);
-      if (!Number.isFinite(type) || !Number.isFinite(val) || val <= 0) continue;
-
-      const max = ARTIFACT_EFFECT_MAX[type];
-      if (max && max > 0) {
-        score += (val / max) * 100;
-      }
-    }
-
-    return Math.round(score);
+    // Artifact ingame score calculation disabled - formula is inaccurate.
+    // The game uses a complex roll-based system that is not fully documented.
+    // See docs/ARTIFACT_SCORING_RESEARCH.md for research findings.
+    // Returns 0 to prevent UI initialization errors.
+    return 0;
   }
 
   function calcArtifactIngameScore(artifact) {
@@ -117,12 +106,13 @@
   /**
    * Artifact Forge Score is our own quality scale (not the in-game rating).
    * It mirrors the Rune Table UX: a compact 0–5+ number with 0.5 steps.
+   * DISABLED - formula is inaccurate based on game data.
    */
   function calcArtifactForgeScoreDisplay(artifact) {
-    const raw = Number(artifact && artifact.artifactScore);
-    if (!Number.isFinite(raw) || raw < 0) return null;
-    const scaled = (raw / 4) * 5;
-    return Math.round(scaled * 2) / 2;
+    // Artifact forge score calculation disabled - formula is inaccurate.
+    // See docs/ARTIFACT_SCORING_RESEARCH.md for research findings.
+    // Returns 0 to prevent UI initialization errors.
+    return 0;
   }
 
   S.calcArtifactIngameScoreRaw = calcArtifactIngameScoreRaw;

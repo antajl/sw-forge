@@ -8697,6 +8697,7 @@
         btn.setAttribute('aria-selected', String(on));
         btn.tabIndex = on ? 0 : -1;
       });
+      positionDashDistKindIndicator({ nav: kindTabs, activeKey: active, instant: false });
     }
     const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const hint = document.getElementById('lbl-dash-unified-chart-hint');
@@ -8706,6 +8707,31 @@
           ? tloc.dashboardArtifactDistHint || ''
           : tloc.dashboardVerdictStackHint || '';
     }
+  }
+
+  function positionDashDistKindIndicator(opts) {
+    const o = opts || {};
+    const nav = o.nav;
+    if (!nav) return;
+    const motionApi = window.SWRM_MOTION;
+    if (motionApi && typeof motionApi.positionDashUnifiedTabIndicator === 'function') {
+      motionApi.positionDashUnifiedTabIndicator({
+        nav,
+        activeKey: o.activeKey,
+        instant: !!o.instant,
+      });
+      return;
+    }
+    const ind = nav.querySelector('.dash-dist-kind-tabs__indicator');
+    if (!ind) return;
+    const btn = nav.querySelector(`[data-dash-dist-kind="${o.activeKey}"]`);
+    if (!btn) return;
+    const rNav = nav.getBoundingClientRect();
+    const rBtn = btn.getBoundingClientRect();
+    const left = Math.max(0, rBtn.left - rNav.left);
+    ind.style.width = `${Math.max(0, rBtn.width)}px`;
+    ind.style.left = `${left}px`;
+    ind.style.transform = 'none';
   }
 
   function applyDashboardDistKind(kind, opts) {
@@ -8726,6 +8752,10 @@
     bindArtifactDashboardClicks();
     const initial = readDashboardDistKind();
     syncDashboardDistKindUi(initial);
+    const kindTabs = document.getElementById('dash-dist-kind-tabs');
+    if (kindTabs) {
+      positionDashDistKindIndicator({ nav: kindTabs, activeKey: initial, instant: true });
+    }
     document.querySelectorAll('[data-dash-dist-kind]').forEach((btn) => {
       btn.addEventListener('click', () => {
         const raw = btn.getAttribute('data-dash-dist-kind') || 'runes';

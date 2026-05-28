@@ -181,11 +181,12 @@
    */
   function positionDashUnifiedTabIndicator(opts) {
     const { nav, activeKey, instant } = opts || {};
-    const ind = nav && nav.querySelector('.dash-unified-tabs__indicator');
+    const ind = nav && nav.querySelector('.dash-unified-tabs__indicator, .dash-dist-kind-tabs__indicator');
     const key = String(activeKey || '').trim();
     const btn =
       (key && nav && nav.querySelector(`[data-dash-uni="${key}"]`)) ||
       (key && nav && nav.querySelector(`[data-dash-art-tab="${key}"]`)) ||
+      (key && nav && nav.querySelector(`[data-dash-dist-kind="${key}"]`)) ||
       (key && document.getElementById(`dash-unified-tab-${key}`)) ||
       (nav && nav.querySelector('.is-active')) ||
       null;
@@ -207,7 +208,7 @@
     gsap.to(ind, {
       left: x,
       width: w,
-      duration: 0.32,
+      duration: 0.4,
       ease: 'power3.out',
       overwrite: 'auto',
       onStart: () => {
@@ -242,7 +243,7 @@
     gsap.to(ind, {
       left: x,
       width: w,
-      duration: 0.32,
+      duration: 0.4,
       ease: 'power3.out',
       overwrite: 'auto',
     });
@@ -303,7 +304,7 @@
     gsap.to(ind, {
       top: y,
       height: h,
-      duration: 0.32,
+      duration: 0.4,
       ease: 'power3.out',
       overwrite: 'auto',
       onStart: () => {

@@ -1,10 +1,10 @@
 /* Element accents — border / bar only, no full fill */
 :root {
-  --monsters-el-fire: #b85c5c;
-  --monsters-el-water: #5a8fae;
-  --monsters-el-wind: #6a9e62;
-  --monsters-el-light: #c4a84a;
-  --monsters-el-dark: #8a72a8;
+  --monsters-el-fire: #C4525E;
+  --monsters-el-water: #4A89B8;
+  --monsters-el-wind: #CFA738;
+  --monsters-el-light: #D1C494;
+  --monsters-el-dark: #8A5E9C;
 }
 
 .monsters-card--fire {

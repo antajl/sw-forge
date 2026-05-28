@@ -184,9 +184,9 @@
     const ind = nav && nav.querySelector('.dash-unified-tabs__indicator');
     const key = String(activeKey || '').trim();
     const btn =
-      (key && document.getElementById(`dash-unified-tab-${key}`)) ||
       (key && nav && nav.querySelector(`[data-dash-uni="${key}"]`)) ||
       (key && nav && nav.querySelector(`[data-dash-art-tab="${key}"]`)) ||
+      (key && document.getElementById(`dash-unified-tab-${key}`)) ||
       (nav && nav.querySelector('.is-active')) ||
       null;
     if (!nav || !ind || !btn) return false;
@@ -196,6 +196,7 @@
     const w = Math.max(0, btnRect.width);
     killTweensOf(ind);
     const snap = () => {
+      ind.style.transform = 'none';
       ind.style.left = `${x}px`;
       ind.style.width = `${w}px`;
     };
@@ -209,6 +210,9 @@
       duration: 0.32,
       ease: 'power3.out',
       overwrite: 'auto',
+      onStart: () => {
+        ind.style.transform = 'none';
+      },
     });
     return true;
   }
@@ -263,28 +267,48 @@
     ].includes(activeKey)
       ? activeKey
       : 'engine';
-    const btn = document.getElementById(`rules-subtab-${key}`);
+    const btn =
+      (key && nav && nav.querySelector(`[data-rules-subtab="${key}"]`)) ||
+      (key && document.getElementById(`rules-subtab-${key}`)) ||
+      null;
+    
+    // Reset indicators in other nav elements
+    document.querySelectorAll('.rules-subtabs').forEach((otherNav) => {
+      if (otherNav !== nav) {
+        const otherInd = otherNav.querySelector('.rules-subtabs__indicator');
+        if (otherInd) {
+          killTweensOf(otherInd);
+          otherInd.style.transform = 'none';
+          otherInd.style.top = '0';
+          otherInd.style.height = '0';
+        }
+      }
+    });
+
     if (!nav || !ind || !btn) return false;
-    const label = btn.querySelector('.rules-subtab__label');
     const navRect = nav.getBoundingClientRect();
-    const targetRect = (label || btn).getBoundingClientRect();
-    const x = Math.max(0, targetRect.left - navRect.left);
-    const w = Math.max(0, targetRect.width);
+    const btnRect = btn.getBoundingClientRect();
+    const y = Math.max(0, btnRect.top - navRect.top);
+    const h = Math.max(0, btnRect.height);
     killTweensOf(ind);
     const snap = () => {
-      ind.style.left = `${x}px`;
-      ind.style.width = `${w}px`;
+      ind.style.transform = 'none';
+      ind.style.top = `${y}px`;
+      ind.style.height = `${h}px`;
     };
     if (instant || !enabled()) {
       snap();
       return false;
     }
     gsap.to(ind, {
-      left: x,
-      width: w,
+      top: y,
+      height: h,
       duration: 0.32,
       ease: 'power3.out',
       overwrite: 'auto',
+      onStart: () => {
+        ind.style.transform = 'none';
+      },
     });
     return true;
   }

@@ -2,17 +2,34 @@
 .role-chart, .set-chart, .slot-chart { display: flex; flex-direction: column; gap: 6px; }
 
 .chart-scroll--sets {
-  max-height: none;
-  overflow-y: visible;
+  max-height: 280px;
+  overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: auto;
+  padding-right: 12px;
+}
+.chart-scroll--sets::-webkit-scrollbar {
+  width: 8px;
+}
+.chart-scroll--sets::-webkit-scrollbar-track {
+  background: transparent;
+}
+.chart-scroll--sets::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 4px;
+}
+.chart-scroll--sets-hidden::-webkit-scrollbar {
+  display: none;
+}
+.chart-scroll--sets-hidden {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
-.chart-scroll--sets::-webkit-scrollbar {
-  display: none;
-  width: 0;
-  height: 0;
+.chart-scroll--sets-visible::-webkit-scrollbar-thumb {
+  background: var(--border2);
+}
+.chart-scroll--sets-visible::-webkit-scrollbar-thumb:hover {
+  background: var(--border);
 }
 .chart-row { display: flex; align-items: center; gap: 9px; }
 .chart-row--slot {
@@ -84,11 +101,66 @@ html.swrm-has-gsap .slot-main-card-bar {
 .chart-bar-fill.chart-bar--roles {
   background: var(--accent);
 }
+.chart-bar-fill.chart-bar--role-godroll {
+  background: var(--gold);
+}
+.chart-bar-fill.chart-bar--role-bruiser {
+  background: var(--sell);
+}
+.chart-bar-fill.chart-bar--role-fastcc {
+  background: var(--teal);
+}
+.chart-bar-fill.chart-bar--role-tank {
+  background: var(--purple);
+}
+.chart-bar-fill.chart-bar--role-bomber {
+  background: var(--orange);
+}
+.chart-bar-fill.chart-bar--role-classicdps {
+  background: var(--accent);
+}
+.chart-bar-fill.chart-bar--role-slowdps {
+  background: var(--accent2);
+}
+.chart-bar-fill.chart-bar--role-duoroll {
+  background: var(--gold);
+}
+.chart-bar-fill.chart-bar--role-universal {
+  background: var(--green);
+}
 .chart-bar-fill.chart-bar--sets {
   background: var(--finish);
 }
 .chart-bar-fill.chart-bar--slots {
   background: var(--grind);
+}
+
+/* Artifact grade colors */
+.chart-bar-fill.chart-bar--grade-legend {
+  background: var(--gold);
+}
+.chart-bar-fill.chart-bar--grade-hero {
+  background: var(--purple);
+}
+.chart-bar-fill.chart-bar--grade-rare {
+  background: var(--accent);
+}
+
+/* Artifact attribute colors (from monsters elements) */
+.chart-bar-fill.chart-bar--attr-fire {
+  background: var(--monsters-el-fire);
+}
+.chart-bar-fill.chart-bar--attr-water {
+  background: var(--monsters-el-water);
+}
+.chart-bar-fill.chart-bar--attr-wind {
+  background: var(--monsters-el-wind);
+}
+.chart-bar-fill.chart-bar--attr-light {
+  background: var(--monsters-el-light);
+}
+.chart-bar-fill.chart-bar--attr-dark {
+  background: var(--monsters-el-dark);
 }
 
 .chart-row-stats {
@@ -98,8 +170,8 @@ html.swrm-has-gsap .slot-main-card-bar {
   align-items: flex-end;
   justify-content: center;
   gap: 4px;
-  min-width: 7.25rem;
-  width: 7.25rem;
+  min-width: 4rem;
+  width: 4rem;
   padding-left: 8px;
   margin-left: 0;
   border-left: none;
@@ -118,6 +190,10 @@ html.swrm-has-gsap .slot-main-card-bar {
 }
 .chart-stat-line--count {
   gap: 0;
+  justify-content: flex-end;
+}
+.chart-stat-line--combined {
+  gap: 4px;
   justify-content: flex-end;
 }
 .chart-stat-lbl {

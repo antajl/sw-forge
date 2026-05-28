@@ -3548,19 +3548,22 @@
 
   /** Right column: count value + optional ingame score line. */
   function chartRowStatsHtml(cnt, ingameDisplay, tloc) {
-    const li = escapeHtml((tloc && tloc.dashboardChartLblAvgIngame) || 'Avg Ingame Score');
-    const countLine = `<div class="chart-stat-line chart-stat-line--count">
-      <span class="chart-stat-val">${cnt}</span>
-    </div>`;
+    const countLabel = (tloc && tloc.dashboardChartLblCount) || 'Count';
+    const scoreLabel = (tloc && tloc.dashboardChartLblAvgIngame) || 'Avg Ingame Score';
     if (ingameDisplay === undefined) {
-      return `<div class="chart-row-stats chart-row-stats--solo">${countLine}</div>`;
+      return `<div class="chart-row-stats chart-row-stats--solo">
+        <div class="chart-stat-line chart-stat-line--count">
+          <span class="chart-stat-val" title="${escapeHtml(countLabel)}">${cnt}</span>
+        </div>
+      </div>`;
     }
     const ingameInner = ingameDisplay === '-' ? '\u2014' : escapeHtml(String(ingameDisplay));
-    const ingameLine = `<div class="chart-stat-line chart-stat-line--ingame">
-      <span class="chart-stat-lbl">${li}</span>
-      <span class="chart-stat-val">${ingameInner}</span>
+    return `<div class="chart-row-stats">
+      <div class="chart-stat-line chart-stat-line--combined">
+        <span class="chart-stat-val" title="${escapeHtml(countLabel)}">${cnt}</span>
+        <span class="chart-stat-val" title="${escapeHtml(scoreLabel)}">(${ingameInner})</span>
+      </div>
     </div>`;
-    return `<div class="chart-row-stats">${countLine}${ingameLine}</div>`;
   }
 
   function subLineTotal(s) {
@@ -5290,6 +5293,17 @@
       const sortedRoles = Object.keys(roleCounts).sort((a, b) => (roleCounts[b] || 0) - (roleCounts[a] || 0));
       const roleScale = dashChartScaleMax(sortedRoles.map((rr) => roleCounts[rr] || 0));
       roleBarTargets = new Map();
+      const roleColorClassMap = {
+        'God Roll': 'chart-bar--role-godroll',
+        'Bruiser': 'chart-bar--role-bruiser',
+        'Fast CC': 'chart-bar--role-fastcc',
+        'Tank': 'chart-bar--role-tank',
+        'Bomber': 'chart-bar--role-bomber',
+        'Classic DPS': 'chart-bar--role-classicdps',
+        'Slow DPS': 'chart-bar--role-slowdps',
+        'Duo Roll': 'chart-bar--role-duoroll',
+        'Universal': 'chart-bar--role-universal'
+      };
       for (const role of sortedRoles) {
         const cnt = roleCounts[role] || 0;
         const avg = roleEff[role]
@@ -5300,16 +5314,34 @@
         roleBarTargets.set(role, pctNum);
         const startPct = !animateCharts ? pctNum : chartFromZero ? 0 : prevRoleW.has(role) ? prevRoleW.get(role) : 0;
         const er = escapeHtml(role);
+        const roleClass = roleColorClassMap[role] || 'chart-bar--roles';
         roleEl.innerHTML += `
         <div class="chart-row chart-row--clickable" role="button" tabindex="0" data-dash-role="${er}">
           <div class="chart-label">${er}</div>
-          ${chartBarTrackHtml(pct, 'chart-bar--roles', animateCharts ? startPct : undefined)}
+          ${chartBarTrackHtml(pct, roleClass, animateCharts ? startPct : undefined)}
           ${chartRowStatsHtml(cnt, avg, tloc)}
         </div>`;
       }
     }
 
     const setEl = document.getElementById('set-chart');
+    const setScrollEl = document.getElementById('set-chart-scroll');
+    if (setScrollEl) {
+      setScrollEl.style.maxHeight = '280px';
+      setScrollEl.style.overflowY = 'auto';
+      setScrollEl.style.overflowX = 'hidden';
+      setScrollEl.style.paddingRight = '12px';
+      // Hide scrollbar by default, show on hover
+      setScrollEl.classList.add('chart-scroll--sets-hidden');
+      setScrollEl.addEventListener('mouseenter', () => {
+        setScrollEl.classList.remove('chart-scroll--sets-hidden');
+        setScrollEl.classList.add('chart-scroll--sets-visible');
+      });
+      setScrollEl.addEventListener('mouseleave', () => {
+        setScrollEl.classList.remove('chart-scroll--sets-visible');
+        setScrollEl.classList.add('chart-scroll--sets-hidden');
+      });
+    }
     if (setEl) {
       oldRectsSets = animateCharts ? snapshotKeyedRowRects(setEl, 'data-dash-set') : null;
       const prevSetW =
@@ -7954,7 +7986,7 @@
     const o = opts || {};
     const tloc = o.tloc || TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const dataAttr = o.dataAttr || 'data-dash-art-row';
-    const fillClass = o.fillClass || 'chart-bar--roles';
+    const defaultFillClass = o.fillClass || 'chart-bar--roles';
     const animateCharts = !!o.animateCharts;
     const chartFromZero = !!o.fromZero;
     const prevW =
@@ -7966,7 +7998,7 @@
     const scale = dashChartScaleMax(rows.map((r) => r.count));
     const targets = new Map();
     for (let i = 0; i < rows.length; i++) {
-      const { key, label, count } = rows[i];
+      const { key, label, count, fillClass } = rows[i];
       const pct = dashChartPct(count, scale).toFixed(1);
       const pctNum = parseFloat(pct);
       targets.set(String(key), pctNum);
@@ -7989,10 +8021,11 @@
         ingameByKey && Object.prototype.hasOwnProperty.call(ingameByKey, String(key))
           ? ingameByKey[String(key)]
           : undefined;
+      const rowFillClass = fillClass || defaultFillClass;
       el.innerHTML += `
         <div class="${rowClasses}" ${dataAttr}="${ek}"${clickAttr}>
           <div class="chart-label">${elbl}</div>
-          ${chartBarTrackHtml(pct, fillClass, animateCharts ? startPct : undefined)}
+          ${chartBarTrackHtml(pct, rowFillClass, animateCharts ? startPct : undefined)}
           ${chartRowStatsHtml(count, ingameVal, tloc)}
         </div>`;
     }
@@ -8223,9 +8256,18 @@
         count: agg.grade[g] || 0,
       })).filter((r) => r.count > 0),
     );
+    const gradeColorClassMap = {
+      'Legend': 'chart-bar--grade-legend',
+      'Hero': 'chart-bar--grade-hero',
+      'Rare': 'chart-bar--grade-rare',
+    };
+    const gradeRowsWithColor = gradeRows.map((row) => ({
+      ...row,
+      fillClass: gradeColorClassMap[row.key] || 'chart-bar--sets',
+    }));
     const gradeTargets = renderArtifactBarRows(
       document.getElementById('dash-art-grade-chart'),
-      gradeRows,
+      gradeRowsWithColor,
       {
         tloc,
         dataAttr: 'data-dash-art-grade',
@@ -8270,9 +8312,21 @@
       (a, b) => (agg.role[b] || 0) - (agg.role[a] || 0) || a.localeCompare(b),
     );
     const roleRows = roleKeys.map((k) => ({ key: k, label: k, count: agg.role[k] || 0 }));
+    const roleColorClassMap = {
+      'Classic DPS': 'chart-bar--role-classicdps',
+      'Tank': 'chart-bar--role-tank',
+      'Bomber': 'chart-bar--role-bomber',
+      'Fast CC': 'chart-bar--role-fastcc',
+      'Bruiser': 'chart-bar--role-bruiser',
+      'Slow DPS': 'chart-bar--role-slowdps',
+    };
+    const roleRowsWithColor = roleRows.map((row) => ({
+      ...row,
+      fillClass: roleColorClassMap[row.key] || 'chart-bar--roles',
+    }));
     const roleTargets = renderArtifactBarRows(
       document.getElementById('dash-art-role-chart'),
-      roleRows,
+      roleRowsWithColor,
       {
         tloc,
         dataAttr: 'data-dash-art-role',
@@ -8297,7 +8351,18 @@
             count: agg.attribute[attr] || 0,
           })).filter((r) => r.count > 0),
         );
-        attributeTargets = renderArtifactBarRows(attributeEl, attributeRows, {
+        const attributeColorClassMap = {
+          '1': 'chart-bar--attr-fire',
+          '2': 'chart-bar--attr-water',
+          '3': 'chart-bar--attr-wind',
+          '4': 'chart-bar--attr-light',
+          '5': 'chart-bar--attr-dark',
+        };
+        const attributeRowsWithColor = attributeRows.map((row) => ({
+          ...row,
+          fillClass: attributeColorClassMap[row.key] || 'chart-bar--sets',
+        }));
+        attributeTargets = renderArtifactBarRows(attributeEl, attributeRowsWithColor, {
           tloc,
           dataAttr: 'data-dash-art-attribute',
           fillClass: 'chart-bar--sets',
@@ -8419,7 +8484,8 @@
     const rBtn = btn.getBoundingClientRect();
     const left = Math.max(0, rBtn.left - rNav.left);
     ind.style.width = `${Math.max(0, rBtn.width)}px`;
-    ind.style.transform = `translateX(${left}px)`;
+    ind.style.left = `${left}px`;
+    ind.style.transform = 'none';
   }
 
   function applyArtifactDashTab(which) {

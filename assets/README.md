@@ -46,6 +46,7 @@ Requires schema 2 `data/monsters-index.json`. Writes `assets/monsters/*.png` and
 ## Already local
 
 - `relics/` — manual PNGs per relic type (see project docs)
+- `gsap.min.js` — GSAP 3.12.7 animation library (loaded in `index.html`, no CDN dependency)
 
 ## Code
 

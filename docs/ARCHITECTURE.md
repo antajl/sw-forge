@@ -15,8 +15,9 @@ SW Forge is a static browser app. Cloudflare Pages serves `index.html`, CSS, dat
 5. `js/data/local-assets.js`, `js/data/skill-db.js`, `js/data/monster-db.js`
 6. `js/engine/*.js`, `js/advanced-formulas.js`
 7. `js/self-test.js`
-8. `js/swrm-motion.js`
-9. `js/ui.js` (Forge Score in `js/features/runes/rune-score.js`, table in `table*.js`)
+8. `assets/gsap.min.js` (GSAP 3.12.7 animation library, local)
+9. `js/swrm-motion.js`
+10. `js/ui.js` (Forge Score in `js/features/runes/rune-score.js`, table in `table*.js`)
 
 **Player docs:** Guide text lives in `index.html` (`#tab-guide`), not under `docs/`. Changelog strings: `js/core/changelog-data.js`.
 

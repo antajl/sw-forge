@@ -12,19 +12,22 @@
 
   /** Right column: count value + optional ingame score line. */
   function chartRowStatsHtml(cnt, ingameDisplay, tloc) {
-    const li = escapeHtml((tloc && tloc.dashboardChartLblAvgIngame) || 'Avg Ingame Score');
-    const countLine = `<div class="chart-stat-line chart-stat-line--count">
-      <span class="chart-stat-val">${cnt}</span>
-    </div>`;
+    const countLabel = (tloc && tloc.dashboardChartLblCount) || 'Count';
+    const scoreLabel = (tloc && tloc.dashboardChartLblAvgIngame) || 'Avg Ingame Score';
     if (ingameDisplay === undefined) {
-      return `<div class="chart-row-stats chart-row-stats--solo">${countLine}</div>`;
+      return `<div class="chart-row-stats chart-row-stats--solo">
+        <div class="chart-stat-line chart-stat-line--count">
+          <span class="chart-stat-val" title="${escapeHtml(countLabel)}">${cnt}</span>
+        </div>
+      </div>`;
     }
     const ingameInner = ingameDisplay === '-' ? '\u2014' : escapeHtml(String(ingameDisplay));
-    const ingameLine = `<div class="chart-stat-line chart-stat-line--ingame">
-      <span class="chart-stat-lbl">${li}</span>
-      <span class="chart-stat-val">${ingameInner}</span>
+    return `<div class="chart-row-stats">
+      <div class="chart-stat-line chart-stat-line--combined">
+        <span class="chart-stat-val" title="${escapeHtml(countLabel)}">${cnt}</span>
+        <span class="chart-stat-val" title="${escapeHtml(scoreLabel)}">(${ingameInner})</span>
+      </div>
     </div>`;
-    return `<div class="chart-row-stats">${countLine}${ingameLine}</div>`;
   }
 
   function subLineTotal(s) {

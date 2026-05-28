@@ -197,7 +197,7 @@
     const o = opts || {};
     const tloc = o.tloc || TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const dataAttr = o.dataAttr || 'data-dash-art-row';
-    const fillClass = o.fillClass || 'chart-bar--roles';
+    const defaultFillClass = o.fillClass || 'chart-bar--roles';
     const animateCharts = !!o.animateCharts;
     const chartFromZero = !!o.fromZero;
     const prevW =
@@ -209,7 +209,7 @@
     const scale = dashChartScaleMax(rows.map((r) => r.count));
     const targets = new Map();
     for (let i = 0; i < rows.length; i++) {
-      const { key, label, count } = rows[i];
+      const { key, label, count, fillClass } = rows[i];
       const pct = dashChartPct(count, scale).toFixed(1);
       const pctNum = parseFloat(pct);
       targets.set(String(key), pctNum);
@@ -232,10 +232,11 @@
         ingameByKey && Object.prototype.hasOwnProperty.call(ingameByKey, String(key))
           ? ingameByKey[String(key)]
           : undefined;
+      const rowFillClass = fillClass || defaultFillClass;
       el.innerHTML += `
         <div class="${rowClasses}" ${dataAttr}="${ek}"${clickAttr}>
           <div class="chart-label">${elbl}</div>
-          ${chartBarTrackHtml(pct, fillClass, animateCharts ? startPct : undefined)}
+          ${chartBarTrackHtml(pct, rowFillClass, animateCharts ? startPct : undefined)}
           ${chartRowStatsHtml(count, ingameVal, tloc)}
         </div>`;
     }
@@ -466,9 +467,18 @@
         count: agg.grade[g] || 0,
       })).filter((r) => r.count > 0),
     );
+    const gradeColorClassMap = {
+      'Legend': 'chart-bar--grade-legend',
+      'Hero': 'chart-bar--grade-hero',
+      'Rare': 'chart-bar--grade-rare',
+    };
+    const gradeRowsWithColor = gradeRows.map((row) => ({
+      ...row,
+      fillClass: gradeColorClassMap[row.key] || 'chart-bar--sets',
+    }));
     const gradeTargets = renderArtifactBarRows(
       document.getElementById('dash-art-grade-chart'),
-      gradeRows,
+      gradeRowsWithColor,
       {
         tloc,
         dataAttr: 'data-dash-art-grade',
@@ -513,9 +523,21 @@
       (a, b) => (agg.role[b] || 0) - (agg.role[a] || 0) || a.localeCompare(b),
     );
     const roleRows = roleKeys.map((k) => ({ key: k, label: k, count: agg.role[k] || 0 }));
+    const roleColorClassMap = {
+      'Classic DPS': 'chart-bar--role-classicdps',
+      'Tank': 'chart-bar--role-tank',
+      'Bomber': 'chart-bar--role-bomber',
+      'Fast CC': 'chart-bar--role-fastcc',
+      'Bruiser': 'chart-bar--role-bruiser',
+      'Slow DPS': 'chart-bar--role-slowdps',
+    };
+    const roleRowsWithColor = roleRows.map((row) => ({
+      ...row,
+      fillClass: roleColorClassMap[row.key] || 'chart-bar--roles',
+    }));
     const roleTargets = renderArtifactBarRows(
       document.getElementById('dash-art-role-chart'),
-      roleRows,
+      roleRowsWithColor,
       {
         tloc,
         dataAttr: 'data-dash-art-role',
@@ -540,7 +562,18 @@
             count: agg.attribute[attr] || 0,
           })).filter((r) => r.count > 0),
         );
-        attributeTargets = renderArtifactBarRows(attributeEl, attributeRows, {
+        const attributeColorClassMap = {
+          '1': 'chart-bar--attr-fire',
+          '2': 'chart-bar--attr-water',
+          '3': 'chart-bar--attr-wind',
+          '4': 'chart-bar--attr-light',
+          '5': 'chart-bar--attr-dark',
+        };
+        const attributeRowsWithColor = attributeRows.map((row) => ({
+          ...row,
+          fillClass: attributeColorClassMap[row.key] || 'chart-bar--sets',
+        }));
+        attributeTargets = renderArtifactBarRows(attributeEl, attributeRowsWithColor, {
           tloc,
           dataAttr: 'data-dash-art-attribute',
           fillClass: 'chart-bar--sets',
@@ -662,7 +695,8 @@
     const rBtn = btn.getBoundingClientRect();
     const left = Math.max(0, rBtn.left - rNav.left);
     ind.style.width = `${Math.max(0, rBtn.width)}px`;
-    ind.style.transform = `translateX(${left}px)`;
+    ind.style.left = `${left}px`;
+    ind.style.transform = 'none';
   }
 
   function applyArtifactDashTab(which) {

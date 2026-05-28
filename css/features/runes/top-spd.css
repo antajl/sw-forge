@@ -164,6 +164,7 @@
   inset: 0;
   width: 100%;
   height: 100%;
+  padding: 16px;
 }
 
 .top-spd-radar-host .top-spd-radar__svg {
@@ -244,7 +245,7 @@
 .top-spd-radar__slot {
   fill: var(--text-dim);
   font-family: var(--font-head);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.03em;
 }
@@ -256,7 +257,7 @@
 .top-spd-radar__val {
   fill: var(--text);
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
 }
 

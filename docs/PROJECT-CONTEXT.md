@@ -8,7 +8,7 @@ Summoners War rune analyzer + monster hub. Static site on **Cloudflare Pages** �
 
 ## Стек
 
-Vanilla JS + CSS · **Build:** `npm run build` (`build:css` + `build:ui`) · **Prod CSS:** `css/dist/app.css` · **Prod UI:** `js/ui.js`
+Vanilla JS + CSS · **Build:** `npm run build` (`build:css` + `build:ui`) · **Prod CSS:** `css/dist/app.css` · **Prod UI:** `js/ui.js` · **No external CDN dependencies** (GSAP local in `assets/`)
 
 ## URLs
 

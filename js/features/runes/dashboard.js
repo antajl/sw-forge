@@ -409,6 +409,17 @@
       const sortedRoles = Object.keys(roleCounts).sort((a, b) => (roleCounts[b] || 0) - (roleCounts[a] || 0));
       const roleScale = dashChartScaleMax(sortedRoles.map((rr) => roleCounts[rr] || 0));
       roleBarTargets = new Map();
+      const roleColorClassMap = {
+        'God Roll': 'chart-bar--role-godroll',
+        'Bruiser': 'chart-bar--role-bruiser',
+        'Fast CC': 'chart-bar--role-fastcc',
+        'Tank': 'chart-bar--role-tank',
+        'Bomber': 'chart-bar--role-bomber',
+        'Classic DPS': 'chart-bar--role-classicdps',
+        'Slow DPS': 'chart-bar--role-slowdps',
+        'Duo Roll': 'chart-bar--role-duoroll',
+        'Universal': 'chart-bar--role-universal'
+      };
       for (const role of sortedRoles) {
         const cnt = roleCounts[role] || 0;
         const avg = roleEff[role]
@@ -419,16 +430,34 @@
         roleBarTargets.set(role, pctNum);
         const startPct = !animateCharts ? pctNum : chartFromZero ? 0 : prevRoleW.has(role) ? prevRoleW.get(role) : 0;
         const er = escapeHtml(role);
+        const roleClass = roleColorClassMap[role] || 'chart-bar--roles';
         roleEl.innerHTML += `
         <div class="chart-row chart-row--clickable" role="button" tabindex="0" data-dash-role="${er}">
           <div class="chart-label">${er}</div>
-          ${chartBarTrackHtml(pct, 'chart-bar--roles', animateCharts ? startPct : undefined)}
+          ${chartBarTrackHtml(pct, roleClass, animateCharts ? startPct : undefined)}
           ${chartRowStatsHtml(cnt, avg, tloc)}
         </div>`;
       }
     }
 
     const setEl = document.getElementById('set-chart');
+    const setScrollEl = document.getElementById('set-chart-scroll');
+    if (setScrollEl) {
+      setScrollEl.style.maxHeight = '280px';
+      setScrollEl.style.overflowY = 'auto';
+      setScrollEl.style.overflowX = 'hidden';
+      setScrollEl.style.paddingRight = '12px';
+      // Hide scrollbar by default, show on hover
+      setScrollEl.classList.add('chart-scroll--sets-hidden');
+      setScrollEl.addEventListener('mouseenter', () => {
+        setScrollEl.classList.remove('chart-scroll--sets-hidden');
+        setScrollEl.classList.add('chart-scroll--sets-visible');
+      });
+      setScrollEl.addEventListener('mouseleave', () => {
+        setScrollEl.classList.remove('chart-scroll--sets-visible');
+        setScrollEl.classList.add('chart-scroll--sets-hidden');
+      });
+    }
     if (setEl) {
       oldRectsSets = animateCharts ? snapshotKeyedRowRects(setEl, 'data-dash-set') : null;
       const prevSetW =

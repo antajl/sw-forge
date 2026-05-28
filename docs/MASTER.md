@@ -27,7 +27,7 @@ SW Forge — статический сайт на **Cloudflare Pages**: анал
 - **Build:** `npm run build` = `build:css` + `build:ui` (артефакты коммитятся, как `ui.js`)
 - **CSS в prod:** `index.html` → `css/dist/app.css` (исходники в `css/features/`, dev-цепочка `css/style.css`)
 - **Шрифты:** системный UI-стек (`system-ui` / Segoe UI / Roboto) в `base.css`; `tabular-nums` на body. Файлы в `assets/fonts/` — legacy, не подключаются
-- **Анимации:** GSAP 3.12.7 с jsDelivr (SRI + `crossorigin`)
+- **Анимации:** GSAP 3.12.7 локально (`assets/gsap.min.js`)
 - **i18n:** EN + RU в `i18n.js`; FR lazy → `js/core/i18n-fr.js`
 - **Worker:** `worker/` (Wrangler) — Share Profile
 
@@ -316,7 +316,7 @@ Dev: `css/style.css` (только локально; prod использует `
 
 ### JavaScript (`index.html`, конец `<body>`)
 
-Все локальные скрипты с **`defer`**, кроме GSAP (блокирующий CDN + SRI).
+Все локальные скрипты с **`defer`**, включая GSAP.
 
 | # | Файл | Строки `index.html` |
 |---|------|---------------------|
@@ -337,7 +337,7 @@ Dev: `css/style.css` (только локально; prod использует `
 | 15 | `js/data/monster-db.js` | ~3882 |
 | 16–21 | `js/engine/*`, `advanced-formulas.js` | ~3883–3888 |
 | 22 | `js/self-test.js` | 3889 |
-| 23 | GSAP CDN | ~3890–3892 |
+| 23 | GSAP локально | ~3890 |
 | 24 | `js/swrm-motion.js` | 3893 |
 | 25 | `js/ui.js` | 3894 |
 

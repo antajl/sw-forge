@@ -5448,8 +5448,7 @@ html:not(.swrm-has-gsap) .dash-unified-tabs__indicator {
   display: none;
 }
 
-.runes-hub-tabs__indicator,
-.rules-subtabs__indicator {
+.runes-hub-tabs__indicator {
   position: absolute;
   left: 0;
   bottom: 4px;
@@ -5459,6 +5458,20 @@ html:not(.swrm-has-gsap) .dash-unified-tabs__indicator {
   pointer-events: none;
   z-index: 4;
   background: linear-gradient(90deg, var(--accent), var(--accent2));
+  box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 40%, transparent);
+  opacity: 0.95;
+}
+
+.rules-subtabs__indicator {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 3px;
+  height: 0;
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 4;
+  background: linear-gradient(180deg, var(--accent), var(--accent2));
   box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 40%, transparent);
   opacity: 0.95;
 }
@@ -5627,9 +5640,21 @@ html:not(.swrm-has-gsap) .rules-subtabs__indicator {
   letter-spacing: 0.02em;
 }
 
+#dash-art-tabs {
+  position: relative;
+  padding-bottom: 8px;
+  margin-bottom: 14px;
+  overflow: visible;
+}
+
 #dash-art-tabs .dash-art-tab.rules-subtab {
+  flex: 1 1 0;
+  min-width: 5.5rem;
+  align-items: center;
   justify-content: center;
   text-align: center;
+  padding: 11px 12px;
+  transition: background 0.14s ease, border-color 0.14s ease, color 0.14s ease;
 }
 
 #dash-art-tabs .dash-art-tab.rules-subtab .rules-subtab__label {
@@ -5747,17 +5772,34 @@ html:not(.swrm-has-gsap) .rules-subtabs__indicator {
 .role-chart, .set-chart, .slot-chart { display: flex; flex-direction: column; gap: 6px; }
 
 .chart-scroll--sets {
-  max-height: none;
-  overflow-y: visible;
+  max-height: 280px;
+  overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: auto;
+  padding-right: 12px;
+}
+.chart-scroll--sets::-webkit-scrollbar {
+  width: 8px;
+}
+.chart-scroll--sets::-webkit-scrollbar-track {
+  background: transparent;
+}
+.chart-scroll--sets::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 4px;
+}
+.chart-scroll--sets-hidden::-webkit-scrollbar {
+  display: none;
+}
+.chart-scroll--sets-hidden {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
-.chart-scroll--sets::-webkit-scrollbar {
-  display: none;
-  width: 0;
-  height: 0;
+.chart-scroll--sets-visible::-webkit-scrollbar-thumb {
+  background: var(--border2);
+}
+.chart-scroll--sets-visible::-webkit-scrollbar-thumb:hover {
+  background: var(--border);
 }
 .chart-row { display: flex; align-items: center; gap: 9px; }
 .chart-row--slot {
@@ -5829,11 +5871,66 @@ html.swrm-has-gsap .slot-main-card-bar {
 .chart-bar-fill.chart-bar--roles {
   background: var(--accent);
 }
+.chart-bar-fill.chart-bar--role-godroll {
+  background: var(--gold);
+}
+.chart-bar-fill.chart-bar--role-bruiser {
+  background: var(--sell);
+}
+.chart-bar-fill.chart-bar--role-fastcc {
+  background: var(--teal);
+}
+.chart-bar-fill.chart-bar--role-tank {
+  background: var(--purple);
+}
+.chart-bar-fill.chart-bar--role-bomber {
+  background: var(--orange);
+}
+.chart-bar-fill.chart-bar--role-classicdps {
+  background: var(--accent);
+}
+.chart-bar-fill.chart-bar--role-slowdps {
+  background: var(--accent2);
+}
+.chart-bar-fill.chart-bar--role-duoroll {
+  background: var(--gold);
+}
+.chart-bar-fill.chart-bar--role-universal {
+  background: var(--green);
+}
 .chart-bar-fill.chart-bar--sets {
   background: var(--finish);
 }
 .chart-bar-fill.chart-bar--slots {
   background: var(--grind);
+}
+
+/* Artifact grade colors */
+.chart-bar-fill.chart-bar--grade-legend {
+  background: var(--gold);
+}
+.chart-bar-fill.chart-bar--grade-hero {
+  background: var(--purple);
+}
+.chart-bar-fill.chart-bar--grade-rare {
+  background: var(--accent);
+}
+
+/* Artifact attribute colors (from monsters elements) */
+.chart-bar-fill.chart-bar--attr-fire {
+  background: var(--monsters-el-fire);
+}
+.chart-bar-fill.chart-bar--attr-water {
+  background: var(--monsters-el-water);
+}
+.chart-bar-fill.chart-bar--attr-wind {
+  background: var(--monsters-el-wind);
+}
+.chart-bar-fill.chart-bar--attr-light {
+  background: var(--monsters-el-light);
+}
+.chart-bar-fill.chart-bar--attr-dark {
+  background: var(--monsters-el-dark);
 }
 
 .chart-row-stats {
@@ -5843,8 +5940,8 @@ html.swrm-has-gsap .slot-main-card-bar {
   align-items: flex-end;
   justify-content: center;
   gap: 4px;
-  min-width: 7.25rem;
-  width: 7.25rem;
+  min-width: 4rem;
+  width: 4rem;
   padding-left: 8px;
   margin-left: 0;
   border-left: none;
@@ -5863,6 +5960,10 @@ html.swrm-has-gsap .slot-main-card-bar {
 }
 .chart-stat-line--count {
   gap: 0;
+  justify-content: flex-end;
+}
+.chart-stat-line--combined {
+  gap: 4px;
   justify-content: flex-end;
 }
 .chart-stat-lbl {
@@ -6344,6 +6445,7 @@ html[lang='ru'] .slot-share-slot-lbl {
   inset: 0;
   width: 100%;
   height: 100%;
+  padding: 16px;
 }
 
 .top-spd-radar-host .top-spd-radar__svg {
@@ -6424,7 +6526,7 @@ html[lang='ru'] .slot-share-slot-lbl {
 .top-spd-radar__slot {
   fill: var(--text-dim);
   font-family: var(--font-head);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.03em;
 }
@@ -6436,7 +6538,7 @@ html[lang='ru'] .slot-share-slot-lbl {
 .top-spd-radar__val {
   fill: var(--text);
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
 }
 
@@ -10701,11 +10803,11 @@ thead tr {
 /* === css/features/monsters/elements.css === */
 /* Element accents — border / bar only, no full fill */
 :root {
-  --monsters-el-fire: #b85c5c;
-  --monsters-el-water: #5a8fae;
-  --monsters-el-wind: #6a9e62;
-  --monsters-el-light: #c4a84a;
-  --monsters-el-dark: #8a72a8;
+  --monsters-el-fire: #C4525E;
+  --monsters-el-water: #4A89B8;
+  --monsters-el-wind: #CFA738;
+  --monsters-el-light: #D1C494;
+  --monsters-el-dark: #8A5E9C;
 }
 
 .monsters-card--fire {

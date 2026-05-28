@@ -7384,11 +7384,20 @@
     });
   }
 
-  function updateTableKindTabIndicator() {
+  function updateTableKindTabIndicator(options) {
     const nav = document.getElementById('table-kind-tabs');
     const indicator = nav && nav.querySelector('.table-kind-tabs__indicator');
     const active = nav && nav.querySelector('.table-kind-tab.is-active');
     if (!nav || !indicator || !active) return;
+    const motion = window.SWRM_MOTION;
+    if (motion && typeof motion.positionTableKindTabIndicator === 'function') {
+      motion.positionTableKindTabIndicator({
+        nav,
+        activeKey: active.dataset.tableKind,
+        instant: !!(options && options.instant),
+      });
+      return;
+    }
     const navRect = nav.getBoundingClientRect();
     const tabRect = active.getBoundingClientRect();
     indicator.style.left = `${tabRect.left - navRect.left}px`;
@@ -7431,7 +7440,7 @@
       const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
       search.placeholder = t.tableSearchRunes || 'Search by set, stat, role…';
     }
-    updateTableKindTabIndicator();
+    updateTableKindTabIndicator({ instant: !!(options && options.instantIndicator) });
     if (id === 'runes') {
       if (options && options.skipRuneRender) return;
       if (typeof flushRuneTableRenderIfNeeded === 'function') {
@@ -7457,7 +7466,7 @@
         showTableKind(kind);
       });
     });
-    showTableKind(readTableKind(), { skipRuneRender: true });
+    showTableKind(readTableKind(), { skipRuneRender: true, instantIndicator: true });
   }
 
   function onGearDataHydrated() {

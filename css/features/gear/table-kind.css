@@ -16,7 +16,6 @@
   background: linear-gradient(90deg, var(--accent), var(--accent2));
   box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 40%, transparent);
   opacity: 0.95;
-  transition: left 0.2s ease, width 0.2s ease;
 }
 
 html:not(.swrm-has-gsap) .table-kind-tabs__indicator {

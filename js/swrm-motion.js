@@ -48,6 +48,10 @@
   function enabled() {
     return !!gsap && !reducedMotion;
   }
+  const RUNES_TAB_INDICATOR_DURATION = 0.65;
+  const RUNES_TAB_PANE_FADE_DURATION = 0.28;
+  const RUNES_TAB_INDICATOR_EASE = 'power2.inOut';
+  const RUNES_TAB_PANE_EASE = 'power1.inOut';
 
   let stageTimeline = null;
 
@@ -158,10 +162,10 @@
 
     if (current && current !== next) {
       current.classList.remove('is-active');
-      dashTimeline.to(current, { opacity: 0, duration: 0.22, ease: 'power1.inOut' }, 0);
+      dashTimeline.to(current, { opacity: 0, duration: RUNES_TAB_PANE_FADE_DURATION, ease: RUNES_TAB_PANE_EASE }, 0);
     }
     next.classList.add('is-active');
-    dashTimeline.to(next, { opacity: 1, duration: 0.22, ease: 'power1.inOut' }, 0);
+    dashTimeline.to(next, { opacity: 1, duration: RUNES_TAB_PANE_FADE_DURATION, ease: RUNES_TAB_PANE_EASE }, 0);
     animateDashboardPaneBars(next);
     return true;
   }
@@ -208,8 +212,8 @@
     gsap.to(ind, {
       left: x,
       width: w,
-      duration: 0.4,
-      ease: 'power3.out',
+      duration: RUNES_TAB_INDICATOR_DURATION,
+      ease: RUNES_TAB_INDICATOR_EASE,
       overwrite: 'auto',
       onStart: () => {
         ind.style.transform = 'none';
@@ -243,9 +247,45 @@
     gsap.to(ind, {
       left: x,
       width: w,
-      duration: 0.4,
-      ease: 'power3.out',
+      duration: RUNES_TAB_INDICATOR_DURATION,
+      ease: RUNES_TAB_INDICATOR_EASE,
       overwrite: 'auto',
+    });
+    return true;
+  }
+
+  function positionTableKindTabIndicator(opts) {
+    const { nav, activeKey, instant } = opts || {};
+    const ind = nav && nav.querySelector('.table-kind-tabs__indicator');
+    const key = String(activeKey || '').trim();
+    const btn =
+      (key && nav && nav.querySelector(`[data-table-kind="${key}"]`)) ||
+      (nav && nav.querySelector('.table-kind-tab.is-active')) ||
+      null;
+    if (!nav || !ind || !btn) return false;
+    const navRect = nav.getBoundingClientRect();
+    const btnRect = btn.getBoundingClientRect();
+    const x = Math.max(0, btnRect.left - navRect.left);
+    const w = Math.max(0, btnRect.width);
+    killTweensOf(ind);
+    const snap = () => {
+      ind.style.transform = 'none';
+      ind.style.left = `${x}px`;
+      ind.style.width = `${w}px`;
+    };
+    if (instant || !enabled()) {
+      snap();
+      return false;
+    }
+    gsap.to(ind, {
+      left: x,
+      width: w,
+      duration: RUNES_TAB_INDICATOR_DURATION,
+      ease: RUNES_TAB_INDICATOR_EASE,
+      overwrite: 'auto',
+      onStart: () => {
+        ind.style.transform = 'none';
+      },
     });
     return true;
   }
@@ -304,8 +344,8 @@
     gsap.to(ind, {
       top: y,
       height: h,
-      duration: 0.4,
-      ease: 'power3.out',
+      duration: RUNES_TAB_INDICATOR_DURATION,
+      ease: RUNES_TAB_INDICATOR_EASE,
       overwrite: 'auto',
       onStart: () => {
         ind.style.transform = 'none';
@@ -364,9 +404,9 @@
       },
     });
     if (prev) {
-      tl.to(prev, { opacity: 0, duration: 0.2, ease: 'power1.inOut' }, 0);
+      tl.to(prev, { opacity: 0, duration: RUNES_TAB_PANE_FADE_DURATION, ease: RUNES_TAB_PANE_EASE }, 0);
     }
-    tl.to(active, { opacity: 1, duration: 0.2, ease: 'power1.inOut' }, 0);
+    tl.to(active, { opacity: 1, duration: RUNES_TAB_PANE_FADE_DURATION, ease: RUNES_TAB_PANE_EASE }, 0);
     subpanelTimelines.set(active, tl);
   }
 
@@ -606,6 +646,7 @@
     animateDashUnifiedTab,
     positionDashUnifiedTabIndicator,
     positionRunesHubTabIndicator,
+    positionTableKindTabIndicator,
     positionRulesSubtabIndicator,
     swapSubpanels,
     toastIn,

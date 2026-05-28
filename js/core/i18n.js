@@ -30,7 +30,7 @@ const TRANSLATIONS = {
     footerDisclaimer:
       'Summoners War™ is a trademark of Com2uS Corp. This site is not affiliated with or endorsed by Com2uS Corp.',
     footerVersionLabel: 'Build',
-    dashboard: 'Runes',
+    dashboard: 'Gear',
     runesHubDashboard: 'Dashboard',
     runesHubRuneTable: 'Table',
     runesHubRuneRules: 'Rules',
@@ -937,7 +937,7 @@ const TRANSLATIONS = {
     footerDisclaimer:
       'Summoners War™ — торговая марка Com2uS Corp. Этот сайт не аффилирован с Com2uS Corp. и не одобрен ею.',
     footerVersionLabel: 'Сборка',
-    dashboard: 'Руны',
+    dashboard: 'Gear',
     runesHubDashboard: 'Панель',
     runesHubRuneTable: 'Таблица',
     runesHubRuneRules: 'Правила',

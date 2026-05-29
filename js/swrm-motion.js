@@ -673,6 +673,71 @@
     global.document.documentElement.classList.add('swrm-has-gsap');
   }
 
+  let mainTabTimeline = null;
+  let mainTabGen = 0;
+
+  /**
+   * Slide transition between main tabs (Gear/Monsters/Guide/Updates/Settings) using absolute positioning.
+   * @param {{ current: HTMLElement|null, next: HTMLElement, direction: 'next'|'prev', onComplete?: () => void }} opts
+   * @returns {boolean} true when GSAP animation started
+   */
+  function animateMainTabTransition(opts) {
+    const { current, next, direction, onComplete } = opts || {};
+    if (!enabled() || !next) return false;
+
+    const gen = ++mainTabGen;
+    if (mainTabTimeline) {
+      mainTabTimeline.kill();
+      mainTabTimeline = null;
+    }
+
+    const dir = direction === 'next' ? 1 : -1;
+    const startX = dir * 100;
+    const endX = -dir * 100;
+
+    // Add animating class for absolute positioning
+    next.classList.add('animating');
+    next.classList.remove('hidden');
+    next.setAttribute('aria-hidden', 'false');
+    gsap.set(next, { x: `${startX}%`, opacity: 0 });
+
+    if (current) {
+      current.classList.add('animating');
+      gsap.set(current, { x: 0, opacity: 1 });
+    }
+
+    mainTabTimeline = gsap.timeline({
+      onComplete: () => {
+        if (gen !== mainTabGen) return;
+        mainTabTimeline = null;
+        if (current) {
+          gsap.set(current, { clearProps: 'x,opacity' });
+          current.classList.remove('animating');
+          current.classList.add('hidden');
+          current.setAttribute('aria-hidden', 'true');
+        }
+        gsap.set(next, { clearProps: 'x,opacity' });
+        next.classList.remove('animating');
+        onComplete && onComplete();
+      },
+    });
+
+    if (current && current !== next) {
+      mainTabTimeline.to(current, { x: `${endX}%`, opacity: 0, duration: 0.4, ease: 'power2.inOut' }, 0);
+    }
+    mainTabTimeline.to(next, { x: 0, opacity: 1, duration: 0.4, ease: 'power2.inOut' }, 0);
+
+    return true;
+  }
+
+  function cancelMainTabTransition() {
+    mainTabGen++;
+    if (mainTabTimeline) {
+      mainTabTimeline.kill();
+      mainTabTimeline = null;
+    }
+  }
+
   global.SWRM_MOTION = {
     enabled,
     reduced: () => reducedMotion,
@@ -697,5 +762,7 @@
     animateTopSpdRadar,
     cancelTopSpdRadar,
     killTweensOf,
+    animateMainTabTransition,
+    cancelMainTabTransition,
   };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -592,6 +592,8 @@
       if (typeof unpinMonsterDetail === 'function') unpinMonsterDetail();
       if (typeof clearAllMonstersSelection === 'function') clearAllMonstersSelection();
     }
+
+    const prevMain = showMainTabLastMain;
     showMainTabLastMain = main;
     const hashParts = splitMainHash();
     const runesSub =
@@ -600,26 +602,62 @@
       hashParts.runesSubtab ||
       readStoredRunesSubtab();
 
+    // Tab order for direction detection
+    const tabOrder = ['runes', 'monsters', 'guide', 'changelog', 'app-settings'];
+    const prevIndex = prevMain ? tabOrder.indexOf(prevMain) : -1;
+    const nextIndex = tabOrder.indexOf(main);
+    const direction = prevIndex >= 0 && nextIndex >= 0 && nextIndex > prevIndex ? 'next' : 'prev';
+
+    const motionApi = window.SWRM_MOTION;
+    const useGsap = motionApi && motionApi.enabled();
+
+    const currentTabContent = prevMain ? document.getElementById(`tab-${prevMain}`) : null;
+    const nextTabContent = document.getElementById(`tab-${main}`);
+
     document.querySelectorAll('.tab').forEach((t) => {
       t.classList.toggle('active', t.dataset.tab === main);
     });
-    document.querySelectorAll('.tab-content').forEach((el) => {
-      el.classList.toggle('hidden', el.id !== `tab-${main}`);
-    });
+
+    if (useGsap && currentTabContent && nextTabContent && currentTabContent !== nextTabContent) {
+      const started = motionApi.animateMainTabTransition({
+        current: currentTabContent,
+        next: nextTabContent,
+        direction,
+        onComplete: () => {
+          document.querySelectorAll('.tab-content').forEach((el) => {
+            el.classList.toggle('hidden', el.id !== `tab-${main}`);
+          });
+          // Reset scroll position after animation completes
+          if (main === 'changelog') {
+            const chRoot = document.getElementById('tab-changelog');
+            if (chRoot) chRoot.scrollTop = 0;
+          }
+          if (main === 'guide') {
+            const guideRoot = document.getElementById('tab-guide');
+            if (guideRoot) guideRoot.scrollTop = 0;
+          }
+          if (main === 'monsters') {
+            const monstersRoot = document.getElementById('tab-monsters');
+            if (monstersRoot) monstersRoot.scrollTop = 0;
+          }
+        },
+      });
+      if (!started) {
+        document.querySelectorAll('.tab-content').forEach((el) => {
+          el.classList.toggle('hidden', el.id !== `tab-${main}`);
+        });
+      }
+    } else {
+      document.querySelectorAll('.tab-content').forEach((el) => {
+        el.classList.toggle('hidden', el.id !== `tab-${main}`);
+      });
+    }
 
     if (main === 'runes') {
       initRunesHubTabs();
       showRunesSubtab(runesSub, opts);
     }
 
-    if (main === 'changelog') {
-      const chRoot = document.getElementById('tab-changelog');
-      if (chRoot) chRoot.scrollTop = 0;
-    }
-    if (main === 'guide') {
-      const guideRoot = document.getElementById('tab-guide');
-      if (guideRoot) guideRoot.scrollTop = 0;
-    }
     if (main === 'app-settings') {
       renderDbSlots();
     }
@@ -633,8 +671,6 @@
         hashParts.monstersSubtab ||
         readStoredMonstersSubtab();
       showMonstersSubtab(monstersSub, opts);
-      const monstersRoot = document.getElementById('tab-monsters');
-      if (monstersRoot) monstersRoot.scrollTop = 0;
     }
 
     if (writeHash) {

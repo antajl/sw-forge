@@ -10,6 +10,33 @@
   backdrop-filter: blur(12px);
 }
 
+/* Main tab content animation support */
+main {
+  position: relative;
+}
+
+.tab-content {
+  position: relative;
+  width: 100%;
+  min-height: 0;
+}
+
+html.swrm-has-gsap .tab-content {
+  will-change: transform, opacity;
+}
+
+/* Absolute positioning for animation layer */
+.tab-content.animating {
+  position: absolute !important;
+  top: var(--app-gutter);
+  left: var(--app-gutter);
+  right: var(--app-gutter);
+  box-sizing: border-box;
+  width: auto !important;
+  height: 100%;
+  z-index: 50;
+}
+
 .site-header {
   position: relative;
   z-index: 1;

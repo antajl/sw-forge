@@ -1,5 +1,6 @@
 // js/features/monsters/monsters-hub.js — Roster / Teams sub-tabs
   let monstersHubTabsBound = false;
+  let monstersHubFirstShow = true;
 
   function normalizeMonstersSubtabId(id) {
     return MONSTERS_SUBTAB_IDS.includes(id) ? id : 'roster';
@@ -26,6 +27,20 @@
       else pane.setAttribute('hidden', '');
     });
 
+    const motionApi = window.SWRM_MOTION;
+    if (motionApi && typeof motionApi.positionMonstersHubTabIndicator === 'function') {
+      const nav = document.getElementById('monsters-hub-tabs');
+      if (nav) {
+        const snap = monstersHubFirstShow;
+        monstersHubFirstShow = false;
+        if (snap) {
+          rafTwice(() => motionApi.positionMonstersHubTabIndicator({ nav, activeKey: id, instant: true }));
+        } else {
+          motionApi.positionMonstersHubTabIndicator({ nav, activeKey: id, instant: false });
+        }
+      }
+    }
+
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const lead = document.getElementById('lbl-monsters-lead');
     if (lead) {
@@ -41,6 +56,8 @@
 
     if (id === 'roster') {
       void renderMonstersPanel();
+    } else if (id === 'dashboard') {
+      if (typeof renderMonstersDashboard === 'function') void renderMonstersDashboard();
     } else if (id === 'planner' && typeof renderSkillPlannerPanel === 'function') {
       void renderSkillPlannerPanel();
     } else if (id === 'teams' && typeof renderTeamsPanel === 'function') {
@@ -59,6 +76,30 @@
         showMainTab('monsters', { monstersSubtab: sub, writeHash: true });
       });
     });
+
+    const motionApi = window.SWRM_MOTION;
+    if (motionApi && typeof motionApi.positionMonstersHubTabIndicator === 'function') {
+      let resizeTimer = null;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+          const nav2 = document.getElementById('monsters-hub-tabs');
+          const activeTab = nav2 && nav2.querySelector('.monsters-hub-tab.is-active');
+          if (activeTab) {
+            motionApi.positionMonstersHubTabIndicator({ nav: nav2, activeKey: activeTab.dataset.monstersHub, instant: true });
+          }
+        }, 120);
+      });
+      window.addEventListener('pageshow', () => {
+        rafTwice(() => {
+          const nav2 = document.getElementById('monsters-hub-tabs');
+          const activeTab = nav2 && nav2.querySelector('.monsters-hub-tab.is-active');
+          if (activeTab) {
+            motionApi.positionMonstersHubTabIndicator({ nav: nav2, activeKey: activeTab.dataset.monstersHub, instant: true });
+          }
+        });
+      });
+    }
   }
 
   function monstersSubtabFromHashSegment(segment) {
@@ -66,5 +107,6 @@
     if (s === 'team' || s === 'teams') return 'teams';
     if (s === 'roster' || s === 'list') return 'roster';
     if (s === 'planner' || s === 'skill' || s === 'skills' || s === 'skill-plan') return 'planner';
+    if (s === 'dashboard') return 'dashboard';
     return MONSTERS_SUBTAB_IDS.includes(s) ? s : null;
   }

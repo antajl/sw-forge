@@ -1,17 +1,52 @@
-/* Monsters hub — Roster / Teams inner tabs */
+/* Monsters hub — Dashboard / Roster / Teams / Planner inner tabs */
 #tab-monsters > .monsters-hub-tabs.rules-subtabs {
-  margin: 0 0 1.25rem;
+  margin: 0 0 16px;
   padding: 4px;
   gap: 6px;
+  position: sticky;
+  top: 0;
+  z-index: 12;
+  background: color-mix(in srgb, var(--bg-main) 92%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+body.light-theme #tab-monsters > .monsters-hub-tabs.rules-subtabs {
+  background: color-mix(in srgb, var(--bg-main) 94%, transparent);
+}
+
+.monsters-hub-tabs__indicator {
+  position: absolute;
+  left: 0;
+  bottom: 4px;
+  height: 3px;
+  width: 0;
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 4;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 40%, transparent);
+  opacity: 0.95;
+}
+
+html:not(.swrm-has-gsap) .monsters-hub-tabs__indicator {
+  display: none;
 }
 
 .monsters-hub-tabs .monsters-hub-tab {
   flex: 1 1 0;
-  min-width: 6rem;
+  min-width: 5.5rem;
+  min-height: 3.35rem;
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 11px 14px;
+  padding: 11px 12px;
+}
+
+.monsters-hub-tabs .rules-subtab__label {
+  width: 100%;
+  text-align: center;
+  font-size: var(--runes-fs-tab-main, 0.9rem);
+  letter-spacing: 0.04em;
 }
 
 .monsters-hub-pane:not(.is-active) {
@@ -24,11 +59,24 @@
 }
 
 #tab-monsters-teams[hidden],
-#tab-monsters-planner[hidden] {
+#tab-monsters-planner[hidden],
+#tab-monsters-dashboard[hidden] {
   display: none !important;
 }
 
 #tab-monsters-teams.monsters-hub-pane.is-active[hidden],
-#tab-monsters-planner.monsters-hub-pane.is-active[hidden] {
+#tab-monsters-planner.monsters-hub-pane.is-active[hidden],
+#tab-monsters-dashboard.monsters-hub-pane.is-active[hidden] {
   display: block !important;
+}
+
+@media (max-width: 520px) {
+  .monsters-hub-tabs .monsters-hub-tab {
+    flex: 1 1 calc(25% - 6px);
+    min-height: 3.15rem;
+    padding: 10px 8px;
+  }
+  .monsters-hub-tabs .rules-subtab__label {
+    font-size: 0.84rem;
+  }
 }

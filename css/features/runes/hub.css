@@ -1,6 +1,6 @@
 /* Runes hub — inner tabs (Dashboard / Table / Rules), matches .rules-subtabs look */
 #tab-runes > .runes-hub-tabs.rules-subtabs {
-  margin: 0 0 1.25rem;
+  margin: 0 0 16px;
   padding: 4px;
   gap: 6px;
   position: sticky;

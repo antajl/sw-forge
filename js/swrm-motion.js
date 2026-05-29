@@ -254,6 +254,42 @@
     return true;
   }
 
+  /**
+   * Sliding underline under Monsters Hub tabs (Dashboard / Roster / Teams / Planner).
+   * @param {{ nav: HTMLElement|null, activeKey: string, instant?: boolean }} opts
+   * @returns {boolean} true when a GSAP tween ran
+   */
+  function positionMonstersHubTabIndicator(opts) {
+    const { nav, activeKey, instant } = opts || {};
+    const ind = nav && nav.querySelector('.monsters-hub-tabs__indicator');
+    const key = ['dashboard', 'roster', 'teams', 'planner'].includes(activeKey) ? activeKey : 'roster';
+    const btn = document.getElementById(`monsters-hub-tab-${key}`);
+    if (!nav || !ind || !btn) return false;
+    const navRect = nav.getBoundingClientRect();
+    const btnRect = btn.getBoundingClientRect();
+    const x = Math.max(0, btnRect.left - navRect.left);
+    const w = Math.max(0, btnRect.width);
+    killTweensOf(ind);
+    const snap = () => {
+      ind.style.transform = 'none';
+      ind.style.left = `${x}px`;
+      ind.style.width = `${w}px`;
+    };
+    if (instant || !enabled()) {
+      snap();
+      return false;
+    }
+    gsap.to(ind, {
+      left: x,
+      width: w,
+      duration: RUNES_TAB_INDICATOR_DURATION,
+      ease: RUNES_TAB_INDICATOR_EASE,
+      overwrite: 'auto',
+      onStart: () => { ind.style.transform = 'none'; },
+    });
+    return true;
+  }
+
   function positionTableKindTabIndicator(opts) {
     const { nav, activeKey, instant } = opts || {};
     const ind = nav && nav.querySelector('.table-kind-tabs__indicator');
@@ -646,6 +682,7 @@
     animateDashUnifiedTab,
     positionDashUnifiedTabIndicator,
     positionRunesHubTabIndicator,
+    positionMonstersHubTabIndicator,
     positionTableKindTabIndicator,
     positionRulesSubtabIndicator,
     swapSubpanels,

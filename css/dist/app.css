@@ -1853,10 +1853,57 @@ html[lang='fr'] #tab-guide .guide-lang--fr {
   display: none;
 }
 
+#tab-guide .rules-tab-shell,
+#tab-changelog .rules-tab-shell {
+  max-width: var(--app-content-max);
+  margin: 0 auto;
+  padding: 0 0 36px;
+  width: 100%;
+}
+
 #tab-guide .rules-subtabs,
 #tab-changelog .rules-subtabs {
-  margin-top: 0;
-  margin-bottom: 1rem;
+  margin: 0 0 16px;
+  padding: 4px;
+  gap: 6px;
+  position: sticky;
+  top: 0;
+  z-index: 12;
+  background: color-mix(in srgb, var(--bg-main) 92%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+body.light-theme #tab-guide .rules-subtabs,
+body.light-theme #tab-changelog .rules-subtabs {
+  background: color-mix(in srgb, var(--bg-main) 94%, transparent);
+}
+
+#tab-guide .rules-subtabs .rules-subtab,
+#tab-changelog .rules-subtabs .rules-subtab {
+  flex: 1 1 0;
+  min-width: 5.5rem;
+  min-height: 3.35rem;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 11px 12px;
+}
+
+#tab-guide .rules-subtabs .rules-subtab__label,
+#tab-changelog .rules-subtabs .rules-subtab__label {
+  width: 100%;
+  text-align: center;
+  font-size: var(--runes-fs-tab-main, 0.9rem);
+  letter-spacing: 0.04em;
+}
+
+#tab-guide .rules-subtabs .rules-subtab__hint {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  line-height: 1.2;
 }
 
 #tab-guide .guide-lang {
@@ -2098,10 +2145,7 @@ body.share-readonly #demo-dataset-banner:not(.share-view-banner) {
 
 /* Archive tab — match app content width, spaced cards */
 #tab-guide {
-  max-width: var(--app-content-max);
-  margin: 0 auto;
-  padding: 8px 16px 36px;
-  box-sizing: border-box;
+  max-width: 100%;
 }
 
 #tab-guide .guide-lang {
@@ -2125,10 +2169,7 @@ body.share-readonly #demo-dataset-banner:not(.share-view-banner) {
 }
 
 #tab-changelog {
-  max-width: var(--app-content-max);
-  margin: 0 auto;
-  padding: 8px 16px 36px;
-  box-sizing: border-box;
+  max-width: 100%;
 }
 
 #tab-changelog .changelog-release {
@@ -3078,7 +3119,7 @@ body.share-readonly #demo-dataset-banner:not(.share-view-banner) {
 /* === css/features/runes/hub.css === */
 /* Runes hub — inner tabs (Dashboard / Table / Rules), matches .rules-subtabs look */
 #tab-runes > .runes-hub-tabs.rules-subtabs {
-  margin: 0 0 1.25rem;
+  margin: 0 0 16px;
   padding: 4px;
   gap: 6px;
   position: sticky;
@@ -9933,20 +9974,55 @@ thead tr {
 
 
 /* === css/features/monsters/hub.css === */
-/* Monsters hub — Roster / Teams inner tabs */
+/* Monsters hub — Dashboard / Roster / Teams / Planner inner tabs */
 #tab-monsters > .monsters-hub-tabs.rules-subtabs {
-  margin: 0 0 1.25rem;
+  margin: 0 0 16px;
   padding: 4px;
   gap: 6px;
+  position: sticky;
+  top: 0;
+  z-index: 12;
+  background: color-mix(in srgb, var(--bg-main) 92%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+body.light-theme #tab-monsters > .monsters-hub-tabs.rules-subtabs {
+  background: color-mix(in srgb, var(--bg-main) 94%, transparent);
+}
+
+.monsters-hub-tabs__indicator {
+  position: absolute;
+  left: 0;
+  bottom: 4px;
+  height: 3px;
+  width: 0;
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 4;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 40%, transparent);
+  opacity: 0.95;
+}
+
+html:not(.swrm-has-gsap) .monsters-hub-tabs__indicator {
+  display: none;
 }
 
 .monsters-hub-tabs .monsters-hub-tab {
   flex: 1 1 0;
-  min-width: 6rem;
+  min-width: 5.5rem;
+  min-height: 3.35rem;
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 11px 14px;
+  padding: 11px 12px;
+}
+
+.monsters-hub-tabs .rules-subtab__label {
+  width: 100%;
+  text-align: center;
+  font-size: var(--runes-fs-tab-main, 0.9rem);
+  letter-spacing: 0.04em;
 }
 
 .monsters-hub-pane:not(.is-active) {
@@ -9959,13 +10035,26 @@ thead tr {
 }
 
 #tab-monsters-teams[hidden],
-#tab-monsters-planner[hidden] {
+#tab-monsters-planner[hidden],
+#tab-monsters-dashboard[hidden] {
   display: none !important;
 }
 
 #tab-monsters-teams.monsters-hub-pane.is-active[hidden],
-#tab-monsters-planner.monsters-hub-pane.is-active[hidden] {
+#tab-monsters-planner.monsters-hub-pane.is-active[hidden],
+#tab-monsters-dashboard.monsters-hub-pane.is-active[hidden] {
   display: block !important;
+}
+
+@media (max-width: 520px) {
+  .monsters-hub-tabs .monsters-hub-tab {
+    flex: 1 1 calc(25% - 6px);
+    min-height: 3.15rem;
+    padding: 10px 8px;
+  }
+  .monsters-hub-tabs .rules-subtab__label {
+    font-size: 0.84rem;
+  }
 }
 
 
@@ -11122,7 +11211,7 @@ thead tr {
 .monsters-shell {
   max-width: var(--app-content-max);
   margin: 0 auto;
-  padding: 0 4px 24px;
+  padding: 0 0 24px;
 }
 
 .monsters-layout {

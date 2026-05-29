@@ -254,7 +254,7 @@
   const MAIN_TAB_IDS = ['runes', 'monsters', 'guide', 'changelog', 'app-settings'];
   const RUNES_SUBTAB_IDS = ['dashboard', 'runetable', 'settings'];
   const RUNES_SUBTAB_STORAGE_KEY = 'swrm_runes_subtab_v1';
-  const MONSTERS_SUBTAB_IDS = ['roster', 'teams', 'planner'];
+  const MONSTERS_SUBTAB_IDS = ['dashboard', 'roster', 'teams', 'planner'];
   const MONSTERS_SUBTAB_STORAGE_KEY = 'swrm_monsters_subtab_v1';
   let runesHubTabsBound = false;
 
@@ -360,18 +360,11 @@
     });
 
     const motionApi = window.SWRM_MOTION;
-    if (motionApi && typeof motionApi.positionRunesHubTabIndicator === 'function') {
-      const nav = document.getElementById('runes-hub-tabs');
-      if (nav) {
-        motionApi.positionRunesHubTabIndicator({ nav, activeKey: id, instant: false });
-      }
-    }
-
     if (motionApi) {
       rafTwice(() => {
         const nav = document.getElementById('runes-hub-tabs');
         if (nav && typeof motionApi.positionRunesHubTabIndicator === 'function') {
-          motionApi.positionRunesHubTabIndicator({ nav, activeKey: id, instant: true });
+          motionApi.positionRunesHubTabIndicator({ nav, activeKey: id, instant: false });
         }
         if (id === 'dashboard') {
           const uniNav = document.getElementById('dash-unified-tabs');
@@ -392,7 +385,7 @@
             motionApi.positionDashUnifiedTabIndicator({ nav: kindNav, activeKey: kind, instant: true });
           }
           const artNav = document.getElementById('dash-art-tabs');
-          if (artNav && typeof positionArtifactDashTabIndicator === 'function') {
+          if (artNav && !artNav.closest('[hidden]') && typeof positionArtifactDashTabIndicator === 'function') {
             const key =
               (typeof readArtifactDashTab === 'function' && readArtifactDashTab()) ||
               (artNav.querySelector('[data-dash-art-tab].is-active')?.getAttribute('data-dash-art-tab')) ||

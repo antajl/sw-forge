@@ -14,10 +14,57 @@ html[lang='fr'] #tab-guide .guide-lang--fr {
   display: none;
 }
 
+#tab-guide .rules-tab-shell,
+#tab-changelog .rules-tab-shell {
+  max-width: var(--app-content-max);
+  margin: 0 auto;
+  padding: 0 0 36px;
+  width: 100%;
+}
+
 #tab-guide .rules-subtabs,
 #tab-changelog .rules-subtabs {
-  margin-top: 0;
-  margin-bottom: 1rem;
+  margin: 0 0 16px;
+  padding: 4px;
+  gap: 6px;
+  position: sticky;
+  top: 0;
+  z-index: 12;
+  background: color-mix(in srgb, var(--bg-main) 92%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+body.light-theme #tab-guide .rules-subtabs,
+body.light-theme #tab-changelog .rules-subtabs {
+  background: color-mix(in srgb, var(--bg-main) 94%, transparent);
+}
+
+#tab-guide .rules-subtabs .rules-subtab,
+#tab-changelog .rules-subtabs .rules-subtab {
+  flex: 1 1 0;
+  min-width: 5.5rem;
+  min-height: 3.35rem;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 11px 12px;
+}
+
+#tab-guide .rules-subtabs .rules-subtab__label,
+#tab-changelog .rules-subtabs .rules-subtab__label {
+  width: 100%;
+  text-align: center;
+  font-size: var(--runes-fs-tab-main, 0.9rem);
+  letter-spacing: 0.04em;
+}
+
+#tab-guide .rules-subtabs .rules-subtab__hint {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  line-height: 1.2;
 }
 
 #tab-guide .guide-lang {
@@ -259,10 +306,7 @@ body.share-readonly #demo-dataset-banner:not(.share-view-banner) {
 
 /* Archive tab — match app content width, spaced cards */
 #tab-guide {
-  max-width: var(--app-content-max);
-  margin: 0 auto;
-  padding: 8px 16px 36px;
-  box-sizing: border-box;
+  max-width: 100%;
 }
 
 #tab-guide .guide-lang {
@@ -286,10 +330,7 @@ body.share-readonly #demo-dataset-banner:not(.share-view-banner) {
 }
 
 #tab-changelog {
-  max-width: var(--app-content-max);
-  margin: 0 auto;
-  padding: 8px 16px 36px;
-  box-sizing: border-box;
+  max-width: 100%;
 }
 
 #tab-changelog .changelog-release {

@@ -892,6 +892,18 @@
       });
       positionDashDistKindIndicator({ nav: kindTabs, activeKey: active, instant: false });
     }
+    if (active === 'artifacts') {
+      if (typeof initArtifactDashTabs === 'function') initArtifactDashTabs();
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        const nav = document.getElementById('dash-art-tabs');
+        if (!nav || typeof positionArtifactDashTabIndicator !== 'function') return;
+        const key =
+          (typeof readArtifactDashTab === 'function' && readArtifactDashTab()) ||
+          (nav.querySelector('[data-dash-art-tab].is-active')?.getAttribute('data-dash-art-tab')) ||
+          'breakdown';
+        positionArtifactDashTabIndicator({ nav, activeKey: key, instant: true });
+      }));
+    }
     const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const hint = document.getElementById('lbl-dash-unified-chart-hint');
     if (hint) {

@@ -1295,6 +1295,11 @@
       <div class="monsters-shell">
         <div id="monsters-stats" hidden aria-live="polite" class="visually-hidden"></div>
         <nav class="rules-subtabs monsters-hub-tabs" id="monsters-hub-tabs" role="tablist" aria-label="Monsters">
+          <span class="monsters-hub-tabs__indicator" aria-hidden="true"></span>
+          <button type="button" role="tab" class="rules-subtab monsters-hub-tab" id="monsters-hub-tab-dashboard"
+            data-monsters-hub="dashboard" aria-selected="false" aria-controls="tab-monsters-dashboard" tabindex="-1">
+            <span class="rules-subtab__label" id="lbl-monsters-hub-dashboard">Dashboard</span>
+          </button>
           <button type="button" role="tab" class="rules-subtab monsters-hub-tab is-active" id="monsters-hub-tab-roster"
             data-monsters-hub="roster" aria-selected="true" aria-controls="tab-monsters-roster" tabindex="0">
             <span class="rules-subtab__label" id="lbl-monsters-hub-roster">Roster</span>
@@ -1308,6 +1313,9 @@
             <span class="rules-subtab__label" id="lbl-monsters-hub-teams">Teams</span>
           </button>
         </nav>
+        <div id="tab-monsters-dashboard" class="monsters-hub-pane" data-monsters-pane="dashboard" role="tabpanel" aria-labelledby="monsters-hub-tab-dashboard" hidden>
+          <!-- Monsters Dashboard — placeholder -->
+        </div>
         <div id="tab-monsters-planner" class="monsters-hub-pane" data-monsters-pane="planner" role="tabpanel" aria-labelledby="monsters-hub-tab-planner" hidden>
           <div class="skill-planner" id="skill-planner-root">
             <div class="skill-planner__summary" id="skill-planner-summary" aria-live="polite"></div>

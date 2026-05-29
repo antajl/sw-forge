@@ -3,6 +3,17 @@
   max-width: var(--app-content-max);
   margin: 0 auto;
   padding: 0 0 24px;
+  position: relative;
+}
+
+/* Animation support for Monsters hub panes */
+.monsters-hub-pane.animating {
+  position: absolute;
+  top: 82px; /* Approximate height of tabs container (padding 4px + min-height 3.35rem + margin 16px) + extra buffer */
+  left: 0;
+  right: 0;
+  box-sizing: border-box;
+  width: auto !important;
 }
 
 .monsters-layout {

@@ -738,6 +738,74 @@
     }
   }
 
+  let subTabTimeline = null;
+  let subTabGen = 0;
+
+  /**
+   * Slide transition between sub-tabs (e.g., Monsters Dashboard/Roster/Teams) using absolute positioning.
+   * @param {{ current: HTMLElement|null, next: HTMLElement, direction: 'next'|'prev', onComplete?: () => void }} opts
+   * @returns {boolean} true when GSAP animation started
+   */
+  function animateSubTabTransition(opts) {
+    const { current, next, direction, onComplete } = opts || {};
+    if (!enabled() || !next) return false;
+
+    const gen = ++subTabGen;
+    if (subTabTimeline) {
+      subTabTimeline.kill();
+      subTabTimeline = null;
+    }
+
+    const dir = direction === 'next' ? 1 : -1;
+    const startX = dir * 100;
+    const endX = -dir * 100;
+
+    // Add animating class for absolute positioning
+    next.classList.add('animating');
+    next.classList.remove('hidden');
+    next.classList.add('is-active');
+    next.removeAttribute('hidden');
+
+    if (current) {
+      current.classList.add('animating');
+      gsap.set(current, { x: 0, opacity: 1 });
+    }
+
+    gsap.set(next, { x: `${startX}%`, opacity: 0 });
+
+    subTabTimeline = gsap.timeline({
+      onComplete: () => {
+        if (gen !== subTabGen) return;
+        subTabTimeline = null;
+        if (current) {
+          gsap.set(current, { clearProps: 'x,opacity' });
+          current.classList.remove('animating');
+          current.classList.remove('is-active');
+          current.classList.add('hidden');
+          current.setAttribute('hidden', '');
+        }
+        gsap.set(next, { clearProps: 'x,opacity' });
+        next.classList.remove('animating');
+        onComplete && onComplete();
+      },
+    });
+
+    if (current && current !== next) {
+      subTabTimeline.to(current, { x: `${endX}%`, opacity: 0, duration: 0.4, ease: 'power2.inOut' }, 0);
+    }
+    subTabTimeline.to(next, { x: 0, opacity: 1, duration: 0.4, ease: 'power2.inOut' }, 0);
+
+    return true;
+  }
+
+  function cancelSubTabTransition() {
+    subTabGen++;
+    if (subTabTimeline) {
+      subTabTimeline.kill();
+      subTabTimeline = null;
+    }
+  }
+
   global.SWRM_MOTION = {
     enabled,
     reduced: () => reducedMotion,
@@ -764,5 +832,7 @@
     killTweensOf,
     animateMainTabTransition,
     cancelMainTabTransition,
+    animateSubTabTransition,
+    cancelSubTabTransition,
   };
 })(typeof window !== 'undefined' ? window : globalThis);

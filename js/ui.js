@@ -419,12 +419,26 @@
     return pane.classList.contains('is-active') && !pane.hidden;
   }
 
+  let lastRunesSubtab = null;
+
   function showRunesSubtab(subId, options) {
     const opts = options || {};
     const id = RUNES_SUBTAB_IDS.includes(subId) ? subId : 'dashboard';
     try {
       sessionStorage.setItem(RUNES_SUBTAB_STORAGE_KEY, id);
     } catch (e) { /* ignore */ }
+
+    const tabOrder = ['dashboard', 'runetable', 'settings'];
+    const prevIndex = lastRunesSubtab ? tabOrder.indexOf(lastRunesSubtab) : -1;
+    const nextIndex = tabOrder.indexOf(id);
+    const direction = prevIndex >= 0 && nextIndex >= 0 && nextIndex > prevIndex ? 'next' : 'prev';
+    lastRunesSubtab = id;
+
+    const motionApi = window.SWRM_MOTION;
+    const useGsap = motionApi && motionApi.enabled();
+
+    const currentPane = prevIndex >= 0 ? document.querySelector(`.runes-hub-pane[data-runes-pane="${tabOrder[prevIndex]}"]`) : null;
+    const nextPane = document.querySelector(`.runes-hub-pane[data-runes-pane="${id}"]`);
 
     document.querySelectorAll('.runes-hub-tab').forEach((btn) => {
       const on = btn.dataset.runesHub === id;
@@ -433,15 +447,40 @@
       btn.tabIndex = on ? 0 : -1;
     });
 
-    document.querySelectorAll('.runes-hub-pane').forEach((pane) => {
-      const on = pane.dataset.runesPane === id;
-      pane.classList.toggle('is-active', on);
-      pane.classList.toggle('hidden', !on);
-      if (on) pane.removeAttribute('hidden');
-      else pane.setAttribute('hidden', '');
-    });
+    if (useGsap && currentPane && nextPane && currentPane !== nextPane) {
+      const started = motionApi.animateSubTabTransition({
+        current: currentPane,
+        next: nextPane,
+        direction,
+        onComplete: () => {
+          document.querySelectorAll('.runes-hub-pane').forEach((pane) => {
+            const on = pane.dataset.runesPane === id;
+            pane.classList.toggle('is-active', on);
+            pane.classList.toggle('hidden', !on);
+            if (on) pane.removeAttribute('hidden');
+            else pane.setAttribute('hidden', '');
+          });
+        },
+      });
+      if (!started) {
+        document.querySelectorAll('.runes-hub-pane').forEach((pane) => {
+          const on = pane.dataset.runesPane === id;
+          pane.classList.toggle('is-active', on);
+          pane.classList.toggle('hidden', !on);
+          if (on) pane.removeAttribute('hidden');
+          else pane.setAttribute('hidden', '');
+        });
+      }
+    } else {
+      document.querySelectorAll('.runes-hub-pane').forEach((pane) => {
+        const on = pane.dataset.runesPane === id;
+        pane.classList.toggle('is-active', on);
+        pane.classList.toggle('hidden', !on);
+        if (on) pane.removeAttribute('hidden');
+        else pane.setAttribute('hidden', '');
+      });
+    }
 
-    const motionApi = window.SWRM_MOTION;
     if (motionApi) {
       rafTwice(() => {
         const nav = document.getElementById('runes-hub-tabs');
@@ -13699,6 +13738,7 @@
 
   let monstersHubTabsBound = false;
   let monstersHubFirstShow = true;
+  let lastMonstersSubtab = null;
 
   function normalizeMonstersSubtabId(id) {
     return MONSTERS_SUBTAB_IDS.includes(id) ? id : 'roster';
@@ -13710,6 +13750,18 @@
       sessionStorage.setItem(MONSTERS_SUBTAB_STORAGE_KEY, id);
     } catch (e) { /* ignore */ }
 
+    const tabOrder = ['dashboard', 'roster', 'planner', 'teams'];
+    const prevIndex = lastMonstersSubtab ? tabOrder.indexOf(lastMonstersSubtab) : -1;
+    const nextIndex = tabOrder.indexOf(id);
+    const direction = prevIndex >= 0 && nextIndex >= 0 && nextIndex > prevIndex ? 'next' : 'prev';
+    lastMonstersSubtab = id;
+
+    const motionApi = window.SWRM_MOTION;
+    const useGsap = motionApi && motionApi.enabled();
+
+    const currentPane = prevIndex >= 0 ? document.querySelector(`.monsters-hub-pane[data-monsters-pane="${tabOrder[prevIndex]}"]`) : null;
+    const nextPane = document.querySelector(`.monsters-hub-pane[data-monsters-pane="${id}"]`);
+
     document.querySelectorAll('.monsters-hub-tab').forEach((btn) => {
       const on = btn.dataset.monstersHub === id;
       btn.classList.toggle('is-active', on);
@@ -13717,15 +13769,40 @@
       btn.tabIndex = on ? 0 : -1;
     });
 
-    document.querySelectorAll('.monsters-hub-pane').forEach((pane) => {
-      const on = pane.dataset.monstersPane === id;
-      pane.classList.toggle('is-active', on);
-      pane.classList.toggle('hidden', !on);
-      if (on) pane.removeAttribute('hidden');
-      else pane.setAttribute('hidden', '');
-    });
+    if (useGsap && currentPane && nextPane && currentPane !== nextPane) {
+      const started = motionApi.animateSubTabTransition({
+        current: currentPane,
+        next: nextPane,
+        direction,
+        onComplete: () => {
+          document.querySelectorAll('.monsters-hub-pane').forEach((pane) => {
+            const on = pane.dataset.monstersPane === id;
+            pane.classList.toggle('is-active', on);
+            pane.classList.toggle('hidden', !on);
+            if (on) pane.removeAttribute('hidden');
+            else pane.setAttribute('hidden', '');
+          });
+        },
+      });
+      if (!started) {
+        document.querySelectorAll('.monsters-hub-pane').forEach((pane) => {
+          const on = pane.dataset.monstersPane === id;
+          pane.classList.toggle('is-active', on);
+          pane.classList.toggle('hidden', !on);
+          if (on) pane.removeAttribute('hidden');
+          else pane.setAttribute('hidden', '');
+        });
+      }
+    } else {
+      document.querySelectorAll('.monsters-hub-pane').forEach((pane) => {
+        const on = pane.dataset.monstersPane === id;
+        pane.classList.toggle('is-active', on);
+        pane.classList.toggle('hidden', !on);
+        if (on) pane.removeAttribute('hidden');
+        else pane.setAttribute('hidden', '');
+      });
+    }
 
-    const motionApi = window.SWRM_MOTION;
     if (motionApi && typeof motionApi.positionMonstersHubTabIndicator === 'function') {
       const nav = document.getElementById('monsters-hub-tabs');
       if (nav) {

@@ -78,11 +78,13 @@ body.light-theme #tab-changelog .rules-subtabs {
   border-radius: var(--radius);
   border: 1px solid color-mix(in srgb, var(--border2) 88%, var(--accent) 12%);
   background: linear-gradient(
-    155deg,
-    color-mix(in srgb, var(--surface) 94%, var(--accent) 6%) 0%,
-    var(--surface) 72%
+    160deg,
+    color-mix(in srgb, var(--surface) 92%, var(--accent) 8%) 0%,
+    var(--surface) 62%
   );
-  box-shadow: 0 1px 3px color-mix(in srgb, var(--text-hi) 4%, transparent);
+  box-shadow:
+    0 1px 3px color-mix(in srgb, var(--text-hi) 5%, transparent),
+    0 0 28px color-mix(in srgb, var(--accent) 7%, transparent);
 }
 
 #tab-guide .guide-section h3 {
@@ -129,7 +131,14 @@ body.light-theme #tab-changelog .rules-subtabs {
   padding: 1rem 1.1rem;
   border-radius: var(--radius);
   border: 1px solid var(--border2);
-  background: var(--surface);
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--surface) 92%, var(--accent) 8%) 0%,
+    var(--surface) 62%
+  );
+  box-shadow:
+    0 1px 3px color-mix(in srgb, var(--text-hi) 5%, transparent),
+    0 0 28px color-mix(in srgb, var(--accent) 7%, transparent);
 }
 
 #tab-changelog .changelog-release-date {
@@ -210,11 +219,13 @@ body.light-theme #tab-changelog .rules-subtabs {
   border-radius: var(--radius);
   border: 1px solid color-mix(in srgb, var(--border2) 88%, var(--accent) 12%);
   background: linear-gradient(
-    155deg,
-    color-mix(in srgb, var(--surface) 94%, var(--accent) 6%) 0%,
-    var(--surface) 72%
+    160deg,
+    color-mix(in srgb, var(--surface) 92%, var(--accent) 8%) 0%,
+    var(--surface) 62%
   );
-  box-shadow: 0 1px 3px color-mix(in srgb, var(--text-hi) 4%, transparent);
+  box-shadow:
+    0 1px 3px color-mix(in srgb, var(--text-hi) 5%, transparent),
+    0 0 28px color-mix(in srgb, var(--accent) 7%, transparent);
 }
 
 #tab-changelog .guide-section--hero {

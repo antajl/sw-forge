@@ -341,7 +341,8 @@
           ? (i * binSize + binSize).toFixed(binSize < 1 ? 1 : 0)
           : maxLabel;
       const label = i < binCount - 1 ? `${labelStart}-${labelEnd}` : maxLabel;
-      const cls = i >= binCount - 2 ? 'great' : i >= binCount - 4 ? 'good' : '';
+      const scoreValue = parseFloat(labelStart);
+      const cls = scoreValue >= 155 ? 'great' : scoreValue >= 105 ? 'good' : scoreValue >= 55 ? '' : 'low';
       el.innerHTML += `
         <div class="eff-bar-wrap" title="${label}: ${cnt}">
           <div class="eff-bar eff-bar--score ${cls}" style="height:${h0}px"></div>

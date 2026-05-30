@@ -129,7 +129,7 @@ html.swrm-has-gsap .slot-main-card-bar {
   background: var(--green);
 }
 .chart-bar-fill.chart-bar--sets {
-  background: var(--finish);
+  background: var(--chart-sets);
 }
 .chart-bar-fill.chart-bar--slots {
   background: var(--grind);

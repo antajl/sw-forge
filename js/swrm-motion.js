@@ -757,8 +757,20 @@
     }
 
     const dir = direction === 'next' ? 1 : -1;
-    const startX = dir * 100;
-    const endX = -dir * 100;
+    const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+    const startX = dir * viewportWidth;
+    const endX = -dir * viewportWidth;
+
+    // Calculate dynamic top offset for runes-hub-pane to prevent vertical jump
+    let topOffset = 0;
+    if (next.classList.contains('runes-hub-pane')) {
+      const nav = document.getElementById('runes-hub-tabs');
+      if (nav) {
+              const navStyle = window.getComputedStyle(nav);
+        const marginBottom = parseFloat(navStyle.marginBottom) || 0;
+        topOffset = nav.offsetHeight + marginBottom;
+      }
+    }
 
     // Add animating class for absolute positioning
     next.classList.add('animating');
@@ -769,29 +781,35 @@
     if (current) {
       current.classList.add('animating');
       gsap.set(current, { x: 0, opacity: 1 });
+      if (topOffset) {
+        gsap.set(current, { top: topOffset });
+      }
     }
 
-    gsap.set(next, { x: `${startX}%`, opacity: 0 });
+    gsap.set(next, { x: startX, opacity: 0 });
+    if (topOffset) {
+      gsap.set(next, { top: topOffset });
+    }
 
     subTabTimeline = gsap.timeline({
       onComplete: () => {
         if (gen !== subTabGen) return;
         subTabTimeline = null;
         if (current) {
-          gsap.set(current, { clearProps: 'x,opacity' });
+          gsap.set(current, { clearProps: 'x,opacity,top' });
           current.classList.remove('animating');
           current.classList.remove('is-active');
           current.classList.add('hidden');
           current.setAttribute('hidden', '');
         }
-        gsap.set(next, { clearProps: 'x,opacity' });
+        gsap.set(next, { clearProps: 'x,opacity,top' });
         next.classList.remove('animating');
         onComplete && onComplete();
       },
     });
 
     if (current && current !== next) {
-      subTabTimeline.to(current, { x: `${endX}%`, opacity: 0, duration: 0.4, ease: 'power2.inOut' }, 0);
+      subTabTimeline.to(current, { x: endX, opacity: 0, duration: 0.4, ease: 'power2.inOut' }, 0);
     }
     subTabTimeline.to(next, { x: 0, opacity: 1, duration: 0.4, ease: 'power2.inOut' }, 0);
 

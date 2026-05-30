@@ -56,6 +56,9 @@
   --content-max: 1320px;
   --app-gutter: 20px;
 
+  /* Chart colors */
+  --chart-sets: #66EBE3;
+
   /* Progression stages (Early / Mid / Late) — shared accents */
   --stage-early: var(--green);
   --stage-mid: var(--gold);
@@ -99,14 +102,14 @@
   --tint-upgrade: var(--upgrade);
   --tint-gem: var(--gem);
 
-  --tint-highroll: var(--gold);
-  --tint-bruiser: var(--sell);
-  --tint-fastcc: var(--teal);
-  --tint-tank: var(--purple);
-  --tint-bomber: var(--orange);
-  --tint-classicdps: var(--accent);
-  --tint-slowdps: var(--accent2);
-  --tint-duoroll: var(--gold);
+  --tint-highroll:   #FFE45E;
+  --tint-bruiser:    #FF9AAA;
+  --tint-fastcc:     #6AE7E7;
+  --tint-tank:       #B993FF;
+  --tint-bomber:     #FFAE63;
+  --tint-classicdps: #7CD2FF;
+  --tint-slowdps:    #70B9FF;
+  --tint-duoroll:    #FFE45E;
 
   --tint-eff-hi: var(--green);
   --tint-eff-mid: var(--gold);
@@ -198,6 +201,7 @@ body {
   display: flex;
   flex-direction: column;
   background-image: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(255, 205, 150, 0.05) 0%, transparent 72%);
+  box-shadow: 0 0 28px color-mix(in srgb, var(--accent) 7%, transparent);
 }
 
 /* ---- SCROLLBAR ---- */
@@ -1962,11 +1966,13 @@ body.light-theme #tab-changelog .rules-subtabs {
   border-radius: var(--radius);
   border: 1px solid color-mix(in srgb, var(--border2) 88%, var(--accent) 12%);
   background: linear-gradient(
-    155deg,
-    color-mix(in srgb, var(--surface) 94%, var(--accent) 6%) 0%,
-    var(--surface) 72%
+    160deg,
+    color-mix(in srgb, var(--surface) 92%, var(--accent) 8%) 0%,
+    var(--surface) 62%
   );
-  box-shadow: 0 1px 3px color-mix(in srgb, var(--text-hi) 4%, transparent);
+  box-shadow:
+    0 1px 3px color-mix(in srgb, var(--text-hi) 5%, transparent),
+    0 0 28px color-mix(in srgb, var(--accent) 7%, transparent);
 }
 
 #tab-guide .guide-section h3 {
@@ -2013,7 +2019,14 @@ body.light-theme #tab-changelog .rules-subtabs {
   padding: 1rem 1.1rem;
   border-radius: var(--radius);
   border: 1px solid var(--border2);
-  background: var(--surface);
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--surface) 92%, var(--accent) 8%) 0%,
+    var(--surface) 62%
+  );
+  box-shadow:
+    0 1px 3px color-mix(in srgb, var(--text-hi) 5%, transparent),
+    0 0 28px color-mix(in srgb, var(--accent) 7%, transparent);
 }
 
 #tab-changelog .changelog-release-date {
@@ -2094,11 +2107,13 @@ body.light-theme #tab-changelog .rules-subtabs {
   border-radius: var(--radius);
   border: 1px solid color-mix(in srgb, var(--border2) 88%, var(--accent) 12%);
   background: linear-gradient(
-    155deg,
-    color-mix(in srgb, var(--surface) 94%, var(--accent) 6%) 0%,
-    var(--surface) 72%
+    160deg,
+    color-mix(in srgb, var(--surface) 92%, var(--accent) 8%) 0%,
+    var(--surface) 62%
   );
-  box-shadow: 0 1px 3px color-mix(in srgb, var(--text-hi) 4%, transparent);
+  box-shadow:
+    0 1px 3px color-mix(in srgb, var(--text-hi) 5%, transparent),
+    0 0 28px color-mix(in srgb, var(--accent) 7%, transparent);
 }
 
 #tab-changelog .guide-section--hero {
@@ -3184,7 +3199,7 @@ body.light-theme #tab-runes > .runes-hub-tabs.rules-subtabs {
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 11px 12px;
+  padding: 12px;
 }
 
 .runes-hub-tabs .rules-subtab__label {
@@ -3219,19 +3234,16 @@ body.light-theme #tab-runes > .runes-hub-tabs.rules-subtabs {
   display: block;
   min-width: 0;
   max-width: 100%;
-  overflow-x: clip;
 }
 
 #tab-runes {
   max-width: 100%;
-  overflow-x: clip;
   position: relative;
 }
 
 /* Animation support for Runes hub panes */
 .runes-hub-pane.animating {
   position: absolute;
-  top: 82px; /* Approximate height of tabs container (padding 4px + tab height + margin 16px) + extra buffer */
   left: 0;
   right: 0;
   box-sizing: border-box;
@@ -4293,7 +4305,7 @@ select:not(#stage-select):focus { border-color: var(--accent); }
 /* === css/features/runes/rules.css === */
 /* ========== Rune Rules tab (structured layout) ========== */
 .rules-expert-banner {
-  margin: 0 0 1.25rem;
+  margin: 0 0 16px;
   padding: 0.85rem 1rem;
   border-radius: var(--radius-lg);
   border: 1px solid color-mix(in srgb, var(--warn, #e8b84a) 35%, var(--border2));
@@ -4348,7 +4360,7 @@ select:not(#stage-select):focus { border-color: var(--accent); }
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 @media (max-width: 720px) {
@@ -4380,8 +4392,8 @@ select:not(#stage-select):focus { border-color: var(--accent); }
 .artifact-role-cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
-  gap: 10px;
-  margin-bottom: 12px;
+  gap: 16px;
+  margin-bottom: 16px;
 }
 
 .artifact-role-card {
@@ -4410,7 +4422,7 @@ select:not(#stage-select):focus { border-color: var(--accent); }
 }
 
 .artifact-role-editor {
-  margin-top: 14px;
+  margin-top: 16px;
   padding: 14px;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border2);
@@ -4425,7 +4437,7 @@ select:not(#stage-select):focus { border-color: var(--accent); }
 .artifact-role-editor__foot {
   display: flex;
   gap: 8px;
-  margin-top: 12px;
+  margin-top: 16px;
 }
 
 .artifact-rules-checks--tall {
@@ -4452,7 +4464,7 @@ select:not(#stage-select):focus { border-color: var(--accent); }
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 22px;
+  margin-bottom: 16px;
   padding: 4px;
   padding-bottom: 8px;
   border-radius: var(--radius-lg);
@@ -4631,10 +4643,16 @@ html.swrm-has-gsap .rules-tab-shell > .rules-tab-footer {
 }
 
 .rules-card {
-  background: var(--surface);
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--surface) 92%, var(--accent) 8%) 0%,
+    var(--surface) 62%
+  );
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  box-shadow: 0 2px 28px color-mix(in srgb, var(--bg2) 75%, transparent);
+  box-shadow:
+    0 1px 3px color-mix(in srgb, var(--text-hi) 5%, transparent),
+    0 0 28px color-mix(in srgb, var(--accent) 7%, transparent);
   overflow: hidden;
 }
 .rules-card--engine {
@@ -4779,7 +4797,7 @@ html.swrm-has-gsap .rules-tab-shell > .rules-tab-footer {
 .settings-two-col {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 24px;
+  gap: 16px;
   width: 100%;
   padding: 0 0 20px;
   align-items: start;
@@ -4801,7 +4819,7 @@ html.swrm-has-gsap .rules-tab-shell > .rules-tab-footer {
 .changelog-releases {
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 16px;
 }
 .changelog-release {
   padding: 14px 16px;
@@ -4923,7 +4941,7 @@ html.swrm-has-gsap .rules-tab-shell > .rules-tab-footer {
 .hint { font-size: 0.78rem; color: var(--text-dim); }
 
 .settings-actions {
-  display: flex; gap: 12px; margin-top: 24px;
+  display: flex; gap: 12px; margin-top: 16px;
   padding-top: 20px; border-top: 1px solid var(--border);
 }
 .btn-primary {
@@ -4980,7 +4998,7 @@ html.swrm-has-gsap .rules-tab-shell > .rules-tab-footer {
 .role-layout {
   display: grid;
   grid-template-columns: 200px 1fr;
-  gap: 20px;
+  gap: 16px;
   margin-top: 16px;
 }
 
@@ -5469,7 +5487,7 @@ html[lang="ru"] #tab-dashboard .btn-dash-open-all-inline {
 }
 
 .panel-top-spd-head {
-  margin-bottom: 8px;
+  margin-bottom: 16px;
   padding-bottom: 0;
   border-bottom: none;
 }
@@ -5527,7 +5545,7 @@ html[lang='ru'] .panel-dash-distributions-head .rules-page-lead.dash-unified-blo
 
 /* Unified tabs/panes */
 .dash-unified-tabs.rules-subtabs {
-  margin-bottom: 14px;
+  margin-bottom: 16px;
   position: relative;
   padding-bottom: 8px;
 }
@@ -6035,7 +6053,7 @@ html.swrm-has-gsap .slot-main-card-bar {
   background: var(--green);
 }
 .chart-bar-fill.chart-bar--sets {
-  background: var(--finish);
+  background: var(--chart-sets);
 }
 .chart-bar-fill.chart-bar--slots {
   background: var(--grind);
@@ -6308,7 +6326,7 @@ html[lang='ru'] .slot-share-slot-lbl {
   height: 0;
   max-height: 100%;
   border-radius: 4px 4px 0 0;
-  background: var(--grind);
+  background: var(--chart-sets);
   transition: height 0.35s ease;
 }
 
@@ -6383,7 +6401,7 @@ html[lang='ru'] .slot-share-slot-lbl {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: color-mix(in srgb, var(--accent) 72%, var(--finish));
+  background: var(--chart-sets);
   min-width: 2px;
   transition: width 0.35s ease;
 }
@@ -6913,12 +6931,28 @@ html[lang='ru'] .slot-share-slot-lbl {
   bottom: 26px;
 }
 
-.eff-bar--score.great {
-  background: color-mix(in srgb, var(--gold) 72%, var(--accent));
+/* Слабые значения (уводим в тень, чтобы не мозолили глаза) */
+.eff-bar.low,
+.eff-bar--score.low {
+  background: #A0AAB5;
 }
 
+/* Основная масса / Средний уровень (твой любимый мятный) */
+.eff-bar,
+.eff-bar--score {
+  background: #66EBE3;
+}
+
+/* Хорошие проки (сочный зеленый) */
+.eff-bar.good,
 .eff-bar--score.good {
-  background: color-mix(in srgb, var(--accent) 55%, var(--bg3));
+  background: #8CE6A4;
+}
+
+/* Топовые проки (леденцовое золото) */
+.eff-bar.great,
+.eff-bar--score.great {
+  background: #FFE45E;
 }
 
 .eff-chart {
@@ -6928,12 +6962,9 @@ html[lang='ru'] .slot-share-slot-lbl {
 .eff-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .eff-bar {
   width: 100%; border-radius: 2px 2px 0 0;
-  background: var(--grind);
   transition: height 0.4s;
   min-height: 2px;
 }
-.eff-bar.good { background: var(--keep); }
-.eff-bar.great { background: var(--finish); }
 .eff-label { font-size: 0.6rem; color: var(--text-dim); }
 
 /* === css/features/runes/floating-tip.css === */
@@ -8310,7 +8341,7 @@ table.show-target td.target-col-cell .table-stat__text {
 
 /* === css/features/gear/table-kind.css === */
 .table-kind-tabs.rules-subtabs {
-  margin: 0 0 12px;
+  margin: 0 0 16px;
   position: relative;
   padding-bottom: 8px;
 }
@@ -8879,7 +8910,7 @@ thead tr {
 
 .artifact-rules-grid {
   display: grid;
-  gap: 1rem;
+  gap: 16px;
   grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
 }
 
@@ -8926,7 +8957,7 @@ thead tr {
 }
 
 .gear-table-active-filters {
-  margin-top: -4px;
+  margin-top: -16px;
 }
 
 

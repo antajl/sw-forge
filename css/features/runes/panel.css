@@ -25,7 +25,7 @@
 }
 
 .panel-top-spd-head {
-  margin-bottom: 8px;
+  margin-bottom: 16px;
   padding-bottom: 0;
   border-bottom: none;
 }
@@ -83,7 +83,7 @@ html[lang='ru'] .panel-dash-distributions-head .rules-page-lead.dash-unified-blo
 
 /* Unified tabs/panes */
 .dash-unified-tabs.rules-subtabs {
-  margin-bottom: 14px;
+  margin-bottom: 16px;
   position: relative;
   padding-bottom: 8px;
 }

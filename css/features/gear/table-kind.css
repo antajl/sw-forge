@@ -1,5 +1,5 @@
 .table-kind-tabs.rules-subtabs {
-  margin: 0 0 12px;
+  margin: 0 0 16px;
   position: relative;
   padding-bottom: 8px;
 }
@@ -568,7 +568,7 @@ thead tr {
 
 .artifact-rules-grid {
   display: grid;
-  gap: 1rem;
+  gap: 16px;
   grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
 }
 

@@ -7,6 +7,29 @@
  */
 const STATIC_CHANGELOG = [
   {
+    date: '2026-05-30',
+    items: {
+      en: [
+        'UI polish: unified vertical spacing (16px) across all Gear sections for consistent layout.',
+        'Tab animations: smoother transitions between Dashboard/Table/Rules with fade effect and off-screen slide.',
+        'Card styling: unified gradient backgrounds across all tabs (Dashboard, Rules, Guide, Changelog) for consistent visual design.',
+        'Ambient glow: moved to body background for consistent lighting across all pages.',
+      ],
+      ru: [
+        'UI: унифицированы вертикальные отступы (16px) во всех разделах Gear для единообразного вида.',
+        'Анимации вкладок: плавные переходы между Dashboard/Table/Rules с fade и улетом за экран.',
+        'Стиль карточек: унифицированы градиентные фоны во всех вкладках (Dashboard, Rules, Guide, Changelog).',
+        'Фоновое свечение: перенесено на body для равномерного освещения на всех страницах.',
+      ],
+      fr: [
+        'UI : espacement vertical unifié (16px) dans toutes les sections Gear.',
+        'Animations d\'onglets : transitions fluides entre Dashboard/Table/Rules avec fondu et glissement hors écran.',
+        'Style des cartes : arrière-plans dégradés unifiés dans tous les onglets.',
+        'Lueur ambiante : déplacée sur le body pour un éclairage constant.',
+      ],
+    },
+  },
+  {
     date: '2026-05-28',
     items: {
       en: [
@@ -159,23 +182,17 @@ const STATIC_CHANGELOG = [
       en: [
         'Artifacts / Relics tables: visual alignment with Rune Table — sticky headers, zebra striping, colgroup-based column widths.',
         'Artifacts table: virtual scrolling (like Rune Table) — renders only visible rows for large datasets.',
-        'Artifacts / Relics tables: row classes updated for zebra striping (gear-table__data-row, gear-table__data-row--even).',
         'Skill Plan: search field added to toolbar — filters monsters by name (EN/RU i18n).',
-        'Docs: removed PLANS-LOCAL-ASSETS.md and archive/MASTER-TASKS-DONE.md; updated README.md, MASTER.md, PLANS.md.',
       ],
       ru: [
         'Таблицы Артефактов / Релик: визуальное выравнивание с Таблицей рун — sticky headers, зебра, colgroup для ширин колонок.',
         'Таблица Артефактов: virtual scrolling (как у рун) — рендер только видимых строк для больших наборов данных.',
-        'Таблицы Артефактов / Релик: классы строк для зебры (gear-table__data-row, gear-table__data-row--even).',
         'Skill Plan: поле поиска в тулбаре — фильтр монстров по имени (i18n EN/RU).',
-        'Docs: удалены PLANS-LOCAL-ASSETS.md и archive/MASTER-TASKS-DONE.md; обновлены README.md, MASTER.md, PLANS.md.',
       ],
       fr: [
         'Tables Artifacts / Relics : alignement visuel avec la Table des runes — sticky headers, zebra, colgroup pour les largeurs de colonnes.',
         'Table Artifacts : virtual scrolling (comme les runes) — rendu uniquement des lignes visibles pour les grands jeux de données.',
-        'Tables Artifacts / Relics : classes de lignes pour zebra (gear-table__data-row, gear-table__data-row--even).',
         'Skill Plan : champ de recherche dans la barre d\'outils — filtre des monstres par nom.',
-        'Docs : suppression de PLANS-LOCAL-ASSETS.md et archive/MASTER-TASKS-DONE.md ; mise à jour de README.md, MASTER.md, PLANS.md.',
       ],
     },
   },
@@ -271,21 +288,18 @@ const STATIC_CHANGELOG = [
         'Guide → Rune Table documents Forge Score vs Ingame Rating; hover Forge for a point breakdown.',
         'Monsters → Roster: Box overview strip with clickable tiles (unruned, incomplete sets, 6/6, skill-ups, storage) and a readiness summary line.',
         'Fix: a JavaScript syntax error in the score module could block the whole app (tabs and UI frozen) until reload after rebuild.',
-        'Project layout: UI split into gear/ (artifact & relic tables), teams/, and monsters/box-overview modules; docs in docs/FEATURES.md.',
       ],
       ru: [
         'Колонка Forge Score в таблице рун: отдельная шкала 0–100 — ценность main и sub (разные рейтинги), синергии main↔sub (+/−), пары сабов, штраф за дубли, слабый innate; не Eff% и не вердикт.',
         'Guide → Таблица рун: Forge Score vs Ingame; подсказка при наведении на Forge.',
         'Монстры → Roster: полоса «обзор коробки» с плитками (без рун, неполный сет, 6/6, skill-ups, склад) и строка готовности.',
         'Исправление: синтаксическая ошибка в модуле Score могла ломать весь интерфейс (вкладки не переключались) до пересборки.',
-        'Структура: модули gear/, teams/, monsters/box-overview; описание в docs/FEATURES.md.',
       ],
       fr: [
         'Colonne Forge Score : note 0–100 séparée (tiers main/sub, synergies, paires, doublons, innate léger) — pas Eff% ni verdict.',
         'Guide → Table runes : Forge Score vs Ingame ; infobulle sur Forge.',
         'Monstres → Roster : bandeau « vue boîte » avec tuiles cliquables et ligne de readiness.',
-        'Correctif : erreur de syntaxe JS dans le module Score pouvait bloquer toute l’app.',
-        'Découpe des sources : dossiers gear/, teams/, box-overview.',
+        'Correctif : erreur de syntaxe JS dans le module Score pouvait bloquer toute l\'app.',
       ],
     },
   },
@@ -332,17 +346,14 @@ const STATIC_CHANGELOG = [
       en: [
         'Header theme control is now one sun / moon slider (tap toggles light / dark); the square highlight slides to the active side with yellow sun or blue moon on the selected mode only.',
         'Rune Table Target for Sell verdicts shows the first engine reason (no role, Duo near-miss, Exclude blocking a role, bad flat, low eff); role filter label uses God Roll instead of High Roll.',
-        'Developer workflow: UI script split into feature folders under js/features/ with a rebuild step into js/ui.js; settings and CSS already modular.',
       ],
       ru: [
         'Тема в шапке — один переключатель-слайдер солнце / луна (тап меняет светлую и тёмную); квадратная подсветка едет к активной стороне, жёлтое солнце или голубая луна только у выбранного режима.',
         'Target в таблице для Sell показывает первую причину из движка (нет роли, почти Duo, Exclude блокирует роль, плохой flat, низкий eff); в фильтре ролей подпись God Roll вместо High Roll.',
-        'Для разработки: UI разбит на feature-папки в js/features/ со сборкой в js/ui.js; settings и CSS уже модульные.',
       ],
       fr: [
-        'Thème d’en-tête : un seul curseur soleil / lune (bascule clair / sombre) ; surbrillance carrée côté actif, soleil jaune ou lune bleue seulement sur le mode choisi.',
+        'Thème d\'en-tête : un seul curseur soleil / lune (bascule clair / sombre) ; surbrillance carrée côté actif, soleil jaune ou lune bleue seulement sur le mode choisi.',
         'Colonne Target pour Sell : première raison moteur (pas de rôle, Duo presque, Exclude bloque un rôle, flat faible, eff bas) ; filtre rôle affiche God Roll au lieu de High Roll.',
-        'Workflow dev : UI découpé en dossiers js/features/ avec rebuild vers js/ui.js ; settings et CSS déjà modulaires.',
       ],
     },
   },

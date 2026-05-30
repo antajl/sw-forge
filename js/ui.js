@@ -5590,7 +5590,7 @@
         const labelStart = xMin + i * binSize;
         const labelEnd = labelStart + binSize - 1;
         const label = `${labelStart}-${labelEnd}`;
-        const cls = i >= binCount - 2 ? 'great' : i >= binCount - 4 ? 'good' : '';
+        const cls = labelStart >= 160 ? 'great' : labelStart >= 120 ? 'good' : labelStart >= 75 ? '' : 'low';
         effEl.innerHTML += `
         <div class="eff-bar-wrap" title="${label}: ${effBuckets[i]} runes">
           <div class="eff-bar ${cls}" style="height:${h0}px"></div>
@@ -5630,7 +5630,8 @@
         scoreBarTargets[i] = h;
         const h0 = !animateCharts ? h : chartFromZero ? 0 : prevScoreHeights && prevScoreHeights[i] != null ? prevScoreHeights[i] : 0;
         const label = `${i * 5}-${i * 5 + 4}`;
-        const cls = i >= 18 ? 'great' : i >= 14 ? 'good' : '';
+        const scoreValue = i * 5;
+        const cls = scoreValue >= 75 ? 'great' : scoreValue >= 50 ? 'good' : scoreValue >= 25 ? '' : 'low';
         scoreEl.innerHTML += `
         <div class="eff-bar-wrap" title="${label}: ${scoreBuckets[i]} runes">
           <div class="eff-bar eff-bar--score ${cls}" style="height:${h0}px"></div>
@@ -8314,7 +8315,8 @@
           ? (i * binSize + binSize).toFixed(binSize < 1 ? 1 : 0)
           : maxLabel;
       const label = i < binCount - 1 ? `${labelStart}-${labelEnd}` : maxLabel;
-      const cls = i >= binCount - 2 ? 'great' : i >= binCount - 4 ? 'good' : '';
+      const scoreValue = parseFloat(labelStart);
+      const cls = scoreValue >= 155 ? 'great' : scoreValue >= 105 ? 'good' : scoreValue >= 55 ? '' : 'low';
       el.innerHTML += `
         <div class="eff-bar-wrap" title="${label}: ${cnt}">
           <div class="eff-bar eff-bar--score ${cls}" style="height:${h0}px"></div>

@@ -55,6 +55,9 @@
   --content-max: 1320px;
   --app-gutter: 20px;
 
+  /* Chart colors */
+  --chart-sets: #66EBE3;
+
   /* Progression stages (Early / Mid / Late) — shared accents */
   --stage-early: var(--green);
   --stage-mid: var(--gold);
@@ -98,14 +101,14 @@
   --tint-upgrade: var(--upgrade);
   --tint-gem: var(--gem);
 
-  --tint-highroll: var(--gold);
-  --tint-bruiser: var(--sell);
-  --tint-fastcc: var(--teal);
-  --tint-tank: var(--purple);
-  --tint-bomber: var(--orange);
-  --tint-classicdps: var(--accent);
-  --tint-slowdps: var(--accent2);
-  --tint-duoroll: var(--gold);
+  --tint-highroll:   #FFE45E;
+  --tint-bruiser:    #FF9AAA;
+  --tint-fastcc:     #6AE7E7;
+  --tint-tank:       #B993FF;
+  --tint-bomber:     #FFAE63;
+  --tint-classicdps: #7CD2FF;
+  --tint-slowdps:    #70B9FF;
+  --tint-duoroll:    #FFE45E;
 
   --tint-eff-hi: var(--green);
   --tint-eff-mid: var(--gold);
@@ -197,6 +200,7 @@ body {
   display: flex;
   flex-direction: column;
   background-image: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(255, 205, 150, 0.05) 0%, transparent 72%);
+  box-shadow: 0 0 28px color-mix(in srgb, var(--accent) 7%, transparent);
 }
 
 /* ---- SCROLLBAR ---- */

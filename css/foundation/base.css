@@ -23,16 +23,24 @@
   --red:      #ff8a93;
   --orange:   #ffb86b;
   --purple:   #cfa8ff;
-  --star-awaken: #f06eb0; /* awakened unit ★ (game pink — not --purple) */
+  --star-awaken: #FF46A2; /* awakened unit ★ (game pink — not --purple) */
   --teal:     #62d8d2;
 
-  --keep:    #9cd4a8;
-  --sell:    #ff9aaa;
-  --grind:   #7cdbdb;
-  --finish:  #9acbff;
-  --reapp:   #fde86e;
-  --upgrade: #ffcc82;
-  --gem:     #e0b8ef;
+  /* Verdict colors */
+  --keep:    #8CE6A4;
+  --sell:    #FF9AAA;
+  --grind:   #6AE7E7;
+  --finish:  #70B9FF;
+  --reapp:   #FFE45E;
+  --upgrade: #FFAE63;
+  --gem:     #E59BFF;
+
+  /* Monster grades */
+  --grade-normal: #ffffff;
+  --grade-magic: #55BB44;
+  --grade-rare: #3399FF;
+  --grade-hero: #AA44DD;
+  --grade-legend: #FF9900;
 
   /* Native OS UI font — no bundled sans/mono (readability feedback) */
   --font-ui: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -76,9 +84,11 @@
   --tint-acc: var(--accent2);
   --tint-res: var(--purple);
 
-  --tint-legend: var(--gold);
-  --tint-hero: var(--purple);
-  --tint-rare: var(--accent);
+  --tint-legend: var(--grade-legend);
+  --tint-hero: var(--grade-hero);
+  --tint-rare: var(--grade-rare);
+  --tint-magic: var(--grade-magic);
+  --tint-normal: var(--grade-normal);
 
   --tint-keep: var(--keep);
   --tint-sell: var(--sell);
@@ -124,13 +134,21 @@
   --purple:   #634090;
   --teal:     #157a74;
 
-  --keep:    #3d7a32;
-  --sell:    #b83a48;
-  --grind:   #1a7a72;
-  --finish:  #2a6db8;
-  --reapp:   #a88608;
-  --upgrade: #b87418;
-  --gem:     #7d3d94;
+  /* Verdict colors */
+  --keep:    #8CE6A4;
+  --sell:    #FF9AAA;
+  --grind:   #6AE7E7;
+  --finish:  #70B9FF;
+  --reapp:   #FFE45E;
+  --upgrade: #FFAE63;
+  --gem:     #E59BFF;
+
+  /* Monster grades */
+  --grade-normal: #ffffff;
+  --grade-magic: #55BB44;
+  --grade-rare: #3399FF;
+  --grade-hero: #AA44DD;
+  --grade-legend: #FF9900;
 
   --glow-accent: 0 0 20px rgba(58, 123, 200, 0.16);
 

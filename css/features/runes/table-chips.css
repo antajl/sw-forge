@@ -1,6 +1,6 @@
 /* Grade badges (legacy markup) */
-.badge.badge-legend { --chip-tint: var(--tint-legend); }
-.badge.badge-hero { --chip-tint: var(--tint-hero); }
+.badge.badge-legend { --chip-tint: var(--grade-legend); }
+.badge.badge-hero { --chip-tint: var(--grade-hero); }
 
 /* Legacy eff classes (e.g. if reused outside table chips) */
 .eff-hi  { color: var(--tint-eff-hi); font-family: var(--font-ui); }
@@ -92,9 +92,11 @@
 }
 
 /* Grades */
-.grade-tag.legend { --chip-tint: var(--tint-legend); }
-.grade-tag.hero { --chip-tint: var(--tint-hero); }
-.grade-tag.rare { --chip-tint: var(--tint-rare); }
+.grade-tag.legend { --chip-tint: var(--grade-legend); }
+.grade-tag.hero { --chip-tint: var(--grade-hero); }
+.grade-tag.rare { --chip-tint: var(--grade-rare); }
+.grade-tag.magic { --chip-tint: var(--grade-magic); }
+.grade-tag.normal { --chip-tint: var(--grade-normal); }
 .grade-tag.grade-tag--other {
   --chip-tint: var(--tint-muted);
   --chip-surface-pct: 94%;

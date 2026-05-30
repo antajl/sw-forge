@@ -206,9 +206,7 @@
     if (emptySearch) emptySearch.textContent = t.monstersEmptyResetSearch || 'Reset search';
     const attrib = document.getElementById('lbl-monsters-attrib');
     if (attrib) {
-      attrib.innerHTML =
-        t.monstersSwarfarmAttrib ||
-        'Monster names & icons from <a href="https://swarfarm.com" target="_blank" rel="noopener noreferrer">SWARFARM</a>.';
+      attrib.innerHTML = t.monstersSwarfarmAttrib || '';
     }
     const elSel = document.getElementById('monsters-filter-element');
     if (elSel && elSel.options.length) {

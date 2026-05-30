@@ -10,6 +10,209 @@
   background: color-mix(in srgb, var(--surface) 88%, var(--bg2));
 }
 
+.monsters-metrics {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.monsters-metric-card {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  background: var(--bg3);
+}
+
+.monsters-metric-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.monsters-metric-name {
+  font-size: var(--text-caption);
+  font-weight: 600;
+  color: var(--text-dim);
+  letter-spacing: 0.02em;
+}
+
+.monsters-metric-val {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-hi);
+  line-height: 1.1;
+}
+
+.monsters-composition {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.monsters-composition__section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.monsters-composition__title {
+  margin: 0;
+  font-size: var(--text-caption);
+  font-weight: 600;
+  color: var(--text-dim);
+  letter-spacing: 0.02em;
+}
+
+.monsters-composition__bars {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.monsters-composition-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--bg3);
+  font-size: 0.72rem;
+  color: var(--text);
+}
+
+.monsters-composition-bar__label {
+  font-weight: 500;
+}
+
+.monsters-composition-bar__count {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--text-hi);
+}
+
+.monsters-rune-slots {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.monsters-rune-slots__title {
+  margin: 0;
+  font-size: var(--text-caption);
+  font-weight: 600;
+  color: var(--text-dim);
+  letter-spacing: 0.02em;
+}
+
+.monsters-rune-slots__chart {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.monsters-rune-slots-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--bg3);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.monsters-rune-slots-bar:hover {
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg3));
+}
+
+.monsters-rune-slots-bar__label {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text);
+  min-width: 60px;
+}
+
+.monsters-rune-slots-bar__track {
+  flex: 1;
+  height: 8px;
+  background: var(--bg2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.monsters-rune-slots-bar__fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 4px;
+  transition: width 0.3s;
+}
+
+.monsters-rune-slots-bar__count {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-hi);
+  min-width: 30px;
+  text-align: right;
+}
+
+.monsters-skill-priorities {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.monsters-skill-priorities__title {
+  margin: 0;
+  font-size: var(--text-caption);
+  font-weight: 600;
+  color: var(--text-dim);
+  letter-spacing: 0.02em;
+}
+
+.monsters-skill-priorities__list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.monsters-skill-priority-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--bg3);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.monsters-skill-priority-item:hover {
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg3));
+}
+
+.monsters-skill-priority-item__name {
+  flex: 1;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.monsters-skill-priority-item__count {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-hi);
+}
+
 .monsters-box-overview[hidden] {
   display: none !important;
 }

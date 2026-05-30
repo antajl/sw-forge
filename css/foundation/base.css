@@ -200,7 +200,6 @@ body {
   display: flex;
   flex-direction: column;
   background-image: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(255, 205, 150, 0.05) 0%, transparent 72%);
-  box-shadow: 0 0 28px color-mix(in srgb, var(--accent) 7%, transparent);
 }
 
 /* ---- SCROLLBAR ---- */

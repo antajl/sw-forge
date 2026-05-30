@@ -314,6 +314,7 @@ Cloudflare Worker + D1 — Share API (`worker/src/index.js`, `wrangler.toml`).
 | Тинты вердиктов | `--tint-keep`, `--tint-sell`, `--tint-grind`, `--tint-finish`, `--tint-reapp`, `--tint-upgrade`, `--tint-gem` |
 | Тинты ролей | `--tint-highroll`, `--tint-bruiser`, `--tint-fastcc`, `--tint-tank`, `--tint-bomber`, `--tint-classicdps`, `--tint-slowdps`, `--tint-duoroll` |
 | Eff tiers | `--tint-eff-hi`, `--tint-eff-mid`, `--tint-eff-lo` |
+| Графики | `--chart-sets`, `--chart-slots` |
 
 `.light-theme` переопределяет те же токены (см. `base.css`).
 

@@ -1,6 +1,6 @@
 // js/features/runes/table-virtual.js — windowed tbody render for large rune lists
   const RUNE_TABLE_VIRTUAL_COLS = 15;
-  const RUNE_TABLE_VIRTUAL_OVERSCAN = 12;
+  const RUNE_TABLE_VIRTUAL_OVERSCAN = 6;
   const RUNE_TABLE_VIRTUAL_ROW_FALLBACK = 44;
   const RUNE_TABLE_VIRTUAL_SPACER_COL_CLASSES = [
     'col-slot',

@@ -4,17 +4,30 @@
 
   document.querySelectorAll('.tab').forEach((btn) => {
     btn.addEventListener('click', () => {
-      showMainTab(btn.dataset.tab, { writeHash: true });
+      const tabId = btn.dataset.tab;
+      showMainTab(tabId, { writeHash: true });
+      localStorage.setItem('swrm-last-tab', tabId);
     });
   });
 
   window.addEventListener('hashchange', () => {
     const id = mainTabIdFromHash();
-    if (id) showMainTab(id);
-    else showMainTab('runes');
+    if (id) {
+      showMainTab(id);
+      localStorage.setItem('swrm-last-tab', id);
+    } else {
+      const lastTab = localStorage.getItem('swrm-last-tab') || 'runes';
+      showMainTab(lastTab);
+    }
   });
 
   window.addEventListener('popstate', () => {
-    const id = mainTabIdFromHash() || 'runes';
-    showMainTab(id);
+    const id = mainTabIdFromHash();
+    if (id) {
+      showMainTab(id);
+      localStorage.setItem('swrm-last-tab', id);
+    } else {
+      const lastTab = localStorage.getItem('swrm-last-tab') || 'runes';
+      showMainTab(lastTab);
+    }
   });

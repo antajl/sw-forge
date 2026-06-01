@@ -1,6 +1,6 @@
 /* ========== Rune Rules tab (structured layout) ========== */
 .rules-expert-banner {
-  margin: 0 0 1.25rem;
+  margin: 0 0 16px;
   padding: 0.85rem 1rem;
   border-radius: var(--radius-lg);
   border: 1px solid color-mix(in srgb, var(--warn, #e8b84a) 35%, var(--border2));
@@ -55,7 +55,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 @media (max-width: 720px) {
@@ -87,8 +87,8 @@
 .artifact-role-cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
-  gap: 10px;
-  margin-bottom: 12px;
+  gap: 16px;
+  margin-bottom: 16px;
 }
 
 .artifact-role-card {
@@ -117,7 +117,7 @@
 }
 
 .artifact-role-editor {
-  margin-top: 14px;
+  margin-top: 16px;
   padding: 14px;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border2);
@@ -132,7 +132,7 @@
 .artifact-role-editor__foot {
   display: flex;
   gap: 8px;
-  margin-top: 12px;
+  margin-top: 16px;
 }
 
 .artifact-rules-checks--tall {
@@ -159,7 +159,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 22px;
+  margin-bottom: 16px;
   padding: 4px;
   padding-bottom: 8px;
   border-radius: var(--radius-lg);
@@ -338,10 +338,16 @@ html.swrm-has-gsap .rules-tab-shell > .rules-tab-footer {
 }
 
 .rules-card {
-  background: var(--surface);
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--surface) 92%, var(--accent) 8%) 0%,
+    var(--surface) 62%
+  );
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  box-shadow: 0 2px 28px color-mix(in srgb, var(--bg2) 75%, transparent);
+  box-shadow:
+    0 1px 3px color-mix(in srgb, var(--text-hi) 5%, transparent),
+    0 0 28px color-mix(in srgb, var(--accent) 7%, transparent);
   overflow: hidden;
 }
 .rules-card--engine {
@@ -486,7 +492,7 @@ html.swrm-has-gsap .rules-tab-shell > .rules-tab-footer {
 .settings-two-col {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 24px;
+  gap: 16px;
   width: 100%;
   padding: 0 0 20px;
   align-items: start;
@@ -508,7 +514,7 @@ html.swrm-has-gsap .rules-tab-shell > .rules-tab-footer {
 .changelog-releases {
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 16px;
 }
 .changelog-release {
   padding: 14px 16px;
@@ -630,7 +636,7 @@ html.swrm-has-gsap .rules-tab-shell > .rules-tab-footer {
 .hint { font-size: 0.78rem; color: var(--text-dim); }
 
 .settings-actions {
-  display: flex; gap: 12px; margin-top: 24px;
+  display: flex; gap: 12px; margin-top: 16px;
   padding-top: 20px; border-top: 1px solid var(--border);
 }
 .btn-primary {
@@ -687,7 +693,7 @@ html.swrm-has-gsap .rules-tab-shell > .rules-tab-footer {
 .role-layout {
   display: grid;
   grid-template-columns: 200px 1fr;
-  gap: 20px;
+  gap: 16px;
   margin-top: 16px;
 }
 

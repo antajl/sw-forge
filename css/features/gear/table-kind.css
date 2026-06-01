@@ -1,5 +1,5 @@
 .table-kind-tabs.rules-subtabs {
-  margin: 0 0 12px;
+  margin: 0 0 16px;
   position: relative;
   padding-bottom: 8px;
 }
@@ -16,7 +16,6 @@
   background: linear-gradient(90deg, var(--accent), var(--accent2));
   box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 40%, transparent);
   opacity: 0.95;
-  transition: left 0.2s ease, width 0.2s ease;
 }
 
 html:not(.swrm-has-gsap) .table-kind-tabs__indicator {
@@ -569,7 +568,7 @@ thead tr {
 
 .artifact-rules-grid {
   display: grid;
-  gap: 1rem;
+  gap: 16px;
   grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
 }
 

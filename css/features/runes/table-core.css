@@ -1,7 +1,7 @@
 /* Table core */
 .table-wrap {
   overflow: auto;
-  max-height: min(82vh, 980px);
+  max-height: min(75vh, 900px);
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
 }

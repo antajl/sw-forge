@@ -74,12 +74,28 @@
   bottom: 26px;
 }
 
-.eff-bar--score.great {
-  background: color-mix(in srgb, var(--gold) 72%, var(--accent));
+/* Слабые значения (уводим в тень, чтобы не мозолили глаза) */
+.eff-bar.low,
+.eff-bar--score.low {
+  background: #A0AAB5;
 }
 
+/* Основная масса / Средний уровень (твой любимый мятный) */
+.eff-bar,
+.eff-bar--score {
+  background: #66EBE3;
+}
+
+/* Хорошие проки (сочный зеленый) */
+.eff-bar.good,
 .eff-bar--score.good {
-  background: color-mix(in srgb, var(--accent) 55%, var(--bg3));
+  background: #8CE6A4;
+}
+
+/* Топовые проки (леденцовое золото) */
+.eff-bar.great,
+.eff-bar--score.great {
+  background: #FFE45E;
 }
 
 .eff-chart {
@@ -89,10 +105,7 @@
 .eff-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .eff-bar {
   width: 100%; border-radius: 2px 2px 0 0;
-  background: var(--grind);
   transition: height 0.4s;
   min-height: 2px;
 }
-.eff-bar.good { background: var(--keep); }
-.eff-bar.great { background: var(--finish); }
 .eff-label { font-size: 0.6rem; color: var(--text-dim); }

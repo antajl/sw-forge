@@ -1,498 +1,62 @@
-# SW Forge — MASTER (справочник для AI и разработчика)
+# SW Forge — MASTER (Entry Point)
 
-> **Назначение:** карта репозитория, контракты загрузки, правила правок.  
-> **Не backlog:** открытые фичи → [`PLANS.md`](PLANS.md); сделанное → Updates в приложении.  
-> **Быстрый вход:** [`PROJECT-CONTEXT.md`](PROJECT-CONTEXT.md) · **Индекс docs:** [`README.md`](README.md)
-
----
-
-## ЧАСТЬ 1: КОНТЕКСТ ПРОЕКТА
-
-### Что это
-SW Forge — статический сайт на **Cloudflare Pages**: анализ рун Summoners War + хаб монстров (один SWEX в браузере).
-
-### Инфраструктура
-| | |
-|---|---|
-| **Prod** | https://sw-forge.pages.dev |
-| **Repo** | https://github.com/antajl/sw-forge (`main`) |
-| **Share API** | https://sw-backend.antajltube.workers.dev (Worker + D1) |
-| **D1** | `swf-db` |
-| **Локально** | VS Code Live Server → http://127.0.0.1:5500 |
-
-Деплой: `git push` → Pages ~1 мин. CDN: корневой `_headers`.
-
-### Стек
-- **Runtime:** Vanilla JS + CSS, без фреймворков и бандлера в браузере
-- **Build:** `npm run build` = `build:css` + `build:ui` (артефакты коммитятся, как `ui.js`)
-- **CSS в prod:** `index.html` → `css/dist/app.css` (исходники в `css/features/`, dev-цепочка `css/style.css`)
-- **Шрифты:** системный UI-стек (`system-ui` / Segoe UI / Roboto) в `base.css`; `tabular-nums` на body. Файлы в `assets/fonts/` — legacy, не подключаются
-- **Анимации:** GSAP 3.12.7 локально (`assets/gsap.min.js`)
-- **i18n:** EN + RU в `i18n.js`; FR lazy → `js/core/i18n-fr.js`
-- **Worker:** `worker/` (Wrangler) — Share Profile
-
-### npm scripts (`package.json`)
-| Команда | Действие |
-|---------|----------|
-| `npm run build:ui` | `tools/build-ui.mjs` → `js/ui.js` |
-| `npm run build:css` | `tools/build-css.mjs` → `css/dist/app.css` |
-| `npm run build` | оба шага |
-| `npm run watch:ui` | пересборка `ui.js` при сохранении в `js/features/` |
+> **Purpose:** Repository map, edit rules, build commands.  
+> **Not a backlog:** open features → [`PLANS.md`](PLANS.md); completed → Updates in app.  
+> **Quick start:** [`PROJECT-CONTEXT.md`](PROJECT-CONTEXT.md) · **Docs index:** [`README.md`](README.md)
 
 ---
 
-## ЧАСТЬ 2: КАРТА ФАЙЛОВ
+## Project Context
 
-### ⛔ Не редактировать вручную
-| Файл | Почему |
-|------|--------|
-| `js/ui.js` | Артефакт `npm run build:ui` |
-| `css/dist/app.css` | Артефакт `npm run build:css` |
-| Порядок `<script defer>` в `index.html` | Жёсткий контракт зависимостей |
+SW Forge — static site on **Cloudflare Pages**: Summoners War rune analyzer + monster hub (SWEX stays in browser).
 
-### Корень и статика
-| Путь | Назначение |
-|------|------------|
-| `index.html` | Единственная HTML-страница (весь UI inline) |
-| `_headers` | Cache-Control для Cloudflare Pages |
-| `assets/fonts/*.woff2` | Self-hosted шрифты |
-| `data/demo.json` | Демо SWEX (~5.5 MB) |
-| `data/monsters-index.json` | Имена/иконки/мета монстров (кэш SWARFARM, `fetch-monsters-index.mjs`) |
-| `data/skills-index.json` | Скиллы: max level, иконки, описание, прокачка, CD (`fetch-skills-index.mjs --fresh`, schema 2) |
+**Stack:** Vanilla JS + CSS · **Build:** `npm run build` (`build:css` + `build:ui`) · **Prod CSS:** `css/dist/app.css` · **Prod UI:** `js/ui.js` · **No external CDN** (GSAP local in `assets/`)
 
-### CSS
-| Путь | Назначение |
-|------|------------|
-| `css/dist/app.css` | **Prod** — собранный бандл |
-| `css/style.css` | Dev: только `@import` |
-| `css/foundation/base.css` | `:root` переменные, `@font-face`, light theme |
-| `css/foundation/header.css` | Шапка, навигация |
-| `css/foundation/overlays.css` | Модалки, share-баннер, demo-баннер |
-| `css/foundation/toasts.css` | Тосты |
-| `css/foundation/action-chrome.css` | Кнопки |
-| `css/features/runes/*.css` | Вкладка Runes (таблица, dashboard, rules UI…) |
-| `css/features/gear/table-kind.css` | Artifacts / Relics таблицы |
-| `css/features/teams/*.css` | Teams |
-| `css/features/monsters/*.css` | Monsters (roster, detail, toolbar…) |
-| `css/features/guide/archive.css` | Guide |
-| `css/features/app/settings.css` | Settings |
-
-Порядок сборки CSS: `tools/build-css.mjs` → массив `FILES`.
-
-### JS — core (до UI)
-| Путь | Назначение |
-|------|------------|
-| `js/core/meta.js` | `APP_VERSION`, константы статов |
-| `js/core/i18n.js` | `TRANSLATIONS` EN + RU |
-| `js/core/i18n-fr.js` | FR partial (lazy) |
-| `js/core/defaults.js` | Пороги, роли, формулы, settings |
-| `js/core/changelog-data.js` | `STATIC_CHANGELOG`, `STATIC_ROADMAP` |
-| `js/core/bootstrap.js` | Сборка `window.SWRM` из defaults |
-
-### JS — data
-| Путь | Назначение |
-|------|------------|
-| `js/data/parser.js` | `parseSWEX`, `parseRune`, `parseUnits`, SWOP Eff% |
-| `js/data/ingame-score.js` | `calcIngameScore`, `ingameScoreBreakdown` — Com2uS Rating (таблица рун, колонка Ingame) |
-| `js/data/artifact-ingame-score.js` | `calcArtifactIngameScore`, `artifactIngameScoreBreakdown`, `ARTIFACT_INGAME_WEIGHTS` — коэффициенты Ingame Score артефактов |
-| `js/data/monster-db.js` | `monsters-index.json`, `SWRM_MONSTER_DB` |
-| `js/data/skill-db.js` | `skills-index.json` + `metaById` (тултипы, Skill plan CD без API) |
-| `js/data/gear/parse.js` | Артефакты/реликты из SWEX |
-| `js/data/artifacts/effects.js` | Справочник эффектов артефактов |
-| `js/data/relics/effects.js` | Типы реликтов, подписи |
-
-### JS — engine (без DOM)
-| Путь | Назначение |
-|------|------------|
-| `js/engine/engine-core.js` | `statMap`, HR anchor, sub helpers |
-| `js/engine/engine-legacy-roles.js` | `checkRole`, `checkHighRoll`, duo |
-| `js/engine/engine-gem-reapp-verdict.js` | Grind, Gem, Reapp, God sell |
-| `js/advanced-formulas.js` | Формулы, `getAdvancedVerdict` |
-| `js/engine/engine-process.js` | `processRune`, `processAll` |
-
-### JS — workers
-| Путь | Назначение |
-|------|------------|
-| `js/workers/rune-processor.worker.js` | `processAll` в фоне |
-| `js/features/runes/rune-processor-worker.js` | `processRunesAsync` + fallback |
-
-### JS — прочее до ui.js
-| Путь | Назначение |
-|------|------------|
-| `js/self-test.js` | `SWRM.runSelfTests` |
-| `js/swrm-motion.js` | GSAP-анимации |
-
-### JS — features → `ui.js` (редактировать здесь)
-
-Порядок concatenation: `tools/build-ui.mjs` (`CHUNKS` + `MONSTER_PARTS`).
-
-**Shell / app**
-| Файл | Роль |
-|------|------|
-| `shell/bootstrap.js` | Глобальное состояние приложения, табы |
-| `shell/theme-nav.js` | Тема dark/light |
-| `shell/i18n-bindings.js` | Привязка `TRANSLATIONS` к DOM, lazy FR |
-| `shell/mobile-nav.js` | Мобильная навигация |
-| `shell/filters-popover.js` | Поповеры фильтров |
-| `shell/main-tabs.js` | Runes / Monsters / Guide / Updates |
-
-**Runes**
-| Файл | Роль |
-|------|------|
-| `runes/stage-filters.js` | Стадия Early/Mid/Late |
-| `runes/rune-processor-worker.js` | Async process |
-| `runes/upload.js` | SWEX upload, demo, DB slots |
-| `runes/utils.js` | Hydrate SWEX, empty state |
-| `runes/verdict-filters.js` | Фильтр вердиктов |
-| `runes/charts.js` | Графики |
-| `runes/copy-summary.js` | Копирование сводки |
-| `runes/stage-advisor-ui.js` | Stage Advisor |
-| `runes/depth.js` | Depth analysis |
-| `runes/dashboard.js` | Dashboard |
-| `runes/rune-score.js` | Forge Score |
-| `runes/table-row-render.js` | Строка таблицы (Ingame, Forge, Verdict tooltip, Location) |
-| `runes/table-filters.js` | Фильтры таблицы |
-| `runes/table.js` | Таблица рун |
-
-**Gear**
-| Файл | Роль |
-|------|------|
-| `gear/table-kind.js` | Runes / Artifacts / Relics sub-tabs |
-| `gear/gear-roster-chips.js` | Чипы над таблицей gear |
-| `gear/artifacts-table.js` | Таблица артефактов, сортировка по заголовкам |
-| `gear/relics-table.js` | Таблица реликтов, сортировка по заголовкам |
-
-**Rules**
-| Файл | Роль |
-|------|------|
-| `rules/formulas-ui.js` | Редактор формул |
-| `rules/panel.js` | Контейнер Rules |
-| `rules/constants-ui.js` | Константы UI |
-| `rules/bootstrap.js` | Init settings / restore |
-| `rules/policy-ui.js` | Eval policy |
-
-**App**
-| Файл | Роль |
-|------|------|
-| `app/settings-ui.js` | App Settings |
-| `app/share.js` | Share Profile, `?s=`, `?profile=`, `?data=` |
-| `app/changelog.js` | Updates / Roadmap UI |
-
-**Monsters** (`MONSTER_PARTS` + `monsters/bootstrap.js`)
-| Файл | Роль |
-|------|------|
-| `monsters/monsters-state.js` | Состояние, ключи localStorage |
-| `monsters/monsters-hub.js` | Вкладка Monsters |
-| `teams/storage.js` | Teams localStorage + share export |
-| `teams/ui.js` | Teams UI, combat SPD, share view |
-| `monsters/monsters-storage.js` | Фильтры, meta units |
-| `monsters/monsters-bulk.js` | Bulk select / marks |
-| `monsters/monsters-filters.js` | Логика фильтров |
-| `monsters/box-overview.js` | Плитки обзора коробки |
-| `monsters/monsters-stats-calc.js` | Статы, боевой SPD, парсинг тотема (`wizard_skill_list` skill_id 14) |
-| `monsters/monsters-gear.js` | Gear на detail |
-| `monsters/monsters-runes.js` | Руны на карточке |
-| `monsters/monsters-detail.js` | Панель деталей |
-| `monsters/monsters-card.js` | Карточки |
-| `monsters/monsters-table.js` | Таблица |
-| `monsters/monsters-list.js` | Список / enrich |
-| `monsters/monsters-events.js` | События тулбара |
-| `monsters/bootstrap.js` | Закрывает IIFE `ui.js` |
-
-### tools/
-| Активные | |
-|----------|--|
-| `build-ui.mjs` | Сборка `js/ui.js` |
-| `build-css.mjs` | Сборка `css/dist/app.css` |
-| `watch-ui.mjs` | Watch UI |
-| `fetch-monsters-index.mjs` | Обновить `monsters-index.json` |
-| `fetch-skills-index.mjs` | `skills-index.json` (+ `metaById`; `--fresh` для полной перекачки) |
-| `extract-tab-icons.mjs` | Иконки вкладок |
-| `inspect-totem-from-json.mjs` | Где в SWEX лежит уровень Sky Tribe Totem (skill_id 14) |
-
-Одноразовые патчи: `tools/archive/` (не трогать).
-
-### docs/
-| Файл | Роль |
-|------|------|
-| `PROJECT-CONTEXT.md` | Короткий вход |
-| `MASTER.md` | Этот справочник |
-| `PLANS.md` | Открытый продуктовый backlog |
-| `ARCHITECTURE.md` | Runtime / build схема |
-| `FEATURES.md` | Карта фич по папкам |
-
-### worker/
-Cloudflare Worker + D1 — Share API (`worker/src/index.js`, `wrangler.toml`).
+**URLs:** Prod https://sw-forge.pages.dev · Share API https://sw-backend.antajltube.workers.dev · Local http://127.0.0.1:5500/
 
 ---
 
-### `window.SWRM` — основные члены
+## Edit Rules (5 points)
 
-Собирается по цепочке скриптов; в `ui.js` тот же объект + UI-хелперы.
-
-| API | Модуль | Назначение |
-|-----|--------|------------|
-| `APP_VERSION` | bootstrap | Версия приложения |
-| `settings`, `saveSettings` | defaults | Настройки пользователя |
-| `TRANSLATIONS`, `STATIC_CHANGELOG`, `STATIC_ROADMAP` | i18n / changelog | UI тексты |
-| `parseSWEX`, `parseRune`, `parseUnits` | parser | SWEX → руны/юниты |
-| `calcEfficiency`, `calcEfficiencyUncapped` | parser | SWOP Eff% (Depth, dashboard charts — **не** колонка таблицы) |
-| `calcIngameScore`, `ingameScoreBreakdown` | ingame-score | Ingame Rating в таблице рун |
-| `calcArtifactIngameScore`, `artifactIngameScoreBreakdown`, `ARTIFACT_INGAME_WEIGHTS` | artifact-ingame-score | Ingame Score артефактов, коэффициенты для калибровки |
-| `parseAccountGear`, `parseArtifact`, `parseRelic` | gear/parse | Gear |
-| `formatGearEffectLine`, `formatArtifactSubLine` | gear/parse | Отображение stat lines |
-| `processAll`, `processRune`, `getRuneVerdict` | engine | Вердикты рун |
-| `getAdvancedVerdict`, `processAdvancedFormulas` | advanced-formulas | Формулы / роли |
-| `checkRole`, `checkGrind`, `checkHighRoll` | engine | Правила ролей / grind |
-| `processRunesAsync` | rune-processor-worker | Worker + fallback |
-| `runSelfTests` | self-test | Самотест |
-| `isShareReadOnly`, `getShareIdFromUrl`, `getProfileLinkFromUrl` | share (ui) | Share режимы |
-
-Отдельно: `window.SWRM_MONSTER_DB` — индекс монстров (`loadMonsterIndex`, `monsterDisplayName`, `lookupMonster`).
+1. `js/features/` changes → `npm run build:ui`
+2. CSS from `tools/build-css.mjs` list → `npm run build:css`
+3. New UI strings → `i18n.js` EN + RU
+4. Player-facing changes → changelog **today's date only**; then remove from `PLANS.md`
+5. **Do not edit manually:** `js/ui.js`, `css/dist/app.css`, `<script defer>` order in `index.html`
 
 ---
 
-### Внешние данные SWARFARM (что локально vs что с сети)
+## Build Commands
 
-| Источник | Локально (`data/`) | По сети (рантайм) |
-|----------|-------------------|-------------------|
-| **Скиллы** | `skills-index.json`: max level, иконка, имя, описание, upgrades, CD | Fallback API только если `com2us_id` нет в индексе (`SWRM_LOCAL_ASSETS_ONLY` отключает API) |
-| **Монстры** | `monsters-index.json` schema 2: имя, статы, `leader_skill`, портрет path | API деталки не вызывается, если строка полная (`monsterHasBundledDetail`) |
-| **Картинки** | `assets/` + manifests (`skills-icons`, `leader-icons`, `monsters-portraits`, static bundle) | CDN fallback, пока файла нет в manifest; `SWRM_LOCAL_ASSETS_ONLY=true` — только локальные PNG |
-| **Реликвии** | `assets/relics/*.png` (вручную) | — |
-| **SWEX** | `demo.json` только для демо | Экспорт пользователя — всегда локально в браузере |
-
-Иконки и статика кэшируются браузером; JSON индексов — с `?v=APP_VERSION`.
-
----
-
-### Версионирование и кэш-бустинг
-
-**Правило:** При каждом релизе с пользовательски-видимыми изменениями необходимо обновлять версию для кэш-бустинга.
-
-**Что делать при релизе:**
-1. Обновить `APP_VERSION` в `js/core/meta.js` (например, с `1.2.18` на `1.2.19`)
-2. Обновить `?v=APP_VERSION` в `index.html` для всех ресурсов:
-   - CSS: `<link rel="stylesheet" href="css/dist/app.css?v=1.2.19" />`
-   - JS: `<script defer src="js/core/meta.js?v=1.2.19"></script>` (все скрипты)
-3. Запустить `npm run build:ui` для сборки `js/ui.js`
-
-**Зачем это нужно:**
-- Пользователи видят новые версии JS/CSS сразу после деплоя, без ожидания истечения кэша (24 часа)
-- Предотвращает проблемы с устаревшими файлами в кэше браузера/CDN
-- `_headers` устанавливает кэш 24 часа для JS/CSS, версионирование обходит это ограничение
-
-**Исключения:**
-- Внешние библиотеки (например, `assets/gsap.min.js`) не требуют версионирования
-- Статические ассеты (`assets/*`) кэшируются навсегда (`immutable`), версионирование не нужно
-
----
-
-### CSS-переменные
-
-**Правило:** в `css/features/` использовать только `var(--…)` из списка ниже (hex только в `base.css` / `tokens.css` как источник значений).
-
-#### `css/foundation/base.css` — `:root` (dark)
-
-| Группа | Переменные |
-|--------|------------|
-| Фоны | `--bg`, `--bg2`, `--bg3`, `--surface` |
-| Бордеры | `--border`, `--border2` |
-| Текст | `--text`, `--text-dim`, `--text-hi` |
-| Акценты | `--accent`, `--accent2`, `--gold`, `--green`, `--red`, `--orange`, `--purple`, `--teal` |
-| Звёзды | `--star-awaken` (розовый awaken, **не** `--purple`) |
-| Вердикты | `--keep`, `--sell`, `--grind`, `--finish`, `--reapp`, `--upgrade`, `--gem` |
-| Шрифты | `--font-ui`, `--font-head`, `--font-mono` |
-| Радиус | `--radius`, `--radius-lg` |
-| Лейаут | `--app-content-max`, `--content-max`, `--app-gutter` |
-| Стадии | `--stage-early`, `--stage-mid`, `--stage-late` |
-| Эффекты | `--glow-accent`, `--select-chevron`, `--stage-select-chevron` |
-| Chips (база) | `--chip-surface-pct`, `--chip-border-base-pct` |
-| Тинты статов | `--tint-spd`, `--tint-hp`, `--tint-atk`, `--tint-def`, `--tint-cr`, `--tint-cd`, `--tint-acc`, `--tint-res` |
-| Тинты грейда | `--tint-legend`, `--tint-hero`, `--tint-rare` |
-| Тинты прочие | `--tint-neutral`, `--tint-muted`, `--tint-ancient` |
-| Тинты вердиктов | `--tint-keep`, `--tint-sell`, `--tint-grind`, `--tint-finish`, `--tint-reapp`, `--tint-upgrade`, `--tint-gem` |
-| Тинты ролей | `--tint-highroll`, `--tint-bruiser`, `--tint-fastcc`, `--tint-tank`, `--tint-bomber`, `--tint-classicdps`, `--tint-slowdps`, `--tint-duoroll` |
-| Eff tiers | `--tint-eff-hi`, `--tint-eff-mid`, `--tint-eff-lo` |
-
-`.light-theme` переопределяет те же токены (см. `base.css`).
-
-#### `css/features/monsters/tokens.css`
-
-| Переменные |
-|------------|
-| `--monster-star-natural`, `--monster-star-awaken`, `--monster-star-stroke`, `--monster-star-shadow` |
-| `--space-xs`, `--space-sm`, `--space-md`, `--space-lg` |
-| `--text-caption`, `--text-secondary`, `--text-body`, `--text-xs`, `--text-sm`, `--text-md` |
-
----
-
-## ЧАСТЬ 3: ПОРЯДОК ЗАГРУЗКИ
-
-### CSS (`index.html`, `<head>`)
-| # | Файл | Строка ~ |
-|---|------|----------|
-| — | `css/dist/app.css` | 21 |
-
-Dev: `css/style.css` (только локально; prod использует `app.css`).
-
-### JavaScript (`index.html`, конец `<body>`)
-
-Все локальные скрипты с **`defer`**, включая GSAP.
-
-| # | Файл | Строки `index.html` |
-|---|------|---------------------|
-| 1 | `js/core/meta.js` | 3868 |
-| 2 | `js/core/i18n.js` | 3869 |
-| 3 | `js/core/defaults.js` | 3870 |
-| 4 | `js/core/changelog-data.js` | 3871 |
-| 5 | `js/core/bootstrap.js` | 3872 |
-| 6 | `js/data/artifacts/effects.js` | ~3873 |
-| 7 | `js/data/artifact-ingame-score.js` | ~3874 |
-| 8 | `js/data/relics/effects.js` | ~3875 |
-| 9 | `js/data/gear/parse.js` | ~3876 |
-| 10 | `js/data/gear/icons.js` | ~3877 |
-| 11 | `js/data/parser.js` | ~3878 |
-| 12 | `js/data/ingame-score.js` | ~3879 |
-| 13 | `js/data/local-assets.js` | ~3880 |
-| 14 | `js/data/skill-db.js` | ~3881 |
-| 15 | `js/data/monster-db.js` | ~3882 |
-| 16–21 | `js/engine/*`, `advanced-formulas.js` | ~3883–3888 |
-| 22 | `js/self-test.js` | 3889 |
-| 23 | GSAP локально | ~3890 |
-| 24 | `js/swrm-motion.js` | 3893 |
-| 25 | `js/ui.js` | 3894 |
-
-**Lazy (не в HTML):** `js/core/i18n-fr.js` — подгружается при выборе FR в `i18n-bindings.js`.
-
-**Worker:** `js/workers/rune-processor.worker.js` — создаётся из `rune-processor-worker.js`, не в HTML.
-
-### Порядок `ui.js` (внутри одного IIFE)
-
-См. `tools/build-ui.mjs`: `CHUNKS` (shell → runes → gear → rules → app) → `MONSTER_PARTS` → `monsters/bootstrap.js` (единственный файл с закрывающим `})();`).
-
----
-
-## ЧАСТЬ 4: ПРАВИЛА ДЛЯ КАЖДОГО ИЗМЕНЕНИЯ
-
-### 1. Updates (`js/core/changelog-data.js`)
-
-- Только блок **сегодняшней даты**; один день = один блок; новые пункты **в начало** `en[]` / `ru[]`.
-- **EN и RU:** одинаковое число пунктов, один порядок.
-- Текст для **игрока**: руны, 6★, SWEX, Keep/Sell, Monsters, Share — без имён файлов, npm, Worker, «Block A».
-- Объединяй мелочи одной темы в **один** пункт.
-- После записи убери задачу из [`PLANS.md`](PLANS.md).
-
-### 1b. Roadmap (`STATIC_ROADMAP` в том же файле)
-
-- Источник правды — [`PLANS.md`](PLANS.md); Roadmap = **краткая копия для игроков** (те же разделы, смысл пунктов).
-- EN + RU синхронны с PLANS; без путей, API, Worker, Database Slots, localStorage.
-- FR — тот же смысл, можно короче. Закрытый пункт — убрать и из PLANS, и из Roadmap.
-
-### 2. i18n (`js/core/i18n.js`)
-
-- Любая новая UI-строка → ключ в **EN и RU**.
-- Плоский namespace, без HTML в строках.
-- FR → `js/core/i18n-fr.js` + загрузка в `i18n-bindings.js`.
-
-### 3. CSS
-
-- Цвета только `var(--…)` в `css/features/`.
-- Новый файл → добавить в `tools/build-css.mjs` (`FILES`) → `npm run build:css`.
-- Dev-цепочка: `@import` в `css/features/*/index.css` (опционально).
-
-### 4. Build
-
-| Изменили | Команда |
-|----------|---------|
-| `js/features/**` | `npm run build:ui` |
-| CSS из списка `build-css.mjs` | `npm run build:css` |
-| Оба | `npm run build` |
-
-### 5. Новый файл в `ui.js`
-
-1. Создать `js/features/.../file.js`
-2. Добавить путь в `tools/build-ui.mjs` (`CHUNKS` или `MONSTER_PARTS`) с учётом зависимостей
-3. `npm run build:ui`
-
----
-
-## ЧАСТЬ 5: АРХИВ ИСПОЛНЯЕМЫХ ЗАДАЧ (A / B / C)
-
-Блоки A / B / C выполнены. Детали в Updates → Releases (2026-05-22).
-
-**Не искать новые задачи в MASTER** — только [`PLANS.md`](PLANS.md).
-
----
-
-## ЧАСТЬ 6: ПРАВИЛА ДЛЯ НОВЫХ ФИЧЕЙ
-
-1. **CSS** — файл в `css/features/[feature]/`, строка в `tools/build-css.mjs`, `npm run build:css`
-2. **JS** — файл в `js/features/`, строка в `tools/build-ui.mjs`, `npm run build:ui`
-3. **i18n** — EN + RU (+ FR при необходимости)
-4. **Updates** — сегодняшний блок, игровой язык
-5. **PLANS** — убрать выполненный пункт
-
-### Данные монстров / скиллов
 ```bash
-node tools/fetch-monsters-index.mjs
-node tools/fetch-skills-index.mjs --fresh   # полная перекачка skills + meta (~1.6 MB JSON)
-```
-После обновления JSON — поднять `APP_VERSION` в `js/core/meta.js` и задеплоить `data/*.json` вместе с сайтом.
-
-**Что остаётся с SWARFARM в рантайме (см. § «Внешние данные» ниже):** картинки (портреты, иконки скиллов/элементов/артефактов/сетов рун), опционально API одного монстра для базовых статов в деталке, fallback meta скилла если id нет в индексе.
-
-### Worker (Share)
-```bash
-cd worker && npx wrangler deploy
+npm run build:ui    # tools/build-ui.mjs → js/ui.js
+npm run build:css   # tools/build-css.mjs → css/dist/app.css
+npm run build       # both steps
+npm run watch:ui    # rebuild ui.js on save in js/features/
 ```
 
 ---
 
-## ЧАСТЬ 7: ТЕХНИЧЕСКИЙ ДОЛГ
+## Documentation Index
 
-| # | Проблема | Статус |
-|---|----------|--------|
-| 1 | Остаточные hex в `css/features/` | Частично закрыто |
-| 2 | `index.html` монолит (~250 KB) | Открыто |
-| 3 | Нет минификации JS/CSS | Открыто |
-| 4 | Нет `npm run watch:css` | Открыто |
-
-Закрыто (не возвращать в backlog): `@import` prod → `app.css`; Google Fonts → local; `processAll` worker; `tools/archive/`.
-
----
-
-## ЧАСТЬ 8: БЫСТРЫЕ КОМАНДЫ
-
-```bash
-npm run build:ui
-npm run build:css
-npm run build
-npm run watch:ui
-
-node tools/fetch-monsters-index.mjs
-node tools/fetch-skills-index.mjs
-
-cd worker && npx wrangler deploy && cd ..
-```
-
-Поиск hex в features (PowerShell / git bash):
-```bash
-rg "#[0-9a-fA-F]{6}" css/features/ -g "*.css"
-```
+| Question | File |
+|----------|------|
+| Complete file map | [`FILE-MAP.md`](FILE-MAP.md) |
+| Script load order | [`LOAD-ORDER.md`](LOAD-ORDER.md) |
+| `window.SWRM` API + CSS variables | [`API-REFERENCE.md`](API-REFERENCE.md) |
+| Known bugs / issues | [`KNOWN-ISSUES.md`](KNOWN-ISSUES.md) |
+| Runtime / build architecture | [`ARCHITECTURE.md`](ARCHITECTURE.md) |
+| Feature folder map | [`FEATURES.md`](FEATURES.md) |
+| **What to do next (backlog)** | **[`PLANS.md`](PLANS.md)** + Updates → Roadmap |
 
 ---
 
-## ЧАСТЬ 9: СВЯЗЬ С ДРУГИМИ ДОКУМЕНТАМИ
+## Quick Links
 
-| Вопрос | Файл |
-|--------|------|
-| Быстрый старт AI | `PROJECT-CONTEXT.md` |
-| Как устроен runtime | `ARCHITECTURE.md` |
-| Где код фичи | `FEATURES.md` |
-| **Что делать дальше в продукте** | **`PLANS.md`** + Updates → Roadmap |
-| История задач A/B/C | `archive/MASTER-TASKS-DONE.md` |
+- **Monster/skill data:** `node tools/fetch-monsters-index.mjs` · `node tools/fetch-skills-index.mjs --fresh`
+- **Worker deploy:** `cd worker && npx wrangler deploy`
+- **Search hex in features:** `rg "#[0-9a-fA-F]{6}" css/features/ -g "*.css"`
 
 ---
 
-*При изменении структуры репозитория обновляй **Часть 2** и `tools/build-*.mjs`. Backlog не добавляй в MASTER — только в PLANS.*
+*When changing repo structure, update [`FILE-MAP.md`](FILE-MAP.md) and `tools/build-*.mjs`. Do not add backlog items here — use [`PLANS.md`](PLANS.md).*

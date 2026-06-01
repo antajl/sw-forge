@@ -341,7 +341,8 @@
           ? (i * binSize + binSize).toFixed(binSize < 1 ? 1 : 0)
           : maxLabel;
       const label = i < binCount - 1 ? `${labelStart}-${labelEnd}` : maxLabel;
-      const cls = i >= binCount - 2 ? 'great' : i >= binCount - 4 ? 'good' : '';
+      const scoreValue = parseFloat(labelStart);
+      const cls = scoreValue >= 155 ? 'great' : scoreValue >= 105 ? 'good' : scoreValue >= 55 ? '' : 'low';
       el.innerHTML += `
         <div class="eff-bar-wrap" title="${label}: ${cnt}">
           <div class="eff-bar eff-bar--score ${cls}" style="height:${h0}px"></div>
@@ -890,6 +891,19 @@
         btn.setAttribute('aria-selected', String(on));
         btn.tabIndex = on ? 0 : -1;
       });
+      positionDashDistKindIndicator({ nav: kindTabs, activeKey: active, instant: false });
+    }
+    if (active === 'artifacts') {
+      if (typeof initArtifactDashTabs === 'function') initArtifactDashTabs();
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        const nav = document.getElementById('dash-art-tabs');
+        if (!nav || typeof positionArtifactDashTabIndicator !== 'function') return;
+        const key =
+          (typeof readArtifactDashTab === 'function' && readArtifactDashTab()) ||
+          (nav.querySelector('[data-dash-art-tab].is-active')?.getAttribute('data-dash-art-tab')) ||
+          'breakdown';
+        positionArtifactDashTabIndicator({ nav, activeKey: key, instant: true });
+      }));
     }
     const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const hint = document.getElementById('lbl-dash-unified-chart-hint');
@@ -899,6 +913,31 @@
           ? tloc.dashboardArtifactDistHint || ''
           : tloc.dashboardVerdictStackHint || '';
     }
+  }
+
+  function positionDashDistKindIndicator(opts) {
+    const o = opts || {};
+    const nav = o.nav;
+    if (!nav) return;
+    const motionApi = window.SWRM_MOTION;
+    if (motionApi && typeof motionApi.positionDashUnifiedTabIndicator === 'function') {
+      motionApi.positionDashUnifiedTabIndicator({
+        nav,
+        activeKey: o.activeKey,
+        instant: !!o.instant,
+      });
+      return;
+    }
+    const ind = nav.querySelector('.dash-dist-kind-tabs__indicator');
+    if (!ind) return;
+    const btn = nav.querySelector(`[data-dash-dist-kind="${o.activeKey}"]`);
+    if (!btn) return;
+    const rNav = nav.getBoundingClientRect();
+    const rBtn = btn.getBoundingClientRect();
+    const left = Math.max(0, rBtn.left - rNav.left);
+    ind.style.width = `${Math.max(0, rBtn.width)}px`;
+    ind.style.left = `${left}px`;
+    ind.style.transform = 'none';
   }
 
   function applyDashboardDistKind(kind, opts) {
@@ -919,6 +958,31 @@
     bindArtifactDashboardClicks();
     const initial = readDashboardDistKind();
     syncDashboardDistKindUi(initial);
+    const kindTabs = document.getElementById('dash-dist-kind-tabs');
+    if (kindTabs) {
+      positionDashDistKindIndicator({ nav: kindTabs, activeKey: initial, instant: true });
+    }
+    if (kindTabs && kindTabs.dataset.bound === '1') {
+      if (initial === 'artifacts') {
+        renderArtifactDashboardDistributions({ animateCharts: false, fromZero: false });
+      }
+      return;
+    }
+    if (kindTabs) kindTabs.dataset.bound = '1';
+    if (kindTabs) {
+      let resizeTimer = null;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+          positionDashDistKindIndicator({ nav: kindTabs, activeKey: readDashboardDistKind(), instant: true });
+        }, 120);
+      });
+      window.addEventListener('pageshow', () => {
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          positionDashDistKindIndicator({ nav: kindTabs, activeKey: readDashboardDistKind(), instant: true });
+        }));
+      });
+    }
     document.querySelectorAll('[data-dash-dist-kind]').forEach((btn) => {
       btn.addEventListener('click', () => {
         const raw = btn.getAttribute('data-dash-dist-kind') || 'runes';

@@ -24,16 +24,24 @@
   --red:      #ff8a93;
   --orange:   #ffb86b;
   --purple:   #cfa8ff;
-  --star-awaken: #f06eb0; /* awakened unit ★ (game pink — not --purple) */
+  --star-awaken: #FF46A2; /* awakened unit ★ (game pink — not --purple) */
   --teal:     #62d8d2;
 
-  --keep:    #9cd4a8;
-  --sell:    #ff9aaa;
-  --grind:   #7cdbdb;
-  --finish:  #9acbff;
-  --reapp:   #fde86e;
-  --upgrade: #ffcc82;
-  --gem:     #e0b8ef;
+  /* Verdict colors */
+  --keep:    #8CE6A4;
+  --sell:    #FF9AAA;
+  --grind:   #6AE7E7;
+  --finish:  #70B9FF;
+  --reapp:   #FFE45E;
+  --upgrade: #FFAE63;
+  --gem:     #E59BFF;
+
+  /* Monster grades */
+  --grade-normal: #ffffff;
+  --grade-magic: #55BB44;
+  --grade-rare: #3399FF;
+  --grade-hero: #AA44DD;
+  --grade-legend: #FF9900;
 
   /* Native OS UI font — no bundled sans/mono (readability feedback) */
   --font-ui: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -77,9 +85,11 @@
   --tint-acc: var(--accent2);
   --tint-res: var(--purple);
 
-  --tint-legend: var(--gold);
-  --tint-hero: var(--purple);
-  --tint-rare: var(--accent);
+  --tint-legend: var(--grade-legend);
+  --tint-hero: var(--grade-hero);
+  --tint-rare: var(--grade-rare);
+  --tint-magic: var(--grade-magic);
+  --tint-normal: var(--grade-normal);
 
   --tint-keep: var(--keep);
   --tint-sell: var(--sell);
@@ -89,18 +99,22 @@
   --tint-upgrade: var(--upgrade);
   --tint-gem: var(--gem);
 
-  --tint-highroll: var(--gold);
-  --tint-bruiser: var(--sell);
-  --tint-fastcc: var(--teal);
-  --tint-tank: var(--purple);
-  --tint-bomber: var(--orange);
-  --tint-classicdps: var(--accent);
-  --tint-slowdps: var(--accent2);
-  --tint-duoroll: var(--gold);
+  --tint-highroll:   #FFE45E;
+  --tint-bruiser:    #FF9AAA;
+  --tint-fastcc:     #6AE7E7;
+  --tint-tank:       #B993FF;
+  --tint-bomber:     #FFAE63;
+  --tint-classicdps: #7CD2FF;
+  --tint-slowdps:    #70B9FF;
+  --tint-duoroll:    #FFE45E;
 
   --tint-eff-hi: var(--green);
   --tint-eff-mid: var(--gold);
   --tint-eff-lo: var(--accent);
+
+  /* Chart colors */
+  --chart-sets: #6AE7E7;
+  --chart-slots: #6AE7E7;
 }
 
 .light-theme {
@@ -125,13 +139,21 @@
   --purple:   #634090;
   --teal:     #157a74;
 
-  --keep:    #3d7a32;
-  --sell:    #b83a48;
-  --grind:   #1a7a72;
-  --finish:  #2a6db8;
-  --reapp:   #a88608;
-  --upgrade: #b87418;
-  --gem:     #7d3d94;
+  /* Verdict colors */
+  --keep:    #8CE6A4;
+  --sell:    #FF9AAA;
+  --grind:   #6AE7E7;
+  --finish:  #70B9FF;
+  --reapp:   #FFE45E;
+  --upgrade: #FFAE63;
+  --gem:     #E59BFF;
+
+  /* Monster grades */
+  --grade-normal: #ffffff;
+  --grade-magic: #55BB44;
+  --grade-rare: #3399FF;
+  --grade-hero: #AA44DD;
+  --grade-legend: #FF9900;
 
   --glow-accent: 0 0 20px rgba(58, 123, 200, 0.16);
 
@@ -199,6 +221,33 @@ body {
   overflow-y: visible;
   background: color-mix(in srgb, var(--bg2) 92%, transparent);
   backdrop-filter: blur(12px);
+}
+
+/* Main tab content animation support */
+main {
+  position: relative;
+}
+
+.tab-content {
+  position: relative;
+  width: 100%;
+  min-height: 0;
+}
+
+html.swrm-has-gsap .tab-content {
+  will-change: transform, opacity;
+}
+
+/* Absolute positioning for animation layer */
+.tab-content.animating {
+  position: absolute !important;
+  top: var(--app-gutter);
+  left: var(--app-gutter);
+  right: var(--app-gutter);
+  box-sizing: border-box;
+  width: auto !important;
+  height: 100%;
+  z-index: 50;
 }
 
 .site-header {
@@ -1853,10 +1902,57 @@ html[lang='fr'] #tab-guide .guide-lang--fr {
   display: none;
 }
 
+#tab-guide .rules-tab-shell,
+#tab-changelog .rules-tab-shell {
+  max-width: var(--app-content-max);
+  margin: 0 auto;
+  padding: 0 0 36px;
+  width: 100%;
+}
+
 #tab-guide .rules-subtabs,
 #tab-changelog .rules-subtabs {
-  margin-top: 0;
-  margin-bottom: 1rem;
+  margin: 0 0 16px;
+  padding: 4px;
+  gap: 6px;
+  position: sticky;
+  top: 0;
+  z-index: 12;
+  background: color-mix(in srgb, var(--bg-main) 92%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+body.light-theme #tab-guide .rules-subtabs,
+body.light-theme #tab-changelog .rules-subtabs {
+  background: color-mix(in srgb, var(--bg-main) 94%, transparent);
+}
+
+#tab-guide .rules-subtabs .rules-subtab,
+#tab-changelog .rules-subtabs .rules-subtab {
+  flex: 1 1 0;
+  min-width: 5.5rem;
+  min-height: 3.35rem;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 11px 12px;
+}
+
+#tab-guide .rules-subtabs .rules-subtab__label,
+#tab-changelog .rules-subtabs .rules-subtab__label {
+  width: 100%;
+  text-align: center;
+  font-size: var(--runes-fs-tab-main, 0.9rem);
+  letter-spacing: 0.04em;
+}
+
+#tab-guide .rules-subtabs .rules-subtab__hint {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  line-height: 1.2;
 }
 
 #tab-guide .guide-lang {
@@ -1870,11 +1966,13 @@ html[lang='fr'] #tab-guide .guide-lang--fr {
   border-radius: var(--radius);
   border: 1px solid color-mix(in srgb, var(--border2) 88%, var(--accent) 12%);
   background: linear-gradient(
-    155deg,
-    color-mix(in srgb, var(--surface) 94%, var(--accent) 6%) 0%,
-    var(--surface) 72%
+    160deg,
+    color-mix(in srgb, var(--surface) 92%, var(--accent) 8%) 0%,
+    var(--surface) 62%
   );
-  box-shadow: 0 1px 3px color-mix(in srgb, var(--text-hi) 4%, transparent);
+  box-shadow:
+    0 1px 3px color-mix(in srgb, var(--text-hi) 5%, transparent),
+    0 0 28px color-mix(in srgb, var(--accent) 7%, transparent);
 }
 
 #tab-guide .guide-section h3 {
@@ -1921,7 +2019,14 @@ html[lang='fr'] #tab-guide .guide-lang--fr {
   padding: 1rem 1.1rem;
   border-radius: var(--radius);
   border: 1px solid var(--border2);
-  background: var(--surface);
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--surface) 92%, var(--accent) 8%) 0%,
+    var(--surface) 62%
+  );
+  box-shadow:
+    0 1px 3px color-mix(in srgb, var(--text-hi) 5%, transparent),
+    0 0 28px color-mix(in srgb, var(--accent) 7%, transparent);
 }
 
 #tab-changelog .changelog-release-date {
@@ -2002,11 +2107,13 @@ html[lang='fr'] #tab-guide .guide-lang--fr {
   border-radius: var(--radius);
   border: 1px solid color-mix(in srgb, var(--border2) 88%, var(--accent) 12%);
   background: linear-gradient(
-    155deg,
-    color-mix(in srgb, var(--surface) 94%, var(--accent) 6%) 0%,
-    var(--surface) 72%
+    160deg,
+    color-mix(in srgb, var(--surface) 92%, var(--accent) 8%) 0%,
+    var(--surface) 62%
   );
-  box-shadow: 0 1px 3px color-mix(in srgb, var(--text-hi) 4%, transparent);
+  box-shadow:
+    0 1px 3px color-mix(in srgb, var(--text-hi) 5%, transparent),
+    0 0 28px color-mix(in srgb, var(--accent) 7%, transparent);
 }
 
 #tab-changelog .guide-section--hero {
@@ -2098,10 +2205,7 @@ body.share-readonly #demo-dataset-banner:not(.share-view-banner) {
 
 /* Archive tab — match app content width, spaced cards */
 #tab-guide {
-  max-width: var(--app-content-max);
-  margin: 0 auto;
-  padding: 8px 16px 36px;
-  box-sizing: border-box;
+  max-width: 100%;
 }
 
 #tab-guide .guide-lang {
@@ -2125,10 +2229,7 @@ body.share-readonly #demo-dataset-banner:not(.share-view-banner) {
 }
 
 #tab-changelog {
-  max-width: var(--app-content-max);
-  margin: 0 auto;
-  padding: 8px 16px 36px;
-  box-sizing: border-box;
+  max-width: 100%;
 }
 
 #tab-changelog .changelog-release {
@@ -3026,6 +3127,7 @@ body.share-readonly #demo-dataset-banner:not(.share-view-banner) {
   --runes-fs-title: 0.9375rem;
   --runes-fs-section: 1rem;
   --runes-fs-control: 0.8125rem;
+  --runes-fs-tab-main: 0.9rem;
 }
 
 #tab-runes .hint,
@@ -3077,7 +3179,7 @@ body.share-readonly #demo-dataset-banner:not(.share-view-banner) {
 /* === css/features/runes/hub.css === */
 /* Runes hub — inner tabs (Dashboard / Table / Rules), matches .rules-subtabs look */
 #tab-runes > .runes-hub-tabs.rules-subtabs {
-  margin: 0 0 1.25rem;
+  margin: 0 0 16px;
   padding: 4px;
   gap: 6px;
   position: sticky;
@@ -3097,13 +3199,13 @@ body.light-theme #tab-runes > .runes-hub-tabs.rules-subtabs {
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 11px 12px;
+  padding: 12px;
 }
 
 .runes-hub-tabs .rules-subtab__label {
   width: 100%;
   text-align: center;
-  font-size: 0.84rem;
+  font-size: var(--runes-fs-tab-main);
   letter-spacing: 0.04em;
 }
 
@@ -3132,12 +3234,20 @@ body.light-theme #tab-runes > .runes-hub-tabs.rules-subtabs {
   display: block;
   min-width: 0;
   max-width: 100%;
-  overflow-x: clip;
 }
 
 #tab-runes {
   max-width: 100%;
-  overflow-x: clip;
+  position: relative;
+}
+
+/* Animation support for Runes hub panes */
+.runes-hub-pane.animating {
+  position: absolute;
+  left: 0;
+  right: 0;
+  box-sizing: border-box;
+  width: auto !important;
 }
 
 #tab-runes .dashboard-stage-wrap,
@@ -3153,7 +3263,7 @@ body.light-theme #tab-runes > .runes-hub-tabs.rules-subtabs {
     padding: 10px 8px;
   }
   .runes-hub-tabs .rules-subtab__label {
-    font-size: 0.78rem;
+    font-size: 0.84rem;
   }
 }
 
@@ -4195,7 +4305,7 @@ select:not(#stage-select):focus { border-color: var(--accent); }
 /* === css/features/runes/rules.css === */
 /* ========== Rune Rules tab (structured layout) ========== */
 .rules-expert-banner {
-  margin: 0 0 1.25rem;
+  margin: 0 0 16px;
   padding: 0.85rem 1rem;
   border-radius: var(--radius-lg);
   border: 1px solid color-mix(in srgb, var(--warn, #e8b84a) 35%, var(--border2));
@@ -4250,7 +4360,7 @@ select:not(#stage-select):focus { border-color: var(--accent); }
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 @media (max-width: 720px) {
@@ -4282,8 +4392,8 @@ select:not(#stage-select):focus { border-color: var(--accent); }
 .artifact-role-cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
-  gap: 10px;
-  margin-bottom: 12px;
+  gap: 16px;
+  margin-bottom: 16px;
 }
 
 .artifact-role-card {
@@ -4312,7 +4422,7 @@ select:not(#stage-select):focus { border-color: var(--accent); }
 }
 
 .artifact-role-editor {
-  margin-top: 14px;
+  margin-top: 16px;
   padding: 14px;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border2);
@@ -4327,7 +4437,7 @@ select:not(#stage-select):focus { border-color: var(--accent); }
 .artifact-role-editor__foot {
   display: flex;
   gap: 8px;
-  margin-top: 12px;
+  margin-top: 16px;
 }
 
 .artifact-rules-checks--tall {
@@ -4354,7 +4464,7 @@ select:not(#stage-select):focus { border-color: var(--accent); }
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 22px;
+  margin-bottom: 16px;
   padding: 4px;
   padding-bottom: 8px;
   border-radius: var(--radius-lg);
@@ -4533,10 +4643,16 @@ html.swrm-has-gsap .rules-tab-shell > .rules-tab-footer {
 }
 
 .rules-card {
-  background: var(--surface);
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--surface) 92%, var(--accent) 8%) 0%,
+    var(--surface) 62%
+  );
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  box-shadow: 0 2px 28px color-mix(in srgb, var(--bg2) 75%, transparent);
+  box-shadow:
+    0 1px 3px color-mix(in srgb, var(--text-hi) 5%, transparent),
+    0 0 28px color-mix(in srgb, var(--accent) 7%, transparent);
   overflow: hidden;
 }
 .rules-card--engine {
@@ -4681,7 +4797,7 @@ html.swrm-has-gsap .rules-tab-shell > .rules-tab-footer {
 .settings-two-col {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 24px;
+  gap: 16px;
   width: 100%;
   padding: 0 0 20px;
   align-items: start;
@@ -4703,7 +4819,7 @@ html.swrm-has-gsap .rules-tab-shell > .rules-tab-footer {
 .changelog-releases {
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 16px;
 }
 .changelog-release {
   padding: 14px 16px;
@@ -4825,7 +4941,7 @@ html.swrm-has-gsap .rules-tab-shell > .rules-tab-footer {
 .hint { font-size: 0.78rem; color: var(--text-dim); }
 
 .settings-actions {
-  display: flex; gap: 12px; margin-top: 24px;
+  display: flex; gap: 12px; margin-top: 16px;
   padding-top: 20px; border-top: 1px solid var(--border);
 }
 .btn-primary {
@@ -4882,7 +4998,7 @@ html.swrm-has-gsap .rules-tab-shell > .rules-tab-footer {
 .role-layout {
   display: grid;
   grid-template-columns: 200px 1fr;
-  gap: 20px;
+  gap: 16px;
   margin-top: 16px;
 }
 
@@ -5371,7 +5487,7 @@ html[lang="ru"] #tab-dashboard .btn-dash-open-all-inline {
 }
 
 .panel-top-spd-head {
-  margin-bottom: 8px;
+  margin-bottom: 16px;
   padding-bottom: 0;
   border-bottom: none;
 }
@@ -5406,6 +5522,10 @@ html[lang="ru"] #tab-dashboard .btn-dash-open-all-inline {
   border-bottom: 1px solid var(--border);
 }
 
+.panel-dash-distributions-head .dash-dist-kind-tabs {
+  flex: 1 1 100%;
+}
+
 .panel-dash-distributions-head .rules-page-title {
   margin: 0;
   font-size: 1.15rem;
@@ -5425,7 +5545,7 @@ html[lang='ru'] .panel-dash-distributions-head .rules-page-lead.dash-unified-blo
 
 /* Unified tabs/panes */
 .dash-unified-tabs.rules-subtabs {
-  margin-bottom: 14px;
+  margin-bottom: 16px;
   position: relative;
   padding-bottom: 8px;
 }
@@ -5549,6 +5669,7 @@ html:not(.swrm-has-gsap) .rules-subtabs__indicator {
   }
 }
 
+
 /* === css/features/runes/dashboard-artifacts.css === */
 /* dashboard-artifacts.css — artifact distribution grid on Dashboard */
 
@@ -5565,35 +5686,64 @@ html:not(.swrm-has-gsap) .rules-subtabs__indicator {
 }
 
 .dash-dist-kind-tabs {
-  display: inline-flex;
-  gap: 4px;
-  padding: 3px;
-  border-radius: 8px;
-  background: var(--surface-2, rgba(255, 255, 255, 0.06));
-  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+  display: flex;
+  width: 100%;
+  gap: 10px;
+  padding: 6px;
+  padding-bottom: 10px;
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--bg3) 55%, transparent);
+  border: 1px solid var(--border);
+  position: relative;
+}
+
+.dash-dist-kind-tabs__indicator {
+  position: absolute;
+  left: 0;
+  bottom: 4px;
+  height: 3px;
+  width: 0;
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 4;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 40%, transparent);
+  opacity: 0.95;
+}
+
+html:not(.swrm-has-gsap) .dash-dist-kind-tabs__indicator {
+  display: none;
 }
 
 .dash-dist-kind-tab {
   appearance: none;
-  border: none;
+  border: 1px solid transparent;
   background: transparent;
-  color: var(--text-muted, #9aa3b2);
-  font: inherit;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  padding: 6px 14px;
-  border-radius: 6px;
+  color: var(--text-dim);
+  font-family: var(--font-head);
+  font-size: var(--runes-fs-tab-main);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 14px 18px;
+  border-radius: var(--radius);
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  flex: 1 1 0;
+  min-width: 5.5rem;
+  transition: background 0.14s ease, border-color 0.14s ease, color 0.14s ease;
 }
 
 .dash-dist-kind-tab:hover {
-  color: var(--text, #e8ecf1);
+  color: var(--text);
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  border-color: var(--border2);
 }
 
 .dash-dist-kind-tab.is-active {
-  background: var(--accent-dim, rgba(99, 179, 237, 0.18));
-  color: var(--text, #e8ecf1);
+  color: var(--text-hi);
+  background: var(--surface);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border2));
+  box-shadow: 0 2px 14px color-mix(in srgb, var(--accent) 16%, transparent);
+  transition: background 0.14s ease, border-color 0.14s ease, color 0.14s ease, box-shadow 0.24s ease;
 }
 
 .dash-dist-kind-tab:focus-visible {
@@ -5629,6 +5779,10 @@ html:not(.swrm-has-gsap) .rules-subtabs__indicator {
 
 .dash-artifact-cell {
   min-width: 0;
+  background: color-mix(in srgb, var(--dash-inner-well) 78%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--border2) 78%, var(--accent));
+  border-radius: var(--radius-lg);
+  padding: 12px 14px 14px;
 }
 
 .dash-artifact-cell__title {
@@ -5899,7 +6053,7 @@ html.swrm-has-gsap .slot-main-card-bar {
   background: var(--green);
 }
 .chart-bar-fill.chart-bar--sets {
-  background: var(--finish);
+  background: var(--chart-sets);
 }
 .chart-bar-fill.chart-bar--slots {
   background: var(--grind);
@@ -6172,7 +6326,7 @@ html[lang='ru'] .slot-share-slot-lbl {
   height: 0;
   max-height: 100%;
   border-radius: 4px 4px 0 0;
-  background: var(--grind);
+  background: var(--chart-sets);
   transition: height 0.35s ease;
 }
 
@@ -6247,7 +6401,7 @@ html[lang='ru'] .slot-share-slot-lbl {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: color-mix(in srgb, var(--accent) 72%, var(--finish));
+  background: var(--chart-sets);
   min-width: 2px;
   transition: width 0.35s ease;
 }
@@ -6777,12 +6931,28 @@ html[lang='ru'] .slot-share-slot-lbl {
   bottom: 26px;
 }
 
-.eff-bar--score.great {
-  background: color-mix(in srgb, var(--gold) 72%, var(--accent));
+/* Слабые значения (уводим в тень, чтобы не мозолили глаза) */
+.eff-bar.low,
+.eff-bar--score.low {
+  background: #A0AAB5;
 }
 
+/* Основная масса / Средний уровень (твой любимый мятный) */
+.eff-bar,
+.eff-bar--score {
+  background: #66EBE3;
+}
+
+/* Хорошие проки (сочный зеленый) */
+.eff-bar.good,
 .eff-bar--score.good {
-  background: color-mix(in srgb, var(--accent) 55%, var(--bg3));
+  background: #8CE6A4;
+}
+
+/* Топовые проки (леденцовое золото) */
+.eff-bar.great,
+.eff-bar--score.great {
+  background: #FFE45E;
 }
 
 .eff-chart {
@@ -6792,12 +6962,9 @@ html[lang='ru'] .slot-share-slot-lbl {
 .eff-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .eff-bar {
   width: 100%; border-radius: 2px 2px 0 0;
-  background: var(--grind);
   transition: height 0.4s;
   min-height: 2px;
 }
-.eff-bar.good { background: var(--keep); }
-.eff-bar.great { background: var(--finish); }
 .eff-label { font-size: 0.6rem; color: var(--text-dim); }
 
 /* === css/features/runes/floating-tip.css === */
@@ -7388,7 +7555,7 @@ html.swrm-has-gsap .swrm-floating-tip {
 /* Table core */
 .table-wrap {
   overflow: auto;
-  max-height: min(82vh, 980px);
+  max-height: min(75vh, 900px);
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
 }
@@ -7926,8 +8093,8 @@ table.show-target td.target-col-cell .table-stat__text {
 
 /* === css/features/runes/table-chips.css === */
 /* Grade badges (legacy markup) */
-.badge.badge-legend { --chip-tint: var(--tint-legend); }
-.badge.badge-hero { --chip-tint: var(--tint-hero); }
+.badge.badge-legend { --chip-tint: var(--grade-legend); }
+.badge.badge-hero { --chip-tint: var(--grade-hero); }
 
 /* Legacy eff classes (e.g. if reused outside table chips) */
 .eff-hi  { color: var(--tint-eff-hi); font-family: var(--font-ui); }
@@ -8019,9 +8186,11 @@ table.show-target td.target-col-cell .table-stat__text {
 }
 
 /* Grades */
-.grade-tag.legend { --chip-tint: var(--tint-legend); }
-.grade-tag.hero { --chip-tint: var(--tint-hero); }
-.grade-tag.rare { --chip-tint: var(--tint-rare); }
+.grade-tag.legend { --chip-tint: var(--grade-legend); }
+.grade-tag.hero { --chip-tint: var(--grade-hero); }
+.grade-tag.rare { --chip-tint: var(--grade-rare); }
+.grade-tag.magic { --chip-tint: var(--grade-magic); }
+.grade-tag.normal { --chip-tint: var(--grade-normal); }
 .grade-tag.grade-tag--other {
   --chip-tint: var(--tint-muted);
   --chip-surface-pct: 94%;
@@ -8172,7 +8341,7 @@ table.show-target td.target-col-cell .table-stat__text {
 
 /* === css/features/gear/table-kind.css === */
 .table-kind-tabs.rules-subtabs {
-  margin: 0 0 12px;
+  margin: 0 0 16px;
   position: relative;
   padding-bottom: 8px;
 }
@@ -8189,7 +8358,6 @@ table.show-target td.target-col-cell .table-stat__text {
   background: linear-gradient(90deg, var(--accent), var(--accent2));
   box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 40%, transparent);
   opacity: 0.95;
-  transition: left 0.2s ease, width 0.2s ease;
 }
 
 html:not(.swrm-has-gsap) .table-kind-tabs__indicator {
@@ -8742,7 +8910,7 @@ thead tr {
 
 .artifact-rules-grid {
   display: grid;
-  gap: 1rem;
+  gap: 16px;
   grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
 }
 
@@ -8789,7 +8957,7 @@ thead tr {
 }
 
 .gear-table-active-filters {
-  margin-top: -4px;
+  margin-top: -16px;
 }
 
 
@@ -9480,6 +9648,209 @@ thead tr {
   background: color-mix(in srgb, var(--surface) 88%, var(--bg2));
 }
 
+.monsters-metrics {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.monsters-metric-card {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  background: var(--bg3);
+}
+
+.monsters-metric-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.monsters-metric-name {
+  font-size: var(--text-caption);
+  font-weight: 600;
+  color: var(--text-dim);
+  letter-spacing: 0.02em;
+}
+
+.monsters-metric-val {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-hi);
+  line-height: 1.1;
+}
+
+.monsters-composition {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.monsters-composition__section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.monsters-composition__title {
+  margin: 0;
+  font-size: var(--text-caption);
+  font-weight: 600;
+  color: var(--text-dim);
+  letter-spacing: 0.02em;
+}
+
+.monsters-composition__bars {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.monsters-composition-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--bg3);
+  font-size: 0.72rem;
+  color: var(--text);
+}
+
+.monsters-composition-bar__label {
+  font-weight: 500;
+}
+
+.monsters-composition-bar__count {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--text-hi);
+}
+
+.monsters-rune-slots {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.monsters-rune-slots__title {
+  margin: 0;
+  font-size: var(--text-caption);
+  font-weight: 600;
+  color: var(--text-dim);
+  letter-spacing: 0.02em;
+}
+
+.monsters-rune-slots__chart {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.monsters-rune-slots-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--bg3);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.monsters-rune-slots-bar:hover {
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg3));
+}
+
+.monsters-rune-slots-bar__label {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text);
+  min-width: 60px;
+}
+
+.monsters-rune-slots-bar__track {
+  flex: 1;
+  height: 8px;
+  background: var(--bg2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.monsters-rune-slots-bar__fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 4px;
+  transition: width 0.3s;
+}
+
+.monsters-rune-slots-bar__count {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-hi);
+  min-width: 30px;
+  text-align: right;
+}
+
+.monsters-skill-priorities {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.monsters-skill-priorities__title {
+  margin: 0;
+  font-size: var(--text-caption);
+  font-weight: 600;
+  color: var(--text-dim);
+  letter-spacing: 0.02em;
+}
+
+.monsters-skill-priorities__list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.monsters-skill-priority-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--bg3);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.monsters-skill-priority-item:hover {
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg3));
+}
+
+.monsters-skill-priority-item__name {
+  flex: 1;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.monsters-skill-priority-item__count {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-hi);
+}
+
 .monsters-box-overview[hidden] {
   display: none !important;
 }
@@ -9895,20 +10266,55 @@ thead tr {
 
 
 /* === css/features/monsters/hub.css === */
-/* Monsters hub — Roster / Teams inner tabs */
+/* Monsters hub — Dashboard / Roster / Teams / Planner inner tabs */
 #tab-monsters > .monsters-hub-tabs.rules-subtabs {
-  margin: 0 0 1.25rem;
+  margin: 0 0 16px;
   padding: 4px;
   gap: 6px;
+  position: sticky;
+  top: 0;
+  z-index: 12;
+  background: color-mix(in srgb, var(--bg-main) 92%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+body.light-theme #tab-monsters > .monsters-hub-tabs.rules-subtabs {
+  background: color-mix(in srgb, var(--bg-main) 94%, transparent);
+}
+
+.monsters-hub-tabs__indicator {
+  position: absolute;
+  left: 0;
+  bottom: 4px;
+  height: 3px;
+  width: 0;
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 4;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 40%, transparent);
+  opacity: 0.95;
+}
+
+html:not(.swrm-has-gsap) .monsters-hub-tabs__indicator {
+  display: none;
 }
 
 .monsters-hub-tabs .monsters-hub-tab {
   flex: 1 1 0;
-  min-width: 6rem;
+  min-width: 5.5rem;
+  min-height: 3.35rem;
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 11px 14px;
+  padding: 11px 12px;
+}
+
+.monsters-hub-tabs .rules-subtab__label {
+  width: 100%;
+  text-align: center;
+  font-size: var(--runes-fs-tab-main, 0.9rem);
+  letter-spacing: 0.04em;
 }
 
 .monsters-hub-pane:not(.is-active) {
@@ -9921,13 +10327,26 @@ thead tr {
 }
 
 #tab-monsters-teams[hidden],
-#tab-monsters-planner[hidden] {
+#tab-monsters-planner[hidden],
+#tab-monsters-dashboard[hidden] {
   display: none !important;
 }
 
 #tab-monsters-teams.monsters-hub-pane.is-active[hidden],
-#tab-monsters-planner.monsters-hub-pane.is-active[hidden] {
+#tab-monsters-planner.monsters-hub-pane.is-active[hidden],
+#tab-monsters-dashboard.monsters-hub-pane.is-active[hidden] {
   display: block !important;
+}
+
+@media (max-width: 520px) {
+  .monsters-hub-tabs .monsters-hub-tab {
+    flex: 1 1 calc(25% - 6px);
+    min-height: 3.15rem;
+    padding: 10px 8px;
+  }
+  .monsters-hub-tabs .rules-subtab__label {
+    font-size: 0.84rem;
+  }
 }
 
 
@@ -10803,11 +11222,11 @@ thead tr {
 /* === css/features/monsters/elements.css === */
 /* Element accents — border / bar only, no full fill */
 :root {
-  --monsters-el-fire: #C4525E;
-  --monsters-el-water: #4A89B8;
-  --monsters-el-wind: #CFA738;
-  --monsters-el-light: #D1C494;
-  --monsters-el-dark: #8A5E9C;
+  --monsters-el-fire:  #FF9AAA; /* Твой леденцово-розовый */
+  --monsters-el-water: #7CD2FF; /* Яркий небесно-голубой (вместо блеклого) */
+  --monsters-el-wind:  #FFDF70; /* Сочный лимонно-жёлтый (не уходит в грязь) */
+  --monsters-el-light: #E2E9F0; /* Контрастный стальной (чтобы не сливался с белым фоном) */
+  --monsters-el-dark:  #B993FF; /* Насыщенный неоново-фиолетовый (чётко отделим от воды) */
 }
 
 .monsters-card--fire {
@@ -11084,7 +11503,18 @@ thead tr {
 .monsters-shell {
   max-width: var(--app-content-max);
   margin: 0 auto;
-  padding: 0 4px 24px;
+  padding: 0 0 24px;
+  position: relative;
+}
+
+/* Animation support for Monsters hub panes */
+.monsters-hub-pane.animating {
+  position: absolute;
+  top: 82px; /* Approximate height of tabs container (padding 4px + min-height 3.35rem + margin 16px) + extra buffer */
+  left: 0;
+  right: 0;
+  box-sizing: border-box;
+  width: auto !important;
 }
 
 .monsters-layout {

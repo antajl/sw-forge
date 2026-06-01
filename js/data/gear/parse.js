@@ -19,8 +19,8 @@
 
   /** SWEX attribute on element artifacts (slot 1). */
   const ARTIFACT_ELEMENT = {
-    1: 'Fire',
-    2: 'Water',
+    1: 'Water',
+    2: 'Fire',
     3: 'Wind',
     4: 'Light',
     5: 'Dark',
@@ -36,9 +36,9 @@
 
   /** Monster archetype on Type artifacts (`unit_style`). */
   const ARTIFACT_ARCHETYPE = {
-    1: 'HP',
-    2: 'Attack',
-    3: 'Defense',
+    1: 'Attack',
+    2: 'Defense',
+    3: 'HP',
     4: 'Support',
     5: 'Intangible',
     98: 'Intangible',
@@ -271,12 +271,21 @@
   function parseAccountGear(json) {
     const artMap = new Map();
     const relMap = new Map();
+    let invArtCount = 0;
+    let unitArtCount = 0;
+    let duplicateRids = new Set();
+    
     const pushArt = (raw, unitId) => {
       const a = parseArtifact(raw);
       if (!a || a.rid == null) return;
       if (unitId != null && a.occupiedId == null) a.occupiedId = Number(unitId);
       else if (a.occupiedId === 0) a.occupiedId = null;
+      if (artMap.has(a.rid)) {
+        duplicateRids.add(a.rid);
+      }
       artMap.set(a.rid, a);
+      if (unitId == null) invArtCount++;
+      else unitArtCount++;
     };
     const pushRel = (raw, unitId) => {
       const r = parseRelic(raw);
@@ -296,6 +305,13 @@
     for (const r of relMap.values()) {
       r.wearCount = wearCounts.get(r.rid) || 0;
     }
+    
+    // Debug logging
+    console.log('[SWRM Gear Parse] Artifacts: inventory=' + invArtCount + ', unit-equipped=' + unitArtCount + ', total=' + artMap.size + ', duplicates=' + duplicateRids.size);
+    if (duplicateRids.size > 0) {
+      console.log('[SWRM Gear Parse] Duplicate artifact RIDs:', Array.from(duplicateRids));
+    }
+    
     return {
       artifacts: Array.from(artMap.values()),
       relics: Array.from(relMap.values()),

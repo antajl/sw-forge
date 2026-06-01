@@ -7,7 +7,11 @@
 | Вопрос | Где смотреть |
 |--------|----------------|
 | С чего начать сессию правок | [`PROJECT-CONTEXT.md`](PROJECT-CONTEXT.md) — стек, build, 5 правил |
-| Где лежит файл / API `SWRM` | [`MASTER.md`](MASTER.md) — карта репо, load order, CSS vars, changelog rules |
+| Где лежит файл / API `SWRM` | [`MASTER.md`](MASTER.md) — точка входа, правила правок, ссылки |
+| Полная карта файлов | [`FILE-MAP.md`](FILE-MAP.md) |
+| Порядок загрузки скриптов | [`LOAD-ORDER.md`](LOAD-ORDER.md) |
+| `window.SWRM` API + CSS переменные | [`API-REFERENCE.md`](API-REFERENCE.md) |
+| Известные баги / проблемы | [`KNOWN-ISSUES.md`](KNOWN-ISSUES.md) |
 | Что делать дальше (backlog) | [`PLANS.md`](PLANS.md) + в приложении Changelog → **Roadmap** |
 | Что уже вышло (игрокам) | Changelog → **Releases** (`js/core/changelog-data.js`) |
 | Порядок скриптов и сборка UI/CSS | [`ARCHITECTURE.md`](ARCHITECTURE.md) |

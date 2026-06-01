@@ -13,9 +13,9 @@
   };
 
   const ARTIFACT_ARCHETYPE_KEY = {
-    1: 'hp',
-    2: 'attack',
-    3: 'defense',
+    1: 'attack',
+    2: 'defense',
+    3: 'hp',
     4: 'support',
     5: 'support',
     98: 'support',

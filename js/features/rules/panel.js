@@ -297,7 +297,7 @@
     const roles = [...orderedRoles, 'Duo Roll', 'God Roll'].filter(
       (name, idx, arr) => arr.indexOf(name) === idx,
     );
-    const t = TRANSLATIONS[currentLang];
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const godLbl = t.roleGodRoll || 'God Roll';
     roleSelect.innerHTML =
       `<option value="">${t.allRoles || 'All Roles'}</option>` +

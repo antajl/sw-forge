@@ -48,6 +48,10 @@
   function enabled() {
     return !!gsap && !reducedMotion;
   }
+  const RUNES_TAB_INDICATOR_DURATION = 0.65;
+  const RUNES_TAB_PANE_FADE_DURATION = 0.28;
+  const RUNES_TAB_INDICATOR_EASE = 'power2.inOut';
+  const RUNES_TAB_PANE_EASE = 'power1.inOut';
 
   let stageTimeline = null;
 
@@ -158,10 +162,10 @@
 
     if (current && current !== next) {
       current.classList.remove('is-active');
-      dashTimeline.to(current, { opacity: 0, duration: 0.22, ease: 'power1.inOut' }, 0);
+      dashTimeline.to(current, { opacity: 0, duration: RUNES_TAB_PANE_FADE_DURATION, ease: RUNES_TAB_PANE_EASE }, 0);
     }
     next.classList.add('is-active');
-    dashTimeline.to(next, { opacity: 1, duration: 0.22, ease: 'power1.inOut' }, 0);
+    dashTimeline.to(next, { opacity: 1, duration: RUNES_TAB_PANE_FADE_DURATION, ease: RUNES_TAB_PANE_EASE }, 0);
     animateDashboardPaneBars(next);
     return true;
   }
@@ -181,11 +185,12 @@
    */
   function positionDashUnifiedTabIndicator(opts) {
     const { nav, activeKey, instant } = opts || {};
-    const ind = nav && nav.querySelector('.dash-unified-tabs__indicator');
+    const ind = nav && nav.querySelector('.dash-unified-tabs__indicator, .dash-dist-kind-tabs__indicator');
     const key = String(activeKey || '').trim();
     const btn =
       (key && nav && nav.querySelector(`[data-dash-uni="${key}"]`)) ||
       (key && nav && nav.querySelector(`[data-dash-art-tab="${key}"]`)) ||
+      (key && nav && nav.querySelector(`[data-dash-dist-kind="${key}"]`)) ||
       (key && document.getElementById(`dash-unified-tab-${key}`)) ||
       (nav && nav.querySelector('.is-active')) ||
       null;
@@ -207,8 +212,8 @@
     gsap.to(ind, {
       left: x,
       width: w,
-      duration: 0.32,
-      ease: 'power3.out',
+      duration: RUNES_TAB_INDICATOR_DURATION,
+      ease: RUNES_TAB_INDICATOR_EASE,
       overwrite: 'auto',
       onStart: () => {
         ind.style.transform = 'none';
@@ -242,9 +247,81 @@
     gsap.to(ind, {
       left: x,
       width: w,
-      duration: 0.32,
-      ease: 'power3.out',
+      duration: RUNES_TAB_INDICATOR_DURATION,
+      ease: RUNES_TAB_INDICATOR_EASE,
       overwrite: 'auto',
+    });
+    return true;
+  }
+
+  /**
+   * Sliding underline under Monsters Hub tabs (Dashboard / Roster / Teams / Planner).
+   * @param {{ nav: HTMLElement|null, activeKey: string, instant?: boolean }} opts
+   * @returns {boolean} true when a GSAP tween ran
+   */
+  function positionMonstersHubTabIndicator(opts) {
+    const { nav, activeKey, instant } = opts || {};
+    const ind = nav && nav.querySelector('.monsters-hub-tabs__indicator');
+    const key = ['dashboard', 'roster', 'teams', 'planner'].includes(activeKey) ? activeKey : 'roster';
+    const btn = document.getElementById(`monsters-hub-tab-${key}`);
+    if (!nav || !ind || !btn) return false;
+    const navRect = nav.getBoundingClientRect();
+    const btnRect = btn.getBoundingClientRect();
+    const x = Math.max(0, btnRect.left - navRect.left);
+    const w = Math.max(0, btnRect.width);
+    killTweensOf(ind);
+    const snap = () => {
+      ind.style.transform = 'none';
+      ind.style.left = `${x}px`;
+      ind.style.width = `${w}px`;
+    };
+    if (instant || !enabled()) {
+      snap();
+      return false;
+    }
+    gsap.to(ind, {
+      left: x,
+      width: w,
+      duration: RUNES_TAB_INDICATOR_DURATION,
+      ease: RUNES_TAB_INDICATOR_EASE,
+      overwrite: 'auto',
+      onStart: () => { ind.style.transform = 'none'; },
+    });
+    return true;
+  }
+
+  function positionTableKindTabIndicator(opts) {
+    const { nav, activeKey, instant } = opts || {};
+    const ind = nav && nav.querySelector('.table-kind-tabs__indicator');
+    const key = String(activeKey || '').trim();
+    const btn =
+      (key && nav && nav.querySelector(`[data-table-kind="${key}"]`)) ||
+      (nav && nav.querySelector('.table-kind-tab.is-active')) ||
+      null;
+    if (!nav || !ind || !btn) return false;
+    const navRect = nav.getBoundingClientRect();
+    const btnRect = btn.getBoundingClientRect();
+    const x = Math.max(0, btnRect.left - navRect.left);
+    const w = Math.max(0, btnRect.width);
+    killTweensOf(ind);
+    const snap = () => {
+      ind.style.transform = 'none';
+      ind.style.left = `${x}px`;
+      ind.style.width = `${w}px`;
+    };
+    if (instant || !enabled()) {
+      snap();
+      return false;
+    }
+    gsap.to(ind, {
+      left: x,
+      width: w,
+      duration: RUNES_TAB_INDICATOR_DURATION,
+      ease: RUNES_TAB_INDICATOR_EASE,
+      overwrite: 'auto',
+      onStart: () => {
+        ind.style.transform = 'none';
+      },
     });
     return true;
   }
@@ -303,8 +380,8 @@
     gsap.to(ind, {
       top: y,
       height: h,
-      duration: 0.32,
-      ease: 'power3.out',
+      duration: RUNES_TAB_INDICATOR_DURATION,
+      ease: RUNES_TAB_INDICATOR_EASE,
       overwrite: 'auto',
       onStart: () => {
         ind.style.transform = 'none';
@@ -363,9 +440,9 @@
       },
     });
     if (prev) {
-      tl.to(prev, { opacity: 0, duration: 0.2, ease: 'power1.inOut' }, 0);
+      tl.to(prev, { opacity: 0, duration: RUNES_TAB_PANE_FADE_DURATION, ease: RUNES_TAB_PANE_EASE }, 0);
     }
-    tl.to(active, { opacity: 1, duration: 0.2, ease: 'power1.inOut' }, 0);
+    tl.to(active, { opacity: 1, duration: RUNES_TAB_PANE_FADE_DURATION, ease: RUNES_TAB_PANE_EASE }, 0);
     subpanelTimelines.set(active, tl);
   }
 
@@ -596,6 +673,157 @@
     global.document.documentElement.classList.add('swrm-has-gsap');
   }
 
+  let mainTabTimeline = null;
+  let mainTabGen = 0;
+
+  /**
+   * Slide transition between main tabs (Gear/Monsters/Guide/Updates/Settings) using absolute positioning.
+   * @param {{ current: HTMLElement|null, next: HTMLElement, direction: 'next'|'prev', onComplete?: () => void }} opts
+   * @returns {boolean} true when GSAP animation started
+   */
+  function animateMainTabTransition(opts) {
+    const { current, next, direction, onComplete } = opts || {};
+    if (!enabled() || !next) return false;
+
+    const gen = ++mainTabGen;
+    if (mainTabTimeline) {
+      mainTabTimeline.kill();
+      mainTabTimeline = null;
+    }
+
+    const dir = direction === 'next' ? 1 : -1;
+    const startX = dir * 100;
+    const endX = -dir * 100;
+
+    // Add animating class for absolute positioning
+    next.classList.add('animating');
+    next.classList.remove('hidden');
+    next.setAttribute('aria-hidden', 'false');
+    gsap.set(next, { x: `${startX}%`, opacity: 0 });
+
+    if (current) {
+      current.classList.add('animating');
+      gsap.set(current, { x: 0, opacity: 1 });
+    }
+
+    mainTabTimeline = gsap.timeline({
+      onComplete: () => {
+        if (gen !== mainTabGen) return;
+        mainTabTimeline = null;
+        if (current) {
+          gsap.set(current, { clearProps: 'x,opacity' });
+          current.classList.remove('animating');
+          current.classList.add('hidden');
+          current.setAttribute('aria-hidden', 'true');
+        }
+        gsap.set(next, { clearProps: 'x,opacity' });
+        next.classList.remove('animating');
+        onComplete && onComplete();
+      },
+    });
+
+    if (current && current !== next) {
+      mainTabTimeline.to(current, { x: `${endX}%`, opacity: 0, duration: 0.4, ease: 'power2.inOut' }, 0);
+    }
+    mainTabTimeline.to(next, { x: 0, opacity: 1, duration: 0.4, ease: 'power2.inOut' }, 0);
+
+    return true;
+  }
+
+  function cancelMainTabTransition() {
+    mainTabGen++;
+    if (mainTabTimeline) {
+      mainTabTimeline.kill();
+      mainTabTimeline = null;
+    }
+  }
+
+  let subTabTimeline = null;
+  let subTabGen = 0;
+
+  /**
+   * Slide transition between sub-tabs (e.g., Monsters Dashboard/Roster/Teams) using absolute positioning.
+   * @param {{ current: HTMLElement|null, next: HTMLElement, direction: 'next'|'prev', onComplete?: () => void }} opts
+   * @returns {boolean} true when GSAP animation started
+   */
+  function animateSubTabTransition(opts) {
+    const { current, next, direction, onComplete } = opts || {};
+    if (!enabled() || !next) return false;
+
+    const gen = ++subTabGen;
+    if (subTabTimeline) {
+      subTabTimeline.kill();
+      subTabTimeline = null;
+    }
+
+    const dir = direction === 'next' ? 1 : -1;
+    const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+    const startX = dir * viewportWidth;
+    const endX = -dir * viewportWidth;
+
+    // Calculate dynamic top offset for runes-hub-pane to prevent vertical jump
+    let topOffset = 0;
+    if (next.classList.contains('runes-hub-pane')) {
+      const nav = document.getElementById('runes-hub-tabs');
+      if (nav) {
+              const navStyle = window.getComputedStyle(nav);
+        const marginBottom = parseFloat(navStyle.marginBottom) || 0;
+        topOffset = nav.offsetHeight + marginBottom;
+      }
+    }
+
+    // Add animating class for absolute positioning
+    next.classList.add('animating');
+    next.classList.remove('hidden');
+    next.classList.add('is-active');
+    next.removeAttribute('hidden');
+
+    if (current) {
+      current.classList.add('animating');
+      gsap.set(current, { x: 0, opacity: 1 });
+      if (topOffset) {
+        gsap.set(current, { top: topOffset });
+      }
+    }
+
+    gsap.set(next, { x: startX, opacity: 0 });
+    if (topOffset) {
+      gsap.set(next, { top: topOffset });
+    }
+
+    subTabTimeline = gsap.timeline({
+      onComplete: () => {
+        if (gen !== subTabGen) return;
+        subTabTimeline = null;
+        if (current) {
+          gsap.set(current, { clearProps: 'x,opacity,top' });
+          current.classList.remove('animating');
+          current.classList.remove('is-active');
+          current.classList.add('hidden');
+          current.setAttribute('hidden', '');
+        }
+        gsap.set(next, { clearProps: 'x,opacity,top' });
+        next.classList.remove('animating');
+        onComplete && onComplete();
+      },
+    });
+
+    if (current && current !== next) {
+      subTabTimeline.to(current, { x: endX, opacity: 0, duration: 0.4, ease: 'power2.inOut' }, 0);
+    }
+    subTabTimeline.to(next, { x: 0, opacity: 1, duration: 0.4, ease: 'power2.inOut' }, 0);
+
+    return true;
+  }
+
+  function cancelSubTabTransition() {
+    subTabGen++;
+    if (subTabTimeline) {
+      subTabTimeline.kill();
+      subTabTimeline = null;
+    }
+  }
+
   global.SWRM_MOTION = {
     enabled,
     reduced: () => reducedMotion,
@@ -605,6 +833,8 @@
     animateDashUnifiedTab,
     positionDashUnifiedTabIndicator,
     positionRunesHubTabIndicator,
+    positionMonstersHubTabIndicator,
+    positionTableKindTabIndicator,
     positionRulesSubtabIndicator,
     swapSubpanels,
     toastIn,
@@ -618,5 +848,9 @@
     animateTopSpdRadar,
     cancelTopSpdRadar,
     killTweensOf,
+    animateMainTabTransition,
+    cancelMainTabTransition,
+    animateSubTabTransition,
+    cancelSubTabTransition,
   };
 })(typeof window !== 'undefined' ? window : globalThis);

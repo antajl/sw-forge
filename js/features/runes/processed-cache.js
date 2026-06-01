@@ -47,20 +47,28 @@
    * @param {{ animateCharts?: boolean, fromZero?: boolean, deferSecondaryUi?: boolean }} [extra]
    */
   function renderHydratedAppUi(extra = {}) {
-    const boot = consumeColdBootUiOpts();
-    const animateCharts = extra.animateCharts ?? boot?.animateCharts ?? true;
-    const fromZero = extra.fromZero ?? boot?.fromZero ?? false;
-    const deferSecondary =
-      extra.deferSecondaryUi ?? boot?.deferSecondaryUi ?? false;
-    const visible =
-      typeof getVisibleRunes === 'function' ? getVisibleRunes() : processedRunes;
-    if (typeof renderDashboard === 'function') {
-      renderDashboard(visible, { animateCharts, fromZero });
-    }
-    if (deferSecondary) scheduleDeferredSecondaryPanels(visible);
-    else {
-      if (typeof renderTable === 'function') renderTable(visible);
-      if (typeof renderMonstersPanel === 'function') renderMonstersPanel();
+    try {
+      const boot = consumeColdBootUiOpts();
+      const animateCharts = extra.animateCharts ?? boot?.animateCharts ?? true;
+      const fromZero = extra.fromZero ?? boot?.fromZero ?? false;
+      const deferSecondary =
+        extra.deferSecondaryUi ?? boot?.deferSecondaryUi ?? false;
+      const visible =
+        typeof getVisibleRunes === 'function' ? getVisibleRunes() : processedRunes;
+      if (typeof renderDashboard === 'function') {
+        renderDashboard(visible, { animateCharts, fromZero });
+      }
+      if (deferSecondary) scheduleDeferredSecondaryPanels(visible);
+      else {
+        if (typeof renderTable === 'function') renderTable(visible);
+        if (typeof renderMonstersPanel === 'function') renderMonstersPanel();
+      }
+    } catch (err) {
+      console.error('renderHydratedAppUi error:', err);
+      // Ensure cold boot flag is cleared even on error to prevent stuck UI
+      if (swrmColdBootPending) {
+        swrmColdBootPending = false;
+      }
     }
   }
 

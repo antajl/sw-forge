@@ -336,7 +336,7 @@
   const MAIN_TAB_IDS = ['runes', 'monsters', 'guide', 'changelog', 'app-settings'];
   const RUNES_SUBTAB_IDS = ['dashboard', 'runetable', 'settings'];
   const RUNES_SUBTAB_STORAGE_KEY = 'swrm_runes_subtab_v1';
-  const MONSTERS_SUBTAB_IDS = ['roster', 'teams', 'planner'];
+  const MONSTERS_SUBTAB_IDS = ['dashboard', 'roster', 'teams', 'planner'];
   const MONSTERS_SUBTAB_STORAGE_KEY = 'swrm_monsters_subtab_v1';
   let runesHubTabsBound = false;
 
@@ -419,12 +419,26 @@
     return pane.classList.contains('is-active') && !pane.hidden;
   }
 
+  let lastRunesSubtab = null;
+
   function showRunesSubtab(subId, options) {
     const opts = options || {};
     const id = RUNES_SUBTAB_IDS.includes(subId) ? subId : 'dashboard';
     try {
       sessionStorage.setItem(RUNES_SUBTAB_STORAGE_KEY, id);
     } catch (e) { /* ignore */ }
+
+    const tabOrder = ['dashboard', 'runetable', 'settings'];
+    const prevIndex = lastRunesSubtab ? tabOrder.indexOf(lastRunesSubtab) : -1;
+    const nextIndex = tabOrder.indexOf(id);
+    const direction = prevIndex >= 0 && nextIndex >= 0 && nextIndex > prevIndex ? 'next' : 'prev';
+    lastRunesSubtab = id;
+
+    const motionApi = window.SWRM_MOTION;
+    const useGsap = motionApi && motionApi.enabled();
+
+    const currentPane = prevIndex >= 0 ? document.querySelector(`.runes-hub-pane[data-runes-pane="${tabOrder[prevIndex]}"]`) : null;
+    const nextPane = document.querySelector(`.runes-hub-pane[data-runes-pane="${id}"]`);
 
     document.querySelectorAll('.runes-hub-tab').forEach((btn) => {
       const on = btn.dataset.runesHub === id;
@@ -433,20 +447,95 @@
       btn.tabIndex = on ? 0 : -1;
     });
 
-    document.querySelectorAll('.runes-hub-pane').forEach((pane) => {
-      const on = pane.dataset.runesPane === id;
-      pane.classList.toggle('is-active', on);
-      pane.classList.toggle('hidden', !on);
-      if (on) pane.removeAttribute('hidden');
-      else pane.setAttribute('hidden', '');
-    });
-
-    const motionApi = window.SWRM_MOTION;
-    if (motionApi && typeof motionApi.positionRunesHubTabIndicator === 'function') {
-      const nav = document.getElementById('runes-hub-tabs');
-      if (nav) {
-        motionApi.positionRunesHubTabIndicator({ nav, activeKey: id, instant: false });
+    if (useGsap && currentPane && nextPane && currentPane !== nextPane) {
+      const started = motionApi.animateSubTabTransition({
+        current: currentPane,
+        next: nextPane,
+        direction,
+        onComplete: () => {
+          document.querySelectorAll('.runes-hub-pane').forEach((pane) => {
+            const on = pane.dataset.runesPane === id;
+            pane.classList.toggle('is-active', on);
+            pane.classList.toggle('hidden', !on);
+            if (on) pane.removeAttribute('hidden');
+            else pane.setAttribute('hidden', '');
+          });
+        },
+      });
+      if (!started) {
+        document.querySelectorAll('.runes-hub-pane').forEach((pane) => {
+          const on = pane.dataset.runesPane === id;
+          pane.classList.toggle('is-active', on);
+          pane.classList.toggle('hidden', !on);
+          if (on) pane.removeAttribute('hidden');
+          else pane.setAttribute('hidden', '');
+        });
       }
+    } else {
+      document.querySelectorAll('.runes-hub-pane').forEach((pane) => {
+        const on = pane.dataset.runesPane === id;
+        pane.classList.toggle('is-active', on);
+        pane.classList.toggle('hidden', !on);
+        if (on) pane.removeAttribute('hidden');
+        else pane.setAttribute('hidden', '');
+      });
+    }
+
+    if (motionApi) {
+      rafTwice(() => {
+        const nav = document.getElementById('runes-hub-tabs');
+        if (nav && typeof motionApi.positionRunesHubTabIndicator === 'function') {
+          motionApi.positionRunesHubTabIndicator({ nav, activeKey: id, instant: false });
+        }
+        if (id === 'dashboard') {
+          const uniNav = document.getElementById('dash-unified-tabs');
+          if (uniNav && typeof motionApi.positionDashUnifiedTabIndicator === 'function') {
+            const key =
+              (typeof readDashboardUnifiedTab === 'function' && readDashboardUnifiedTab()) ||
+              (uniNav.querySelector('[data-dash-uni].is-active')?.getAttribute('data-dash-uni')) ||
+              (uniNav.querySelector('[data-dash-uni]')?.getAttribute('data-dash-uni')) ||
+              'breakdown';
+            motionApi.positionDashUnifiedTabIndicator({ nav: uniNav, activeKey: key, instant: true });
+          }
+          const kindNav = document.getElementById('dash-dist-kind-tabs');
+          if (kindNav && typeof motionApi.positionDashUnifiedTabIndicator === 'function') {
+            const kind =
+              (typeof readDashboardDistKind === 'function' && readDashboardDistKind()) ||
+              (kindNav.querySelector('[data-dash-dist-kind].is-active')?.getAttribute('data-dash-dist-kind')) ||
+              'runes';
+            motionApi.positionDashUnifiedTabIndicator({ nav: kindNav, activeKey: kind, instant: true });
+          }
+          const artNav = document.getElementById('dash-art-tabs');
+          if (artNav && !artNav.closest('[hidden]') && typeof positionArtifactDashTabIndicator === 'function') {
+            const key =
+              (typeof readArtifactDashTab === 'function' && readArtifactDashTab()) ||
+              (artNav.querySelector('[data-dash-art-tab].is-active')?.getAttribute('data-dash-art-tab')) ||
+              'breakdown';
+            positionArtifactDashTabIndicator({ nav: artNav, activeKey: key, instant: true });
+          }
+        } else if (id === 'runetable') {
+          if (typeof updateTableKindTabIndicator === 'function') {
+            updateTableKindTabIndicator({ instant: true });
+          }
+        } else if (id === 'settings') {
+          if (typeof initRulesSubtabs === 'function') initRulesSubtabs();
+          const rulesNav = document.querySelector('#tab-settings .rules-subtabs');
+          if (rulesNav && typeof motionApi.positionRulesSubtabIndicator === 'function') {
+            let key = 'engine';
+            try {
+              key =
+                sessionStorage.getItem(RULES_SUBTAB_KEY) ||
+                rulesNav.querySelector('[data-rules-subtab].is-active')?.getAttribute('data-rules-subtab') ||
+                'engine';
+            } catch (e) {
+              key =
+                rulesNav.querySelector('[data-rules-subtab].is-active')?.getAttribute('data-rules-subtab') ||
+                'engine';
+            }
+            motionApi.positionRulesSubtabIndicator({ nav: rulesNav, activeKey: normalizeRulesSubtabId(key), instant: true });
+          }
+        }
+      });
     }
 
     if (id === 'settings') {
@@ -498,6 +587,24 @@
           motionApi.positionRunesHubTabIndicator({ nav, activeKey: activeTab.dataset.runesHub, instant: true });
         }
       });
+      let resizeTimer = null;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+          const activeTab = nav.querySelector('.runes-hub-tab.is-active');
+          if (activeTab) {
+            motionApi.positionRunesHubTabIndicator({ nav, activeKey: activeTab.dataset.runesHub, instant: true });
+          }
+        }, 120);
+      });
+      window.addEventListener('pageshow', () => {
+        rafTwice(() => {
+          const activeTab = nav.querySelector('.runes-hub-tab.is-active');
+          if (activeTab) {
+            motionApi.positionRunesHubTabIndicator({ nav, activeKey: activeTab.dataset.runesHub, instant: true });
+          }
+        });
+      });
     }
   }
 
@@ -524,6 +631,8 @@
       if (typeof unpinMonsterDetail === 'function') unpinMonsterDetail();
       if (typeof clearAllMonstersSelection === 'function') clearAllMonstersSelection();
     }
+
+    const prevMain = showMainTabLastMain;
     showMainTabLastMain = main;
     const hashParts = splitMainHash();
     const runesSub =
@@ -532,26 +641,62 @@
       hashParts.runesSubtab ||
       readStoredRunesSubtab();
 
+    // Tab order for direction detection
+    const tabOrder = ['runes', 'monsters', 'guide', 'changelog', 'app-settings'];
+    const prevIndex = prevMain ? tabOrder.indexOf(prevMain) : -1;
+    const nextIndex = tabOrder.indexOf(main);
+    const direction = prevIndex >= 0 && nextIndex >= 0 && nextIndex > prevIndex ? 'next' : 'prev';
+
+    const motionApi = window.SWRM_MOTION;
+    const useGsap = motionApi && motionApi.enabled();
+
+    const currentTabContent = prevMain ? document.getElementById(`tab-${prevMain}`) : null;
+    const nextTabContent = document.getElementById(`tab-${main}`);
+
     document.querySelectorAll('.tab').forEach((t) => {
       t.classList.toggle('active', t.dataset.tab === main);
     });
-    document.querySelectorAll('.tab-content').forEach((el) => {
-      el.classList.toggle('hidden', el.id !== `tab-${main}`);
-    });
+
+    if (useGsap && currentTabContent && nextTabContent && currentTabContent !== nextTabContent) {
+      const started = motionApi.animateMainTabTransition({
+        current: currentTabContent,
+        next: nextTabContent,
+        direction,
+        onComplete: () => {
+          document.querySelectorAll('.tab-content').forEach((el) => {
+            el.classList.toggle('hidden', el.id !== `tab-${main}`);
+          });
+          // Reset scroll position after animation completes
+          if (main === 'changelog') {
+            const chRoot = document.getElementById('tab-changelog');
+            if (chRoot) chRoot.scrollTop = 0;
+          }
+          if (main === 'guide') {
+            const guideRoot = document.getElementById('tab-guide');
+            if (guideRoot) guideRoot.scrollTop = 0;
+          }
+          if (main === 'monsters') {
+            const monstersRoot = document.getElementById('tab-monsters');
+            if (monstersRoot) monstersRoot.scrollTop = 0;
+          }
+        },
+      });
+      if (!started) {
+        document.querySelectorAll('.tab-content').forEach((el) => {
+          el.classList.toggle('hidden', el.id !== `tab-${main}`);
+        });
+      }
+    } else {
+      document.querySelectorAll('.tab-content').forEach((el) => {
+        el.classList.toggle('hidden', el.id !== `tab-${main}`);
+      });
+    }
 
     if (main === 'runes') {
       initRunesHubTabs();
       showRunesSubtab(runesSub, opts);
     }
 
-    if (main === 'changelog') {
-      const chRoot = document.getElementById('tab-changelog');
-      if (chRoot) chRoot.scrollTop = 0;
-    }
-    if (main === 'guide') {
-      const guideRoot = document.getElementById('tab-guide');
-      if (guideRoot) guideRoot.scrollTop = 0;
-    }
     if (main === 'app-settings') {
       renderDbSlots();
     }
@@ -565,8 +710,6 @@
         hashParts.monstersSubtab ||
         readStoredMonstersSubtab();
       showMonstersSubtab(monstersSub, opts);
-      const monstersRoot = document.getElementById('tab-monsters');
-      if (monstersRoot) monstersRoot.scrollTop = 0;
     }
 
     if (writeHash) {
@@ -1627,19 +1770,32 @@
 
   document.querySelectorAll('.tab').forEach((btn) => {
     btn.addEventListener('click', () => {
-      showMainTab(btn.dataset.tab, { writeHash: true });
+      const tabId = btn.dataset.tab;
+      showMainTab(tabId, { writeHash: true });
+      localStorage.setItem('swrm-last-tab', tabId);
     });
   });
 
   window.addEventListener('hashchange', () => {
     const id = mainTabIdFromHash();
-    if (id) showMainTab(id);
-    else showMainTab('runes');
+    if (id) {
+      showMainTab(id);
+      localStorage.setItem('swrm-last-tab', id);
+    } else {
+      const lastTab = localStorage.getItem('swrm-last-tab') || 'runes';
+      showMainTab(lastTab);
+    }
   });
 
   window.addEventListener('popstate', () => {
-    const id = mainTabIdFromHash() || 'runes';
-    showMainTab(id);
+    const id = mainTabIdFromHash();
+    if (id) {
+      showMainTab(id);
+      localStorage.setItem('swrm-last-tab', id);
+    } else {
+      const lastTab = localStorage.getItem('swrm-last-tab') || 'runes';
+      showMainTab(lastTab);
+    }
   });
 
   // ===================== STAGE =====================
@@ -2105,20 +2261,28 @@
    * @param {{ animateCharts?: boolean, fromZero?: boolean, deferSecondaryUi?: boolean }} [extra]
    */
   function renderHydratedAppUi(extra = {}) {
-    const boot = consumeColdBootUiOpts();
-    const animateCharts = extra.animateCharts ?? boot?.animateCharts ?? true;
-    const fromZero = extra.fromZero ?? boot?.fromZero ?? false;
-    const deferSecondary =
-      extra.deferSecondaryUi ?? boot?.deferSecondaryUi ?? false;
-    const visible =
-      typeof getVisibleRunes === 'function' ? getVisibleRunes() : processedRunes;
-    if (typeof renderDashboard === 'function') {
-      renderDashboard(visible, { animateCharts, fromZero });
-    }
-    if (deferSecondary) scheduleDeferredSecondaryPanels(visible);
-    else {
-      if (typeof renderTable === 'function') renderTable(visible);
-      if (typeof renderMonstersPanel === 'function') renderMonstersPanel();
+    try {
+      const boot = consumeColdBootUiOpts();
+      const animateCharts = extra.animateCharts ?? boot?.animateCharts ?? true;
+      const fromZero = extra.fromZero ?? boot?.fromZero ?? false;
+      const deferSecondary =
+        extra.deferSecondaryUi ?? boot?.deferSecondaryUi ?? false;
+      const visible =
+        typeof getVisibleRunes === 'function' ? getVisibleRunes() : processedRunes;
+      if (typeof renderDashboard === 'function') {
+        renderDashboard(visible, { animateCharts, fromZero });
+      }
+      if (deferSecondary) scheduleDeferredSecondaryPanels(visible);
+      else {
+        if (typeof renderTable === 'function') renderTable(visible);
+        if (typeof renderMonstersPanel === 'function') renderMonstersPanel();
+      }
+    } catch (err) {
+      console.error('renderHydratedAppUi error:', err);
+      // Ensure cold boot flag is cleared even on error to prevent stuck UI
+      if (swrmColdBootPending) {
+        swrmColdBootPending = false;
+      }
     }
   }
 
@@ -2727,6 +2891,11 @@
     rebuildUnitsFromSwex(jsonObj);
     reprocess();
 
+    // Clear processed runes cache to ensure fresh parsing with new data
+    if (typeof deleteProcessedRunesCache === 'function') {
+      await deleteProcessedRunesCache(1);
+    }
+
     const fileSizeKB = Math.round(jsonText.length / 1024);
     const maxLocalStorageSize = 4 * 1024;
 
@@ -3008,6 +3177,9 @@
       if (r && r.id != null) runeById.set(Number(r.id), r);
     }
     allUnits = parseUnits(activeSwexJson, { sixStarOnly: false, runeById });
+    // Clear artifacts before parsing to prevent phantom artifacts from stale data
+    allArtifacts = [];
+    allRelics = [];
     if (window.SWRM && typeof window.SWRM.parseAccountGear === 'function') {
       const bag = window.SWRM.parseAccountGear(activeSwexJson);
       window.SWRM_ACCOUNT_GEAR = bag;
@@ -3017,8 +3189,6 @@
       if (typeof bumpAllArtifactsRev === 'function') bumpAllArtifactsRev();
     } else {
       window.SWRM_ACCOUNT_GEAR = null;
-      allArtifacts = [];
-      allRelics = [];
       if (typeof bumpAllArtifactsRev === 'function') bumpAllArtifactsRev();
     }
     if (typeof onGearDataHydrated === 'function') onGearDataHydrated();
@@ -5433,7 +5603,7 @@
         const labelStart = xMin + i * binSize;
         const labelEnd = labelStart + binSize - 1;
         const label = `${labelStart}-${labelEnd}`;
-        const cls = i >= binCount - 2 ? 'great' : i >= binCount - 4 ? 'good' : '';
+        const cls = labelStart >= 160 ? 'great' : labelStart >= 120 ? 'good' : labelStart >= 75 ? '' : 'low';
         effEl.innerHTML += `
         <div class="eff-bar-wrap" title="${label}: ${effBuckets[i]} runes">
           <div class="eff-bar ${cls}" style="height:${h0}px"></div>
@@ -5473,7 +5643,8 @@
         scoreBarTargets[i] = h;
         const h0 = !animateCharts ? h : chartFromZero ? 0 : prevScoreHeights && prevScoreHeights[i] != null ? prevScoreHeights[i] : 0;
         const label = `${i * 5}-${i * 5 + 4}`;
-        const cls = i >= 18 ? 'great' : i >= 14 ? 'good' : '';
+        const scoreValue = i * 5;
+        const cls = scoreValue >= 75 ? 'great' : scoreValue >= 50 ? 'good' : scoreValue >= 25 ? '' : 'low';
         scoreEl.innerHTML += `
         <div class="eff-bar-wrap" title="${label}: ${scoreBuckets[i]} runes">
           <div class="eff-bar eff-bar--score ${cls}" style="height:${h0}px"></div>
@@ -6361,7 +6532,7 @@
   }
 
   const RUNE_TABLE_VIRTUAL_COLS = 15;
-  const RUNE_TABLE_VIRTUAL_OVERSCAN = 12;
+  const RUNE_TABLE_VIRTUAL_OVERSCAN = 6;
   const RUNE_TABLE_VIRTUAL_ROW_FALLBACK = 44;
   const RUNE_TABLE_VIRTUAL_SPACER_COL_CLASSES = [
     'col-slot',
@@ -7370,11 +7541,20 @@
     });
   }
 
-  function updateTableKindTabIndicator() {
+  function updateTableKindTabIndicator(options) {
     const nav = document.getElementById('table-kind-tabs');
     const indicator = nav && nav.querySelector('.table-kind-tabs__indicator');
     const active = nav && nav.querySelector('.table-kind-tab.is-active');
     if (!nav || !indicator || !active) return;
+    const motion = window.SWRM_MOTION;
+    if (motion && typeof motion.positionTableKindTabIndicator === 'function') {
+      motion.positionTableKindTabIndicator({
+        nav,
+        activeKey: active.dataset.tableKind,
+        instant: !!(options && options.instant),
+      });
+      return;
+    }
     const navRect = nav.getBoundingClientRect();
     const tabRect = active.getBoundingClientRect();
     indicator.style.left = `${tabRect.left - navRect.left}px`;
@@ -7417,7 +7597,7 @@
       const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
       search.placeholder = t.tableSearchRunes || 'Search by set, stat, role…';
     }
-    updateTableKindTabIndicator();
+    updateTableKindTabIndicator({ instant: !!(options && options.instantIndicator) });
     if (id === 'runes') {
       if (options && options.skipRuneRender) return;
       if (typeof flushRuneTableRenderIfNeeded === 'function') {
@@ -7443,7 +7623,21 @@
         showTableKind(kind);
       });
     });
-    showTableKind(readTableKind(), { skipRuneRender: true });
+    showTableKind(readTableKind(), { skipRuneRender: true, instantIndicator: true });
+    const snap = () => {
+      if (!nav) return;
+      const r = nav.getBoundingClientRect();
+      if (!r || r.width < 2) return;
+      updateTableKindTabIndicator({ instant: true });
+    };
+    let resizeTimer = null;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(snap, 120);
+    });
+    window.addEventListener('pageshow', () => {
+      requestAnimationFrame(() => requestAnimationFrame(snap));
+    });
   }
 
   function onGearDataHydrated() {
@@ -8134,7 +8328,8 @@
           ? (i * binSize + binSize).toFixed(binSize < 1 ? 1 : 0)
           : maxLabel;
       const label = i < binCount - 1 ? `${labelStart}-${labelEnd}` : maxLabel;
-      const cls = i >= binCount - 2 ? 'great' : i >= binCount - 4 ? 'good' : '';
+      const scoreValue = parseFloat(labelStart);
+      const cls = scoreValue >= 155 ? 'great' : scoreValue >= 105 ? 'good' : scoreValue >= 55 ? '' : 'low';
       el.innerHTML += `
         <div class="eff-bar-wrap" title="${label}: ${cnt}">
           <div class="eff-bar eff-bar--score ${cls}" style="height:${h0}px"></div>
@@ -8683,6 +8878,19 @@
         btn.setAttribute('aria-selected', String(on));
         btn.tabIndex = on ? 0 : -1;
       });
+      positionDashDistKindIndicator({ nav: kindTabs, activeKey: active, instant: false });
+    }
+    if (active === 'artifacts') {
+      if (typeof initArtifactDashTabs === 'function') initArtifactDashTabs();
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        const nav = document.getElementById('dash-art-tabs');
+        if (!nav || typeof positionArtifactDashTabIndicator !== 'function') return;
+        const key =
+          (typeof readArtifactDashTab === 'function' && readArtifactDashTab()) ||
+          (nav.querySelector('[data-dash-art-tab].is-active')?.getAttribute('data-dash-art-tab')) ||
+          'breakdown';
+        positionArtifactDashTabIndicator({ nav, activeKey: key, instant: true });
+      }));
     }
     const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const hint = document.getElementById('lbl-dash-unified-chart-hint');
@@ -8692,6 +8900,31 @@
           ? tloc.dashboardArtifactDistHint || ''
           : tloc.dashboardVerdictStackHint || '';
     }
+  }
+
+  function positionDashDistKindIndicator(opts) {
+    const o = opts || {};
+    const nav = o.nav;
+    if (!nav) return;
+    const motionApi = window.SWRM_MOTION;
+    if (motionApi && typeof motionApi.positionDashUnifiedTabIndicator === 'function') {
+      motionApi.positionDashUnifiedTabIndicator({
+        nav,
+        activeKey: o.activeKey,
+        instant: !!o.instant,
+      });
+      return;
+    }
+    const ind = nav.querySelector('.dash-dist-kind-tabs__indicator');
+    if (!ind) return;
+    const btn = nav.querySelector(`[data-dash-dist-kind="${o.activeKey}"]`);
+    if (!btn) return;
+    const rNav = nav.getBoundingClientRect();
+    const rBtn = btn.getBoundingClientRect();
+    const left = Math.max(0, rBtn.left - rNav.left);
+    ind.style.width = `${Math.max(0, rBtn.width)}px`;
+    ind.style.left = `${left}px`;
+    ind.style.transform = 'none';
   }
 
   function applyDashboardDistKind(kind, opts) {
@@ -8712,6 +8945,31 @@
     bindArtifactDashboardClicks();
     const initial = readDashboardDistKind();
     syncDashboardDistKindUi(initial);
+    const kindTabs = document.getElementById('dash-dist-kind-tabs');
+    if (kindTabs) {
+      positionDashDistKindIndicator({ nav: kindTabs, activeKey: initial, instant: true });
+    }
+    if (kindTabs && kindTabs.dataset.bound === '1') {
+      if (initial === 'artifacts') {
+        renderArtifactDashboardDistributions({ animateCharts: false, fromZero: false });
+      }
+      return;
+    }
+    if (kindTabs) kindTabs.dataset.bound = '1';
+    if (kindTabs) {
+      let resizeTimer = null;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+          positionDashDistKindIndicator({ nav: kindTabs, activeKey: readDashboardDistKind(), instant: true });
+        }, 120);
+      });
+      window.addEventListener('pageshow', () => {
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          positionDashDistKindIndicator({ nav: kindTabs, activeKey: readDashboardDistKind(), instant: true });
+        }));
+      });
+    }
     document.querySelectorAll('[data-dash-dist-kind]').forEach((btn) => {
       btn.addEventListener('click', () => {
         const raw = btn.getAttribute('data-dash-dist-kind') || 'runes';
@@ -10878,7 +11136,7 @@
     const roles = [...orderedRoles, 'Duo Roll', 'God Roll'].filter(
       (name, idx, arr) => arr.indexOf(name) === idx,
     );
-    const t = TRANSLATIONS[currentLang];
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const godLbl = t.roleGodRoll || 'God Roll';
     roleSelect.innerHTML =
       `<option value="">${t.allRoles || 'All Roles'}</option>` +
@@ -13494,6 +13752,8 @@
   let monstersRuneFocusState = null;
 
   let monstersHubTabsBound = false;
+  let monstersHubFirstShow = true;
+  let lastMonstersSubtab = null;
 
   function normalizeMonstersSubtabId(id) {
     return MONSTERS_SUBTAB_IDS.includes(id) ? id : 'roster';
@@ -13505,6 +13765,18 @@
       sessionStorage.setItem(MONSTERS_SUBTAB_STORAGE_KEY, id);
     } catch (e) { /* ignore */ }
 
+    const tabOrder = ['dashboard', 'roster', 'planner', 'teams'];
+    const prevIndex = lastMonstersSubtab ? tabOrder.indexOf(lastMonstersSubtab) : -1;
+    const nextIndex = tabOrder.indexOf(id);
+    const direction = prevIndex >= 0 && nextIndex >= 0 && nextIndex > prevIndex ? 'next' : 'prev';
+    lastMonstersSubtab = id;
+
+    const motionApi = window.SWRM_MOTION;
+    const useGsap = motionApi && motionApi.enabled();
+
+    const currentPane = prevIndex >= 0 ? document.querySelector(`.monsters-hub-pane[data-monsters-pane="${tabOrder[prevIndex]}"]`) : null;
+    const nextPane = document.querySelector(`.monsters-hub-pane[data-monsters-pane="${id}"]`);
+
     document.querySelectorAll('.monsters-hub-tab').forEach((btn) => {
       const on = btn.dataset.monstersHub === id;
       btn.classList.toggle('is-active', on);
@@ -13512,13 +13784,52 @@
       btn.tabIndex = on ? 0 : -1;
     });
 
-    document.querySelectorAll('.monsters-hub-pane').forEach((pane) => {
-      const on = pane.dataset.monstersPane === id;
-      pane.classList.toggle('is-active', on);
-      pane.classList.toggle('hidden', !on);
-      if (on) pane.removeAttribute('hidden');
-      else pane.setAttribute('hidden', '');
-    });
+    if (useGsap && currentPane && nextPane && currentPane !== nextPane) {
+      const started = motionApi.animateSubTabTransition({
+        current: currentPane,
+        next: nextPane,
+        direction,
+        onComplete: () => {
+          document.querySelectorAll('.monsters-hub-pane').forEach((pane) => {
+            const on = pane.dataset.monstersPane === id;
+            pane.classList.toggle('is-active', on);
+            pane.classList.toggle('hidden', !on);
+            if (on) pane.removeAttribute('hidden');
+            else pane.setAttribute('hidden', '');
+          });
+        },
+      });
+      if (!started) {
+        document.querySelectorAll('.monsters-hub-pane').forEach((pane) => {
+          const on = pane.dataset.monstersPane === id;
+          pane.classList.toggle('is-active', on);
+          pane.classList.toggle('hidden', !on);
+          if (on) pane.removeAttribute('hidden');
+          else pane.setAttribute('hidden', '');
+        });
+      }
+    } else {
+      document.querySelectorAll('.monsters-hub-pane').forEach((pane) => {
+        const on = pane.dataset.monstersPane === id;
+        pane.classList.toggle('is-active', on);
+        pane.classList.toggle('hidden', !on);
+        if (on) pane.removeAttribute('hidden');
+        else pane.setAttribute('hidden', '');
+      });
+    }
+
+    if (motionApi && typeof motionApi.positionMonstersHubTabIndicator === 'function') {
+      const nav = document.getElementById('monsters-hub-tabs');
+      if (nav) {
+        const snap = monstersHubFirstShow;
+        monstersHubFirstShow = false;
+        if (snap) {
+          rafTwice(() => motionApi.positionMonstersHubTabIndicator({ nav, activeKey: id, instant: true }));
+        } else {
+          motionApi.positionMonstersHubTabIndicator({ nav, activeKey: id, instant: false });
+        }
+      }
+    }
 
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const lead = document.getElementById('lbl-monsters-lead');
@@ -13535,6 +13846,8 @@
 
     if (id === 'roster') {
       void renderMonstersPanel();
+    } else if (id === 'dashboard') {
+      if (typeof renderMonstersDashboard === 'function') void renderMonstersDashboard();
     } else if (id === 'planner' && typeof renderSkillPlannerPanel === 'function') {
       void renderSkillPlannerPanel();
     } else if (id === 'teams' && typeof renderTeamsPanel === 'function') {
@@ -13553,6 +13866,30 @@
         showMainTab('monsters', { monstersSubtab: sub, writeHash: true });
       });
     });
+
+    const motionApi = window.SWRM_MOTION;
+    if (motionApi && typeof motionApi.positionMonstersHubTabIndicator === 'function') {
+      let resizeTimer = null;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+          const nav2 = document.getElementById('monsters-hub-tabs');
+          const activeTab = nav2 && nav2.querySelector('.monsters-hub-tab.is-active');
+          if (activeTab) {
+            motionApi.positionMonstersHubTabIndicator({ nav: nav2, activeKey: activeTab.dataset.monstersHub, instant: true });
+          }
+        }, 120);
+      });
+      window.addEventListener('pageshow', () => {
+        rafTwice(() => {
+          const nav2 = document.getElementById('monsters-hub-tabs');
+          const activeTab = nav2 && nav2.querySelector('.monsters-hub-tab.is-active');
+          if (activeTab) {
+            motionApi.positionMonstersHubTabIndicator({ nav: nav2, activeKey: activeTab.dataset.monstersHub, instant: true });
+          }
+        });
+      });
+    }
   }
 
   function monstersSubtabFromHashSegment(segment) {
@@ -13560,6 +13897,7 @@
     if (s === 'team' || s === 'teams') return 'teams';
     if (s === 'roster' || s === 'list') return 'roster';
     if (s === 'planner' || s === 'skill' || s === 'skills' || s === 'skill-plan') return 'planner';
+    if (s === 'dashboard') return 'dashboard';
     return MONSTERS_SUBTAB_IDS.includes(s) ? s : null;
   }
 
@@ -16527,13 +16865,173 @@
     if (!root || !tiles) return;
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
     const o = computeMonstersBoxOverview(units);
-    if (!o.total) {
-      root.hidden = true;
-      return;
-    }
     root.hidden = false;
     if (lead) lead.hidden = true;
     tiles.innerHTML = '';
+
+    // Render metric labels
+    const totalLabelEl = document.getElementById('lbl-monsters-metric-total');
+    const fullSixLabelEl = document.getElementById('lbl-monsters-metric-fullsix');
+    const skillupsLabelEl = document.getElementById('lbl-monsters-metric-skillups');
+    const readinessLabelEl = document.getElementById('lbl-monsters-metric-readiness');
+
+    if (totalLabelEl) totalLabelEl.textContent = t.monstersMetricTotal || 'Total';
+    if (fullSixLabelEl) fullSixLabelEl.textContent = t.monstersMetricFullsix || 'Full 6/6';
+    if (skillupsLabelEl) skillupsLabelEl.textContent = t.monstersMetricSkillups || 'Skill Ups';
+    if (readinessLabelEl) readinessLabelEl.textContent = t.monstersMetricReadiness || 'Readiness';
+
+    // Render score boxes
+    const totalEl = document.getElementById('monsters-metric-val-total');
+    const fullSixEl = document.getElementById('monsters-metric-val-fullsix');
+    const skillupsEl = document.getElementById('monsters-metric-val-skillups');
+    const readinessEl = document.getElementById('monsters-metric-val-readiness');
+
+    if (totalEl) totalEl.textContent = String(o.total);
+    if (fullSixEl) fullSixEl.textContent = String(o.fullSix);
+    if (skillupsEl) skillupsEl.textContent = String(o.skillUpsTotal);
+    if (readinessEl) readinessEl.textContent = `${o.readinessPct}%`;
+
+    // Render composition labels
+    const elementsTitleEl = document.getElementById('lbl-monsters-composition-elements');
+    const archetypesTitleEl = document.getElementById('lbl-monsters-composition-archetypes');
+    const runeSlotsTitleEl = document.getElementById('lbl-monsters-rune-slots-title');
+    const skillPrioritiesTitleEl = document.getElementById('lbl-monsters-skill-priorities-title');
+
+    if (elementsTitleEl) elementsTitleEl.textContent = t.monstersCompositionElements || 'Elements';
+    if (archetypesTitleEl) archetypesTitleEl.textContent = t.monstersCompositionArchetypes || 'Archetypes';
+    if (runeSlotsTitleEl) runeSlotsTitleEl.textContent = t.monstersRuneSlotsTitle || 'Rune Slots';
+    if (skillPrioritiesTitleEl) skillPrioritiesTitleEl.textContent = t.monstersSkillPrioritiesTitle || 'Skill Plan Priorities';
+
+    // Render element composition
+    const elementsBarsEl = document.getElementById('monsters-composition-elements');
+    if (elementsBarsEl) {
+      const elementCounts = {};
+      for (const u of units || []) {
+        if (typeof isTechnicalFodderMonster === 'function' && isTechnicalFodderMonster(u)) continue;
+        const el = u.metaElement || '';
+        if (el) {
+          elementCounts[el] = (elementCounts[el] || 0) + 1;
+        }
+      }
+      elementsBarsEl.innerHTML = '';
+      for (const [el, count] of Object.entries(elementCounts).sort((a, b) => b[1] - a[1])) {
+        const barEl = document.createElement('div');
+        barEl.className = 'monsters-composition-bar';
+        barEl.innerHTML = `
+          <span class="monsters-composition-bar__label">${el}</span>
+          <span class="monsters-composition-bar__count">${count}</span>
+        `;
+        elementsBarsEl.appendChild(barEl);
+      }
+    }
+
+    // Render archetype composition
+    const archetypesBarsEl = document.getElementById('monsters-composition-archetypes');
+    if (archetypesBarsEl) {
+      const archetypeCounts = {};
+      for (const u of units || []) {
+        if (typeof isTechnicalFodderMonster === 'function' && isTechnicalFodderMonster(u)) continue;
+        const arch = u.metaArchetype || '';
+        if (arch) {
+          archetypeCounts[arch] = (archetypeCounts[arch] || 0) + 1;
+        }
+      }
+      archetypesBarsEl.innerHTML = '';
+      for (const [arch, count] of Object.entries(archetypeCounts).sort((a, b) => b[1] - a[1])) {
+        const barEl = document.createElement('div');
+        barEl.className = 'monsters-composition-bar';
+        barEl.innerHTML = `
+          <span class="monsters-composition-bar__label">${arch}</span>
+          <span class="monsters-composition-bar__count">${count}</span>
+        `;
+        archetypesBarsEl.appendChild(barEl);
+      }
+    }
+
+    // Render rune slots chart
+    const runeSlotsChartEl = document.getElementById('monsters-rune-slots-chart');
+    if (runeSlotsChartEl) {
+      const slotCounts = Array(7).fill(0);
+      for (const u of units || []) {
+        if (typeof isTechnicalFodderMonster === 'function' && isTechnicalFodderMonster(u)) continue;
+        const count = u.equippedCount || 0;
+        if (count >= 0 && count <= 6) {
+          slotCounts[count] += 1;
+        }
+      }
+      const maxCount = Math.max(...slotCounts, 1);
+      runeSlotsChartEl.innerHTML = '';
+      for (let i = 0; i <= 6; i++) {
+        const count = slotCounts[i];
+        if (count > 0) {
+          const pct = (count / maxCount) * 100;
+          const barEl = document.createElement('div');
+          barEl.className = 'monsters-rune-slots-bar';
+          barEl.setAttribute('data-rune-slots', String(i));
+          barEl.setAttribute('role', 'button');
+          barEl.setAttribute('tabindex', '0');
+          barEl.setAttribute('aria-label', `${i} runes: ${count} monsters`);
+          barEl.innerHTML = `
+            <span class="monsters-rune-slots-bar__label">${i}/6</span>
+            <div class="monsters-rune-slots-bar__track">
+              <div class="monsters-rune-slots-bar__fill" style="width: ${pct}%"></div>
+            </div>
+            <span class="monsters-rune-slots-bar__count">${count}</span>
+          `;
+          runeSlotsChartEl.appendChild(barEl);
+        }
+      }
+    }
+
+    // Render skill plan priorities
+    const skillPrioritiesListEl = document.getElementById('monsters-skill-priorities-list');
+    if (skillPrioritiesListEl) {
+      const skillPriorityUnits = (units || [])
+        .filter(u => typeof isTechnicalFodderMonster !== 'function' || !isTechnicalFodderMonster(u))
+        .filter(u => (u.skillUpsNeeded || 0) > 0)
+        .sort((a, b) => (b.skillUpsNeeded || 0) - (a.skillUpsNeeded || 0))
+        .slice(0, 5);
+      
+      skillPrioritiesListEl.innerHTML = '';
+      for (const u of skillPriorityUnits) {
+        const itemEl = document.createElement('div');
+        itemEl.className = 'monsters-skill-priority-item';
+        itemEl.setAttribute('role', 'button');
+        itemEl.setAttribute('tabindex', '0');
+        itemEl.setAttribute('aria-label', `${u.displayName}: ${u.skillUpsNeeded} skill-ups needed`);
+        itemEl.innerHTML = `
+          <span class="monsters-skill-priority-item__name">${u.displayName}</span>
+          <span class="monsters-skill-priority-item__count">${u.skillUpsNeeded}</span>
+        `;
+        skillPrioritiesListEl.appendChild(itemEl);
+      }
+    }
+
+    // Render attention tiles
+    const tileData = [
+      { kind: 'unruned', value: o.unruned, label: t.monstersBoxTileUnruned || 'No runes', icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>' },
+      { kind: 'partial', value: o.partial, label: t.monstersBoxTilePartial || 'Incomplete sets', icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' },
+      { kind: 'fullSix', value: o.fullSix, label: t.monstersBoxTileFullSix || 'Full 6/6', icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>' },
+      { kind: 'skill-ups', value: o.skillMonsters, label: t.monstersBoxTileSkillUps || 'Need skill-ups', icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>' },
+      { kind: 'storage', value: o.storage, label: t.monstersBoxTileStorage || 'In storage', icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>' },
+    ];
+
+    for (const tile of tileData) {
+      if (tile.value > 0) {
+        const tileEl = document.createElement('button');
+        tileEl.className = 'monsters-box-tile';
+        tileEl.type = 'button';
+        tileEl.setAttribute('data-box-tile', tile.kind);
+        tileEl.setAttribute('aria-label', `${tile.label}: ${tile.value}. ${t.monstersBoxTileHint || 'Show matching monsters'}`);
+        tileEl.innerHTML = `
+          <span class="monsters-box-tile__value">${tile.value}</span>
+          <span class="monsters-box-tile__sub">${tile.icon}</span>
+          <span class="monsters-box-tile__label">${tile.label}</span>
+        `;
+        tiles.appendChild(tileEl);
+      }
+    }
+
     if (window.SWRM && typeof window.SWRM.renderAccountReviewStrip === 'function') {
       window.SWRM.renderAccountReviewStrip();
     }
@@ -16542,6 +17040,7 @@
   function bindMonstersBoxOverview() {
     if (boxOverviewBound) return;
     const tiles = document.getElementById('monsters-box-overview-tiles');
+    const runeSlotsChart = document.getElementById('monsters-rune-slots-chart');
     if (!tiles) return;
     boxOverviewBound = true;
     tiles.addEventListener('click', (e) => {
@@ -16551,7 +17050,196 @@
       if (!kind) return;
       applyMonsterBoxOverviewFilter(kind);
     });
+
+    if (runeSlotsChart) {
+      runeSlotsChart.addEventListener('click', (e) => {
+        const bar = e.target.closest('[data-rune-slots]');
+        if (!bar) return;
+        const slots = bar.dataset.runeSlots;
+        if (!slots) return;
+        applyMonsterRuneSlotsFilter(Number(slots));
+      });
+    }
+
+    // Bind dashboard filters
+    const minLevelSelect = document.getElementById('monsters-dashboard-min-level');
+    const starsMinSelect = document.getElementById('monsters-dashboard-stars-min');
+    const starsMaxSelect = document.getElementById('monsters-dashboard-stars-max');
+    const natMinSelect = document.getElementById('monsters-dashboard-nat-min');
+    const natMaxSelect = document.getElementById('monsters-dashboard-nat-max');
+    const copySummaryBtn = document.getElementById('btn-monsters-dashboard-copy-summary');
+
+    if (minLevelSelect) {
+      minLevelSelect.addEventListener('change', () => {
+        if (typeof renderMonstersDashboard === 'function') renderMonstersDashboard();
+      });
+    }
+
+    if (starsMinSelect) {
+      starsMinSelect.addEventListener('change', () => {
+        if (typeof renderMonstersDashboard === 'function') renderMonstersDashboard();
+      });
+    }
+
+    if (starsMaxSelect) {
+      starsMaxSelect.addEventListener('change', () => {
+        if (typeof renderMonstersDashboard === 'function') renderMonstersDashboard();
+      });
+    }
+
+    if (natMinSelect) {
+      natMinSelect.addEventListener('change', () => {
+        if (typeof renderMonstersDashboard === 'function') renderMonstersDashboard();
+      });
+    }
+
+    if (natMaxSelect) {
+      natMaxSelect.addEventListener('change', () => {
+        if (typeof renderMonstersDashboard === 'function') renderMonstersDashboard();
+      });
+    }
+
+    if (copySummaryBtn) {
+      copySummaryBtn.addEventListener('click', () => {
+        copyMonstersDashboardSummary();
+      });
+    }
   }
+
+  function applyMonsterRuneSlotsFilter(slots) {
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const f =
+      typeof readMonstersFiltersFromDom === 'function'
+        ? readMonstersFiltersFromDom()
+        : { sort: 'name', q: '', element: '', location: 'all', minLevelMin: 0 };
+    f.runeFilter = '';
+    f.skillFilter = '';
+    f.fullSixOnly = false;
+    f.location = 'all';
+    f.runeSlotsCount = slots;
+    if (typeof writeMonstersFilters === 'function') writeMonstersFilters(f);
+    if (typeof updateMonstersFilterSummary === 'function') updateMonstersFilterSummary();
+    if (typeof renderMonstersPanel === 'function') void renderMonstersPanel();
+  }
+
+  function renderMonstersDashboard() {
+    const allUnits = typeof getMonstersEnriched === 'function' ? getMonstersEnriched() : [];
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+
+    console.log('[Monsters Dashboard] allUnits:', allUnits.length);
+
+    // Get filter values
+    const minLevel = Number(document.getElementById('monsters-dashboard-min-level')?.value) || 0;
+    const starsMin = Number(document.getElementById('monsters-dashboard-stars-min')?.value) || 1;
+    const starsMax = Number(document.getElementById('monsters-dashboard-stars-max')?.value) || 6;
+    const natMin = Number(document.getElementById('monsters-dashboard-nat-min')?.value) || 1;
+    const natMax = Number(document.getElementById('monsters-dashboard-nat-max')?.value) || 5;
+
+    console.log('[Monsters Dashboard] filters:', { minLevel, starsMin, starsMax, natMin, natMax });
+
+    // Apply filters
+    const filteredUnits = allUnits.filter(u => {
+      if (typeof isTechnicalFodderMonster === 'function' && isTechnicalFodderMonster(u)) return false;
+      if ((u.level || 0) < minLevel) return false;
+      const unitStars = u.stars || 6;
+      if (unitStars < starsMin || unitStars > starsMax) return false;
+      const unitNat = u.unitRank ? u.unitRank.charAt(0) : '1';
+      const natNum = parseInt(unitNat, 10) || 1;
+      if (natNum < natMin || natNum > natMax) return false;
+      return true;
+    });
+
+    console.log('[Monsters Dashboard] filteredUnits:', filteredUnits.length);
+
+    // Update count display
+    const countEl = document.getElementById('dashboard-monsters-count');
+    if (countEl) {
+      const tpl = (t.monstersDashboardAccountMonstersInline || 'Total: {acc} · Current: {view}').trim();
+      countEl.textContent = tpl
+        .replace(/\{acc\}/g, String(allUnits.length))
+        .replace(/\{view\}/g, String(filteredUnits.length));
+    }
+
+    // Update labels
+    const minlvlLabel = document.getElementById('lbl-monsters-dashboard-minlvl');
+    const starsRangeLabel = document.getElementById('lbl-monsters-dashboard-stars-range');
+    const starsMinLabel = document.getElementById('lbl-monsters-dashboard-stars-min');
+    const starsMaxLabel = document.getElementById('lbl-monsters-dashboard-stars-max');
+    const natRangeLabel = document.getElementById('lbl-monsters-dashboard-nat-range');
+    const natMinLabel = document.getElementById('lbl-monsters-dashboard-nat-min');
+    const natMaxLabel = document.getElementById('lbl-monsters-dashboard-nat-max');
+    const copyBtn = document.getElementById('btn-monsters-dashboard-copy-summary');
+
+    if (minlvlLabel) minlvlLabel.textContent = t.monstersDashboardMinlvl || 'Min Level';
+    if (starsRangeLabel) starsRangeLabel.textContent = t.monstersDashboardStarsRange || 'Stars';
+    if (starsMinLabel) starsMinLabel.textContent = t.monstersDashboardStarsMin || 'From';
+    if (starsMaxLabel) starsMaxLabel.textContent = t.monstersDashboardStarsMax || 'To';
+    if (natRangeLabel) natRangeLabel.textContent = t.monstersDashboardNatRange || 'Nat';
+    if (natMinLabel) natMinLabel.textContent = t.monstersDashboardNatMin || 'From';
+    if (natMaxLabel) natMaxLabel.textContent = t.monstersDashboardNatMax || 'To';
+    if (copyBtn) copyBtn.textContent = t.monstersDashboardCopySummary || 'Copy summary';
+
+    // Ensure bindMonstersBoxOverview is called
+    bindMonstersBoxOverview();
+
+    renderMonstersBoxOverview(filteredUnits);
+  }
+
+  async function copyMonstersDashboardSummary() {
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const allUnits = typeof getMonstersEnriched === 'function' ? getMonstersEnriched() : [];
+    const minLevel = Number(document.getElementById('monsters-dashboard-min-level')?.value) || 0;
+    const starsMin = Number(document.getElementById('monsters-dashboard-stars-min')?.value) || 1;
+    const starsMax = Number(document.getElementById('monsters-dashboard-stars-max')?.value) || 6;
+    const natMin = Number(document.getElementById('monsters-dashboard-nat-min')?.value) || 1;
+    const natMax = Number(document.getElementById('monsters-dashboard-nat-max')?.value) || 5;
+
+    const filteredUnits = allUnits.filter(u => {
+      if (typeof isTechnicalFodderMonster === 'function' && isTechnicalFodderMonster(u)) return false;
+      if ((u.level || 0) < minLevel) return false;
+      const unitStars = u.stars || 6;
+      if (unitStars < starsMin || unitStars > starsMax) return false;
+      const unitNat = u.unitRank ? u.unitRank.charAt(0) : '1';
+      const natNum = parseInt(unitNat, 10) || 1;
+      if (natNum < natMin || natNum > natMax) return false;
+      return true;
+    });
+
+    const o = computeMonstersBoxOverview(filteredUnits);
+
+    const lines = [
+      `Monsters Dashboard Summary`,
+      `Total: ${allUnits.length}`,
+      `Current (filtered): ${filteredUnits.length}`,
+      `Min Level: +${minLevel}`,
+      `Stars: ${starsMin}★ to ${starsMax}★`,
+      `Nat: ${natMin} to ${natMax}`,
+      ``,
+      `Metrics:`,
+      `  Total: ${o.total}`,
+      `  Full 6/6: ${o.fullSix}`,
+      `  Skill Ups: ${o.skillUpsTotal}`,
+      `  Readiness: ${o.readinessPct}%`,
+      ``,
+      `Breakdown:`,
+      `  Unruned: ${o.unruned}`,
+      `  Partial: ${o.partial}`,
+      `  Need skill-ups: ${o.skillMonsters}`,
+      `  In storage: ${o.storage}`,
+    ];
+
+    const text = lines.join('\n');
+    const ok = typeof copyTextToClipboard === 'function' ? await copyTextToClipboard(text) : false;
+    if (typeof showSwrmToast === 'function') {
+      showSwrmToast(
+        ok ? (t.dashboardExportDone || 'Copied') : (t.dashboardExportFail || 'Failed'),
+        { type: ok ? 'success' : 'error', duration: 3200 }
+      );
+    }
+  }
+
+  window.renderMonstersDashboard = renderMonstersDashboard;
+  window.renderMonstersBoxOverview = renderMonstersBoxOverview;
 
   const SKILL_PLANNER_STORAGE_KEY = 'swrm_skill_planner_exclude_storage_v1';
   const SKILL_PLANNER_2A_KEY = 'swrm_skill_planner_second_awakened_v1';
@@ -19811,9 +20499,7 @@
     if (emptySearch) emptySearch.textContent = t.monstersEmptyResetSearch || 'Reset search';
     const attrib = document.getElementById('lbl-monsters-attrib');
     if (attrib) {
-      attrib.innerHTML =
-        t.monstersSwarfarmAttrib ||
-        'Monster names & icons from <a href="https://swarfarm.com" target="_blank" rel="noopener noreferrer">SWARFARM</a>.';
+      attrib.innerHTML = t.monstersSwarfarmAttrib || '';
     }
     const elSel = document.getElementById('monsters-filter-element');
     if (elSel && elSel.options.length) {

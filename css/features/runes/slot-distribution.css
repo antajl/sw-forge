@@ -160,7 +160,7 @@ html[lang='ru'] .slot-share-slot-lbl {
   height: 0;
   max-height: 100%;
   border-radius: 4px 4px 0 0;
-  background: var(--grind);
+  background: var(--chart-sets);
   transition: height 0.35s ease;
 }
 
@@ -235,7 +235,7 @@ html[lang='ru'] .slot-share-slot-lbl {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: color-mix(in srgb, var(--accent) 72%, var(--finish));
+  background: var(--chart-sets);
   min-width: 2px;
   transition: width 0.35s ease;
 }

@@ -1,6 +1,6 @@
 /* Runes hub — inner tabs (Dashboard / Table / Rules), matches .rules-subtabs look */
 #tab-runes > .runes-hub-tabs.rules-subtabs {
-  margin: 0 0 1.25rem;
+  margin: 0 0 16px;
   padding: 4px;
   gap: 6px;
   position: sticky;
@@ -20,13 +20,13 @@ body.light-theme #tab-runes > .runes-hub-tabs.rules-subtabs {
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 11px 12px;
+  padding: 12px;
 }
 
 .runes-hub-tabs .rules-subtab__label {
   width: 100%;
   text-align: center;
-  font-size: 0.84rem;
+  font-size: var(--runes-fs-tab-main);
   letter-spacing: 0.04em;
 }
 
@@ -55,12 +55,20 @@ body.light-theme #tab-runes > .runes-hub-tabs.rules-subtabs {
   display: block;
   min-width: 0;
   max-width: 100%;
-  overflow-x: clip;
 }
 
 #tab-runes {
   max-width: 100%;
-  overflow-x: clip;
+  position: relative;
+}
+
+/* Animation support for Runes hub panes */
+.runes-hub-pane.animating {
+  position: absolute;
+  left: 0;
+  right: 0;
+  box-sizing: border-box;
+  width: auto !important;
 }
 
 #tab-runes .dashboard-stage-wrap,
@@ -76,6 +84,6 @@ body.light-theme #tab-runes > .runes-hub-tabs.rules-subtabs {
     padding: 10px 8px;
   }
   .runes-hub-tabs .rules-subtab__label {
-    font-size: 0.78rem;
+    font-size: 0.84rem;
   }
 }

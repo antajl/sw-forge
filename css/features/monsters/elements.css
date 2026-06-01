@@ -1,10 +1,10 @@
 /* Element accents — border / bar only, no full fill */
 :root {
-  --monsters-el-fire: #C4525E;
-  --monsters-el-water: #4A89B8;
-  --monsters-el-wind: #CFA738;
-  --monsters-el-light: #D1C494;
-  --monsters-el-dark: #8A5E9C;
+  --monsters-el-fire:  #FF9AAA; /* Твой леденцово-розовый */
+  --monsters-el-water: #7CD2FF; /* Яркий небесно-голубой (вместо блеклого) */
+  --monsters-el-wind:  #FFDF70; /* Сочный лимонно-жёлтый (не уходит в грязь) */
+  --monsters-el-light: #E2E9F0; /* Контрастный стальной (чтобы не сливался с белым фоном) */
+  --monsters-el-dark:  #B993FF; /* Насыщенный неоново-фиолетовый (чётко отделим от воды) */
 }
 
 .monsters-card--fire {

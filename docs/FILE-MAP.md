@@ -219,6 +219,7 @@ One-time patches: `tools/archive/` (do not touch).
 | `ARCHITECTURE.md` | Runtime / build schema |
 | `FEATURES.md` | Feature map by folders |
 | `FILE-MAP.md` | This file |
+| `FILE-SPLITTING-PLAN.md` | Plan for splitting large files |
 | `LOAD-ORDER.md` | Script load order |
 | `API-REFERENCE.md` | `window.SWRM` API + CSS variables |
 | `KNOWN-ISSUES.md` | Known bugs |

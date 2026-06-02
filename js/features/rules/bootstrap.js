@@ -170,7 +170,7 @@
       initRulesSubtabs();
       initChangelogSubtabs();
       initGuideSubtabs();
-      showMainTab(mainTabIdFromHash() || 'runes');
+      showMainTab(mainTabIdFromHash() || 'gear');
       renderDbSlots();
       if (typeof applyShareUrlTabFromLocation === 'function') applyShareUrlTabFromLocation();
       return;
@@ -197,7 +197,7 @@
     initRulesSubtabs();
     initChangelogSubtabs();
     initGuideSubtabs();
-    showMainTab(mainTabIdFromHash() || 'runes');
+    showMainTab(mainTabIdFromHash() || 'gear');
 
     if (boot.restored && boot.meta) {
       uiAfterSuccessfulRuneRestore(boot.meta);

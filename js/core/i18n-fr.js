@@ -26,6 +26,9 @@ window.SWRM_I18N_FR = {
   footerDisclaimer:
     'Summoners War™ est une marque de Com2uS Corp. Ce site n’est pas affilié ni approuvé par Com2uS Corp.',
   dashboard: 'Gear',
+  dashboardTab: 'Tableauau de bord',
+  dashboardHubRunes: 'Runes',
+  dashboardHubMonsters: 'Monstres',
   monsters: 'Monstres',
   runeTable: 'Liste des runes',
   monstersTitle: 'Monstres',

@@ -16,7 +16,7 @@
       showMainTab(id);
       localStorage.setItem('swrm-last-tab', id);
     } else {
-      const lastTab = localStorage.getItem('swrm-last-tab') || 'runes';
+      const lastTab = localStorage.getItem('swrm-last-tab') || 'gear';
       showMainTab(lastTab);
     }
   });
@@ -27,7 +27,7 @@
       showMainTab(id);
       localStorage.setItem('swrm-last-tab', id);
     } else {
-      const lastTab = localStorage.getItem('swrm-last-tab') || 'runes';
+      const lastTab = localStorage.getItem('swrm-last-tab') || 'gear';
       showMainTab(lastTab);
     }
   });

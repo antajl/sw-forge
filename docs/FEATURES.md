@@ -43,12 +43,12 @@ Artifact charts use the full `allArtifacts` list from SWEX (`parseAccountGear`).
 
 | Folder | Scope | Main files |
 |--------|--------|------------|
-| `shell/` | App chrome, tabs, i18n bindings | `bootstrap.js`, `i18n-bindings.js`, `main-tabs.js` |
-| `runes/` | Dashboard, rune table, filters, upload | `table.js`, `table-row-render.js`, `table-virtual.js`, `dashboard.js`, … |
-| `gear/` | Artifact & relic tables; Dashboard artifact distributions; Keep/Sell verdicts | `dashboard-artifacts.js`, `artifact-verdict.js`, `artifacts-table.js`, `relics-table.js`, … |
+| `shell/` | App chrome, tabs, i18n bindings | `bootstrap.js`, `theme-nav.js`, `donate-dialog.js`, `i18n-bindings.js`, `mobile-nav.js`, `filters-popover.js`, `main-tabs.js` |
+| `runes/` | Dashboard, rune table, filters, upload | `stage-filters.js`, `rune-processor-worker.js`, `processed-cache.js`, `upload.js`, `utils.js`, `verdict-filters.js`, `charts.js`, `copy-summary.js`, `stage-advisor-ui.js`, `depth.js`, `dashboard.js`, `rune-score.js`, `table-row-render.js`, `table-virtual.js`, `table-filters.js`, `table.js` |
+| `gear/` | Artifact & relic tables; Dashboard artifact distributions; Keep/Sell verdicts | `table-kind.js`, `gear-table-filters.js`, `gear-roster-chips.js`, `artifact-verdict.js`, `dashboard-artifacts.js`, `artifacts-table.js`, `artifacts-virtual.js`, `relics-table.js` |
 | `teams/` | Team sets builder (Monsters → Teams hub pane); combat SPD badges | `storage.js`, `ui.js` |
-| `monsters/` | Roster, cards, detail, gear on unit | `monsters-gear.js`, `monsters-detail.js`, … |
-| `rules/` | Runes rules (Engine / Roles / Verdict) + Artifacts rules (Roles / Verdict / Synergies) | `panel.js`, `bootstrap.js`, `artifact-rules-ui.js`, … |
+| `monsters/` | Roster, cards, detail, gear on unit | `monsters-state.js`, `monsters-hub.js`, `monsters-stats-calc.js`, `monsters-storage.js`, `monsters-bulk.js`, `monsters-filters.js`, `box-overview.js`, `skill-planner.js`, `monsters-gear.js`, `monsters-runes.js`, `monsters-detail.js`, `monsters-card.js`, `monsters-table.js`, `monsters-list.js`, `monsters-events.js` |
+| `rules/` | Runes rules (Engine / Roles / Verdict) + Artifacts rules (Roles / Verdict / Synergies) | `formulas-ui.js`, `panel.js`, `constants-ui.js`, `bootstrap.js`, `policy-ui.js`, `artifact-rules-ui.js` |
 | `app/` | Settings, share, Updates tab | `settings-ui.js`, `share.js`, `changelog.js` |
 
 **Build order** (`tools/build-ui.mjs`): `shell` → `runes` → `gear/table-kind.js` → `gear/artifacts-table.js` → `gear/relics-table.js` → `runes/table.js` → `rules` → `app` → monster modules → `teams` → `monsters/bootstrap.js`.

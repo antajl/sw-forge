@@ -333,7 +333,7 @@
   }
 
   /** Top-level header tabs. Runes hub sub-views: dashboard | runetable | settings. */
-  const MAIN_TAB_IDS = ['runes', 'monsters', 'guide', 'changelog', 'app-settings'];
+  const MAIN_TAB_IDS = ['dashboard', 'gear', 'monsters', 'guide', 'changelog', 'app-settings'];
   const RUNES_SUBTAB_IDS = ['dashboard', 'runetable', 'settings'];
   const RUNES_SUBTAB_STORAGE_KEY = 'swrm_runes_subtab_v1';
   const MONSTERS_SUBTAB_IDS = ['dashboard', 'roster', 'teams', 'planner'];
@@ -341,8 +341,8 @@
   let runesHubTabsBound = false;
 
   function normalizeMainTabRequest(tabId) {
-    if (tabId === 'dashboard' || tabId === 'runetable' || tabId === 'settings') {
-      return { main: 'runes', sub: tabId };
+    if (tabId === 'gear' || tabId === 'runetable' || tabId === 'settings') {
+      return { main: 'runes', sub: tabId === 'gear' ? 'dashboard' : tabId };
     }
     if (tabId === 'roster' || tabId === 'teams' || tabId === 'planner') {
       return { main: 'monsters', sub: tabId };
@@ -574,10 +574,10 @@
       btn.addEventListener('click', () => {
         const sub = btn.dataset.runesHub;
         if (!sub) return;
-        showMainTab('runes', { runesSubtab: sub, writeHash: true });
+        showRunesSubtab(sub, { writeHash: true });
       });
     });
-    
+
     // Position indicator on initial load
     const motionApi = window.SWRM_MOTION;
     if (motionApi && typeof motionApi.positionRunesHubTabIndicator === 'function') {
@@ -608,6 +608,138 @@
     }
   }
 
+  let mainTabsIndicatorBound = false;
+  let positionMainTabsIndicator = null;
+
+  function initMainTabsIndicator() {
+    const nav = document.getElementById('main-tabs-nav');
+    if (!nav || mainTabsIndicatorBound) return;
+    mainTabsIndicatorBound = true;
+
+    const indicator = nav.querySelector('.tabs__indicator');
+    if (!indicator) return;
+
+    const motionApi = window.SWRM_MOTION;
+    const useGsap = motionApi && motionApi.enabled();
+
+    // Position indicator on initial load and tab changes
+    positionMainTabsIndicator = () => {
+      const activeTab = nav.querySelector('.tab.active');
+      if (!activeTab) return;
+
+      const navRect = nav.getBoundingClientRect();
+      const tabRect = activeTab.getBoundingClientRect();
+
+      const left = tabRect.left - navRect.left;
+      const width = tabRect.width;
+
+      if (useGsap && typeof gsap !== 'undefined') {
+        // Use GSAP animation like dash-unified-tabs
+        gsap.to(indicator, {
+          left: left,
+          width: width,
+          duration: 0.3,
+          ease: 'power2.out'
+        });
+      } else {
+        // Fallback to CSS transitions
+        indicator.style.left = `${left}px`;
+        indicator.style.width = `${width}px`;
+      }
+    };
+
+    // Position immediately
+    positionMainTabsIndicator();
+    rafTwice(positionMainTabsIndicator);
+    let resizeTimer = null;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(positionMainTabsIndicator, 120);
+    });
+    window.addEventListener('pageshow', () => {
+      rafTwice(positionMainTabsIndicator);
+    });
+  }
+
+  let dashboardHubTabsBound = false;
+  const DASHBOARD_SUBTAB_IDS = ['runes', 'monsters'];
+
+  function initDashboardHubTabs() {
+    const nav = document.getElementById('dashboard-hub-tabs');
+    if (!nav || dashboardHubTabsBound) return;
+    dashboardHubTabsBound = true;
+    nav.querySelectorAll('.dashboard-hub-tab').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const sub = btn.dataset.dashboardHub;
+        if (!sub) return;
+        showDashboardSubtab(sub, { writeHash: true });
+      });
+    });
+
+    // Position indicator on initial load
+    const motionApi = window.SWRM_MOTION;
+    if (motionApi && typeof motionApi.positionRunesHubTabIndicator === 'function') {
+      rafTwice(() => {
+        const activeTab = nav.querySelector('.dashboard-hub-tab.is-active');
+        if (activeTab) {
+          motionApi.positionRunesHubTabIndicator({ nav, activeKey: activeTab.dataset.dashboardHub, instant: true });
+        }
+      });
+      let resizeTimer = null;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+          const activeTab = nav.querySelector('.dashboard-hub-tab.is-active');
+          if (activeTab) {
+            motionApi.positionRunesHubTabIndicator({ nav, activeKey: activeTab.dataset.dashboardHub, instant: true });
+          }
+        }, 120);
+      });
+      window.addEventListener('pageshow', () => {
+        rafTwice(() => {
+          const activeTab = nav.querySelector('.dashboard-hub-tab.is-active');
+          if (activeTab) {
+            motionApi.positionRunesHubTabIndicator({ nav, activeKey: activeTab.dataset.dashboardHub, instant: true });
+          }
+        });
+      });
+    }
+  }
+
+  function showDashboardSubtab(sub, options) {
+    const opts = options || {};
+    const nav = document.getElementById('dashboard-hub-tabs');
+    if (!nav) return;
+
+    const subId = DASHBOARD_SUBTAB_IDS.includes(sub) ? sub : 'runes';
+
+    // Update tab buttons
+    nav.querySelectorAll('.dashboard-hub-tab').forEach((btn) => {
+      const isActive = btn.dataset.dashboardHub === subId;
+      btn.classList.toggle('is-active', isActive);
+      btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      btn.tabIndex = isActive ? 0 : -1;
+    });
+
+    // Update panes
+    document.querySelectorAll('.dashboard-hub-pane').forEach((pane) => {
+      const isActive = pane.dataset.dashboardPane === subId;
+      pane.classList.toggle('is-active', isActive);
+      pane.hidden = !isActive;
+    });
+
+    // Position indicator
+    const motionApi = window.SWRM_MOTION;
+    if (motionApi && typeof motionApi.positionRunesHubTabIndicator === 'function') {
+      motionApi.positionRunesHubTabIndicator({ nav, activeKey: subId, instant: opts.instant });
+    }
+
+    // Initialize runes dashboard if runes subtab
+    if (subId === 'runes' && typeof scheduleDashboardChartReplay === 'function') {
+      scheduleDashboardChartReplay({ tabSwitch: true, animateCharts: false });
+    }
+  }
+
   /**
    * @param {string} tabId
    * @param {{ writeHash?: boolean, pushHistory?: boolean, runesSubtab?: string, keepTab?: boolean }} [options]
@@ -619,6 +751,12 @@
     const writeHash = opts.writeHash === true;
     const pushHistory = opts.pushHistory === true;
     let { main, sub } = normalizeMainTabRequest(tabId);
+    
+    // Map 'gear' to 'runes' for content (tab-runes element)
+    if (main === 'gear') {
+      main = 'runes';
+    }
+    
     if (typeof isShareReadOnly === 'function' && isShareReadOnly()) {
       if (main === 'guide' || main === 'changelog') {
         main = 'runes';
@@ -642,7 +780,8 @@
       readStoredRunesSubtab();
 
     // Tab order for direction detection
-    const tabOrder = ['runes', 'monsters', 'guide', 'changelog', 'app-settings'];
+    // Note: 'runes' is used internally for the Gear tab (data-tab="gear")
+    const tabOrder = ['dashboard', 'runes', 'monsters', 'guide', 'changelog', 'app-settings'];
     const prevIndex = prevMain ? tabOrder.indexOf(prevMain) : -1;
     const nextIndex = tabOrder.indexOf(main);
     const direction = prevIndex >= 0 && nextIndex >= 0 && nextIndex > prevIndex ? 'next' : 'prev';
@@ -654,7 +793,10 @@
     const nextTabContent = document.getElementById(`tab-${main}`);
 
     document.querySelectorAll('.tab').forEach((t) => {
-      t.classList.toggle('active', t.dataset.tab === main);
+      // Handle gear/runes mapping for active class
+      const tabId = t.dataset.tab;
+      const isActive = tabId === main || (tabId === 'gear' && main === 'runes');
+      t.classList.toggle('active', isActive);
     });
 
     if (useGsap && currentTabContent && nextTabContent && currentTabContent !== nextTabContent) {
@@ -692,15 +834,30 @@
       });
     }
 
+    if (main === 'dashboard') {
+      if (positionMainTabsIndicator) positionMainTabsIndicator();
+      initDashboardHubTabs();
+      showDashboardSubtab('runes', opts);
+    }
+
     if (main === 'runes') {
+      if (positionMainTabsIndicator) positionMainTabsIndicator();
       initRunesHubTabs();
       showRunesSubtab(runesSub, opts);
     }
 
     if (main === 'app-settings') {
+      if (positionMainTabsIndicator) positionMainTabsIndicator();
       renderDbSlots();
     }
+    if (main === 'guide') {
+      if (positionMainTabsIndicator) positionMainTabsIndicator();
+    }
+    if (main === 'changelog') {
+      if (positionMainTabsIndicator) positionMainTabsIndicator();
+    }
     if (main === 'monsters') {
+      if (positionMainTabsIndicator) positionMainTabsIndicator();
       initMonstersHubTabs();
       const monstersSub =
         sub ||
@@ -717,9 +874,10 @@
         const base = window.location.pathname + window.location.search;
         let url;
         if (main === 'runes') {
-          if (runesSub === 'dashboard') url = base;
-          else if (runesSub === 'runetable') url = `${base}#runetable${buildRuneTableQuerySuffix()}`;
-          else url = `${base}#${runesSub}`;
+          // Write as 'gear' in hash
+          if (runesSub === 'dashboard') url = `${base}#gear`;
+          else if (runesSub === 'runetable') url = `${base}#gear/runetable${buildRuneTableQuerySuffix()}`;
+          else url = `${base}#gear/${runesSub}`;
         } else if (main === 'monsters') {
           const monstersSub =
             sub ||
@@ -730,12 +888,21 @@
             readStoredMonstersSubtab();
           url = monstersSub === 'roster' ? `${base}#monsters` : `${base}#monsters/${monstersSub}`;
         } else if (main === 'guide') url = `${base}#guide`;
+        else if (main === 'dashboard') {
+          // Don't write hash for dashboard tab - keep URL clean
+          url = base;
+        }
         else url = `${base}#${main}`;
         if (pushHistory) history.pushState(null, '', url);
         else history.replaceState(null, '', url);
       } catch (e) { /* ignore */ }
     }
   }
+
+  // Initialize main tabs indicator on page load
+  document.addEventListener('DOMContentLoaded', () => {
+    initMainTabsIndicator();
+  });
 
   function donateLinks() {
     const sw = window.SWRM || {};
@@ -925,8 +1092,15 @@
     };
 
     // Update tabs - safely check if elements exist
-    setMainNavTabLabel(document.querySelector('[data-tab="runes"]'), t.dashboard);
+    setMainNavTabLabel(document.querySelector('[data-tab="dashboard"]'), t.dashboardTab);
+    setMainNavTabLabel(document.querySelector('[data-tab="gear"]'), t.dashboard);
     setMainNavTabLabel(document.querySelector('[data-tab="monsters"]'), t.monsters);
+    
+    // Update Dashboard subtabs
+    const dashboardRunesLabel = document.getElementById('lbl-dashboard-hub-runes');
+    if (dashboardRunesLabel) dashboardRunesLabel.textContent = t.dashboardHubRunes || 'Runes';
+    const dashboardMonstersLabel = document.getElementById('lbl-dashboard-hub-monsters');
+    if (dashboardMonstersLabel) dashboardMonstersLabel.textContent = t.dashboardHubMonsters || 'Monsters';
     const hubDash = document.getElementById('lbl-runes-hub-dashboard');
     if (hubDash) hubDash.textContent = t.runesHubDashboard || 'Dashboard';
     const hubTable = document.getElementById('lbl-runes-hub-runetable');
@@ -1782,7 +1956,7 @@
       showMainTab(id);
       localStorage.setItem('swrm-last-tab', id);
     } else {
-      const lastTab = localStorage.getItem('swrm-last-tab') || 'runes';
+      const lastTab = localStorage.getItem('swrm-last-tab') || 'gear';
       showMainTab(lastTab);
     }
   });
@@ -1793,7 +1967,7 @@
       showMainTab(id);
       localStorage.setItem('swrm-last-tab', id);
     } else {
-      const lastTab = localStorage.getItem('swrm-last-tab') || 'runes';
+      const lastTab = localStorage.getItem('swrm-last-tab') || 'gear';
       showMainTab(lastTab);
     }
   });
@@ -11497,7 +11671,7 @@
       initRulesSubtabs();
       initChangelogSubtabs();
       initGuideSubtabs();
-      showMainTab(mainTabIdFromHash() || 'runes');
+      showMainTab(mainTabIdFromHash() || 'gear');
       renderDbSlots();
       if (typeof applyShareUrlTabFromLocation === 'function') applyShareUrlTabFromLocation();
       return;
@@ -11524,7 +11698,7 @@
     initRulesSubtabs();
     initChangelogSubtabs();
     initGuideSubtabs();
-    showMainTab(mainTabIdFromHash() || 'runes');
+    showMainTab(mainTabIdFromHash() || 'gear');
 
     if (boot.restored && boot.meta) {
       uiAfterSuccessfulRuneRestore(boot.meta);

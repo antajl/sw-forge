@@ -47,8 +47,15 @@
     };
 
     // Update tabs - safely check if elements exist
-    setMainNavTabLabel(document.querySelector('[data-tab="runes"]'), t.dashboard);
+    setMainNavTabLabel(document.querySelector('[data-tab="dashboard"]'), t.dashboardTab);
+    setMainNavTabLabel(document.querySelector('[data-tab="gear"]'), t.dashboard);
     setMainNavTabLabel(document.querySelector('[data-tab="monsters"]'), t.monsters);
+    
+    // Update Dashboard subtabs
+    const dashboardRunesLabel = document.getElementById('lbl-dashboard-hub-runes');
+    if (dashboardRunesLabel) dashboardRunesLabel.textContent = t.dashboardHubRunes || 'Runes';
+    const dashboardMonstersLabel = document.getElementById('lbl-dashboard-hub-monsters');
+    if (dashboardMonstersLabel) dashboardMonstersLabel.textContent = t.dashboardHubMonsters || 'Monsters';
     const hubDash = document.getElementById('lbl-runes-hub-dashboard');
     if (hubDash) hubDash.textContent = t.runesHubDashboard || 'Dashboard';
     const hubTable = document.getElementById('lbl-runes-hub-runetable');

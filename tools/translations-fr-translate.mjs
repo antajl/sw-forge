@@ -1,4 +1,4 @@
-/** EN → FR for missing i18n keys (Summoners War UI tone). */
+/** EN → FR for missing translation keys (Summoners War UI tone). */
 export const EXACT = {
   title: 'SW-Forge',
   footerVersionLabel: 'Build',
@@ -45,7 +45,7 @@ const PHRASES = [
   ['High Roll', 'High Roll'],
   ['Duo Roll', 'Duo Roll'],
   ['Gem', 'Gemme'],
-  ['Grind', 'Mettre à niveau'],
+  ['Grind', 'Grind'],
   ['Share all', 'Tout partager'],
   ['Favorites', 'Favoris'],
   ['Favorite', 'Favori'],

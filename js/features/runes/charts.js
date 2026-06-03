@@ -342,8 +342,15 @@
         const barW = maxC ? Math.round((e.c / maxC) * 100) : 0;
         const li = document.createElement('li');
         li.className = 'slot-main-card-li';
+        const lang = typeof currentLang !== 'undefined' ? currentLang : 'en';
+        const dispFn = window.SWRM && window.SWRM.displayStatForUi;
+        const typeFn = window.SWRM && window.SWRM.statTypeIdFromCanonical;
+        const mainLabel =
+          typeof dispFn === 'function'
+            ? dispFn(typeFn && typeFn(e.main), e.main, lang)
+            : e.main;
         li.innerHTML =
-          `<span class="slot-main-card-name">${escapeHtml(e.main)}</span>` +
+          `<span class="slot-main-card-name">${escapeHtml(mainLabel)}</span>` +
           `<span class="slot-main-card-track" aria-hidden="true"><span class="slot-main-card-bar" style="width:${barW}%"></span></span>` +
           `<span class="slot-main-card-stat"><span class="slot-main-card-n">${e.c}</span>` +
           `<span class="slot-main-card-p">${pct}%</span></span>`;

@@ -1045,19 +1045,32 @@
   initDonateDialog();
 
   // ===================== LANGUAGE =====================
+  /** FR is lazy-loaded; ignore empty placeholder from old builds. */
+  function frTranslationsReady() {
+    const fr = TRANSLATIONS.fr;
+    return fr && typeof fr === 'object' && fr.title && fr.guideSubtabStart;
+  }
+
+  function getTranslationsForLang(lang) {
+    if (lang === 'fr') {
+      return frTranslationsReady() ? TRANSLATIONS.fr : TRANSLATIONS.en;
+    }
+    return TRANSLATIONS[lang] || TRANSLATIONS.en;
+  }
+
   function loadFrTranslations() {
-    if (TRANSLATIONS.fr) return Promise.resolve();
-    if (window.SWRM_I18N_FR) {
-      TRANSLATIONS.fr = { ...TRANSLATIONS.en, ...window.SWRM_I18N_FR };
+    if (frTranslationsReady()) return Promise.resolve();
+    if (window.TRANSLATIONS_FR) {
+      TRANSLATIONS.fr = { ...TRANSLATIONS.en, ...window.TRANSLATIONS_FR };
       return Promise.resolve();
     }
     return new Promise((resolve, reject) => {
       const s = document.createElement('script');
-      s.src = 'js/core/i18n-fr.js';
+      s.src = 'js/core/translations-fr.js';
       s.onload = () => {
         TRANSLATIONS.fr = {
           ...TRANSLATIONS.en,
-          ...(window.SWRM_I18N_FR || {}),
+          ...(window.TRANSLATIONS_FR || {}),
         };
         resolve();
       };
@@ -1070,7 +1083,7 @@
     if (lang === 'fr') await loadFrTranslations();
     currentLang = lang;
     localStorage.setItem(APP_LANG_KEY, lang);
-    const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
+    const t = getTranslationsForLang(lang);
 
     document.documentElement.lang = lang === 'ru' ? 'ru' : lang === 'fr' ? 'fr' : 'en';
 
@@ -1250,7 +1263,7 @@
   }
 
   function updateDashboardLabels() {
-    const t = TRANSLATIONS[currentLang];
+    const t = getTranslationsForLang(currentLang);
 
     const setDashUniTabLabel = (id, text) => {
       const btn = document.getElementById(id);
@@ -1356,7 +1369,7 @@
   }
 
   function updateTableLabels() {
-    const t = TRANSLATIONS[currentLang];
+    const t = getTranslationsForLang(currentLang);
     
     // Update search and filters
     const searchBox = document.getElementById('search-box');
@@ -1536,8 +1549,20 @@
     const filterMain = document.getElementById('filter-main');
     if (filterMain) {
       const current = filterMain.value;
-    const mains = Object.values((window.SWRM.statNamesUiForLang || (() => STAT_NAMES))(currentLang) || STAT_NAMES);
-      filterMain.innerHTML = `<option value="">All Mains</option>${mains.map(s => `<option value="${s}">${s}</option>`).join('')}`;
+      const uiMap = (window.SWRM && window.SWRM.statNamesUiForLang
+        ? window.SWRM.statNamesUiForLang(currentLang)
+        : STAT_NAMES);
+      const ids = (window.SWRM && window.SWRM.STAT_TYPE_IDS) || Object.keys(STAT_NAMES);
+      const mains = ids.map((id) => STAT_NAMES[id]).filter(Boolean);
+      filterMain.innerHTML =
+        `<option value="">All Mains</option>${ids
+          .map((id) => {
+            const canon = STAT_NAMES[id];
+            if (!canon) return '';
+            const label = uiMap[id] || canon;
+            return `<option value="${canon}">${label}</option>`;
+          })
+          .join('')}`;
       if (mains.includes(current)) filterMain.value = current;
     }
     
@@ -1553,7 +1578,7 @@
   }
 
   function updateSettingsLabels() {
-    const t = TRANSLATIONS[currentLang];
+    const t = getTranslationsForLang(currentLang);
     const settingsTab = document.getElementById('tab-settings');
     if (!settingsTab) return;
 
@@ -1673,7 +1698,13 @@
     const addBtn = document.getElementById('btn-add-role');
     if (addBtn) addBtn.textContent = t.addRole;
 
-    
+    const saveSettingsBtn = document.getElementById('btn-save-settings');
+    if (saveSettingsBtn) {
+      saveSettingsBtn.textContent = t.saveRecalculate || 'Save & Recalculate';
+      if (t.saveRecalculateTitle) saveSettingsBtn.title = t.saveRecalculateTitle;
+      else saveSettingsBtn.removeAttribute('title');
+    }
+
     // Update reapp labels (only text nodes, keep inputs)
     const reappInputs = [
       { id: 'reapp-sets', text: t.allowedSets },
@@ -2965,7 +2996,7 @@
   }
 
   function applyDemoBannerTextFromTranslations() {
-    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en || {};
+    const t = getTranslationsForLang(currentLang);
     const aside = document.getElementById('demo-dataset-banner');
     if (!aside) return;
     const badge = aside.querySelector('.demo-dataset-banner__badge');
@@ -2981,7 +3012,7 @@
   function applySwrmDropVeilTranslations() {
     const root = document.getElementById('swrm-drop-veil');
     if (!root) return;
-    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en || {};
+    const t = getTranslationsForLang(currentLang);
     const title = root.querySelector('.swrm-drop-veil__title');
     const hint = root.querySelector('.swrm-drop-veil__hint');
     if (title) title.textContent = t.dragDropVeilTitle || '';
@@ -4222,8 +4253,15 @@
         const barW = maxC ? Math.round((e.c / maxC) * 100) : 0;
         const li = document.createElement('li');
         li.className = 'slot-main-card-li';
+        const lang = typeof currentLang !== 'undefined' ? currentLang : 'en';
+        const dispFn = window.SWRM && window.SWRM.displayStatForUi;
+        const typeFn = window.SWRM && window.SWRM.statTypeIdFromCanonical;
+        const mainLabel =
+          typeof dispFn === 'function'
+            ? dispFn(typeFn && typeFn(e.main), e.main, lang)
+            : e.main;
         li.innerHTML =
-          `<span class="slot-main-card-name">${escapeHtml(e.main)}</span>` +
+          `<span class="slot-main-card-name">${escapeHtml(mainLabel)}</span>` +
           `<span class="slot-main-card-track" aria-hidden="true"><span class="slot-main-card-bar" style="width:${barW}%"></span></span>` +
           `<span class="slot-main-card-stat"><span class="slot-main-card-n">${e.c}</span>` +
           `<span class="slot-main-card-p">${pct}%</span></span>`;
@@ -6359,7 +6397,10 @@
 
   function formatRuneStatPlainText(opts) {
     const o = opts || {};
-    const base = runeStatBaseName(o.name) || '?';
+    const lang = typeof currentLang !== 'undefined' ? currentLang : 'en';
+    const dispFn = window.SWRM && window.SWRM.displayStatForUi;
+    const uiName = typeof dispFn === 'function' ? dispFn(o.type, o.name, lang) : o.name;
+    const base = runeStatBaseName(uiName) || runeStatBaseName(o.name) || '?';
     const isPct = runeStatValueIsPercent(o.type, o.name);
     const total =
       o.total != null && Number.isFinite(Number(o.total))
@@ -6471,33 +6512,43 @@
       const strictRole = dt.strictBestFormula || '';
       const policyRole = dt.policyBestFormula || dt.bestRole || '';
       const fitScore = Number(r.fitSummary?.bestScore || 0);
-      const tier = fitScore >= 75 ? 'Excellent' : fitScore >= 60 ? 'Good' : 'Usable';
-      const fit = Number.isFinite(fitScore) && fitScore > 0 ? `Fit ${Math.round(fitScore)}` : '';
+      const tier =
+        fitScore >= 75
+          ? tl.keepFitExcellent || 'Excellent'
+          : fitScore >= 60
+            ? tl.keepFitGood || 'Good'
+            : tl.keepFitUsable || 'Usable';
+      const fitLabel = tl.keepFitLabel || 'Fit';
+      const fit =
+        Number.isFinite(fitScore) && fitScore > 0 ? `${fitLabel} ${Math.round(fitScore)}` : '';
 
       if (r.policyRelaxedRole) {
-        const base = `${roleDisplayName(r.policyRelaxedRole)} · ${tier} (Relaxed)`;
+        const mode = tl.keepModeRelaxed || 'Relaxed';
+        const base = `${roleDisplayName(r.policyRelaxedRole)} · ${tier} (${mode})`;
         return fit ? `${base} · ${fit}` : base;
       }
 
       if ((policyRole || '') === 'Universal' || r.universalSource) {
         if (String(r.universalSource) === 'God') {
-          const src = 'High Value · God';
+          const src = tl.keepUniversalGod || 'High Value · God';
           return fit ? `${src} · ${fit}` : src;
         }
         if (String(r.universalSource) === 'Duo') {
-          const src = 'High Value · Duo';
+          const src = tl.keepUniversalDuo || 'High Value · Duo';
           return fit ? `${src} · ${fit}` : src;
         }
-        const src = 'High Value';
+        const src = tl.keepUniversalHighValue || 'High Value';
         return fit ? `${src} · ${fit}` : src;
       }
 
       if (!strict && policy && policyRole) {
-        const base = `${roleDisplayName(policyRole)} · ${tier} (Flexible)`;
+        const mode = tl.keepModeFlexible || 'Flexible';
+        const base = `${roleDisplayName(policyRole)} · ${tier} (${mode})`;
         return fit ? `${base} · ${fit}` : base;
       }
       if (strictRole) {
-        const base = `${roleDisplayName(strictRole)} · ${tier} (Strict)`;
+        const mode = tl.keepModeStrict || 'Strict';
+        const base = `${roleDisplayName(strictRole)} · ${tier} (${mode})`;
         return fit ? `${base} · ${fit}` : base;
       }
     }
@@ -7083,6 +7134,11 @@
       resistance: 'res',
       acc: 'acc',
       accuracy: 'acc',
+      pv: 'hp',
+      atq: 'atk',
+      vit: 'spd',
+      tc: 'crate',
+      dcc: 'cdmg',
     };
     if (map[t]) return map[t];
     return RUNE_SEARCH_STAT_KEYS.has(t) ? t : null;
@@ -7247,7 +7303,16 @@
     if (f.grade) chips.push({ key: 'grade', label: f.grade });
     if (f.set) chips.push({ key: 'set', label: f.set });
     if (f.slot) chips.push({ key: 'slot', label: `${t.runeFilterSlot || 'Slot'} ${f.slot}` });
-    if (f.main) chips.push({ key: 'main', label: f.main });
+    if (f.main) {
+      const dispFn = window.SWRM && window.SWRM.displayStatForUi;
+      const typeFn = window.SWRM && window.SWRM.statTypeIdFromCanonical;
+      const lang = typeof currentLang !== 'undefined' ? currentLang : 'en';
+      const label =
+        typeof dispFn === 'function'
+          ? dispFn(typeFn && typeFn(f.main), f.main, lang)
+          : f.main;
+      chips.push({ key: 'main', label });
+    }
     if (f.location === 'inventory') {
       chips.push({
         key: 'location',

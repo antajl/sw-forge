@@ -6,9 +6,9 @@ SW Forge is a static browser app. Cloudflare Pages serves `index.html`, CSS, dat
 
 ## Runtime Load Order
 
-`index.html` is the runtime contract:
+`index.html` is the runtime contract (build artifact from `index-shell.html` + partials via `npm run build:html`):
 
-1. `js/core/*.js` (meta → i18n → defaults → changelog-data → bootstrap)
+1. `js/core/meta.js`, `js/core/translations.js` (meta → translations → defaults → changelog-data → bootstrap)
 2. `js/data/artifacts/effects.js`, `js/data/artifact-ingame-score.js`, `js/data/relics/effects.js`, `js/data/gear/parse.js`, `js/data/gear/icons.js`
 3. `js/data/parser.js` (SWEX runes/units, SWOP Eff%)
 4. `js/data/ingame-score.js` (Com2uS Ingame Rating — table column, sort, CSV)
@@ -45,6 +45,28 @@ The app API is exposed through `window.SWRM` and related browser globals. Keep t
 | SWEX/data loading | `js/data/parser.js`, `js/data/skill-db.js`, `js/data/monster-db.js` | none |
 | Demo dataset | loaded from `data/demo.json` via `js/features/runes/upload.js` | none |
 | Bundled indexes | `data/monsters-index.json`, `data/skills-index.json` (schema 2: `metaById`) | see `data/README.md`, `MASTER.md` § external data |
+
+## HTML Build
+
+`tools/build-html.mjs` assembles `index.html` from `index-shell.html` and partial files in `partials/`. The shell template contains `<!-- @include partials/... -->` markers that are replaced with partial content at build time.
+
+Common commands:
+
+```bash
+npm run build:html
+```
+
+Use `npm run build:html` after any edit under `partials/`.
+
+## Translations Build
+
+`tools/build-translations.mjs` joins `js/core/translations-en.js` and `js/core/translations-ru.js` into `js/core/translations.js`. French stays in `translations-fr.js` and loads lazily.
+
+```bash
+npm run build:translations
+```
+
+Edit EN/RU in source files, then run `npm run build:translations`. Edit FR directly in `translations-fr.js`.
 
 ## UI Build
 

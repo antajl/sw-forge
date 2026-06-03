@@ -7,6 +7,8 @@
 
 ## CSS Load Order (`index.html`, `<head>`)
 
+**Note:** `index.html` is a build artifact assembled from `index-shell.html` + partials via `npm run build:html`.
+
 | # | File | Line ~ |
 |---|------|--------|
 | — | `css/dist/app.css` | 21 |
@@ -17,32 +19,36 @@ Dev: `css/style.css` (local only; prod uses `app.css`).
 
 ## JavaScript Load Order (`index.html`, end of `<body>`)
 
+**Note:** `index.html` is a build artifact assembled from `index-shell.html` + partials via `npm run build:html`. Script order is defined in `index-shell.html`.
+
 All local scripts use **`defer`**, including GSAP.
 
 | # | File | Line in `index.html` |
 |---|------|----------------------|
-| 1 | `js/core/meta.js` | 4022 |
-| 2 | `js/core/i18n.js` | 4023 |
-| 3 | `js/core/defaults.js` | 4024 |
-| 4 | `js/core/changelog-data.js` | 4025 |
-| 5 | `js/core/bootstrap.js` | 4026 |
-| 6 | `js/data/artifacts/effects.js` | ~4027 |
-| 7 | `js/data/artifact-ingame-score.js` | ~4028 |
-| 8 | `js/data/relics/effects.js` | ~4029 |
-| 9 | `js/data/gear/parse.js` | ~4030 |
-| 10 | `js/data/gear/icons.js` | ~4031 |
-| 11 | `js/data/parser.js` | ~4032 |
-| 12 | `js/data/ingame-score.js` | ~4033 |
-| 13 | `js/data/local-assets.js` | ~4034 |
-| 14 | `js/data/skill-db.js` | ~4035 |
-| 15 | `js/data/monster-db.js` | ~4036 |
-| 16–21 | `js/engine/*`, `advanced-formulas.js` | ~4037–4042 |
-| 22 | `js/self-test.js` | 4043 |
-| 23 | GSAP local | ~4044 |
-| 24 | `js/swrm-motion.js` | 4046 |
-| 25 | `js/ui.js` | 4047 |
+| 1 | `js/core/meta.js` | ~4218 |
+| 2 | `js/core/translations.js` | ~4219 |
+| 3 | `js/core/defaults.js` | ~4220 |
+| 4 | `js/core/changelog-data.js` | ~4221 |
+| 5 | `js/core/bootstrap.js` | ~4222 |
+| 6 | `js/data/artifacts/effects.js` | ~4223 |
+| 7 | `js/data/artifact-ingame-score.js` | ~4224 |
+| 8 | `js/data/relics/effects.js` | ~4225 |
+| 9 | `js/data/gear/parse.js` | ~4226 |
+| 10 | `js/data/gear/icons.js` | ~4227 |
+| 11 | `js/data/parser.js` | ~4228 |
+| 12 | `js/data/ingame-score.js` | ~4229 |
+| 13 | `js/data/local-assets.js` | ~4230 |
+| 14 | `js/data/skill-db.js` | ~4231 |
+| 15 | `js/data/monster-db.js` | ~4232 |
+| 16–21 | `js/engine/*`, `advanced-formulas.js` | ~4233–4238 |
+| 22 | `js/self-test.js` | ~4239 |
+| 23 | GSAP local | ~4240 |
+| 24 | `js/swrm-motion.js` | ~4241 |
+| 25 | `js/ui.js` | ~4242 |
 
-**Lazy (not in HTML):** `js/core/i18n-fr.js` — loaded on-demand when FR is selected in `i18n-bindings.js`.
+**Lazy (not in HTML):** `js/core/translations-fr.js` — loaded on-demand when FR is selected in `language-bindings.js`.
+
+**Translation sources (edit, not loaded in HTML):** `translations-en.js`, `translations-ru.js` → `npm run build:translations` → `translations.js`.
 
 **Worker:** `js/workers/rune-processor.worker.js` — created from `rune-processor-worker.js`, not in HTML.
 
@@ -54,7 +60,7 @@ See `tools/build-ui.mjs`: `CHUNKS` (shell → runes → gear → rules → app) 
 
 ### Build Order (`tools/build-ui.mjs`)
 
-1. **Shell:** `bootstrap.js`, `theme-nav.js`, `i18n-bindings.js`, `mobile-nav.js`, `filters-popover.js`, `main-tabs.js`
+1. **Shell:** `bootstrap.js`, `theme-nav.js`, `donate-dialog.js`, `language-bindings.js`, `mobile-nav.js`, `filters-popover.js`, `main-tabs.js`
 2. **Runes:** `stage-filters.js`, `rune-processor-worker.js`, `upload.js`, `utils.js`, `verdict-filters.js`, `charts.js`, `copy-summary.js`, `stage-advisor-ui.js`, `depth.js`, `dashboard.js`, `rune-score.js`, `table-row-render.js`, `table-filters.js`, `table.js`
 3. **Gear:** `table-kind.js`, `gear-roster-chips.js`, `artifacts-table.js`, `relics-table.js`, `dashboard-artifacts.js`
 4. **Rules:** `formulas-ui.js`, `panel.js`, `constants-ui.js`, `bootstrap.js`, `policy-ui.js`, `artifact-rules-ui.js`
@@ -83,6 +89,6 @@ See `tools/build-ui.mjs`: `CHUNKS` (shell → runes → gear → rules → app) 
 
 - **Core → Data → Engine → UI:** strict order in `index.html`
 - **`window.SWRM`:** assembled by `js/core/bootstrap.js` from defaults, available to all later scripts
-- **`TRANSLATIONS`:** loaded by `i18n.js`, extended by lazy `i18n-fr.js`
-- **`updateLanguage()`:** defined in `i18n-bindings.js` (inside `ui.js`), called on boot in `shell/bootstrap.js` and `rules/bootstrap.js`
+- **`TRANSLATIONS`:** loaded by `translations.js`, FR extended by lazy `translations-fr.js`
+- **`updateLanguage()`:** defined in `language-bindings.js` (inside `ui.js`), called on boot in `shell/bootstrap.js` and `rules/bootstrap.js`
 - **Do not change `<script defer>` order** without verifying dependency graph

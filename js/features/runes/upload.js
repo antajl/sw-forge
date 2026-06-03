@@ -351,7 +351,7 @@
   }
 
   function applyDemoBannerTextFromTranslations() {
-    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en || {};
+    const t = getTranslationsForLang(currentLang);
     const aside = document.getElementById('demo-dataset-banner');
     if (!aside) return;
     const badge = aside.querySelector('.demo-dataset-banner__badge');
@@ -367,7 +367,7 @@
   function applySwrmDropVeilTranslations() {
     const root = document.getElementById('swrm-drop-veil');
     if (!root) return;
-    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en || {};
+    const t = getTranslationsForLang(currentLang);
     const title = root.querySelector('.swrm-drop-veil__title');
     const hint = root.querySelector('.swrm-drop-veil__hint');
     if (title) title.textContent = t.dragDropVeilTitle || '';

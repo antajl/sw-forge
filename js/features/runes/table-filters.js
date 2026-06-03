@@ -236,6 +236,11 @@
       resistance: 'res',
       acc: 'acc',
       accuracy: 'acc',
+      pv: 'hp',
+      atq: 'atk',
+      vit: 'spd',
+      tc: 'crate',
+      dcc: 'cdmg',
     };
     if (map[t]) return map[t];
     return RUNE_SEARCH_STAT_KEYS.has(t) ? t : null;
@@ -400,7 +405,16 @@
     if (f.grade) chips.push({ key: 'grade', label: f.grade });
     if (f.set) chips.push({ key: 'set', label: f.set });
     if (f.slot) chips.push({ key: 'slot', label: `${t.runeFilterSlot || 'Slot'} ${f.slot}` });
-    if (f.main) chips.push({ key: 'main', label: f.main });
+    if (f.main) {
+      const dispFn = window.SWRM && window.SWRM.displayStatForUi;
+      const typeFn = window.SWRM && window.SWRM.statTypeIdFromCanonical;
+      const lang = typeof currentLang !== 'undefined' ? currentLang : 'en';
+      const label =
+        typeof dispFn === 'function'
+          ? dispFn(typeFn && typeFn(f.main), f.main, lang)
+          : f.main;
+      chips.push({ key: 'main', label });
+    }
     if (f.location === 'inventory') {
       chips.push({
         key: 'location',

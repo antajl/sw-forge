@@ -1,0 +1,132 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SW Forge</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png" />
+  <link rel="shortcut icon" href="assets/favicon-32.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png" />
+  <!-- Inline: SVGs have a huge default intrinsic size before css/dist/app.css loads (e.g. live reload). -->
+  <style>
+    .logo__img { height: 42px; max-width: min(220px, 48vw); }
+    .header-theme-icon, .tab__icon-svg, .tab__icon-mask, .theme-toggle__icon { width: 22px; height: 22px; max-width: 22px; max-height: 22px; display: block; flex-shrink: 0; }
+    /* Avoid default link purple (currentColor) until css/dist/app.css loads */
+    #header-donate-btn .header-donate-heart { color: #d04356; }
+    /* Stage metric SVGs are huge by default вЂ” clip collapsed progression panel until CSS loads */
+    .stage-metric-icon svg { width: 18px; height: 18px; max-width: 18px; max-height: 18px; display: block; }
+    #stage-advisor.is-compact .stage-advisor-expanded-wrap { max-height: 0 !important; overflow: hidden !important; visibility: hidden; }
+  </style>
+  <!-- Inline: Set correct active tab based on URL hash or localStorage before page renders -->
+  <script>
+    (function() {
+      const hash = window.location.hash.replace('#', '');
+      const savedTab = localStorage.getItem('swrm-last-tab');
+      let activeTab = 'gear'; // default
+
+      if (hash) {
+        if (hash === '#dashboard') activeTab = 'dashboard';
+        else if (hash === '#gear' || hash.startsWith('#gear/')) activeTab = 'gear';
+        else if (hash.startsWith('#monsters')) activeTab = 'monsters';
+        else if (hash === '#guide') activeTab = 'guide';
+        else if (hash === '#changelog') activeTab = 'changelog';
+        else if (hash === '#settings') activeTab = 'app-settings';
+      } else if (savedTab) {
+        activeTab = savedTab;
+      }
+
+      // Remove active class from all tabs and add to correct tab
+      document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.tab').forEach(function(tab) {
+          tab.classList.remove('active');
+          if (tab.dataset.tab === activeTab) {
+            tab.classList.add('active');
+          }
+        });
+      });
+    })();
+  </script>
+  <link rel="stylesheet" href="css/dist/app.css?v=1.2.19" />
+</head>
+<body>
+
+  <div class="site-chrome-sticky">
+<!-- @include partials/header.html -->
+  </div>
+
+  <!-- MAIN -->
+  <main>
+
+    <!-- DASHBOARD (Runes + Monsters) -->
+    <section id="tab-dashboard" class="tab-content">
+    <!-- @include partials/tabs/dashboard.html -->
+    </section>
+
+    <!-- RUNES HUB (Dashboard + Table + Rules) -->
+    <section id="tab-runes" class="tab-content hidden">
+    <!-- @include partials/tabs/gear.html -->
+    </section>
+
+    <!-- MONSTERS TAB -->
+    <section id="tab-monsters" class="tab-content hidden">
+    <!-- @include partials/tabs/monsters.html -->
+    </section>
+
+    <section id="tab-guide" class="tab-content hidden">
+    <!-- @include partials/tabs/guide.html -->
+    </section>
+
+    <section id="tab-changelog" class="tab-content hidden">
+    <!-- @include partials/tabs/changelog.html -->
+    </section>
+
+    <!-- APP SETTINGS TAB -->
+    <section id="tab-app-settings" class="tab-content hidden">
+    <!-- @include partials/tabs/app-settings.html -->
+    </section>
+
+  <div id="swrm-drop-veil" class="swrm-drop-veil" hidden aria-hidden="true">
+    <div class="swrm-drop-veil__ring" aria-hidden="true"></div>
+    <div class="swrm-drop-veil__card">
+      <div class="swrm-drop-veil__icon" aria-hidden="true">
+        <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 15V3m0 12l-4-4m4 4l4-4" />
+          <rect x="3" y="15" width="18" height="6" rx="1.5" />
+        </svg>
+      </div>
+      <p class="swrm-drop-veil__title"></p>
+      <p class="swrm-drop-veil__hint"></p>
+    </div>
+  </div>
+
+  <div id="swrm-toast-host" class="swrm-toast-host" aria-live="polite" aria-relevant="additions text"></div>
+
+  <!-- settings: meta → translations → defaults → changelog → bootstrap -->
+  <script defer src="js/core/meta.js?v=1.2.19"></script>
+  <script defer src="js/core/translations.js?v=1.2.19"></script>
+  <script defer src="js/core/defaults.js?v=1.2.19"></script>
+  <script defer src="js/core/changelog-data.js?v=1.2.19"></script>
+  <script defer src="js/core/bootstrap.js?v=1.2.19"></script>
+  <script defer src="js/data/artifacts/effects.js?v=1.2.19"></script>
+  <script defer src="js/data/artifact-ingame-score.js?v=1.2.19"></script>
+  <script defer src="js/data/relics/effects.js?v=1.2.19"></script>
+  <script defer src="js/data/gear/parse.js?v=1.2.19"></script>
+  <script defer src="js/data/gear/icons.js?v=1.2.19"></script>
+  <script defer src="js/data/parser.js?v=1.2.19"></script>
+  <script defer src="js/data/ingame-score.js?v=1.2.19"></script>
+  <script defer src="js/data/local-assets.js?v=1.2.19"></script>
+  <script defer src="js/data/skill-db.js?v=1.2.19"></script>
+  <script defer src="js/data/monster-db.js?v=1.2.19"></script>
+  <script defer src="js/engine/engine-core.js?v=1.2.19"></script>
+  <script defer src="js/engine/engine-legacy-roles.js?v=1.2.19"></script>
+  <script defer src="js/engine/engine-gem-reapp-verdict.js?v=1.2.19"></script>
+  <script defer src="js/engine/engine-artifacts.js?v=1.2.19"></script>
+  <script defer src="js/advanced-formulas.js?v=1.2.19"></script>
+  <script defer src="js/engine/engine-process.js?v=1.2.19"></script>
+  <script defer src="js/self-test.js?v=1.2.19"></script>
+  <script src="assets/gsap.min.js"></script>
+  <script defer src="js/swrm-motion.js?v=1.2.19"></script>
+  <script defer src="js/ui.js?v=1.2.19"></script>
+</body>
+</html>

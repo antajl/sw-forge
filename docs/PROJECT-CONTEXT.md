@@ -28,7 +28,9 @@ Vanilla JS + CSS · **Build:** `npm run build` (`build:css` + `build:ui`) · **P
 | Gear tables | `js/features/gear/` |
 | Teams | `js/features/teams/` · combat SPD + totem via `monsters-stats-calc.js` |
 | SWEX / indexes | `js/data/` · bundled `data/*.json` (see `data/README.md`) |
-| i18n, changelog | `js/core/` |
+| translations, changelog | `js/core/` (`translations-en.js`, `translations-ru.js`, `translations-fr.js`) |
+| **Rune stat labels (EN engine / FR display)** | `js/core/meta.js` — see [`GAME-TERMINOLOGY.md`](GAME-TERMINOLOGY.md) |
+| **Dashboard consolidation (in progress)** | [`DASHBOARD-CONSOLIDATION.md`](DASHBOARD-CONSOLIDATION.md) |
 | Ingame rune Rating | `js/data/ingame-score.js` |
 | Artifact Ingame Score | `js/data/artifact-ingame-score.js` · `ARTIFACT_INGAME_WEIGHTS`, `artifactIngameScoreBreakdown()` |
 | Player Guide (EN/RU) | `index.html` `#tab-guide` — sync with code when table/rules change |
@@ -37,17 +39,18 @@ Vanilla JS + CSS · **Build:** `npm run build` (`build:css` + `build:ui`) · **P
 
 1. `js/features/` → `npm run build:ui`
 2. CSS from `tools/build-css.mjs` list → `npm run build:css`
-3. New UI strings → `i18n.js` EN + RU
+3. UI strings EN/RU → `translations-en.js` + `translations-ru.js` → `npm run build:translations`; FR → `translations-fr.js`
 4. Player-facing changes → changelog **today's date only**; then remove from `PLANS.md`
-5. No manual edits to `js/ui.js` or `css/dist/app.css`
+5. No manual edits to `js/ui.js`, `css/dist/app.css`, or `js/core/translations.js`
 
 ## Build
 
 ```bash
+npm run build:translations
 npm run build:ui
 npm run build:css
 npm run build
 npm run watch:ui
 ```
 
-Do not edit `js/ui.js` by hand. Script order in `index.html` — see `MASTER.md` §3.
+Do not edit `js/ui.js` or `js/core/translations.js` by hand. Script order in `index-shell.html` — see `MASTER.md`.

@@ -15,7 +15,10 @@
 
   function formatRuneStatPlainText(opts) {
     const o = opts || {};
-    const base = runeStatBaseName(o.name) || '?';
+    const lang = typeof currentLang !== 'undefined' ? currentLang : 'en';
+    const dispFn = window.SWRM && window.SWRM.displayStatForUi;
+    const uiName = typeof dispFn === 'function' ? dispFn(o.type, o.name, lang) : o.name;
+    const base = runeStatBaseName(uiName) || runeStatBaseName(o.name) || '?';
     const isPct = runeStatValueIsPercent(o.type, o.name);
     const total =
       o.total != null && Number.isFinite(Number(o.total))
@@ -127,33 +130,43 @@
       const strictRole = dt.strictBestFormula || '';
       const policyRole = dt.policyBestFormula || dt.bestRole || '';
       const fitScore = Number(r.fitSummary?.bestScore || 0);
-      const tier = fitScore >= 75 ? 'Excellent' : fitScore >= 60 ? 'Good' : 'Usable';
-      const fit = Number.isFinite(fitScore) && fitScore > 0 ? `Fit ${Math.round(fitScore)}` : '';
+      const tier =
+        fitScore >= 75
+          ? tl.keepFitExcellent || 'Excellent'
+          : fitScore >= 60
+            ? tl.keepFitGood || 'Good'
+            : tl.keepFitUsable || 'Usable';
+      const fitLabel = tl.keepFitLabel || 'Fit';
+      const fit =
+        Number.isFinite(fitScore) && fitScore > 0 ? `${fitLabel} ${Math.round(fitScore)}` : '';
 
       if (r.policyRelaxedRole) {
-        const base = `${roleDisplayName(r.policyRelaxedRole)} · ${tier} (Relaxed)`;
+        const mode = tl.keepModeRelaxed || 'Relaxed';
+        const base = `${roleDisplayName(r.policyRelaxedRole)} · ${tier} (${mode})`;
         return fit ? `${base} · ${fit}` : base;
       }
 
       if ((policyRole || '') === 'Universal' || r.universalSource) {
         if (String(r.universalSource) === 'God') {
-          const src = 'High Value · God';
+          const src = tl.keepUniversalGod || 'High Value · God';
           return fit ? `${src} · ${fit}` : src;
         }
         if (String(r.universalSource) === 'Duo') {
-          const src = 'High Value · Duo';
+          const src = tl.keepUniversalDuo || 'High Value · Duo';
           return fit ? `${src} · ${fit}` : src;
         }
-        const src = 'High Value';
+        const src = tl.keepUniversalHighValue || 'High Value';
         return fit ? `${src} · ${fit}` : src;
       }
 
       if (!strict && policy && policyRole) {
-        const base = `${roleDisplayName(policyRole)} · ${tier} (Flexible)`;
+        const mode = tl.keepModeFlexible || 'Flexible';
+        const base = `${roleDisplayName(policyRole)} · ${tier} (${mode})`;
         return fit ? `${base} · ${fit}` : base;
       }
       if (strictRole) {
-        const base = `${roleDisplayName(strictRole)} · ${tier} (Strict)`;
+        const mode = tl.keepModeStrict || 'Strict';
+        const base = `${roleDisplayName(strictRole)} · ${tier} (${mode})`;
         return fit ? `${base} · ${fit}` : base;
       }
     }

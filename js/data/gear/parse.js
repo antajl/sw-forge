@@ -73,7 +73,26 @@
   }
 
   function statLabel(typeId) {
-    if (STAT && STAT[typeId]) return STAT[typeId];
+    const dispFn = window.SWRM && window.SWRM.displayStatForUi;
+    const canon = STAT && STAT[typeId];
+    if (typeof dispFn === 'function' && canon) {
+      const lang =
+        typeof currentLang !== 'undefined'
+          ? currentLang
+          : (() => {
+              try {
+                const k =
+                  localStorage.getItem('swrm_app_lang_v1') ||
+                  localStorage.getItem('swrm-lang') ||
+                  'en';
+                return ['en', 'ru', 'fr'].includes(k) ? k : 'en';
+              } catch {
+                return 'en';
+              }
+            })();
+      return dispFn(typeId, canon, lang);
+    }
+    if (canon) return canon;
     return `t${typeId}`;
   }
 

@@ -1,0 +1,460 @@
+﻿      <div class="monsters-shell">
+        <div id="monsters-stats" hidden aria-live="polite" class="visually-hidden"></div>
+        <nav class="rules-subtabs monsters-hub-tabs" id="monsters-hub-tabs" role="tablist" aria-label="Monsters">
+          <span class="monsters-hub-tabs__indicator" aria-hidden="true"></span>
+          <button type="button" role="tab" class="rules-subtab monsters-hub-tab" id="monsters-hub-tab-dashboard"
+            data-monsters-hub="dashboard" aria-selected="false" aria-controls="tab-monsters-dashboard" tabindex="-1">
+            <span class="rules-subtab__label" id="lbl-monsters-hub-dashboard">Dashboard</span>
+          </button>
+          <button type="button" role="tab" class="rules-subtab monsters-hub-tab is-active" id="monsters-hub-tab-roster"
+            data-monsters-hub="roster" aria-selected="true" aria-controls="tab-monsters-roster" tabindex="0">
+            <span class="rules-subtab__label" id="lbl-monsters-hub-roster">Roster</span>
+          </button>
+          <button type="button" role="tab" class="rules-subtab monsters-hub-tab" id="monsters-hub-tab-planner"
+            data-monsters-hub="planner" aria-selected="false" aria-controls="tab-monsters-planner" tabindex="-1">
+            <span class="rules-subtab__label" id="lbl-monsters-hub-planner">Skill plan</span>
+          </button>
+          <button type="button" role="tab" class="rules-subtab monsters-hub-tab" id="monsters-hub-tab-teams"
+            data-monsters-hub="teams" aria-selected="false" aria-controls="tab-monsters-teams" tabindex="-1">
+            <span class="rules-subtab__label" id="lbl-monsters-hub-teams">Teams</span>
+          </button>
+        </nav>
+        <div id="tab-monsters-dashboard" class="monsters-hub-pane" data-monsters-pane="dashboard" role="tabpanel" aria-labelledby="monsters-hub-tab-dashboard" hidden>
+          <div class="dashboard-scope-row">
+            <div class="dashboard-scope-bar">
+              <div class="dashboard-scope-bar-text">
+                <p class="dashboard-account-run-inline">
+                  <span id="dashboard-monsters-count"></span>
+                </p>
+              </div>
+              <div class="dashboard-scope-controls">
+                <label class="level-filter dashboard-min-level" for="monsters-dashboard-min-level">
+                  <span id="lbl-monsters-dashboard-minlvl">Min Level</span>
+                  <select id="monsters-dashboard-min-level">
+                    <option value="0">+0</option>
+                    <option value="5">+5</option>
+                    <option value="10">+10</option>
+                    <option value="15">+15</option>
+                    <option value="20">+20</option>
+                    <option value="25">+25</option>
+                    <option value="30">+30</option>
+                    <option value="35">+35</option>
+                    <option value="40" selected>+40</option>
+                  </select>
+                </label>
+                <div class="dashboard-grade-range" role="group" aria-labelledby="lbl-monsters-dashboard-stars-range">
+                  <span id="lbl-monsters-dashboard-stars-range" class="dashboard-grade-range-label">Stars</span>
+                  <label class="level-filter dashboard-grade-min" for="monsters-dashboard-stars-min">
+                    <span id="lbl-monsters-dashboard-stars-min">From</span>
+                    <select id="monsters-dashboard-stars-min">
+                      <option value="1" selected>1★</option>
+                      <option value="2">2★</option>
+                      <option value="3">3★</option>
+                      <option value="4">4★</option>
+                      <option value="5">5★</option>
+                      <option value="6">6★</option>
+                    </select>
+                  </label>
+                  <label class="level-filter dashboard-grade-max" for="monsters-dashboard-stars-max">
+                    <span id="lbl-monsters-dashboard-stars-max">To</span>
+                    <select id="monsters-dashboard-stars-max">
+                      <option value="1">1★</option>
+                      <option value="2">2★</option>
+                      <option value="3">3★</option>
+                      <option value="4">4★</option>
+                      <option value="5">5★</option>
+                      <option value="6" selected>6★</option>
+                    </select>
+                  </label>
+                </div>
+                <div class="dashboard-grade-range" role="group" aria-labelledby="lbl-monsters-dashboard-nat-range">
+                  <span id="lbl-monsters-dashboard-nat-range" class="dashboard-grade-range-label">Nat</span>
+                  <label class="level-filter dashboard-grade-min" for="monsters-dashboard-nat-min">
+                    <span id="lbl-monsters-dashboard-nat-min">From</span>
+                    <select id="monsters-dashboard-nat-min">
+                      <option value="1" selected>Nat 1</option>
+                      <option value="2">Nat 2</option>
+                      <option value="3">Nat 3</option>
+                      <option value="4">Nat 4</option>
+                      <option value="5">Nat 5</option>
+                    </select>
+                  </label>
+                  <label class="level-filter dashboard-grade-max" for="monsters-dashboard-nat-max">
+                    <span id="lbl-monsters-dashboard-nat-max">To</span>
+                    <select id="monsters-dashboard-nat-max">
+                      <option value="1">Nat 1</option>
+                      <option value="2">Nat 2</option>
+                      <option value="3">Nat 3</option>
+                      <option value="4">Nat 4</option>
+                      <option value="5" selected>Nat 5</option>
+                    </select>
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div class="dashboard-export-aside">
+              <button type="button" class="btn-dashboard-export-standalone" id="btn-monsters-dashboard-copy-summary">Copy summary</button>
+            </div>
+          </div>
+          <section id="monsters-box-overview" class="monsters-box-overview" aria-label="Box overview">
+            <div class="monsters-metrics">
+              <article class="monsters-metric-card">
+                <header class="monsters-metric-card-head">
+                  <span class="monsters-metric-name" id="lbl-monsters-metric-total"></span>
+                </header>
+                <p class="monsters-metric-val" id="monsters-metric-val-total">—</p>
+              </article>
+              <article class="monsters-metric-card">
+                <header class="monsters-metric-card-head">
+                  <span class="monsters-metric-name" id="lbl-monsters-metric-fullsix"></span>
+                </header>
+                <p class="monsters-metric-val" id="monsters-metric-val-fullsix">—</p>
+              </article>
+              <article class="monsters-metric-card">
+                <header class="monsters-metric-card-head">
+                  <span class="monsters-metric-name" id="lbl-monsters-metric-skillups"></span>
+                </header>
+                <p class="monsters-metric-val" id="monsters-metric-val-skillups">—</p>
+              </article>
+              <article class="monsters-metric-card">
+                <header class="monsters-metric-card-head">
+                  <span class="monsters-metric-name" id="lbl-monsters-metric-readiness"></span>
+                </header>
+                <p class="monsters-metric-val" id="monsters-metric-val-readiness">—</p>
+              </article>
+            </div>
+            <div class="monsters-composition">
+              <div class="monsters-composition__section">
+                <h3 class="monsters-composition__title" id="lbl-monsters-composition-elements">Elements</h3>
+                <div class="monsters-composition__bars" id="monsters-composition-elements"></div>
+              </div>
+              <div class="monsters-composition__section">
+                <h3 class="monsters-composition__title" id="lbl-monsters-composition-archetypes">Archetypes</h3>
+                <div class="monsters-composition__bars" id="monsters-composition-archetypes"></div>
+              </div>
+            </div>
+            <div class="monsters-rune-slots">
+              <h3 class="monsters-rune-slots__title" id="lbl-monsters-rune-slots-title">Rune Slots</h3>
+              <div class="monsters-rune-slots__chart" id="monsters-rune-slots-chart"></div>
+            </div>
+            <div class="monsters-skill-priorities">
+              <h3 class="monsters-skill-priorities__title" id="lbl-monsters-skill-priorities-title">Skill Plan Priorities</h3>
+              <div class="monsters-skill-priorities__list" id="monsters-skill-priorities-list"></div>
+            </div>
+            <p class="monsters-box-overview__lead" id="monsters-box-overview-lead"></p>
+            <p class="monsters-box-overview__review" id="monsters-account-review" hidden></p>
+            <div class="monsters-box-overview__tiles" id="monsters-box-overview-tiles"></div>
+          </section>
+        </div>
+        <div id="tab-monsters-planner" class="monsters-hub-pane" data-monsters-pane="planner" role="tabpanel" aria-labelledby="monsters-hub-tab-planner" hidden>
+          <div class="skill-planner" id="skill-planner-root">
+            <div class="skill-planner__summary" id="skill-planner-summary" aria-live="polite"></div>
+            <div class="skill-planner__toolbar">
+              <label class="skill-planner__filter">
+                <span id="lbl-skill-planner-nat">Priority</span>
+                <select id="skill-planner-nat-filter" aria-labelledby="lbl-skill-planner-nat">
+                  <option value="all" id="lbl-skill-planner-nat-all">All naturals</option>
+                  <option value="nat5" id="lbl-skill-planner-nat5">Nat 5 only</option>
+                  <option value="nat4plus" id="lbl-skill-planner-nat4plus">Nat 4+</option>
+                  <option value="nat4" id="lbl-skill-planner-nat4-only">Nat 4 only</option>
+                  <option value="nat3" id="lbl-skill-planner-nat3">Nat 3 only</option>
+                </select>
+              </label>
+              <input
+                type="search"
+                id="skill-planner-search"
+                class="skill-planner__search"
+                placeholder="Search monster…"
+                autocomplete="off"
+                aria-label="Search monster"
+                data-i18n-placeholder="skillPlannerSearch"
+              />
+              <button type="button" class="btn-ghost btn-toolbar skill-planner__toggle" id="skill-planner-exclude-storage" aria-pressed="true">
+                <span id="lbl-skill-planner-exclude-storage">Exclude Storage</span>
+              </button>
+              <button type="button" class="btn-ghost btn-toolbar skill-planner__toggle" id="skill-planner-second-awakened-only" aria-pressed="false" data-swrm-tip="">
+                <span id="lbl-skill-planner-second-awakened-only">Second Awakening only</span>
+              </button>
+            </div>
+            <p class="skill-planner__empty" id="skill-planner-empty" hidden></p>
+            <nav class="rules-subtabs skill-planner__tabs" id="skill-planner-view-tabs" role="tablist" aria-label="">
+              <button type="button" role="tab" class="rules-subtab skill-planner__tab is-active" id="skill-planner-tab-queue"
+                data-planner-view="queue" aria-selected="true" aria-controls="skill-planner-panel-queue" tabindex="0">
+                <span class="rules-subtab__label" id="lbl-skill-planner-tab-queue">Priority queue</span>
+              </button>
+              <button type="button" role="tab" class="rules-subtab skill-planner__tab" id="skill-planner-tab-stuck"
+                data-planner-view="stuck" aria-selected="false" aria-controls="skill-planner-panel-stuck" tabindex="-1">
+                <span class="rules-subtab__label" id="lbl-skill-planner-tab-stuck">Cooldown hunt</span>
+              </button>
+            </nav>
+            <div id="skill-planner-panel-queue" class="skill-planner__panel is-active" role="tabpanel" aria-labelledby="skill-planner-tab-queue">
+              <div class="skill-planner__table-wrap" id="skill-planner-queue"></div>
+            </div>
+            <div id="skill-planner-panel-stuck" class="skill-planner__panel" role="tabpanel" aria-labelledby="skill-planner-tab-stuck" hidden>
+              <div class="skill-planner__table-wrap" id="skill-planner-stuck"></div>
+            </div>
+          </div>
+        </div>
+        <div id="tab-monsters-teams" class="monsters-hub-pane" data-monsters-pane="teams" role="tabpanel" aria-labelledby="monsters-hub-tab-teams" hidden>
+          <div class="teams-shell" id="teams-shell">
+            <div class="teams-layout">
+              <aside class="teams-sidebar" data-teams-readonly-hide>
+                <header class="teams-sidebar__head">
+                  <h3 class="teams-sidebar__title" id="lbl-teams-sets-title">Team sets</h3>
+                  <div class="teams-sidebar__actions" data-teams-readonly-hide>
+                    <button type="button" class="btn-ghost btn-toolbar btn-toolbar--sm" id="teams-export-json">Export</button>
+                    <button type="button" class="btn-ghost btn-toolbar btn-toolbar--sm" id="teams-import-json">Import</button>
+                    <button type="button" class="monsters-toolbar-btn monsters-toolbar-btn--sm" id="teams-add-set">+ Set</button>
+                  </div>
+                </header>
+                <ul class="teams-set-list teams-set-tree" id="teams-set-list"></ul>
+              </aside>
+              <section class="teams-main">
+                <header class="teams-main__head">
+                  <label class="teams-main__set-name">
+                    <span id="lbl-teams-set-name">Set name</span>
+                    <input type="text" id="teams-set-name" maxlength="48" autocomplete="off" spellcheck="false" data-teams-readonly-hide placeholder="e.g. Arena" />
+                  </label>
+                  <button type="button" class="btn-primary" id="teams-create-team" data-teams-readonly-hide>+ Create Team</button>
+                </header>
+                <div class="teams-card-grid" id="teams-card-grid" role="list"></div>
+              </section>
+            </div>
+            <dialog id="teams-editor-dialog" class="teams-editor-dialog" data-teams-readonly-hide>
+              <form method="dialog" class="teams-editor-dialog__form">
+                <header class="teams-editor-dialog__head">
+                  <h3 class="teams-editor-dialog__title" id="lbl-teams-editor-title">Edit team</h3>
+                  <button type="button" class="teams-editor-dialog__close" id="teams-editor-cancel" aria-label="Close">✕</button>
+                </header>
+                <div class="teams-editor-dialog__body">
+                  <label class="teams-editor__field">
+                    <span id="lbl-teams-team-name">Team name</span>
+                    <input type="text" id="teams-team-name" maxlength="48" autocomplete="off" spellcheck="false" placeholder="e.g. Arena Offence" />
+                  </label>
+                  <label class="teams-editor__field">
+                    <span id="lbl-teams-team-size">Team size</span>
+                    <select id="teams-team-size">
+                      <option value="3">3</option>
+                      <option value="4">4</option>
+                      <option value="5" selected>5</option>
+                      <option value="6">6</option>
+                    </select>
+                  </label>
+                  <div class="teams-monster-slots" id="teams-monster-slots"></div>
+                  <label class="teams-editor__field">
+                    <span id="lbl-teams-team-tags">Tags</span>
+                    <input type="text" id="teams-team-tags" maxlength="120" autocomplete="off" spellcheck="false" placeholder="AO, Fast, Speed Lead" />
+                  </label>
+                  <label class="teams-editor__field">
+                    <span id="lbl-teams-team-notes">Notes</span>
+                    <textarea id="teams-team-notes" rows="3" maxlength="500" placeholder="Strategy notes…"></textarea>
+                  </label>
+                  <label class="teams-editor__share">
+                    <input type="checkbox" id="teams-share-public" />
+                    <span id="lbl-teams-share-public">Show in share link</span>
+                  </label>
+                </div>
+                <footer class="teams-editor-dialog__foot">
+                  <button type="button" class="btn-ghost" id="teams-editor-cancel-foot">Cancel</button>
+                  <button type="button" class="btn-primary" id="teams-editor-save">Save team</button>
+                </footer>
+              </form>
+            </dialog>
+            </div>
+          </div>
+        </div>
+
+        <div id="tab-monsters-roster" class="monsters-hub-pane is-active" data-monsters-pane="roster" role="tabpanel" aria-labelledby="monsters-hub-tab-roster">
+        <div class="monsters-layout" id="monsters-layout">
+          <div class="monsters-layout__list">
+                <div class="monsters-toolbar-sticky">
+        <div class="table-toolbar" aria-label="Monster roster tools">
+          <div class="table-toolbar__card">
+            <div class="table-toolbar__row table-toolbar__row--controls table-toolbar__row--roster-inline">
+              <div class="monsters-view-toggle" role="group" aria-label="View">
+                <button type="button" id="monsters-view-table" class="monsters-view-btn monsters-view-btn--active" aria-pressed="true" title="Table">
+                  <svg class="monsters-toolbar-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="4" rx="1"/><rect x="3" y="16" width="18" height="4" rx="1"/></svg>
+                  <span class="sr-only" id="lbl-monsters-view-table">Table</span>
+                </button>
+                <button type="button" id="monsters-view-cards" class="monsters-view-btn" aria-pressed="false" title="Cards">
+                  <svg class="monsters-toolbar-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg>
+                  <span class="sr-only" id="lbl-monsters-view-cards">Cards</span>
+                </button>
+              </div>
+              <div class="table-toolbar__search table-toolbar__search--roster">
+                <label class="visually-hidden" for="monsters-filter-q" id="lbl-monsters-filter-q">Search</label>
+                <input type="search" id="monsters-filter-q" class="table-toolbar__input" autocomplete="off" spellcheck="false" placeholder="Search monsters…" aria-labelledby="lbl-monsters-filter-q" />
+              </div>
+              <div class="table-toolbar__group table-toolbar__group--actions table-toolbar__group--roster-filters">
+                <div class="table-toolbar__buttons">
+                  <div class="filters-popover-host">
+                    <button type="button" class="monsters-toolbar-btn monsters-toolbar-btn--filters" id="monsters-more-filters-btn" aria-haspopup="true" aria-controls="monsters-filters-popover" aria-expanded="false">
+                      <span id="lbl-monsters-more-filters">More Filters ⚙</span>
+                      <span class="monsters-toolbar-btn__badge" id="monsters-filters-active-count" hidden></span>
+                    </button>
+                    <div id="monsters-filters-popover" class="filters-popover filters-popover--wide" role="dialog" aria-labelledby="lbl-monsters-filters-drawer-title" hidden data-anchor-btn="monsters-more-filters-btn">
+                      <div class="filters-popover__panel">
+                        <header class="filters-popover__head">
+                          <h3 class="filters-popover__title" id="lbl-monsters-filters-drawer-title">More filters</h3>
+                          <button type="button" class="filters-popover__close" data-filters-popover-close aria-label="Close">✕</button>
+                        </header>
+                        <div class="filters-popover__body">
+              <div class="monsters-toolbar__filters-grid monsters-toolbar__filters-grid--primary">
+                <label>
+                  <span id="lbl-monsters-filter-element">Element</span>
+                  <select id="monsters-filter-element" aria-labelledby="lbl-monsters-filter-element">
+                    <option value="">All elements</option>
+                    <option value="Fire">Fire</option>
+                    <option value="Water">Water</option>
+                    <option value="Wind">Wind</option>
+                    <option value="Light">Light</option>
+                    <option value="Dark">Dark</option>
+                  </select>
+                </label>
+                <label>
+                  <span id="lbl-monsters-filter-min-level">Min level</span>
+                  <input type="number" id="monsters-filter-min-level" min="1" max="40" step="1" inputmode="numeric" placeholder="All" aria-labelledby="lbl-monsters-filter-min-level" />
+                </label>
+              </div>
+              <p class="monsters-toolbar__filters-heading" id="lbl-monsters-filters-basic">Basic filters</p>
+              <div class="monsters-toolbar__filters-grid monsters-toolbar__filters-grid--primary">
+                <label class="monsters-filter-skill-up-label">
+                  <span id="lbl-monsters-filter-skill">Skills</span>
+                  <select id="monsters-filter-skill">
+                    <option value="" id="lbl-monsters-filter-skill-all">All skills</option>
+                    <option value="needs-up" id="lbl-monsters-filter-skill-needs">Not maxed (skill-ups needed)</option>
+                    <option value="maxed" id="lbl-monsters-filter-skill-maxed">Max skills</option>
+                  </select>
+                </label>
+                <label>
+                  <span id="lbl-monsters-filter-location">Location</span>
+                  <select id="monsters-filter-location">
+                    <option value="all">All</option>
+                    <option value="active">In use</option>
+                    <option value="storage">Storage</option>
+                  </select>
+                </label>
+                <label>
+                  <span id="lbl-monsters-filter-role">Role</span>
+                  <select id="monsters-filter-role">
+                    <option value="">All roles</option>
+                    <option value="HP">HP</option>
+                    <option value="Attack">Attack</option>
+                    <option value="Defense">Defense</option>
+                    <option value="Support">Support</option>
+                  </select>
+                </label>
+                <label>
+                  <span id="lbl-monsters-filter-tag">Tag</span>
+                  <select id="monsters-filter-tag">
+                    <option value="">All tags</option>
+                  </select>
+                </label>
+                <label>
+                  <span id="lbl-monsters-filter-mark">Marks</span>
+                  <select id="monsters-filter-mark">
+                    <option value="">All</option>
+                    <option value="favorite">★ Favorites</option>
+                    <option value="food">🍖 Food</option>
+                  </select>
+                </label>
+              </div>
+              <p class="monsters-toolbar__filters-heading" id="lbl-monsters-filters-runes">Rune filters</p>
+              <div class="monsters-toolbar__filters-grid monsters-toolbar__filters-grid--advanced">
+                <label>
+                  <span id="lbl-monsters-filter-rune-set">Set</span>
+                  <select id="monsters-filter-rune-set">
+                    <option value="">Any set</option>
+                  </select>
+                </label>
+                <label>
+                  <span id="lbl-monsters-filter-rune">Equipped</span>
+                  <select id="monsters-filter-rune">
+                    <option value="">All runes</option>
+                    <option value="unruned">Unruned</option>
+                    <option value="partial">Partial (1–5)</option>
+                  </select>
+                </label>
+                <div class="monsters-toolbar__filter-action">
+                  <span class="monsters-toolbar__field-label" id="lbl-monsters-filter-full-six">Runes</span>
+                  <button type="button" id="monsters-filter-full-six" class="monsters-toolbar-btn monsters-toolbar-btn--block" aria-pressed="false">
+                    <span id="lbl-monsters-filter-full-six-btn">6/6 runes only</span>
+                  </button>
+                </div>
+              </div>
+                    </div>
+                        <footer class="filters-popover__foot">
+                          <button type="button" class="btn-ghost" id="monsters-filters-drawer-reset">Reset filters</button>
+                          <button type="button" class="btn-primary" data-filters-popover-done>Done</button>
+                        </footer>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="table-toolbar__aside">
+                <div class="table-toolbar__buttons table-toolbar__buttons--end">
+                  <button type="button" id="btn-monsters-export-csv" class="btn-ghost btn-toolbar">Export CSV</button>
+                  <div class="share-split share-split--compact" data-share-split>
+                    <button type="button" class="share-split__main" id="monsters-share-main">
+                      <span class="share-split__icon" aria-hidden="true">🔗</span>
+                      <span class="share-split__label" data-share-split-label>Share</span>
+                    </button>
+                    <button type="button" class="share-split__caret" id="monsters-share-caret" aria-expanded="false" aria-haspopup="true" aria-controls="monsters-share-menu" title="Share options">▼</button>
+                    <div class="share-split__menu" id="monsters-share-menu" role="menu" hidden>
+                      <p class="share-split__menu-title" id="lbl-share-menu-title">Share roster</p>
+                      <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="all">All monsters + all runes</button>
+                      <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="equipped-monsters">Equipped monsters only</button>
+                      <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="equipped-runes">Equipped runes only</button>
+                      <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="equipped-both">Equipped monsters + equipped runes</button>
+                      <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="selected">Selected monsters only</button>
+                      <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="favorites">Favorites only</button>
+                      <button type="button" class="share-split__menu-copy" data-share-copy-link>Copy link</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+          <div class="monsters-active-filters" id="monsters-active-filters" hidden>
+            <div class="monsters-active-filters__chips" id="monsters-filter-chips" aria-live="polite"></div>
+            <button type="button" class="monsters-active-filters__clear" id="monsters-filter-clear-all">Clear all</button>
+          </div>
+        </div>
+
+        <div class="monsters-bulk-bar monsters-selection-bar" id="monsters-bulk-bar" hidden>
+          <span class="monsters-selection-bar__count" id="monsters-bulk-count">0 selected</span>
+          <div class="monsters-selection-bar__actions">
+            <button type="button" id="monsters-bulk-favorite" class="monsters-selection-btn">★ <span id="lbl-monsters-bulk-favorite">Add to Favorites</span></button>
+            <button type="button" id="monsters-bulk-food" class="monsters-selection-btn">🍖 <span id="lbl-monsters-bulk-food">Mark as Fodder</span></button>
+            <button type="button" id="monsters-bulk-storage" class="monsters-selection-btn">▣ <span id="lbl-monsters-bulk-storage">Move to Storage</span></button>
+            <div class="monsters-selection-tag" id="monsters-bulk-tag-wrap">
+              <button type="button" class="monsters-selection-btn" id="monsters-bulk-tag-toggle" aria-haspopup="listbox" aria-expanded="false">🏷 <span id="lbl-monsters-bulk-tag">Add Tag</span> ▾</button>
+              <div class="monsters-selection-tag__menu" id="monsters-bulk-tag-menu" hidden role="listbox"></div>
+              <input type="text" id="monsters-bulk-tag-input" class="visually-hidden" maxlength="32" autocomplete="off" spellcheck="false" tabindex="-1" aria-hidden="true" />
+            </div>
+            <button type="button" id="monsters-select-all-visible" class="monsters-selection-btn monsters-selection-btn--ghost">Select all</button>
+            <button type="button" id="monsters-bulk-clear" class="monsters-selection-btn monsters-selection-btn--ghost">Deselect all</button>
+          </div>
+        </div>
+        <div class="monsters-roster-meta">
+          <div class="monsters-chips monsters-chips--stats" id="monsters-chips" aria-live="polite"></div>
+          <div class="monsters-grid-head" id="monsters-grid-head" hidden>
+            <label class="monsters-grid-head__select">
+              <input type="checkbox" id="monsters-grid-select-all" class="monsters-table__bulk-cb monsters-table__bulk-cb--all" />
+              <span id="lbl-monsters-grid-select-all">Select all visible</span>
+            </label>
+          </div>
+        </div>
+        <div id="monsters-grid" class="monsters-grid monsters-grid--cards"></div>
+          </div>
+        </div>
+        </div>
+
+        <aside id="monsters-detail" class="monsters-detail monsters-detail--float" aria-labelledby="monsters-detail-title" hidden>
+          <div class="monsters-detail__body" id="monsters-detail-body" hidden></div>
+        </aside>
+
+        <p class="monsters-attrib" id="lbl-monsters-attrib"></p>
+      </div>

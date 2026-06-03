@@ -1,0 +1,27 @@
+﻿      <div class="rules-tab-shell">
+        <header class="rules-page-header visually-hidden" aria-hidden="true">
+          <h2 class="rules-page-title" id="lbl-changelog-page-title">Updates</h2>
+          <p class="rules-page-lead" id="lbl-changelog-page-lead"></p>
+        </header>
+
+        <nav class="rules-subtabs" id="changelog-subtabs" role="tablist">
+          <button type="button" role="tab" class="rules-subtab is-active" id="changelog-subtab-shipped"
+            data-changelog-subtab="shipped" aria-selected="true" aria-controls="changelog-panel-shipped" tabindex="0">
+            <span class="rules-subtab__label" id="lbl-changelog-subtab-shipped">Releases</span>
+          </button>
+          <button type="button" role="tab" class="rules-subtab" id="changelog-subtab-roadmap"
+            data-changelog-subtab="roadmap" aria-selected="false" aria-controls="changelog-panel-roadmap" tabindex="-1">
+            <span class="rules-subtab__label" id="lbl-changelog-subtab-roadmap">Roadmap</span>
+          </button>
+        </nav>
+
+        <div id="changelog-panel-shipped" role="tabpanel" aria-labelledby="changelog-subtab-shipped"
+          class="rules-subpanel is-active" data-changelog-subtab="shipped">
+          <p class="settings-desc changelog-lead" id="lbl-changelog-shipped-lead"></p>
+          <div id="changelog-list" class="changelog-releases"></div>
+        </div>
+        <div id="changelog-panel-roadmap" role="tabpanel" aria-labelledby="changelog-subtab-roadmap"
+          class="rules-subpanel" data-changelog-subtab="roadmap">
+          <div id="changelog-roadmap-list" class="roadmap-grid" role="document"></div>
+        </div>
+      </div>

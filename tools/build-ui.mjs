@@ -15,7 +15,7 @@ const CHUNKS = [
   'shell/bootstrap.js',
   'shell/theme-nav.js',
   'shell/donate-dialog.js',
-  'shell/i18n-bindings.js',
+  'shell/language-bindings.js',
   'shell/mobile-nav.js',
   'shell/filters-popover.js',
   'shell/main-tabs.js',

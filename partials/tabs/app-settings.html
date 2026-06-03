@@ -1,0 +1,93 @@
+﻿      <div class="app-settings-shell">
+        <article class="app-settings-card app-settings-card--slots" aria-labelledby="db-slots-title">
+          <header class="app-settings-card__head app-settings-card__head--split">
+            <div class="app-settings-card__head-text">
+              <h2 class="app-settings-card__title" id="db-slots-title">Database slots</h2>
+              <p id="db-slots-desc" class="app-settings-card__desc">Store up to four SWEX exports and switch the active profile instantly.</p>
+            </div>
+            <div class="app-settings-card__head-actions" data-share-settings-actions>
+              <div class="share-split share-split--compact" data-share-split>
+                <button type="button" class="share-split__main" id="share-profile-btn" title="Share profile">
+                  <span class="share-split__icon" aria-hidden="true">🔗</span>
+                  <span class="share-split__label" data-share-split-label>Share</span>
+                </button>
+                <button type="button" class="share-split__caret" aria-expanded="false" aria-haspopup="true" aria-controls="settings-share-menu" title="Share options">▼</button>
+                <div class="share-split__menu" id="settings-share-menu" role="menu" hidden>
+                  <p class="share-split__menu-title" id="lbl-share-menu-title-settings">Share roster</p>
+                  <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="all">All monsters + all runes</button>
+                  <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="equipped-monsters">Equipped monsters only</button>
+                  <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="equipped-runes">Equipped runes only</button>
+                  <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="equipped-both">Equipped monsters + equipped runes</button>
+                  <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="selected">Selected monsters only</button>
+                  <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="favorites">Favorites only</button>
+                  <button type="button" class="share-split__menu-copy" data-share-copy-link>Copy link</button>
+                </div>
+              </div>
+            </div>
+          </header>
+          <div class="app-settings-card__body">
+            <div id="db-slots-wrap" class="db-slots-wrap"></div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-shell">
+      <p class="footer-disclaimer" id="lbl-footer-disclaimer">Summoners War™ is a trademark of Com2uS Corp. This site is not affiliated with or endorsed by Com2uS Corp.</p>
+      <p class="footer-version"><span id="lbl-footer-version">Build</span> <span id="footer-app-version">—</span></p>
+    </div>
+  </footer>
+
+  <dialog id="donate-dialog" class="donate-dialog" aria-labelledby="donate-dialog-title">
+    <form method="dialog" class="donate-dialog__form">
+      <header class="donate-dialog__head">
+        <h2 class="donate-dialog__title" id="donate-dialog-title">Support the development</h2>
+        <button type="button" class="donate-dialog__close" id="donate-dialog-close" aria-label="Close">×</button>
+      </header>
+      <div class="donate-dialog__body">
+        <p class="donate-dialog__lead" id="lbl-donate-dialog-lead">Your support helps me keep this tool free and updated. Please choose the method that works best for you:</p>
+
+        <section class="donate-dialog__section">
+          <h3 class="donate-dialog__section-title" id="lbl-donate-section-boosty-title">1. Credit Cards / Apple Pay (via Boosty)</h3>
+          <p class="donate-dialog__section-desc" id="lbl-donate-section-boosty-desc">A dedicated creator platform that supports international card payments.</p>
+          <a class="btn-primary donate-dialog__pay-btn" id="donate-link-boosty" href="https://boosty.to/antajl/donate" target="_blank" rel="noopener noreferrer"><span id="lbl-donate-btn-boosty">Pay via Boosty</span></a>
+        </section>
+
+        <section class="donate-dialog__section">
+          <h3 class="donate-dialog__section-title" id="lbl-donate-section-lava-title">2. Universal Payment Gateway (via Lava.top)</h3>
+          <p class="donate-dialog__section-desc" id="lbl-donate-section-lava-desc">A fast and convenient platform that supports various payment methods.</p>
+          <a class="btn-primary donate-dialog__pay-btn" id="donate-link-lava" href="https://app.lava.top/antajl?tabId=donate" target="_blank" rel="noopener noreferrer"><span id="lbl-donate-btn-lava">Pay via Lava.top</span></a>
+        </section>
+
+        <section class="donate-dialog__section">
+          <h3 class="donate-dialog__section-title" id="lbl-donate-section-crypto-title">3. Direct Crypto Transfer</h3>
+          <p class="donate-dialog__section-desc" id="lbl-donate-section-crypto-desc">Best for those who prefer direct, peer-to-peer transfers without intermediaries.</p>
+          <p class="donate-dialog__crypto" id="donate-crypto-address">USDT (TRC-20): TBwBtxxcYFQceogrUCnZxZWGWVJKjWyahR</p>
+          <p class="donate-dialog__crypto-hint" id="lbl-donate-crypto-hint">Please ensure you are using the TRC-20 network.</p>
+          <button type="button" class="btn-secondary btn-sm" id="donate-copy-crypto"><span id="lbl-donate-copy-crypto">Copy address</span></button>
+        </section>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- UPLOAD PROMPT OVERLAY (shown when no data) -->
+  <section id="upload-prompt" class="upload-prompt hidden" role="dialog" aria-modal="true" aria-labelledby="upload-prompt-title">
+    <div class="prompt-card">
+      <button type="button" class="close-upload" id="close-upload-prompt" title="Close" aria-label="Close">×</button>
+      <div class="prompt-icon" aria-hidden="true">
+        <img class="prompt-icon__img" src="assets/logo-icon.png" width="72" height="72" alt="" decoding="async" />
+      </div>
+      <h2 id="upload-prompt-title">Load your SWEX JSON</h2>
+      <p id="upload-prompt-lead" class="prompt-lead">Export with Summoners War Exporter (SWEX), then select your .json file. Analysis runs entirely in this browser.</p>
+      <p id="upload-prompt-drag-hint" class="prompt-drag-hint" role="note"></p>
+      <div class="prompt-primary">
+        <label id="upload-prompt-cta" for="json-upload" class="upload-btn-large">Choose JSON file</label>
+        <input type="file" id="json-upload" class="prompt-file-input" accept=".json,application/json" />
+      </div>
+      <p id="upload-prompt-secondary" class="prompt-secondary">This becomes your active profile (Data 1). Add or switch accounts in App Settings → Database Slots.</p>
+      <button type="button" class="btn-ghost prompt-clear-btn" id="btn-clear-saved-runes">Clear all saved data</button>
+      <p id="upload-prompt-hint" class="prompt-hint">All processing happens in your browser — your data never leaves your device.</p>
+    </div>

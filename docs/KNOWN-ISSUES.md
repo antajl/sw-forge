@@ -8,25 +8,14 @@
 ## [RESOLVED] FR language breaks on page reload
 
 **Status:** Resolved (fixed 2026-06-01)  
-**Files:** `js/features/shell/bootstrap.js`, `js/features/shell/i18n-bindings.js`
+**Files:** `js/features/shell/bootstrap.js`, `js/features/shell/language-bindings.js`
 
 ### Root cause
-`i18n-fr.js` is lazy-loaded only when `updateLanguage('fr')` is called explicitly. On page reload, `currentLang = 'fr'` is read from localStorage, but `updateLanguage()` was never called during initialization, leaving `TRANSLATIONS.fr` undefined. The UI then broke when trying to access undefined translation keys.
+`translations-fr.js` is lazy-loaded only when `updateLanguage('fr')` runs. Additionally, `translations.js` contained `fr: {}` — an empty but **truthy** object. That made `loadFrTranslations()` skip loading (it checked `if (TRANSLATIONS.fr)`), and `TRANSLATIONS['fr'] || TRANSLATIONS.en` never fell back to English because `{}` is truthy. Result: empty labels on Guide subtabs, demo banner, and upload prompt.
 
 ### Fix
-Проблема была вызвана синтаксическими ошибками в `js/core/i18n-fr.js`:
-
-1. **Исправлены синтаксические ошибки в `js/core/i18n-fr.js`:**
-   - Удалён лишний обратный слеш `\` в конце строки 589
-   - Удалены экранированные кавычки `\'` на строке 592
-   - Удалён обратный слеш `\` в конце строки 655
-   - Исправлены экранированные кавычки `\'` на строке 658
-
-2. **Добавлен fallback в `js/features/rules/panel.js`:**
-   - `refreshRoleFilterOptions` теперь использует `TRANSLATIONS[currentLang] || TRANSLATIONS.en`
-   - Предотвращает `TypeError` при доступе к отсутствующим ключам в FR
-
-Эти изменения гарантируют, что `i18n-fr.js` загружается без ошибок и UI не падает при перезагрузке с FR языком.
+- Remove `fr: {}` from `tools/build-translations.mjs` output.
+- Add `frTranslationsReady()` / `getTranslationsForLang()` in `language-bindings.js` and use them in `updateLanguage`, demo banner, and drop veil.
 
 ### Verification
 - FR: select language → reload → UI fully in French ✓
@@ -54,16 +43,23 @@ rg "#[0-9a-fA-F]{6}" css/features/ -g "*.css"
 
 ---
 
-## [OPEN] `index.html` monolithic (~250 KB)
+## [RESOLVED] `index.html` monolithic (~250 KB)
 
-**Status:** Open  
-**Files:** `index.html`
+**Status:** Resolved (fixed 2026-06-03)  
+**Files:** `index.html`, `index-shell.html`, `partials/`
 
 ### Issue
-Single HTML file contains entire UI inline, making it hard to edit and navigate.
+Single HTML file contained entire UI inline, making it hard to edit and navigate.
+
+### Resolution
+Implemented build-time HTML assembly from partials:
+- Created `index-shell.html` template with `<!-- @include partials/... -->` markers
+- Split UI sections into partial files in `partials/` and `partials/tabs/`
+- Created `tools/build-html.mjs` to assemble `index.html` from shell + partials
+- Updated `package.json` to include `build:html` in build process
 
 ### Impact
-Developer experience; no runtime impact.
+Developer experience improved: UI sections now editable in separate partial files. No runtime impact.
 
 ### Notes
 Player Guide text lives in `#tab-guide` within HTML by design (not moved to `docs/`).

@@ -11,7 +11,9 @@
 |------|------|
 | `js/ui.js` | Artifact of `npm run build:ui` |
 | `css/dist/app.css` | Artifact of `npm run build:css` |
-| Order of `<script defer>` in `index.html` | Hard dependency contract |
+| `index.html` | Artifact of `npm run build:html` (from `index-shell.html` + partials) |
+| `js/core/translations.js` | Artifact of `npm run build:translations` (from `translations-en.js` + `translations-ru.js`) |
+| Order of `<script defer>` in `index-shell.html` | Hard dependency contract |
 
 ---
 
@@ -19,7 +21,15 @@
 
 | Path | Purpose |
 |------|---------|
-| `index.html` | Single HTML page (entire UI inline) |
+| `index.html` | **Prod** — assembled HTML (build artifact from `index-shell.html` + partials) |
+| `index-shell.html` | Shell template with `<!-- @include partials/... -->` markers |
+| `partials/header.html` | Header partial (logo, navigation, theme toggle) |
+| `partials/tabs/dashboard.html` | Dashboard tab content |
+| `partials/tabs/gear.html` | Gear tab content (runes, artifacts, relics) |
+| `partials/tabs/monsters.html` | Monsters tab content |
+| `partials/tabs/guide.html` | Guide tab content |
+| `partials/tabs/changelog.html` | Changelog tab content |
+| `partials/tabs/app-settings.html` | App Settings tab content |
 | `_headers` | Cache-Control for Cloudflare Pages |
 | `assets/fonts/*.woff2` | Self-hosted fonts (legacy, not connected) |
 | `data/demo.json` | Demo SWEX (~5.5 MB) |
@@ -55,8 +65,10 @@ CSS build order: `tools/build-css.mjs` → `FILES` array.
 | Path | Purpose |
 |------|---------|
 | `js/core/meta.js` | `APP_VERSION`, stat constants |
-| `js/core/i18n.js` | `TRANSLATIONS` EN + RU |
-| `js/core/i18n-fr.js` | FR partial (lazy-loaded) |
+| `js/core/translations-en.js` | English UI strings (source) |
+| `js/core/translations-ru.js` | Russian UI strings (source) |
+| `js/core/translations-fr.js` | French UI strings (lazy-loaded source) |
+| `js/core/translations.js` | **Prod** — EN+RU bundle (`npm run build:translations`) |
 | `js/core/defaults.js` | Thresholds, roles, formulas, settings |
 | `js/core/changelog-data.js` | `STATIC_CHANGELOG`, `STATIC_ROADMAP` |
 | `js/core/bootstrap.js` | Assembles `window.SWRM` from defaults |
@@ -118,7 +130,7 @@ Concatenation order: `tools/build-ui.mjs` (`CHUNKS` + `MONSTER_PARTS`).
 |------|------|
 | `shell/bootstrap.js` | Global app state, tabs |
 | `shell/theme-nav.js` | Dark/light theme |
-| `shell/i18n-bindings.js` | Binds `TRANSLATIONS` to DOM, lazy FR |
+| `shell/language-bindings.js` | Binds `TRANSLATIONS` to DOM, lazy FR |
 | `shell/mobile-nav.js` | Mobile navigation |
 | `shell/filters-popover.js` | Filter popovers |
 | `shell/main-tabs.js` | Runes / Monsters / Guide / Updates |
@@ -199,6 +211,11 @@ Concatenation order: `tools/build-ui.mjs` (`CHUNKS` + `MONSTER_PARTS`).
 |--------|--|
 | `build-ui.mjs` | Build `js/ui.js` |
 | `build-css.mjs` | Build `css/dist/app.css` |
+| `build-html.mjs` | Build `index.html` from shell + partials |
+| `build-translations.mjs` | Build `js/core/translations.js` from EN/RU sources |
+| `translations-audit.mjs` | Compare keys across EN/RU/FR source files |
+| `translations-extract-en.mjs` | Extract EN strings for missing FR keys |
+| `translations-build-fr.mjs` | Auto-add FR keys from EN missing list |
 | `watch-ui.mjs` | Watch UI |
 | `fetch-monsters-index.mjs` | Update `monsters-index.json` |
 | `fetch-skills-index.mjs` | `skills-index.json` (+ `metaById`; `--fresh` for full re-fetch) |

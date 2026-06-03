@@ -16,113 +16,96 @@ This document outlines a plan to split large, monolithic files into smaller, mor
 
 ## 1. index.html — Split by Main Tabs
 
+### Status: ✅ COMPLETED (2026-06-02)
+
+**Implementation:** Build-time assembly from partials (not runtime fetch)
+
 ### Current State
-- **Size:** 4237 lines, ~371KB
-- **Structure:** Single file containing all tabs inline
-- **Issue:** Difficult to navigate and edit
+- **Size:** 4237 lines, ~371KB → Split into partials
+- **Structure:** `index-shell.html` template + partials in `partials/`
+- **Issue:** ✅ Resolved - easier to navigate and edit
 
-### Proposed Structure
+### Implemented Structure
 
-Split into modular HTML partials loaded via JavaScript (no build system required):
+Build-time assembly from partials:
 
 ```
-index.html (main shell, ~200 lines)
-├── partials/header.html
-├── partials/tabs/dashboard.html
-├── partials/tabs/gear.html
-├── partials/tabs/monsters.html
-├── partials/tabs/guide.html
-├── partials/tabs/updates.html
-└── partials/tabs/settings.html
+index-shell.html (template with markers, ~133 lines)
+├── partials/header.html (header navigation)
+├── partials/tabs/dashboard.html (dashboard tab)
+├── partials/tabs/gear.html (gear/runes tab)
+├── partials/tabs/monsters.html (monsters tab)
+├── partials/tabs/guide.html (guide tab)
+├── partials/tabs/changelog.html (changelog tab)
+└── partials/tabs/app-settings.html (app settings tab)
 ```
 
-### Implementation Plan
+### Implementation (Completed)
 
-#### Step 1: Create partials directory structure
+**Approach:** Build-time assembly (not runtime fetch)
+
+#### Step 1: Created partials directory structure
 ```bash
 mkdir -p partials/tabs
 ```
 
-#### Step 2: Extract header to partials/header.html
-**Content to extract:** Lines 1-179 (DOCTYPE, `<head>`, header navigation)
+#### Step 2: Created index-shell.html template
+- Copied original `index.html` to `index-shell.html`
+- Replaced content sections with `<!-- @include partials/... -->` markers
+- Preserved script load order in shell template
 
-**New index.html structure:**
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>SW Forge</title>
-  <!-- CSS, fonts, meta tags -->
-</head>
-<body>
-  <div id="header-container"></div>
-  <div id="demo-dataset-banner"></div>
-  <main>
-    <div id="tabs-container"></div>
-  </main>
-  <!-- Scripts -->
-</body>
-</html>
-```
+#### Step 3: Extracted each tab content to partials
 
-**Loading script (inline in index.html):**
-```html
-<script>
-  // Load partials synchronously before DOMContentLoaded
-  async function loadPartial(id, path) {
-    const response = await fetch(path);
-    const html = await response.text();
-    document.getElementById(id).innerHTML = html;
-  }
-
-  (async () => {
-    await loadPartial('header-container', 'partials/header.html');
-    await loadPartial('tabs-container', 'partials/tabs/dashboard.html');
-    // Load other tabs on demand or all at once
-  })();
-</script>
-```
-
-#### Step 3: Extract each tab content
+**partials/header.html**
+- Extracted: Header section (logo, navigation, theme toggle)
+- Size: ~126 lines
 
 **partials/tabs/dashboard.html**
-- Extract: Lines 196-342 (`<section id="tab-dashboard">`)
-- Size: ~150 lines
-- Contains: Dashboard hub (Runes/Monsters sub-tabs), stage advisor, charts
+- Extracted: Dashboard tab content
+- Size: ~145 lines
 
 **partials/tabs/gear.html**
-- Extract: Lines 344-1480 (`<section id="tab-runes">`)
-- Size: ~1136 lines
-- Contains: Gear hub (Dashboard/Table/Rules sub-tabs), rune table, rules panels
+- Extracted: Gear tab content (runes, artifacts, relics)
+- Size: ~292 lines
 
 **partials/tabs/monsters.html**
-- Extract: Lines 1482-1944 (`<section id="tab-monsters">`)
-- Size: ~462 lines
-- Contains: Monsters hub, roster, detail, teams
+- Extracted: Monsters tab content
+- Size: ~461 lines
 
 **partials/tabs/guide.html**
-- Extract: Lines 1946-4065 (`<section id="tab-guide">`)
-- Size: ~2119 lines
-- Contains: Guide content (EN/RU/FR sections)
+- Extracted: Guide tab content
+- Size: ~2118 lines
 
-**partials/tabs/updates.html**
-- Extract: Lines 4067-4095 (`<section id="tab-changelog">`)
-- Size: ~28 lines
-- Contains: Updates/Changelog UI shell
+**partials/tabs/changelog.html**
+- Extracted: Changelog tab content
+- Size: ~27 lines
 
-**partials/tabs/settings.html**
-- Extract: Lines 4097-end (`<section id="tab-app-settings">`)
-- Size: ~140 lines
-- Contains: App settings UI
+**partials/tabs/app-settings.html**
+- Extracted: App settings tab content
+- Size: ~93 lines
 
-#### Step 4: Update script loading order
-Move all `<script defer>` tags to the end of `index.html` (after partials are loaded).
+#### Step 4: Created build script
+**tools/build-html.mjs:**
+- Reads `index-shell.html`
+- Replaces `<!-- @include partials/... -->` markers with partial content
+- Writes assembled `index.html`
 
-#### Step 5: Update documentation
-- Update `FILE-MAP.md` with new structure
-- Update `ARCHITECTURE.md` with partial loading strategy
-- Update `LOAD-ORDER.md` with new load sequence
+#### Step 5: Updated package.json
+```json
+{
+  "scripts": {
+    "build:html": "node tools/build-html.mjs",
+    "build": "npm run build:html && npm run build:css && npm run build:ui"
+  }
+}
+```
+
+#### Step 6: Updated documentation
+- Updated `MASTER.md` with build:html command and edit rules
+- Updated `FILE-MAP.md` with partials and index-shell.html
+- Updated `ARCHITECTURE.md` with HTML Build section
+- Updated `LOAD-ORDER.md` with index.html as build artifact
+- Updated `KNOWN-ISSUES.md` - marked monolithic index.html as resolved
 
 ### Benefits
 - **Navigation:** Each tab in separate file, easier to find content
@@ -131,35 +114,40 @@ Move all `<script defer>` tags to the end of `index.html` (after partials are lo
 - **Maintenance:** Clear separation of concerns
 
 ### Risks & Mitigations
-- **Risk:** Fetch latency for partials
-  - **Mitigation:** Load critical partials synchronously, lazy-load others
+- **Risk:** Build step required
+  - **Mitigation:** ✅ Implemented - `npm run build:html` integrates into existing build process
 - **Risk:** Offline support (file:// protocol)
-  - **Mitigation:** Provide fallback to single-file mode or use build system for production
+  - **Mitigation:** ✅ Resolved - build-time assembly works with file:// protocol
 - **Risk:** SEO impact
-  - **Mitigation:** Not applicable (SPA, content loaded client-side)
+  - **Mitigation:** Not applicable (SPA, content pre-assembled at build time)
 
-### Alternative: Build System Approach
-If fetch-based loading is problematic, use a simple build step:
+### Build System Approach (Used)
+We used the build system approach instead of runtime fetch:
 
 **tools/build-html.mjs:**
 ```javascript
 import fs from 'fs';
+import path from 'path';
 
-const partials = {
-  'header-container': 'partials/header.html',
-  'tabs-container': 'partials/tabs/dashboard.html',
-  // ... other tabs
-};
+const shellPath = path.join(rootDir, 'index-shell.html');
+const outputPath = path.join(rootDir, 'index.html');
 
-let html = fs.readFileSync('index.html', 'utf8');
-for (const [id, path] of Object.entries(partials)) {
-  const content = fs.readFileSync(path, 'utf8');
-  html = html.replace(`<div id="${id}"></div>`, `<div id="${id}">${content}</div>`);
+let content = fs.readFileSync(shellPath, 'utf-8');
+
+// Replace <!-- @include partials/... --> markers with partial content
+const includePattern = /<!-- @include (.+?) -->/g;
+let match;
+while ((match = includePattern.exec(content)) !== null) {
+  const [fullMatch, partialPath] = match;
+  const partialFilePath = path.join(rootDir, partialPath);
+  const partialContent = fs.readFileSync(partialFilePath, 'utf-8');
+  content = content.replace(fullMatch, partialContent);
 }
-fs.writeFileSync('dist/index.html', html);
+
+fs.writeFileSync(outputPath, content, 'utf-8');
 ```
 
-**Update package.json:**
+**package.json:**
 ```json
 {
   "scripts": {
@@ -171,79 +159,30 @@ fs.writeFileSync('dist/index.html', html);
 
 ---
 
-## 2. js/core/i18n.js — Split by Language
+## 2. js/core/translations — Split by Language
 
-### Current State
-- **Size:** 1857 lines, ~100KB
-- **Structure:** Single object with EN and RU translations
-- **Issue:** Difficult to find specific translation strings
+### Status: ✅ COMPLETED (2026-06-03)
 
-### Proposed Structure
+**Implementation:** Source files per language + build artifact (FR lazy-loaded)
+
+### Structure
 
 ```
-js/core/i18n.js (main entry, ~50 lines)
-├── js/core/i18n-en.js (EN translations, ~900 lines)
-└── js/core/i18n-ru.js (RU translations, ~900 lines)
+js/core/translations-en.js   (EN source, edit here)
+js/core/translations-ru.js   (RU source, edit here)
+js/core/translations-fr.js   (FR source, lazy-loaded)
+js/core/translations.js      (build artifact: EN+RU bundle)
+tools/build-translations.mjs
 ```
 
-### Implementation Plan
+### Build
 
-#### Step 1: Extract translations
-Split the `TRANSLATIONS` object by language:
-
-**js/core/i18n-en.js:**
-```javascript
-export const TRANSLATIONS_EN = {
-  // All English translations
-  "lbl-tab-dashboard": "Dashboard",
-  // ... rest of EN strings
-};
+```bash
+npm run build:translations   # EN+RU → translations.js
+npm run build                  # includes build:translations
 ```
 
-**js/core/i18n-ru.js:**
-```javascript
-export const TRANSLATIONS_RU = {
-  // All Russian translations
-  "lbl-tab-dashboard": "Дашборд",
-  // ... rest of RU strings
-};
-```
-
-#### Step 2: Create main i18n.js
-**js/core/i18n.js:**
-```javascript
-import { TRANSLATIONS_EN } from './i18n-en.js';
-import { TRANSLATIONS_RU } from './i18n-ru.js';
-
-export const TRANSLATIONS = {
-  en: TRANSLATIONS_EN,
-  ru: TRANSLATIONS_RU
-};
-
-export const DEFAULT_LANG = 'en';
-```
-
-#### Step 3: Update index.html load order
-Add new script tags before existing i18n.js:
-```html
-<script defer src="js/core/i18n-en.js"></script>
-<script defer src="js/core/i18n-ru.js"></script>
-<script defer src="js/core/i18n.js"></script>
-```
-
-#### Step 4: Update i18n-fr.js
-Keep as-is (already separate file).
-
-### Benefits
-- **Navigation:** Easier to find translation strings by language
-- **Collaboration:** Translators can work on separate language files
-- **Maintenance:** Clear separation of languages
-
-### Risks & Mitigations
-- **Risk:** More HTTP requests
-  - **Mitigation:** Minimal impact (2 additional small files)
-- **Risk:** Breaking existing code
-  - **Mitigation:** Keep same export structure (`TRANSLATIONS` object)
+Edit rules: EN/RU in source files → rebuild. FR in `translations-fr.js` directly. UI bindings in `language-bindings.js`.
 
 ---
 
@@ -393,30 +332,42 @@ export { STATIC_CHANGELOG, STATIC_ROADMAP };
 
 ## Implementation Priority
 
-### Phase 1: High Priority
+### Phase 1: High Priority ✅
 1. **index.html** — Split by tabs (largest impact)
-   - Estimated effort: 4-6 hours
-   - Risk: Medium (requires careful testing)
+   - Status: ✅ COMPLETED (2026-06-02)
+   - Effort: ~2 hours
+   - Risk: Medium → Resolved (build-time approach)
 
 ### Phase 2: Medium Priority
-2. **js/core/i18n.js** — Split by language
-   - Estimated effort: 1-2 hours
-   - Risk: Low (simple extraction)
+2. **translations split** — Split by language
+   - Status: ✅ COMPLETED (2026-06-03)
+   - Estimated effort: ~1 hour
+   - Risk: Low
 
 3. **js/core/defaults.js** — Split by category
    - Estimated effort: 2-3 hours
    - Risk: Low-Medium (requires careful categorization)
+   - Priority: Medium - improves maintainability
 
-### Phase 3: Low Priority
+### Phase 3: Low Priority (Future)
 4. **js/core/changelog-data.js** — Split by type
    - Estimated effort: 1 hour
    - Risk: Low (simple extraction)
+   - Priority: Low - minor benefit
 
 ---
 
 ## Testing Checklist
 
-After each split, verify:
+### index.html Split ✅ (2026-06-02)
+- [x] All functionality works as before
+- [x] No console errors
+- [x] All tabs load correctly
+- [x] Build process works (`npm run build`)
+- [x] Documentation updated (MASTER.md, FILE-MAP.md, ARCHITECTURE.md, LOAD-ORDER.md, KNOWN-ISSUES.md)
+
+### Future Splits
+After each future split, verify:
 
 - [ ] All functionality works as before
 - [ ] No console errors
@@ -453,8 +404,20 @@ After implementing splits, update:
 
 ## Notes
 
+- **Build system used** for index.html split (build-time assembly from partials)
 - **No build system required** for JS splits (ES6 modules work natively in modern browsers)
-- **index.html split** may require build system or fetch-based loading
 - **Keep backward compatibility** where possible (same export structures)
 - **Test thoroughly** after each split
 - **Update documentation** immediately after changes
+
+## Summary
+
+**Completed (2026-06-03):**
+- ✅ index.html split via build-time assembly from partials
+- ✅ translations split: EN/RU sources + build artifact, FR lazy
+- ✅ Renamed `i18n-bindings.js` → `language-bindings.js`
+- ✅ Created `tools/build-translations.mjs`, integrated into `npm run build`
+
+**Remaining (Future):**
+- js/core/defaults.js split by category (Medium priority)
+- js/core/changelog-data.js split by type (Low priority)

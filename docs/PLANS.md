@@ -43,10 +43,10 @@
 3. Опционально отдельная верхняя вкладка (vs только Runes → Table).
 4. Больше подтверждённых подписей типов реликтов.
 
-## 7. Guide & i18n
+## 7. Guide & translations
 
 1. ~~FR Guide для Monsters (позже Artifacts).~~ — реализован (секция `guide-lang--fr` в `index.html`).
-2. ~~Дополнительные FR-строки UI Monsters.~~ — реализованы (`i18n-fr.js`).
+2. ~~Дополнительные FR-строки UI Monsters.~~ — реализованы (`translations-fr.js`).
 
 ## 9. Локальные ассеты
 

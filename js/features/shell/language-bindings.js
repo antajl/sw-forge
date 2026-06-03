@@ -1,18 +1,31 @@
-// js/features/shell/i18n-bindings.js — UI translation bindings
+// js/features/shell/language-bindings.js — UI translation bindings
   // ===================== LANGUAGE =====================
+  /** FR is lazy-loaded; ignore empty placeholder from old builds. */
+  function frTranslationsReady() {
+    const fr = TRANSLATIONS.fr;
+    return fr && typeof fr === 'object' && fr.title && fr.guideSubtabStart;
+  }
+
+  function getTranslationsForLang(lang) {
+    if (lang === 'fr') {
+      return frTranslationsReady() ? TRANSLATIONS.fr : TRANSLATIONS.en;
+    }
+    return TRANSLATIONS[lang] || TRANSLATIONS.en;
+  }
+
   function loadFrTranslations() {
-    if (TRANSLATIONS.fr) return Promise.resolve();
-    if (window.SWRM_I18N_FR) {
-      TRANSLATIONS.fr = { ...TRANSLATIONS.en, ...window.SWRM_I18N_FR };
+    if (frTranslationsReady()) return Promise.resolve();
+    if (window.TRANSLATIONS_FR) {
+      TRANSLATIONS.fr = { ...TRANSLATIONS.en, ...window.TRANSLATIONS_FR };
       return Promise.resolve();
     }
     return new Promise((resolve, reject) => {
       const s = document.createElement('script');
-      s.src = 'js/core/i18n-fr.js';
+      s.src = 'js/core/translations-fr.js';
       s.onload = () => {
         TRANSLATIONS.fr = {
           ...TRANSLATIONS.en,
-          ...(window.SWRM_I18N_FR || {}),
+          ...(window.TRANSLATIONS_FR || {}),
         };
         resolve();
       };
@@ -25,7 +38,7 @@
     if (lang === 'fr') await loadFrTranslations();
     currentLang = lang;
     localStorage.setItem(APP_LANG_KEY, lang);
-    const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
+    const t = getTranslationsForLang(lang);
 
     document.documentElement.lang = lang === 'ru' ? 'ru' : lang === 'fr' ? 'fr' : 'en';
 
@@ -205,7 +218,7 @@
   }
 
   function updateDashboardLabels() {
-    const t = TRANSLATIONS[currentLang];
+    const t = getTranslationsForLang(currentLang);
 
     const setDashUniTabLabel = (id, text) => {
       const btn = document.getElementById(id);
@@ -311,7 +324,7 @@
   }
 
   function updateTableLabels() {
-    const t = TRANSLATIONS[currentLang];
+    const t = getTranslationsForLang(currentLang);
     
     // Update search and filters
     const searchBox = document.getElementById('search-box');
@@ -491,8 +504,20 @@
     const filterMain = document.getElementById('filter-main');
     if (filterMain) {
       const current = filterMain.value;
-    const mains = Object.values((window.SWRM.statNamesUiForLang || (() => STAT_NAMES))(currentLang) || STAT_NAMES);
-      filterMain.innerHTML = `<option value="">All Mains</option>${mains.map(s => `<option value="${s}">${s}</option>`).join('')}`;
+      const uiMap = (window.SWRM && window.SWRM.statNamesUiForLang
+        ? window.SWRM.statNamesUiForLang(currentLang)
+        : STAT_NAMES);
+      const ids = (window.SWRM && window.SWRM.STAT_TYPE_IDS) || Object.keys(STAT_NAMES);
+      const mains = ids.map((id) => STAT_NAMES[id]).filter(Boolean);
+      filterMain.innerHTML =
+        `<option value="">All Mains</option>${ids
+          .map((id) => {
+            const canon = STAT_NAMES[id];
+            if (!canon) return '';
+            const label = uiMap[id] || canon;
+            return `<option value="${canon}">${label}</option>`;
+          })
+          .join('')}`;
       if (mains.includes(current)) filterMain.value = current;
     }
     
@@ -508,7 +533,7 @@
   }
 
   function updateSettingsLabels() {
-    const t = TRANSLATIONS[currentLang];
+    const t = getTranslationsForLang(currentLang);
     const settingsTab = document.getElementById('tab-settings');
     if (!settingsTab) return;
 
@@ -628,7 +653,13 @@
     const addBtn = document.getElementById('btn-add-role');
     if (addBtn) addBtn.textContent = t.addRole;
 
-    
+    const saveSettingsBtn = document.getElementById('btn-save-settings');
+    if (saveSettingsBtn) {
+      saveSettingsBtn.textContent = t.saveRecalculate || 'Save & Recalculate';
+      if (t.saveRecalculateTitle) saveSettingsBtn.title = t.saveRecalculateTitle;
+      else saveSettingsBtn.removeAttribute('title');
+    }
+
     // Update reapp labels (only text nodes, keep inputs)
     const reappInputs = [
       { id: 'reapp-sets', text: t.allowedSets },

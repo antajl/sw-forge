@@ -3,7 +3,7 @@ self.window = self;
 
 importScripts(
   '../core/meta.js',
-  '../core/i18n.js',
+  '../core/translations.js',
   '../core/defaults.js',
   '../core/changelog-data.js',
   '../core/bootstrap.js',

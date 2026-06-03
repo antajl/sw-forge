@@ -1,10 +1,10 @@
 import fs from 'fs';
 
-const src = fs.readFileSync('js/core/i18n.js', 'utf8');
+const src = fs.readFileSync('js/core/translations-en.js', 'utf8');
 const missFr = JSON.parse(fs.readFileSync('tools/miss-fr-keys.json', 'utf8'));
 
-const enStart = src.indexOf('en: {') + 'en: {'.length;
-const enEnd = src.indexOf('\n  ru: {');
+const enStart = src.indexOf('{') + 1;
+const enEnd = src.lastIndexOf('}');
 const enBlock = src.slice(enStart, enEnd);
 
 const out = {};

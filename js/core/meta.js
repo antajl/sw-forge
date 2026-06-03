@@ -12,7 +12,7 @@ const STAT_NAMES = {
   11: 'RES',    12: 'ACC'
 };
 
-/** Localized stat abbreviations for dropdowns (engine + JSON still use {@link STAT_NAMES}). French uses in-game style: VIT, PV, ATQ… */
+/** Localized stat abbreviations for dropdowns (engine + JSON still use {@link STAT_NAMES}). FR: communauté SW (PV, ATQ, VIT, TC, DCC, ACC). */
 const STAT_NAMES_UI_BY_LANG = {
   en: { ...STAT_NAMES },
   ru: { ...STAT_NAMES },
@@ -24,14 +24,42 @@ const STAT_NAMES_UI_BY_LANG = {
     5: 'DEF',
     6: 'DEF%',
     8: 'VIT',
-    9: 'Taux CR',
-    10: 'DG CR',
-    11: 'RÉS',
-    12: 'PRÉ',
+    9: 'TC',
+    10: 'DCC',
+    11: 'RES',
+    12: 'ACC',
   },
 };
 function statNamesUiForLang(lang) {
   return STAT_NAMES_UI_BY_LANG[lang] || STAT_NAMES_UI_BY_LANG.en;
+}
+
+/** SWEX stat type ids (mains + subs) in stable order — filter dropdowns, docs. */
+const STAT_TYPE_IDS = [1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12];
+
+/** Reverse lookup: canonical English label from {@link STAT_NAMES} → type id. */
+function statTypeIdFromCanonical(canonicalName) {
+  const canon = String(canonicalName || '').trim();
+  if (!canon) return null;
+  for (let i = 0; i < STAT_TYPE_IDS.length; i++) {
+    const id = STAT_TYPE_IDS[i];
+    if (STAT_NAMES[id] === canon) return id;
+  }
+  return null;
+}
+
+/**
+ * Player-facing stat abbreviation (table cells, charts, filter chips).
+ * Engine, SWEX parser, filters, and sort keys always use English {@link STAT_NAMES}.
+ */
+function displayStatForUi(typeId, canonicalName, lang) {
+  const ui = statNamesUiForLang(lang || 'en');
+  const t = Number(typeId);
+  if (Number.isFinite(t) && ui[t]) return ui[t];
+  const id = statTypeIdFromCanonical(canonicalName);
+  if (id != null && ui[id]) return ui[id];
+  const fallback = String(canonicalName || '').trim();
+  return fallback || '?';
 }
 
 const SET_NAMES = {

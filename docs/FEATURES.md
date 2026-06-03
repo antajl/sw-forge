@@ -43,7 +43,7 @@ Artifact charts use the full `allArtifacts` list from SWEX (`parseAccountGear`).
 
 | Folder | Scope | Main files |
 |--------|--------|------------|
-| `shell/` | App chrome, tabs, i18n bindings | `bootstrap.js`, `theme-nav.js`, `donate-dialog.js`, `i18n-bindings.js`, `mobile-nav.js`, `filters-popover.js`, `main-tabs.js` |
+| `shell/` | App chrome, tabs, language bindings | `bootstrap.js`, `theme-nav.js`, `donate-dialog.js`, `language-bindings.js`, `mobile-nav.js`, `filters-popover.js`, `main-tabs.js` |
 | `runes/` | Dashboard, rune table, filters, upload | `stage-filters.js`, `rune-processor-worker.js`, `processed-cache.js`, `upload.js`, `utils.js`, `verdict-filters.js`, `charts.js`, `copy-summary.js`, `stage-advisor-ui.js`, `depth.js`, `dashboard.js`, `rune-score.js`, `table-row-render.js`, `table-virtual.js`, `table-filters.js`, `table.js` |
 | `gear/` | Artifact & relic tables; Dashboard artifact distributions; Keep/Sell verdicts | `table-kind.js`, `gear-table-filters.js`, `gear-roster-chips.js`, `artifact-verdict.js`, `dashboard-artifacts.js`, `artifacts-table.js`, `artifacts-virtual.js`, `relics-table.js` |
 | `teams/` | Team sets builder (Monsters → Teams hub pane); combat SPD badges | `storage.js`, `ui.js` |

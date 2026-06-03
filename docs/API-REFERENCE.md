@@ -13,7 +13,7 @@ Assembled by the script load chain; same object in `ui.js` plus UI helpers.
 |-----|--------|---------|
 | `APP_VERSION` | bootstrap | App version string |
 | `settings`, `saveSettings` | defaults | User settings persistence |
-| `TRANSLATIONS`, `STATIC_CHANGELOG`, `STATIC_ROADMAP` | i18n / changelog | UI text strings |
+| `TRANSLATIONS`, `STATIC_CHANGELOG`, `STATIC_ROADMAP` | translations / changelog | UI text strings |
 | `parseSWEX`, `parseRune`, `parseUnits` | parser | SWEX → runes/units |
 | `calcEfficiency`, `calcEfficiencyUncapped` | parser | SWOP Eff% (Depth, dashboard charts — **not** table column) |
 | `calcIngameScore`, `ingameScoreBreakdown` | ingame-score | Ingame Rating in rune table |

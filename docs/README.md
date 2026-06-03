@@ -7,6 +7,8 @@
 | Вопрос | Где смотреть |
 |--------|----------------|
 | С чего начать сессию правок | [`PROJECT-CONTEXT.md`](PROJECT-CONTEXT.md) — стек, build, 5 правил |
+| **Игровая терминология (статы, EN vs FR)** | [`GAME-TERMINOLOGY.md`](GAME-TERMINOLOGY.md) — engine EN, display localized |
+| **Слияние Dashboard (Gear/Monsters → главная вкладка)** | [`DASHBOARD-CONSOLIDATION.md`](DASHBOARD-CONSOLIDATION.md) — фазы, id, чеклист |
 | Где лежит файл / API `SWRM` | [`MASTER.md`](MASTER.md) — точка входа, правила правок, ссылки |
 | Полная карта файлов | [`FILE-MAP.md`](FILE-MAP.md) |
 | Порядок загрузки скриптов | [`LOAD-ORDER.md`](LOAD-ORDER.md) |
@@ -36,7 +38,7 @@
 | **Changelog → Releases** | `js/core/changelog-data.js` → `STATIC_CHANGELOG` | Что вышло (новое сверху). |
 | **Changelog → Roadmap** | тот же файл → `STATIC_ROADMAP` | Краткая копия [`PLANS.md`](PLANS.md). |
 
-Подписи кнопок/колонок — `js/core/i18n.js` (+ `i18n-fr.js` lazy).
+Подписи кнопок/колонок — `js/core/translations-en.js` + `translations-ru.js` (→ `translations.js`), FR lazy в `translations-fr.js`.
 
 ---
 
@@ -51,6 +53,7 @@
 | Forge Score | `js/features/runes/rune-score.js` | Guide → Rune Table → Forge |
 | Вердикты / причина в тултипе | `js/engine/*`, `table-row-render.js` (`runeVerdictTipText`) | Guide → How scoring works |
 | Фильтры, сорт, CSV | `table-filters.js`, `table.js` | Guide → Table toolbar |
+| **Статы в ячейках (EN engine / FR PV,VIT…)** | `meta.js` (`displayStatForUi`), `table-row-render.js` | [`GAME-TERMINOLOGY.md`](GAME-TERMINOLOGY.md) |
 
 ### Артефакты / реликвии
 
@@ -86,6 +89,6 @@
 | Колонки / формулы таблицы | `index.html` Guide (EN+RU) + при необходимости `MASTER.md` / `FEATURES.md` |
 | Новый модуль в load chain | `index.html` + `ARCHITECTURE.md` + `MASTER.md` § load order |
 | Новая папка в `js/features/` | `tools/build-ui.mjs` + `FEATURES.md` |
-| Строки UI | `i18n.js` (en+ru), опционально `i18n-fr.js` |
+| Строки UI | `translations-en.js` + `translations-ru.js` → `npm run build:translations`; FR → `translations-fr.js` |
 
 Не править вручную: `js/ui.js`, `css/dist/app.css`.

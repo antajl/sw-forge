@@ -24,7 +24,7 @@ const frMap = {
   reappOddInnateHint: 'Vide = toute innée ; ex. SPD, ACC',
 };
 
-let fr = fs.readFileSync('js/core/i18n-fr.js', 'utf8');
+let fr = fs.readFileSync('js/core/translations-fr.js', 'utf8');
 const additions = [];
 for (const [k, v] of Object.entries(frMap)) {
   if (fr.includes(`${k}:`)) continue;
@@ -36,5 +36,5 @@ if (!additions.length) {
 }
 const idx = fr.lastIndexOf('};');
 fr = `${fr.slice(0, idx)}\n${additions.join('\n')}\n};`;
-fs.writeFileSync('js/core/i18n-fr.js', fr);
+fs.writeFileSync('js/core/translations-fr.js', fr);
 console.log('added', additions.length);

@@ -23,6 +23,7 @@
 }
 
 .rules-tab-shell {
+  position: relative;
   max-width: var(--app-content-max);
   margin: 0 auto;
   padding: 8px 0 36px;
@@ -218,6 +219,7 @@
 }
 
 .rules-subpanel {
+  position: relative;
   display: none;
 }
 .rules-subpanel.is-active,
@@ -225,39 +227,17 @@
   display: block;
 }
 
+/* Поддержка анимации слайда */
+.rules-subpanel.animating {
+  position: absolute;
+  left: 0;
+  right: 0;
+  box-sizing: border-box;
+  width: auto !important;
+}
+
 /* GSAP subtab crossfade: stack panels (no layout jump from two block siblings) */
-html.swrm-has-gsap .rules-tab-shell {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-areas:
-    'rules-header'
-    'rules-tabs'
-    'rules-panels'
-    'rules-footer';
-  align-content: start;
-}
-
-html.swrm-has-gsap .rules-tab-shell > .rules-page-header {
-  grid-area: rules-header;
-}
-
-html.swrm-has-gsap .rules-tab-shell > .rules-subtabs {
-  grid-area: rules-tabs;
-}
-
-html.swrm-has-gsap .rules-tab-shell > .rules-subpanel {
-  grid-area: rules-panels;
-  min-width: 0;
-}
-
-html.swrm-has-gsap .rules-tab-shell > .rules-subpanel.rules-subpanel--exit {
-  pointer-events: none;
-}
-
-html.swrm-has-gsap .rules-tab-shell > .rules-tab-footer {
-  grid-area: rules-footer;
-  margin-top: 28px;
-}
+/* Removed CSS Grid to match Dashboard/Gear/Monsters block layout */
 
 .rules-col-stack {
   display: flex;

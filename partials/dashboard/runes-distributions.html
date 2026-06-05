@@ -1,0 +1,211 @@
+        <div class="dashboard-scope-row">
+          <div class="dashboard-scope-bar">
+            <div class="dashboard-scope-bar-text">
+              <p class="dashboard-account-run-inline">
+                <span id="dashboard-account-run-count"></span>
+              </p>
+            </div>
+            <div class="dashboard-scope-controls">
+              <label class="level-filter dashboard-min-level" for="global-min-level">
+                <span id="dashboard-minlvl-label">Min Level</span>
+                <select id="global-min-level">
+                  <option value="0">+0</option>
+                  <option value="3">+3</option>
+                  <option value="6">+6</option>
+                  <option value="9">+9</option>
+                  <option value="12">+12</option>
+                  <option value="15">+15</option>
+                </select>
+              </label>
+              <div class="dashboard-grade-range" role="group" aria-labelledby="lbl-dashboard-grade-range">
+                <span id="lbl-dashboard-grade-range" class="dashboard-grade-range-label">Grades</span>
+                <label class="level-filter dashboard-grade-min" for="global-grade-min">
+                  <span id="lbl-dashboard-grade-min">From</span>
+                  <select id="global-grade-min"></select>
+                </label>
+                <label class="level-filter dashboard-grade-max" for="global-grade-max">
+                  <span id="lbl-dashboard-grade-max">To</span>
+                  <select id="global-grade-max"></select>
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="dashboard-export-aside">
+            <button type="button" class="btn-dashboard-export-standalone" id="btn-dashboard-export-summary">Copy summary</button>
+          </div>
+        </div>
+
+        <div class="panel panel-wide panel-dash-distributions" id="panel-dash-distributions">
+          <header class="panel-dash-distributions-head">
+            <nav class="dash-dist-kind-tabs" role="tablist" id="dash-dist-kind-tabs" aria-label="">
+              <span class="dash-dist-kind-tabs__indicator" aria-hidden="true"></span>
+              <button type="button" class="dash-dist-kind-tab is-active" role="tab" id="dash-dist-kind-runes"
+                data-dash-dist-kind="runes" aria-selected="true" tabindex="0">
+                <span class="dash-dist-kind-tab__label" id="lbl-dash-dist-kind-runes">Runes</span>
+              </button>
+              <button type="button" class="dash-dist-kind-tab" role="tab" id="dash-dist-kind-artifacts"
+                data-dash-dist-kind="artifacts" aria-selected="false" tabindex="-1">
+                <span class="dash-dist-kind-tab__label" id="lbl-dash-dist-kind-artifacts">Artifacts</span>
+              </button>
+            </nav>
+          </header>
+          <div id="dash-dist-runes-wrap" class="dash-dist-runes-wrap">
+          <nav class="rules-subtabs dash-unified-tabs" role="tablist" id="dash-unified-tabs" aria-label="">
+            <span class="dash-unified-tabs__indicator" aria-hidden="true"></span>
+            <button type="button" class="rules-subtab dash-unified-tab is-active" role="tab" id="dash-unified-tab-breakdown"
+              aria-controls="dash-pane-breakdown" aria-selected="true" data-dash-uni="breakdown" tabindex="0">
+              <span class="rules-subtab__label" id="lbl-dash-unified-tab-breakdown">Breakdown</span>
+            </button>
+            <button type="button" class="rules-subtab dash-unified-tab" role="tab" id="dash-unified-tab-slots"
+              aria-controls="dash-pane-slots" aria-selected="false" data-dash-uni="slots" tabindex="-1">
+              <span class="rules-subtab__label">Slot</span>
+            </button>
+            <button type="button" class="rules-subtab dash-unified-tab" role="tab" id="dash-unified-tab-score"
+              aria-controls="dash-pane-score" aria-selected="false" data-dash-uni="score" tabindex="-1">
+              <span class="rules-subtab__label" id="lbl-dash-unified-tab-score">Score</span>
+            </button>
+          </nav>
+          <div class="dash-unified-panes" id="dash-unified-panes">
+          <div id="dash-pane-breakdown" class="dash-unified-pane is-active" role="tabpanel" aria-labelledby="dash-unified-tab-breakdown">
+            <div id="dash-runes-breakdown-grid" class="dash-runes-breakdown-grid">
+              <section class="dash-artifact-cell" aria-labelledby="lbl-dash-rune-verdict">
+                <h3 class="dash-artifact-cell__title" id="lbl-dash-rune-verdict">Verdict</h3>
+                <div id="verdict-chart" class="role-chart verdict-chart"></div>
+              </section>
+              <section class="dash-artifact-cell" aria-labelledby="lbl-dash-rune-roles">
+                <h3 class="dash-artifact-cell__title" id="lbl-dash-rune-roles">Roles</h3>
+                <div id="role-chart" class="role-chart"></div>
+              </section>
+              <section class="dash-artifact-cell dash-artifact-cell--sets" aria-labelledby="lbl-dash-rune-sets">
+                <h3 class="dash-artifact-cell__title" id="lbl-dash-rune-sets">Sets</h3>
+                <div id="set-chart-scroll" class="chart-scroll chart-scroll--sets">
+                  <div id="set-chart" class="set-chart"></div>
+                </div>
+              </section>
+            </div>
+          </div>
+          <div id="dash-pane-slots" class="dash-unified-pane" role="tabpanel" aria-labelledby="dash-unified-tab-slots" hidden>
+            <h3 class="slot-pane-title" id="lbl-dash-slot-share-title"></h3>
+            <div id="slot-main-cards-root" class="slot-main-cards-root"></div>
+            <section class="panel-top-spd" id="panel-top-spd">
+              <header class="panel-top-spd-head">
+                <div class="panel-top-spd-head__row">
+                  <h2 class="rules-page-title" id="lbl-top-spd-title">Top SPD by slot</h2>
+                  <div class="panel-top-spd-head__tools">
+                    <select id="top-spd-set-select" class="top-spd-set-select" aria-label="Rune set"></select>
+                    <div class="top-spd-sort" id="top-spd-sort" role="group" aria-labelledby="lbl-top-spd-sort">
+                      <span id="lbl-top-spd-sort" class="visually-hidden">Sort top list</span>
+                      <div class="top-spd-sort-metric" id="top-spd-sort-metric" role="group" aria-label="">
+                        <button type="button" class="top-spd-sort-btn is-active" id="btn-top-spd-sort-cur" data-top-spd-metric="cur">Current</button>
+                        <button type="button" class="top-spd-sort-btn" id="btn-top-spd-sort-pot" data-top-spd-metric="pot">Potential</button>
+                      </div>
+                      <button type="button" class="top-spd-sort-dir" id="btn-top-spd-sort-dir" data-dir="desc" aria-pressed="true" title="">
+                        <span class="top-spd-sort-dir__label" id="lbl-top-spd-sort-dir" aria-hidden="true">↓</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </header>
+              <div class="top-spd-body">
+                <div class="top-spd-radar-col">
+                  <div class="top-spd-radar-stage">
+                    <div id="top-spd-radar-host" class="top-spd-radar-host" aria-hidden="true"></div>
+                    <div class="top-spd-radar-legend" id="top-spd-radar-legend" hidden aria-hidden="true">
+                      <span class="top-spd-radar-legend__item top-spd-radar-legend__item--cur" id="lbl-top-spd-legend-cur"></span>
+                      <span class="top-spd-radar-legend__item top-spd-radar-legend__item--pot" id="lbl-top-spd-legend-pot"></span>
+                    </div>
+                  </div>
+                </div>
+                <div id="top-spd-grid" class="top-spd-grid"></div>
+              </div>
+            </section>
+          </div>
+          <div id="dash-pane-score" class="dash-unified-pane" role="tabpanel" aria-labelledby="dash-unified-tab-score" hidden>
+            <div class="dash-score-stack">
+              <section class="dash-score-stack__block" aria-labelledby="lbl-dash-score-ingame">
+                <h3 class="dash-artifact-cell__title" id="lbl-dash-score-ingame">Ingame Score</h3>
+                <div class="eff-histo-host eff-histo-host--dash-pane">
+                  <div class="eff-median-line" id="eff-median-line" hidden role="img" tabindex="0"></div>
+                  <div id="eff-chart" class="eff-chart"></div>
+                </div>
+              </section>
+              <section class="dash-score-stack__block" aria-labelledby="lbl-dash-score-forge">
+                <h3 class="dash-artifact-cell__title" id="lbl-dash-score-forge">Forge Score</h3>
+                <div class="eff-histo-host eff-histo-host--dash-pane eff-histo-host--score-pane">
+                  <div class="eff-median-line" id="score-median-line" hidden role="img" tabindex="0"></div>
+                  <div id="score-chart" class="eff-chart eff-chart--score"></div>
+                </div>
+              </section>
+            </div>
+          </div>
+          </div>
+          </div>
+          <div id="dash-dist-artifacts-wrap" class="dash-dist-artifacts-wrap" hidden>
+            <p class="dash-artifact-empty" id="dash-artifact-empty" hidden></p>
+            <nav class="rules-subtabs dash-unified-tabs" role="tablist" id="dash-art-tabs" aria-label="">
+              <span class="dash-unified-tabs__indicator" aria-hidden="true"></span>
+              <button type="button" class="rules-subtab dash-art-tab is-active" role="tab" id="dash-art-tab-breakdown"
+                aria-controls="dash-art-pane-breakdown" aria-selected="true" data-dash-art-tab="breakdown" tabindex="0">
+                <span class="rules-subtab__label" id="lbl-dash-art-tab-breakdown">Breakdown</span>
+              </button>
+              <button type="button" class="rules-subtab dash-art-tab" role="tab" id="dash-art-tab-type"
+                aria-controls="dash-art-pane-type" aria-selected="false" data-dash-art-tab="type" tabindex="-1">
+                <span class="rules-subtab__label" id="lbl-dash-art-tab-type">Type</span>
+              </button>
+              <button type="button" class="rules-subtab dash-art-tab" role="tab" id="dash-art-tab-score"
+                aria-controls="dash-art-pane-score" aria-selected="false" data-dash-art-tab="score" tabindex="-1">
+                <span class="rules-subtab__label" id="lbl-dash-art-tab-score">Score</span>
+              </button>
+            </nav>
+            <div id="dash-art-panes" class="dash-unified-panes">
+              <div id="dash-art-pane-breakdown" class="dash-unified-pane is-active" role="tabpanel" aria-labelledby="dash-art-tab-breakdown">
+                <div id="dash-artifact-grid" class="dash-artifact-grid" hidden>
+                  <section class="dash-artifact-cell" aria-labelledby="lbl-dash-art-verdict">
+                    <h3 class="dash-artifact-cell__title" id="lbl-dash-art-verdict">Artifact Verdict</h3>
+                    <div id="dash-art-verdict-chart" class="role-chart verdict-chart dash-artifact-verdict-chart"></div>
+                  </section>
+                  <section class="dash-artifact-cell" aria-labelledby="lbl-dash-art-role">
+                    <h3 class="dash-artifact-cell__title" id="lbl-dash-art-role">Role</h3>
+                    <div id="dash-art-role-chart" class="role-chart"></div>
+                  </section>
+                  <section class="dash-artifact-cell" aria-labelledby="lbl-dash-art-grade">
+                    <h3 class="dash-artifact-cell__title" id="lbl-dash-art-grade">Grade</h3>
+                    <div id="dash-art-grade-chart" class="role-chart"></div>
+                  </section>
+                </div>
+              </div>
+              <div id="dash-art-pane-type" class="dash-unified-pane" role="tabpanel" aria-labelledby="dash-art-tab-type" hidden>
+                <div class="dash-artifact-grid" id="dash-artifact-grid-type" hidden>
+                  <section class="dash-artifact-cell" aria-labelledby="lbl-dash-art-type">
+                    <h3 class="dash-artifact-cell__title" id="lbl-dash-art-type">Type</h3>
+                    <div id="dash-art-type-chart" class="role-chart"></div>
+                  </section>
+                  <section class="dash-artifact-cell" aria-labelledby="lbl-dash-art-attribute">
+                    <h3 class="dash-artifact-cell__title" id="lbl-dash-art-attribute">Attribute</h3>
+                    <div id="dash-art-attribute-chart" class="role-chart"></div>
+                  </section>
+                </div>
+              </div>
+              <div id="dash-art-pane-score" class="dash-unified-pane" role="tabpanel" aria-labelledby="dash-art-tab-score" hidden>
+                <div id="dash-artifact-grid-score" hidden>
+                  <div class="dash-score-stack">
+                    <section class="dash-score-stack__block" aria-labelledby="lbl-dash-art-score-ingame">
+                      <h3 class="dash-artifact-cell__title" id="lbl-dash-art-score-ingame">Ingame Score</h3>
+                      <div class="eff-histo-host eff-histo-host--dash-pane eff-histo-host--artifact-score">
+                        <div class="eff-median-line" id="dash-art-ingame-median-line" hidden role="img" tabindex="0"></div>
+                        <div id="dash-art-score-ingame-chart" class="eff-chart"></div>
+                      </div>
+                    </section>
+                    <section class="dash-score-stack__block" aria-labelledby="lbl-dash-art-score-forge">
+                      <h3 class="dash-artifact-cell__title" id="lbl-dash-art-score-forge">Forge Score</h3>
+                      <div class="eff-histo-host eff-histo-host--dash-pane eff-histo-host--score-pane eff-histo-host--artifact-score">
+                        <div class="eff-median-line" id="dash-art-forge-median-line" hidden role="img" tabindex="0"></div>
+                        <div id="dash-art-score-forge-chart" class="eff-chart eff-chart--score"></div>
+                      </div>
+                    </section>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>

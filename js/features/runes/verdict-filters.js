@@ -1,9 +1,22 @@
 // js/features/runes/verdict-filters.js — verdict and grade navigation/filtering
   function getVisibleRunes() {
+    const DELETED_RUNES_KEY = 'swrm_deleted_runes_v1';
+    let deletedRunes = new Set();
+    try {
+      const stored = localStorage.getItem(DELETED_RUNES_KEY);
+      if (stored) {
+        deletedRunes = new Set(JSON.parse(stored));
+      }
+    } catch (e) {
+      deletedRunes = new Set();
+    }
+
     return processedRunes.filter((r) => {
       if (r.level < globalMinLevel) return false;
       const g = typeof r.grade === 'number' ? r.grade : 0;
-      return g >= globalGradeMin && g <= globalGradeMax;
+      if (g < globalGradeMin || g > globalGradeMax) return false;
+      if (r.id != null && deletedRunes.has(String(r.id))) return false;
+      return true;
     });
   }
 

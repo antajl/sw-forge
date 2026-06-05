@@ -249,6 +249,63 @@
     applyFiltersAndSort(getVisibleRunes(), { preserveTableExpansion: true });
   });
 
+  // Delete rune functionality
+  const DELETED_RUNES_KEY = 'swrm_deleted_runes_v1';
+  let deletedRunes = new Set();
+
+  function loadDeletedRunes() {
+    try {
+      const stored = localStorage.getItem(DELETED_RUNES_KEY);
+      if (stored) {
+        deletedRunes = new Set(JSON.parse(stored));
+      }
+    } catch (e) {
+      deletedRunes = new Set();
+    }
+  }
+
+  function saveDeletedRunes() {
+    try {
+      localStorage.setItem(DELETED_RUNES_KEY, JSON.stringify([...deletedRunes]));
+    } catch (e) {
+      // Ignore storage errors
+    }
+  }
+
+  function deleteRune(runeId) {
+    if (!runeId) return;
+    deletedRunes.add(String(runeId));
+    saveDeletedRunes();
+    applyFiltersAndSort(getVisibleRunes());
+  }
+
+  function restoreDeletedRune(runeId) {
+    if (!runeId) return;
+    deletedRunes.delete(String(runeId));
+    saveDeletedRunes();
+    applyFiltersAndSort(getVisibleRunes());
+  }
+
+  function clearAllDeletedRunes() {
+    deletedRunes.clear();
+    saveDeletedRunes();
+    applyFiltersAndSort(getVisibleRunes());
+  }
+
+  loadDeletedRunes();
+
+  document.getElementById('rune-table-scroll')?.addEventListener('click', (e) => {
+    const deleteBtn = e.target.closest('[data-delete-rune]');
+    if (deleteBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      const runeId = deleteBtn.getAttribute('data-delete-rune');
+      if (runeId && confirm('Delete this rune from the current profile?')) {
+        deleteRune(runeId);
+      }
+    }
+  });
+
   document.getElementById('toggle-ancient-only')?.addEventListener('change', (e) => {
     localStorage.setItem(RUNE_TABLE_ANCIENT_ONLY_KEY, e.target.checked ? '1' : '0');
     updateRuneTableFilterIndicators();

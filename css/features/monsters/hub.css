@@ -2,9 +2,9 @@
 #tab-monsters > .monsters-hub-tabs.rules-subtabs {
   margin: 0 0 16px;
   padding: 4px;
+  padding-bottom: 8px;
   gap: 6px;
-  position: sticky;
-  top: 0;
+  position: static;
   z-index: 12;
   background: color-mix(in srgb, var(--bg-main) 92%, transparent);
   backdrop-filter: blur(8px);
@@ -35,18 +35,27 @@ html:not(.swrm-has-gsap) .monsters-hub-tabs__indicator {
 .monsters-hub-tabs .monsters-hub-tab {
   flex: 1 1 0;
   min-width: 5.5rem;
-  min-height: 3.35rem;
+  min-height: 4rem;
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 11px 12px;
+  padding: 12px;
 }
 
 .monsters-hub-tabs .rules-subtab__label {
   width: 100%;
   text-align: center;
-  font-size: var(--runes-fs-tab-main, 0.9rem);
+  font-size: 1rem;
   letter-spacing: 0.04em;
+}
+
+.monsters-hub-tabs .rules-subtab__hint {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  line-height: 1.2;
 }
 
 .monsters-hub-pane:not(.is-active) {
@@ -72,8 +81,7 @@ html:not(.swrm-has-gsap) .monsters-hub-tabs__indicator {
 
 @media (max-width: 520px) {
   .monsters-hub-tabs .monsters-hub-tab {
-    flex: 1 1 calc(25% - 6px);
-    min-height: 3.15rem;
+    flex: 1 1 calc(33.33% - 6px);
     padding: 10px 8px;
   }
   .monsters-hub-tabs .rules-subtab__label {

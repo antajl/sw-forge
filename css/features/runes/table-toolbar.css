@@ -1,22 +1,9 @@
-/* Table toolbar */
-.table-toolbar {
-  margin-bottom: 8px;
-}
-
 .rune-table-active-filters {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 8px 12px;
-  margin: 0 0 10px;
-}
-
-.rune-table-filter-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  flex: 1 1 auto;
-  min-width: 0;
+  margin: 0 0 12px;
 }
 
 .rune-table-active-filters__clear {
@@ -45,20 +32,18 @@
 }
 
 .table-kind-pane > .rune-table-roster-meta + .table-wrap {
-  margin-top: 0;
+  margin-top: 12px;
 }
 
-#tab-runetable .table-toolbar .monsters-toolbar-btn--filters {
+#tab-runetable .table-toolbar .monsters-toolbar-btn--filters,
+#artifact-table-toolbar .monsters-toolbar-btn--filters,
+#relic-table-toolbar .monsters-toolbar-btn--filters {
   min-height: 32px;
 }
 .table-toolbar__card {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 14px 16px 16px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 0;
 }
 .table-toolbar__row--search {
   display: flex;
@@ -73,7 +58,7 @@
   flex-wrap: nowrap;
   align-items: center;
   justify-content: space-between;
-  gap: 10px 12px;
+  gap: 10px;
 }
 
 .table-toolbar__search--table {
@@ -187,9 +172,9 @@
 .table-toolbar__aside {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: center;
   justify-content: flex-end;
-  gap: 10px 16px;
+  gap: 10px 12px;
   flex: 0 1 auto;
   margin-left: auto;
 }

@@ -293,12 +293,13 @@
     }
   }
 
-  document.getElementById('tab-dashboard')?.addEventListener('click', dashboardNavigateFromClick);
+  const runesDashboardRoot = document.getElementById('dashboard-pane-runes');
+  runesDashboardRoot?.addEventListener('click', dashboardNavigateFromClick);
 
-  document.getElementById('tab-dashboard')?.addEventListener('keydown', (e) => {
+  runesDashboardRoot?.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter' && e.key !== ' ') return;
     const t = e.target;
-    if (!t || !t.closest || !t.closest('#tab-dashboard')) return;
+    if (!t || !t.closest || !t.closest('#dashboard-pane-runes')) return;
     const setRow = t.closest('.chart-row--clickable[data-dash-set]');
     const vrow = t.closest('.chart-row--clickable[data-dash-verdict]');
     const row = t.closest('.chart-row--clickable[data-dash-role]');

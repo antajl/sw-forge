@@ -82,13 +82,40 @@ html[lang='ru'] .panel-dash-distributions-head .rules-page-lead.dash-unified-blo
 }
 
 /* Unified tabs/panes */
-.dash-unified-tabs.rules-subtabs {
-  margin-bottom: 16px;
-  position: relative;
+.dash-unified-tabs.rules-subtabs,
+.dashboard-hub-tabs.rules-subtabs {
+  margin: 0 0 16px;
+  padding: 4px;
   padding-bottom: 8px;
+  gap: 6px;
+  position: static;
+  z-index: 12;
+  background: color-mix(in srgb, var(--bg-main) 92%, transparent);
+  backdrop-filter: blur(8px);
 }
 
-.dash-unified-tabs__indicator {
+body.light-theme .dash-unified-tabs.rules-subtabs,
+body.light-theme .dashboard-hub-tabs.rules-subtabs {
+  background: color-mix(in srgb, var(--bg-main) 94%, transparent);
+}
+
+#tab-dashboard > .dashboard-hub-tabs.rules-subtabs {
+  margin: 0 0 16px;
+  padding: 4px;
+  padding-bottom: 8px;
+  gap: 6px;
+  position: static;
+  z-index: 12;
+  background: color-mix(in srgb, var(--bg-main) 92%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+body.light-theme #tab-dashboard > .dashboard-hub-tabs.rules-subtabs {
+  background: color-mix(in srgb, var(--bg-main) 94%, transparent);
+}
+
+.dash-unified-tabs__indicator,
+.dashboard-hub-tabs__indicator {
   position: absolute;
   left: 0;
   bottom: 4px;
@@ -145,17 +172,114 @@ html:not(.swrm-has-gsap) .rules-subtabs__indicator {
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 11px 12px;
-  transition: background 0.14s ease, border-color 0.14s ease, color 0.14s ease;
+  padding: 12px;
+}
+
+.dashboard-hub-tabs .rules-subtab {
+  flex: 1 1 0 !important;
+  min-width: 5.5rem !important;
+  min-height: 4rem !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  padding: 12px !important;
+}
+
+.dashboard-hub-tabs .rules-subtab__label {
+  width: 100%;
+  text-align: center;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+}
+
+.dashboard-hub-tabs .rules-subtab__hint {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  line-height: 1.2;
+}
+
+.dash-unified-tab.rules-subtab:hover {
+  color: var(--text);
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  border-color: var(--border2);
+}
+
+.dashboard-hub-tabs .rules-subtab:hover {
+  color: var(--text) !important;
+  background: color-mix(in srgb, var(--surface) 70%, transparent) !important;
+  border-color: var(--border2) !important;
 }
 
 .dash-unified-tab.rules-subtab.is-active {
+  color: var(--text-hi);
+  background: var(--surface);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border2));
+  box-shadow: 0 2px 14px color-mix(in srgb, var(--accent) 16%, transparent);
   transition: background 0.14s ease, border-color 0.14s ease, color 0.14s ease, box-shadow 0.24s ease;
+}
+
+.dashboard-hub-tabs .rules-subtab.is-active {
+  color: var(--text-hi) !important;
+  background: var(--surface) !important;
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border2)) !important;
+  box-shadow: 0 2px 14px color-mix(in srgb, var(--accent) 16%, transparent) !important;
+  transition: background 0.14s ease, border-color 0.14s ease, color 0.14s ease, box-shadow 0.24s ease !important;
+}
+
+.dash-unified-tab.rules-subtab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.dashboard-hub-tabs .rules-subtab:focus-visible {
+  outline: 2px solid var(--accent) !important;
+  outline-offset: 2px !important;
 }
 
 .dash-unified-tab .rules-subtab__label {
   width: 100%;
   text-align: center;
+  font-weight: 700;
+  font-size: 0.88rem;
+  letter-spacing: 0.03em;
+  text-transform: none;
+}
+
+.dash-unified-tabs .rules-subtab__label,
+.dashboard-hub-tabs .rules-subtab__label {
+  width: 100%;
+  text-align: center;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+}
+
+.dashboard-hub-tabs .rules-subtab__label {
+  width: 100%;
+  text-align: center;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+}
+
+.dash-unified-tabs .rules-subtab__hint,
+.dashboard-hub-tabs .rules-subtab__hint {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  line-height: 1.2;
+}
+
+.dashboard-hub-tabs .rules-subtab__hint {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  line-height: 1.2;
 }
 
 .dash-unified-panes {
@@ -164,6 +288,25 @@ html:not(.swrm-has-gsap) .rules-subtabs__indicator {
 
 .dash-unified-pane {
   min-width: 0;
+}
+
+.dashboard-hub-pane:not(.is-active) {
+  display: none;
+}
+
+.dashboard-hub-pane.is-active {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Animation support for Dashboard hub panes */
+.dashboard-hub-pane.animating {
+  position: absolute;
+  left: 0;
+  right: 0;
+  box-sizing: border-box;
+  width: auto !important;
 }
 
 /* GSAP cross-fade */
@@ -204,5 +347,15 @@ html:not(.swrm-has-gsap) .rules-subtabs__indicator {
     opacity: 1;
     visibility: visible;
     pointer-events: auto;
+  }
+}
+
+@media (max-width: 520px) {
+  .dash-unified-tabs .dash-unified-tab {
+    flex: 1 1 calc(33.33% - 6px);
+    padding: 10px 8px;
+  }
+  .dash-unified-tabs .rules-subtab__label {
+    font-size: 0.84rem;
   }
 }

@@ -871,7 +871,7 @@
     document.addEventListener('keydown', (e) => {
       if (e.key !== 'Enter' && e.key !== ' ') return;
       const target = e.target;
-      if (!target || !target.closest || !target.closest('#tab-dashboard')) return;
+      if (!target || !target.closest || !target.closest('#dashboard-pane-runes')) return;
       if (activateFromTarget(target)) e.preventDefault();
     });
   }

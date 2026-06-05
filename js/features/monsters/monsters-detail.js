@@ -1,10 +1,52 @@
 // js/features/monsters/monsters-detail.js — detail panel rendering
+  function initMonstersDetailDrag() {
+    const aside = document.getElementById('monsters-detail');
+    if (!aside || aside.dataset.dragInit === '1') return;
+    aside.dataset.dragInit = '1';
+
+    let isDragging = false;
+    let offsetX, offsetY;
+
+    aside.addEventListener('mousedown', (e) => {
+      if (!aside.classList.contains('monsters-detail--float')) return;
+      // Allow dragging from any part except interactive elements
+      if (e.target.closest('button, a, input, select, textarea')) return;
+
+      isDragging = true;
+      const rect = aside.getBoundingClientRect();
+      offsetX = e.clientX - rect.left;
+      offsetY = e.clientY - rect.top;
+
+      // Reset right/bottom before setting left/top
+      aside.style.right = 'auto';
+      aside.style.bottom = 'auto';
+
+      aside.classList.add('monsters-detail--draggable');
+      e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+
+      aside.style.left = `${e.clientX - offsetX}px`;
+      aside.style.top = `${e.clientY - offsetY}px`;
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (isDragging) {
+        isDragging = false;
+        aside.classList.remove('monsters-detail--draggable');
+      }
+    });
+  }
+
   function renderMonstersDetail(u, t, anchorEl) {
     const aside = document.getElementById('monsters-detail');
     const body = document.getElementById('monsters-detail-body');
     if (!aside || !body) return;
     bindMonstersDetailFloat();
     syncMonstersDetailPinnedLayout();
+    initMonstersDetailDrag();
 
     if (!u) {
       hideMonstersDetailFloat();

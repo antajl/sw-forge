@@ -240,7 +240,7 @@ html.swrm-has-gsap .tab-content {
 /* Absolute positioning for animation layer */
 .tab-content.animating {
   position: absolute !important;
-  top: var(--app-gutter);
+  top: 0;
   left: var(--app-gutter);
   right: var(--app-gutter);
   box-sizing: border-box;
@@ -1370,7 +1370,7 @@ body.swrm-drop-veil-open {
 main {
   max-width: var(--app-content-max);
   margin: 0 auto;
-  padding: var(--app-gutter);
+  padding: 0px var(--app-gutter);
   flex: 1 0 auto;
   width: 100%;
 }
@@ -1988,6 +1988,7 @@ html[lang='fr'] #tab-guide .guide-lang--fr {
 #tab-changelog .rules-subtabs {
   margin: 0 0 16px;
   padding: 4px;
+  padding-bottom: 8px;
   gap: 6px;
   position: sticky;
   top: 0;
@@ -2005,18 +2006,18 @@ body.light-theme #tab-changelog .rules-subtabs {
 #tab-changelog .rules-subtabs .rules-subtab {
   flex: 1 1 0;
   min-width: 5.5rem;
-  min-height: 3.35rem;
+  min-height: 4rem;
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 11px 12px;
+  padding: 12px;
 }
 
 #tab-guide .rules-subtabs .rules-subtab__label,
 #tab-changelog .rules-subtabs .rules-subtab__label {
   width: 100%;
   text-align: center;
-  font-size: var(--runes-fs-tab-main, 0.9rem);
+  font-size: 1rem;
   letter-spacing: 0.04em;
 }
 
@@ -2027,6 +2028,26 @@ body.light-theme #tab-changelog .rules-subtabs {
   text-transform: uppercase;
   color: var(--text-dim);
   line-height: 1.2;
+}
+
+#tab-guide .rules-subtabs .guide-subtabs__indicator,
+#tab-changelog .rules-subtabs .changelog-subtabs__indicator {
+  position: absolute;
+  left: 0;
+  bottom: 4px;
+  height: 3px;
+  width: 0;
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 4;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 40%, transparent);
+  opacity: 0.95;
+}
+
+html:not(.swrm-has-gsap) #tab-guide .rules-subtabs .guide-subtabs__indicator,
+html:not(.swrm-has-gsap) #tab-changelog .rules-subtabs .changelog-subtabs__indicator {
+  display: none;
 }
 
 #tab-guide .guide-lang {
@@ -3255,9 +3276,9 @@ body.share-readonly #demo-dataset-banner:not(.share-view-banner) {
 #tab-runes > .runes-hub-tabs.rules-subtabs {
   margin: 0 0 16px;
   padding: 4px;
+  padding-bottom: 8px;
   gap: 6px;
-  position: sticky;
-  top: 0;
+  position: static;
   z-index: 12;
   background: color-mix(in srgb, var(--bg-main) 92%, transparent);
   backdrop-filter: blur(8px);
@@ -3270,6 +3291,7 @@ body.light-theme #tab-runes > .runes-hub-tabs.rules-subtabs {
 .runes-hub-tabs .runes-hub-tab {
   flex: 1 1 0;
   min-width: 5.5rem;
+  min-height: 4rem;
   align-items: center;
   justify-content: center;
   text-align: center;
@@ -3279,7 +3301,7 @@ body.light-theme #tab-runes > .runes-hub-tabs.rules-subtabs {
 .runes-hub-tabs .rules-subtab__label {
   width: 100%;
   text-align: center;
-  font-size: var(--runes-fs-tab-main);
+  font-size: 1rem;
   letter-spacing: 0.04em;
 }
 
@@ -4402,6 +4424,7 @@ select:not(#stage-select):focus { border-color: var(--accent); }
 }
 
 .rules-tab-shell {
+  position: relative;
   max-width: var(--app-content-max);
   margin: 0 auto;
   padding: 8px 0 36px;
@@ -4597,6 +4620,7 @@ select:not(#stage-select):focus { border-color: var(--accent); }
 }
 
 .rules-subpanel {
+  position: relative;
   display: none;
 }
 .rules-subpanel.is-active,
@@ -4604,39 +4628,17 @@ select:not(#stage-select):focus { border-color: var(--accent); }
   display: block;
 }
 
+/* Поддержка анимации слайда */
+.rules-subpanel.animating {
+  position: absolute;
+  left: 0;
+  right: 0;
+  box-sizing: border-box;
+  width: auto !important;
+}
+
 /* GSAP subtab crossfade: stack panels (no layout jump from two block siblings) */
-html.swrm-has-gsap .rules-tab-shell {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-areas:
-    'rules-header'
-    'rules-tabs'
-    'rules-panels'
-    'rules-footer';
-  align-content: start;
-}
-
-html.swrm-has-gsap .rules-tab-shell > .rules-page-header {
-  grid-area: rules-header;
-}
-
-html.swrm-has-gsap .rules-tab-shell > .rules-subtabs {
-  grid-area: rules-tabs;
-}
-
-html.swrm-has-gsap .rules-tab-shell > .rules-subpanel {
-  grid-area: rules-panels;
-  min-width: 0;
-}
-
-html.swrm-has-gsap .rules-tab-shell > .rules-subpanel.rules-subpanel--exit {
-  pointer-events: none;
-}
-
-html.swrm-has-gsap .rules-tab-shell > .rules-tab-footer {
-  grid-area: rules-footer;
-  margin-top: 28px;
-}
+/* Removed CSS Grid to match Dashboard/Gear/Monsters block layout */
 
 .rules-col-stack {
   display: flex;
@@ -5618,13 +5620,40 @@ html[lang='ru'] .panel-dash-distributions-head .rules-page-lead.dash-unified-blo
 }
 
 /* Unified tabs/panes */
-.dash-unified-tabs.rules-subtabs {
-  margin-bottom: 16px;
-  position: relative;
+.dash-unified-tabs.rules-subtabs,
+.dashboard-hub-tabs.rules-subtabs {
+  margin: 0 0 16px;
+  padding: 4px;
   padding-bottom: 8px;
+  gap: 6px;
+  position: static;
+  z-index: 12;
+  background: color-mix(in srgb, var(--bg-main) 92%, transparent);
+  backdrop-filter: blur(8px);
 }
 
-.dash-unified-tabs__indicator {
+body.light-theme .dash-unified-tabs.rules-subtabs,
+body.light-theme .dashboard-hub-tabs.rules-subtabs {
+  background: color-mix(in srgb, var(--bg-main) 94%, transparent);
+}
+
+#tab-dashboard > .dashboard-hub-tabs.rules-subtabs {
+  margin: 0 0 16px;
+  padding: 4px;
+  padding-bottom: 8px;
+  gap: 6px;
+  position: static;
+  z-index: 12;
+  background: color-mix(in srgb, var(--bg-main) 92%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+body.light-theme #tab-dashboard > .dashboard-hub-tabs.rules-subtabs {
+  background: color-mix(in srgb, var(--bg-main) 94%, transparent);
+}
+
+.dash-unified-tabs__indicator,
+.dashboard-hub-tabs__indicator {
   position: absolute;
   left: 0;
   bottom: 4px;
@@ -5681,17 +5710,114 @@ html:not(.swrm-has-gsap) .rules-subtabs__indicator {
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 11px 12px;
-  transition: background 0.14s ease, border-color 0.14s ease, color 0.14s ease;
+  padding: 12px;
+}
+
+.dashboard-hub-tabs .rules-subtab {
+  flex: 1 1 0 !important;
+  min-width: 5.5rem !important;
+  min-height: 4rem !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  padding: 12px !important;
+}
+
+.dashboard-hub-tabs .rules-subtab__label {
+  width: 100%;
+  text-align: center;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+}
+
+.dashboard-hub-tabs .rules-subtab__hint {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  line-height: 1.2;
+}
+
+.dash-unified-tab.rules-subtab:hover {
+  color: var(--text);
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  border-color: var(--border2);
+}
+
+.dashboard-hub-tabs .rules-subtab:hover {
+  color: var(--text) !important;
+  background: color-mix(in srgb, var(--surface) 70%, transparent) !important;
+  border-color: var(--border2) !important;
 }
 
 .dash-unified-tab.rules-subtab.is-active {
+  color: var(--text-hi);
+  background: var(--surface);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border2));
+  box-shadow: 0 2px 14px color-mix(in srgb, var(--accent) 16%, transparent);
   transition: background 0.14s ease, border-color 0.14s ease, color 0.14s ease, box-shadow 0.24s ease;
+}
+
+.dashboard-hub-tabs .rules-subtab.is-active {
+  color: var(--text-hi) !important;
+  background: var(--surface) !important;
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border2)) !important;
+  box-shadow: 0 2px 14px color-mix(in srgb, var(--accent) 16%, transparent) !important;
+  transition: background 0.14s ease, border-color 0.14s ease, color 0.14s ease, box-shadow 0.24s ease !important;
+}
+
+.dash-unified-tab.rules-subtab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.dashboard-hub-tabs .rules-subtab:focus-visible {
+  outline: 2px solid var(--accent) !important;
+  outline-offset: 2px !important;
 }
 
 .dash-unified-tab .rules-subtab__label {
   width: 100%;
   text-align: center;
+  font-weight: 700;
+  font-size: 0.88rem;
+  letter-spacing: 0.03em;
+  text-transform: none;
+}
+
+.dash-unified-tabs .rules-subtab__label,
+.dashboard-hub-tabs .rules-subtab__label {
+  width: 100%;
+  text-align: center;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+}
+
+.dashboard-hub-tabs .rules-subtab__label {
+  width: 100%;
+  text-align: center;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+}
+
+.dash-unified-tabs .rules-subtab__hint,
+.dashboard-hub-tabs .rules-subtab__hint {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  line-height: 1.2;
+}
+
+.dashboard-hub-tabs .rules-subtab__hint {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  line-height: 1.2;
 }
 
 .dash-unified-panes {
@@ -5700,6 +5826,25 @@ html:not(.swrm-has-gsap) .rules-subtabs__indicator {
 
 .dash-unified-pane {
   min-width: 0;
+}
+
+.dashboard-hub-pane:not(.is-active) {
+  display: none;
+}
+
+.dashboard-hub-pane.is-active {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Animation support for Dashboard hub panes */
+.dashboard-hub-pane.animating {
+  position: absolute;
+  left: 0;
+  right: 0;
+  box-sizing: border-box;
+  width: auto !important;
 }
 
 /* GSAP cross-fade */
@@ -5740,6 +5885,16 @@ html:not(.swrm-has-gsap) .rules-subtabs__indicator {
     opacity: 1;
     visibility: visible;
     pointer-events: auto;
+  }
+}
+
+@media (max-width: 520px) {
+  .dash-unified-tabs .dash-unified-tab {
+    flex: 1 1 calc(33.33% - 6px);
+    padding: 10px 8px;
+  }
+  .dash-unified-tabs .rules-subtab__label {
+    font-size: 0.84rem;
   }
 }
 
@@ -6070,9 +6225,9 @@ html:not(.swrm-has-gsap) .dash-dist-kind-tabs__indicator {
   overflow: hidden;
   border: 1px solid var(--border2);
 }
-#tab-dashboard:not(.is-active) .chart-bar-fill,
-#tab-dashboard:not(.is-active) .eff-bar,
-#tab-dashboard:not(.is-active) .slot-share-bar-fill {
+#tab-dashboard.hidden .chart-bar-fill,
+#tab-dashboard.hidden .eff-bar,
+#tab-dashboard.hidden .slot-share-bar-fill {
   width: 0 !important;
   height: 0 !important;
 }
@@ -7289,25 +7444,12 @@ html.swrm-has-gsap .swrm-floating-tip {
 
 
 /* === css/features/runes/table-toolbar.css === */
-/* Table toolbar */
-.table-toolbar {
-  margin-bottom: 8px;
-}
-
 .rune-table-active-filters {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 8px 12px;
-  margin: 0 0 10px;
-}
-
-.rune-table-filter-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  flex: 1 1 auto;
-  min-width: 0;
+  margin: 0 0 12px;
 }
 
 .rune-table-active-filters__clear {
@@ -7336,20 +7478,18 @@ html.swrm-has-gsap .swrm-floating-tip {
 }
 
 .table-kind-pane > .rune-table-roster-meta + .table-wrap {
-  margin-top: 0;
+  margin-top: 12px;
 }
 
-#tab-runetable .table-toolbar .monsters-toolbar-btn--filters {
+#tab-runetable .table-toolbar .monsters-toolbar-btn--filters,
+#artifact-table-toolbar .monsters-toolbar-btn--filters,
+#relic-table-toolbar .monsters-toolbar-btn--filters {
   min-height: 32px;
 }
 .table-toolbar__card {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 14px 16px 16px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 0;
 }
 .table-toolbar__row--search {
   display: flex;
@@ -7364,7 +7504,7 @@ html.swrm-has-gsap .swrm-floating-tip {
   flex-wrap: nowrap;
   align-items: center;
   justify-content: space-between;
-  gap: 10px 12px;
+  gap: 10px;
 }
 
 .table-toolbar__search--table {
@@ -7478,9 +7618,9 @@ html.swrm-has-gsap .swrm-floating-tip {
 .table-toolbar__aside {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: center;
   justify-content: flex-end;
-  gap: 10px 16px;
+  gap: 10px 12px;
   flex: 0 1 auto;
   margin-left: auto;
 }
@@ -7926,6 +8066,32 @@ td {
   width: auto;
   min-width: var(--rt-c-location);
   max-width: none;
+}
+#rune-table col.col-actions,
+#rune-table th.col-actions,
+#rune-table td.col-actions {
+  width: 32px;
+  min-width: 32px;
+  max-width: 32px;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+.rune-table__delete-btn {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.15s;
+}
+.rune-table__delete-btn:hover {
+  color: var(--red);
+  background: color-mix(in srgb, var(--red) 15%, var(--surface));
 }
 
 #rune-table th.col-set,
@@ -10344,9 +10510,9 @@ thead tr {
 #tab-monsters > .monsters-hub-tabs.rules-subtabs {
   margin: 0 0 16px;
   padding: 4px;
+  padding-bottom: 8px;
   gap: 6px;
-  position: sticky;
-  top: 0;
+  position: static;
   z-index: 12;
   background: color-mix(in srgb, var(--bg-main) 92%, transparent);
   backdrop-filter: blur(8px);
@@ -10377,18 +10543,27 @@ html:not(.swrm-has-gsap) .monsters-hub-tabs__indicator {
 .monsters-hub-tabs .monsters-hub-tab {
   flex: 1 1 0;
   min-width: 5.5rem;
-  min-height: 3.35rem;
+  min-height: 4rem;
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 11px 12px;
+  padding: 12px;
 }
 
 .monsters-hub-tabs .rules-subtab__label {
   width: 100%;
   text-align: center;
-  font-size: var(--runes-fs-tab-main, 0.9rem);
+  font-size: 1rem;
   letter-spacing: 0.04em;
+}
+
+.monsters-hub-tabs .rules-subtab__hint {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  line-height: 1.2;
 }
 
 .monsters-hub-pane:not(.is-active) {
@@ -10414,8 +10589,7 @@ html:not(.swrm-has-gsap) .monsters-hub-tabs__indicator {
 
 @media (max-width: 520px) {
   .monsters-hub-tabs .monsters-hub-tab {
-    flex: 1 1 calc(25% - 6px);
-    min-height: 3.15rem;
+    flex: 1 1 calc(33.33% - 6px);
     padding: 10px 8px;
   }
   .monsters-hub-tabs .rules-subtab__label {
@@ -10428,6 +10602,12 @@ html:not(.swrm-has-gsap) .monsters-hub-tabs__indicator {
 /* Roster toolbar — table-toolbar card layout (matches Runes table) */
 #tab-monsters-roster .table-toolbar {
   margin-bottom: 6px;
+}
+
+#rune-table-toolbar,
+#artifact-table-toolbar,
+#relic-table-toolbar {
+  margin-bottom: 12px;
 }
 
 #tab-monsters-roster .table-toolbar__row--search-roster {
@@ -10569,7 +10749,7 @@ html:not(.swrm-has-gsap) .monsters-hub-tabs__indicator {
 #rune-table-roster-meta,
 #artifact-table-roster-meta,
 #relic-table-roster-meta {
-  margin: 0 0 4px;
+  margin: 0 0 12px;
 }
 
 .monsters-roster-meta .monsters-grid-head {
@@ -11577,14 +11757,13 @@ html:not(.swrm-has-gsap) .monsters-hub-tabs__indicator {
 .monsters-shell {
   max-width: var(--app-content-max);
   margin: 0 auto;
-  padding: 0 0 24px;
+  padding: 0;
   position: relative;
 }
 
 /* Animation support for Monsters hub panes */
 .monsters-hub-pane.animating {
   position: absolute;
-  top: 82px; /* Approximate height of tabs container (padding 4px + min-height 3.35rem + margin 16px) + extra buffer */
   left: 0;
   right: 0;
   box-sizing: border-box;
@@ -12116,6 +12295,33 @@ html:not(.swrm-has-gsap) .monsters-hub-tabs__indicator {
 .monsters-card--pinned {
   border-color: color-mix(in srgb, var(--accent) 50%, var(--border2));
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.monsters-card--highlight {
+  border-color: var(--gold);
+  background: color-mix(in srgb, var(--gold) 35%, var(--surface));
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--gold) 70%, transparent),
+    0 0 20px color-mix(in srgb, var(--gold) 50%, transparent),
+    0 6px 24px rgba(0, 0, 0, 0.15);
+  animation: monsters-card-highlight-pulse 2s ease-out;
+  transform: scale(1.02);
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+
+@keyframes monsters-card-highlight-pulse {
+  0% {
+    box-shadow:
+      0 0 0 3px color-mix(in srgb, var(--gold) 70%, transparent),
+      0 0 0 10px color-mix(in srgb, var(--gold) 50%, transparent),
+      0 6px 24px rgba(0, 0, 0, 0.15);
+  }
+  100% {
+    box-shadow:
+      0 0 0 3px color-mix(in srgb, var(--gold) 70%, transparent),
+      0 0 20px color-mix(in srgb, var(--gold) 50%, transparent),
+      0 6px 24px rgba(0, 0, 0, 0.15);
+  }
 }
 
 .monsters-card--list {
@@ -13291,6 +13497,32 @@ html:not(.swrm-has-gsap) .monsters-hub-tabs__indicator {
   background: color-mix(in srgb, var(--accent) 16%, var(--surface));
 }
 
+.monsters-table__row--highlight {
+  background: color-mix(in srgb, var(--gold) 35%, var(--surface));
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--gold) 70%, transparent),
+    0 0 20px color-mix(in srgb, var(--gold) 50%, transparent),
+    0 6px 24px rgba(0, 0, 0, 0.15);
+  animation: monsters-table-row-highlight-pulse 2s ease-out;
+  transform: scale(1.01);
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+
+@keyframes monsters-table-row-highlight-pulse {
+  0% {
+    box-shadow:
+      0 0 0 3px color-mix(in srgb, var(--gold) 70%, transparent),
+      0 0 0 10px color-mix(in srgb, var(--gold) 50%, transparent),
+      0 6px 24px rgba(0, 0, 0, 0.15);
+  }
+  100% {
+    box-shadow:
+      0 0 0 3px color-mix(in srgb, var(--gold) 70%, transparent),
+      0 0 20px color-mix(in srgb, var(--gold) 50%, transparent),
+      0 6px 24px rgba(0, 0, 0, 0.15);
+  }
+}
+
 .monsters-table__name {
   font-weight: 600;
   color: var(--text-hi);
@@ -13409,6 +13641,20 @@ html:not(.swrm-has-gsap) .monsters-hub-tabs__indicator {
   border-radius: var(--radius);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
   pointer-events: auto;
+}
+
+.monsters-detail.monsters-detail--float {
+  cursor: grab;
+}
+
+.monsters-detail.monsters-detail--float.monsters-detail--draggable {
+  cursor: grabbing;
+}
+
+.monsters-detail__drag-handle {
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .monsters-detail.monsters-detail--float[hidden] {

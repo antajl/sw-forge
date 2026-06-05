@@ -235,6 +235,7 @@
 
   const CHANGELOG_SUBTAB_KEY = 'swrm_changelog_subtab_v1';
   let changelogSubtabsBound = false;
+  let lastChangelogSubtab = null;
 
   function setChangelogSubtab(subtabId, instant) {
     const nav = document.getElementById('changelog-subtabs');
@@ -248,13 +249,44 @@
     });
     const panels = Array.from(document.querySelectorAll('#tab-changelog .rules-subpanel'));
     const motionApi = window.SWRM_MOTION;
-    if (motionApi) {
-      motionApi.swapSubpanels(panels, (p) => p.dataset.changelogSubtab === v, !!instant);
+
+    const tabOrder = ['shipped', 'roadmap'];
+    const prevIndex = lastChangelogSubtab ? tabOrder.indexOf(lastChangelogSubtab) : -1;
+    const nextIndex = tabOrder.indexOf(v);
+    const direction = prevIndex >= 0 && nextIndex >= 0 && nextIndex > prevIndex ? 'next' : 'prev';
+    lastChangelogSubtab = v;
+
+    const currentPane = prevIndex >= 0
+      ? document.querySelector(`#tab-changelog .rules-subpanel[data-changelog-subtab="${tabOrder[prevIndex]}"]`)
+      : null;
+    const nextPane = document.querySelector(`#tab-changelog .rules-subpanel[data-changelog-subtab="${v}"]`);
+
+    if (!instant && motionApi && motionApi.enabled() && currentPane && nextPane && currentPane !== nextPane) {
+      motionApi.animateSubTabTransition({
+        current: currentPane, next: nextPane, direction,
+        onComplete: () => {
+          panels.forEach((p) => {
+            const on = p.dataset.changelogSubtab === v;
+            p.classList.toggle('is-active', on);
+            if (on) p.removeAttribute('hidden'); else p.setAttribute('hidden', '');
+          });
+        },
+      });
     } else {
-      panels.forEach((panel) => {
-        panel.classList.toggle('is-active', panel.dataset.changelogSubtab === v);
+      panels.forEach((p) => {
+        const on = p.dataset.changelogSubtab === v;
+        p.classList.toggle('is-active', on);
+        if (on) p.removeAttribute('hidden'); else p.setAttribute('hidden', '');
       });
     }
+
+    if (motionApi && typeof motionApi.positionChangelogSubtabIndicator === 'function') {
+      rafTwice(() => {
+        const nav = document.getElementById('changelog-subtabs');
+        if (nav) motionApi.positionChangelogSubtabIndicator({ nav, activeKey: v, instant: !!instant });
+      });
+    }
+
     try { sessionStorage.setItem(CHANGELOG_SUBTAB_KEY, v); } catch (e) { /* ignore */ }
   }
 
@@ -268,10 +300,29 @@
     let saved = 'shipped';
     try { saved = sessionStorage.getItem(CHANGELOG_SUBTAB_KEY) || 'shipped'; } catch (e) { /* ignore */ }
     setChangelogSubtab(saved, true);
+
+    const motionApi = window.SWRM_MOTION;
+    if (motionApi && typeof motionApi.positionChangelogSubtabIndicator === 'function') {
+      rafTwice(() => {
+        const nav = document.getElementById('changelog-subtabs');
+        if (nav) motionApi.positionChangelogSubtabIndicator({ nav, activeKey: saved, instant: true });
+      });
+      let resizeTimer = null;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+          const nav = document.getElementById('changelog-subtabs');
+          const activeBtn = nav && nav.querySelector('.rules-subtab.is-active');
+          if (activeBtn) motionApi.positionChangelogSubtabIndicator({ nav, activeKey: activeBtn.dataset.changelogSubtab, instant: true });
+        }, 120);
+      });
+    }
   }
 
   const GUIDE_SUBTAB_KEY = 'swrm_guide_subtab_v1';
   let guideSubtabsBound = false;
+  let lastGuideSubtab = null;
+  let lastDashboardSubtab = null;
 
   function normalizeGuideSubtabId(id) {
     if (
@@ -302,13 +353,44 @@
       document.querySelectorAll('#tab-guide .rules-subpanel[data-guide-subtab]'),
     );
     const motionApi = window.SWRM_MOTION;
-    if (motionApi) {
-      motionApi.swapSubpanels(panels, (p) => p.dataset.guideSubtab === v, !!instant);
+
+    const tabOrder = ['start', 'dashboard', 'progression', 'table', 'evaluation', 'rules', 'tips'];
+    const prevIndex = lastGuideSubtab ? tabOrder.indexOf(lastGuideSubtab) : -1;
+    const nextIndex = tabOrder.indexOf(v);
+    const direction = prevIndex >= 0 && nextIndex >= 0 && nextIndex > prevIndex ? 'next' : 'prev';
+    lastGuideSubtab = v;
+
+    const currentPane = prevIndex >= 0
+      ? document.querySelector(`#tab-guide .rules-subpanel[data-guide-subtab="${tabOrder[prevIndex]}"]`)
+      : null;
+    const nextPane = document.querySelector(`#tab-guide .rules-subpanel[data-guide-subtab="${v}"]`);
+
+    if (!instant && motionApi && motionApi.enabled() && currentPane && nextPane && currentPane !== nextPane) {
+      motionApi.animateSubTabTransition({
+        current: currentPane, next: nextPane, direction,
+        onComplete: () => {
+          panels.forEach((p) => {
+            const on = p.dataset.guideSubtab === v;
+            p.classList.toggle('is-active', on);
+            if (on) p.removeAttribute('hidden'); else p.setAttribute('hidden', '');
+          });
+        },
+      });
     } else {
-      panels.forEach((panel) => {
-        panel.classList.toggle('is-active', panel.dataset.guideSubtab === v);
+      panels.forEach((p) => {
+        const on = p.dataset.guideSubtab === v;
+        p.classList.toggle('is-active', on);
+        if (on) p.removeAttribute('hidden'); else p.setAttribute('hidden', '');
       });
     }
+
+    if (motionApi && typeof motionApi.positionGuideSubtabIndicator === 'function') {
+      rafTwice(() => {
+        const nav = document.getElementById('guide-subtabs');
+        if (nav) motionApi.positionGuideSubtabIndicator({ nav, activeKey: v, instant: !!instant });
+      });
+    }
+
     try {
       sessionStorage.setItem(GUIDE_SUBTAB_KEY, v);
     } catch (e) {
@@ -330,25 +412,42 @@
       /* ignore */
     }
     setGuideSubtab(saved, true);
+
+    const motionApi = window.SWRM_MOTION;
+    if (motionApi && typeof motionApi.positionGuideSubtabIndicator === 'function') {
+      rafTwice(() => {
+        const nav = document.getElementById('guide-subtabs');
+        if (nav) motionApi.positionGuideSubtabIndicator({ nav, activeKey: saved, instant: true });
+      });
+      let resizeTimer = null;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+          const nav = document.getElementById('guide-subtabs');
+          const activeBtn = nav && nav.querySelector('.rules-subtab.is-active');
+          if (activeBtn) motionApi.positionGuideSubtabIndicator({ nav, activeKey: activeBtn.dataset.guideSubtab, instant: true });
+        }, 120);
+      });
+    }
   }
 
-  /** Top-level header tabs. Runes hub sub-views: dashboard | runetable | settings. */
+  /** Top-level header tabs. Gear hub sub-views: runetable | settings (rune dashboard → main Dashboard tab). */
   const MAIN_TAB_IDS = ['dashboard', 'gear', 'monsters', 'guide', 'changelog', 'app-settings'];
-  const RUNES_SUBTAB_IDS = ['dashboard', 'runetable', 'settings'];
+  const RUNES_SUBTAB_IDS = ['runetable', 'settings'];
   const RUNES_SUBTAB_STORAGE_KEY = 'swrm_runes_subtab_v1';
-  const MONSTERS_SUBTAB_IDS = ['dashboard', 'roster', 'teams', 'planner'];
+  const MONSTERS_SUBTAB_IDS = ['roster', 'teams', 'planner'];
   const MONSTERS_SUBTAB_STORAGE_KEY = 'swrm_monsters_subtab_v1';
   let runesHubTabsBound = false;
 
   function normalizeMainTabRequest(tabId) {
     if (tabId === 'gear' || tabId === 'runetable' || tabId === 'settings') {
-      return { main: 'runes', sub: tabId === 'gear' ? 'dashboard' : tabId };
+      return { main: 'runes', sub: tabId === 'gear' ? 'runetable' : tabId };
     }
     if (tabId === 'roster' || tabId === 'teams' || tabId === 'planner') {
       return { main: 'monsters', sub: tabId };
     }
     if (MAIN_TAB_IDS.includes(tabId)) return { main: tabId, sub: null };
-    return { main: 'runes', sub: 'dashboard' };
+    return { main: 'dashboard', sub: 'runes' };
   }
 
   function runesSubtabFromHashSegment(segment) {
@@ -361,29 +460,60 @@
 
   function splitMainHash() {
     const raw = (window.location.hash || '').replace(/^#/, '').trim();
-    if (!raw) return { tab: null, runesSubtab: null, monstersSubtab: null, query: '' };
+    const empty = {
+      tab: null,
+      runesSubtab: null,
+      monstersSubtab: null,
+      dashboardSubtab: null,
+      query: '',
+    };
+    if (!raw) return empty;
     const qm = raw.indexOf('?');
     const tabPart = (qm === -1 ? raw : raw.slice(0, qm)).trim();
     const query = qm === -1 ? '' : raw.slice(qm + 1);
     let h = tabPart;
     if (h.startsWith('tab-')) h = h.slice(4);
+    if (h.startsWith('dashboard/')) {
+      const seg = h.slice(11).split('/')[0];
+      const dashboardSubtab = seg === 'monsters' ? 'monsters' : 'runes';
+      return { tab: 'dashboard', runesSubtab: null, monstersSubtab: null, dashboardSubtab, query };
+    }
+    if (h === 'dashboard') {
+      return { tab: 'dashboard', runesSubtab: null, monstersSubtab: null, dashboardSubtab: 'runes', query };
+    }
+    if (h === 'gear' || h.startsWith('gear/')) {
+      const seg = h === 'gear' ? 'dashboard' : h.slice(5).split('/')[0];
+      if (seg === 'dashboard') {
+        return { tab: 'dashboard', runesSubtab: null, monstersSubtab: null, dashboardSubtab: 'runes', query };
+      }
+      const sub = runesSubtabFromHashSegment(seg);
+      if (sub) return { tab: 'runes', runesSubtab: sub, monstersSubtab: null, dashboardSubtab: null, query };
+    }
     if (h.startsWith('runes/')) {
       const sub = runesSubtabFromHashSegment(h.slice(6).split('/')[0]);
-      if (sub) return { tab: 'runes', runesSubtab: sub, monstersSubtab: null, query };
+      if (sub === 'dashboard') {
+        return { tab: 'dashboard', runesSubtab: null, monstersSubtab: null, dashboardSubtab: 'runes', query };
+      }
+      if (sub) return { tab: 'runes', runesSubtab: sub, monstersSubtab: null, dashboardSubtab: null, query };
     }
     if (h.startsWith('monsters/')) {
       const sub = monstersSubtabFromHashSegment(h.slice(9).split('/')[0]);
-      if (sub) return { tab: 'monsters', runesSubtab: null, monstersSubtab: sub, query };
+      if (sub === 'dashboard') {
+        return { tab: 'dashboard', runesSubtab: null, monstersSubtab: null, dashboardSubtab: 'monsters', query };
+      }
+      if (sub) return { tab: 'monsters', runesSubtab: null, monstersSubtab: sub, dashboardSubtab: null, query };
     }
-    if (h === 'dashboard' || h === 'runetable' || h === 'settings') {
-      return { tab: 'runes', runesSubtab: h, monstersSubtab: null, query };
+    if (h === 'runetable' || h === 'settings') {
+      return { tab: 'runes', runesSubtab: h, monstersSubtab: null, dashboardSubtab: null, query };
     }
     if (h === 'roster' || h === 'teams' || h === 'planner') {
-      return { tab: 'monsters', runesSubtab: null, monstersSubtab: h, query };
+      return { tab: 'monsters', runesSubtab: null, monstersSubtab: h, dashboardSubtab: null, query };
     }
-    if (h === 'archive') return { tab: 'guide', runesSubtab: null, monstersSubtab: null, query };
-    if (MAIN_TAB_IDS.includes(h)) return { tab: h, runesSubtab: null, monstersSubtab: null, query };
-    return { tab: null, runesSubtab: null, monstersSubtab: null, query };
+    if (h === 'archive') return { tab: 'guide', runesSubtab: null, monstersSubtab: null, dashboardSubtab: null, query };
+    if (MAIN_TAB_IDS.includes(h)) {
+      return { tab: h, runesSubtab: null, monstersSubtab: null, dashboardSubtab: null, query };
+    }
+    return empty;
   }
 
   function mainTabIdFromHash() {
@@ -396,6 +526,7 @@
   function readStoredMonstersSubtab() {
     try {
       const v = sessionStorage.getItem(MONSTERS_SUBTAB_STORAGE_KEY);
+      if (v === 'dashboard') return 'roster';
       return MONSTERS_SUBTAB_IDS.includes(v) ? v : 'roster';
     } catch (e) {
       return 'roster';
@@ -405,9 +536,10 @@
   function readStoredRunesSubtab() {
     try {
       const v = sessionStorage.getItem(RUNES_SUBTAB_STORAGE_KEY);
-      return RUNES_SUBTAB_IDS.includes(v) ? v : 'dashboard';
+      if (v === 'dashboard') return 'runetable';
+      return RUNES_SUBTAB_IDS.includes(v) ? v : 'runetable';
     } catch (e) {
-      return 'dashboard';
+      return 'runetable';
     }
   }
 
@@ -423,12 +555,12 @@
 
   function showRunesSubtab(subId, options) {
     const opts = options || {};
-    const id = RUNES_SUBTAB_IDS.includes(subId) ? subId : 'dashboard';
+    const id = RUNES_SUBTAB_IDS.includes(subId) ? subId : 'runetable';
     try {
       sessionStorage.setItem(RUNES_SUBTAB_STORAGE_KEY, id);
     } catch (e) { /* ignore */ }
 
-    const tabOrder = ['dashboard', 'runetable', 'settings'];
+    const tabOrder = ['runetable', 'settings'];
     const prevIndex = lastRunesSubtab ? tabOrder.indexOf(lastRunesSubtab) : -1;
     const nextIndex = tabOrder.indexOf(id);
     const direction = prevIndex >= 0 && nextIndex >= 0 && nextIndex > prevIndex ? 'next' : 'prev';
@@ -487,33 +619,7 @@
         if (nav && typeof motionApi.positionRunesHubTabIndicator === 'function') {
           motionApi.positionRunesHubTabIndicator({ nav, activeKey: id, instant: false });
         }
-        if (id === 'dashboard') {
-          const uniNav = document.getElementById('dash-unified-tabs');
-          if (uniNav && typeof motionApi.positionDashUnifiedTabIndicator === 'function') {
-            const key =
-              (typeof readDashboardUnifiedTab === 'function' && readDashboardUnifiedTab()) ||
-              (uniNav.querySelector('[data-dash-uni].is-active')?.getAttribute('data-dash-uni')) ||
-              (uniNav.querySelector('[data-dash-uni]')?.getAttribute('data-dash-uni')) ||
-              'breakdown';
-            motionApi.positionDashUnifiedTabIndicator({ nav: uniNav, activeKey: key, instant: true });
-          }
-          const kindNav = document.getElementById('dash-dist-kind-tabs');
-          if (kindNav && typeof motionApi.positionDashUnifiedTabIndicator === 'function') {
-            const kind =
-              (typeof readDashboardDistKind === 'function' && readDashboardDistKind()) ||
-              (kindNav.querySelector('[data-dash-dist-kind].is-active')?.getAttribute('data-dash-dist-kind')) ||
-              'runes';
-            motionApi.positionDashUnifiedTabIndicator({ nav: kindNav, activeKey: kind, instant: true });
-          }
-          const artNav = document.getElementById('dash-art-tabs');
-          if (artNav && !artNav.closest('[hidden]') && typeof positionArtifactDashTabIndicator === 'function') {
-            const key =
-              (typeof readArtifactDashTab === 'function' && readArtifactDashTab()) ||
-              (artNav.querySelector('[data-dash-art-tab].is-active')?.getAttribute('data-dash-art-tab')) ||
-              'breakdown';
-            positionArtifactDashTabIndicator({ nav: artNav, activeKey: key, instant: true });
-          }
-        } else if (id === 'runetable') {
+        if (id === 'runetable') {
           if (typeof updateTableKindTabIndicator === 'function') {
             updateTableKindTabIndicator({ instant: true });
           }
@@ -541,10 +647,6 @@
     if (id === 'settings') {
       const rulesRoot = document.getElementById('tab-settings');
       if (rulesRoot) rulesRoot.scrollTop = 0;
-    }
-
-    if (id === 'dashboard' && typeof scheduleDashboardChartReplay === 'function') {
-      scheduleDashboardChartReplay({ tabSwitch: true, animateCharts: false });
     }
 
     if (id === 'runetable') {
@@ -678,11 +780,11 @@
 
     // Position indicator on initial load
     const motionApi = window.SWRM_MOTION;
-    if (motionApi && typeof motionApi.positionRunesHubTabIndicator === 'function') {
+    if (motionApi && typeof motionApi.positionDashboardHubTabIndicator === 'function') {
       rafTwice(() => {
         const activeTab = nav.querySelector('.dashboard-hub-tab.is-active');
         if (activeTab) {
-          motionApi.positionRunesHubTabIndicator({ nav, activeKey: activeTab.dataset.dashboardHub, instant: true });
+          motionApi.positionDashboardHubTabIndicator({ nav, activeKey: activeTab.dataset.dashboardHub, instant: true });
         }
       });
       let resizeTimer = null;
@@ -691,7 +793,7 @@
         resizeTimer = setTimeout(() => {
           const activeTab = nav.querySelector('.dashboard-hub-tab.is-active');
           if (activeTab) {
-            motionApi.positionRunesHubTabIndicator({ nav, activeKey: activeTab.dataset.dashboardHub, instant: true });
+            motionApi.positionDashboardHubTabIndicator({ nav, activeKey: activeTab.dataset.dashboardHub, instant: true });
           }
         }, 120);
       });
@@ -699,7 +801,7 @@
         rafTwice(() => {
           const activeTab = nav.querySelector('.dashboard-hub-tab.is-active');
           if (activeTab) {
-            motionApi.positionRunesHubTabIndicator({ nav, activeKey: activeTab.dataset.dashboardHub, instant: true });
+            motionApi.positionDashboardHubTabIndicator({ nav, activeKey: activeTab.dataset.dashboardHub, instant: true });
           }
         });
       });
@@ -713,6 +815,13 @@
 
     const subId = DASHBOARD_SUBTAB_IDS.includes(sub) ? sub : 'runes';
 
+    const DASHBOARD_TAB_ORDER = ['runes', 'monsters'];
+    const prevDashIndex = lastDashboardSubtab ? DASHBOARD_TAB_ORDER.indexOf(lastDashboardSubtab) : -1;
+    const nextDashIndex = DASHBOARD_TAB_ORDER.indexOf(subId);
+    const dashDirection = prevDashIndex >= 0 && nextDashIndex >= 0 && nextDashIndex > prevDashIndex ? 'next' : 'prev';
+    const prevDashSubId = lastDashboardSubtab;
+    lastDashboardSubtab = subId;
+
     // Update tab buttons
     nav.querySelectorAll('.dashboard-hub-tab').forEach((btn) => {
       const isActive = btn.dataset.dashboardHub === subId;
@@ -721,22 +830,91 @@
       btn.tabIndex = isActive ? 0 : -1;
     });
 
-    // Update panes
-    document.querySelectorAll('.dashboard-hub-pane').forEach((pane) => {
-      const isActive = pane.dataset.dashboardPane === subId;
-      pane.classList.toggle('is-active', isActive);
-      pane.hidden = !isActive;
-    });
-
-    // Position indicator
+    // Update panes with slide animation
     const motionApi = window.SWRM_MOTION;
-    if (motionApi && typeof motionApi.positionRunesHubTabIndicator === 'function') {
-      motionApi.positionRunesHubTabIndicator({ nav, activeKey: subId, instant: opts.instant });
+    const currentDashPane = prevDashSubId
+      ? document.querySelector(`.dashboard-hub-pane[data-dashboard-pane="${prevDashSubId}"]`)
+      : null;
+    const nextDashPane = document.querySelector(`.dashboard-hub-pane[data-dashboard-pane="${subId}"]`);
+
+    if (!opts.instant && motionApi && motionApi.enabled() && currentDashPane && nextDashPane && currentDashPane !== nextDashPane) {
+      const started = motionApi.animateSubTabTransition({
+        current: currentDashPane,
+        next: nextDashPane,
+        direction: dashDirection,
+        onComplete: () => {
+          document.querySelectorAll('.dashboard-hub-pane').forEach((pane) => {
+            const isActive = pane.dataset.dashboardPane === subId;
+            pane.classList.toggle('is-active', isActive);
+            pane.hidden = !isActive;
+          });
+        },
+      });
+      if (!started) {
+        document.querySelectorAll('.dashboard-hub-pane').forEach((pane) => {
+          const isActive = pane.dataset.dashboardPane === subId;
+          pane.classList.toggle('is-active', isActive);
+          pane.hidden = !isActive;
+        });
+      }
+    } else {
+      document.querySelectorAll('.dashboard-hub-pane').forEach((pane) => {
+        const isActive = pane.dataset.dashboardPane === subId;
+        pane.classList.toggle('is-active', isActive);
+        pane.hidden = !isActive;
+      });
     }
 
-    // Initialize runes dashboard if runes subtab
+    // Position indicator
+    if (motionApi && typeof motionApi.positionDashboardHubTabIndicator === 'function') {
+      motionApi.positionDashboardHubTabIndicator({ nav, activeKey: subId, instant: opts.instant });
+    }
+
     if (subId === 'runes' && typeof scheduleDashboardChartReplay === 'function') {
       scheduleDashboardChartReplay({ tabSwitch: true, animateCharts: false });
+    }
+    if (subId === 'monsters' && typeof renderMonstersDashboard === 'function') {
+      const hasCache =
+        typeof monstersEnrichedCache !== 'undefined' &&
+        Array.isArray(monstersEnrichedCache) &&
+        monstersEnrichedCache.length > 0;
+      if (hasCache) {
+        renderMonstersDashboard();
+      } else {
+        // Явно вызываем renderMonstersPanel чтобы заполнить кэш
+        if (typeof renderMonstersPanel === 'function') {
+          void renderMonstersPanel();
+        }
+      }
+    }
+
+    if (motionApi && subId === 'runes') {
+      rafTwice(() => {
+        const uniNav = document.getElementById('dash-unified-tabs');
+        if (uniNav && typeof motionApi.positionDashUnifiedTabIndicator === 'function') {
+          const key =
+            (typeof readDashboardUnifiedTab === 'function' && readDashboardUnifiedTab()) ||
+            (uniNav.querySelector('[data-dash-uni].is-active')?.getAttribute('data-dash-uni')) ||
+            'breakdown';
+          motionApi.positionDashUnifiedTabIndicator({ nav: uniNav, activeKey: key, instant: true });
+        }
+        const kindNav = document.getElementById('dash-dist-kind-tabs');
+        if (kindNav && typeof motionApi.positionDashUnifiedTabIndicator === 'function') {
+          const kind =
+            (typeof readDashboardDistKind === 'function' && readDashboardDistKind()) ||
+            (kindNav.querySelector('[data-dash-dist-kind].is-active')?.getAttribute('data-dash-dist-kind')) ||
+            'runes';
+          motionApi.positionDashUnifiedTabIndicator({ nav: kindNav, activeKey: kind, instant: true });
+        }
+        const artNav = document.getElementById('dash-art-tabs');
+        if (artNav && !artNav.closest('[hidden]') && typeof positionArtifactDashTabIndicator === 'function') {
+          const key =
+            (typeof readArtifactDashTab === 'function' && readArtifactDashTab()) ||
+            (artNav.querySelector('[data-dash-art-tab].is-active')?.getAttribute('data-dash-art-tab')) ||
+            'breakdown';
+          positionArtifactDashTabIndicator({ nav: artNav, activeKey: key, instant: true });
+        }
+      });
     }
   }
 
@@ -761,7 +939,7 @@
       if (main === 'guide' || main === 'changelog') {
         main = 'runes';
         sub = sub || readStoredRunesSubtab();
-        tabId = sub && sub !== 'dashboard' ? `runes/${sub}` : 'runes';
+        tabId = sub ? `runes/${sub}` : 'runes';
       }
     }
     if (showMainTabLastMain === 'monsters' && main !== 'monsters') {
@@ -837,7 +1015,14 @@
     if (main === 'dashboard') {
       if (positionMainTabsIndicator) positionMainTabsIndicator();
       initDashboardHubTabs();
-      showDashboardSubtab('runes', opts);
+      const dashSub =
+        sub ||
+        (opts.dashboardSubtab && DASHBOARD_SUBTAB_IDS.includes(opts.dashboardSubtab)
+          ? opts.dashboardSubtab
+          : null) ||
+        hashParts.dashboardSubtab ||
+        'runes';
+      showDashboardSubtab(dashSub, opts);
     }
 
     if (main === 'runes') {
@@ -852,9 +1037,30 @@
     }
     if (main === 'guide') {
       if (positionMainTabsIndicator) positionMainTabsIndicator();
+      initGuideSubtabs();
+      // initGuideSubtabs() is guarded by guideSubtabsBound and skips on repeat visits,
+      // so the indicator is never repositioned after the first time. Always reposition it.
+      const motionApiG = window.SWRM_MOTION;
+      if (motionApiG && typeof motionApiG.positionGuideSubtabIndicator === 'function') {
+        rafTwice(() => {
+          const guideNav = document.getElementById('guide-subtabs');
+          const activeBtn = guideNav && guideNav.querySelector('.rules-subtab.is-active');
+          if (activeBtn) motionApiG.positionGuideSubtabIndicator({ nav: guideNav, activeKey: activeBtn.dataset.guideSubtab, instant: true });
+        });
+      }
     }
     if (main === 'changelog') {
       if (positionMainTabsIndicator) positionMainTabsIndicator();
+      initChangelogSubtabs();
+      // Same guard issue as guide — always reposition indicator on every visit.
+      const motionApiC = window.SWRM_MOTION;
+      if (motionApiC && typeof motionApiC.positionChangelogSubtabIndicator === 'function') {
+        rafTwice(() => {
+          const clNav = document.getElementById('changelog-subtabs');
+          const activeBtn = clNav && clNav.querySelector('.rules-subtab.is-active');
+          if (activeBtn) motionApiC.positionChangelogSubtabIndicator({ nav: clNav, activeKey: activeBtn.dataset.changelogSubtab, instant: true });
+        });
+      }
     }
     if (main === 'monsters') {
       if (positionMainTabsIndicator) positionMainTabsIndicator();
@@ -874,9 +1080,7 @@
         const base = window.location.pathname + window.location.search;
         let url;
         if (main === 'runes') {
-          // Write as 'gear' in hash
-          if (runesSub === 'dashboard') url = `${base}#gear`;
-          else if (runesSub === 'runetable') url = `${base}#gear/runetable${buildRuneTableQuerySuffix()}`;
+          if (runesSub === 'runetable') url = `${base}#gear/runetable${buildRuneTableQuerySuffix()}`;
           else url = `${base}#gear/${runesSub}`;
         } else if (main === 'monsters') {
           const monstersSub =
@@ -889,8 +1093,14 @@
           url = monstersSub === 'roster' ? `${base}#monsters` : `${base}#monsters/${monstersSub}`;
         } else if (main === 'guide') url = `${base}#guide`;
         else if (main === 'dashboard') {
-          // Don't write hash for dashboard tab - keep URL clean
-          url = base;
+          const dashSub =
+            sub ||
+            (opts.dashboardSubtab && DASHBOARD_SUBTAB_IDS.includes(opts.dashboardSubtab)
+              ? opts.dashboardSubtab
+              : null) ||
+            hashParts.dashboardSubtab ||
+            'runes';
+          url = dashSub === 'monsters' ? `${base}#dashboard/monsters` : `${base}#dashboard`;
         }
         else url = `${base}#${main}`;
         if (pushHistory) history.pushState(null, '', url);
@@ -2297,12 +2507,13 @@
     }
   }
 
-  document.getElementById('tab-dashboard')?.addEventListener('click', dashboardNavigateFromClick);
+  const runesDashboardRoot = document.getElementById('dashboard-pane-runes');
+  runesDashboardRoot?.addEventListener('click', dashboardNavigateFromClick);
 
-  document.getElementById('tab-dashboard')?.addEventListener('keydown', (e) => {
+  runesDashboardRoot?.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter' && e.key !== ' ') return;
     const t = e.target;
-    if (!t || !t.closest || !t.closest('#tab-dashboard')) return;
+    if (!t || !t.closest || !t.closest('#dashboard-pane-runes')) return;
     const setRow = t.closest('.chart-row--clickable[data-dash-set]');
     const vrow = t.closest('.chart-row--clickable[data-dash-verdict]');
     const row = t.closest('.chart-row--clickable[data-dash-role]');
@@ -2452,7 +2663,11 @@
   function scheduleDeferredSecondaryPanels(visible) {
     const run = () => {
       if (typeof renderTable === 'function') renderTable(visible);
-      if (typeof renderMonstersPanel === 'function') renderMonstersPanel();
+      if (typeof renderMonstersPanel === 'function') {
+        void renderMonstersPanel();
+      } else if (typeof renderMonstersDashboard === 'function') {
+        renderMonstersDashboard();
+      }
     };
     if (typeof requestIdleCallback === 'function') {
       requestIdleCallback(run, { timeout: 2500 });
@@ -2476,6 +2691,14 @@
         typeof getVisibleRunes === 'function' ? getVisibleRunes() : processedRunes;
       if (typeof renderDashboard === 'function') {
         renderDashboard(visible, { animateCharts, fromZero });
+      }
+      if (
+        !deferSecondary &&
+        typeof renderMonstersDashboard === 'function' &&
+        typeof isMainMonstersDashboardVisible === 'function' &&
+        isMainMonstersDashboardVisible()
+      ) {
+        renderMonstersDashboard();
       }
       if (deferSecondary) scheduleDeferredSecondaryPanels(visible);
       else {
@@ -3304,6 +3527,12 @@
 
     document.addEventListener('dragend', () => hideSwrmDropVeilUi(), true);
 
+    document.addEventListener('dragleave', (e) => {
+      if (e.relatedTarget === null) {
+        hideSwrmDropVeilUi();
+      }
+    }, true);
+
     window.addEventListener('blur', () => hideSwrmDropVeilUi());
 
     document.addEventListener(
@@ -3847,10 +4076,23 @@
   }
 
   function getVisibleRunes() {
+    const DELETED_RUNES_KEY = 'swrm_deleted_runes_v1';
+    let deletedRunes = new Set();
+    try {
+      const stored = localStorage.getItem(DELETED_RUNES_KEY);
+      if (stored) {
+        deletedRunes = new Set(JSON.parse(stored));
+      }
+    } catch (e) {
+      deletedRunes = new Set();
+    }
+
     return processedRunes.filter((r) => {
       if (r.level < globalMinLevel) return false;
       const g = typeof r.grade === 'number' ? r.grade : 0;
-      return g >= globalGradeMin && g <= globalGradeMax;
+      if (g < globalGradeMin || g > globalGradeMax) return false;
+      if (r.id != null && deletedRunes.has(String(r.id))) return false;
+      return true;
     });
   }
 
@@ -5360,21 +5602,20 @@
     return played;
   }
 
+  function isMainRunesDashboardVisible() {
+    const section = document.getElementById('tab-dashboard');
+    if (!section || section.classList.contains('hidden')) return false;
+    const pane = document.getElementById('dashboard-pane-runes');
+    return !!(pane && !pane.hidden && pane.classList.contains('is-active'));
+  }
+
   function scheduleDashboardChartReplay(options) {
     const opts = options || {};
     const tabSwitch = !!opts.tabSwitch;
     const fromZero = !!opts.fromZero && !tabSwitch;
     const animateCharts = opts.animateCharts !== false;
     rafTwice(() => {
-      const hub = document.getElementById('tab-runes');
-      if (hub && hub.classList.contains('hidden')) return;
-      const dashPane = document.getElementById('tab-dashboard');
-      if (
-        dashPane &&
-        (dashPane.hidden || !dashPane.classList.contains('is-active'))
-      ) {
-        return;
-      }
+      if (!isMainRunesDashboardVisible()) return;
       if (typeof readDashboardDistKind === 'function' && readDashboardDistKind() === 'artifacts') {
         if (typeof renderArtifactDashboardDistributions === 'function') {
           renderArtifactDashboardDistributions({ animateCharts, fromZero });
@@ -5388,6 +5629,8 @@
 
       if (tabSwitch && cacheHit) {
         if (animateCharts && replayDashboardDistributionAnimations()) return;
+        // Always animate when switching to the tab
+        renderDashboard(visible, { animateCharts: true, fromZero: false });
         return;
       }
 
@@ -6737,7 +6980,8 @@
 
     const rowIndex = opts && Number.isFinite(opts.rowIndex) ? opts.rowIndex : -1;
     const evenCls = rowIndex >= 0 && rowIndex % 2 === 1 ? ' rune-table__data-row--even' : '';
-    return `<tr class="rune-table__data-row${evenCls}">
+    const runeId = r.id != null ? String(r.id) : '';
+    return `<tr class="rune-table__data-row${evenCls}" data-rune-id="${escapeHtml(runeId)}">
       <td class="col-slot col-num td-num-plain">${highlightSearchInPlain(String(r.slot), tableSearchHighlight)}</td>
       <td class="col-set col-text">${tableStatLine(highlightSearchInPlain(r.setName, tableSearchHighlight), { set: true })}</td>
       <td class="col-main col-text">${tableStatLine(mainInner)}</td>
@@ -6753,6 +6997,7 @@
       <td class="col-text col-verdict col-block-gap">${verdictHtml}</td>
       <td class="col-text col-role">${roleHtml}</td>
       <td class="col-text col-location">${locHtml}</td>
+      <td class="col-actions"><button type="button" class="rune-table__delete-btn btn-secondary btn-sm" data-delete-rune="${escapeHtml(runeId)}" title="Delete rune">×</button></td>
     </tr>`;
   }
 
@@ -9097,7 +9342,7 @@
     document.addEventListener('keydown', (e) => {
       if (e.key !== 'Enter' && e.key !== ' ') return;
       const target = e.target;
-      if (!target || !target.closest || !target.closest('#tab-dashboard')) return;
+      if (!target || !target.closest || !target.closest('#dashboard-pane-runes')) return;
       if (activateFromTarget(target)) e.preventDefault();
     });
   }
@@ -10757,6 +11002,63 @@
   document.getElementById('btn-rune-table-show-all')?.addEventListener('click', () => {
     runeTableShowAll = true;
     applyFiltersAndSort(getVisibleRunes(), { preserveTableExpansion: true });
+  });
+
+  // Delete rune functionality
+  const DELETED_RUNES_KEY = 'swrm_deleted_runes_v1';
+  let deletedRunes = new Set();
+
+  function loadDeletedRunes() {
+    try {
+      const stored = localStorage.getItem(DELETED_RUNES_KEY);
+      if (stored) {
+        deletedRunes = new Set(JSON.parse(stored));
+      }
+    } catch (e) {
+      deletedRunes = new Set();
+    }
+  }
+
+  function saveDeletedRunes() {
+    try {
+      localStorage.setItem(DELETED_RUNES_KEY, JSON.stringify([...deletedRunes]));
+    } catch (e) {
+      // Ignore storage errors
+    }
+  }
+
+  function deleteRune(runeId) {
+    if (!runeId) return;
+    deletedRunes.add(String(runeId));
+    saveDeletedRunes();
+    applyFiltersAndSort(getVisibleRunes());
+  }
+
+  function restoreDeletedRune(runeId) {
+    if (!runeId) return;
+    deletedRunes.delete(String(runeId));
+    saveDeletedRunes();
+    applyFiltersAndSort(getVisibleRunes());
+  }
+
+  function clearAllDeletedRunes() {
+    deletedRunes.clear();
+    saveDeletedRunes();
+    applyFiltersAndSort(getVisibleRunes());
+  }
+
+  loadDeletedRunes();
+
+  document.getElementById('rune-table-scroll')?.addEventListener('click', (e) => {
+    const deleteBtn = e.target.closest('[data-delete-rune]');
+    if (deleteBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      const runeId = deleteBtn.getAttribute('data-delete-rune');
+      if (runeId && confirm('Delete this rune from the current profile?')) {
+        deleteRune(runeId);
+      }
+    }
   });
 
   document.getElementById('toggle-ancient-only')?.addEventListener('change', (e) => {
@@ -14004,7 +14306,7 @@
       sessionStorage.setItem(MONSTERS_SUBTAB_STORAGE_KEY, id);
     } catch (e) { /* ignore */ }
 
-    const tabOrder = ['dashboard', 'roster', 'planner', 'teams'];
+    const tabOrder = ['roster', 'planner', 'teams'];
     const prevIndex = lastMonstersSubtab ? tabOrder.indexOf(lastMonstersSubtab) : -1;
     const nextIndex = tabOrder.indexOf(id);
     const direction = prevIndex >= 0 && nextIndex >= 0 && nextIndex > prevIndex ? 'next' : 'prev';
@@ -14085,8 +14387,6 @@
 
     if (id === 'roster') {
       void renderMonstersPanel();
-    } else if (id === 'dashboard') {
-      if (typeof renderMonstersDashboard === 'function') void renderMonstersDashboard();
     } else if (id === 'planner' && typeof renderSkillPlannerPanel === 'function') {
       void renderSkillPlannerPanel();
     } else if (id === 'teams' && typeof renderTeamsPanel === 'function') {
@@ -14136,7 +14436,7 @@
     if (s === 'team' || s === 'teams') return 'teams';
     if (s === 'roster' || s === 'list') return 'roster';
     if (s === 'planner' || s === 'skill' || s === 'skills' || s === 'skill-plan') return 'planner';
-    if (s === 'dashboard') return 'dashboard';
+    if (s === 'dashboard') return null;
     return MONSTERS_SUBTAB_IDS.includes(s) ? s : null;
   }
 
@@ -17002,14 +17302,30 @@
       const vh = window.innerHeight;
       const w = aside.offsetWidth || 320;
       const h = aside.offsetHeight || 400;
-      let left = rect.right + pad;
-      let top = rect.top;
-      if (left + w > vw - pad) left = rect.left - w - pad;
-      if (left < pad) left = Math.max(pad, (vw - w) / 2);
-      if (top + h > vh - pad) top = Math.max(pad, vh - h - pad);
-      if (top < pad) top = pad;
+
+      let left, top;
+
+      // Check if anchorEl is outside viewport
+      const isOutsideViewport = rect.bottom < 0 || rect.top > vh || rect.right < 0 || rect.left > vw;
+
+      if (isOutsideViewport) {
+        // Position in center of viewport if anchor is outside
+        left = (vw - w) / 2;
+        top = (vh - h) / 2;
+      } else {
+        // Position relative to anchor element
+        left = rect.right + pad;
+        top = rect.top;
+        if (left + w > vw - pad) left = rect.left - w - pad;
+        if (left < pad) left = Math.max(pad, (vw - w) / 2);
+        if (top + h > vh - pad) top = Math.max(pad, vh - h - pad);
+        if (top < pad) top = pad;
+      }
+
       aside.style.left = `${Math.round(left)}px`;
       aside.style.top = `${Math.round(top)}px`;
+      aside.style.right = 'auto';
+      aside.style.bottom = 'auto';
     };
     requestAnimationFrame(() => requestAnimationFrame(place));
   }
@@ -17361,11 +17677,24 @@
     if (typeof renderMonstersPanel === 'function') void renderMonstersPanel();
   }
 
-  function renderMonstersDashboard() {
-    const allUnits = typeof getMonstersEnriched === 'function' ? getMonstersEnriched() : [];
-    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+  function isMainMonstersDashboardVisible() {
+    const section = document.getElementById('tab-dashboard');
+    if (!section || section.classList.contains('hidden')) return false;
+    const pane = document.getElementById('dashboard-pane-monsters');
+    return !!(pane && !pane.hidden && pane.classList.contains('is-active'));
+  }
 
-    console.log('[Monsters Dashboard] allUnits:', allUnits.length);
+  function monstersDashboardSourceUnits() {
+    if (typeof monstersEnrichedCache !== 'undefined' && monstersEnrichedCache.length) {
+      return monstersEnrichedCache;
+    }
+    if (typeof getMonstersEnriched === 'function') return getMonstersEnriched();
+    return [];
+  }
+
+  function renderMonstersDashboard() {
+    const allUnits = monstersDashboardSourceUnits();
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
 
     // Get filter values
     const minLevel = Number(document.getElementById('monsters-dashboard-min-level')?.value) || 0;
@@ -17374,21 +17703,17 @@
     const natMin = Number(document.getElementById('monsters-dashboard-nat-min')?.value) || 1;
     const natMax = Number(document.getElementById('monsters-dashboard-nat-max')?.value) || 5;
 
-    console.log('[Monsters Dashboard] filters:', { minLevel, starsMin, starsMax, natMin, natMax });
-
     // Apply filters
     const filteredUnits = allUnits.filter(u => {
       if (typeof isTechnicalFodderMonster === 'function' && isTechnicalFodderMonster(u)) return false;
       if ((u.level || 0) < minLevel) return false;
       const unitStars = u.stars || 6;
       if (unitStars < starsMin || unitStars > starsMax) return false;
-      const unitNat = u.unitRank ? u.unitRank.charAt(0) : '1';
+      const unitNat = u.unitRank && typeof u.unitRank === 'string' ? u.unitRank.charAt(0) : '1';
       const natNum = parseInt(unitNat, 10) || 1;
       if (natNum < natMin || natNum > natMax) return false;
       return true;
     });
-
-    console.log('[Monsters Dashboard] filteredUnits:', filteredUnits.length);
 
     // Update count display
     const countEl = document.getElementById('dashboard-monsters-count');
@@ -17426,7 +17751,7 @@
 
   async function copyMonstersDashboardSummary() {
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-    const allUnits = typeof getMonstersEnriched === 'function' ? getMonstersEnriched() : [];
+    const allUnits = monstersDashboardSourceUnits();
     const minLevel = Number(document.getElementById('monsters-dashboard-min-level')?.value) || 0;
     const starsMin = Number(document.getElementById('monsters-dashboard-stars-min')?.value) || 1;
     const starsMax = Number(document.getElementById('monsters-dashboard-stars-max')?.value) || 6;
@@ -17438,7 +17763,7 @@
       if ((u.level || 0) < minLevel) return false;
       const unitStars = u.stars || 6;
       if (unitStars < starsMin || unitStars > starsMax) return false;
-      const unitNat = u.unitRank ? u.unitRank.charAt(0) : '1';
+      const unitNat = u.unitRank && typeof u.unitRank === 'string' ? u.unitRank.charAt(0) : '1';
       const natNum = parseInt(unitNat, 10) || 1;
       if (natNum < natMin || natNum > natMax) return false;
       return true;
@@ -18253,7 +18578,14 @@
         const node = document.querySelector(
           `.monsters-card[data-unit-id="${esc}"], .monsters-table__row[data-unit-id="${esc}"]`,
         );
-        if (node) node.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        if (node) {
+          node.scrollIntoView({ block: 'center', behavior: 'smooth' });
+          // Add highlight effect
+          node.classList.add('monsters-card--highlight', 'monsters-table__row--highlight');
+          setTimeout(() => {
+            node.classList.remove('monsters-card--highlight', 'monsters-table__row--highlight');
+          }, 2000);
+        }
         if (typeof showMonsterDetailForCard === 'function') {
           showMonsterDetailForCard(uid, node || null, { pin: true });
         }
@@ -19567,12 +19899,54 @@
     return inner;
   }
 
+  function initMonstersDetailDrag() {
+    const aside = document.getElementById('monsters-detail');
+    if (!aside || aside.dataset.dragInit === '1') return;
+    aside.dataset.dragInit = '1';
+
+    let isDragging = false;
+    let offsetX, offsetY;
+
+    aside.addEventListener('mousedown', (e) => {
+      if (!aside.classList.contains('monsters-detail--float')) return;
+      // Allow dragging from any part except interactive elements
+      if (e.target.closest('button, a, input, select, textarea')) return;
+
+      isDragging = true;
+      const rect = aside.getBoundingClientRect();
+      offsetX = e.clientX - rect.left;
+      offsetY = e.clientY - rect.top;
+
+      // Reset right/bottom before setting left/top
+      aside.style.right = 'auto';
+      aside.style.bottom = 'auto';
+
+      aside.classList.add('monsters-detail--draggable');
+      e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+
+      aside.style.left = `${e.clientX - offsetX}px`;
+      aside.style.top = `${e.clientY - offsetY}px`;
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (isDragging) {
+        isDragging = false;
+        aside.classList.remove('monsters-detail--draggable');
+      }
+    });
+  }
+
   function renderMonstersDetail(u, t, anchorEl) {
     const aside = document.getElementById('monsters-detail');
     const body = document.getElementById('monsters-detail-body');
     if (!aside || !body) return;
     bindMonstersDetailFloat();
     syncMonstersDetailPinnedLayout();
+    initMonstersDetailDrag();
 
     if (!u) {
       hideMonstersDetailFloat();
@@ -20378,7 +20752,6 @@
         return renderMonstersPanel();
       }
       if (grid) grid.innerHTML = '';
-      if (typeof renderMonstersBoxOverview === 'function') renderMonstersBoxOverview([]);
       renderMonstersChips({ total: 0, anyRune: 0, fullSix: 0, skillUpsTotal: 0 }, t, false);
       renderMonstersEmptyState('no-data', t);
       hideMonstersDetailFloat();
@@ -20469,7 +20842,7 @@
     }
     monstersVisibleUnitIds = visible.map((u) => String(u.unitId));
     const sum = computeMonstersSummary(enriched);
-    if (typeof renderMonstersBoxOverview === 'function') renderMonstersBoxOverview(enriched);
+    if (typeof renderMonstersDashboard === 'function') renderMonstersDashboard();
     renderMonstersChips(sum, t, indexMissing, skillsIndexMissing);
     if (typeof renderRuneTableRosterChips === 'function') renderRuneTableRosterChips();
 

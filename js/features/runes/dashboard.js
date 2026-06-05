@@ -90,21 +90,20 @@
     return played;
   }
 
+  function isMainRunesDashboardVisible() {
+    const section = document.getElementById('tab-dashboard');
+    if (!section || section.classList.contains('hidden')) return false;
+    const pane = document.getElementById('dashboard-pane-runes');
+    return !!(pane && !pane.hidden && pane.classList.contains('is-active'));
+  }
+
   function scheduleDashboardChartReplay(options) {
     const opts = options || {};
     const tabSwitch = !!opts.tabSwitch;
     const fromZero = !!opts.fromZero && !tabSwitch;
     const animateCharts = opts.animateCharts !== false;
     rafTwice(() => {
-      const hub = document.getElementById('tab-runes');
-      if (hub && hub.classList.contains('hidden')) return;
-      const dashPane = document.getElementById('tab-dashboard');
-      if (
-        dashPane &&
-        (dashPane.hidden || !dashPane.classList.contains('is-active'))
-      ) {
-        return;
-      }
+      if (!isMainRunesDashboardVisible()) return;
       if (typeof readDashboardDistKind === 'function' && readDashboardDistKind() === 'artifacts') {
         if (typeof renderArtifactDashboardDistributions === 'function') {
           renderArtifactDashboardDistributions({ animateCharts, fromZero });
@@ -118,6 +117,8 @@
 
       if (tabSwitch && cacheHit) {
         if (animateCharts && replayDashboardDistributionAnimations()) return;
+        // Always animate when switching to the tab
+        renderDashboard(visible, { animateCharts: true, fromZero: false });
         return;
       }
 

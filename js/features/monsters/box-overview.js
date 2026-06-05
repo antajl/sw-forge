@@ -326,11 +326,24 @@
     if (typeof renderMonstersPanel === 'function') void renderMonstersPanel();
   }
 
-  function renderMonstersDashboard() {
-    const allUnits = typeof getMonstersEnriched === 'function' ? getMonstersEnriched() : [];
-    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+  function isMainMonstersDashboardVisible() {
+    const section = document.getElementById('tab-dashboard');
+    if (!section || section.classList.contains('hidden')) return false;
+    const pane = document.getElementById('dashboard-pane-monsters');
+    return !!(pane && !pane.hidden && pane.classList.contains('is-active'));
+  }
 
-    console.log('[Monsters Dashboard] allUnits:', allUnits.length);
+  function monstersDashboardSourceUnits() {
+    if (typeof monstersEnrichedCache !== 'undefined' && monstersEnrichedCache.length) {
+      return monstersEnrichedCache;
+    }
+    if (typeof getMonstersEnriched === 'function') return getMonstersEnriched();
+    return [];
+  }
+
+  function renderMonstersDashboard() {
+    const allUnits = monstersDashboardSourceUnits();
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
 
     // Get filter values
     const minLevel = Number(document.getElementById('monsters-dashboard-min-level')?.value) || 0;
@@ -339,21 +352,17 @@
     const natMin = Number(document.getElementById('monsters-dashboard-nat-min')?.value) || 1;
     const natMax = Number(document.getElementById('monsters-dashboard-nat-max')?.value) || 5;
 
-    console.log('[Monsters Dashboard] filters:', { minLevel, starsMin, starsMax, natMin, natMax });
-
     // Apply filters
     const filteredUnits = allUnits.filter(u => {
       if (typeof isTechnicalFodderMonster === 'function' && isTechnicalFodderMonster(u)) return false;
       if ((u.level || 0) < minLevel) return false;
       const unitStars = u.stars || 6;
       if (unitStars < starsMin || unitStars > starsMax) return false;
-      const unitNat = u.unitRank ? u.unitRank.charAt(0) : '1';
+      const unitNat = u.unitRank && typeof u.unitRank === 'string' ? u.unitRank.charAt(0) : '1';
       const natNum = parseInt(unitNat, 10) || 1;
       if (natNum < natMin || natNum > natMax) return false;
       return true;
     });
-
-    console.log('[Monsters Dashboard] filteredUnits:', filteredUnits.length);
 
     // Update count display
     const countEl = document.getElementById('dashboard-monsters-count');
@@ -391,7 +400,7 @@
 
   async function copyMonstersDashboardSummary() {
     const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-    const allUnits = typeof getMonstersEnriched === 'function' ? getMonstersEnriched() : [];
+    const allUnits = monstersDashboardSourceUnits();
     const minLevel = Number(document.getElementById('monsters-dashboard-min-level')?.value) || 0;
     const starsMin = Number(document.getElementById('monsters-dashboard-stars-min')?.value) || 1;
     const starsMax = Number(document.getElementById('monsters-dashboard-stars-max')?.value) || 6;
@@ -403,7 +412,7 @@
       if ((u.level || 0) < minLevel) return false;
       const unitStars = u.stars || 6;
       if (unitStars < starsMin || unitStars > starsMax) return false;
-      const unitNat = u.unitRank ? u.unitRank.charAt(0) : '1';
+      const unitNat = u.unitRank && typeof u.unitRank === 'string' ? u.unitRank.charAt(0) : '1';
       const natNum = parseInt(unitNat, 10) || 1;
       if (natNum < natMin || natNum > natMax) return false;
       return true;

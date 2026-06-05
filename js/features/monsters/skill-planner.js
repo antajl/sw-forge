@@ -772,7 +772,14 @@
         const node = document.querySelector(
           `.monsters-card[data-unit-id="${esc}"], .monsters-table__row[data-unit-id="${esc}"]`,
         );
-        if (node) node.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        if (node) {
+          node.scrollIntoView({ block: 'center', behavior: 'smooth' });
+          // Add highlight effect
+          node.classList.add('monsters-card--highlight', 'monsters-table__row--highlight');
+          setTimeout(() => {
+            node.classList.remove('monsters-card--highlight', 'monsters-table__row--highlight');
+          }, 2000);
+        }
         if (typeof showMonsterDetailForCard === 'function') {
           showMonsterDetailForCard(uid, node || null, { pin: true });
         }

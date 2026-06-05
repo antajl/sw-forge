@@ -72,9 +72,9 @@
   overflow: hidden;
   border: 1px solid var(--border2);
 }
-#tab-dashboard:not(.is-active) .chart-bar-fill,
-#tab-dashboard:not(.is-active) .eff-bar,
-#tab-dashboard:not(.is-active) .slot-share-bar-fill {
+#tab-dashboard.hidden .chart-bar-fill,
+#tab-dashboard.hidden .eff-bar,
+#tab-dashboard.hidden .slot-share-bar-fill {
   width: 0 !important;
   height: 0 !important;
 }

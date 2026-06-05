@@ -13,7 +13,7 @@
       sessionStorage.setItem(MONSTERS_SUBTAB_STORAGE_KEY, id);
     } catch (e) { /* ignore */ }
 
-    const tabOrder = ['dashboard', 'roster', 'planner', 'teams'];
+    const tabOrder = ['roster', 'planner', 'teams'];
     const prevIndex = lastMonstersSubtab ? tabOrder.indexOf(lastMonstersSubtab) : -1;
     const nextIndex = tabOrder.indexOf(id);
     const direction = prevIndex >= 0 && nextIndex >= 0 && nextIndex > prevIndex ? 'next' : 'prev';
@@ -94,8 +94,6 @@
 
     if (id === 'roster') {
       void renderMonstersPanel();
-    } else if (id === 'dashboard') {
-      if (typeof renderMonstersDashboard === 'function') void renderMonstersDashboard();
     } else if (id === 'planner' && typeof renderSkillPlannerPanel === 'function') {
       void renderSkillPlannerPanel();
     } else if (id === 'teams' && typeof renderTeamsPanel === 'function') {
@@ -145,6 +143,6 @@
     if (s === 'team' || s === 'teams') return 'teams';
     if (s === 'roster' || s === 'list') return 'roster';
     if (s === 'planner' || s === 'skill' || s === 'skills' || s === 'skill-plan') return 'planner';
-    if (s === 'dashboard') return 'dashboard';
+    if (s === 'dashboard') return null;
     return MONSTERS_SUBTAB_IDS.includes(s) ? s : null;
   }

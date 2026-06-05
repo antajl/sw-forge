@@ -259,7 +259,7 @@ body.swrm-drop-veil-open {
 main {
   max-width: var(--app-content-max);
   margin: 0 auto;
-  padding: var(--app-gutter);
+  padding: 0px var(--app-gutter);
   flex: 1 0 auto;
   width: 100%;
 }

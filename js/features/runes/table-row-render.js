@@ -355,7 +355,8 @@
 
     const rowIndex = opts && Number.isFinite(opts.rowIndex) ? opts.rowIndex : -1;
     const evenCls = rowIndex >= 0 && rowIndex % 2 === 1 ? ' rune-table__data-row--even' : '';
-    return `<tr class="rune-table__data-row${evenCls}">
+    const runeId = r.id != null ? String(r.id) : '';
+    return `<tr class="rune-table__data-row${evenCls}" data-rune-id="${escapeHtml(runeId)}">
       <td class="col-slot col-num td-num-plain">${highlightSearchInPlain(String(r.slot), tableSearchHighlight)}</td>
       <td class="col-set col-text">${tableStatLine(highlightSearchInPlain(r.setName, tableSearchHighlight), { set: true })}</td>
       <td class="col-main col-text">${tableStatLine(mainInner)}</td>
@@ -371,5 +372,6 @@
       <td class="col-text col-verdict col-block-gap">${verdictHtml}</td>
       <td class="col-text col-role">${roleHtml}</td>
       <td class="col-text col-location">${locHtml}</td>
+      <td class="col-actions"><button type="button" class="rune-table__delete-btn btn-secondary btn-sm" data-delete-rune="${escapeHtml(runeId)}" title="Delete rune">×</button></td>
     </tr>`;
   }

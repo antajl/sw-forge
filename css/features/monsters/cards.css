@@ -92,6 +92,33 @@
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
+.monsters-card--highlight {
+  border-color: var(--gold);
+  background: color-mix(in srgb, var(--gold) 35%, var(--surface));
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--gold) 70%, transparent),
+    0 0 20px color-mix(in srgb, var(--gold) 50%, transparent),
+    0 6px 24px rgba(0, 0, 0, 0.15);
+  animation: monsters-card-highlight-pulse 2s ease-out;
+  transform: scale(1.02);
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+
+@keyframes monsters-card-highlight-pulse {
+  0% {
+    box-shadow:
+      0 0 0 3px color-mix(in srgb, var(--gold) 70%, transparent),
+      0 0 0 10px color-mix(in srgb, var(--gold) 50%, transparent),
+      0 6px 24px rgba(0, 0, 0, 0.15);
+  }
+  100% {
+    box-shadow:
+      0 0 0 3px color-mix(in srgb, var(--gold) 70%, transparent),
+      0 0 20px color-mix(in srgb, var(--gold) 50%, transparent),
+      0 6px 24px rgba(0, 0, 0, 0.15);
+  }
+}
+
 .monsters-card--list {
   display: grid;
   grid-template-columns: 3px 22px minmax(5.5rem, 1fr) auto auto;

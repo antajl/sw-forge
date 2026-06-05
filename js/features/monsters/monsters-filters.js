@@ -550,14 +550,30 @@
       const vh = window.innerHeight;
       const w = aside.offsetWidth || 320;
       const h = aside.offsetHeight || 400;
-      let left = rect.right + pad;
-      let top = rect.top;
-      if (left + w > vw - pad) left = rect.left - w - pad;
-      if (left < pad) left = Math.max(pad, (vw - w) / 2);
-      if (top + h > vh - pad) top = Math.max(pad, vh - h - pad);
-      if (top < pad) top = pad;
+
+      let left, top;
+
+      // Check if anchorEl is outside viewport
+      const isOutsideViewport = rect.bottom < 0 || rect.top > vh || rect.right < 0 || rect.left > vw;
+
+      if (isOutsideViewport) {
+        // Position in center of viewport if anchor is outside
+        left = (vw - w) / 2;
+        top = (vh - h) / 2;
+      } else {
+        // Position relative to anchor element
+        left = rect.right + pad;
+        top = rect.top;
+        if (left + w > vw - pad) left = rect.left - w - pad;
+        if (left < pad) left = Math.max(pad, (vw - w) / 2);
+        if (top + h > vh - pad) top = Math.max(pad, vh - h - pad);
+        if (top < pad) top = pad;
+      }
+
       aside.style.left = `${Math.round(left)}px`;
       aside.style.top = `${Math.round(top)}px`;
+      aside.style.right = 'auto';
+      aside.style.bottom = 'auto';
     };
     requestAnimationFrame(() => requestAnimationFrame(place));
   }

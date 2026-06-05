@@ -26,6 +26,7 @@ html[lang='fr'] #tab-guide .guide-lang--fr {
 #tab-changelog .rules-subtabs {
   margin: 0 0 16px;
   padding: 4px;
+  padding-bottom: 8px;
   gap: 6px;
   position: sticky;
   top: 0;
@@ -43,18 +44,18 @@ body.light-theme #tab-changelog .rules-subtabs {
 #tab-changelog .rules-subtabs .rules-subtab {
   flex: 1 1 0;
   min-width: 5.5rem;
-  min-height: 3.35rem;
+  min-height: 4rem;
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 11px 12px;
+  padding: 12px;
 }
 
 #tab-guide .rules-subtabs .rules-subtab__label,
 #tab-changelog .rules-subtabs .rules-subtab__label {
   width: 100%;
   text-align: center;
-  font-size: var(--runes-fs-tab-main, 0.9rem);
+  font-size: 1rem;
   letter-spacing: 0.04em;
 }
 
@@ -65,6 +66,26 @@ body.light-theme #tab-changelog .rules-subtabs {
   text-transform: uppercase;
   color: var(--text-dim);
   line-height: 1.2;
+}
+
+#tab-guide .rules-subtabs .guide-subtabs__indicator,
+#tab-changelog .rules-subtabs .changelog-subtabs__indicator {
+  position: absolute;
+  left: 0;
+  bottom: 4px;
+  height: 3px;
+  width: 0;
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 4;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 40%, transparent);
+  opacity: 0.95;
+}
+
+html:not(.swrm-has-gsap) #tab-guide .rules-subtabs .guide-subtabs__indicator,
+html:not(.swrm-has-gsap) #tab-changelog .rules-subtabs .changelog-subtabs__indicator {
+  display: none;
 }
 
 #tab-guide .guide-lang {

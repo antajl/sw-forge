@@ -52,36 +52,36 @@ Header tabs
 
 ---
 
-## Phases (do in order)
+## Phases (status: implemented 2026-06)
 
-### Phase 1 — Runes dashboard → `#dashboard-pane-runes`
+### Phase 1 — Runes dashboard → `#dashboard-pane-runes` ✅
 
-- [ ] Extract shared HTML to `partials/dashboard/runes-distributions.html` (scope bar + `#panel-dash-distributions` from `gear.html`).
-- [ ] Include it in `partials/tabs/dashboard.html` (replace `#dashboard-charts` placeholder).
-- [ ] **Remove** dashboard pane + hub tab from `gear.html`; default Gear hub to **Table** (`runetable`).
-- [ ] Fix `scheduleDashboardChartReplay()` — visible when main `#tab-dashboard` section is active and `#dashboard-pane-runes` is shown (not Gear hub).
-- [ ] Hash redirect: `#runes/dashboard` / `#gear` + stored subtab `dashboard` → open main **Dashboard → Runes** (or `#dashboard` / `#dashboard/runes`).
-- [ ] `npm run build:html` + smoke test (stage advisor, scope filters, 5 chart tabs, artifacts toggle, export, chart → table).
+- [x] `partials/dashboard/runes-distributions.html` + `@include` in `dashboard.html`.
+- [x] Gear hub: **Table | Rules** only; default `runetable`.
+- [x] `isMainRunesDashboardVisible()`; chart clicks on `#dashboard-pane-runes`.
+- [x] Hash: `#gear`, `#gear/dashboard`, `#runes/dashboard` → main Dashboard → Runes.
 
-### Phase 2 — Monsters dashboard → `#dashboard-pane-monsters`
+### Phase 2 — Monsters dashboard → `#dashboard-pane-monsters` ✅
 
-- [ ] Extract `partials/dashboard/monsters-overview.html` from `monsters.html` (`#tab-monsters-dashboard` inner content).
-- [ ] Include in `#dashboard-pane-monsters`; remove stub `#monsters-dashboard-content`.
-- [ ] `showDashboardSubtab('monsters')` → call `renderMonstersDashboard()` (mirror `monsters-hub.js`).
-- [ ] Smoke test (filters, metrics, composition bars, tiles → roster).
+- [x] `partials/dashboard/monsters-overview.html` + `@include`.
+- [x] `showDashboardSubtab('monsters')` → `renderMonstersDashboard()`.
 
-### Phase 3 — Remove hub Dashboard subtabs
+### Phase 3 — Remove hub Dashboard subtabs ✅
 
-- [ ] Remove Dashboard button + pane from `monsters-hub-tabs` / `monsters.html`.
-- [ ] Update `MONSTERS_SUBTAB_IDS`, `readStoredMonstersSubtab` default (`roster`), hash `#monsters/dashboard` redirect.
-- [ ] Update `RUNES_SUBTAB_IDS` (drop `dashboard`), `readStoredRunesSubtab` default (`runetable`).
-- [ ] `language-bindings.js`: labels for removed hub tabs; Guide copy if it says “Gear → Dashboard”.
-- [ ] Changelog + Guide panels if player-facing paths change.
+- [x] Monsters + Gear hubs: no Dashboard subtab.
+- [x] `RUNES_SUBTAB_IDS` / `MONSTERS_SUBTAB_IDS` updated; session `dashboard` migrated.
 
-### Phase 4 — Cleanup
+### Post-migration fixes (empty charts / Monsters zeros)
 
-- [ ] Grep for `tab-dashboard`, `runes-hub-tab-dashboard`, `monsters-hub-tab-dashboard`, `#runes/dashboard`.
-- [ ] Optional: nested `@include` support in `tools/build-html.mjs` (already needed for partials under `partials/dashboard/`).
+- **Runes bars empty:** cache hit on tab switch skipped repaint while bars were built at width 0% (hidden pane + GSAP). Fix: `scheduleDashboardChartReplay` repaints with `animateCharts: false` on cache hit.
+- **Monsters zeros after ~1s:** `renderMonstersPanel` called `renderMonstersBoxOverview([])` on the shared `#monsters-box-overview` before data loaded. Fix: removed that call; `renderMonstersDashboard` uses `monstersEnrichedCache`.
+
+### Phase 4 — Cleanup ✅ (browser smoke test pending)
+
+- [x] Recursive `tools/build-html.mjs`; no duplicate hub dashboard ids in built HTML.
+- [x] Split helpers: `tools/split-gear-dashboard.mjs`, `tools/split-monsters-dashboard.mjs`.
+- [ ] Manual smoke test (checklist below).
+- [ ] Guide/changelog wording “Gear → Dashboard” (optional).
 
 ---
 

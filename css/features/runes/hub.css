@@ -2,9 +2,9 @@
 #tab-runes > .runes-hub-tabs.rules-subtabs {
   margin: 0 0 16px;
   padding: 4px;
+  padding-bottom: 8px;
   gap: 6px;
-  position: sticky;
-  top: 0;
+  position: static;
   z-index: 12;
   background: color-mix(in srgb, var(--bg-main) 92%, transparent);
   backdrop-filter: blur(8px);
@@ -17,6 +17,7 @@ body.light-theme #tab-runes > .runes-hub-tabs.rules-subtabs {
 .runes-hub-tabs .runes-hub-tab {
   flex: 1 1 0;
   min-width: 5.5rem;
+  min-height: 4rem;
   align-items: center;
   justify-content: center;
   text-align: center;
@@ -26,7 +27,7 @@ body.light-theme #tab-runes > .runes-hub-tabs.rules-subtabs {
 .runes-hub-tabs .rules-subtab__label {
   width: 100%;
   text-align: center;
-  font-size: var(--runes-fs-tab-main);
+  font-size: 1rem;
   letter-spacing: 0.04em;
 }
 

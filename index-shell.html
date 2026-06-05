@@ -18,35 +18,6 @@
     .stage-metric-icon svg { width: 18px; height: 18px; max-width: 18px; max-height: 18px; display: block; }
     #stage-advisor.is-compact .stage-advisor-expanded-wrap { max-height: 0 !important; overflow: hidden !important; visibility: hidden; }
   </style>
-  <!-- Inline: Set correct active tab based on URL hash or localStorage before page renders -->
-  <script>
-    (function() {
-      const hash = window.location.hash.replace('#', '');
-      const savedTab = localStorage.getItem('swrm-last-tab');
-      let activeTab = 'gear'; // default
-
-      if (hash) {
-        if (hash === '#dashboard') activeTab = 'dashboard';
-        else if (hash === '#gear' || hash.startsWith('#gear/')) activeTab = 'gear';
-        else if (hash.startsWith('#monsters')) activeTab = 'monsters';
-        else if (hash === '#guide') activeTab = 'guide';
-        else if (hash === '#changelog') activeTab = 'changelog';
-        else if (hash === '#settings') activeTab = 'app-settings';
-      } else if (savedTab) {
-        activeTab = savedTab;
-      }
-
-      // Remove active class from all tabs and add to correct tab
-      document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('.tab').forEach(function(tab) {
-          tab.classList.remove('active');
-          if (tab.dataset.tab === activeTab) {
-            tab.classList.add('active');
-          }
-        });
-      });
-    })();
-  </script>
   <link rel="stylesheet" href="css/dist/app.css?v=1.2.19" />
 </head>
 <body>
@@ -59,11 +30,11 @@
   <main>
 
     <!-- DASHBOARD (Runes + Monsters) -->
-    <section id="tab-dashboard" class="tab-content">
+    <section id="tab-dashboard" class="tab-content hidden">
     <!-- @include partials/tabs/dashboard.html -->
     </section>
 
-    <!-- RUNES HUB (Dashboard + Table + Rules) -->
+    <!-- RUNES HUB (Table + Rules) — rune dashboard lives on main Dashboard tab -->
     <section id="tab-runes" class="tab-content hidden">
     <!-- @include partials/tabs/gear.html -->
     </section>

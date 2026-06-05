@@ -13,6 +13,20 @@
   pointer-events: auto;
 }
 
+.monsters-detail.monsters-detail--float {
+  cursor: grab;
+}
+
+.monsters-detail.monsters-detail--float.monsters-detail--draggable {
+  cursor: grabbing;
+}
+
+.monsters-detail__drag-handle {
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
 .monsters-detail.monsters-detail--float[hidden] {
   display: none !important;
 }

@@ -255,6 +255,38 @@
   }
 
   /**
+   * Sliding underline under Dashboard Hub tabs (Runes / Monsters).
+   * @param {{ nav: HTMLElement|null, activeKey: string, instant?: boolean }} opts
+   * @returns {boolean} true when a GSAP tween ran
+   */
+  function positionDashboardHubTabIndicator(opts) {
+    const { nav, activeKey, instant } = opts || {};
+    const ind = nav && nav.querySelector('.dashboard-hub-tabs__indicator');
+    const key = ['runes', 'monsters'].includes(activeKey) ? activeKey : 'runes';
+    const btn = document.getElementById(`dashboard-hub-tab-${key}`);
+    if (!nav || !ind || !btn) return false;
+    const x = btn.offsetLeft;
+    const w = Math.max(0, btn.offsetWidth);
+    killTweensOf(ind);
+    const snap = () => {
+      ind.style.left = `${x}px`;
+      ind.style.width = `${w}px`;
+    };
+    if (instant || !enabled()) {
+      snap();
+      return false;
+    }
+    gsap.to(ind, {
+      left: x,
+      width: w,
+      duration: RUNES_TAB_INDICATOR_DURATION,
+      ease: RUNES_TAB_INDICATOR_EASE,
+      overwrite: 'auto',
+    });
+    return true;
+  }
+
+  /**
    * Sliding underline under Monsters Hub tabs (Dashboard / Roster / Teams / Planner).
    * @param {{ nav: HTMLElement|null, activeKey: string, instant?: boolean }} opts
    * @returns {boolean} true when a GSAP tween ran
@@ -264,6 +296,76 @@
     const ind = nav && nav.querySelector('.monsters-hub-tabs__indicator');
     const key = ['dashboard', 'roster', 'teams', 'planner'].includes(activeKey) ? activeKey : 'roster';
     const btn = document.getElementById(`monsters-hub-tab-${key}`);
+    if (!nav || !ind || !btn) return false;
+    const navRect = nav.getBoundingClientRect();
+    const btnRect = btn.getBoundingClientRect();
+    const x = Math.max(0, btnRect.left - navRect.left);
+    const w = Math.max(0, btnRect.width);
+    killTweensOf(ind);
+    const snap = () => {
+      ind.style.transform = 'none';
+      ind.style.left = `${x}px`;
+      ind.style.width = `${w}px`;
+    };
+    if (instant || !enabled()) {
+      snap();
+      return false;
+    }
+    gsap.to(ind, {
+      left: x,
+      width: w,
+      duration: RUNES_TAB_INDICATOR_DURATION,
+      ease: RUNES_TAB_INDICATOR_EASE,
+      overwrite: 'auto',
+      onStart: () => { ind.style.transform = 'none'; },
+    });
+    return true;
+  }
+
+  /**
+   * Sliding underline under Guide tabs (Start / Dashboard / Progression / Table / Evaluation / Rules / Tips).
+   * @param {{ nav: HTMLElement|null, activeKey: string, instant?: boolean }} opts
+   * @returns {boolean} true when a GSAP tween ran
+   */
+  function positionGuideSubtabIndicator(opts) {
+    const { nav, activeKey, instant } = opts || {};
+    const ind = nav && nav.querySelector('.guide-subtabs__indicator');
+    const btn = activeKey && nav && nav.querySelector(`[data-guide-subtab="${activeKey}"]`);
+    if (!nav || !ind || !btn) return false;
+    const navRect = nav.getBoundingClientRect();
+    const btnRect = btn.getBoundingClientRect();
+    const x = Math.max(0, btnRect.left - navRect.left);
+    const w = Math.max(0, btnRect.width);
+    killTweensOf(ind);
+    const snap = () => {
+      ind.style.transform = 'none';
+      ind.style.left = `${x}px`;
+      ind.style.width = `${w}px`;
+    };
+    if (instant || !enabled()) {
+      snap();
+      return false;
+    }
+    gsap.to(ind, {
+      left: x,
+      width: w,
+      duration: RUNES_TAB_INDICATOR_DURATION,
+      ease: RUNES_TAB_INDICATOR_EASE,
+      overwrite: 'auto',
+      onStart: () => { ind.style.transform = 'none'; },
+    });
+    return true;
+  }
+
+  /**
+   * Sliding underline under Changelog tabs (Releases / Roadmap).
+   * @param {{ nav: HTMLElement|null, activeKey: string, instant?: boolean }} opts
+   * @returns {boolean} true when a GSAP tween ran
+   */
+  function positionChangelogSubtabIndicator(opts) {
+    const { nav, activeKey, instant } = opts || {};
+    const ind = nav && nav.querySelector('.changelog-subtabs__indicator');
+    const btn = activeKey && nav && nav.querySelector(`[data-changelog-subtab="${activeKey}"]`);
     if (!nav || !ind || !btn) return false;
     const navRect = nav.getBoundingClientRect();
     const btnRect = btn.getBoundingClientRect();
@@ -761,15 +863,42 @@
     const startX = dir * viewportWidth;
     const endX = -dir * viewportWidth;
 
-    // Calculate dynamic top offset for runes-hub-pane to prevent vertical jump
+    // Find the nav bar and the layout container for these panels.
+    // The container is the element whose height collapses when panels become position:absolute
+    // during animation (absolute children leave normal flow). We lock its min-height
+    // before the animation starts and release it when done.
     let topOffset = 0;
-    if (next.classList.contains('runes-hub-pane')) {
-      const nav = document.getElementById('runes-hub-tabs');
-      if (nav) {
-              const navStyle = window.getComputedStyle(nav);
-        const marginBottom = parseFloat(navStyle.marginBottom) || 0;
-        topOffset = nav.offsetHeight + marginBottom;
+    let lockedContainer = null;
+    (function () {
+      let nav = null;
+      if (next.classList.contains('runes-hub-pane')) {
+        nav = document.getElementById('runes-hub-tabs');
+        lockedContainer = document.getElementById('tab-runes');
+      } else if (next.classList.contains('monsters-hub-pane')) {
+        nav = document.getElementById('monsters-hub-tabs');
+        lockedContainer = document.getElementById('tab-monsters');
+      } else if (next.classList.contains('dashboard-hub-pane')) {
+        nav = document.getElementById('dashboard-hub-tabs');
+        lockedContainer = document.getElementById('tab-dashboard');
+      } else if (next.classList.contains('table-kind-pane')) {
+        nav = document.getElementById('table-kind-tabs');
+        lockedContainer = next.closest('.runes-hub-pane') || document.getElementById('tab-runes');
+      } else if (next.classList.contains('rules-subpanel')) {
+        const shell = next.closest('.rules-tab-shell');
+        nav = shell && shell.querySelector('.rules-subtabs');
+        lockedContainer = shell;
       }
+      if (!nav) return;
+      const navStyle = window.getComputedStyle(nav);
+      const marginBottom = parseFloat(navStyle.marginBottom) || 0;
+      topOffset = nav.offsetTop + nav.offsetHeight + marginBottom;
+    })();
+
+    // Lock the container height BEFORE panels go absolute so the page doesn't jump.
+    // Measure current height, then pin it with min-height for the animation duration.
+    if (lockedContainer) {
+      const h = lockedContainer.getBoundingClientRect().height;
+      lockedContainer.style.minHeight = h + 'px';
     }
 
     // Add animating class for absolute positioning
@@ -780,21 +909,17 @@
 
     if (current) {
       current.classList.add('animating');
-      gsap.set(current, { x: 0, opacity: 1 });
-      if (topOffset) {
-        gsap.set(current, { top: topOffset });
-      }
+      gsap.set(current, { x: 0, opacity: 1, top: topOffset });
     }
 
-    gsap.set(next, { x: startX, opacity: 0 });
-    if (topOffset) {
-      gsap.set(next, { top: topOffset });
-    }
+    gsap.set(next, { x: startX, opacity: 0, top: topOffset });
 
     subTabTimeline = gsap.timeline({
       onComplete: () => {
         if (gen !== subTabGen) return;
         subTabTimeline = null;
+        // Release the height lock now that panels are back in normal flow.
+        if (lockedContainer) lockedContainer.style.minHeight = '';
         if (current) {
           gsap.set(current, { clearProps: 'x,opacity,top' });
           current.classList.remove('animating');
@@ -833,7 +958,10 @@
     animateDashUnifiedTab,
     positionDashUnifiedTabIndicator,
     positionRunesHubTabIndicator,
+    positionDashboardHubTabIndicator,
     positionMonstersHubTabIndicator,
+    positionGuideSubtabIndicator,
+    positionChangelogSubtabIndicator,
     positionTableKindTabIndicator,
     positionRulesSubtabIndicator,
     swapSubpanels,

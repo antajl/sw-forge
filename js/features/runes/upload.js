@@ -659,6 +659,12 @@
 
     document.addEventListener('dragend', () => hideSwrmDropVeilUi(), true);
 
+    document.addEventListener('dragleave', (e) => {
+      if (e.relatedTarget === null) {
+        hideSwrmDropVeilUi();
+      }
+    }, true);
+
     window.addEventListener('blur', () => hideSwrmDropVeilUi());
 
     document.addEventListener(

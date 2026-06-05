@@ -33,7 +33,11 @@
   function scheduleDeferredSecondaryPanels(visible) {
     const run = () => {
       if (typeof renderTable === 'function') renderTable(visible);
-      if (typeof renderMonstersPanel === 'function') renderMonstersPanel();
+      if (typeof renderMonstersPanel === 'function') {
+        void renderMonstersPanel();
+      } else if (typeof renderMonstersDashboard === 'function') {
+        renderMonstersDashboard();
+      }
     };
     if (typeof requestIdleCallback === 'function') {
       requestIdleCallback(run, { timeout: 2500 });
@@ -57,6 +61,14 @@
         typeof getVisibleRunes === 'function' ? getVisibleRunes() : processedRunes;
       if (typeof renderDashboard === 'function') {
         renderDashboard(visible, { animateCharts, fromZero });
+      }
+      if (
+        !deferSecondary &&
+        typeof renderMonstersDashboard === 'function' &&
+        typeof isMainMonstersDashboardVisible === 'function' &&
+        isMainMonstersDashboardVisible()
+      ) {
+        renderMonstersDashboard();
       }
       if (deferSecondary) scheduleDeferredSecondaryPanels(visible);
       else {

@@ -28,7 +28,7 @@ html.swrm-has-gsap .tab-content {
 /* Absolute positioning for animation layer */
 .tab-content.animating {
   position: absolute !important;
-  top: var(--app-gutter);
+  top: 0;
   left: var(--app-gutter);
   right: var(--app-gutter);
   box-sizing: border-box;

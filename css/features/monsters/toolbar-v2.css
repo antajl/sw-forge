@@ -3,6 +3,12 @@
   margin-bottom: 6px;
 }
 
+#rune-table-toolbar,
+#artifact-table-toolbar,
+#relic-table-toolbar {
+  margin-bottom: 12px;
+}
+
 #tab-monsters-roster .table-toolbar__row--search-roster {
   align-items: center;
 }
@@ -142,7 +148,7 @@
 #rune-table-roster-meta,
 #artifact-table-roster-meta,
 #relic-table-roster-meta {
-  margin: 0 0 4px;
+  margin: 0 0 12px;
 }
 
 .monsters-roster-meta .monsters-grid-head {

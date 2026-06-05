@@ -544,31 +544,17 @@
     aside.hidden = false;
     aside.classList.add('monsters-detail--visible');
     const place = () => {
-      const rect = anchorEl.getBoundingClientRect();
       const pad = 10;
       const vw = window.innerWidth;
       const vh = window.innerHeight;
       const w = aside.offsetWidth || 320;
       const h = aside.offsetHeight || 400;
+      const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+      const scrollY = window.pageYOffset || document.documentElement.scrollTop;
 
-      let left, top;
-
-      // Check if anchorEl is outside viewport
-      const isOutsideViewport = rect.bottom < 0 || rect.top > vh || rect.right < 0 || rect.left > vw;
-
-      if (isOutsideViewport) {
-        // Position in center of viewport if anchor is outside
-        left = (vw - w) / 2;
-        top = (vh - h) / 2;
-      } else {
-        // Position relative to anchor element
-        left = rect.right + pad;
-        top = rect.top;
-        if (left + w > vw - pad) left = rect.left - w - pad;
-        if (left < pad) left = Math.max(pad, (vw - w) / 2);
-        if (top + h > vh - pad) top = Math.max(pad, vh - h - pad);
-        if (top < pad) top = pad;
-      }
+      // Always position in center of viewport (accounting for scroll)
+      const left = scrollX + (vw - w) / 2;
+      const top = scrollY + (vh - h) / 2;
 
       aside.style.left = `${Math.round(left)}px`;
       aside.style.top = `${Math.round(top)}px`;

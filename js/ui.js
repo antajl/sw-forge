@@ -17296,31 +17296,17 @@
     aside.hidden = false;
     aside.classList.add('monsters-detail--visible');
     const place = () => {
-      const rect = anchorEl.getBoundingClientRect();
       const pad = 10;
       const vw = window.innerWidth;
       const vh = window.innerHeight;
       const w = aside.offsetWidth || 320;
       const h = aside.offsetHeight || 400;
+      const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+      const scrollY = window.pageYOffset || document.documentElement.scrollTop;
 
-      let left, top;
-
-      // Check if anchorEl is outside viewport
-      const isOutsideViewport = rect.bottom < 0 || rect.top > vh || rect.right < 0 || rect.left > vw;
-
-      if (isOutsideViewport) {
-        // Position in center of viewport if anchor is outside
-        left = (vw - w) / 2;
-        top = (vh - h) / 2;
-      } else {
-        // Position relative to anchor element
-        left = rect.right + pad;
-        top = rect.top;
-        if (left + w > vw - pad) left = rect.left - w - pad;
-        if (left < pad) left = Math.max(pad, (vw - w) / 2);
-        if (top + h > vh - pad) top = Math.max(pad, vh - h - pad);
-        if (top < pad) top = pad;
-      }
+      // Always position in center of viewport (accounting for scroll)
+      const left = scrollX + (vw - w) / 2;
+      const top = scrollY + (vh - h) / 2;
 
       aside.style.left = `${Math.round(left)}px`;
       aside.style.top = `${Math.round(top)}px`;
@@ -19905,7 +19891,7 @@
     aside.dataset.dragInit = '1';
 
     let isDragging = false;
-    let offsetX, offsetY;
+    let startX, startY, startLeft, startTop;
 
     aside.addEventListener('mousedown', (e) => {
       if (!aside.classList.contains('monsters-detail--float')) return;
@@ -19913,13 +19899,13 @@
       if (e.target.closest('button, a, input, select, textarea')) return;
 
       isDragging = true;
-      const rect = aside.getBoundingClientRect();
-      offsetX = e.clientX - rect.left;
-      offsetY = e.clientY - rect.top;
+      startX = e.clientX;
+      startY = e.clientY;
 
-      // Reset right/bottom before setting left/top
-      aside.style.right = 'auto';
-      aside.style.bottom = 'auto';
+      // Get current position from computed style
+      const computedStyle = window.getComputedStyle(aside);
+      startLeft = parseFloat(computedStyle.left) || 0;
+      startTop = parseFloat(computedStyle.top) || 0;
 
       aside.classList.add('monsters-detail--draggable');
       e.preventDefault();
@@ -19928,8 +19914,13 @@
     document.addEventListener('mousemove', (e) => {
       if (!isDragging) return;
 
-      aside.style.left = `${e.clientX - offsetX}px`;
-      aside.style.top = `${e.clientY - offsetY}px`;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+
+      aside.style.left = `${startLeft + dx}px`;
+      aside.style.top = `${startTop + dy}px`;
+      aside.style.right = 'auto';
+      aside.style.bottom = 'auto';
     });
 
     document.addEventListener('mouseup', () => {

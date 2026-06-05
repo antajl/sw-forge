@@ -5,7 +5,7 @@
     aside.dataset.dragInit = '1';
 
     let isDragging = false;
-    let offsetX, offsetY;
+    let startX, startY, startLeft, startTop;
 
     aside.addEventListener('mousedown', (e) => {
       if (!aside.classList.contains('monsters-detail--float')) return;
@@ -13,13 +13,13 @@
       if (e.target.closest('button, a, input, select, textarea')) return;
 
       isDragging = true;
-      const rect = aside.getBoundingClientRect();
-      offsetX = e.clientX - rect.left;
-      offsetY = e.clientY - rect.top;
+      startX = e.clientX;
+      startY = e.clientY;
 
-      // Reset right/bottom before setting left/top
-      aside.style.right = 'auto';
-      aside.style.bottom = 'auto';
+      // Get current position from computed style
+      const computedStyle = window.getComputedStyle(aside);
+      startLeft = parseFloat(computedStyle.left) || 0;
+      startTop = parseFloat(computedStyle.top) || 0;
 
       aside.classList.add('monsters-detail--draggable');
       e.preventDefault();
@@ -28,8 +28,13 @@
     document.addEventListener('mousemove', (e) => {
       if (!isDragging) return;
 
-      aside.style.left = `${e.clientX - offsetX}px`;
-      aside.style.top = `${e.clientY - offsetY}px`;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+
+      aside.style.left = `${startLeft + dx}px`;
+      aside.style.top = `${startTop + dy}px`;
+      aside.style.right = 'auto';
+      aside.style.bottom = 'auto';
     });
 
     document.addEventListener('mouseup', () => {

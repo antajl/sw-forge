@@ -1,6 +1,6 @@
 /* Split from css/monsters.css */
 .monsters-detail.monsters-detail--float {
-  position: fixed;
+  position: absolute;
   z-index: 12040;
   width: min(320px, calc(100vw - 24px));
   max-height: min(92vh, calc(100vh - 24px));

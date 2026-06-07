@@ -26,6 +26,11 @@
             <span class="rules-subtab__label" id="lbl-guide-subtab-table"></span>
             <span class="rules-subtab__hint" id="lbl-guide-subtab-table-hint"></span>
           </button>
+          <button type="button" role="tab" class="rules-subtab" id="guide-subtab-gear"
+            data-guide-subtab="gear" aria-selected="false" aria-controls="guide-panel-gear" tabindex="-1">
+            <span class="rules-subtab__label" id="lbl-guide-subtab-gear"></span>
+            <span class="rules-subtab__hint" id="lbl-guide-subtab-gear-hint"></span>
+          </button>
           <button type="button" role="tab" class="rules-subtab" id="guide-subtab-evaluation"
             data-guide-subtab="evaluation" aria-selected="false" aria-controls="guide-panel-evaluation" tabindex="-1">
             <span class="rules-subtab__label" id="lbl-guide-subtab-evaluation"></span>
@@ -988,6 +993,142 @@
               <h3 id="guide-h-table-link-ru">Поделиться и экспорт</h3>
               <p><strong>Export CSV</strong> — Forge, Ingame, Role, Verdict и колонка <strong>Reason</strong> (тот же текст, что в тултипе Verdict). <strong>Share</strong> — ссылка только для чтения (режимы в Настройках).</p>
               <p>Фильтры попадают в URL <strong>#runetable?…</strong> — закладка или ссылка для того же вида в этом браузере.</p>
+            </section>
+          </div>
+        </div>
+
+        <div id="guide-panel-gear" role="tabpanel" aria-labelledby="guide-subtab-gear"
+          class="rules-subpanel" data-guide-subtab="gear">
+          <div class="guide-lang guide-lang--en guide-list">
+            <section class="guide-section guide-section--hero" aria-labelledby="guide-h-gear-en">
+              <h3 id="guide-h-gear-en">Artifacts &amp; Relics</h3>
+              <p class="guide-lead">Gear items from the Cairos Dungeon — separate from runes, with their own tables and evaluation rules. Found in <strong>Runes → Table</strong> (switch tabs to Artifacts / Relics).</p>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-gear-what-en">
+              <h3 id="guide-h-gear-what-en">What they are</h3>
+              <div class="guide-duo-cards">
+                <article class="guide-duo-card">
+                  <span class="guide-duo-card__kicker">Artifacts</span>
+                  <p class="guide-duo-card__title">Cairos Dungeon drops</p>
+                  <p>Equippable items with primary stats, secondary effects, and optional power-ups. Can be enhanced with grindstones and enchanted gems (same as runes). Ingame Score is calculated but not used for verdicts.</p>
+                </article>
+                <article class="guide-duo-card">
+                  <span class="guide-duo-card__kicker">Relics</span>
+                  <p class="guide-duo-card__title">Specialized gear types</p>
+                  <p>Categories like Weapon, Armor, Accessory, Ornament. Each type has specific stat patterns and evaluation rules. Same enhancement system as artifacts.</p>
+                </article>
+              </div>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-gear-table-en">
+              <h3 id="guide-h-gear-table-en">Gear tables</h3>
+              <p class="guide-lead">Switch between Runes, Artifacts, and Relics using the tabs above the table. Each has its own filters and columns.</p>
+              <ul class="guide-checklist">
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Artifacts table</strong> — shows primary stat, secondary effects, power-ups, and evaluation.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Relics table</strong> — shows type, stats, and type-specific evaluation.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Shared filters</strong> — search, grade, set-like categories work across all tables.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Export CSV</strong> — works the same as runes, with gear-specific columns.</span></li>
+              </ul>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-gear-eval-en">
+              <h3 id="guide-h-gear-eval-en">Evaluation notes</h3>
+              <p class="guide-lead">Gear evaluation uses a different engine than runes — focused on primary stat quality and secondary effect value rather than substat rolls.</p>
+              <ul class="guide-checklist">
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Ingame Score</strong> — calculated from game data but not used for verdicts (disabled in rules).</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Primary stat</strong> — main evaluation factor, similar to rune main stat.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Secondary effects</strong> — special abilities that define the item's value.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Power-ups</strong> — additional enhancements that can be applied (grindstones, gems).</span></li>
+              </ul>
+              <div class="guide-callout guide-callout--calm">
+                <p>Gear evaluation is still evolving. For detailed mechanics, see <strong>GAME-KNOWLEDGE.md</strong> in the project documentation.</p>
+              </div>
+            </section>
+          </div>
+          <div class="guide-lang guide-lang--fr guide-list">
+            <section class="guide-section guide-section--hero" aria-labelledby="guide-h-gear-fr">
+              <h3 id="guide-h-gear-fr">Artefacts &amp; Reliques</h3>
+              <p class="guide-lead">Objets du donjon Cairos — séparés des runes, avec leurs propres tables et règles d'évaluation. Trouvés dans <strong>Runes → Table</strong> (changez d'onglet pour Artefacts / Reliques).</p>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-gear-what-fr">
+              <h3 id="guide-h-gear-what-fr">Ce qu'ils sont</h3>
+              <div class="guide-duo-cards">
+                <article class="guide-duo-card">
+                  <span class="guide-duo-card__kicker">Artefacts</span>
+                  <p class="guide-duo-card__title">Récompenses du donjon Cairos</p>
+                  <p>Objets équipables avec stat principal, effets secondaires et power-ups optionnels. Peuvent être améliorés avec meules et gemmes enchantées (comme les runes). Le Score en jeu est calculé mais pas utilisé pour les verdicts.</p>
+                </article>
+                <article class="guide-duo-card">
+                  <span class="guide-duo-card__kicker">Reliques</span>
+                  <p class="guide-duo-card__title">Types d'équipement spécialisés</p>
+                  <p>Catégories comme Arme, Armure, Accessoire, Ornement. Chaque type a des motifs de stats et des règles d'évaluation spécifiques. Même système d'amélioration que les artefacts.</p>
+                </article>
+              </div>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-gear-table-fr">
+              <h3 id="guide-h-gear-table-fr">Tables d'équipement</h3>
+              <p class="guide-lead">Basculez entre Runes, Artefacts et Reliques avec les onglets au-dessus de la table. Chacun a ses propres filtres et colonnes.</p>
+              <ul class="guide-checklist">
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Table Artefacts</strong> — stat principal, effets secondaires, power-ups et évaluation.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Table Reliques</strong> — type, stats et évaluation spécifique au type.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Filtres partagés</strong> — recherche, grade, catégories fonctionnent sur toutes les tables.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Export CSV</strong> — fonctionne comme pour les runes, avec colonnes spécifiques.</span></li>
+              </ul>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-gear-eval-fr">
+              <h3 id="guide-h-gear-eval-fr">Notes d'évaluation</h3>
+              <p class="guide-lead">L'évaluation d'équipement utilise un moteur différent des runes — focalisé sur la qualité du stat principal et la valeur des effets secondaires plutôt que les rolls de sous-stats.</p>
+              <ul class="guide-checklist">
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Score en jeu</strong> — calculé depuis les données du jeu mais pas utilisé pour les verdicts (désactivé dans les règles).</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Stat principal</strong> — facteur principal d'évaluation, similaire au main des runes.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Effets secondaires</strong> — capacités spéciales qui définissent la valeur de l'objet.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Power-ups</strong> — améliorations supplémentaires applicables (meules, gemmes).</span></li>
+              </ul>
+              <div class="guide-callout guide-callout--calm">
+                <p>L'évaluation d'équipement est encore en évolution. Pour les mécaniques détaillées, voir <strong>GAME-KNOWLEDGE.md</strong> dans la documentation du projet.</p>
+              </div>
+            </section>
+          </div>
+          <div class="guide-lang guide-lang--ru guide-list">
+            <section class="guide-section guide-section--hero" aria-labelledby="guide-h-gear-ru">
+              <h3 id="guide-h-gear-ru">Артефакты и Реликвы</h3>
+              <p class="guide-lead">Предметы из данжа Cairos — отдельно от рун, со своими таблицами и правилами оценки. В <strong>Руны → Таблица</strong> переключитесь на Артефакты / Реликвы.</p>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-gear-what-ru">
+              <h3 id="guide-h-gear-what-ru">Что это</h3>
+              <div class="guide-duo-cards">
+                <article class="guide-duo-card">
+                  <span class="guide-duo-card__kicker">Артефакты</span>
+                  <p class="guide-duo-card__title">Дроп Cairos Dungeon</p>
+                  <p>Экипируемые предметы с основным статом, вторичными эффектами и опциональными power-ups. Можно улучшать гриндстонами и гемами (как руны). Ingame Score считается, но не используется для вердиктов.</p>
+                </article>
+                <article class="guide-duo-card">
+                  <span class="guide-duo-card__kicker">Реликвы</span>
+                  <p class="guide-duo-card__title">Специализированные типы экипировки</p>
+                  <p>Категории: Weapon, Armor, Accessory, Ornament. У каждого типа свои паттерны статов и правила оценки. Та же система улучшений, что у артефактов.</p>
+                </article>
+              </div>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-gear-table-ru">
+              <h3 id="guide-h-gear-table-ru">Таблицы экипировки</h3>
+              <p class="guide-lead">Переключайтесь между Рунами, Артефактами и Реликвами табами над таблицей. У каждой свои фильтры и колонки.</p>
+              <ul class="guide-checklist">
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Таблица Артефактов</strong> — основной стат, вторичные эффекты, power-ups, оценка.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Таблица Реликв</strong> — тип, статы, оценка по типу.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Общие фильтры</strong> — поиск, грейд, категории работают во всех таблицах.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Export CSV</strong> — работает как для рун, со спец. колонками.</span></li>
+              </ul>
+            </section>
+            <section class="guide-section" aria-labelledby="guide-h-gear-eval-ru">
+              <h3 id="guide-h-gear-eval-ru">Оценка</h3>
+              <p class="guide-lead">Оценка экипировки использует другой движок, чем руны — фокус на качестве основного стата и ценности вторичных эффектов, а не роллах сабов.</p>
+              <ul class="guide-checklist">
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Ingame Score</strong> — считается из данных игры, но не используется для вердиктов (отключено в правилах).</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Основной стат</strong> — главный фактор оценки, как мейн у рун.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Вторичные эффекты</strong> — спец. способности, определяющие ценность предмета.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>Power-ups</strong> — дополнительные улучшения (гринды, гемы).</span></li>
+              </ul>
+              <div class="guide-callout guide-callout--calm">
+                <p>Оценка экипировки всё ещё развивается. Подробности — в <strong>GAME-KNOWLEDGE.md</strong> в документации проекта.</p>
+              </div>
             </section>
           </div>
         </div>
@@ -2046,6 +2187,15 @@
                 <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span>After an update, verdicts look off → hard refresh, then once <strong>Save &amp; Recalculate</strong> in Rune Rules.</span></li>
               </ul>
             </section>
+            <section class="guide-section" aria-labelledby="guide-h-tips-docs-en">
+              <h3 id="guide-h-tips-docs-en">Documentation</h3>
+              <p class="guide-lead">For deeper technical details and game mechanics, see the project documentation.</p>
+              <ul class="guide-checklist">
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>GAME-KNOWLEDGE.md</strong> — detailed game mechanics (runes, grindstones, gems, reappraisal stones, artifacts, rune sets).</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>BACKLOG.md</strong> — open bugs and feature backlog.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>PROJECT-STRUCTURE.md</strong> — file map, load order, build system, feature folders.</span></li>
+              </ul>
+            </section>
           </div>
           <div class="guide-lang guide-lang--fr guide-list">
             <section class="guide-section guide-section--hero" aria-labelledby="guide-h-tips-fr">
@@ -2081,6 +2231,15 @@
               </ul>
             </section>
           </div>
+            <section class="guide-section" aria-labelledby="guide-h-tips-docs-fr">
+              <h3 id="guide-h-tips-docs-fr">Documentation</h3>
+              <p class="guide-lead">Pour les détails techniques et les mécaniques de jeu, voir la documentation du projet.</p>
+              <ul class="guide-checklist">
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>GAME-KNOWLEDGE.md</strong> — mécaniques de jeu détaillées (runes, meules, gemmes, réappréciation, artefacts, sets de runes).</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>BACKLOG.md</strong> — bugs ouverts et backlog de fonctionnalités.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>PROJECT-STRUCTURE.md</strong> — carte des fichiers, ordre de chargement, système de build, dossiers de fonctionnalités.</span></li>
+              </ul>
+            </section>
           <div class="guide-lang guide-lang--ru guide-list">
             <section class="guide-section guide-section--hero" aria-labelledby="guide-h-tips-ru">
               <h3 id="guide-h-tips-ru">Горячие клавиши и фишки</h3>
@@ -2115,5 +2274,14 @@
               </ul>
             </section>
           </div>
+            <section class="guide-section" aria-labelledby="guide-h-tips-docs-ru">
+              <h3 id="guide-h-tips-docs-ru">Документация</h3>
+              <p class="guide-lead">Для технических деталей и игровой механики см. документацию проекта.</p>
+              <ul class="guide-checklist">
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>GAME-KNOWLEDGE.md</strong> — детальная игровая механика (руны, гринды, гемы, реапп, артефакты, сет рун).</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>BACKLOG.md</strong> — открытые баги и backlog фич.</span></li>
+                <li><span class="guide-checklist__icon" aria-hidden="true">◇</span><span><strong>PROJECT-STRUCTURE.md</strong> — карта файлов, порядок загрузки, build system, папки фич.</span></li>
+              </ul>
+            </section>
         </div>
       </div>

@@ -13643,6 +13643,37 @@ html:not(.swrm-has-gsap) .monsters-hub-tabs__indicator {
   pointer-events: auto;
 }
 
+/* Passive skill vortex animation */
+.sw-passive-vortex {
+  position: relative;
+  padding: 2px;
+  border-radius: inherit;
+}
+
+.sw-passive-vortex__pseudo {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    transparent 270deg,
+    #00bcd4 300deg,
+    #2196f3 330deg,
+    transparent 360deg
+  );
+  will-change: transform;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.sw-passive-vortex__inner {
+  position: relative;
+  background: var(--surface);
+  border-radius: inherit;
+  z-index: 5;
+}
+
 .monsters-detail.monsters-detail--float {
   cursor: grab;
 }

@@ -68,7 +68,7 @@
     };
   }
 
-  function computeRolePressure(includedStats, sm, settings, stage, gradeStr) {
+  function computeRolePressure(includedStats, sm, settings, stage, gradeStr, formulaConfig) {
     const key = modeKey(stage, gradeStr);
     const th = settings?.hrThresholds || {};
     let sum = 0;
@@ -78,7 +78,10 @@
       const have = Number(sm[stat] || 0);
       const need = Number(th[stat]?.[key] || 0);
       if (need <= 0) continue;
-      const ratio = Math.max(0, Math.min(1.2, have / need));
+      // Apply per-stat pressure boost if configured
+      const boost = formulaConfig?.keyStatPressureBoost?.[stat];
+      const effectiveHave = boost ? have * boost : have;
+      const ratio = Math.max(0, Math.min(1.2, effectiveHave / need));
       sum += ratio;
       count++;
     }
@@ -113,22 +116,38 @@
   }
 
   // Check accepted main stats for slots
+  // conditionalMains structure: { [slot]: [{ main: 'HP%', requireSub: 'SPD', minSubValue: 6 }, ...] }
   function checkAcceptedMains(rune, formula) {
-    if ([2, 4, 6].includes(rune.slot)) {
-      const accepted = formula.acceptedMains?.[rune.slot];
-      if (typeof accepted === 'string') {
-        const raw = accepted.trim();
-        if (raw && raw !== 'None') {
-          return raw.includes(rune.mainName);
-        }
-        return true;
+    const slot = rune.slot;
+    if (![2, 4, 6].includes(slot)) return true;
+    const accepted = formula.acceptedMains?.[slot];
+    const mainName = rune.mainName;
+    
+    // Standard accepted mains check
+    if (!accepted || accepted.length === 0) return true;
+    if (typeof accepted === 'string') {
+      const raw = accepted.trim();
+      if (raw && raw !== 'None') {
+        if (raw.includes(mainName)) return true;
       }
+    } else {
       const validMains = splitAcceptedMains(accepted);
-      if (validMains.length > 0 && !validMains.includes(rune.mainName)) {
-        return false;
+      if (validMains.length > 0 && validMains.includes(mainName)) return true;
+    }
+    
+    // NEW: Check conditionalMains — allow main if a specific sub condition is met
+    const conditionals = formula.conditionalMains?.[slot];
+    if (conditionals && Array.isArray(conditionals)) {
+      const sm = statMap(rune);
+      for (const cond of conditionals) {
+        if (cond.main !== mainName) continue;
+        const subVal = Number(sm[cond.requireSub] || 0);
+        const minVal = Number(cond.minSubValue || 1);
+        if (subVal >= minVal) return true;   // condition satisfied
       }
     }
-    return true;
+    
+    return false;
   }
 
   // Check substats inclusion/exclusion for stage
@@ -314,7 +333,7 @@
     const minStrict = supportCount >= minStrictRequired;
 
     const anchorStrict = checkAnchorRequirements(rune, formula, stage, settings);
-    const pressure = computeRolePressure(substatResult.includedStats, substatResult.statMap, settings, stage, rune.gradeStr);
+    const pressure = computeRolePressure(substatResult.includedStats, substatResult.statMap, settings, stage, rune.gradeStr, formula);
     const roleFloorRaw = policy.rolePressureByRole?.[formulaName];
     const roleFloor = Number.isFinite(Number(roleFloorRaw)) ? Number(roleFloorRaw) : Number(policy.minRolePressure || 0);
     const pressureStrict = roleFloor <= 0 ? true : pressure >= roleFloor;

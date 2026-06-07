@@ -23,6 +23,29 @@
   const FLAT_SUB_TYPE_IDS = [1, 3, 5];
   const FLAT_SUB_THRESHOLDS = { 1: 200, 3: 20, 5: 20 };
 
+  // Role-aware gem target priority: stats listed LAST are most desirable (gem IN),
+  // stats listed FIRST are least desirable (gem OUT first — i.e., replace them).
+  const GEM_TARGET_PRIORITY_BY_ROLE = {
+    'Classic DPS':  ['RES', 'HP%', 'DEF%', 'HP', 'DEF', 'ACC', 'ATK', 'ATK%', 'CRate', 'CDmg', 'SPD'],
+    'Slow DPS':     ['RES', 'HP%', 'DEF%', 'HP', 'DEF', 'ACC', 'ATK', 'ATK%', 'CRate', 'CDmg', 'SPD'],
+    'Bomber':       ['RES', 'HP%', 'DEF%', 'HP', 'DEF', 'CRate', 'CDmg', 'ATK', 'ATK%', 'ACC', 'SPD'],
+    'Fast CC':      ['RES', 'CDmg', 'CRate', 'ATK', 'ATK%', 'DEF', 'DEF%', 'ACC', 'HP', 'HP%', 'SPD'],
+    'Tank':         ['ATK', 'ATK%', 'CRate', 'CDmg', 'ACC', 'DEF', 'DEF%', 'HP', 'HP%', 'RES', 'SPD'],
+    'Bruiser':      ['ATK', 'ACC', 'DEF', 'DEF%', 'RES', 'HP', 'HP%', 'CRate', 'CDmg', 'ATK%', 'SPD'],
+    'Universal':    ['RES', 'DEF', 'ATK', 'HP', 'DEF%', 'ATK%', 'HP%', 'ACC', 'CRate', 'CDmg', 'SPD'],
+  };
+  const GEM_TARGET_PRIORITY_DEFAULT = ['RES', 'DEF', 'ATK', 'HP', 'DEF%', 'ATK%', 'HP%', 'ACC', 'CRate', 'CDmg', 'SPD'];
+
+  // Slot-based restrictions: these stats can never appear as substats on the given slot,
+  // so a gem cannot introduce them there either.
+  // Slot 1 (main=ATK): no DEF or DEF% substats allowed.
+  // Slot 3 (main=DEF): no ATK or ATK% substats allowed.
+  // Slot 5 has NO extra restrictions — ATK%, DEF%, SPD are all valid substats there.
+  const GEM_SLOT_FORBIDDEN = {
+    1: new Set(['DEF', 'DEF%']),
+    3: new Set(['ATK', 'ATK%']),
+  };
+
   /** Row order: low flat HP/DEF/ATK with no grind/gem; empty if any enchanted sub (spreadsheet “clean” gate). */
   function listBadFlatSubNames(rune) {
     const subs = (rune.substats || []).filter(qSub);
@@ -100,10 +123,12 @@
     );
 
     let bestCandidate = null;
+    const forbidden = GEM_SLOT_FORBIDDEN[rune.slot];
     for (const s of rune.substats) {
       if (!qSub(s)) continue;
       if (GRINDABLE.has(s.name)) continue;
       for (const target of GRINDABLE) {
+        if (forbidden && forbidden.has(target)) continue;
         const score = statScores[target] || 0;
         if (score < 15) continue;
         if (!bestCandidate || score > bestCandidate.score) {
@@ -114,20 +139,88 @@
     return bestCandidate || { can: false };
   }
 
+  function checkRoleAwareGemTarget(rune, stage, settings, role) {
+    if (!hasBadFlat(rune, stage)) return { can: false };
+    const GRINDABLE = new Set(['SPD', 'HP%', 'ATK%', 'DEF%', 'ACC', 'RES']);
+    const priority = GEM_TARGET_PRIORITY_BY_ROLE[role] || GEM_TARGET_PRIORITY_DEFAULT;
+    const subs = (rune.substats || []).filter(qSub);
+    
+    // Find the lowest-priority GRINDABLE stat present on the rune (gem OUT candidate)
+    // AND the highest-priority GRINDABLE stat NOT present (gem IN candidate).
+    // We only replace flat subs (badFlat candidates), not GRINDABLE ones.
+    
+    // Candidate flat subs to remove (non-GRINDABLE bad flats)
+    const flatCandidates = listBadFlatSubNames(rune);
+    if (!flatCandidates.length) return { can: false };
+    
+    // Find the best stat to gem IN: highest priority GRINDABLE stat not yet on the rune
+    const presentStats = new Set(subs.map(s => s.name));
+    let gemInTarget = null;
+    const forbidden = GEM_SLOT_FORBIDDEN[rune.slot];
+    for (let i = priority.length - 1; i >= 0; i--) {
+      const stat = priority[i];
+      if (GRINDABLE.has(stat) && !presentStats.has(stat)) {
+        if (forbidden && forbidden.has(stat)) continue;
+        gemInTarget = stat;
+        break;
+      }
+    }
+    
+    // Check that gem-in target has a meaningful threshold value
+    const useHr = settings.hrThresholds && Object.keys(settings.hrThresholds).length;
+    const key = modeKey('Late', rune.gradeStr);
+    const th = useHr ? settings.hrThresholds : settings.thresholds;
+    if (gemInTarget) {
+      const score = Number(th[gemInTarget]?.[key] || 0);
+      if (score < 15) gemInTarget = null;
+    }
+    
+    if (!gemInTarget) {
+      // Fallback: use legacy flat-gem logic
+      return checkSubstatFlatGem(rune, stage, settings);
+    }
+    
+    return {
+      can: true,
+      kind: 'role-aware',
+      from: flatCandidates[0],   // the flat to remove (worst candidate)
+      to: gemInTarget,
+      badFlatSubs: flatCandidates,
+    };
+  }
+
+  function hasAnySpd(rune) {
+    if (rune.mainName === 'SPD') return true;
+    if (rune.innate_name === 'SPD') return true;
+    const subs = rune.substats || [];
+    for (let i = 0; i < subs.length; i++) {
+      if (subs[i].name === 'SPD' && (Number(subs[i].val) || 0) > 0) return true;
+    }
+    return false;
+  }
+
   /** Enchant Gem targets substats only (innate prefix is not gemmable in-game). */
-  function evaluateGemRecommendation(rune, stage, settings) {
+  function evaluateGemRecommendation(rune, stage, settings, role) {
     const gm = settings.gemMeta;
     if (!gm || !gm.legacyFlatSubGem) return { can: false };
     if (!hasBadFlat(rune, stage)) return { can: false };
-    const leg = checkSubstatFlatGem(rune, stage, settings);
+    const leg = checkRoleAwareGemTarget(rune, stage, settings, role);
     if (!leg.can) return { can: false };
+    
+    // NEW: check if SPD is completely absent from this rune
+    const spdMissing = !hasAnySpd(rune);
+    
     return {
       can: true,
       kind: leg.kind,
       score: leg.score,
       /** UI Target: flat substats triggering the gate (omit suggested grindable target on purpose). */
-      badFlatSubs: listBadFlatSubNames(rune),
+      badFlatSubs: leg.badFlatSubs || listBadFlatSubNames(rune),
+      // NEW field: if true, UI should suggest gemming SPD over the flat stat
+      missingSpdHint: spdMissing && leg.to !== 'SPD',
+      suggestedTarget: leg.to,
     };
+    // UI: check gemInfo.missingSpdHint to show SPD recommendation tooltip
   }
 
   function passesGemQualityGate(rune, stage, isHero, hasHighDuo, settings) {
@@ -311,7 +404,7 @@
     }
 
     if (!bestRole && !godMatched && !duoMatched && hasBadFlat(rune, stage)) {
-      const gem = evaluateGemRecommendation(rune, stage, settings);
+      const gem = evaluateGemRecommendation(rune, stage, settings, rune.role || '');
       if (!gem.can) return { code: 'bad_flat', detail: '' };
     }
 
@@ -351,6 +444,7 @@
   S.checkGrind = checkGrind;
   S.checkSubstatFlatGem = checkSubstatFlatGem;
   S.checkGem = checkSubstatFlatGem;
+  S.checkRoleAwareGemTarget = checkRoleAwareGemTarget;
   S.evaluateGemRecommendation = evaluateGemRecommendation;
   S.passesGemQualityGate = passesGemQualityGate;
   S.matchReappRule = matchReappRule;

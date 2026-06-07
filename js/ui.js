@@ -19525,6 +19525,12 @@
     const fb = swarfarmSkillIconFallback(s.skillId);
     const label = skillDb && s.upgradeable !== false ? skillDb.formatSkillLevelDetail(s) : '';
     const fbAttr = fb ? ' data-fallback="' + escapeHtml(fb) + '"' : '';
+    const isPassive = s.isPassive === true || (s.passive === true);
+    if (isPassive) console.log('Passive skill found:', s.skillId, s);
+    const passiveClass = isPassive ? ' sw-passive-vortex' : '';
+    const passivePseudo = isPassive ? '<div class="sw-passive-vortex__pseudo"></div>' : '';
+    const passiveInner = isPassive ? '<div class="sw-passive-vortex__inner">' : '';
+    const passiveInnerClose = isPassive ? '</div>' : '';
     const img = url
       ? '<img class="monsters-detail__skill-img" src="' +
         escapeHtml(url) +
@@ -19542,13 +19548,18 @@
       ? '<span class="monsters-detail__skill-lv-overlay">' + escapeHtml(label) + '</span>'
       : '';
     return (
-      '<div class="monsters-detail__skill-tile monsters-detail__skill-tile--tip" data-skill-id="' +
+      '<div class="monsters-detail__skill-tile monsters-detail__skill-tile--tip' +
+      passiveClass +
+      '" data-skill-id="' +
       escapeHtml(String(s.skillId)) +
       '" data-skill-level="' +
       escapeHtml(String(s.level)) +
       '">' +
+      passivePseudo +
+      passiveInner +
       img +
       overlay +
+      passiveInnerClose +
       '</div>'
     );
   }
@@ -19931,6 +19942,31 @@
     });
   }
 
+  function initPassiveSkillVortex() {
+    if (typeof gsap === 'undefined') {
+      console.log('GSAP is not defined');
+      return;
+    }
+    requestAnimationFrame(() => {
+      const vortexElements = document.querySelectorAll('.sw-passive-vortex');
+      console.log('Found vortex elements:', vortexElements.length);
+      vortexElements.forEach((el) => {
+        const pseudo = el.querySelector('.sw-passive-vortex__pseudo');
+        if (!pseudo) {
+          console.log('No pseudo element found for vortex');
+          return;
+        }
+        console.log('Starting GSAP animation for pseudo element');
+        gsap.to(pseudo, {
+          rotation: 360,
+          duration: 3,
+          repeat: -1,
+          ease: 'linear',
+        });
+      });
+    });
+  }
+
   function renderMonstersDetail(u, t, anchorEl) {
     const aside = document.getElementById('monsters-detail');
     const body = document.getElementById('monsters-detail-body');
@@ -20034,6 +20070,7 @@
     body.hidden = false;
     aside.hidden = false;
     aside.classList.add('monsters-detail--visible');
+    initPassiveSkillVortex();
 
     const img = body.querySelector('.monsters-detail__portrait[data-img-file]');
     if (img && u.imageFilename) bindMonsterPortrait(img, u.imageFilename);

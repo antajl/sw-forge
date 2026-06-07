@@ -326,7 +326,8 @@ const DEFAULT_FORMULAS = {
       'Slot 4': { Early: 1, Mid: 1, Late: 1 },
       'Slot 6': { Early: 1, Mid: 1, Late: 1 },
     },
-    requireHR: { 'High Roll for Hero': { Early: false, Mid: false, Late: true }, 'High Roll for Legend': { Early: false, Mid: true, Late: true } }
+    requireHR: { 'High Roll for Hero': { Early: false, Mid: false, Late: true }, 'High Roll for Legend': { Early: false, Mid: true, Late: true } },
+    keyStatPressureBoost: { 'ACC': 1.35 },
   },
 'Fast CC': {
     enabled: true,
@@ -357,6 +358,7 @@ const DEFAULT_FORMULAS = {
       'High Roll for Hero': { Early: false, Mid: true, Late: true },
       'High Roll for Legend': { Early: false, Mid: false, Late: true },
     },
+    conditionalMains: { 2: [{ main: 'HP%', requireSub: 'SPD', minSubValue: 6 }, { main: 'DEF%', requireSub: 'SPD', minSubValue: 6 }] },
   },
   'Tank': {
     enabled: true,
@@ -374,7 +376,8 @@ const DEFAULT_FORMULAS = {
     mustHave: { Early: 'RES', Mid: 'RES', Late: 'RES' },
     slotRequirements: { 2: { Early: 'None', Mid: 'None', Late: 'None' }, 4: { Early: 'HP%', Mid: 'HP%', Late: 'HP%' }, 6: { Early: 'RES', Mid: 'RES', Late: 'RES' } },
     minStats: { '1/3/5': { Early: 2, Mid: 2, Late: 2 }, 'Slot 2': { Early: 1, Mid: 1, Late: 1 }, 'Slot 4': { Early: 1, Mid: 1, Late: 1 }, 'Slot 6': { Early: 1, Mid: 1, Late: 1 } },
-    requireHR: { 'High Roll for Hero': { Early: false, Mid: true, Late: true }, 'High Roll for Legend': { Early: false, Mid: false, Late: true } }
+    requireHR: { 'High Roll for Hero': { Early: false, Mid: true, Late: true }, 'High Roll for Legend': { Early: false, Mid: false, Late: true } },
+    conditionalMains: { 2: [{ main: 'HP%', requireSub: 'SPD', minSubValue: 6 }, { main: 'DEF%', requireSub: 'SPD', minSubValue: 6 }] },
   },
   'Bruiser': {
     enabled: true,

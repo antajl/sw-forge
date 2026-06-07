@@ -603,6 +603,12 @@
     const fb = swarfarmSkillIconFallback(s.skillId);
     const label = skillDb && s.upgradeable !== false ? skillDb.formatSkillLevelDetail(s) : '';
     const fbAttr = fb ? ' data-fallback="' + escapeHtml(fb) + '"' : '';
+    const isPassive = s.isPassive === true || (s.passive === true);
+    if (isPassive) console.log('Passive skill found:', s.skillId, s);
+    const passiveClass = isPassive ? ' sw-passive-vortex' : '';
+    const passivePseudo = isPassive ? '<div class="sw-passive-vortex__pseudo"></div>' : '';
+    const passiveInner = isPassive ? '<div class="sw-passive-vortex__inner">' : '';
+    const passiveInnerClose = isPassive ? '</div>' : '';
     const img = url
       ? '<img class="monsters-detail__skill-img" src="' +
         escapeHtml(url) +
@@ -620,13 +626,18 @@
       ? '<span class="monsters-detail__skill-lv-overlay">' + escapeHtml(label) + '</span>'
       : '';
     return (
-      '<div class="monsters-detail__skill-tile monsters-detail__skill-tile--tip" data-skill-id="' +
+      '<div class="monsters-detail__skill-tile monsters-detail__skill-tile--tip' +
+      passiveClass +
+      '" data-skill-id="' +
       escapeHtml(String(s.skillId)) +
       '" data-skill-level="' +
       escapeHtml(String(s.level)) +
       '">' +
+      passivePseudo +
+      passiveInner +
       img +
       overlay +
+      passiveInnerClose +
       '</div>'
     );
   }

@@ -1,7 +1,7 @@
 # SW Forge — API Reference
 
 > `window.SWRM` API and CSS variables.  
-> **Context:** [`PROJECT-CONTEXT.md`](PROJECT-CONTEXT.md) · **File map:** [`FILE-MAP.md`](FILE-MAP.md)
+> **Context:** [`MASTER.md`](MASTER.md) · **Project structure:** [`PROJECT-STRUCTURE.md`](PROJECT-STRUCTURE.md)
 
 ---
 

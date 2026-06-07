@@ -284,7 +284,7 @@
   function enrichRuneMeta(rune, stage, settings) {
     rune.badFlat = S.hasBadFlat(rune, stage);
     rune.grindInfo = S.checkGrind(rune, stage, settings);
-    rune.gemInfo = S.evaluateGemRecommendation(rune, stage, settings);
+    rune.gemInfo = S.evaluateGemRecommendation(rune, stage, settings, rune.role || '');
     if (
       rune.verdict === 'Gem' &&
       (!rune.gemInfo || !rune.gemInfo.can) &&

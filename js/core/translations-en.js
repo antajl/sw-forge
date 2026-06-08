@@ -789,22 +789,27 @@ const TRANSLATIONS_EN = {
       'Load a SWEX export to see progression depth and combined score.',
 
     stageMetricsExplainer:
-      'These three numbers always use your full export — not the preset or Min level below. Card weights:',
+      'These four numbers always use your full export — not the preset or Min level below. Card weights:',
 
     stageCardHrName: 'Speed Depth',
-    stageCardHrWeight: '35%',
+    stageCardHrWeight: '30%',
     stageCardHrDesc:
-      'How many runes have sub SPD total ≥ 18 (roll + grind). This term contributes up to 35 points once you reach 250 such runes.',
+      'How many runes have sub SPD total ≥ 18 (roll + grind) and efficiency ≥ 60%. This term contributes up to 30 points once you reach 250 such runes.',
 
     stageCardKeepName: 'Power Depth',
-    stageCardKeepWeight: '35%',
+    stageCardKeepWeight: '15%',
     stageCardKeepDesc:
-      'How many 6★ runes are at exactly +15. This term contributes up to 35 points once you reach 600.',
+      'How many 6★ runes are at exactly +15. This term contributes up to 15 points once you reach 600.',
 
     stageCardMetaName: 'Elite Quality',
-    stageCardMetaWeight: '30%',
+    stageCardMetaWeight: '35%',
     stageCardMetaDesc:
-      'Average Ingame Score on your best runes (up to 50). Baseline 75, span 10 points for the full 30-point term.',
+      'Average Ingame Score on your best runes (up to 50). Baseline 80, span 25 points for the full 35-point term.',
+
+    stageCardRosterName: 'Roster Depth',
+    stageCardRosterWeight: '20%',
+    stageCardRosterDesc:
+      'How many 6★ level 40 monsters have 6 runes at +15 with average efficiency ≥ 60%. This term contributes up to 20 points once you reach 50 such monsters.',
 
     stageEliteValFormat: '{eff} (n={n})',
 

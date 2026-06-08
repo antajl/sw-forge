@@ -793,22 +793,27 @@ const TRANSLATIONS = {
       'Load a SWEX export to see progression depth and combined score.',
 
     stageMetricsExplainer:
-      'These three numbers always use your full export — not the preset or Min level below. Card weights:',
+      'These four numbers always use your full export — not the preset or Min level below. Card weights:',
 
     stageCardHrName: 'Speed Depth',
-    stageCardHrWeight: '35%',
+    stageCardHrWeight: '30%',
     stageCardHrDesc:
-      'How many runes have sub SPD total ≥ 18 (roll + grind). This term contributes up to 35 points once you reach 250 such runes.',
+      'How many runes have sub SPD total ≥ 18 (roll + grind) and efficiency ≥ 60%. This term contributes up to 30 points once you reach 250 such runes.',
 
     stageCardKeepName: 'Power Depth',
-    stageCardKeepWeight: '35%',
+    stageCardKeepWeight: '15%',
     stageCardKeepDesc:
-      'How many 6★ runes are at exactly +15. This term contributes up to 35 points once you reach 600.',
+      'How many 6★ runes are at exactly +15. This term contributes up to 15 points once you reach 600.',
 
     stageCardMetaName: 'Elite Quality',
-    stageCardMetaWeight: '30%',
+    stageCardMetaWeight: '35%',
     stageCardMetaDesc:
-      'Average Ingame Score on your best runes (up to 50). Baseline 75, span 10 points for the full 30-point term.',
+      'Average Ingame Score on your best runes (up to 50). Baseline 80, span 25 points for the full 35-point term.',
+
+    stageCardRosterName: 'Roster Depth',
+    stageCardRosterWeight: '20%',
+    stageCardRosterDesc:
+      'How many 6★ level 40 monsters have 6 runes at +15 with average efficiency ≥ 60%. This term contributes up to 20 points once you reach 50 such monsters.',
 
     stageEliteValFormat: '{eff} (n={n})',
 
@@ -1728,22 +1733,27 @@ const TRANSLATIONS = {
       'Загрузите SWEX JSON, чтобы увидеть глубину и сводный балл.',
 
     stageMetricsExplainer:
-      'Три числа всегда по полному экспорту — не по пресету и не по «Мин. ур.» ниже. Веса на карточках:',
+      'Четыре числа всегда по полному экспорту — не по пресету и не по «Мин. ур.» ниже. Веса на карточках:',
 
     stageCardHrName: 'SPD-глубина',
-    stageCardHrWeight: '35%',
+    stageCardHrWeight: '30%',
     stageCardHrDesc:
-      'Сколько рун, у которых сумма саб SPD ≥ 18 (ролл + камень). До 35 баллов, полный вклад при 250+ таких рунах.',
+      'Сколько рун, у которых сумма саб SPD ≥ 18 (ролл + камень) и эффективность ≥ 60%. До 30 баллов, полный вклад при 250+ таких рунах.',
 
     stageCardKeepName: 'Глубина +15',
-    stageCardKeepWeight: '35%',
+    stageCardKeepWeight: '15%',
     stageCardKeepDesc:
-      'Сколько 6★ рун на ровно +15. До 35 баллов, полный вклад при 600+.',
+      'Сколько 6★ рун на ровно +15. До 15 баллов, полный вклад при 600+.',
 
     stageCardMetaName: 'Элита по Ingame',
-    stageCardMetaWeight: '30%',
+    stageCardMetaWeight: '35%',
     stageCardMetaDesc:
-      'Средняя Игровая оценка по лучшим рунам (до 50). База 75, диапазон 10 пунктов для полных 30 баллов.',
+      'Средняя Игровая оценка по лучшим рунам (до 50). База 80, диапазон 25 пунктов для полных 35 баллов.',
+
+    stageCardRosterName: 'Глубина ростера',
+    stageCardRosterWeight: '20%',
+    stageCardRosterDesc:
+      'Сколько 6★ монстров 40 уровня имеют 6 рун на +15 со средней эффективностью ≥ 60%. До 20 баллов, полный вклад при 50+ таких монстрах.',
 
     stageEliteValFormat: '{eff} (n={n})',
 

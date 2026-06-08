@@ -7,6 +7,35 @@
  */
 const STATIC_CHANGELOG = [
   {
+    date: '2026-06-08',
+    items: {
+      en: [
+        'Account progression: updated to 4-metric system (Speed Depth 30%, Power Depth 15%, Elite Quality 35%, Roster Depth 20%).',
+        'Speed Depth: added efficiency filter (≥ 60%) for SPD runes.',
+        'Elite Quality: updated baseline to 80% and span to 25% (80-105% range).',
+        'Roster Depth: new metric counting built monsters (6★ level 40 with 6 runes +15 and avg efficiency ≥ 60%).',
+        'Dashboard: added 4th metric card for Roster Depth with contribution display.',
+        'Guide: updated all languages (EN/FR/RU) with new 4-metric system descriptions.',
+      ],
+      ru: [
+        'Прогресс аккаунта: обновлена до 4-метрической системы (SPD-глубина 30%, Глубина +15 15%, Элита 35%, Глубина ростера 20%).',
+        'SPD-глубина: добавлен фильтр эффективности (≥ 60%) для SPD рун.',
+        'Элита: обновлена база до 80% и диапазон до 25% (диапазон 80-105%).',
+        'Глубина ростера: новая метрика считающая построенных монстров (6★ уровень 40 с 6 рунами +15 и средней эффективностью ≥ 60%).',
+        'Dashboard: добавлена 4-я метрическая карточка для Глубины ростера с отображением вклада.',
+        'Guide: обновлены все языки (EN/FR/RU) с описанием новой 4-метрической системы.',
+      ],
+      fr: [
+        'Progression du compte : mise à jour vers un système à 4 métriques (Profondeur vitesse 30%, Profondeur puissance 15%, Qualité élite 35%, Profondeur effectif 20%).',
+        'Profondeur vitesse : ajouté filtre d\'efficacité (≥ 60%) pour les runes SPD.',
+        'Qualité élite : mise à jour de la base à 80% et de l\'étendue à 25% (plage 80-105%).',
+        'Profondeur effectif : nouvelle métrique comptant les monstres construits (6★ niveau 40 avec 6 runes +15 et efficacité moyenne ≥ 60%).',
+        'Dashboard : ajouté 4ème carte métrique pour la Profondeur effectif avec affichage de la contribution.',
+        'Guide : mis à jour toutes les langues (EN/FR/RU) avec les descriptions du nouveau système à 4 métriques.',
+      ],
+    },
+  },
+  {
     date: '2026-05-30',
     items: {
       en: [

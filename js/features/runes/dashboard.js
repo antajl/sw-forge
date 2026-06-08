@@ -42,14 +42,33 @@
   }
 
   function getCachedGameStageMetrics(runes) {
-    const key = `${swrmAllRunesRev}:${Array.isArray(runes) ? runes.length : 0}`;
+    const key = `${swrmAllRunesRev}:${Array.isArray(runes) ? runes.length : 0}:${Array.isArray(allUnits) ? allUnits.length : 0}`;
     if (gameStageMetricsCache.key === key && gameStageMetricsCache.value) {
       return gameStageMetricsCache.value;
     }
-    const value = analyzeGameStage(runes);
+    const runeMetrics = analyzeGameStage(runes);
+    const rosterMetrics = analyzeRosterDepth(allUnits);
+
+    // Merge roster metrics into rune metrics
+    const merged = {
+      ...runeMetrics,
+      rosterDepthCount: rosterMetrics.rosterDepthCount,
+      rosterPoints: rosterMetrics.rosterPoints,
+      rosterCap: rosterMetrics.rosterCap,
+    };
+
+    // Recalculate total score with roster points
+    const spdPoints = parseFloat(runeMetrics.spdPoints) || 0;
+    const plus15Points = parseFloat(runeMetrics.plus15Points) || 0;
+    const elitePoints = parseFloat(runeMetrics.elitePoints) || 0;
+    const rosterPoints = parseFloat(rosterMetrics.rosterPoints) || 0;
+    const totalScore = spdPoints + plus15Points + elitePoints + rosterPoints;
+
+    merged.score = (Math.round(totalScore * 10) / 10).toFixed(1);
+
     gameStageMetricsCache.key = key;
-    gameStageMetricsCache.value = value;
-    return value;
+    gameStageMetricsCache.value = merged;
+    return merged;
   }
 
   function attachForgeScoresToRunes(runes) {
@@ -159,6 +178,7 @@
     const metricHr = document.getElementById('metric-val-highroll');
     const metricKe = document.getElementById('metric-val-keepeff');
     const metricMe = document.getElementById('metric-val-meta');
+    const metricRo = document.getElementById('metric-val-roster');
     const recDisp = document.getElementById('recommended-stage-display');
     const scoreInline = document.getElementById('lbl-stage-score-inline');
     const scoreFootnote = document.getElementById('lbl-stage-score-footnote');
@@ -180,6 +200,10 @@
       } else {
         metricMe.textContent = '\u2014';
       }
+    }
+
+    if (metricRo) {
+      metricRo.textContent = metrics.runeCount ? String(metrics.rosterDepthCount) : '\u2014';
     }
 
     if (recDisp) {
@@ -245,6 +269,7 @@
     setMetricTitleName('lbl-card-hr-name', tloc.stageCardHrName || '');
     setMetricTitleName('lbl-card-keep-name', tloc.stageCardKeepName || '');
     setMetricTitleName('lbl-card-meta-name', tloc.stageCardMetaName || '');
+    setMetricTitleName('lbl-card-roster-name', tloc.stageCardRosterName || '');
 
     const metricsExpl = document.getElementById('lbl-stage-metrics-explainer');
     if (metricsExpl) {
@@ -287,6 +312,7 @@
       ['metric-contrib-spd', 'spdPoints', 'spdCap'],
       ['metric-contrib-plus15', 'plus15Points', 'plus15Cap'],
       ['metric-contrib-elite', 'elitePoints', 'eliteCap'],
+      ['metric-contrib-roster', 'rosterPoints', 'rosterCap'],
     ].forEach(([elId, pk, ck]) => {
       const el = document.getElementById(elId);
       if (!el) return;
@@ -306,18 +332,13 @@
       if (!card) return;
       let tip = String(desc.textContent || '').replace(/\s+/g, ' ').trim();
       if (!tip) tip = String(fallback || '').replace(/\s+/g, ' ').trim();
-      const targets = [
-        card,
-        ...card.querySelectorAll('.stage-metric-card-head, .stage-metric-val, .stage-metric-contrib, .stage-metric-weight, .stage-metric-icon'),
-      ];
-      targets.forEach((node) => {
-        if (!node) return;
-        setSwrmFloatTipTarget(node, tip);
-      });
+      // Bind tooltip only to the card itself to prevent flickering when moving between child elements
+      setSwrmFloatTipTarget(card, tip);
     };
     attachMetricCardTooltip('lbl-card-hr-desc', tloc.stageCardHrDesc || '');
     attachMetricCardTooltip('lbl-card-keep-desc', tloc.stageCardKeepDesc || '');
     attachMetricCardTooltip('lbl-card-meta-desc', tloc.stageCardMetaDesc || '');
+    attachMetricCardTooltip('lbl-card-roster-desc', tloc.stageCardRosterDesc || '');
 
     syncGameStageVisualClasses(stage, recStage, hasProg);
 

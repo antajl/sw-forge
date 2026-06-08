@@ -5101,14 +5101,18 @@
     // ----- Depth v2 tuning: edit all knobs here -----
     const CFG = {
       spdSubMin: 18,
+      spdEffMin: 60,
       spdDepthCap: 250,
-      spdDepthWeight: 35,
+      spdDepthWeight: 30,
       plus15DepthCap: 600,
-      plus15DepthWeight: 35,
+      plus15DepthWeight: 15,
       eliteTopN: 50,
-      eliteEffBaseline: 75,
-      eliteEffSpan: 10,
-      eliteWeight: 30,
+      eliteEffBaseline: 80,
+      eliteEffSpan: 25,
+      eliteWeight: 35,
+      rosterDepthCap: 50,
+      rosterEffMin: 60,
+      rosterDepthWeight: 20,
       stageMidMin: 45,
       stageLateMin: 85,
     };
@@ -5130,6 +5134,7 @@
         plus15DepthCount: 0,
         eliteAvgEff: '0.0',
         eliteSampleSize: 0,
+        rosterDepthCount: 0,
         score: '0.0',
         runeCount: 0,
         stageMidMin: CFG.stageMidMin,
@@ -5137,16 +5142,20 @@
         spdPoints: '0.0',
         plus15Points: '0.0',
         elitePoints: '0.0',
+        rosterPoints: '0.0',
         spdCap: CFG.spdDepthWeight,
         plus15Cap: CFG.plus15DepthWeight,
         eliteCap: CFG.eliteWeight,
+        rosterCap: CFG.rosterDepthWeight,
       };
     }
 
     let spdDepthCount = 0;
     let plus15DepthCount = 0;
     for (const r of list) {
-      if (runeSpdSubTotal(r) >= CFG.spdSubMin) spdDepthCount++;
+      const spdTotal = runeSpdSubTotal(r);
+      const eff = r.eff || 0;
+      if (spdTotal >= CFG.spdSubMin && eff >= CFG.spdEffMin) spdDepthCount++;
       const stars = r.stars;
       const starsNum = typeof stars === 'number' ? stars : parseInt(String(stars), 10);
       if (starsNum === 6 && (r.level | 0) === 15) plus15DepthCount++;
@@ -5173,8 +5182,9 @@
     const spdPoints = spdNorm * CFG.spdDepthWeight;
     const plus15Points = plus15Norm * CFG.plus15DepthWeight;
     const elitePoints = eliteNorm * CFG.eliteWeight;
+    const rosterPoints = 0; // TODO: implement Roster Depth
 
-    const scoreVal = spdPoints + plus15Points + elitePoints;
+    const scoreVal = spdPoints + plus15Points + elitePoints + rosterPoints;
     const scoreRounded = Math.round(scoreVal * 10) / 10;
 
     return {
@@ -5182,6 +5192,7 @@
       plus15DepthCount,
       eliteAvgEff: eliteAvgUncapped.toFixed(1),
       eliteSampleSize: eliteK,
+      rosterDepthCount: 0, // TODO: implement
       score: scoreRounded.toFixed(1),
       runeCount: list.length,
       stageMidMin: CFG.stageMidMin,
@@ -5189,9 +5200,11 @@
       spdPoints: (Math.round(spdPoints * 10) / 10).toFixed(1),
       plus15Points: (Math.round(plus15Points * 10) / 10).toFixed(1),
       elitePoints: (Math.round(elitePoints * 10) / 10).toFixed(1),
+      rosterPoints: '0.0', // TODO: implement
       spdCap: CFG.spdDepthWeight,
       plus15Cap: CFG.plus15DepthWeight,
       eliteCap: CFG.eliteWeight,
+      rosterCap: CFG.rosterDepthWeight,
     };
   }
 
@@ -5199,6 +5212,74 @@
     if (score >= lateMin) return 'Late';
     if (score >= midMin) return 'Mid';
     return 'Early';
+  }
+
+  /**
+   * Analyze roster depth — count built monsters (6★ level 40 with 6 runes +15 and avg efficiency ≥ 60%).
+   * @param {Array} units - Parsed units from SWEX unit_list
+   * @param {Object} opts - Options with CFG values
+   * @returns {Object} Roster depth metrics
+   */
+  function analyzeRosterDepth(units, opts = {}) {
+    const CFG = opts.CFG || {
+      rosterDepthCap: 50,
+      rosterEffMin: 60,
+      rosterDepthWeight: 20,
+    };
+
+    const list = Array.isArray(units) ? units : [];
+    let builtCount = 0;
+
+    for (const u of list) {
+      // Check: 6★ (stars=6), level 40, 6 equipped runes, all at +15
+      const stars = typeof u.stars === 'number' ? u.stars : parseInt(String(u.stars || ''), 10);
+      const level = u.level || 0;
+      const runeSlots = u.runeSlots || [];
+
+      if (stars !== 6 || level !== 40 || runeSlots.length !== 6) continue;
+
+      // Extract runes from runeSlots
+      const runes = runeSlots.map((slot) => slot.rune).filter((r) => r != null);
+      if (runes.length !== 6) continue;
+
+      // Check all runes at +15
+      const allPlus15 = runes.every((r) => {
+        if (!r) return false;
+        const rLevel = r.level | 0;
+        return rLevel === 15;
+      });
+
+      if (!allPlus15) continue;
+
+      // Calculate average efficiency of equipped runes
+      let totalEff = 0;
+      let validRuneCount = 0;
+
+      for (const r of runes) {
+        if (!r) continue;
+        const eff = r.eff || 0;
+        if (Number.isFinite(eff)) {
+          totalEff += eff;
+          validRuneCount++;
+        }
+      }
+
+      if (validRuneCount === 0) continue;
+
+      const avgEff = totalEff / validRuneCount;
+      if (avgEff >= CFG.rosterEffMin) {
+        builtCount++;
+      }
+    }
+
+    const rosterNorm = Math.min(builtCount / CFG.rosterDepthCap, 1);
+    const rosterPoints = rosterNorm * CFG.rosterDepthWeight;
+
+    return {
+      rosterDepthCount: builtCount,
+      rosterPoints: (Math.round(rosterPoints * 10) / 10).toFixed(1),
+      rosterCap: CFG.rosterDepthWeight,
+    };
   }
 
   const DASH_VERDICT_SEG_ORDER = ['Keep', 'Finish', 'Upgrade', 'Gem', 'Grind', 'Reapp', 'Sell'];
@@ -5554,14 +5635,33 @@
   }
 
   function getCachedGameStageMetrics(runes) {
-    const key = `${swrmAllRunesRev}:${Array.isArray(runes) ? runes.length : 0}`;
+    const key = `${swrmAllRunesRev}:${Array.isArray(runes) ? runes.length : 0}:${Array.isArray(allUnits) ? allUnits.length : 0}`;
     if (gameStageMetricsCache.key === key && gameStageMetricsCache.value) {
       return gameStageMetricsCache.value;
     }
-    const value = analyzeGameStage(runes);
+    const runeMetrics = analyzeGameStage(runes);
+    const rosterMetrics = analyzeRosterDepth(allUnits);
+
+    // Merge roster metrics into rune metrics
+    const merged = {
+      ...runeMetrics,
+      rosterDepthCount: rosterMetrics.rosterDepthCount,
+      rosterPoints: rosterMetrics.rosterPoints,
+      rosterCap: rosterMetrics.rosterCap,
+    };
+
+    // Recalculate total score with roster points
+    const spdPoints = parseFloat(runeMetrics.spdPoints) || 0;
+    const plus15Points = parseFloat(runeMetrics.plus15Points) || 0;
+    const elitePoints = parseFloat(runeMetrics.elitePoints) || 0;
+    const rosterPoints = parseFloat(rosterMetrics.rosterPoints) || 0;
+    const totalScore = spdPoints + plus15Points + elitePoints + rosterPoints;
+
+    merged.score = (Math.round(totalScore * 10) / 10).toFixed(1);
+
     gameStageMetricsCache.key = key;
-    gameStageMetricsCache.value = value;
-    return value;
+    gameStageMetricsCache.value = merged;
+    return merged;
   }
 
   function attachForgeScoresToRunes(runes) {
@@ -5671,6 +5771,7 @@
     const metricHr = document.getElementById('metric-val-highroll');
     const metricKe = document.getElementById('metric-val-keepeff');
     const metricMe = document.getElementById('metric-val-meta');
+    const metricRo = document.getElementById('metric-val-roster');
     const recDisp = document.getElementById('recommended-stage-display');
     const scoreInline = document.getElementById('lbl-stage-score-inline');
     const scoreFootnote = document.getElementById('lbl-stage-score-footnote');
@@ -5692,6 +5793,10 @@
       } else {
         metricMe.textContent = '\u2014';
       }
+    }
+
+    if (metricRo) {
+      metricRo.textContent = metrics.runeCount ? String(metrics.rosterDepthCount) : '\u2014';
     }
 
     if (recDisp) {
@@ -5757,6 +5862,7 @@
     setMetricTitleName('lbl-card-hr-name', tloc.stageCardHrName || '');
     setMetricTitleName('lbl-card-keep-name', tloc.stageCardKeepName || '');
     setMetricTitleName('lbl-card-meta-name', tloc.stageCardMetaName || '');
+    setMetricTitleName('lbl-card-roster-name', tloc.stageCardRosterName || '');
 
     const metricsExpl = document.getElementById('lbl-stage-metrics-explainer');
     if (metricsExpl) {
@@ -5799,6 +5905,7 @@
       ['metric-contrib-spd', 'spdPoints', 'spdCap'],
       ['metric-contrib-plus15', 'plus15Points', 'plus15Cap'],
       ['metric-contrib-elite', 'elitePoints', 'eliteCap'],
+      ['metric-contrib-roster', 'rosterPoints', 'rosterCap'],
     ].forEach(([elId, pk, ck]) => {
       const el = document.getElementById(elId);
       if (!el) return;
@@ -5818,18 +5925,13 @@
       if (!card) return;
       let tip = String(desc.textContent || '').replace(/\s+/g, ' ').trim();
       if (!tip) tip = String(fallback || '').replace(/\s+/g, ' ').trim();
-      const targets = [
-        card,
-        ...card.querySelectorAll('.stage-metric-card-head, .stage-metric-val, .stage-metric-contrib, .stage-metric-weight, .stage-metric-icon'),
-      ];
-      targets.forEach((node) => {
-        if (!node) return;
-        setSwrmFloatTipTarget(node, tip);
-      });
+      // Bind tooltip only to the card itself to prevent flickering when moving between child elements
+      setSwrmFloatTipTarget(card, tip);
     };
     attachMetricCardTooltip('lbl-card-hr-desc', tloc.stageCardHrDesc || '');
     attachMetricCardTooltip('lbl-card-keep-desc', tloc.stageCardKeepDesc || '');
     attachMetricCardTooltip('lbl-card-meta-desc', tloc.stageCardMetaDesc || '');
+    attachMetricCardTooltip('lbl-card-roster-desc', tloc.stageCardRosterDesc || '');
 
     syncGameStageVisualClasses(stage, recStage, hasProg);
 

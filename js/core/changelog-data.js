@@ -7,6 +7,26 @@
  */
 const STATIC_CHANGELOG = [
   {
+    date: '2026-07-09',
+    items: {
+      en: [
+        'Rune Table: redesigned layout — stats and scores now display in multi-line format for better readability.',
+        'Rune Table: set icons with pentagon frames and ancient glow effect.',
+        'Rune Table: improved column alignment and font size consistency.',
+      ],
+      ru: [
+        'Таблица рун: переработанный дизайн — статы и очки теперь отображаются в многострочном формате для лучшей читаемости.',
+        'Таблица рун: иконки сетов с пятиугольными рамками и свечением для ancient рун.',
+        'Таблица рун: улучшено выравнивание колонок и единый размер шрифта.',
+      ],
+      fr: [
+        'Table runes : design repensé — stats et scores affichés en multi-ligne pour une meilleure lisibilité.',
+        'Table runes : icônes de sets avec cadres pentagonaux et effet de lueur ancient.',
+        'Table runes : alignement des colonnes amélioré et taille de police unifiée.',
+      ],
+    },
+  },
+  {
     date: '2026-06-08',
     items: {
       en: [

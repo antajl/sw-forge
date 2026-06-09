@@ -342,36 +342,36 @@
       val: r.mainVal,
     });
     const mainInner = highlightSearchInPlain(mainPlain, tableSearchHighlight);
-    
+
     const setLevel = r.level || 0;
     const ancientText = isAncient ? ' (Ancient)' : '';
     const tooltipText = `Slot ${r.slot} | ${r.setName} +${setLevel}${ancientText}`;
-    
+
     // Calculate pentagon points based on slot
     const slotAngleMap = { 1: -90, 2: -30, 3: 30, 4: 90, 5: 150, 6: -150 };
     const deg = slotAngleMap[r.slot] || 0;
     const outerAngle = deg * Math.PI / 180;
     const R = 16; // radius in pixels (half of 32px image)
-    const cx = 16;
-    const cy = 16;
-    
-    // Calculate polygon points
+
+    // Shift center towards elongated tip (index 0) by 4 pixels
+    const cx = 16 - 8 * Math.cos(outerAngle);
+    const cy = 16 - 8 * Math.sin(outerAngle);
+
+    // Calculate polygon points - elongated tip (index 0), shortened base (indices 2,3)
     const points = [];
     for (let i = 0; i < 5; i++) {
       const angle = outerAngle + i * 2 * Math.PI / 5;
-      const r = i === 0 ? R * 1.9 : (i === 2 || i === 3) ? R * 0.62 : R;
-      const x = cx + r * Math.cos(angle);
-      const y = cy + r * Math.sin(angle);
+      const radius = i === 0 ? R * 1.9 : (i === 2 || i === 3) ? R * 0.62 : R;
+      const x = cx + radius * Math.cos(angle);
+      const y = cy + radius * Math.sin(angle);
       points.push(`${x.toFixed(1)},${y.toFixed(1)}`);
     }
     const polygonPoints = points.join(' ');
-    
-    // Calculate image offset (shift towards the tip)
-    const lx = cx + (R * 0.45) * Math.cos(outerAngle);
-    const ly = cy + (R * 0.45) * Math.sin(outerAngle);
-    const imageX = (lx - 16).toFixed(1);
-    const imageY = (ly - 16).toFixed(1);
-    
+
+    // Center image in pentagon - no special offsets per slot
+    const imageX = 0;
+    const imageY = 0;
+
     const setKey = String(r.setName || '')
       .trim()
       .toLowerCase()
@@ -379,7 +379,7 @@
     const setIconUrl = setKey ? `assets/runes/sets/${setKey}.png` : '';
     const setIconHtml = setIconUrl
       ? `<div class="rune-table__set-wrapper${isAncient ? ' rune-table__set-wrapper--ancient' : ''}" data-swrm-tip="${escapeAttr(tooltipText)}">
-        <svg class="rune-table__set-icon rune-table__set-icon--${gradeClass}${isAncient ? ' rune-table__set-icon--ancient' : ''} rune-table__set-icon--slot-${r.slot}" width="48" height="48" viewBox="-16 -16 64 64">
+        <svg class="rune-table__set-icon rune-table__set-icon--${gradeClass}${isAncient ? ' rune-table__set-icon--ancient' : ''}" width="48" height="48" viewBox="-16 -16 64 64">
           <defs>
             <clipPath id="clip-${r.id || Math.random().toString(36).substr(2, 9)}">
               <polygon points="${polygonPoints}" />
@@ -401,7 +401,7 @@
         <span class="rune-table__set-level">+${setLevel}</span>
       </div>`
       : '';
-    
+
     const setHtml = setIconHtml;
     
     const roleText = roleDisplayName((r.role || '').trim());
@@ -419,11 +419,28 @@
     const locText = runeLocationLabel(r, tloc);
     const locHtml = tableStatLine(highlightSearchInPlain(locText, tableSearchHighlight));
 
-    const subCell = (sub, first) => {
-      const inner = sub ? renderSubStat(sub) : '';
-      const cls = first ? 'col-sub col-sub-first' : 'col-sub';
-      return `<td class="${cls}">${inner}</td>`;
-    };
+    // Build multi-line stats cell (Main + Innate)
+    const mainInnateHtml = `
+      <div class="rune-table__stats-multi">
+        <div class="rune-table__stat-line rune-table__stat-line--main"><span class="rune-table__stat-prefix">Main</span> ${mainInner}</div>
+        ${innateHtml ? `<div class="rune-table__stat-line rune-table__stat-line--innate"><span class="rune-table__stat-prefix">Inn</span> ${innateHtml}</div>` : ''}
+      </div>
+    `;
+
+    // Build multi-line subs cell
+    const subsHtml = subs.length > 0
+      ? `<div class="rune-table__subs-multi">
+        ${subs.map(sub => `<div class="rune-table__stat-line">${renderSubStat(sub)}</div>`).join('')}
+      </div>`
+      : '';
+
+    // Build multi-line scores cell (Ingame + Forge)
+    const scoresHtml = `
+      <div class="rune-table__scores-multi">
+        <div class="rune-table__score-line rune-table__score-line--ingame"><span class="rune-table__score-label">Ingame</span> <span class="rune-ingame-score${ingameTip ? ' rune-ingame-score--tip' : ''}"${ingameTipAttr}>${highlightSearchInPlain(ingameShown, tableSearchHighlight)}</span></div>
+        <div class="rune-table__score-line rune-table__score-line--forge"><span class="rune-table__score-label">Forge</span> <span class="stat-chip stat-chip--score ${scoreTier}${scoreTip ? ' stat-chip--has-tip' : ''}"${scoreTipAttr}>${highlightSearchInPlain(scoreShown, tableSearchHighlight)}</span></div>
+      </div>
+    `;
 
     const rowIndex = opts && Number.isFinite(opts.rowIndex) ? opts.rowIndex : -1;
     const evenCls = rowIndex >= 0 && rowIndex % 2 === 1 ? ' rune-table__data-row--even' : '';
@@ -433,16 +450,11 @@
     return `<tr class="rune-table__data-row${evenCls}" data-rune-id="${escapeHtml(runeId)}">
       <td class="col-text col-location">${locHtml}</td>
       <td class="col-set col-text">${setHtml}</td>
-      <td class="col-main col-text">${tableStatLine(mainInner)}</td>
-      <td class="col-text col-innate col-block-gap">${innateHtml}</td>
-      ${subCell(subs[0], true)}
-      ${subCell(subs[1], false)}
-      ${subCell(subs[2], false)}
-      ${subCell(subs[3], false)}
-      <td class="col-num col-ingame td-num td-num--ingame col-block-gap"><span class="rune-ingame-score${ingameTip ? ' rune-ingame-score--tip' : ''}"${ingameTipAttr}>${highlightSearchInPlain(ingameShown, tableSearchHighlight)}</span></td>
-      <td class="col-num col-score td-num td-num--score"><span class="stat-chip stat-chip--score ${scoreTier}${scoreTip ? ' stat-chip--has-tip' : ''}"${scoreTipAttr}>${highlightSearchInPlain(scoreShown, tableSearchHighlight)}</span></td>
+      <td class="col-text col-main-innate">${mainInnateHtml}</td>
+      <td class="col-text col-sub">${subsHtml}</td>
+      <td class="col-text col-scores col-block-gap">${scoresHtml}</td>
       <td class="col-text col-verdict col-block-gap">${verdictHtml}</td>
       <td class="col-text col-role">${roleHtml}</td>
-      <td class="col-actions"><button type="button" class="rune-table__delete-btn btn-secondary btn-sm" data-delete-rune="${escapeHtml(runeId)}" title="Delete rune">×</button></td>
+      <td class="col-actions"><button type="button" class="rune-table__delete-btn btn-secondary btn-sm" data-delete-rune="${escapeHtml(runeId)}" title="Delete rune">Sold</button></td>
     </tr>`;
   }

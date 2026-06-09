@@ -672,34 +672,59 @@
     const onSort = (key, dir) => {
       currentSortKey = key;
       currentSortDir = dir;
-      
-      // Update active class
-      document.querySelectorAll('.sort-option').forEach(btn => {
-        btn.classList.remove('sort-option--active');
-        if (btn.getAttribute('data-sort-key') === key && btn.getAttribute('data-sort-dir') === dir) {
-          btn.classList.add('sort-option--active');
-        }
-      });
-      
       updateSortButton();
       applyFiltersAndSort(getVisibleRunes());
     };
 
     bindFiltersPopover('rune-sort-btn', 'rune-sort-popover', { onClose: () => {} });
 
-    document.querySelectorAll('.sort-option').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const key = btn.getAttribute('data-sort-key');
-        const dir = btn.getAttribute('data-sort-dir');
-        onSort(key, dir);
-        
-        // Close popover
-        const popover = document.getElementById('rune-sort-popover');
-        const host = document.querySelector('.filters-popover-host[data-anchor-btn="rune-sort-btn"]') || document.getElementById('rune-sort-btn').parentElement;
-        if (popover) popover.hidden = true;
-        if (host) host.classList.remove('is-open');
+    // Handle sort parameter select change
+    const sortParameterSelect = document.getElementById('sort-parameter');
+    const sortDirectionBtn = document.getElementById('sort-direction-toggle');
+    let currentSortDirection = 'desc'; // Default direction
+
+    if (sortParameterSelect) {
+      sortParameterSelect.addEventListener('change', () => {
+        const key = sortParameterSelect.value;
+        onSort(key, currentSortDirection);
       });
-    });
+    }
+
+    // Handle direction toggle button
+    if (sortDirectionBtn) {
+      sortDirectionBtn.addEventListener('click', () => {
+        currentSortDirection = currentSortDirection === 'desc' ? 'asc' : 'desc';
+        sortDirectionBtn.textContent = currentSortDirection === 'desc' ? '↓' : '↑';
+        if (sortParameterSelect) {
+          const key = sortParameterSelect.value;
+          onSort(key, currentSortDirection);
+        }
+      });
+    }
+
+    // Handle Reset sort button
+    const resetSortBtn = document.getElementById('btn-reset-sort');
+    if (resetSortBtn) {
+      resetSortBtn.addEventListener('click', () => {
+        if (sortParameterSelect) {
+          sortParameterSelect.value = 'score';
+        }
+        currentSortDirection = 'desc';
+        if (sortDirectionBtn) {
+          sortDirectionBtn.textContent = '↓';
+        }
+        onSort('score', 'desc');
+      });
+    }
+
+    // Handle Done button
+    const sortPopoverDoneBtn = document.querySelector('#rune-sort-popover [data-filters-popover-done]');
+    if (sortPopoverDoneBtn) {
+      sortPopoverDoneBtn.addEventListener('click', () => {
+        const popover = document.getElementById('rune-sort-popover');
+        if (popover) popover.hidden = true;
+      });
+    }
 
     document.getElementById('rune-filters-drawer-reset')?.addEventListener('click', () => {
       ['filter-verdict', 'filter-role', 'filter-grade', 'filter-set', 'filter-slot', 'filter-main', 'filter-rune-location'].forEach((id) => {

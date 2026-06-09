@@ -280,6 +280,8 @@ const TRANSLATIONS_RU = {
     guideSubtabProgressionHint: 'Формулы и стадии',
     guideSubtabTable: 'Таблица рун',
     guideSubtabTableHint: 'Поиск, фильтры, ссылка',
+    guideSubtabGear: 'Артефакты и Реликвии',
+    guideSubtabGearHint: 'Таблицы и оценка экипировки',
     guideSubtabEvaluation: 'Оценка рун',
     guideSubtabEvaluationHint: 'Роли, вердикты, стадии',
     guideSubtabRules: 'Правила рун',

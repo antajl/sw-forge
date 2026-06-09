@@ -248,6 +248,7 @@
       id === 'dashboard' ||
       id === 'progression' ||
       id === 'table' ||
+      id === 'gear' ||
       id === 'evaluation' ||
       id === 'rules' ||
       id === 'tips'
@@ -272,7 +273,7 @@
     );
     const motionApi = window.SWRM_MOTION;
 
-    const tabOrder = ['start', 'dashboard', 'progression', 'table', 'evaluation', 'rules', 'tips'];
+    const tabOrder = ['start', 'dashboard', 'progression', 'table', 'gear', 'evaluation', 'rules', 'tips'];
     const prevIndex = lastGuideSubtab ? tabOrder.indexOf(lastGuideSubtab) : -1;
     const nextIndex = tabOrder.indexOf(v);
     const direction = prevIndex >= 0 && nextIndex >= 0 && nextIndex > prevIndex ? 'next' : 'prev';

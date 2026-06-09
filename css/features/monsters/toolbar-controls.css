@@ -163,6 +163,10 @@
   gap: 8px 12px;
 }
 
+.monsters-toolbar__filters-grid--sort {
+  grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
+}
+
 .monsters-toolbar__filters-grid label {
   display: flex;
   flex-direction: column;

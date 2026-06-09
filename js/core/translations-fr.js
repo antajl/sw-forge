@@ -247,6 +247,8 @@ window.TRANSLATIONS_FR = {
   guideSubtabProgressionHint: 'Calcul du score et segments',
   guideSubtabTable: 'Table des runes',
   guideSubtabTableHint: 'Recherche, filtres, état URL',
+  guideSubtabGear: 'Artefacts & Reliques',
+  guideSubtabGearHint: 'Tables et évaluation',
   guideSubtabEvaluation: 'Notation',
   guideSubtabEvaluationHint: 'Rôles, verdicts, segments',
   guideSubtabRules: 'Règles des runes',

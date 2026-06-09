@@ -1,10 +1,24 @@
 /* Table core */
 .table-wrap {
-  overflow: auto;
+  width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
   max-height: calc(100vh - 400px);
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
 }
+
+#rune-table {
+  width: 100%;
+  table-layout: auto;
+  border-collapse: collapse;
+}
+
+#rune-table td,
+#rune-table th {
+  vertical-align: middle;
+}
+
 .table-wrap:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
@@ -95,7 +109,7 @@ thead tr {
   z-index: 22;
 }
 th {
-  font-family: var(--font-head); font-size: 0.75rem; font-weight: 700;
+  font-family: var(--font-head); font-size: 0.85rem; font-weight: 700;
   letter-spacing: 0.04em; text-transform: none; color: var(--text-dim);
   padding: 8px 8px; white-space: nowrap;
   cursor: pointer; user-select: none;
@@ -146,7 +160,7 @@ tbody tr {
 }
 tbody tr:hover { background: var(--surface); }
 td {
-  padding: 6px 8px; font-size: 0.79rem; color: var(--text);
+  padding: 6px 8px; font-size: 0.85rem; color: var(--text);
   white-space: nowrap;
 }
 
@@ -177,6 +191,8 @@ td {
 }
 
 /* Fixed column widths — stable under virtual scroll (not derived from visible rows) */
+#rune-table th.col-slot,
+#rune-table td.col-slot,
 #rune-table th.col-lvl,
 #rune-table td.col-lvl,
 #rune-table th.col-ingame,
@@ -206,6 +222,13 @@ td {
 #rune-table td.col-location {
   width: auto;
   min-width: var(--rt-c-location);
+  max-width: none;
+}
+#rune-table col.col-slot,
+#rune-table th.col-slot,
+#rune-table td.col-slot {
+  width: auto;
+  min-width: var(--rt-c-slot);
   max-width: none;
 }
 #rune-table col.col-innate,
@@ -267,21 +290,47 @@ td {
   padding-right: 4px;
 }
 .rune-table__delete-btn {
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  border: none;
-  background: transparent;
+  min-width: 48px;
+  height: 28px;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  background: var(--bg2);
   color: var(--text-dim);
-  font-size: 1.2rem;
-  line-height: 1;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.2;
   cursor: pointer;
   border-radius: 4px;
   transition: all 0.15s;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 .rune-table__delete-btn:hover {
   color: var(--red);
-  background: color-mix(in srgb, var(--red) 15%, var(--surface));
+  background: color-mix(in srgb, var(--red) 10%, var(--surface));
+  border-color: var(--red);
+}
+
+#sort-direction-toggle {
+  min-width: 32px;
+  padding: 4px 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  color: var(--text);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+#sort-direction-toggle:hover {
+  background: var(--surface);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+#sort-direction-toggle:active {
+  background: var(--bg3);
 }
 
 #rune-table th.col-set,
@@ -306,13 +355,18 @@ td {
 
 /* Virtual scroll: uniform row height from measured sample */
 #rune-table-scroll.table-wrap--virtual tbody tr.rune-table__data-row {
-  height: 60px;
+  height: var(--rune-virtual-row-h, auto);
+  min-height: 60px;
 }
 #rune-table-scroll.table-wrap--virtual tbody tr.rune-table__data-row td {
   vertical-align: middle;
   overflow: hidden;
 }
 
+#rune-table td.col-slot {
+  padding-left: 6px;
+  padding-right: 4px;
+}
 .rune-table__set-icon {
   vertical-align: middle;
   margin-right: 4px;
@@ -326,18 +380,22 @@ td {
   display: inline-block;
   vertical-align: middle;
 }
+
+.col-set {
+  text-align: center;
+}
 .rune-table__set-level {
   position: absolute;
   bottom: -2px;
   right: -2px;
   background: var(--surface);
   color: var(--text);
-  font-size: 10px;
+  font-size: 0.65rem;
   font-weight: bold;
   padding: 1px 3px;
   border-radius: 4px;
   border: 1px solid var(--border);
-  min-width: 14px;
+  min-width: 12px;
   text-align: center;
   line-height: 1;
 }
@@ -345,19 +403,19 @@ td {
   color: var(--grade-legend, #FF9900);
 }
 .rune-table__set-icon--legend.rune-table__set-icon--ancient {
-  filter: drop-shadow(0 0 12px 4px rgba(255, 153, 0, 0.8));
+  filter: drop-shadow(0 0 8px 2px rgba(255, 153, 0, 0.6));
 }
 .rune-table__set-icon--hero {
   color: var(--grade-hero, #AA44DD);
 }
 .rune-table__set-icon--hero.rune-table__set-icon--ancient {
-  filter: drop-shadow(0 0 12px 4px rgba(170, 68, 221, 0.8));
+  filter: drop-shadow(0 0 8px 2px rgba(170, 68, 221, 0.6));
 }
 .rune-table__set-icon--rare {
   color: var(--grade-rare, #3399FF);
 }
 .rune-table__set-icon--rare.rune-table__set-icon--ancient {
-  filter: drop-shadow(0 0 12px 4px rgba(51, 153, 255, 0.8));
+  filter: drop-shadow(0 0 8px 2px rgba(51, 153, 255, 0.6));
 }
 .rune-table__set-icon--grade-tag--other {
   color: var(--grade-other, #888);
@@ -365,38 +423,122 @@ td {
 .rune-table__set-icon--grade-tag--other.rune-table__set-icon--ancient {
   filter: drop-shadow(0 0 8px 2px rgba(136, 136, 136, 0.6));
 }
-/* Ancient glow on SVG element (direct filter with specific colors) */
-.rune-table__set-icon--legend.rune-table__set-icon--ancient {
-  filter: drop-shadow(0 0 10px 4px rgba(255, 153, 0, 0.9));
+
+/* Multi-line stats cells */
+.rune-table__stats-multi,
+.rune-table__subs-multi {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.3;
+  text-align: left;
 }
-.rune-table__set-icon--hero.rune-table__set-icon--ancient {
-  filter: drop-shadow(0 0 10px 4px rgba(170, 68, 221, 0.9));
+
+.rune-table__stat-line {
+  font-size: 0.85rem;
+  white-space: nowrap;
 }
-.rune-table__set-icon--rare.rune-table__set-icon--ancient {
-  filter: drop-shadow(0 0 10px 4px rgba(51, 153, 255, 0.9));
+
+.rune-table__stat-line--main {
+  font-weight: 600;
 }
-.rune-table__set-icon--grade-tag--other.rune-table__set-icon--ancient {
-  filter: drop-shadow(0 0 10px 4px rgba(136, 136, 136, 0.9));
+
+.rune-table__stat-line--innate {
+  opacity: 0.85;
+  font-weight: 400;
 }
-/* Compensate slot offset to center icons */
-.rune-table__set-icon--slot-1 {
-  transform: translateY(4px);
+
+.rune-table__stat-prefix {
+  display: inline-block;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  margin-right: 4px;
 }
-.rune-table__set-icon--slot-2 {
-  transform: translate(-4px, 1px);
+.rune-table__stat-line--main .rune-table__stat-prefix {
+  color: var(--accent);
 }
-.rune-table__set-icon--slot-3 {
-  transform: translate(-4px, -1px);
+.rune-table__stat-line--innate .rune-table__stat-prefix {
+  color: var(--text-dim);
+  margin-right: 16px;
 }
-.rune-table__set-icon--slot-4 {
-  transform: translateY(-6px);
+
+/* Main+Innate column */
+.col-main-innate {
+  min-width: 5rem;
+  width: auto;
+  text-align: left;
 }
-.rune-table__set-icon--slot-5 {
-  transform: translate(4px, -1px);
+
+/* Subs column */
+.col-sub {
+  min-width: 6rem;
+  width: auto;
 }
-.rune-table__set-icon--slot-6 {
-  transform: translate(6px, 1px);
+
+/* Scores column */
+.col-scores {
+  min-width: 5rem;
+  width: auto;
 }
+
+/* Multi-line scores cell */
+.rune-table__scores-multi {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.3;
+}
+
+.rune-table__score-line {
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.rune-table__score-label {
+  display: inline-block;
+  width: 3.5em;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  text-align: center;
+  margin-right: 4px;
+}
+
+.rune-table__score-line--ingame .rune-table__score-label {
+  color: var(--text-dim);
+}
+
+.rune-table__score-line--forge .rune-table__score-label {
+  color: var(--accent);
+}
+
+/* Column widths for table-layout: fixed - distribute remaining space */
+#rune-table col.col-location {
+  width: 11%;
+}
+#rune-table col.col-set {
+  width: 9%;
+}
+#rune-table col.col-main-innate {
+  width: 13%;
+}
+#rune-table col.col-sub {
+  width: 23%;
+}
+#rune-table col.col-scores {
+  width: 14%;
+}
+#rune-table col.col-verdict {
+  width: 11%;
+}
+#rune-table col.col-role {
+  width: 9%;
+}
+#rune-table col.col-actions {
+  width: 10%;
+}
+
 /* Section breaks: rune identity | subs | scores | verdict+meta */
 #rune-table th.col-block-gap,
 #rune-table td.col-block-gap {

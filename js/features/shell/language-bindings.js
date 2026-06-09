@@ -101,6 +101,10 @@
     if (subGuideTable) subGuideTable.textContent = t.guideSubtabTable || '';
     const subGuideTableHint = document.getElementById('lbl-guide-subtab-table-hint');
     if (subGuideTableHint) subGuideTableHint.textContent = t.guideSubtabTableHint || '';
+    const subGuideGear = document.getElementById('lbl-guide-subtab-gear');
+    if (subGuideGear) subGuideGear.textContent = t.guideSubtabGear || '';
+    const subGuideGearHint = document.getElementById('lbl-guide-subtab-gear-hint');
+    if (subGuideGearHint) subGuideGearHint.textContent = t.guideSubtabGearHint || '';
     const subGuideEval = document.getElementById('lbl-guide-subtab-evaluation');
     if (subGuideEval) subGuideEval.textContent = t.guideSubtabEvaluation || '';
     const subGuideEvalHint = document.getElementById('lbl-guide-subtab-evaluation-hint');

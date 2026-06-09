@@ -263,6 +263,8 @@ const TRANSLATIONS_EN = {
     guideSubtabProgressionHint: 'Score math & stages',
     guideSubtabTable: 'Rune Table',
     guideSubtabTableHint: 'Search, filters, URL state',
+    guideSubtabGear: 'Artifacts & Relics',
+    guideSubtabGearHint: 'Gear tables and evaluation',
     guideSubtabEvaluation: 'How scoring works',
     guideSubtabEvaluationHint: 'Roles, verdicts, stages',
     guideSubtabRules: 'Rune Rules',

@@ -102,6 +102,7 @@
         case 'grade':   av = a.grade;   bv = b.grade;   break;
         case 'level':   av = a.level;   bv = b.level;   break;
         case 'main':    av = a.mainName;bv = b.mainName;break;
+        case 'location':av = a.equipped_name || (isRuneEquipped(a) ? a.equipped_name : 'Inventory'); bv = b.equipped_name || (isRuneEquipped(b) ? b.equipped_name : 'Inventory'); break;
         case 'score':
           av = typeof computeRuneScore === 'function' ? computeRuneScore(a) : 0;
           bv = typeof computeRuneScore === 'function' ? computeRuneScore(b) : 0;

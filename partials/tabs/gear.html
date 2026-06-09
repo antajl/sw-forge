@@ -123,6 +123,44 @@
                         </div>
                       </div>
                     </div>
+                    <div class="filters-popover-host">
+                      <button type="button" class="monsters-toolbar-btn monsters-toolbar-btn--filters" id="rune-sort-btn" aria-haspopup="true" aria-controls="rune-sort-popover" aria-expanded="false">
+                        <span class="monsters-toolbar-btn__icon">↓↑</span>
+                        <span id="lbl-rune-sort">Sort</span>
+                      </button>
+                      <div id="rune-sort-popover" class="filters-popover filters-popover--sort" role="dialog" aria-labelledby="lbl-rune-sort-drawer-title" hidden data-anchor-btn="rune-sort-btn">
+                        <div class="filters-popover__panel">
+                          <header class="filters-popover__head">
+                            <h3 class="filters-popover__title" id="lbl-rune-sort-drawer-title">Sort by</h3>
+                            <button type="button" class="filters-popover__close" data-filters-popover-close aria-label="Close">✕</button>
+                          </header>
+                          <div class="filters-popover__body">
+                            <div class="sort-groups">
+                              <div class="sort-group">
+                                <div class="sort-group__label">Score</div>
+                                <button type="button" class="sort-option sort-option--active" data-sort-key="score" data-sort-dir="desc">Forge ↓</button>
+                                <button type="button" class="sort-option" data-sort-key="score" data-sort-dir="asc">Forge ↑</button>
+                                <button type="button" class="sort-option" data-sort-key="eff" data-sort-dir="desc">Ingame ↓</button>
+                                <button type="button" class="sort-option" data-sort-key="eff" data-sort-dir="asc">Ingame ↑</button>
+                              </div>
+                              <div class="sort-group">
+                                <div class="sort-group__label">Properties</div>
+                                <button type="button" class="sort-option" data-sort-key="verdict" data-sort-dir="desc">Verdict ↓</button>
+                                <button type="button" class="sort-option" data-sort-key="verdict" data-sort-dir="asc">Verdict ↑</button>
+                                <button type="button" class="sort-option" data-sort-key="set" data-sort-dir="asc">Set A-Z</button>
+                                <button type="button" class="sort-option" data-sort-key="set" data-sort-dir="desc">Set Z-A</button>
+                                <button type="button" class="sort-option" data-sort-key="main" data-sort-dir="asc">Main A-Z</button>
+                                <button type="button" class="sort-option" data-sort-key="main" data-sort-dir="desc">Main Z-A</button>
+                                <button type="button" class="sort-option" data-sort-key="location" data-sort-dir="asc">Location A-Z</button>
+                                <button type="button" class="sort-option" data-sort-key="location" data-sort-dir="desc">Location Z-A</button>
+                                <button type="button" class="sort-option" data-sort-key="role" data-sort-dir="asc">Role A-Z</button>
+                                <button type="button" class="sort-option" data-sort-key="role" data-sort-dir="desc">Role Z-A</button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div class="table-toolbar__aside">
@@ -163,11 +201,9 @@
             <div class="table-wrap" id="rune-table-scroll" tabindex="0" role="region" aria-label="Rune table">
               <table id="rune-table">
                 <colgroup>
-                  <col class="col-slot" />
+                  <col class="col-location" />
                   <col class="col-set" />
                   <col class="col-main" />
-                  <col class="col-grade" />
-                  <col class="col-lvl" />
                   <col class="col-innate" />
                   <col class="col-sub" />
                   <col class="col-sub" />
@@ -177,16 +213,13 @@
                   <col class="col-score" />
                   <col class="col-verdict" />
                   <col class="col-role" />
-                  <col class="col-location" />
                   <col class="col-actions" />
                 </colgroup>
                 <thead>
                   <tr>
-                    <th data-sort="slot" class="col-slot th-num col-num" data-filter-key="slot"><span class="th-text th-text--plain" id="lbl-th-slot">Slot</span></th>
+                    <th class="col-text col-location" data-filter-key="location"><span class="th-text th-text--plain" id="lbl-th-rune-location">Location</span></th>
                     <th data-sort="set" class="col-set col-text" data-filter-key="set"><span class="th-text th-text--plain" id="lbl-th-set">Set</span></th>
                     <th data-sort="main" class="col-main col-text" data-filter-key="main"><span class="th-text th-text--plain" id="lbl-th-main">Main</span></th>
-                    <th data-sort="grade" class="col-grade" data-filter-key="grade"><span class="th-text th-text--plain" id="lbl-th-grade">Grade</span></th>
-                    <th data-sort="level" class="col-lvl th-num col-num"><span class="th-text th-text--plain" id="lbl-th-level">Lvl</span></th>
                     <th class="col-text col-innate col-block-gap"><span class="th-text th-text--plain" id="lbl-th-innate">Innate</span></th>
                     <th data-sort="s1" class="col-sub col-sub-first"><span class="th-text th-text--plain" id="lbl-th-sub1">Sub 1</span></th>
                     <th data-sort="s2" class="col-sub"><span class="th-text th-text--plain" id="lbl-th-sub2">Sub 2</span></th>
@@ -196,7 +229,6 @@
                     <th data-sort="score" class="th-num col-num col-score th-col-primary"><span class="th-text th-text--plain" id="lbl-th-score">Forge</span></th>
                     <th data-sort="verdict" class="col-text col-verdict col-block-gap" data-filter-key="verdict"><span class="th-text th-text--plain" id="lbl-th-verdict">Verdict</span></th>
                     <th data-sort="role" class="col-text col-role" data-filter-key="role"><span class="th-text th-text--plain" id="lbl-th-role">Role</span></th>
-                    <th class="col-text col-location" data-filter-key="location"><span class="th-text th-text--plain" id="lbl-th-rune-location">Location</span></th>
                     <th class="col-actions"><span class="th-text th-text--plain">Action</span></th>
                   </tr>
                 </thead>

@@ -7769,7 +7769,7 @@ html.swrm-has-gsap .swrm-floating-tip {
 /* Table core */
 .table-wrap {
   overflow: auto;
-  max-height: min(75vh, 900px);
+  max-height: calc(100vh - 400px);
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
 }
@@ -7822,27 +7822,27 @@ html.swrm-has-gsap .swrm-floating-tip {
 
 #rune-table-scroll.table-wrap--virtual {
   overflow: auto;
+  max-height: calc(100vh - 400px);
   overscroll-behavior: contain;
 }
 
 #rune-table {
   table-layout: fixed;
   width: 100%;
-  min-width: max-content;
   border-collapse: collapse;
   /* Anchors: Slot | Determination | CDmg 80% | Legend chip | Lvl/15 | CDmg 4% | ATK 24% [+7]+gem ×4 | Ingame/Forge+999 | Upgrade | Classic DPS | Homunculus(Support) */
   --rt-c-slot: 2.5rem;
-  --rt-c-set: 6rem;
+  --rt-c-set: 8rem;
   --rt-c-main: 5rem;
-  --rt-c-grade: 5rem;
+  --rt-c-grade: 2.5rem;
   --rt-c-lvl: 2.5rem;
-  --rt-c-innate: 4.5rem;
+  --rt-c-innate: 4rem;
   --rt-c-sub: 6.85rem;
   --rt-c-ingame: 4rem;
   --rt-c-score: 3.15rem;
   --rt-c-verdict: 4.65rem;
-  --rt-c-role: 6.15rem;
-  --rt-c-location: 8.35rem;
+  --rt-c-role: 5.25rem;
+  --rt-c-location: 5.5rem;
   --rt-row-bg: var(--bg2);
   --rt-row-bg-even: color-mix(in srgb, var(--surface) 40%, var(--bg2));
   --rt-row-bg-hover: var(--surface);
@@ -7924,30 +7924,6 @@ td {
   text-align: center;
   vertical-align: middle;
 }
-
-#rune-table th.col-set,
-#rune-table td.col-set,
-#rune-table th.col-main,
-#rune-table td.col-main,
-#rune-table th.col-location,
-#rune-table td.col-location {
-  text-align: left;
-}
-
-#rune-table thead th.col-set .th-text.th-text--plain,
-#rune-table thead th.col-main .th-text.th-text--plain,
-#rune-table thead th.col-location .th-text.th-text--plain {
-  text-align: left;
-}
-
-#rune-table th.col-grade,
-#rune-table td.col-grade {
-  text-align: right;
-}
-
-#rune-table thead th.col-grade .th-text.th-text--plain {
-  text-align: right;
-}
 #rune-table th.th-num,
 #rune-table td.td-num,
 #rune-table td.td-num-plain {
@@ -7969,8 +7945,6 @@ td {
 }
 
 /* Fixed column widths — stable under virtual scroll (not derived from visible rows) */
-#rune-table th.col-slot,
-#rune-table td.col-slot,
 #rune-table th.col-lvl,
 #rune-table td.col-lvl,
 #rune-table th.col-ingame,
@@ -7984,88 +7958,72 @@ td {
 #rune-table col.col-set,
 #rune-table th.col-set,
 #rune-table td.col-set {
-  width: var(--rt-c-set);
+  width: auto;
   min-width: var(--rt-c-set);
-  max-width: var(--rt-c-set);
+  max-width: none;
 }
 #rune-table col.col-main,
 #rune-table th.col-main,
 #rune-table td.col-main {
-  width: var(--rt-c-main);
-  min-width: var(--rt-c-main);
-  max-width: var(--rt-c-main);
-}
-#rune-table col.col-grade,
-#rune-table th.col-grade,
-#rune-table td.col-grade {
-  width: var(--rt-c-grade);
-  min-width: var(--rt-c-grade);
-  max-width: var(--rt-c-grade);
-}
-#rune-table col.col-slot,
-#rune-table th.col-slot,
-#rune-table td.col-slot {
-  width: var(--rt-c-slot);
-  min-width: var(--rt-c-slot);
-  max-width: var(--rt-c-slot);
-}
-#rune-table col.col-lvl,
-#rune-table th.col-lvl,
-#rune-table td.col-lvl {
-  width: var(--rt-c-lvl);
-  min-width: var(--rt-c-lvl);
-  max-width: var(--rt-c-lvl);
-}
-#rune-table col.col-innate,
-#rune-table th.col-innate,
-#rune-table td.col-innate {
-  width: var(--rt-c-innate);
-  min-width: var(--rt-c-innate);
-  max-width: var(--rt-c-innate);
-}
-#rune-table col.col-sub,
-#rune-table th.col-sub,
-#rune-table td.col-sub {
-  width: var(--rt-c-sub);
-  min-width: var(--rt-c-sub);
-  max-width: var(--rt-c-sub);
-}
-#rune-table col.col-ingame,
-#rune-table th.col-ingame,
-#rune-table td.col-ingame {
-  width: var(--rt-c-ingame);
-  min-width: var(--rt-c-ingame);
-  max-width: var(--rt-c-ingame);
-}
-#rune-table col.col-score,
-#rune-table th.col-score,
-#rune-table td.col-score {
-  width: var(--rt-c-score);
-  min-width: var(--rt-c-score);
-  max-width: var(--rt-c-score);
-}
-#rune-table col.col-verdict,
-#rune-table th.col-verdict,
-#rune-table td.col-verdict {
-  width: var(--rt-c-verdict);
-  min-width: var(--rt-c-verdict);
-  max-width: var(--rt-c-verdict);
-}
-#rune-table col.col-role,
-#rune-table th.col-role,
-#rune-table td.col-role {
-  width: var(--rt-c-role);
-  min-width: var(--rt-c-role);
-  max-width: var(--rt-c-role);
-}
-#rune-table col.col-location {
   width: auto;
+  min-width: var(--rt-c-main);
+  max-width: none;
 }
+#rune-table col.col-location,
 #rune-table th.col-location,
 #rune-table td.col-location {
   width: auto;
   min-width: var(--rt-c-location);
   max-width: none;
+}
+#rune-table col.col-innate,
+#rune-table th.col-innate,
+#rune-table td.col-innate {
+  width: auto;
+  min-width: var(--rt-c-innate);
+  max-width: none;
+}
+#rune-table col.col-sub,
+#rune-table th.col-sub,
+#rune-table td.col-sub {
+  width: auto;
+  min-width: var(--rt-c-sub);
+  max-width: none;
+}
+#rune-table col.col-ingame,
+#rune-table th.col-ingame,
+#rune-table td.col-ingame {
+  width: auto;
+  min-width: var(--rt-c-ingame);
+  max-width: none;
+}
+#rune-table col.col-score,
+#rune-table th.col-score,
+#rune-table td.col-score {
+  width: auto;
+  min-width: var(--rt-c-score);
+  max-width: none;
+}
+#rune-table col.col-verdict,
+#rune-table th.col-verdict,
+#rune-table td.col-verdict {
+  width: auto;
+  min-width: var(--rt-c-verdict);
+  max-width: none;
+}
+#rune-table col.col-role,
+#rune-table th.col-role,
+#rune-table td.col-role {
+  width: auto;
+  min-width: var(--rt-c-role);
+  max-width: none;
+}
+#rune-table col.col-location,
+#rune-table th.col-location,
+#rune-table td.col-location {
+  width: var(--rt-c-location);
+  min-width: var(--rt-c-location);
+  max-width: var(--rt-c-location);
 }
 #rune-table col.col-actions,
 #rune-table th.col-actions,
@@ -8097,18 +8055,11 @@ td {
 #rune-table th.col-set,
 #rune-table td.col-set,
 #rune-table th.col-main,
-#rune-table td.col-main,
-#rune-table th.col-grade,
-#rune-table td.col-grade {
+#rune-table td.col-main {
   padding-left: 4px;
   padding-right: 4px;
 }
 
-#rune-table th.col-grade,
-#rune-table td.col-grade {
-  overflow: hidden;
-  contain: paint;
-}
 #rune-table th.col-location,
 #rune-table td.col-location {
   overflow: hidden;
@@ -8117,25 +8068,102 @@ td {
 #rune-table td.col-set,
 #rune-table td.col-main,
 #rune-table td.col-innate,
-#rune-table td.col-sub,
-#rune-table td.col-location {
+#rune-table td.col-sub {
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 /* Virtual scroll: uniform row height from measured sample */
 #rune-table-scroll.table-wrap--virtual tbody tr.rune-table__data-row {
-  height: var(--rune-virtual-row-h, auto);
+  height: 60px;
 }
 #rune-table-scroll.table-wrap--virtual tbody tr.rune-table__data-row td {
   vertical-align: middle;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-#rune-table td.col-slot {
-  padding-left: 6px;
-  padding-right: 4px;
+.rune-table__set-icon {
+  vertical-align: middle;
+  margin-right: 4px;
+  display: inline-block;
+}
+.rune-table__set-icon polygon {
+  stroke: currentColor;
+}
+.rune-table__set-wrapper {
+  position: relative;
+  display: inline-block;
+  vertical-align: middle;
+}
+.rune-table__set-level {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 10px;
+  font-weight: bold;
+  padding: 1px 3px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  min-width: 14px;
+  text-align: center;
+  line-height: 1;
+}
+.rune-table__set-icon--legend {
+  color: var(--grade-legend, #FF9900);
+}
+.rune-table__set-icon--legend.rune-table__set-icon--ancient {
+  filter: drop-shadow(0 0 12px 4px rgba(255, 153, 0, 0.8));
+}
+.rune-table__set-icon--hero {
+  color: var(--grade-hero, #AA44DD);
+}
+.rune-table__set-icon--hero.rune-table__set-icon--ancient {
+  filter: drop-shadow(0 0 12px 4px rgba(170, 68, 221, 0.8));
+}
+.rune-table__set-icon--rare {
+  color: var(--grade-rare, #3399FF);
+}
+.rune-table__set-icon--rare.rune-table__set-icon--ancient {
+  filter: drop-shadow(0 0 12px 4px rgba(51, 153, 255, 0.8));
+}
+.rune-table__set-icon--grade-tag--other {
+  color: var(--grade-other, #888);
+}
+.rune-table__set-icon--grade-tag--other.rune-table__set-icon--ancient {
+  filter: drop-shadow(0 0 8px 2px rgba(136, 136, 136, 0.6));
+}
+/* Ancient glow on SVG element (direct filter with specific colors) */
+.rune-table__set-icon--legend.rune-table__set-icon--ancient {
+  filter: drop-shadow(0 0 10px 4px rgba(255, 153, 0, 0.9));
+}
+.rune-table__set-icon--hero.rune-table__set-icon--ancient {
+  filter: drop-shadow(0 0 10px 4px rgba(170, 68, 221, 0.9));
+}
+.rune-table__set-icon--rare.rune-table__set-icon--ancient {
+  filter: drop-shadow(0 0 10px 4px rgba(51, 153, 255, 0.9));
+}
+.rune-table__set-icon--grade-tag--other.rune-table__set-icon--ancient {
+  filter: drop-shadow(0 0 10px 4px rgba(136, 136, 136, 0.9));
+}
+/* Compensate slot offset to center icons */
+.rune-table__set-icon--slot-1 {
+  transform: translateY(4px);
+}
+.rune-table__set-icon--slot-2 {
+  transform: translate(-4px, 1px);
+}
+.rune-table__set-icon--slot-3 {
+  transform: translate(-4px, -1px);
+}
+.rune-table__set-icon--slot-4 {
+  transform: translateY(-6px);
+}
+.rune-table__set-icon--slot-5 {
+  transform: translate(4px, -1px);
+}
+.rune-table__set-icon--slot-6 {
+  transform: translate(6px, 1px);
 }
 /* Section breaks: rune identity | subs | scores | verdict+meta */
 #rune-table th.col-block-gap,
@@ -8628,7 +8656,7 @@ html:not(.swrm-has-gsap) .table-kind-tabs__indicator {
 #artifact-table-scroll,
 #relic-table-scroll {
   width: 100%;
-  max-height: min(82vh, 980px);
+  max-height: calc(100vh - 400px);
   overflow: auto;
   overscroll-behavior: contain;
   border-radius: var(--radius-lg);
@@ -8762,6 +8790,13 @@ thead tr {
 .light-theme #artifact-table,
 .light-theme #relic-table {
   --gear-row-bg-even: color-mix(in srgb, var(--surface) 68%, var(--bg2));
+}
+
+#artifact-table-scroll.table-wrap--virtual,
+#relic-table-scroll.table-wrap--virtual {
+  overflow: auto;
+  max-height: calc(100vh - 400px);
+  overscroll-behavior: contain;
 }
 
 /* Virtual scroll: uniform row height from measured sample */
@@ -11188,6 +11223,73 @@ html:not(.swrm-has-gsap) .monsters-hub-tabs__indicator {
   border-color: var(--accent);
 }
 
+/* Sort options */
+.sort-option {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg2);
+  color: var(--text-hi);
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.sort-option:hover {
+  background: var(--bg3);
+  border-color: var(--border2);
+}
+
+.sort-option--active {
+  background: var(--accent);
+  color: var(--text-on-accent);
+  border-color: var(--accent);
+}
+
+.sort-option--active:hover {
+  background: color-mix(in srgb, var(--accent) 85%, var(--text-on-accent));
+}
+
+/* Sort groups */
+.sort-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sort-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sort-group__label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Sort popover specific */
+.filters-popover--sort {
+  min-width: 14rem;
+  max-width: min(20rem, calc(100vw - 24px));
+}
+
+.filters-popover--sort .filters-popover__body {
+  padding: 16px;
+}
+
+/* Sort button icon */
+.monsters-toolbar-btn__icon {
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
 /* Legacy filters dialog (unused) */
 .monsters-filters-drawer {
   margin: 0;
@@ -13252,11 +13354,20 @@ html:not(.swrm-has-gsap) .monsters-hub-tabs__indicator {
   display: block;
 }
 
-.monsters-table-wrap {
-  overflow: auto;
+.monsters-grid--table-view {
+  display: none;
+}
+
+.monsters-table-scroll {
+  overflow-y: auto;
+  max-height: calc(100vh - 320px);
   border: 1px solid var(--border2);
   border-radius: var(--radius);
   background: var(--surface);
+}
+
+.monsters-table-wrap {
+  /* overflow, border, radius, background handled by scroller */
 }
 
 .monsters-table {

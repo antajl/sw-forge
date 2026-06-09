@@ -1,6 +1,6 @@
 // js/features/gear/artifacts-virtual.js — windowed tbody render for large artifact lists
   const ARTIFACT_TABLE_VIRTUAL_COLS = 9;
-  const ARTIFACT_TABLE_VIRTUAL_OVERSCAN = 8;
+  const ARTIFACT_TABLE_VIRTUAL_OVERSCAN = 3;
   const ARTIFACT_TABLE_VIRTUAL_ROW_FALLBACK = 44;
   const ARTIFACT_TABLE_VIRTUAL_SPACER_COL_CLASSES = [
     'col-grade',

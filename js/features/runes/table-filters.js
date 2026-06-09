@@ -122,7 +122,7 @@
     try {
       const base = window.location.pathname + window.location.search;
       const suf = buildRuneTableQuerySuffix();
-      history.replaceState(null, '', `${base}#runetable${suf}`);
+      history.replaceState(null, '', `${base}#gear/runetable${suf}`);
     } catch (e) { /* ignore */ }
   }
 
@@ -596,7 +596,7 @@
       return true;
     });
 
-    sortRunesInPlace(filteredRunes, sortKey, sortDir);
+    sortRunesInPlace(filteredRunes, currentSortKey, currentSortDir);
 
     if (!isRuneTableRunesTabActive()) {
       runeTableRenderPending = true;
@@ -619,6 +619,7 @@
     if (typeof bindRuneTableVirtualScroll === 'function') bindRuneTableVirtualScroll();
     if (typeof paintRuneTableVirtualBody === 'function') {
       runeVirtualLastKey = '';
+      // Render immediately - animation callback will handle deferred render if needed
       paintRuneTableVirtualBody(filteredRunes);
     } else {
       const cap = runeTableShowAll ? total : Math.min(RUNE_TABLE_PAGE, total);
@@ -638,6 +639,10 @@
     }
   }
 
+  // Sort state (exported for use in applyFiltersAndSort)
+  let currentSortKey = 'score';
+  let currentSortDir = 'desc';
+
   function bindRuneTableFiltersDrawer() {
     const onFilter = () => {
       updateRuneTableFilterIndicators();
@@ -645,6 +650,56 @@
     };
 
     bindFiltersPopover('rune-more-filters-btn', 'rune-filters-popover', { onClose: onFilter });
+
+    // Sort by popover
+    const updateSortButton = () => {
+      const sortBtn = document.getElementById('lbl-rune-sort');
+      if (!sortBtn) return;
+      const dirSymbol = currentSortDir === 'asc' ? '↑' : '↓';
+      const keyNames = {
+        score: 'Forge',
+        eff: 'Ingame',
+        verdict: 'Verdict',
+        set: 'Set',
+        main: 'Main',
+        location: 'Location',
+        role: 'Role'
+      };
+      const keyName = keyNames[currentSortKey] || currentSortKey;
+      sortBtn.textContent = `Sort by ${keyName} ${dirSymbol}`;
+    };
+
+    const onSort = (key, dir) => {
+      currentSortKey = key;
+      currentSortDir = dir;
+      
+      // Update active class
+      document.querySelectorAll('.sort-option').forEach(btn => {
+        btn.classList.remove('sort-option--active');
+        if (btn.getAttribute('data-sort-key') === key && btn.getAttribute('data-sort-dir') === dir) {
+          btn.classList.add('sort-option--active');
+        }
+      });
+      
+      updateSortButton();
+      applyFiltersAndSort(getVisibleRunes());
+    };
+
+    bindFiltersPopover('rune-sort-btn', 'rune-sort-popover', { onClose: () => {} });
+
+    document.querySelectorAll('.sort-option').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const key = btn.getAttribute('data-sort-key');
+        const dir = btn.getAttribute('data-sort-dir');
+        onSort(key, dir);
+        
+        // Close popover
+        const popover = document.getElementById('rune-sort-popover');
+        const host = document.querySelector('.filters-popover-host[data-anchor-btn="rune-sort-btn"]') || document.getElementById('rune-sort-btn').parentElement;
+        if (popover) popover.hidden = true;
+        if (host) host.classList.remove('is-open');
+      });
+    });
 
     document.getElementById('rune-filters-drawer-reset')?.addEventListener('click', () => {
       ['filter-verdict', 'filter-role', 'filter-grade', 'filter-set', 'filter-slot', 'filter-main', 'filter-rune-location'].forEach((id) => {

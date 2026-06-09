@@ -123,9 +123,39 @@
     syncMonstersViewToggle(view);
 
     if (view === 'table') {
-      grid.innerHTML = buildMonsterTableHtml(visible, t);
-      bindMonsterTableRows(grid, t);
+      const tableScroll = document.getElementById('monsters-table-scroll');
+      const tableGrid = document.getElementById('monsters-grid');
+      const thead = document.getElementById('monsters-thead');
+      const tbody = document.getElementById('monsters-tbody');
+      
+      // Show table scroll container, hide cards grid
+      if (tableScroll) tableScroll.hidden = false;
+      if (tableGrid) tableGrid.classList.add('monsters-grid--table-view');
+      
+      // Set table head
+      if (thead && typeof buildMonsterTableHeadHtml === 'function') {
+        thead.innerHTML = buildMonsterTableHeadHtml(t);
+      }
+      
+      // Use virtual scroll for table body
+      monstersVisibleUnits = visible.map((u) => String(u.unitId));
+      if (typeof bindMonstersTableVirtualScroll === 'function') bindMonstersTableVirtualScroll();
+      if (typeof resetMonstersTableVirtualScroll === 'function') resetMonstersTableVirtualScroll();
+      if (typeof paintMonstersTableVirtualBody === 'function') {
+        monstersVirtualLastKey = '';
+        paintMonstersTableVirtualBody(visible);
+      } else {
+        // Fallback to non-virtual rendering
+        if (tbody) tbody.innerHTML = visible.map((u) => buildMonsterTableRow(u, t)).join('');
+        if (tableScroll) bindMonsterTableRows(tableScroll, t);
+      }
     } else if (view === 'cards') {
+      // Hide table scroll container, show cards grid
+      const tableScroll = document.getElementById('monsters-table-scroll');
+      const tableGrid = document.getElementById('monsters-grid');
+      if (tableScroll) tableScroll.hidden = true;
+      if (tableGrid) tableGrid.classList.remove('monsters-grid--table-view');
+      
       grid.innerHTML = visible.map((u) => buildMonsterCardHtml(u, db, t, view)).join('');
       grid.querySelectorAll('.monsters-card__img[data-img-file]').forEach((img) => {
         const file = img.getAttribute('data-img-file');

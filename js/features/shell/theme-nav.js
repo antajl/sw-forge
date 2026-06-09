@@ -575,10 +575,9 @@
         if (query) applyRuneTableQueryParams(new URLSearchParams(query));
         updateSortHeaderClasses();
         updateRuneTableFilterIndicators();
+        // Don't render here - defer to after animation completes
         if (typeof flushRuneTableRenderIfNeeded === 'function') {
-          flushRuneTableRenderIfNeeded();
-        } else {
-          applyFiltersAndSort(getVisibleRunes(), { preserveTableExpansion: true });
+          runeTableRenderPending = true;
         }
       } else if (typeof showTableKind === 'function') {
         showTableKind(kind);
@@ -917,17 +916,31 @@
             const monstersRoot = document.getElementById('tab-monsters');
             if (monstersRoot) monstersRoot.scrollTop = 0;
           }
+          // Render rune table after animation completes
+          if (main === 'runes') {
+            if (typeof flushRuneTableRenderIfNeeded === 'function') {
+              flushRuneTableRenderIfNeeded();
+            }
+          }
         },
       });
       if (!started) {
         document.querySelectorAll('.tab-content').forEach((el) => {
           el.classList.toggle('hidden', el.id !== `tab-${main}`);
         });
+        // Fallback: render rune table if animation didn't start
+        if (main === 'runes' && typeof flushRuneTableRenderIfNeeded === 'function') {
+          flushRuneTableRenderIfNeeded();
+        }
       }
     } else {
       document.querySelectorAll('.tab-content').forEach((el) => {
         el.classList.toggle('hidden', el.id !== `tab-${main}`);
       });
+      // Fallback: render rune table if GSAP is disabled
+      if (main === 'runes' && typeof flushRuneTableRenderIfNeeded === 'function') {
+        flushRuneTableRenderIfNeeded();
+      }
     }
 
     if (main === 'dashboard') {

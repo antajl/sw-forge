@@ -7,8 +7,8 @@
     6: 'Resolute',
     12: 'Timeless',
     13: 'Primal',
-    14: 'Primal',
-    16: 'Restore',
+    14: 'Valiant',
+    16: 'Valiant',
   };
 
   const RELIC_CATEGORY_VERIFIED = new Set([6, 12, 13, 14, 16]);
@@ -21,9 +21,9 @@
     13: (threshold, pct) =>
       `MAX HP +(${pct}%) per (${threshold}) ATK at the start of battle`,
     14: (threshold, pct) =>
-      `MAX HP +(${pct}%) per (${threshold}) SPD at the start of battle`,
+      `ATK +(${pct}%) per (${threshold}) DEF at the start of battle`,
     16: (threshold, pct) =>
-      `HP Recovery and Shield amount +(${pct}%) per (${threshold}) MAX HP at the start of battle`,
+      `ATK +(${pct}%) per (${threshold}) SPD at the start of battle`,
   };
 
   /** sec_effect[2] = bonus % shown in-game. */

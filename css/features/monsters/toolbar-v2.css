@@ -587,6 +587,73 @@
   border-color: var(--accent);
 }
 
+/* Sort options */
+.sort-option {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg2);
+  color: var(--text-hi);
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.sort-option:hover {
+  background: var(--bg3);
+  border-color: var(--border2);
+}
+
+.sort-option--active {
+  background: var(--accent);
+  color: var(--text-on-accent);
+  border-color: var(--accent);
+}
+
+.sort-option--active:hover {
+  background: color-mix(in srgb, var(--accent) 85%, var(--text-on-accent));
+}
+
+/* Sort groups */
+.sort-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sort-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sort-group__label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Sort popover specific */
+.filters-popover--sort {
+  min-width: 14rem;
+  max-width: min(20rem, calc(100vw - 24px));
+}
+
+.filters-popover--sort .filters-popover__body {
+  padding: 16px;
+}
+
+/* Sort button icon */
+.monsters-toolbar-btn__icon {
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
 /* Legacy filters dialog (unused) */
 .monsters-filters-drawer {
   margin: 0;

@@ -273,25 +273,30 @@
   }
 
   function runeRow(r, opts) {
+    // Cache translations to avoid repeated lookups
     const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const tScore = tloc;
+    
     const gradeKey = r.gradeStr;
     const gradeClass = { Legend: 'legend', Hero: 'hero', Rare: 'rare' }[gradeKey] || 'grade-tag--other';
     const gradeLabel = { Legend: 'Legend', Hero: 'Hero', Rare: 'Rare' }[gradeKey] || String(r.gradeStr);
     const gradeLabelHtml = highlightSearchInPlain(gradeLabel, tableSearchHighlight);
+    
+    const isAncient = r.isAncient;
     const ancientTipRaw = tloc.tableAncientBadgeTitle || '';
-    const ancientTipAttr =
-      r.isAncient && ancientTipRaw ? ` data-swrm-tip="${escapeAttr(ancientTipRaw)}"` : '';
+    const gradeTip = isAncient && ancientTipRaw
+      ? `${gradeLabel} · ${ancientTipRaw}` 
+      : gradeLabel;
+    const ancientTipAttr = ` data-swrm-tip="${escapeAttr(gradeTip)}"`;
     const ancientLbl = escapeAttr(tloc.tableAncientBadge || 'Ancient');
-    const gradeAria = r.isAncient ? ` aria-label="${ancientLbl}, ${escapeAttr(gradeLabel)}"` : '';
-    const ancientIcon =
-      r.isAncient && (gradeKey === 'Hero' || gradeKey === 'Legend')
+    const gradeAria = isAncient ? ` aria-label="${ancientLbl}, ${escapeAttr(gradeLabel)}"` : '';
+    const ancientIcon = isAncient && (gradeKey === 'Hero' || gradeKey === 'Legend')
         ? '<span class="grade-tag__ancient-icon" aria-hidden="true"></span>'
         : '';
-    const grade = `<span class="grade-tag ${gradeClass}${r.isAncient ? ' grade-tag--ancient' : ''}"${ancientTipAttr}${gradeAria}>${ancientIcon}<span class="grade-tag__lbl">${gradeLabelHtml}</span></span>`;
+    const grade = `<span class="grade-tag ${gradeClass}${isAncient ? ' grade-tag--ancient' : ''}"${ancientTipAttr}${gradeAria}>${ancientIcon}<span class="grade-tag__lbl">${gradeLabelHtml}</span></span>`;
 
-    const tScore = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-    const ingameScore =
-      typeof getRuneIngameScore === 'function'
+    // Cache score calculations
+    const ingameScore = typeof getRuneIngameScore === 'function'
         ? getRuneIngameScore(r)
         : Number.isFinite(r.ingameScore)
           ? r.ingameScore
@@ -299,11 +304,11 @@
             ? window.SWRM.calcIngameScore(r)
             : 0;
     const ingameShown = String(ingameScore);
-    const ingameTip =
-      typeof window.SWRM?.ingameScoreBreakdown === 'function'
+    const ingameTip = typeof window.SWRM?.ingameScoreBreakdown === 'function'
         ? window.SWRM.ingameScoreBreakdown(r).join('\n')
         : tScore.tableIngameScoreHeaderTitle || '';
     const ingameTipAttr = ingameTip ? ` data-swrm-tip="${escapeAttr(ingameTip)}"` : '';
+    
     const scoreNum = Number.isFinite(r.forgeScore)
       ? r.forgeScore
       : typeof computeRuneScore === 'function'
@@ -311,13 +316,15 @@
         : 0;
     const scoreTier = typeof runeScoreTier === 'function' ? runeScoreTier(scoreNum) : 'stat-chip--score-lo';
     const scoreShown = String(scoreNum);
-    const scoreTip =
-      typeof runeScoreTooltip === 'function'
+    const scoreTip = typeof runeScoreTooltip === 'function'
         ? runeScoreTooltip(r, tScore)
         : tScore.tableScoreHint || '';
     const scoreTipAttr = scoreTip ? ` data-swrm-tip="${escapeAttr(scoreTip)}"` : '';
+    
     const rCls = roleClass(r.role);
     const subs = r.substats.slice(0, 4);
+    
+    // Cache stat formatting
     const innatePlain = r.innate_name
       ? formatRuneStatPlainText({
           type: r.innate_type,
@@ -328,22 +335,87 @@
     const innateHtml = innatePlain
       ? tableStatLine(highlightSearchInPlain(innatePlain, tableSearchHighlight))
       : '';
+      
     const mainPlain = formatRuneStatPlainText({
       type: r.mainType,
       name: r.mainName,
       val: r.mainVal,
     });
     const mainInner = highlightSearchInPlain(mainPlain, tableSearchHighlight);
+    
+    const setLevel = r.level || 0;
+    const ancientText = isAncient ? ' (Ancient)' : '';
+    const tooltipText = `Slot ${r.slot} | ${r.setName} +${setLevel}${ancientText}`;
+    
+    // Calculate pentagon points based on slot
+    const slotAngleMap = { 1: -90, 2: -30, 3: 30, 4: 90, 5: 150, 6: -150 };
+    const deg = slotAngleMap[r.slot] || 0;
+    const outerAngle = deg * Math.PI / 180;
+    const R = 16; // radius in pixels (half of 32px image)
+    const cx = 16;
+    const cy = 16;
+    
+    // Calculate polygon points
+    const points = [];
+    for (let i = 0; i < 5; i++) {
+      const angle = outerAngle + i * 2 * Math.PI / 5;
+      const r = i === 0 ? R * 1.9 : (i === 2 || i === 3) ? R * 0.62 : R;
+      const x = cx + r * Math.cos(angle);
+      const y = cy + r * Math.sin(angle);
+      points.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+    }
+    const polygonPoints = points.join(' ');
+    
+    // Calculate image offset (shift towards the tip)
+    const lx = cx + (R * 0.45) * Math.cos(outerAngle);
+    const ly = cy + (R * 0.45) * Math.sin(outerAngle);
+    const imageX = (lx - 16).toFixed(1);
+    const imageY = (ly - 16).toFixed(1);
+    
+    const setKey = String(r.setName || '')
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, '_');
+    const setIconUrl = setKey ? `assets/runes/sets/${setKey}.png` : '';
+    const setIconHtml = setIconUrl
+      ? `<div class="rune-table__set-wrapper${isAncient ? ' rune-table__set-wrapper--ancient' : ''}" data-swrm-tip="${escapeAttr(tooltipText)}">
+        <svg class="rune-table__set-icon rune-table__set-icon--${gradeClass}${isAncient ? ' rune-table__set-icon--ancient' : ''} rune-table__set-icon--slot-${r.slot}" width="48" height="48" viewBox="-16 -16 64 64">
+          <defs>
+            <clipPath id="clip-${r.id || Math.random().toString(36).substr(2, 9)}">
+              <polygon points="${polygonPoints}" />
+            </clipPath>
+            ${isAncient ? `
+            <filter id="glow-${r.id || Math.random().toString(36).substr(2, 9)}">
+              <feGaussianBlur stdDeviation="4" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+            ` : ''}
+          </defs>
+          ${isAncient ? `<polygon points="${polygonPoints}" fill="currentColor" filter="url(#glow-${r.id || Math.random().toString(36).substr(2, 9)})" opacity="0.6" />` : ''}
+          <polygon points="${polygonPoints}" fill="none" stroke-width="2" />
+          <image href="${escapeHtml(setIconUrl)}" width="32" height="32" x="${imageX}" y="${imageY}" clip-path="url(#clip-${r.id || Math.random().toString(36).substr(2, 9)})" />
+        </svg>
+        <span class="rune-table__set-level">+${setLevel}</span>
+      </div>`
+      : '';
+    
+    const setHtml = setIconHtml;
+    
     const roleText = roleDisplayName((r.role || '').trim());
     const roleHtml = roleText
       ? `<span class="role-tag ${rCls}">${highlightSearchInPlain(roleText, tableSearchHighlight)}</span>`
       : '';
+      
     const verdictText = (r.verdict || '').trim();
     const verdictTip = runeVerdictTipText(r);
     const verdictTipAttr = verdictTip ? ` data-swrm-tip="${escapeAttr(verdictTip)}"` : '';
     const verdictHtml = verdictText
       ? `<span class="verdict-tag ${verdictText.toLowerCase()}${verdictTip ? ' verdict-tag--has-tip' : ''}"${verdictTipAttr}>${highlightSearchInPlain(verdictText, tableSearchHighlight)}</span>`
       : '';
+      
     const locText = runeLocationLabel(r, tloc);
     const locHtml = tableStatLine(highlightSearchInPlain(locText, tableSearchHighlight));
 
@@ -356,12 +428,12 @@
     const rowIndex = opts && Number.isFinite(opts.rowIndex) ? opts.rowIndex : -1;
     const evenCls = rowIndex >= 0 && rowIndex % 2 === 1 ? ' rune-table__data-row--even' : '';
     const runeId = r.id != null ? String(r.id) : '';
+    
+    // Build row HTML
     return `<tr class="rune-table__data-row${evenCls}" data-rune-id="${escapeHtml(runeId)}">
-      <td class="col-slot col-num td-num-plain">${highlightSearchInPlain(String(r.slot), tableSearchHighlight)}</td>
-      <td class="col-set col-text">${tableStatLine(highlightSearchInPlain(r.setName, tableSearchHighlight), { set: true })}</td>
+      <td class="col-text col-location">${locHtml}</td>
+      <td class="col-set col-text">${setHtml}</td>
       <td class="col-main col-text">${tableStatLine(mainInner)}</td>
-      <td class="col-grade">${grade}</td>
-      <td class="col-lvl col-num td-num-plain">${highlightSearchInPlain(String(r.level), tableSearchHighlight)}</td>
       <td class="col-text col-innate col-block-gap">${innateHtml}</td>
       ${subCell(subs[0], true)}
       ${subCell(subs[1], false)}
@@ -371,7 +443,6 @@
       <td class="col-num col-score td-num td-num--score"><span class="stat-chip stat-chip--score ${scoreTier}${scoreTip ? ' stat-chip--has-tip' : ''}"${scoreTipAttr}>${highlightSearchInPlain(scoreShown, tableSearchHighlight)}</span></td>
       <td class="col-text col-verdict col-block-gap">${verdictHtml}</td>
       <td class="col-text col-role">${roleHtml}</td>
-      <td class="col-text col-location">${locHtml}</td>
       <td class="col-actions"><button type="button" class="rune-table__delete-btn btn-secondary btn-sm" data-delete-rune="${escapeHtml(runeId)}" title="Delete rune">×</button></td>
     </tr>`;
   }

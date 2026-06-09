@@ -2,11 +2,20 @@
   display: block;
 }
 
-.monsters-table-wrap {
-  overflow: auto;
+.monsters-grid--table-view {
+  display: none;
+}
+
+.monsters-table-scroll {
+  overflow-y: auto;
+  max-height: calc(100vh - 320px);
   border: 1px solid var(--border2);
   border-radius: var(--radius);
   background: var(--surface);
+}
+
+.monsters-table-wrap {
+  /* overflow, border, radius, background handled by scroller */
 }
 
 .monsters-table {

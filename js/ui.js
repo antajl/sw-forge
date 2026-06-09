@@ -657,10 +657,9 @@
         if (query) applyRuneTableQueryParams(new URLSearchParams(query));
         updateSortHeaderClasses();
         updateRuneTableFilterIndicators();
+        // Don't render here - defer to after animation completes
         if (typeof flushRuneTableRenderIfNeeded === 'function') {
-          flushRuneTableRenderIfNeeded();
-        } else {
-          applyFiltersAndSort(getVisibleRunes(), { preserveTableExpansion: true });
+          runeTableRenderPending = true;
         }
       } else if (typeof showTableKind === 'function') {
         showTableKind(kind);
@@ -999,17 +998,31 @@
             const monstersRoot = document.getElementById('tab-monsters');
             if (monstersRoot) monstersRoot.scrollTop = 0;
           }
+          // Render rune table after animation completes
+          if (main === 'runes') {
+            if (typeof flushRuneTableRenderIfNeeded === 'function') {
+              flushRuneTableRenderIfNeeded();
+            }
+          }
         },
       });
       if (!started) {
         document.querySelectorAll('.tab-content').forEach((el) => {
           el.classList.toggle('hidden', el.id !== `tab-${main}`);
         });
+        // Fallback: render rune table if animation didn't start
+        if (main === 'runes' && typeof flushRuneTableRenderIfNeeded === 'function') {
+          flushRuneTableRenderIfNeeded();
+        }
       }
     } else {
       document.querySelectorAll('.tab-content').forEach((el) => {
         el.classList.toggle('hidden', el.id !== `tab-${main}`);
       });
+      // Fallback: render rune table if GSAP is disabled
+      if (main === 'runes' && typeof flushRuneTableRenderIfNeeded === 'function') {
+        flushRuneTableRenderIfNeeded();
+      }
     }
 
     if (main === 'dashboard') {
@@ -7000,25 +7013,30 @@
   }
 
   function runeRow(r, opts) {
+    // Cache translations to avoid repeated lookups
     const tloc = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+    const tScore = tloc;
+    
     const gradeKey = r.gradeStr;
     const gradeClass = { Legend: 'legend', Hero: 'hero', Rare: 'rare' }[gradeKey] || 'grade-tag--other';
     const gradeLabel = { Legend: 'Legend', Hero: 'Hero', Rare: 'Rare' }[gradeKey] || String(r.gradeStr);
     const gradeLabelHtml = highlightSearchInPlain(gradeLabel, tableSearchHighlight);
+    
+    const isAncient = r.isAncient;
     const ancientTipRaw = tloc.tableAncientBadgeTitle || '';
-    const ancientTipAttr =
-      r.isAncient && ancientTipRaw ? ` data-swrm-tip="${escapeAttr(ancientTipRaw)}"` : '';
+    const gradeTip = isAncient && ancientTipRaw
+      ? `${gradeLabel} · ${ancientTipRaw}` 
+      : gradeLabel;
+    const ancientTipAttr = ` data-swrm-tip="${escapeAttr(gradeTip)}"`;
     const ancientLbl = escapeAttr(tloc.tableAncientBadge || 'Ancient');
-    const gradeAria = r.isAncient ? ` aria-label="${ancientLbl}, ${escapeAttr(gradeLabel)}"` : '';
-    const ancientIcon =
-      r.isAncient && (gradeKey === 'Hero' || gradeKey === 'Legend')
+    const gradeAria = isAncient ? ` aria-label="${ancientLbl}, ${escapeAttr(gradeLabel)}"` : '';
+    const ancientIcon = isAncient && (gradeKey === 'Hero' || gradeKey === 'Legend')
         ? '<span class="grade-tag__ancient-icon" aria-hidden="true"></span>'
         : '';
-    const grade = `<span class="grade-tag ${gradeClass}${r.isAncient ? ' grade-tag--ancient' : ''}"${ancientTipAttr}${gradeAria}>${ancientIcon}<span class="grade-tag__lbl">${gradeLabelHtml}</span></span>`;
+    const grade = `<span class="grade-tag ${gradeClass}${isAncient ? ' grade-tag--ancient' : ''}"${ancientTipAttr}${gradeAria}>${ancientIcon}<span class="grade-tag__lbl">${gradeLabelHtml}</span></span>`;
 
-    const tScore = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-    const ingameScore =
-      typeof getRuneIngameScore === 'function'
+    // Cache score calculations
+    const ingameScore = typeof getRuneIngameScore === 'function'
         ? getRuneIngameScore(r)
         : Number.isFinite(r.ingameScore)
           ? r.ingameScore
@@ -7026,11 +7044,11 @@
             ? window.SWRM.calcIngameScore(r)
             : 0;
     const ingameShown = String(ingameScore);
-    const ingameTip =
-      typeof window.SWRM?.ingameScoreBreakdown === 'function'
+    const ingameTip = typeof window.SWRM?.ingameScoreBreakdown === 'function'
         ? window.SWRM.ingameScoreBreakdown(r).join('\n')
         : tScore.tableIngameScoreHeaderTitle || '';
     const ingameTipAttr = ingameTip ? ` data-swrm-tip="${escapeAttr(ingameTip)}"` : '';
+    
     const scoreNum = Number.isFinite(r.forgeScore)
       ? r.forgeScore
       : typeof computeRuneScore === 'function'
@@ -7038,13 +7056,15 @@
         : 0;
     const scoreTier = typeof runeScoreTier === 'function' ? runeScoreTier(scoreNum) : 'stat-chip--score-lo';
     const scoreShown = String(scoreNum);
-    const scoreTip =
-      typeof runeScoreTooltip === 'function'
+    const scoreTip = typeof runeScoreTooltip === 'function'
         ? runeScoreTooltip(r, tScore)
         : tScore.tableScoreHint || '';
     const scoreTipAttr = scoreTip ? ` data-swrm-tip="${escapeAttr(scoreTip)}"` : '';
+    
     const rCls = roleClass(r.role);
     const subs = r.substats.slice(0, 4);
+    
+    // Cache stat formatting
     const innatePlain = r.innate_name
       ? formatRuneStatPlainText({
           type: r.innate_type,
@@ -7055,22 +7075,87 @@
     const innateHtml = innatePlain
       ? tableStatLine(highlightSearchInPlain(innatePlain, tableSearchHighlight))
       : '';
+      
     const mainPlain = formatRuneStatPlainText({
       type: r.mainType,
       name: r.mainName,
       val: r.mainVal,
     });
     const mainInner = highlightSearchInPlain(mainPlain, tableSearchHighlight);
+    
+    const setLevel = r.level || 0;
+    const ancientText = isAncient ? ' (Ancient)' : '';
+    const tooltipText = `Slot ${r.slot} | ${r.setName} +${setLevel}${ancientText}`;
+    
+    // Calculate pentagon points based on slot
+    const slotAngleMap = { 1: -90, 2: -30, 3: 30, 4: 90, 5: 150, 6: -150 };
+    const deg = slotAngleMap[r.slot] || 0;
+    const outerAngle = deg * Math.PI / 180;
+    const R = 16; // radius in pixels (half of 32px image)
+    const cx = 16;
+    const cy = 16;
+    
+    // Calculate polygon points
+    const points = [];
+    for (let i = 0; i < 5; i++) {
+      const angle = outerAngle + i * 2 * Math.PI / 5;
+      const r = i === 0 ? R * 1.9 : (i === 2 || i === 3) ? R * 0.62 : R;
+      const x = cx + r * Math.cos(angle);
+      const y = cy + r * Math.sin(angle);
+      points.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+    }
+    const polygonPoints = points.join(' ');
+    
+    // Calculate image offset (shift towards the tip)
+    const lx = cx + (R * 0.45) * Math.cos(outerAngle);
+    const ly = cy + (R * 0.45) * Math.sin(outerAngle);
+    const imageX = (lx - 16).toFixed(1);
+    const imageY = (ly - 16).toFixed(1);
+    
+    const setKey = String(r.setName || '')
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, '_');
+    const setIconUrl = setKey ? `assets/runes/sets/${setKey}.png` : '';
+    const setIconHtml = setIconUrl
+      ? `<div class="rune-table__set-wrapper${isAncient ? ' rune-table__set-wrapper--ancient' : ''}" data-swrm-tip="${escapeAttr(tooltipText)}">
+        <svg class="rune-table__set-icon rune-table__set-icon--${gradeClass}${isAncient ? ' rune-table__set-icon--ancient' : ''} rune-table__set-icon--slot-${r.slot}" width="48" height="48" viewBox="-16 -16 64 64">
+          <defs>
+            <clipPath id="clip-${r.id || Math.random().toString(36).substr(2, 9)}">
+              <polygon points="${polygonPoints}" />
+            </clipPath>
+            ${isAncient ? `
+            <filter id="glow-${r.id || Math.random().toString(36).substr(2, 9)}">
+              <feGaussianBlur stdDeviation="4" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+            ` : ''}
+          </defs>
+          ${isAncient ? `<polygon points="${polygonPoints}" fill="currentColor" filter="url(#glow-${r.id || Math.random().toString(36).substr(2, 9)})" opacity="0.6" />` : ''}
+          <polygon points="${polygonPoints}" fill="none" stroke-width="2" />
+          <image href="${escapeHtml(setIconUrl)}" width="32" height="32" x="${imageX}" y="${imageY}" clip-path="url(#clip-${r.id || Math.random().toString(36).substr(2, 9)})" />
+        </svg>
+        <span class="rune-table__set-level">+${setLevel}</span>
+      </div>`
+      : '';
+    
+    const setHtml = setIconHtml;
+    
     const roleText = roleDisplayName((r.role || '').trim());
     const roleHtml = roleText
       ? `<span class="role-tag ${rCls}">${highlightSearchInPlain(roleText, tableSearchHighlight)}</span>`
       : '';
+      
     const verdictText = (r.verdict || '').trim();
     const verdictTip = runeVerdictTipText(r);
     const verdictTipAttr = verdictTip ? ` data-swrm-tip="${escapeAttr(verdictTip)}"` : '';
     const verdictHtml = verdictText
       ? `<span class="verdict-tag ${verdictText.toLowerCase()}${verdictTip ? ' verdict-tag--has-tip' : ''}"${verdictTipAttr}>${highlightSearchInPlain(verdictText, tableSearchHighlight)}</span>`
       : '';
+      
     const locText = runeLocationLabel(r, tloc);
     const locHtml = tableStatLine(highlightSearchInPlain(locText, tableSearchHighlight));
 
@@ -7083,12 +7168,12 @@
     const rowIndex = opts && Number.isFinite(opts.rowIndex) ? opts.rowIndex : -1;
     const evenCls = rowIndex >= 0 && rowIndex % 2 === 1 ? ' rune-table__data-row--even' : '';
     const runeId = r.id != null ? String(r.id) : '';
+    
+    // Build row HTML
     return `<tr class="rune-table__data-row${evenCls}" data-rune-id="${escapeHtml(runeId)}">
-      <td class="col-slot col-num td-num-plain">${highlightSearchInPlain(String(r.slot), tableSearchHighlight)}</td>
-      <td class="col-set col-text">${tableStatLine(highlightSearchInPlain(r.setName, tableSearchHighlight), { set: true })}</td>
+      <td class="col-text col-location">${locHtml}</td>
+      <td class="col-set col-text">${setHtml}</td>
       <td class="col-main col-text">${tableStatLine(mainInner)}</td>
-      <td class="col-grade">${grade}</td>
-      <td class="col-lvl col-num td-num-plain">${highlightSearchInPlain(String(r.level), tableSearchHighlight)}</td>
       <td class="col-text col-innate col-block-gap">${innateHtml}</td>
       ${subCell(subs[0], true)}
       ${subCell(subs[1], false)}
@@ -7098,13 +7183,12 @@
       <td class="col-num col-score td-num td-num--score"><span class="stat-chip stat-chip--score ${scoreTier}${scoreTip ? ' stat-chip--has-tip' : ''}"${scoreTipAttr}>${highlightSearchInPlain(scoreShown, tableSearchHighlight)}</span></td>
       <td class="col-text col-verdict col-block-gap">${verdictHtml}</td>
       <td class="col-text col-role">${roleHtml}</td>
-      <td class="col-text col-location">${locHtml}</td>
       <td class="col-actions"><button type="button" class="rune-table__delete-btn btn-secondary btn-sm" data-delete-rune="${escapeHtml(runeId)}" title="Delete rune">×</button></td>
     </tr>`;
   }
 
   const RUNE_TABLE_VIRTUAL_COLS = 15;
-  const RUNE_TABLE_VIRTUAL_OVERSCAN = 6;
+  const RUNE_TABLE_VIRTUAL_OVERSCAN = 3;
   const RUNE_TABLE_VIRTUAL_ROW_FALLBACK = 44;
   const RUNE_TABLE_VIRTUAL_SPACER_COL_CLASSES = [
     'col-slot',
@@ -7367,7 +7451,7 @@
     try {
       const base = window.location.pathname + window.location.search;
       const suf = buildRuneTableQuerySuffix();
-      history.replaceState(null, '', `${base}#runetable${suf}`);
+      history.replaceState(null, '', `${base}#gear/runetable${suf}`);
     } catch (e) { /* ignore */ }
   }
 
@@ -7841,7 +7925,7 @@
       return true;
     });
 
-    sortRunesInPlace(filteredRunes, sortKey, sortDir);
+    sortRunesInPlace(filteredRunes, currentSortKey, currentSortDir);
 
     if (!isRuneTableRunesTabActive()) {
       runeTableRenderPending = true;
@@ -7864,6 +7948,7 @@
     if (typeof bindRuneTableVirtualScroll === 'function') bindRuneTableVirtualScroll();
     if (typeof paintRuneTableVirtualBody === 'function') {
       runeVirtualLastKey = '';
+      // Render immediately - animation callback will handle deferred render if needed
       paintRuneTableVirtualBody(filteredRunes);
     } else {
       const cap = runeTableShowAll ? total : Math.min(RUNE_TABLE_PAGE, total);
@@ -7883,6 +7968,10 @@
     }
   }
 
+  // Sort state (exported for use in applyFiltersAndSort)
+  let currentSortKey = 'score';
+  let currentSortDir = 'desc';
+
   function bindRuneTableFiltersDrawer() {
     const onFilter = () => {
       updateRuneTableFilterIndicators();
@@ -7890,6 +7979,56 @@
     };
 
     bindFiltersPopover('rune-more-filters-btn', 'rune-filters-popover', { onClose: onFilter });
+
+    // Sort by popover
+    const updateSortButton = () => {
+      const sortBtn = document.getElementById('lbl-rune-sort');
+      if (!sortBtn) return;
+      const dirSymbol = currentSortDir === 'asc' ? '↑' : '↓';
+      const keyNames = {
+        score: 'Forge',
+        eff: 'Ingame',
+        verdict: 'Verdict',
+        set: 'Set',
+        main: 'Main',
+        location: 'Location',
+        role: 'Role'
+      };
+      const keyName = keyNames[currentSortKey] || currentSortKey;
+      sortBtn.textContent = `Sort by ${keyName} ${dirSymbol}`;
+    };
+
+    const onSort = (key, dir) => {
+      currentSortKey = key;
+      currentSortDir = dir;
+      
+      // Update active class
+      document.querySelectorAll('.sort-option').forEach(btn => {
+        btn.classList.remove('sort-option--active');
+        if (btn.getAttribute('data-sort-key') === key && btn.getAttribute('data-sort-dir') === dir) {
+          btn.classList.add('sort-option--active');
+        }
+      });
+      
+      updateSortButton();
+      applyFiltersAndSort(getVisibleRunes());
+    };
+
+    bindFiltersPopover('rune-sort-btn', 'rune-sort-popover', { onClose: () => {} });
+
+    document.querySelectorAll('.sort-option').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const key = btn.getAttribute('data-sort-key');
+        const dir = btn.getAttribute('data-sort-dir');
+        onSort(key, dir);
+        
+        // Close popover
+        const popover = document.getElementById('rune-sort-popover');
+        const host = document.querySelector('.filters-popover-host[data-anchor-btn="rune-sort-btn"]') || document.getElementById('rune-sort-btn').parentElement;
+        if (popover) popover.hidden = true;
+        if (host) host.classList.remove('is-open');
+      });
+    });
 
     document.getElementById('rune-filters-drawer-reset')?.addEventListener('click', () => {
       ['filter-verdict', 'filter-role', 'filter-grade', 'filter-set', 'filter-slot', 'filter-main', 'filter-rune-location'].forEach((id) => {
@@ -7919,6 +8058,8 @@
   const TABLE_KIND_IDS = ['runes', 'artifacts', 'relics'];
   const TABLE_KIND_STORAGE_KEY = 'swrm_table_kind_v1';
   let tableKindTabsBound = false;
+  let artifactTableRendered = false;
+  let relicTableRendered = false;
 
   function normalizeTableKind(id) {
     return TABLE_KIND_IDS.includes(id) ? id : 'runes';
@@ -8080,15 +8221,26 @@
     }
   }
 
-  function renderGearTables() {
+  function renderGearTables(options) {
+    const kind = typeof readTableKind === 'function' ? readTableKind() : 'runes';
+    const force = options && options.force;
+    
     if (typeof applyArtifactFiltersFromDom === 'function') applyArtifactFiltersFromDom();
     if (typeof applyRelicFiltersFromDom === 'function') applyRelicFiltersFromDom();
     applyArtifactTableSearch();
     applyRelicTableSearch();
-    renderArtifactTableBody();
-    renderRelicTableBody();
+    
+    // Lazy render: only render the active table, defer others
+    if (kind === 'artifacts' || force) {
+      renderArtifactTableBody();
+      artifactTableRendered = true;
+    }
+    if (kind === 'relics' || force) {
+      renderRelicTableBody();
+      relicTableRendered = true;
+    }
+    
     updateGearTableCount();
-    const kind = typeof readTableKind === 'function' ? readTableKind() : 'runes';
     if (kind === 'artifacts' && typeof updateArtifactFilterBadge === 'function') {
       updateArtifactFilterBadge();
     } else if (kind === 'relics' && typeof updateRelicFilterBadge === 'function') {
@@ -8192,6 +8344,7 @@
       }
       applyFiltersAndSort(getVisibleRunes(), { preserveTableExpansion: true });
     } else {
+      // Lazy render: only render the active gear table
       renderGearTables();
     }
   }
@@ -10343,7 +10496,7 @@
 
 
   const ARTIFACT_TABLE_VIRTUAL_COLS = 9;
-  const ARTIFACT_TABLE_VIRTUAL_OVERSCAN = 8;
+  const ARTIFACT_TABLE_VIRTUAL_OVERSCAN = 3;
   const ARTIFACT_TABLE_VIRTUAL_ROW_FALLBACK = 44;
   const ARTIFACT_TABLE_VIRTUAL_SPACER_COL_CLASSES = [
     'col-grade',
@@ -10959,6 +11112,7 @@
         case 'grade':   av = a.grade;   bv = b.grade;   break;
         case 'level':   av = a.level;   bv = b.level;   break;
         case 'main':    av = a.mainName;bv = b.mainName;break;
+        case 'location':av = a.equipped_name || (isRuneEquipped(a) ? a.equipped_name : 'Inventory'); bv = b.equipped_name || (isRuneEquipped(b) ? b.equipped_name : 'Inventory'); break;
         case 'score':
           av = typeof computeRuneScore === 'function' ? computeRuneScore(a) : 0;
           bv = typeof computeRuneScore === 'function' ? computeRuneScore(b) : 0;
@@ -20571,6 +20725,199 @@
     { id: 'tags', labelKey: 'monstersColTags', fallback: 'Tags', sortable: true },
   ];
 
+  const MONSTERS_TABLE_VIRTUAL_COLS = 12;
+  const MONSTERS_TABLE_VIRTUAL_OVERSCAN = 3;
+  const MONSTERS_TABLE_VIRTUAL_ROW_FALLBACK = 44;
+  const MONSTERS_TABLE_VIRTUAL_SPACER_COL_CLASSES = [
+    'monsters-table__td-bulk',
+    'monsters-table__td-name',
+    'monsters-table__td-stars',
+    'monsters-table__td-level',
+    'monsters-table__td-element',
+    'monsters-table__td-role',
+    'monsters-table__td-runes',
+    'monsters-table__td-skills',
+    'monsters-table__td-mark',
+    'monsters-table__td-mark',
+    'monsters-table__td-mark',
+    'monsters-table__td-tags',
+  ];
+
+  let monstersVirtualRowHeight = 0;
+  let monstersVirtualScrollRaf = 0;
+  let monstersVirtualBound = false;
+  let monstersVirtualLastKey = '';
+  let monstersVirtualData = [];
+
+  function monstersTableVirtualScroller() {
+    return document.getElementById('monsters-table-scroll');
+  }
+
+  function monstersTableVirtualSpacerRow(heightPx) {
+    const h = Math.max(0, Math.round(heightPx));
+    if (h <= 0) return '';
+    const cells = MONSTERS_TABLE_VIRTUAL_SPACER_COL_CLASSES.map(
+      (cls) =>
+        `<td class="${cls}" style="height:${h}px;padding:0;border:none;line-height:0" aria-hidden="true"></td>`,
+    ).join('');
+    return `<tr class="monsters-table__spacer" aria-hidden="true">${cells}</tr>`;
+  }
+
+  function measureMonstersVirtualRowHeight(tbody) {
+    const row = tbody && tbody.querySelector('tr.monsters-table__row');
+    if (!row) return 0;
+    const h = row.getBoundingClientRect().height;
+    return h > 0 ? Math.ceil(h) : 0;
+  }
+
+  function monstersVirtualRangeKey(start, end, total) {
+    return `${total}:${start}:${end}:${monstersVirtualRowHeight}`;
+  }
+
+  function resetMonstersTableVirtualScroll() {
+    const scroller = monstersTableVirtualScroller();
+    if (scroller) scroller.scrollTop = 0;
+    monstersVirtualLastKey = '';
+  }
+
+  function scheduleMonstersTableVirtualRepaint() {
+    if (monstersVirtualScrollRaf) return;
+    monstersVirtualScrollRaf = requestAnimationFrame(() => {
+      monstersVirtualScrollRaf = 0;
+      if (typeof paintMonstersTableVirtualBody === 'function') {
+        paintMonstersTableVirtualBody(monstersVirtualData);
+      }
+    });
+  }
+
+  function paintMonstersTableVirtualBody(rows) {
+    const tbody = document.getElementById('monsters-tbody');
+    const scroller = monstersTableVirtualScroller();
+    if (!tbody || !scroller) return;
+
+    const list = rows || [];
+    monstersVirtualData = list; // Store data for repaint
+    const total = list.length;
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+
+    if (!total) {
+      monstersVirtualLastKey = 'empty';
+      tbody.innerHTML = `<tr><td colspan="${MONSTERS_TABLE_VIRTUAL_COLS}" class="table-empty">${escapeHtml(t.monstersListEmpty || 'No monsters match the current filters.')}</td></tr>`;
+      return;
+    }
+
+    let rowH = monstersVirtualRowHeight;
+    if (!rowH) rowH = MONSTERS_TABLE_VIRTUAL_ROW_FALLBACK;
+
+    const viewH = Math.max(scroller.clientHeight, 120);
+    const scrollTop = Math.max(0, scroller.scrollTop);
+    const start = Math.max(0, Math.floor(scrollTop / rowH) - MONSTERS_TABLE_VIRTUAL_OVERSCAN);
+    const visibleCount = Math.ceil(viewH / rowH) + MONSTERS_TABLE_VIRTUAL_OVERSCAN * 2;
+    const end = Math.min(total, start + visibleCount);
+
+    const key = monstersVirtualRangeKey(start, end, total);
+    if (key === monstersVirtualLastKey) return;
+    monstersVirtualLastKey = key;
+
+    const topPad = start * rowH;
+    const bottomPad = (total - end) * rowH;
+    const slice = list.slice(start, end);
+
+    const head = buildMonsterTableHeadHtml(t);
+    const body = slice
+      .map((u) => {
+        const uid = escapeHtml(String(u.unitId));
+        const bulkSel = monstersBulkSelected.has(String(u.unitId));
+        const pinned =
+          monstersDetailPinnedUnitId != null &&
+          String(monstersDetailPinnedUnitId) === String(u.unitId);
+        const hover =
+          !pinned &&
+          monstersDetailHoverUnitId != null &&
+          String(monstersDetailHoverUnitId) === String(u.unitId);
+        const elCls = elementClass(u.metaElement);
+        const rowCls = [
+          bulkSel ? 'monsters-table__row--bulk-on' : '',
+          pinned ? 'monsters-table__row--pinned' : '',
+          hover ? 'monsters-table__row--hover' : '',
+          elCls ? `monsters-table__row--${elCls}` : '',
+        ]
+          .filter(Boolean)
+          .join(' ');
+        const q = monstersSearchHighlight || '';
+        const name = highlightMonstersSearchInPlain(u.displayName || `#${u.masterId}`, q);
+        const runeTpl = t.monstersListRunesTpl || '{n}/6';
+        const runes = highlightMonstersSearchInPlain(
+          runeTpl.replace(/\{n\}/g, String(u.equippedCount || 0)),
+          q,
+        );
+        const skills =
+          u.skillUpsNeeded > 0
+            ? `<span class="monsters-table__devils" title="${escapeHtml((t.monstersSkillDeficitTip || '{n} to max').replace(/\{n\}/g, String(u.skillUpsNeeded)))}">${devilmonIconHtml('monsters-table__devil-icon')}<span class="monsters-table__devil-n">${escapeHtml(String(u.skillUpsNeeded))}</span></span>`
+            : u.skillsMaxed
+              ? '✓'
+              : '—';
+        return `<tr class="monsters-table__row${rowCls ? ` ${rowCls}` : ''}" data-unit-id="${uid}" tabindex="0">
+          <td data-col="bulk" class="monsters-table__td-bulk"><input type="checkbox" class="monsters-table__bulk-cb" data-unit-id="${uid}" ${bulkSel ? 'checked' : ''} aria-label="${escapeHtml(t.monstersBulkSelectOne || 'Select')}" /></td>
+          <td data-col="name"><div class="monsters-table__name-cell">${monsterTableThumbHtml(u)}<span class="monsters-table__name">${name}</span></div></td>
+          <td data-col="stars">${monsterTableCellStars(u)}</td>
+          <td data-col="level">${highlightMonstersSearchInPlain(String(u.level), q)}</td>
+          <td data-col="element">${monsterTableElementCell(u)}</td>
+          <td data-col="role">${highlightMonstersSearchInPlain(u.metaArchetype || '—', q)}</td>
+          <td data-col="runes">${runes}</td>
+          <td data-col="skills">${skills}</td>
+          <td data-col="favorite" class="monsters-table__td-mark">${buildMonsterTableMarkBtn(u, 'favorite', t)}</td>
+          <td data-col="food" class="monsters-table__td-mark">${buildMonsterTableMarkBtn(u, 'food', t)}</td>
+          <td data-col="storage" class="monsters-table__td-mark">${buildMonsterTableMarkBtn(u, 'storage', t)}</td>
+          <td data-col="tags">${monsterTableCellTags(u)}</td>
+        </tr>`;
+      })
+      .join('');
+
+    tbody.innerHTML =
+      monstersTableVirtualSpacerRow(topPad) +
+      body +
+      monstersTableVirtualSpacerRow(bottomPad);
+
+    const measured = measureMonstersVirtualRowHeight(tbody);
+    if (measured && measured !== monstersVirtualRowHeight) {
+      monstersVirtualRowHeight = measured;
+      scroller.style.setProperty('--monsters-virtual-row-h', `${measured}px`);
+      monstersVirtualLastKey = '';
+      scheduleMonstersTableVirtualRepaint();
+      return;
+    }
+    if (!monstersVirtualRowHeight && measured) {
+      monstersVirtualRowHeight = measured;
+      scroller.style.setProperty('--monsters-virtual-row-h', `${measured}px`);
+    }
+
+    // Rebind events after repaint
+    const table = tbody.closest('table');
+    if (table) {
+      bindMonsterTableRows(table, t);
+    }
+  }
+
+  function bindMonstersTableVirtualScroll() {
+    if (monstersVirtualBound) return;
+    const scroller = monstersTableVirtualScroller();
+    if (!scroller) return;
+    monstersVirtualBound = true;
+    scroller.classList.add('table-wrap--virtual');
+    scroller.addEventListener(
+      'scroll',
+      () => {
+        scheduleMonstersTableVirtualRepaint();
+      },
+      { passive: true },
+    );
+    window.addEventListener('resize', () => {
+      monstersVirtualLastKey = '';
+      scheduleMonstersTableVirtualRepaint();
+    });
+  }
+
   function monsterTableCellStars(u) {
     return buildMonsterStarsBadge(u, 'table');
   }
@@ -20704,6 +21051,54 @@
     } else {
       monstersTableSort.dir = monstersTableSort.dir === 'desc' ? 'asc' : 'desc';
     }
+  }
+
+  function buildMonsterTableRow(u, t) {
+    const uid = escapeHtml(String(u.unitId));
+    const bulkSel = monstersBulkSelected.has(String(u.unitId));
+    const pinned =
+      monstersDetailPinnedUnitId != null &&
+      String(monstersDetailPinnedUnitId) === String(u.unitId);
+    const hover =
+      !pinned &&
+      monstersDetailHoverUnitId != null &&
+      String(monstersDetailHoverUnitId) === String(u.unitId);
+    const elCls = elementClass(u.metaElement);
+    const rowCls = [
+      bulkSel ? 'monsters-table__row--bulk-on' : '',
+      pinned ? 'monsters-table__row--pinned' : '',
+      hover ? 'monsters-table__row--hover' : '',
+      elCls ? `monsters-table__row--${elCls}` : '',
+    ]
+      .filter(Boolean)
+      .join(' ');
+    const q = monstersSearchHighlight || '';
+    const name = highlightMonstersSearchInPlain(u.displayName || `#${u.masterId}`, q);
+    const runeTpl = t.monstersListRunesTpl || '{n}/6';
+    const runes = highlightMonstersSearchInPlain(
+      runeTpl.replace(/\{n\}/g, String(u.equippedCount || 0)),
+      q,
+    );
+    const skills =
+      u.skillUpsNeeded > 0
+        ? `<span class="monsters-table__devils" title="${escapeHtml((t.monstersSkillDeficitTip || '{n} to max').replace(/\{n\}/g, String(u.skillUpsNeeded)))}">${devilmonIconHtml('monsters-table__devil-icon')}<span class="monsters-table__devil-n">${escapeHtml(String(u.skillUpsNeeded))}</span></span>`
+        : u.skillsMaxed
+          ? '✓'
+          : '—';
+    return `<tr class="monsters-table__row${rowCls ? ` ${rowCls}` : ''}" data-unit-id="${uid}" tabindex="0">
+      <td data-col="bulk" class="monsters-table__td-bulk"><input type="checkbox" class="monsters-table__bulk-cb" data-unit-id="${uid}" ${bulkSel ? 'checked' : ''} aria-label="${escapeHtml(t.monstersBulkSelectOne || 'Select')}" /></td>
+      <td data-col="name"><div class="monsters-table__name-cell">${monsterTableThumbHtml(u)}<span class="monsters-table__name">${name}</span></div></td>
+      <td data-col="stars">${monsterTableCellStars(u)}</td>
+      <td data-col="level">${highlightMonstersSearchInPlain(String(u.level), q)}</td>
+      <td data-col="element">${monsterTableElementCell(u)}</td>
+      <td data-col="role">${highlightMonstersSearchInPlain(u.metaArchetype || '—', q)}</td>
+      <td data-col="runes">${runes}</td>
+      <td data-col="skills">${skills}</td>
+      <td data-col="favorite" class="monsters-table__td-mark">${buildMonsterTableMarkBtn(u, 'favorite', t)}</td>
+      <td data-col="food" class="monsters-table__td-mark">${buildMonsterTableMarkBtn(u, 'food', t)}</td>
+      <td data-col="storage" class="monsters-table__td-mark">${buildMonsterTableMarkBtn(u, 'storage', t)}</td>
+      <td data-col="tags">${monsterTableCellTags(u)}</td>
+    </tr>`;
   }
 
   function buildMonsterTableHtml(visible, t) {
@@ -20988,9 +21383,39 @@
     syncMonstersViewToggle(view);
 
     if (view === 'table') {
-      grid.innerHTML = buildMonsterTableHtml(visible, t);
-      bindMonsterTableRows(grid, t);
+      const tableScroll = document.getElementById('monsters-table-scroll');
+      const tableGrid = document.getElementById('monsters-grid');
+      const thead = document.getElementById('monsters-thead');
+      const tbody = document.getElementById('monsters-tbody');
+      
+      // Show table scroll container, hide cards grid
+      if (tableScroll) tableScroll.hidden = false;
+      if (tableGrid) tableGrid.classList.add('monsters-grid--table-view');
+      
+      // Set table head
+      if (thead && typeof buildMonsterTableHeadHtml === 'function') {
+        thead.innerHTML = buildMonsterTableHeadHtml(t);
+      }
+      
+      // Use virtual scroll for table body
+      monstersVisibleUnits = visible.map((u) => String(u.unitId));
+      if (typeof bindMonstersTableVirtualScroll === 'function') bindMonstersTableVirtualScroll();
+      if (typeof resetMonstersTableVirtualScroll === 'function') resetMonstersTableVirtualScroll();
+      if (typeof paintMonstersTableVirtualBody === 'function') {
+        monstersVirtualLastKey = '';
+        paintMonstersTableVirtualBody(visible);
+      } else {
+        // Fallback to non-virtual rendering
+        if (tbody) tbody.innerHTML = visible.map((u) => buildMonsterTableRow(u, t)).join('');
+        if (tableScroll) bindMonsterTableRows(tableScroll, t);
+      }
     } else if (view === 'cards') {
+      // Hide table scroll container, show cards grid
+      const tableScroll = document.getElementById('monsters-table-scroll');
+      const tableGrid = document.getElementById('monsters-grid');
+      if (tableScroll) tableScroll.hidden = true;
+      if (tableGrid) tableGrid.classList.remove('monsters-grid--table-view');
+      
       grid.innerHTML = visible.map((u) => buildMonsterCardHtml(u, db, t, view)).join('');
       grid.querySelectorAll('.monsters-card__img[data-img-file]').forEach((img) => {
         const file = img.getAttribute('data-img-file');

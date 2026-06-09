@@ -14,6 +14,199 @@
     { id: 'tags', labelKey: 'monstersColTags', fallback: 'Tags', sortable: true },
   ];
 
+  const MONSTERS_TABLE_VIRTUAL_COLS = 12;
+  const MONSTERS_TABLE_VIRTUAL_OVERSCAN = 3;
+  const MONSTERS_TABLE_VIRTUAL_ROW_FALLBACK = 44;
+  const MONSTERS_TABLE_VIRTUAL_SPACER_COL_CLASSES = [
+    'monsters-table__td-bulk',
+    'monsters-table__td-name',
+    'monsters-table__td-stars',
+    'monsters-table__td-level',
+    'monsters-table__td-element',
+    'monsters-table__td-role',
+    'monsters-table__td-runes',
+    'monsters-table__td-skills',
+    'monsters-table__td-mark',
+    'monsters-table__td-mark',
+    'monsters-table__td-mark',
+    'monsters-table__td-tags',
+  ];
+
+  let monstersVirtualRowHeight = 0;
+  let monstersVirtualScrollRaf = 0;
+  let monstersVirtualBound = false;
+  let monstersVirtualLastKey = '';
+  let monstersVirtualData = [];
+
+  function monstersTableVirtualScroller() {
+    return document.getElementById('monsters-table-scroll');
+  }
+
+  function monstersTableVirtualSpacerRow(heightPx) {
+    const h = Math.max(0, Math.round(heightPx));
+    if (h <= 0) return '';
+    const cells = MONSTERS_TABLE_VIRTUAL_SPACER_COL_CLASSES.map(
+      (cls) =>
+        `<td class="${cls}" style="height:${h}px;padding:0;border:none;line-height:0" aria-hidden="true"></td>`,
+    ).join('');
+    return `<tr class="monsters-table__spacer" aria-hidden="true">${cells}</tr>`;
+  }
+
+  function measureMonstersVirtualRowHeight(tbody) {
+    const row = tbody && tbody.querySelector('tr.monsters-table__row');
+    if (!row) return 0;
+    const h = row.getBoundingClientRect().height;
+    return h > 0 ? Math.ceil(h) : 0;
+  }
+
+  function monstersVirtualRangeKey(start, end, total) {
+    return `${total}:${start}:${end}:${monstersVirtualRowHeight}`;
+  }
+
+  function resetMonstersTableVirtualScroll() {
+    const scroller = monstersTableVirtualScroller();
+    if (scroller) scroller.scrollTop = 0;
+    monstersVirtualLastKey = '';
+  }
+
+  function scheduleMonstersTableVirtualRepaint() {
+    if (monstersVirtualScrollRaf) return;
+    monstersVirtualScrollRaf = requestAnimationFrame(() => {
+      monstersVirtualScrollRaf = 0;
+      if (typeof paintMonstersTableVirtualBody === 'function') {
+        paintMonstersTableVirtualBody(monstersVirtualData);
+      }
+    });
+  }
+
+  function paintMonstersTableVirtualBody(rows) {
+    const tbody = document.getElementById('monsters-tbody');
+    const scroller = monstersTableVirtualScroller();
+    if (!tbody || !scroller) return;
+
+    const list = rows || [];
+    monstersVirtualData = list; // Store data for repaint
+    const total = list.length;
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+
+    if (!total) {
+      monstersVirtualLastKey = 'empty';
+      tbody.innerHTML = `<tr><td colspan="${MONSTERS_TABLE_VIRTUAL_COLS}" class="table-empty">${escapeHtml(t.monstersListEmpty || 'No monsters match the current filters.')}</td></tr>`;
+      return;
+    }
+
+    let rowH = monstersVirtualRowHeight;
+    if (!rowH) rowH = MONSTERS_TABLE_VIRTUAL_ROW_FALLBACK;
+
+    const viewH = Math.max(scroller.clientHeight, 120);
+    const scrollTop = Math.max(0, scroller.scrollTop);
+    const start = Math.max(0, Math.floor(scrollTop / rowH) - MONSTERS_TABLE_VIRTUAL_OVERSCAN);
+    const visibleCount = Math.ceil(viewH / rowH) + MONSTERS_TABLE_VIRTUAL_OVERSCAN * 2;
+    const end = Math.min(total, start + visibleCount);
+
+    const key = monstersVirtualRangeKey(start, end, total);
+    if (key === monstersVirtualLastKey) return;
+    monstersVirtualLastKey = key;
+
+    const topPad = start * rowH;
+    const bottomPad = (total - end) * rowH;
+    const slice = list.slice(start, end);
+
+    const head = buildMonsterTableHeadHtml(t);
+    const body = slice
+      .map((u) => {
+        const uid = escapeHtml(String(u.unitId));
+        const bulkSel = monstersBulkSelected.has(String(u.unitId));
+        const pinned =
+          monstersDetailPinnedUnitId != null &&
+          String(monstersDetailPinnedUnitId) === String(u.unitId);
+        const hover =
+          !pinned &&
+          monstersDetailHoverUnitId != null &&
+          String(monstersDetailHoverUnitId) === String(u.unitId);
+        const elCls = elementClass(u.metaElement);
+        const rowCls = [
+          bulkSel ? 'monsters-table__row--bulk-on' : '',
+          pinned ? 'monsters-table__row--pinned' : '',
+          hover ? 'monsters-table__row--hover' : '',
+          elCls ? `monsters-table__row--${elCls}` : '',
+        ]
+          .filter(Boolean)
+          .join(' ');
+        const q = monstersSearchHighlight || '';
+        const name = highlightMonstersSearchInPlain(u.displayName || `#${u.masterId}`, q);
+        const runeTpl = t.monstersListRunesTpl || '{n}/6';
+        const runes = highlightMonstersSearchInPlain(
+          runeTpl.replace(/\{n\}/g, String(u.equippedCount || 0)),
+          q,
+        );
+        const skills =
+          u.skillUpsNeeded > 0
+            ? `<span class="monsters-table__devils" title="${escapeHtml((t.monstersSkillDeficitTip || '{n} to max').replace(/\{n\}/g, String(u.skillUpsNeeded)))}">${devilmonIconHtml('monsters-table__devil-icon')}<span class="monsters-table__devil-n">${escapeHtml(String(u.skillUpsNeeded))}</span></span>`
+            : u.skillsMaxed
+              ? '✓'
+              : '—';
+        return `<tr class="monsters-table__row${rowCls ? ` ${rowCls}` : ''}" data-unit-id="${uid}" tabindex="0">
+          <td data-col="bulk" class="monsters-table__td-bulk"><input type="checkbox" class="monsters-table__bulk-cb" data-unit-id="${uid}" ${bulkSel ? 'checked' : ''} aria-label="${escapeHtml(t.monstersBulkSelectOne || 'Select')}" /></td>
+          <td data-col="name"><div class="monsters-table__name-cell">${monsterTableThumbHtml(u)}<span class="monsters-table__name">${name}</span></div></td>
+          <td data-col="stars">${monsterTableCellStars(u)}</td>
+          <td data-col="level">${highlightMonstersSearchInPlain(String(u.level), q)}</td>
+          <td data-col="element">${monsterTableElementCell(u)}</td>
+          <td data-col="role">${highlightMonstersSearchInPlain(u.metaArchetype || '—', q)}</td>
+          <td data-col="runes">${runes}</td>
+          <td data-col="skills">${skills}</td>
+          <td data-col="favorite" class="monsters-table__td-mark">${buildMonsterTableMarkBtn(u, 'favorite', t)}</td>
+          <td data-col="food" class="monsters-table__td-mark">${buildMonsterTableMarkBtn(u, 'food', t)}</td>
+          <td data-col="storage" class="monsters-table__td-mark">${buildMonsterTableMarkBtn(u, 'storage', t)}</td>
+          <td data-col="tags">${monsterTableCellTags(u)}</td>
+        </tr>`;
+      })
+      .join('');
+
+    tbody.innerHTML =
+      monstersTableVirtualSpacerRow(topPad) +
+      body +
+      monstersTableVirtualSpacerRow(bottomPad);
+
+    const measured = measureMonstersVirtualRowHeight(tbody);
+    if (measured && measured !== monstersVirtualRowHeight) {
+      monstersVirtualRowHeight = measured;
+      scroller.style.setProperty('--monsters-virtual-row-h', `${measured}px`);
+      monstersVirtualLastKey = '';
+      scheduleMonstersTableVirtualRepaint();
+      return;
+    }
+    if (!monstersVirtualRowHeight && measured) {
+      monstersVirtualRowHeight = measured;
+      scroller.style.setProperty('--monsters-virtual-row-h', `${measured}px`);
+    }
+
+    // Rebind events after repaint
+    const table = tbody.closest('table');
+    if (table) {
+      bindMonsterTableRows(table, t);
+    }
+  }
+
+  function bindMonstersTableVirtualScroll() {
+    if (monstersVirtualBound) return;
+    const scroller = monstersTableVirtualScroller();
+    if (!scroller) return;
+    monstersVirtualBound = true;
+    scroller.classList.add('table-wrap--virtual');
+    scroller.addEventListener(
+      'scroll',
+      () => {
+        scheduleMonstersTableVirtualRepaint();
+      },
+      { passive: true },
+    );
+    window.addEventListener('resize', () => {
+      monstersVirtualLastKey = '';
+      scheduleMonstersTableVirtualRepaint();
+    });
+  }
+
   function monsterTableCellStars(u) {
     return buildMonsterStarsBadge(u, 'table');
   }
@@ -147,6 +340,54 @@
     } else {
       monstersTableSort.dir = monstersTableSort.dir === 'desc' ? 'asc' : 'desc';
     }
+  }
+
+  function buildMonsterTableRow(u, t) {
+    const uid = escapeHtml(String(u.unitId));
+    const bulkSel = monstersBulkSelected.has(String(u.unitId));
+    const pinned =
+      monstersDetailPinnedUnitId != null &&
+      String(monstersDetailPinnedUnitId) === String(u.unitId);
+    const hover =
+      !pinned &&
+      monstersDetailHoverUnitId != null &&
+      String(monstersDetailHoverUnitId) === String(u.unitId);
+    const elCls = elementClass(u.metaElement);
+    const rowCls = [
+      bulkSel ? 'monsters-table__row--bulk-on' : '',
+      pinned ? 'monsters-table__row--pinned' : '',
+      hover ? 'monsters-table__row--hover' : '',
+      elCls ? `monsters-table__row--${elCls}` : '',
+    ]
+      .filter(Boolean)
+      .join(' ');
+    const q = monstersSearchHighlight || '';
+    const name = highlightMonstersSearchInPlain(u.displayName || `#${u.masterId}`, q);
+    const runeTpl = t.monstersListRunesTpl || '{n}/6';
+    const runes = highlightMonstersSearchInPlain(
+      runeTpl.replace(/\{n\}/g, String(u.equippedCount || 0)),
+      q,
+    );
+    const skills =
+      u.skillUpsNeeded > 0
+        ? `<span class="monsters-table__devils" title="${escapeHtml((t.monstersSkillDeficitTip || '{n} to max').replace(/\{n\}/g, String(u.skillUpsNeeded)))}">${devilmonIconHtml('monsters-table__devil-icon')}<span class="monsters-table__devil-n">${escapeHtml(String(u.skillUpsNeeded))}</span></span>`
+        : u.skillsMaxed
+          ? '✓'
+          : '—';
+    return `<tr class="monsters-table__row${rowCls ? ` ${rowCls}` : ''}" data-unit-id="${uid}" tabindex="0">
+      <td data-col="bulk" class="monsters-table__td-bulk"><input type="checkbox" class="monsters-table__bulk-cb" data-unit-id="${uid}" ${bulkSel ? 'checked' : ''} aria-label="${escapeHtml(t.monstersBulkSelectOne || 'Select')}" /></td>
+      <td data-col="name"><div class="monsters-table__name-cell">${monsterTableThumbHtml(u)}<span class="monsters-table__name">${name}</span></div></td>
+      <td data-col="stars">${monsterTableCellStars(u)}</td>
+      <td data-col="level">${highlightMonstersSearchInPlain(String(u.level), q)}</td>
+      <td data-col="element">${monsterTableElementCell(u)}</td>
+      <td data-col="role">${highlightMonstersSearchInPlain(u.metaArchetype || '—', q)}</td>
+      <td data-col="runes">${runes}</td>
+      <td data-col="skills">${skills}</td>
+      <td data-col="favorite" class="monsters-table__td-mark">${buildMonsterTableMarkBtn(u, 'favorite', t)}</td>
+      <td data-col="food" class="monsters-table__td-mark">${buildMonsterTableMarkBtn(u, 'food', t)}</td>
+      <td data-col="storage" class="monsters-table__td-mark">${buildMonsterTableMarkBtn(u, 'storage', t)}</td>
+      <td data-col="tags">${monsterTableCellTags(u)}</td>
+    </tr>`;
   }
 
   function buildMonsterTableHtml(visible, t) {

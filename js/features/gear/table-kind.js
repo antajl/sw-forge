@@ -2,6 +2,8 @@
   const TABLE_KIND_IDS = ['runes', 'artifacts', 'relics'];
   const TABLE_KIND_STORAGE_KEY = 'swrm_table_kind_v1';
   let tableKindTabsBound = false;
+  let artifactTableRendered = false;
+  let relicTableRendered = false;
 
   function normalizeTableKind(id) {
     return TABLE_KIND_IDS.includes(id) ? id : 'runes';
@@ -163,15 +165,26 @@
     }
   }
 
-  function renderGearTables() {
+  function renderGearTables(options) {
+    const kind = typeof readTableKind === 'function' ? readTableKind() : 'runes';
+    const force = options && options.force;
+    
     if (typeof applyArtifactFiltersFromDom === 'function') applyArtifactFiltersFromDom();
     if (typeof applyRelicFiltersFromDom === 'function') applyRelicFiltersFromDom();
     applyArtifactTableSearch();
     applyRelicTableSearch();
-    renderArtifactTableBody();
-    renderRelicTableBody();
+    
+    // Lazy render: only render the active table, defer others
+    if (kind === 'artifacts' || force) {
+      renderArtifactTableBody();
+      artifactTableRendered = true;
+    }
+    if (kind === 'relics' || force) {
+      renderRelicTableBody();
+      relicTableRendered = true;
+    }
+    
     updateGearTableCount();
-    const kind = typeof readTableKind === 'function' ? readTableKind() : 'runes';
     if (kind === 'artifacts' && typeof updateArtifactFilterBadge === 'function') {
       updateArtifactFilterBadge();
     } else if (kind === 'relics' && typeof updateRelicFilterBadge === 'function') {
@@ -275,6 +288,7 @@
       }
       applyFiltersAndSort(getVisibleRunes(), { preserveTableExpansion: true });
     } else {
+      // Lazy render: only render the active gear table
       renderGearTables();
     }
   }

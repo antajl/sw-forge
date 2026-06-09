@@ -46,7 +46,7 @@ html:not(.swrm-has-gsap) .table-kind-tabs__indicator {
 #artifact-table-scroll,
 #relic-table-scroll {
   width: 100%;
-  max-height: min(82vh, 980px);
+  max-height: calc(100vh - 400px);
   overflow: auto;
   overscroll-behavior: contain;
   border-radius: var(--radius-lg);
@@ -180,6 +180,13 @@ thead tr {
 .light-theme #artifact-table,
 .light-theme #relic-table {
   --gear-row-bg-even: color-mix(in srgb, var(--surface) 68%, var(--bg2));
+}
+
+#artifact-table-scroll.table-wrap--virtual,
+#relic-table-scroll.table-wrap--virtual {
+  overflow: auto;
+  max-height: calc(100vh - 400px);
+  overscroll-behavior: contain;
 }
 
 /* Virtual scroll: uniform row height from measured sample */

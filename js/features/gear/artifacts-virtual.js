@@ -1,17 +1,16 @@
 // js/features/gear/artifacts-virtual.js — windowed tbody render for large artifact lists
-  const ARTIFACT_TABLE_VIRTUAL_COLS = 9;
+  const ARTIFACT_TABLE_VIRTUAL_COLS = 8;
   const ARTIFACT_TABLE_VIRTUAL_OVERSCAN = 3;
   const ARTIFACT_TABLE_VIRTUAL_ROW_FALLBACK = 44;
   const ARTIFACT_TABLE_VIRTUAL_SPACER_COL_CLASSES = [
-    'col-grade',
+    'col-location',
     'col-category',
     'col-main',
     'col-subs-stack',
-    'col-art-ingame col-block-gap',
-    'col-art-forge',
+    'col-art-scores',
     'col-art-role',
     'col-art-verdict',
-    'col-location col-block-gap',
+    'col-actions',
   ];
 
   let artifactVirtualRowHeight = 0;
@@ -71,7 +70,7 @@
 
     if (!total) {
       artifactVirtualLastKey = 'empty';
-      tbody.innerHTML = `<tr><td colspan="${ARTIFACT_TABLE_VIRTUAL_COLS}" class="table-empty">${escapeHtml(t.tableGearEmpty || 'No artifacts')}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" class="table-empty">${escapeHtml(t.tableGearEmpty || 'No artifacts')}</td></tr>`;
       if (typeof renderArtifactTableRosterChips === 'function') renderArtifactTableRosterChips();
       return;
     }
@@ -121,19 +120,41 @@
             : t.artifactVerdictSell || 'Sell'
           : '—';
         const evenClass = (start + i) % 2 === 0 ? 'gear-table__data-row--even' : '';
+
+        const ingameShown = String(ingameScore);
+        const ingameTip = typeof window.SWRM?.artifactIngameScoreBreakdown === 'function'
+            ? window.SWRM.artifactIngameScoreBreakdown(a).join('\n')
+            : t.tableIngameScoreHeaderTitle || '';
+        const ingameTipAttr = ingameTip ? ` data-swrm-tip="${escapeAttr(ingameTip)}"` : '';
+
+        const scoreShown = Number.isFinite(forgeScore) ? forgeScore.toFixed(1) : '—';
+        const scoreTip = typeof window.SWRM?.artifactForgeScoreTooltip === 'function'
+            ? window.SWRM.artifactForgeScoreTooltip(a, t)
+            : t.tableScoreHint || '';
+        const scoreTipAttr = scoreTip ? ` data-swrm-tip="${escapeAttr(scoreTip)}"` : '';
+
         return `<tr class="gear-table__data-row ${evenClass}">
+          <td class="col-location col-block-gap">${escapeHtml(gearLocationLabel(a.occupiedId, t))}</td>
           <td class="col-category">${catCell}</td>
           <td class="col-main">${escapeHtml(main)}</td>
           <td class="col-subs-stack"><div class="gear-table-subs">${artifactSubStack(a, fmtSub)}</div></td>
-          <td class="col-art-ingame th-num col-block-gap">${Number.isFinite(ingameScore) ? escapeHtml(String(ingameScore)) : '—'}</td>
-          <td class="col-art-forge th-num">${Number.isFinite(forgeScore) ? escapeHtml(forgeScore.toFixed(1)) : '—'}</td>
+          <td class="col-art-scores th-num col-block-gap">
+            <div class="gear-table-scores">
+              <span class="gear-table-scores__ingame"${ingameTipAttr}>${Number.isFinite(ingameScore) ? escapeHtml(ingameShown) : '—'}</span>
+              <span class="gear-table-scores__forge"${scoreTipAttr}>${scoreShown}</span>
+            </div>
+          </td>
           <td class="col-art-role col-block-gap">${escapeHtml(role || '—')}</td>
           <td class="col-art-verdict"><span class="${escapeHtml(verdictClass)}">${escapeHtml(verdictLabel)}</span></td>
-          <td class="col-location col-block-gap">${escapeHtml(gearLocationLabel(a.occupiedId, t))}</td>
           <td class="col-actions"><button type="button" class="gear-table__delete-btn btn-secondary btn-sm" data-delete-artifact="${escapeHtml(String(a.rid))}" title="Sell artifact">Sold</button></td>
         </tr>`;
       }).join('') +
       artifactTableVirtualSpacerRow(bottomPad);
+
+    // Add scroll animation for subs on hover
+    if (typeof setupArtifactSubsScrollAnimation === 'function') {
+      setupArtifactSubsScrollAnimation(tbody);
+    }
 
     const measured = measureArtifactVirtualRowHeight(tbody);
     if (measured && measured !== artifactVirtualRowHeight) {

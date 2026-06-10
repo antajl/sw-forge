@@ -8082,15 +8082,15 @@ td {
 
 #sort-direction-toggle {
   min-width: 32px;
-  height: 28px;
-  padding: 2px 8px;
-  font-size: 0.75rem;
+  height: 34px;
+  padding: 6px 10px;
+  font-size: 0.85rem;
   font-weight: 500;
   line-height: 1;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border2);
   background: var(--surface);
   color: var(--text);
-  border-radius: 4px;
+  border-radius: var(--radius);
   cursor: pointer;
   transition: all 0.15s;
 }
@@ -8824,24 +8824,24 @@ html:not(.swrm-has-gsap) .table-kind-tabs__indicator {
 #artifact-table,
 #relic-table {
   width: 100%;
-  table-layout: auto;
+  table-layout: fixed;
   border-collapse: collapse;
   /* Column width variables */
-  --art-c-grade: 5rem;
-  --art-c-category: 8rem;
-  --art-c-main: 8rem;
-  --art-c-subs: 15rem;
-  --art-c-ingame: 4.5rem;
-  --art-c-forge: 4.5rem;
-  --art-c-role: 7rem;
-  --art-c-verdict: 5.5rem;
-  --art-c-location: 8.35rem;
-  --rel-c-category: 8rem;
-  --rel-c-lvl: 3rem;
-  --rel-c-durability: 4.5rem;
-  --rel-c-main: 8rem;
-  --rel-c-sec: 14rem;
-  --rel-c-equipped: 6rem;
+  --art-c-location: 12%;
+  --art-c-category: 10%;
+  --art-c-main: 12%;
+  --art-c-subs: 22%;
+  --art-c-scores: 12%;
+  --art-c-role: 10%;
+  --art-c-verdict: 10%;
+  --art-c-actions: 12%;
+  --rel-c-category: 12%;
+  --rel-c-lvl: 8%;
+  --rel-c-durability: 10%;
+  --rel-c-main: 14%;
+  --rel-c-sec: 24%;
+  --rel-c-equipped: 14%;
+  --rel-c-actions: 18%;
   --gear-row-bg: var(--bg2);
   --gear-row-bg-even: color-mix(in srgb, var(--surface) 40%, var(--bg2));
   --gear-row-bg-hover: var(--surface);
@@ -8975,124 +8975,117 @@ thead tr {
   vertical-align: middle;
 }
 
-/* Artifact table column widths - using auto layout with min-widths like rune table */
+/* Artifact table column widths - using width with table-layout: fixed */
+#artifact-table col.col-location,
+#artifact-table th.col-location,
+#artifact-table td.col-location {
+  width: var(--art-c-location);
+  min-width: 0;
+  max-width: none;
+}
 #artifact-table col.col-category,
 #artifact-table th.col-category,
 #artifact-table td.col-category {
-  width: auto;
-  min-width: 6rem;
+  width: var(--art-c-category);
+  min-width: 0;
   max-width: none;
 }
 #artifact-table col.col-main,
 #artifact-table th.col-main,
 #artifact-table td.col-main {
-  width: auto;
-  min-width: 8rem;
+  width: var(--art-c-main);
+  min-width: 0;
   max-width: none;
 }
 #artifact-table col.col-subs-stack,
 #artifact-table th.col-subs-stack,
 #artifact-table td.col-subs-stack {
-  width: auto;
-  min-width: 12rem;
+  width: var(--art-c-subs);
+  min-width: 0;
   max-width: none;
 }
 #artifact-table col.col-art-role,
 #artifact-table th.col-art-role,
 #artifact-table td.col-art-role {
-  width: auto;
-  min-width: 6rem;
+  width: var(--art-c-role);
+  min-width: 0;
   max-width: none;
 }
-#artifact-table col.col-art-ingame,
-#artifact-table th.col-art-ingame,
-#artifact-table td.col-art-ingame {
-  width: auto;
-  min-width: 4rem;
-  max-width: none;
-}
-#artifact-table col.col-art-forge,
-#artifact-table th.col-art-forge,
-#artifact-table td.col-art-forge {
-  width: auto;
-  min-width: 4rem;
+#artifact-table col.col-art-scores,
+#artifact-table th.col-art-scores,
+#artifact-table td.col-art-scores {
+  width: var(--art-c-scores);
+  min-width: 0;
   max-width: none;
 }
 #artifact-table col.col-art-verdict,
 #artifact-table th.col-art-verdict,
 #artifact-table td.col-art-verdict {
-  width: auto;
-  min-width: 5rem;
-  max-width: none;
-}
-#artifact-table col.col-location,
-#artifact-table th.col-location,
-#artifact-table td.col-location {
-  width: auto;
-  min-width: 7rem;
+  width: var(--art-c-verdict);
+  min-width: 0;
   max-width: none;
 }
 #artifact-table col.col-actions,
 #artifact-table th.col-actions,
 #artifact-table td.col-actions {
-  width: auto;
-  min-width: 3rem;
+  width: var(--art-c-actions);
+  min-width: 0;
   max-width: none;
   text-align: center;
 }
 
-/* Relic table column widths - using auto layout with min-widths like rune table */
+/* Relic table column widths - using width with table-layout: fixed */
 #relic-table col.col-category,
 #relic-table th.col-category,
 #relic-table td.col-category {
-  width: auto;
-  min-width: 4.5rem;
+  width: var(--rel-c-category);
+  min-width: 0;
   max-width: none;
 }
 #relic-table col.col-lvl,
 #relic-table th.col-lvl,
 #relic-table td.col-lvl {
-  width: auto;
-  min-width: 2rem;
+  width: var(--rel-c-lvl);
+  min-width: 0;
   max-width: none;
   text-align: center;
 }
 #relic-table col.col-durability,
 #relic-table th.col-durability,
 #relic-table td.col-durability {
-  width: auto;
-  min-width: 3.5rem;
+  width: var(--rel-c-durability);
+  min-width: 0;
   max-width: none;
   text-align: center;
 }
 #relic-table col.col-main,
 #relic-table th.col-main,
 #relic-table td.col-main {
-  width: auto;
-  min-width: 6rem;
+  width: var(--rel-c-main);
+  min-width: 0;
   max-width: none;
   text-align: center;
 }
 #relic-table col.col-sec,
 #relic-table th.col-sec,
 #relic-table td.col-sec {
-  width: auto;
-  min-width: 9rem;
+  width: var(--rel-c-sec);
+  min-width: 0;
   max-width: none;
 }
 #relic-table col.col-equipped,
 #relic-table th.col-equipped,
 #relic-table td.col-equipped {
-  width: auto;
-  min-width: 4rem;
+  width: var(--rel-c-equipped);
+  min-width: 0;
   max-width: none;
   text-align: center;
 }
 #relic-table col.col-actions,
 #relic-table th.col-actions,
 #relic-table td.col-actions {
-  width: auto;
-  min-width: 3rem;
+  width: var(--rel-c-actions);
+  min-width: 0;
   max-width: none;
   text-align: center;
 }
@@ -9168,6 +9161,46 @@ thead tr {
 
 #artifact-table td.col-actions {
   text-align: center;
+}
+#artifact-table .col-actions .gear-table__delete-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+#relic-table td.col-actions {
+  text-align: center;
+}
+#relic-table .col-actions .gear-table__delete-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.gear-table-scores {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.2;
+}
+.gear-table-scores__ingame {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+.gear-table-scores__ingame::before {
+  content: 'Ingame ';
+  font-weight: 500;
+}
+.gear-table-scores__forge {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.gear-table-scores__forge::before {
+  content: 'Forge ';
+  font-weight: 500;
+  color: var(--text-dim);
 }
 
 #artifact-table th,
@@ -9374,6 +9407,24 @@ thead tr {
 
 .gear-table-subs__line {
   display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gear-table-subs__line-inner {
+  display: inline-block;
+  white-space: nowrap;
+  padding-right: 4rem;
+}
+
+@keyframes scroll-text {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
 }
 
 .gear-table-subs__empty {
@@ -10891,7 +10942,7 @@ html:not(.swrm-has-gsap) .monsters-hub-tabs__indicator {
 #rune-table-toolbar,
 #artifact-table-toolbar,
 #relic-table-toolbar {
-  margin-bottom: 12px;
+  margin: 12px 0;
 }
 
 #tab-monsters-roster .table-toolbar__row--search-roster {

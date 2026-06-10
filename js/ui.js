@@ -6709,24 +6709,26 @@
             .replace(/\{mul\}/g, String(b.archetypeMul))
             .replace(/\{name\}/g, String(b.archetypeName))
         : '';
-    const tpl =
-      loc.forgeScoreTooltip ||
-      'Main: {mainPts}\nSubs: {subPts}\nInnate: {innatePts}\n\nBase total: {baseSum}\n\nSynergy: ×{mainSubSyn} ×{subSubSyn} ×{dupSub} = {totalMul}\n\nAfter synergy: {synergySum}{archetypeSuffix}\n\nFinal: {total}/100\n\nBased on stat tiers + roll size.';
     const baseSum = b.mainPts + b.subPts + b.innatePts;
-    const totalMul = (b.mainSubSyn * b.subSubSyn * b.dupSub).toFixed(2);
     const synergySum = Math.round(baseSum * b.mainSubSyn * b.subSubSyn * b.dupSub * b.archetypeMul);
-    return tpl
-      .replace(/\{mainPts\}/g, String(b.mainPts))
-      .replace(/\{subPts\}/g, String(b.subPts))
-      .replace(/\{innatePts\}/g, String(b.innatePts))
-      .replace(/\{baseSum\}/g, String(baseSum))
-      .replace(/\{mainSubSyn\}/g, String(b.mainSubSyn))
-      .replace(/\{subSubSyn\}/g, String(b.subSubSyn))
-      .replace(/\{dupSub\}/g, String(b.dupSub))
-      .replace(/\{totalMul\}/g, String(totalMul))
-      .replace(/\{synergySum\}/g, String(synergySum))
-      .replace(/\{archetypeSuffix\}/g, archetypeSuffix)
-      .replace(/\{total\}/g, String(b.total));
+    
+    const lines = [];
+    lines.push(`Main: ${b.mainPts}`);
+    lines.push(`Subs: ${b.subPts}`);
+    lines.push(`Innate: ${b.innatePts}`);
+    lines.push('');
+    lines.push(`Σ base: ${baseSum}`);
+    lines.push('');
+    lines.push(`Synergy multipliers:`);
+    lines.push(`  Main-Sub: ×${b.mainSubSyn}`);
+    lines.push(`  Sub-Sub: ×${b.subSubSyn}`);
+    lines.push(`  Dup penalty: ×${b.dupSub}`);
+    lines.push('');
+    lines.push(`Result: ${synergySum}${archetypeSuffix}`);
+    lines.push('');
+    lines.push(`Final: ${b.total}/100`);
+    
+    return lines.join('\n');
   }
 
   function runeScoreTooltip(r, t) {
@@ -10338,7 +10340,7 @@
 
         const text = s && fmtSub ? fmtSub(s) : '—';
 
-        return `<span class="gear-table-subs__line">${escapeHtml(text)}</span>`;
+        return `<span class="gear-table-subs__line" data-full-text="${escapeAttr(text)}">${escapeHtml(text)}</span>`;
 
       })
 
@@ -10346,6 +10348,70 @@
 
   }
 
+
+
+  function setupArtifactSubsScrollAnimation(tbody) {
+    const rows = tbody.querySelectorAll('tr.gear-table__data-row');
+    
+    rows.forEach(row => {
+      const subsLines = row.querySelectorAll('.gear-table-subs__line');
+      let scrollAnimations = [];
+      
+      row.addEventListener('mouseenter', () => {
+        subsLines.forEach(line => {
+          // Check if text is truncated
+          if (line.scrollWidth > line.clientWidth) {
+            const fullText = line.getAttribute('data-full-text');
+            
+            // Create inner span for animation
+            line.innerHTML = `<span class="gear-table-subs__line-inner">${escapeHtml(fullText)}</span>`;
+            const innerSpan = line.querySelector('.gear-table-subs__line-inner');
+            
+            line.style.textOverflow = 'clip';
+            
+            // Calculate the distance to scroll to show full text
+            const scrollDistance = innerSpan.scrollWidth - line.clientWidth;
+            
+            // Use GSAP if available, otherwise use CSS animation
+            if (typeof gsap !== 'undefined' && gsap.to) {
+              const animation = gsap.fromTo(innerSpan, 
+                { x: 0 },
+                { 
+                  x: -scrollDistance,
+                  duration: 1.5,
+                  ease: 'none',
+                  repeat: -1,
+                  repeatDelay: 0.3
+                }
+              );
+              scrollAnimations.push(animation);
+            } else {
+              // Fallback to CSS animation
+              innerSpan.style.animation = 'scroll-text 1.5s linear infinite';
+            }
+          }
+        });
+      });
+      
+      row.addEventListener('mouseleave', () => {
+        // Stop all animations
+        scrollAnimations.forEach(animation => {
+          if (animation && animation.kill) {
+            animation.kill();
+          }
+        });
+        scrollAnimations = [];
+        
+        // Reset all lines
+        subsLines.forEach(line => {
+          line.style.animation = '';
+          line.style.textOverflow = 'ellipsis';
+          const fullText = line.getAttribute('data-full-text');
+          line.textContent = fullText;
+        });
+      });
+    });
+  }
 
 
   function renderArtifactTableBody() {
@@ -10365,7 +10431,7 @@
 
     if (!filteredArtifacts.length) {
 
-      tbody.innerHTML = `<tr><td colspan="9" class="table-empty">${escapeHtml(t.tableGearEmpty || 'No artifacts')}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" class="table-empty">${escapeHtml(t.tableGearEmpty || 'No artifacts')}</td></tr>`;
 
       if (typeof renderArtifactTableRosterChips === 'function') renderArtifactTableRosterChips();
 
@@ -10431,7 +10497,21 @@
 
           const evenClass = i % 2 === 0 ? 'gear-table__data-row--even' : '';
 
+          const ingameShown = String(ingameScore);
+          const ingameTip = typeof window.SWRM?.artifactIngameScoreBreakdown === 'function'
+              ? window.SWRM.artifactIngameScoreBreakdown(a).join('\n')
+              : t.tableIngameScoreHeaderTitle || '';
+          const ingameTipAttr = ingameTip ? ` data-swrm-tip="${escapeAttr(ingameTip)}"` : '';
+
+          const scoreShown = Number.isFinite(forgeScore) ? forgeScore.toFixed(1) : '—';
+          const scoreTip = typeof window.SWRM?.artifactForgeScoreTooltip === 'function'
+              ? window.SWRM.artifactForgeScoreTooltip(a, t)
+              : t.tableScoreHint || '';
+          const scoreTipAttr = scoreTip ? ` data-swrm-tip="${escapeAttr(scoreTip)}"` : '';
+
           return `<tr class="gear-table__data-row ${evenClass}">
+
+            <td class="col-location col-block-gap">${escapeHtml(gearLocationLabel(a.occupiedId, t))}</td>
 
             <td class="col-category">${catCell}</td>
 
@@ -10439,15 +10519,16 @@
 
             <td class="col-subs-stack"><div class="gear-table-subs">${artifactSubStack(a, fmtSub)}</div></td>
 
-            <td class="col-art-ingame th-num col-block-gap">${Number.isFinite(ingameScore) ? escapeHtml(String(ingameScore)) : '—'}</td>
-
-            <td class="col-art-forge th-num">${Number.isFinite(forgeScore) ? escapeHtml(forgeScore.toFixed(1)) : '—'}</td>
+            <td class="col-art-scores th-num col-block-gap">
+              <div class="gear-table-scores">
+                <span class="gear-table-scores__ingame"${ingameTipAttr}>${Number.isFinite(ingameScore) ? escapeHtml(ingameShown) : '—'}</span>
+                <span class="gear-table-scores__forge"${scoreTipAttr}>${scoreShown}</span>
+              </div>
+            </td>
 
             <td class="col-art-role col-block-gap">${escapeHtml(role || '—')}</td>
 
             <td class="col-art-verdict">${verdict ? `<span class="${escapeHtml(verdictClass)}">${escapeHtml(verdictLabel)}</span>` : '—'}</td>
-
-            <td class="col-location col-block-gap">${escapeHtml(gearLocationLabel(a.occupiedId, t))}</td>
 
             <td class="col-actions"><button type="button" class="gear-table__delete-btn btn-secondary btn-sm" data-delete-artifact="${escapeHtml(String(a.rid))}" title="Sell artifact">Sold</button></td>
 
@@ -10456,6 +10537,9 @@
         });
 
       tbody.innerHTML = rows.join('');
+
+      // Add scroll animation for subs on hover
+      setupArtifactSubsScrollAnimation(tbody);
 
     }
 
@@ -10526,6 +10610,68 @@
 
     document.getElementById('btn-artifact-export-csv')?.addEventListener('click', exportArtifactsCsv);
 
+    // Bind artifact sort popover
+    if (typeof bindFiltersPopover === 'function') {
+      bindFiltersPopover('artifact-sort-btn', 'artifact-sort-popover', { onClose: () => {} });
+    }
+
+    // Handle artifact sort parameter select change
+    const artifactSortParameterSelect = document.getElementById('artifact-sort-parameter');
+    const artifactSortDirectionBtn = document.getElementById('artifact-sort-direction-toggle');
+    let currentArtifactSortDirection = 'desc';
+
+    if (artifactSortParameterSelect) {
+      artifactSortParameterSelect.addEventListener('change', () => {
+        const key = artifactSortParameterSelect.value;
+        artifactSortKey = key;
+        artifactSortDir = currentArtifactSortDirection;
+        if (typeof resetArtifactTableVirtualScroll === 'function') resetArtifactTableVirtualScroll();
+        renderGearTables();
+      });
+    }
+
+    // Handle artifact direction toggle button
+    if (artifactSortDirectionBtn) {
+      artifactSortDirectionBtn.addEventListener('click', () => {
+        currentArtifactSortDirection = currentArtifactSortDirection === 'desc' ? 'asc' : 'desc';
+        artifactSortDirectionBtn.textContent = currentArtifactSortDirection === 'desc' ? '↓' : '↑';
+        if (artifactSortParameterSelect) {
+          const key = artifactSortParameterSelect.value;
+          artifactSortKey = key;
+          artifactSortDir = currentArtifactSortDirection;
+          if (typeof resetArtifactTableVirtualScroll === 'function') resetArtifactTableVirtualScroll();
+          renderGearTables();
+        }
+      });
+    }
+
+    // Handle artifact Reset sort button
+    const artifactResetSortBtn = document.getElementById('btn-artifact-reset-sort');
+    if (artifactResetSortBtn) {
+      artifactResetSortBtn.addEventListener('click', () => {
+        if (artifactSortParameterSelect) {
+          artifactSortParameterSelect.value = 'forgeScore';
+        }
+        currentArtifactSortDirection = 'desc';
+        if (artifactSortDirectionBtn) {
+          artifactSortDirectionBtn.textContent = '↓';
+        }
+        artifactSortKey = 'forgeScore';
+        artifactSortDir = 'desc';
+        if (typeof resetArtifactTableVirtualScroll === 'function') resetArtifactTableVirtualScroll();
+        renderGearTables();
+      });
+    }
+
+    // Handle artifact Done button
+    const artifactSortPopoverDoneBtn = document.querySelector('#artifact-sort-popover [data-filters-popover-done]');
+    if (artifactSortPopoverDoneBtn) {
+      artifactSortPopoverDoneBtn.addEventListener('click', () => {
+        const popover = document.getElementById('artifact-sort-popover');
+        if (popover) popover.hidden = true;
+      });
+    }
+
     document.getElementById('artifact-table-scroll')?.addEventListener('click', (e) => {
       const deleteBtn = e.target.closest('[data-delete-artifact]');
       if (deleteBtn) {
@@ -10584,19 +10730,18 @@
 
 
 
-  const ARTIFACT_TABLE_VIRTUAL_COLS = 9;
+  const ARTIFACT_TABLE_VIRTUAL_COLS = 8;
   const ARTIFACT_TABLE_VIRTUAL_OVERSCAN = 3;
   const ARTIFACT_TABLE_VIRTUAL_ROW_FALLBACK = 44;
   const ARTIFACT_TABLE_VIRTUAL_SPACER_COL_CLASSES = [
-    'col-grade',
+    'col-location',
     'col-category',
     'col-main',
     'col-subs-stack',
-    'col-art-ingame col-block-gap',
-    'col-art-forge',
+    'col-art-scores',
     'col-art-role',
     'col-art-verdict',
-    'col-location col-block-gap',
+    'col-actions',
   ];
 
   let artifactVirtualRowHeight = 0;
@@ -10656,7 +10801,7 @@
 
     if (!total) {
       artifactVirtualLastKey = 'empty';
-      tbody.innerHTML = `<tr><td colspan="${ARTIFACT_TABLE_VIRTUAL_COLS}" class="table-empty">${escapeHtml(t.tableGearEmpty || 'No artifacts')}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" class="table-empty">${escapeHtml(t.tableGearEmpty || 'No artifacts')}</td></tr>`;
       if (typeof renderArtifactTableRosterChips === 'function') renderArtifactTableRosterChips();
       return;
     }
@@ -10706,19 +10851,41 @@
             : t.artifactVerdictSell || 'Sell'
           : '—';
         const evenClass = (start + i) % 2 === 0 ? 'gear-table__data-row--even' : '';
+
+        const ingameShown = String(ingameScore);
+        const ingameTip = typeof window.SWRM?.artifactIngameScoreBreakdown === 'function'
+            ? window.SWRM.artifactIngameScoreBreakdown(a).join('\n')
+            : t.tableIngameScoreHeaderTitle || '';
+        const ingameTipAttr = ingameTip ? ` data-swrm-tip="${escapeAttr(ingameTip)}"` : '';
+
+        const scoreShown = Number.isFinite(forgeScore) ? forgeScore.toFixed(1) : '—';
+        const scoreTip = typeof window.SWRM?.artifactForgeScoreTooltip === 'function'
+            ? window.SWRM.artifactForgeScoreTooltip(a, t)
+            : t.tableScoreHint || '';
+        const scoreTipAttr = scoreTip ? ` data-swrm-tip="${escapeAttr(scoreTip)}"` : '';
+
         return `<tr class="gear-table__data-row ${evenClass}">
+          <td class="col-location col-block-gap">${escapeHtml(gearLocationLabel(a.occupiedId, t))}</td>
           <td class="col-category">${catCell}</td>
           <td class="col-main">${escapeHtml(main)}</td>
           <td class="col-subs-stack"><div class="gear-table-subs">${artifactSubStack(a, fmtSub)}</div></td>
-          <td class="col-art-ingame th-num col-block-gap">${Number.isFinite(ingameScore) ? escapeHtml(String(ingameScore)) : '—'}</td>
-          <td class="col-art-forge th-num">${Number.isFinite(forgeScore) ? escapeHtml(forgeScore.toFixed(1)) : '—'}</td>
+          <td class="col-art-scores th-num col-block-gap">
+            <div class="gear-table-scores">
+              <span class="gear-table-scores__ingame"${ingameTipAttr}>${Number.isFinite(ingameScore) ? escapeHtml(ingameShown) : '—'}</span>
+              <span class="gear-table-scores__forge"${scoreTipAttr}>${scoreShown}</span>
+            </div>
+          </td>
           <td class="col-art-role col-block-gap">${escapeHtml(role || '—')}</td>
           <td class="col-art-verdict"><span class="${escapeHtml(verdictClass)}">${escapeHtml(verdictLabel)}</span></td>
-          <td class="col-location col-block-gap">${escapeHtml(gearLocationLabel(a.occupiedId, t))}</td>
           <td class="col-actions"><button type="button" class="gear-table__delete-btn btn-secondary btn-sm" data-delete-artifact="${escapeHtml(String(a.rid))}" title="Sell artifact">Sold</button></td>
         </tr>`;
       }).join('') +
       artifactTableVirtualSpacerRow(bottomPad);
+
+    // Add scroll animation for subs on hover
+    if (typeof setupArtifactSubsScrollAnimation === 'function') {
+      setupArtifactSubsScrollAnimation(tbody);
+    }
 
     const measured = measureArtifactVirtualRowHeight(tbody);
     if (measured && measured !== artifactVirtualRowHeight) {
@@ -11109,6 +11276,65 @@
 
     document.getElementById('relic-filters-drawer-reset')?.addEventListener('click', resetRelicTableFilters);
     document.getElementById('btn-relic-export-csv')?.addEventListener('click', exportRelicsCsv);
+
+    // Bind relic sort popover
+    if (typeof bindFiltersPopover === 'function') {
+      bindFiltersPopover('relic-sort-btn', 'relic-sort-popover', { onClose: () => {} });
+    }
+
+    // Handle relic sort parameter select change
+    const relicSortParameterSelect = document.getElementById('relic-sort-parameter');
+    const relicSortDirectionBtn = document.getElementById('relic-sort-direction-toggle');
+    let currentRelicSortDirection = 'asc';
+
+    if (relicSortParameterSelect) {
+      relicSortParameterSelect.addEventListener('change', () => {
+        const key = relicSortParameterSelect.value;
+        relicSortKey = key;
+        relicSortDir = currentRelicSortDirection;
+        renderGearTables();
+      });
+    }
+
+    // Handle relic direction toggle button
+    if (relicSortDirectionBtn) {
+      relicSortDirectionBtn.addEventListener('click', () => {
+        currentRelicSortDirection = currentRelicSortDirection === 'desc' ? 'asc' : 'desc';
+        relicSortDirectionBtn.textContent = currentRelicSortDirection === 'desc' ? '↓' : '↑';
+        if (relicSortParameterSelect) {
+          const key = relicSortParameterSelect.value;
+          relicSortKey = key;
+          relicSortDir = currentRelicSortDirection;
+          renderGearTables();
+        }
+      });
+    }
+
+    // Handle relic Reset sort button
+    const relicResetSortBtn = document.getElementById('btn-relic-reset-sort');
+    if (relicResetSortBtn) {
+      relicResetSortBtn.addEventListener('click', () => {
+        if (relicSortParameterSelect) {
+          relicSortParameterSelect.value = 'category';
+        }
+        currentRelicSortDirection = 'asc';
+        if (relicSortDirectionBtn) {
+          relicSortDirectionBtn.textContent = '↓';
+        }
+        relicSortKey = 'category';
+        relicSortDir = 'asc';
+        renderGearTables();
+      });
+    }
+
+    // Handle relic Done button
+    const relicSortPopoverDoneBtn = document.querySelector('#relic-sort-popover [data-filters-popover-done]');
+    if (relicSortPopoverDoneBtn) {
+      relicSortPopoverDoneBtn.addEventListener('click', () => {
+        const popover = document.getElementById('relic-sort-popover');
+        if (popover) popover.hidden = true;
+      });
+    }
 
     document.getElementById('relic-table-scroll')?.addEventListener('click', (e) => {
       const deleteBtn = e.target.closest('[data-delete-relic]');

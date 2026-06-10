@@ -56,8 +56,14 @@
   function formatArtifactSubLine(sub) {
     if (!sub) return '';
     const fn = ARTIFACT_SUB_FORMAT[sub.type];
-    const v = Number(sub.value);
-    if (fn && Number.isFinite(v)) return fn(v);
+    let v = Number(sub.value);
+    if (Number.isFinite(v)) {
+      // Round floating point numbers to avoid long decimals like 0.8999999999999999
+      if (v.toString().length > 10) {
+        v = Math.round(v * 10) / 10;
+      }
+      if (fn) return fn(v);
+    }
     return `t${sub.type} +${v}`;
   }
 

@@ -341,6 +341,12 @@
     return row && row.archetype ? String(row.archetype) : '';
   }
 
+  function monsterIconUrl(masterId, baseIndex) {
+    const row = lookupMonster(masterId);
+    if (!row || !row.image_filename) return '';
+    return monsterImageUrl(row.image_filename, baseIndex);
+  }
+
   /** Fetch single monster from SWARFARM API (merges into cache). */
   async function fetchMonsterMeta(masterId, options) {
     const id = Number(masterId);
@@ -409,6 +415,7 @@
     lookupMonster,
     monsterDisplayName,
     monsterArchetype,
+    monsterIconUrl,
     monsterImageUrl,
     devilmonImageUrl,
     runeSetImageUrl,

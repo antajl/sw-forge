@@ -6,7 +6,7 @@
 #rune-table-toolbar,
 #artifact-table-toolbar,
 #relic-table-toolbar {
-  margin-bottom: 12px;
+  margin: 12px 0;
 }
 
 #tab-monsters-roster .table-toolbar__row--search-roster {

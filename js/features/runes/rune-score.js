@@ -386,24 +386,26 @@
             .replace(/\{mul\}/g, String(b.archetypeMul))
             .replace(/\{name\}/g, String(b.archetypeName))
         : '';
-    const tpl =
-      loc.forgeScoreTooltip ||
-      'Main: {mainPts}\nSubs: {subPts}\nInnate: {innatePts}\n\nBase total: {baseSum}\n\nSynergy: ×{mainSubSyn} ×{subSubSyn} ×{dupSub} = {totalMul}\n\nAfter synergy: {synergySum}{archetypeSuffix}\n\nFinal: {total}/100\n\nBased on stat tiers + roll size.';
     const baseSum = b.mainPts + b.subPts + b.innatePts;
-    const totalMul = (b.mainSubSyn * b.subSubSyn * b.dupSub).toFixed(2);
     const synergySum = Math.round(baseSum * b.mainSubSyn * b.subSubSyn * b.dupSub * b.archetypeMul);
-    return tpl
-      .replace(/\{mainPts\}/g, String(b.mainPts))
-      .replace(/\{subPts\}/g, String(b.subPts))
-      .replace(/\{innatePts\}/g, String(b.innatePts))
-      .replace(/\{baseSum\}/g, String(baseSum))
-      .replace(/\{mainSubSyn\}/g, String(b.mainSubSyn))
-      .replace(/\{subSubSyn\}/g, String(b.subSubSyn))
-      .replace(/\{dupSub\}/g, String(b.dupSub))
-      .replace(/\{totalMul\}/g, String(totalMul))
-      .replace(/\{synergySum\}/g, String(synergySum))
-      .replace(/\{archetypeSuffix\}/g, archetypeSuffix)
-      .replace(/\{total\}/g, String(b.total));
+    
+    const lines = [];
+    lines.push(`Main: ${b.mainPts}`);
+    lines.push(`Subs: ${b.subPts}`);
+    lines.push(`Innate: ${b.innatePts}`);
+    lines.push('');
+    lines.push(`Σ base: ${baseSum}`);
+    lines.push('');
+    lines.push(`Synergy multipliers:`);
+    lines.push(`  Main-Sub: ×${b.mainSubSyn}`);
+    lines.push(`  Sub-Sub: ×${b.subSubSyn}`);
+    lines.push(`  Dup penalty: ×${b.dupSub}`);
+    lines.push('');
+    lines.push(`Result: ${synergySum}${archetypeSuffix}`);
+    lines.push('');
+    lines.push(`Final: ${b.total}/100`);
+    
+    return lines.join('\n');
   }
 
   function runeScoreTooltip(r, t) {

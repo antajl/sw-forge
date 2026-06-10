@@ -354,6 +354,65 @@
     document.getElementById('relic-filters-drawer-reset')?.addEventListener('click', resetRelicTableFilters);
     document.getElementById('btn-relic-export-csv')?.addEventListener('click', exportRelicsCsv);
 
+    // Bind relic sort popover
+    if (typeof bindFiltersPopover === 'function') {
+      bindFiltersPopover('relic-sort-btn', 'relic-sort-popover', { onClose: () => {} });
+    }
+
+    // Handle relic sort parameter select change
+    const relicSortParameterSelect = document.getElementById('relic-sort-parameter');
+    const relicSortDirectionBtn = document.getElementById('relic-sort-direction-toggle');
+    let currentRelicSortDirection = 'asc';
+
+    if (relicSortParameterSelect) {
+      relicSortParameterSelect.addEventListener('change', () => {
+        const key = relicSortParameterSelect.value;
+        relicSortKey = key;
+        relicSortDir = currentRelicSortDirection;
+        renderGearTables();
+      });
+    }
+
+    // Handle relic direction toggle button
+    if (relicSortDirectionBtn) {
+      relicSortDirectionBtn.addEventListener('click', () => {
+        currentRelicSortDirection = currentRelicSortDirection === 'desc' ? 'asc' : 'desc';
+        relicSortDirectionBtn.textContent = currentRelicSortDirection === 'desc' ? '↓' : '↑';
+        if (relicSortParameterSelect) {
+          const key = relicSortParameterSelect.value;
+          relicSortKey = key;
+          relicSortDir = currentRelicSortDirection;
+          renderGearTables();
+        }
+      });
+    }
+
+    // Handle relic Reset sort button
+    const relicResetSortBtn = document.getElementById('btn-relic-reset-sort');
+    if (relicResetSortBtn) {
+      relicResetSortBtn.addEventListener('click', () => {
+        if (relicSortParameterSelect) {
+          relicSortParameterSelect.value = 'category';
+        }
+        currentRelicSortDirection = 'asc';
+        if (relicSortDirectionBtn) {
+          relicSortDirectionBtn.textContent = '↓';
+        }
+        relicSortKey = 'category';
+        relicSortDir = 'asc';
+        renderGearTables();
+      });
+    }
+
+    // Handle relic Done button
+    const relicSortPopoverDoneBtn = document.querySelector('#relic-sort-popover [data-filters-popover-done]');
+    if (relicSortPopoverDoneBtn) {
+      relicSortPopoverDoneBtn.addEventListener('click', () => {
+        const popover = document.getElementById('relic-sort-popover');
+        if (popover) popover.hidden = true;
+      });
+    }
+
     document.getElementById('relic-table-scroll')?.addEventListener('click', (e) => {
       const deleteBtn = e.target.closest('[data-delete-relic]');
       if (deleteBtn) {

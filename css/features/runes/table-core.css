@@ -317,15 +317,15 @@ td {
 
 #sort-direction-toggle {
   min-width: 32px;
-  height: 28px;
-  padding: 2px 8px;
-  font-size: 0.75rem;
+  height: 34px;
+  padding: 6px 10px;
+  font-size: 0.85rem;
   font-weight: 500;
   line-height: 1;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border2);
   background: var(--surface);
   color: var(--text);
-  border-radius: 4px;
+  border-radius: var(--radius);
   cursor: pointer;
   transition: all 0.15s;
 }

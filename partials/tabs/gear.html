@@ -315,6 +315,47 @@
                         </div>
                       </div>
                     </div>
+                    <div class="filters-popover-host">
+                      <button type="button" class="monsters-toolbar-btn monsters-toolbar-btn--filters" id="artifact-sort-btn" aria-haspopup="true" aria-controls="artifact-sort-popover" aria-expanded="false">
+                        <span class="monsters-toolbar-btn__icon">↓↑</span>
+                        <span id="lbl-artifact-sort">Sort</span>
+                      </button>
+                      <div id="artifact-sort-popover" class="filters-popover filters-popover--wide filters-popover--sort" role="dialog" aria-labelledby="lbl-artifact-sort-drawer-title" hidden data-anchor-btn="artifact-sort-btn">
+                        <div class="filters-popover__panel">
+                          <header class="filters-popover__head">
+                            <h3 class="filters-popover__title" id="lbl-artifact-sort-drawer-title">Sort by</h3>
+                            <button type="button" class="filters-popover__close" data-filters-popover-close aria-label="Close">✕</button>
+                          </header>
+                          <div class="filters-popover__body">
+                            <div class="filters-popover__sections">
+                              <section class="filters-popover__section">
+                                <div class="monsters-toolbar__filters-grid monsters-toolbar__filters-grid--sort">
+                                  <label>
+                                    <span id="lbl-artifact-sort-parameter">Sort parameter</span>
+                                    <div style="display: flex; gap: 4px;">
+                                      <select id="artifact-sort-parameter">
+                                        <option value="forgeScore" selected>Forge Score</option>
+                                        <option value="ingameScore">Ingame Score</option>
+                                        <option value="verdict">Verdict</option>
+                                        <option value="category">Category</option>
+                                        <option value="main">Main stat</option>
+                                        <option value="location">Location</option>
+                                        <option value="role">Role</option>
+                                      </select>
+                                      <button type="button" id="artifact-sort-direction-toggle" class="btn-secondary btn-sm" aria-label="Toggle sort direction">↓</button>
+                                    </div>
+                                  </label>
+                                </div>
+                              </section>
+                            </div>
+                          </div>
+                          <footer class="filters-popover__foot">
+                            <button type="button" class="btn-ghost btn-sm" id="btn-artifact-reset-sort">Reset sort</button>
+                            <button type="button" class="btn-primary btn-sm" data-filters-popover-done>Done</button>
+                          </footer>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div class="table-toolbar__aside">
@@ -406,6 +447,45 @@
                         </div>
                       </div>
                     </div>
+                    <div class="filters-popover-host">
+                      <button type="button" class="monsters-toolbar-btn monsters-toolbar-btn--filters" id="relic-sort-btn" aria-haspopup="true" aria-controls="relic-sort-popover" aria-expanded="false">
+                        <span class="monsters-toolbar-btn__icon">↓↑</span>
+                        <span id="lbl-relic-sort">Sort</span>
+                      </button>
+                      <div id="relic-sort-popover" class="filters-popover filters-popover--wide filters-popover--sort" role="dialog" aria-labelledby="lbl-relic-sort-drawer-title" hidden data-anchor-btn="relic-sort-btn">
+                        <div class="filters-popover__panel">
+                          <header class="filters-popover__head">
+                            <h3 class="filters-popover__title" id="lbl-relic-sort-drawer-title">Sort by</h3>
+                            <button type="button" class="filters-popover__close" data-filters-popover-close aria-label="Close">✕</button>
+                          </header>
+                          <div class="filters-popover__body">
+                            <div class="filters-popover__sections">
+                              <section class="filters-popover__section">
+                                <div class="monsters-toolbar__filters-grid monsters-toolbar__filters-grid--sort">
+                                  <label>
+                                    <span id="lbl-relic-sort-parameter">Sort parameter</span>
+                                    <div style="display: flex; gap: 4px;">
+                                      <select id="relic-sort-parameter">
+                                        <option value="category" selected>Category</option>
+                                        <option value="grade">Grade</option>
+                                        <option value="main">Main stat</option>
+                                        <option value="location">Location</option>
+                                        <option value="equipped">Equipped</option>
+                                      </select>
+                                      <button type="button" id="relic-sort-direction-toggle" class="btn-secondary btn-sm" aria-label="Toggle sort direction">↓</button>
+                                    </div>
+                                  </label>
+                                </div>
+                              </section>
+                            </div>
+                          </div>
+                          <footer class="filters-popover__foot">
+                            <button type="button" class="btn-ghost btn-sm" id="btn-relic-reset-sort">Reset sort</button>
+                            <button type="button" class="btn-primary btn-sm" data-filters-popover-done>Done</button>
+                          </footer>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div class="table-toolbar__aside">
@@ -479,26 +559,24 @@
             <div class="table-wrap" id="artifact-table-scroll" tabindex="0" role="region" aria-label="Artifact table">
               <table id="artifact-table" class="gear-table">
                 <colgroup>
+                  <col class="col-location">
                   <col class="col-category">
                   <col class="col-main">
                   <col class="col-subs-stack">
-                  <col class="col-art-ingame">
-                  <col class="col-art-forge">
+                  <col class="col-art-scores">
                   <col class="col-art-role">
                   <col class="col-art-verdict">
-                  <col class="col-location">
                   <col class="col-actions">
                 </colgroup>
                 <thead>
                   <tr>
+                    <th class="col-location col-block-gap" data-sort="location"><span class="th-text th-text--plain" id="lbl-th-art-location">Location</span></th>
                     <th class="col-category" data-sort="category"><span class="th-text th-text--plain" id="lbl-th-art-category">Category</span></th>
                     <th class="col-main" data-sort="main"><span class="th-text th-text--plain" id="lbl-th-art-main">Main</span></th>
                     <th class="col-subs-stack" data-sort="subs"><span class="th-text th-text--plain" id="lbl-th-art-subs">Subs</span></th>
-                    <th class="col-art-ingame th-num col-block-gap" data-sort="ingame"><span class="th-text th-text--plain" id="lbl-th-art-ingame">Ingame</span></th>
-                    <th class="col-art-forge th-num" data-sort="forge"><span class="th-text th-text--plain" id="lbl-th-art-forge">Forge</span></th>
+                    <th class="col-art-scores th-num col-block-gap"><span class="th-text th-text--plain" id="lbl-th-art-scores">Scores</span></th>
                     <th class="col-art-role col-block-gap" data-sort="role"><span class="th-text th-text--plain" id="lbl-th-art-role">Role</span></th>
                     <th class="col-art-verdict" data-sort="verdict"><span class="th-text th-text--plain" id="lbl-th-art-verdict">Verdict</span></th>
-                    <th class="col-location col-block-gap" data-sort="location"><span class="th-text th-text--plain" id="lbl-th-art-location">Location</span></th>
                     <th class="col-actions"><span class="th-text th-text--plain">Action</span></th>
                   </tr>
                 </thead>

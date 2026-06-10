@@ -344,8 +344,14 @@
     const mainInner = highlightSearchInPlain(mainPlain, tableSearchHighlight);
 
     const setLevel = r.level || 0;
-    const ancientText = isAncient ? ' (Ancient)' : '';
-    const tooltipText = `Slot ${r.slot} | ${r.setName} +${setLevel}${ancientText}`;
+    const ancientText = isAncient ? '<span style="color: #ff6b6b; font-weight: 600;">Ancient</span>' : '';
+    const tooltipHtml = `<div style="display: grid; grid-template-columns: auto 1fr; gap: 4px 8px; line-height: 1.4;">
+      <span style="color: var(--text-dim);">Slot:</span><span style="font-weight: 600;">${r.slot}</span>
+      <span style="color: var(--text-dim);">Set:</span><span style="font-weight: 600;">${r.setName}</span>
+      <span style="color: var(--text-dim);">Grade:</span><span style="font-weight: 600;">${gradeLabel}</span>
+      <span style="color: var(--text-dim);">Level:</span><span style="font-weight: 600;">+${setLevel}</span>
+      ${isAncient ? `<span style="color: var(--text-dim);">Type:</span><span>${ancientText}</span>` : ''}
+    </div>`;
 
     // Calculate pentagon points based on slot
     const slotAngleMap = { 1: -90, 2: -30, 3: 30, 4: 90, 5: 150, 6: -150 };
@@ -378,7 +384,7 @@
       .replace(/\s+/g, '_');
     const setIconUrl = setKey ? `assets/runes/sets/${setKey}.png` : '';
     const setIconHtml = setIconUrl
-      ? `<div class="rune-table__set-wrapper${isAncient ? ' rune-table__set-wrapper--ancient' : ''}" data-swrm-tip="${escapeAttr(tooltipText)}">
+      ? `<div class="rune-table__set-wrapper${isAncient ? ' rune-table__set-wrapper--ancient' : ''}" data-swrm-tip-html="${escapeAttr(tooltipHtml)}">
         <svg class="rune-table__set-icon rune-table__set-icon--${gradeClass}${isAncient ? ' rune-table__set-icon--ancient' : ''}" width="48" height="48" viewBox="-16 -16 64 64">
           <defs>
             <clipPath id="clip-${r.id || Math.random().toString(36).substr(2, 9)}">

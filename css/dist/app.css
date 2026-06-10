@@ -1990,11 +1990,8 @@ html[lang='fr'] #tab-guide .guide-lang--fr {
   padding: 4px;
   padding-bottom: 8px;
   gap: 6px;
-  position: sticky;
-  top: 0;
-  z-index: 12;
+  position: static;
   background: color-mix(in srgb, var(--bg-main) 92%, transparent);
-  backdrop-filter: blur(8px);
 }
 
 body.light-theme #tab-guide .rules-subtabs,
@@ -8056,22 +8053,26 @@ td {
   max-width: 32px;
   padding-left: 4px;
   padding-right: 4px;
+  text-align: center;
 }
 .rune-table__delete-btn {
-  min-width: 48px;
-  height: 28px;
-  padding: 2px 8px;
+  min-width: 40px;
+  height: 24px;
+  padding: 2px 6px;
   border: 1px solid var(--border);
   background: var(--bg2);
   color: var(--text-dim);
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 500;
-  line-height: 1.2;
+  line-height: 1;
   cursor: pointer;
   border-radius: 4px;
   transition: all 0.15s;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 .rune-table__delete-btn:hover {
   color: var(--red);
@@ -8081,19 +8082,20 @@ td {
 
 #sort-direction-toggle {
   min-width: 32px;
-  padding: 4px 8px;
-  font-size: 0.9rem;
-  font-weight: 600;
+  height: 28px;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  font-weight: 500;
   line-height: 1;
   border: 1px solid var(--border);
-  background: var(--bg2);
+  background: var(--surface);
   color: var(--text);
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.15s;
 }
 #sort-direction-toggle:hover {
-  background: var(--surface);
+  background: var(--bg2);
   border-color: var(--accent);
   color: var(--accent);
 }
@@ -8193,13 +8195,18 @@ td {
 }
 
 /* Multi-line stats cells */
-.rune-table__stats-multi,
-.rune-table__subs-multi {
+.rune-table__stats-multi {
   display: flex;
   flex-direction: column;
   gap: 2px;
   line-height: 1.3;
   text-align: left;
+}
+.rune-table__subs-multi {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.3;
 }
 
 .rune-table__stat-line {
@@ -8235,6 +8242,9 @@ td {
 .col-main-innate {
   min-width: 5rem;
   width: auto;
+  text-align: left;
+}
+#rune-table thead th.col-main-innate {
   text-align: left;
 }
 
@@ -8799,7 +8809,8 @@ html:not(.swrm-has-gsap) .table-kind-tabs__indicator {
 #relic-table-scroll {
   width: 100%;
   max-height: calc(100vh - 400px);
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
   overscroll-behavior: contain;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
@@ -8813,8 +8824,7 @@ html:not(.swrm-has-gsap) .table-kind-tabs__indicator {
 #artifact-table,
 #relic-table {
   width: 100%;
-  table-layout: fixed;
-  min-width: max-content;
+  table-layout: auto;
   border-collapse: collapse;
   /* Column width variables */
   --art-c-grade: 5rem;
@@ -8965,114 +8975,128 @@ thead tr {
   vertical-align: middle;
 }
 
-/* Artifact table column widths */
-#artifact-table col.col-grade,
-#artifact-table th.col-grade,
-#artifact-table td.col-grade {
-  width: var(--art-c-grade);
-  min-width: var(--art-c-grade);
-  max-width: var(--art-c-grade);
-}
+/* Artifact table column widths - using auto layout with min-widths like rune table */
 #artifact-table col.col-category,
 #artifact-table th.col-category,
 #artifact-table td.col-category {
-  width: var(--art-c-category);
-  min-width: var(--art-c-category);
-  max-width: var(--art-c-category);
+  width: auto;
+  min-width: 6rem;
+  max-width: none;
 }
 #artifact-table col.col-main,
 #artifact-table th.col-main,
 #artifact-table td.col-main {
-  width: var(--art-c-main);
-  min-width: var(--art-c-main);
-  max-width: var(--art-c-main);
+  width: auto;
+  min-width: 8rem;
+  max-width: none;
 }
 #artifact-table col.col-subs-stack,
 #artifact-table th.col-subs-stack,
 #artifact-table td.col-subs-stack {
-  width: var(--art-c-subs);
-  min-width: var(--art-c-subs);
-  max-width: var(--art-c-subs);
+  width: auto;
+  min-width: 12rem;
+  max-width: none;
 }
 #artifact-table col.col-art-role,
 #artifact-table th.col-art-role,
 #artifact-table td.col-art-role {
-  width: var(--art-c-role);
-  min-width: var(--art-c-role);
-  max-width: var(--art-c-role);
+  width: auto;
+  min-width: 6rem;
+  max-width: none;
 }
 #artifact-table col.col-art-ingame,
 #artifact-table th.col-art-ingame,
 #artifact-table td.col-art-ingame {
-  width: var(--art-c-ingame);
-  min-width: var(--art-c-ingame);
-  max-width: var(--art-c-ingame);
+  width: auto;
+  min-width: 4rem;
+  max-width: none;
 }
 #artifact-table col.col-art-forge,
 #artifact-table th.col-art-forge,
 #artifact-table td.col-art-forge {
-  width: var(--art-c-forge);
-  min-width: var(--art-c-forge);
-  max-width: var(--art-c-forge);
+  width: auto;
+  min-width: 4rem;
+  max-width: none;
 }
 #artifact-table col.col-art-verdict,
 #artifact-table th.col-art-verdict,
 #artifact-table td.col-art-verdict {
-  width: var(--art-c-verdict);
-  min-width: var(--art-c-verdict);
-  max-width: var(--art-c-verdict);
+  width: auto;
+  min-width: 5rem;
+  max-width: none;
 }
 #artifact-table col.col-location,
 #artifact-table th.col-location,
 #artifact-table td.col-location {
-  width: var(--art-c-location);
-  min-width: var(--art-c-location);
-  max-width: var(--art-c-location);
+  width: auto;
+  min-width: 7rem;
+  max-width: none;
+}
+#artifact-table col.col-actions,
+#artifact-table th.col-actions,
+#artifact-table td.col-actions {
+  width: auto;
+  min-width: 3rem;
+  max-width: none;
+  text-align: center;
 }
 
-/* Relic table column widths */
+/* Relic table column widths - using auto layout with min-widths like rune table */
 #relic-table col.col-category,
 #relic-table th.col-category,
 #relic-table td.col-category {
-  width: var(--rel-c-category);
-  min-width: var(--rel-c-category);
-  max-width: var(--rel-c-category);
+  width: auto;
+  min-width: 4.5rem;
+  max-width: none;
 }
 #relic-table col.col-lvl,
 #relic-table th.col-lvl,
 #relic-table td.col-lvl {
-  width: var(--rel-c-lvl);
-  min-width: var(--rel-c-lvl);
-  max-width: var(--rel-c-lvl);
+  width: auto;
+  min-width: 2rem;
+  max-width: none;
+  text-align: center;
 }
 #relic-table col.col-durability,
 #relic-table th.col-durability,
 #relic-table td.col-durability {
-  width: var(--rel-c-durability);
-  min-width: var(--rel-c-durability);
-  max-width: var(--rel-c-durability);
+  width: auto;
+  min-width: 3.5rem;
+  max-width: none;
+  text-align: center;
 }
 #relic-table col.col-main,
 #relic-table th.col-main,
 #relic-table td.col-main {
-  width: var(--rel-c-main);
-  min-width: var(--rel-c-main);
-  max-width: var(--rel-c-main);
+  width: auto;
+  min-width: 6rem;
+  max-width: none;
+  text-align: center;
 }
 #relic-table col.col-sec,
 #relic-table th.col-sec,
 #relic-table td.col-sec {
-  width: var(--rel-c-sec);
-  min-width: var(--rel-c-sec);
-  max-width: var(--rel-c-sec);
+  width: auto;
+  min-width: 9rem;
+  max-width: none;
 }
 #relic-table col.col-equipped,
 #relic-table th.col-equipped,
 #relic-table td.col-equipped {
-  width: var(--rel-c-equipped);
-  min-width: var(--rel-c-equipped);
-  max-width: var(--rel-c-equipped);
+  width: auto;
+  min-width: 4rem;
+  max-width: none;
+  text-align: center;
 }
+#relic-table col.col-actions,
+#relic-table th.col-actions,
+#relic-table td.col-actions {
+  width: auto;
+  min-width: 3rem;
+  max-width: none;
+  text-align: center;
+}
+
 
 .gear-table-category {
   display: inline-flex;
@@ -9081,12 +9105,51 @@ thead tr {
   min-width: 0;
 }
 
+.gear-table-category--icon-only {
+  justify-content: center;
+}
+
+.gear-table-category--icon-only .gear-table-category__label {
+  display: none;
+}
+
+.gear-table-category__frame {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  border: 2px solid;
+  padding: 2px;
+}
+
+.gear-table-category__frame--legend {
+  border-color: var(--grade-legend, #ff6b6b);
+  background: color-mix(in srgb, var(--grade-legend, #ff6b6b) 10%, transparent);
+}
+
+.gear-table-category__frame--hero {
+  border-color: var(--grade-hero, #ff9f43);
+  background: color-mix(in srgb, var(--grade-hero, #ff9f43) 10%, transparent);
+}
+
+.gear-table-category__frame--rare {
+  border-color: var(--grade-rare, #3399ff);
+  background: color-mix(in srgb, var(--grade-rare, #3399ff) 10%, transparent);
+}
+
+.gear-table-category__frame--grade-tag--other {
+  border-color: var(--grade-other, #888);
+  background: color-mix(in srgb, var(--grade-other, #888) 10%, transparent);
+}
+
 .gear-table-category__icon {
   width: 24px;
   height: 24px;
   object-fit: contain;
   flex-shrink: 0;
-  border-radius: 4px;
+  border-radius: 2px;
 }
 
 .gear-table-category__icon[hidden] {
@@ -9100,6 +9163,11 @@ thead tr {
 #artifact-table td.col-category,
 #relic-table td.col-category {
   vertical-align: middle;
+  text-align: center;
+}
+
+#artifact-table td.col-actions {
+  text-align: center;
 }
 
 #artifact-table th,
@@ -9139,6 +9207,45 @@ thead tr {
 #artifact-table thead th .th-text.th-text--plain::after,
 #relic-table thead th .th-text.th-text--plain::after {
   display: none;
+}
+
+#artifact-table col.col-actions,
+#artifact-table th.col-actions,
+#artifact-table td.col-actions,
+#relic-table col.col-actions,
+#relic-table th.col-actions,
+#relic-table td.col-actions {
+  width: 32px;
+  min-width: 32px;
+  max-width: 32px;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+.gear-table__delete-btn {
+  min-width: 40px;
+  height: 24px;
+  padding: 2px 6px;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  color: var(--text-dim);
+  font-size: 0.7rem;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.15s;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gear-table__delete-btn:hover {
+  color: var(--red);
+  background: color-mix(in srgb, var(--red) 10%, var(--surface));
+  border-color: var(--red);
 }
 
 #artifact-table thead th[data-sort] .th-text.th-text--plain,

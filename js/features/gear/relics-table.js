@@ -1,5 +1,34 @@
 // js/features/gear/relics-table.js — relic inventory table
   let filteredRelics = [];
+  let deletedRelics = new Set();
+  const DELETED_RELICS_KEY = 'swrm_deleted_relics_v1';
+
+  function loadDeletedRelics() {
+    try {
+      const stored = localStorage.getItem(DELETED_RELICS_KEY);
+      if (stored) {
+        deletedRelics = new Set(JSON.parse(stored));
+      }
+    } catch (e) {
+      deletedRelics = new Set();
+    }
+  }
+
+  function saveDeletedRelics() {
+    try {
+      localStorage.setItem(DELETED_RELICS_KEY, JSON.stringify([...deletedRelics]));
+    } catch (e) {
+      // Ignore storage errors
+    }
+  }
+
+  function deleteRelic(relicId) {
+    if (!relicId) return;
+    deletedRelics.add(String(relicId));
+    saveDeletedRelics();
+    renderGearTables();
+  }
+
   let relicFilterGrade = '';
   let relicFilterCategory = '';
   let relicFilterLocation = '';
@@ -77,6 +106,7 @@
   }
 
   function relicPassesFilters(r) {
+    if (r.rid != null && deletedRelics.has(String(r.rid))) return false;
     if (relicFilterGrade && String(r.gradeStr || '') !== relicFilterGrade) return false;
     if (relicFilterCategory && String(r.category || '') !== relicFilterCategory) return false;
     if (relicFilterLocation === 'inventory') {
@@ -251,7 +281,7 @@
     sortRelicTableRows(filteredRelics);
     updateRelicSortHeaderClasses();
     if (!filteredRelics.length) {
-      tbody.innerHTML = `<tr><td colspan="6" class="table-empty">${escapeHtml(t.tableGearEmptyRelics || 'No relics')}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" class="table-empty">${escapeHtml(t.tableGearEmptyRelics || 'No relics')}</td></tr>`;
       if (typeof renderRelicTableRosterChips === 'function') renderRelicTableRosterChips();
       return;
     }
@@ -282,6 +312,7 @@
           <td class="col-main col-block-gap">${escapeHtml(main)}</td>
           <td class="col-sec">${escapeHtml(sec)}</td>
           <td class="col-equipped th-num col-block-gap">${escapeHtml(wear)}</td>
+          <td class="col-actions"><button type="button" class="gear-table__delete-btn btn-secondary btn-sm" data-delete-relic="${escapeHtml(String(r.rid))}" title="Sell relic">Sold</button></td>
         </tr>`;
       });
     tbody.innerHTML = rows.join('');
@@ -291,6 +322,8 @@
   function bindRelicTableFilters() {
     if (bindRelicTableFilters._done) return;
     bindRelicTableFilters._done = true;
+
+    loadDeletedRelics();
 
     if (typeof bindGearFilterChipsClear === 'function') bindGearFilterChipsClear();
 
@@ -320,6 +353,18 @@
 
     document.getElementById('relic-filters-drawer-reset')?.addEventListener('click', resetRelicTableFilters);
     document.getElementById('btn-relic-export-csv')?.addEventListener('click', exportRelicsCsv);
+
+    document.getElementById('relic-table-scroll')?.addEventListener('click', (e) => {
+      const deleteBtn = e.target.closest('[data-delete-relic]');
+      if (deleteBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const relicId = deleteBtn.getAttribute('data-delete-relic');
+        if (relicId && confirm('Sell this relic from the current profile?')) {
+          deleteRelic(relicId);
+        }
+      }
+    });
 
     ['filter-relic-grade', 'filter-relic-category', 'filter-relic-location'].forEach((id) => {
       document.getElementById(id)?.addEventListener('change', onRelicFilterChange);

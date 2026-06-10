@@ -28,11 +28,8 @@ html[lang='fr'] #tab-guide .guide-lang--fr {
   padding: 4px;
   padding-bottom: 8px;
   gap: 6px;
-  position: sticky;
-  top: 0;
-  z-index: 12;
+  position: static;
   background: color-mix(in srgb, var(--bg-main) 92%, transparent);
-  backdrop-filter: blur(8px);
 }
 
 body.light-theme #tab-guide .rules-subtabs,

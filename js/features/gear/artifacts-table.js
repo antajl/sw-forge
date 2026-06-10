@@ -2,6 +2,36 @@
 
   let filteredArtifacts = [];
 
+  let deletedArtifacts = new Set();
+
+  const DELETED_ARTIFACTS_KEY = 'swrm_deleted_artifacts_v1';
+
+  function loadDeletedArtifacts() {
+    try {
+      const stored = localStorage.getItem(DELETED_ARTIFACTS_KEY);
+      if (stored) {
+        deletedArtifacts = new Set(JSON.parse(stored));
+      }
+    } catch (e) {
+      deletedArtifacts = new Set();
+    }
+  }
+
+  function saveDeletedArtifacts() {
+    try {
+      localStorage.setItem(DELETED_ARTIFACTS_KEY, JSON.stringify([...deletedArtifacts]));
+    } catch (e) {
+      // Ignore storage errors
+    }
+  }
+
+  function deleteArtifact(artifactId) {
+    if (!artifactId) return;
+    deletedArtifacts.add(String(artifactId));
+    saveDeletedArtifacts();
+    renderGearTables();
+  }
+
   let artifactFilterGrade = '';
 
   let artifactFilterType = '';
@@ -87,6 +117,8 @@
 
 
   function artifactPassesFilters(a) {
+
+    if (a.rid != null && deletedArtifacts.has(String(a.rid))) return false;
 
     if (artifactFilterVerdict && a.artifactVerdict !== artifactFilterVerdict) return false;
 
@@ -593,21 +625,9 @@
 
             typeof catFn === 'function'
 
-              ? catFn(iconUrl, a.category || '—')
+              ? catFn(iconUrl, a.category || '—', null, a.gradeStr)
 
               : escapeHtml(a.category || '—');
-
-          const gradeFn = window.SWRM && typeof window.SWRM.gearGradeTagHtml === 'function'
-
-            ? window.SWRM.gearGradeTagHtml
-
-            : null;
-
-          const gradeCell = gradeFn
-
-            ? gradeFn(a.gradeStr)
-
-            : escapeHtml(a.gradeStr || '—');
 
           const verdict = a.artifactVerdict || null;
 
@@ -633,8 +653,6 @@
 
           return `<tr class="gear-table__data-row ${evenClass}">
 
-            <td class="col-grade">${gradeCell}</td>
-
             <td class="col-category">${catCell}</td>
 
             <td class="col-main">${escapeHtml(main)}</td>
@@ -650,6 +668,8 @@
             <td class="col-art-verdict">${verdict ? `<span class="${escapeHtml(verdictClass)}">${escapeHtml(verdictLabel)}</span>` : '—'}</td>
 
             <td class="col-location col-block-gap">${escapeHtml(gearLocationLabel(a.occupiedId, t))}</td>
+
+            <td class="col-actions"><button type="button" class="gear-table__delete-btn btn-secondary btn-sm" data-delete-artifact="${escapeHtml(String(a.rid))}" title="Sell artifact">Sold</button></td>
 
           </tr>`;
 
@@ -670,6 +690,8 @@
     if (bindArtifactTableFilters._done) return;
 
     bindArtifactTableFilters._done = true;
+
+    loadDeletedArtifacts();
 
 
 
@@ -723,6 +745,18 @@
     document.getElementById('artifact-filters-drawer-reset')?.addEventListener('click', resetArtifactTableFilters);
 
     document.getElementById('btn-artifact-export-csv')?.addEventListener('click', exportArtifactsCsv);
+
+    document.getElementById('artifact-table-scroll')?.addEventListener('click', (e) => {
+      const deleteBtn = e.target.closest('[data-delete-artifact]');
+      if (deleteBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const artifactId = deleteBtn.getAttribute('data-delete-artifact');
+        if (artifactId && confirm('Sell this artifact from the current profile?')) {
+          deleteArtifact(artifactId);
+        }
+      }
+    });
 
 
 

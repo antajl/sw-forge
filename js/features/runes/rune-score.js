@@ -388,15 +388,22 @@
         : '';
     const tpl =
       loc.forgeScoreTooltip ||
-      'Main {mainPts} pts · Subs {subPts} · Innate {innatePts}. Synergy main↔sub ×{ms} · sub↔sub ×{ss} · cross-stat dup ×{dup}{archetypeSuffix}. Stat tiers + roll size — not Eff% or verdict.';
+      'Main: {mainPts}\nSubs: {subPts}\nInnate: {innatePts}\n\nBase total: {baseSum}\n\nSynergy: ×{mainSubSyn} ×{subSubSyn} ×{dupSub} = {totalMul}\n\nAfter synergy: {synergySum}{archetypeSuffix}\n\nFinal: {total}/100\n\nBased on stat tiers + roll size.';
+    const baseSum = b.mainPts + b.subPts + b.innatePts;
+    const totalMul = (b.mainSubSyn * b.subSubSyn * b.dupSub).toFixed(2);
+    const synergySum = Math.round(baseSum * b.mainSubSyn * b.subSubSyn * b.dupSub * b.archetypeMul);
     return tpl
       .replace(/\{mainPts\}/g, String(b.mainPts))
       .replace(/\{subPts\}/g, String(b.subPts))
       .replace(/\{innatePts\}/g, String(b.innatePts))
-      .replace(/\{ms\}/g, String(b.mainSubSyn))
-      .replace(/\{ss\}/g, String(b.subSubSyn))
-      .replace(/\{dup\}/g, String(b.dupSub))
-      .replace(/\{archetypeSuffix\}/g, archetypeSuffix);
+      .replace(/\{baseSum\}/g, String(baseSum))
+      .replace(/\{mainSubSyn\}/g, String(b.mainSubSyn))
+      .replace(/\{subSubSyn\}/g, String(b.subSubSyn))
+      .replace(/\{dupSub\}/g, String(b.dupSub))
+      .replace(/\{totalMul\}/g, String(totalMul))
+      .replace(/\{synergySum\}/g, String(synergySum))
+      .replace(/\{archetypeSuffix\}/g, archetypeSuffix)
+      .replace(/\{total\}/g, String(b.total));
   }
 
   function runeScoreTooltip(r, t) {

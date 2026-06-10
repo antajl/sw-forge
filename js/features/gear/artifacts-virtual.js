@@ -107,14 +107,8 @@
             : '';
         const catCell =
           typeof catFn === 'function'
-            ? catFn(iconUrl, a.category || '—')
+            ? catFn(iconUrl, a.category || '—', null, a.gradeStr)
             : escapeHtml(a.category || '—');
-        const gradeFn = window.SWRM && typeof window.SWRM.gearGradeTagHtml === 'function'
-          ? window.SWRM.gearGradeTagHtml
-          : null;
-        const gradeCell = gradeFn
-          ? gradeFn(a.gradeStr)
-          : escapeHtml(a.gradeStr || '—');
         const verdict = a.artifactVerdict || null;
         const role = a.artifactRole || null;
         const ingameScore = Number(a.artifactIngameScore);
@@ -128,7 +122,6 @@
           : '—';
         const evenClass = (start + i) % 2 === 0 ? 'gear-table__data-row--even' : '';
         return `<tr class="gear-table__data-row ${evenClass}">
-          <td class="col-grade">${gradeCell}</td>
           <td class="col-category">${catCell}</td>
           <td class="col-main">${escapeHtml(main)}</td>
           <td class="col-subs-stack"><div class="gear-table-subs">${artifactSubStack(a, fmtSub)}</div></td>
@@ -137,6 +130,7 @@
           <td class="col-art-role col-block-gap">${escapeHtml(role || '—')}</td>
           <td class="col-art-verdict"><span class="${escapeHtml(verdictClass)}">${escapeHtml(verdictLabel)}</span></td>
           <td class="col-location col-block-gap">${escapeHtml(gearLocationLabel(a.occupiedId, t))}</td>
+          <td class="col-actions"><button type="button" class="gear-table__delete-btn btn-secondary btn-sm" data-delete-artifact="${escapeHtml(String(a.rid))}" title="Sell artifact">Sold</button></td>
         </tr>`;
       }).join('') +
       artifactTableVirtualSpacerRow(bottomPad);

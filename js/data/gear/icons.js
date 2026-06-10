@@ -87,18 +87,24 @@
       .replace(/</g, '&lt;');
   }
 
-  function gearCategoryCellHtml(iconUrl, label, iconPaths) {
+  function gearCategoryCellHtml(iconUrl, label, iconPaths, grade) {
     const text = String(label || '—');
     const paths = Array.isArray(iconPaths) ? iconPaths : iconUrl ? [iconUrl] : [];
+    const gradeKey = String(grade || '').trim();
+    const tooltipHtml = `<div style="display: grid; grid-template-columns: auto 1fr; gap: 4px 8px; line-height: 1.4;">
+      <span style="color: var(--text-dim);">Category:</span><span style="font-weight: 600;">${text}</span>
+      ${gradeKey ? `<span style="color: var(--text-dim);">Grade:</span><span style="font-weight: 600;">${gradeKey}</span>` : ''}
+    </div>`;
     if (!paths.length) {
-      return `<span class="gear-table-category"><span class="gear-table-category__label">${escAttr(text)}</span></span>`;
+      return `<span class="gear-table-category" data-swrm-tip-html="${escAttr(tooltipHtml)}"><span class="gear-table-category__label">${escAttr(text)}</span></span>`;
     }
     const src = escAttr(paths[0]);
     const fallback =
       paths.length > 1
         ? ` onerror="var p=this.dataset.fallback&&this.dataset.fallback.split('|');var i=+this.dataset.fi||0;if(i<p.length-1){this.dataset.fi=i+1;this.src=p[i+1];}else{this.hidden=true;}" data-fallback="${escAttr(paths.join('|'))}" data-fi="0"`
         : ' onerror="this.hidden=true"';
-    return `<span class="gear-table-category"><img class="gear-table-category__icon" src="${src}" alt="" width="24" height="24" loading="lazy" decoding="async" referrerpolicy="no-referrer"${fallback} /><span class="gear-table-category__label">${escAttr(text)}</span></span>`;
+    const gradeClass = { Legend: 'legend', Hero: 'hero', Rare: 'rare' }[gradeKey] || 'grade-tag--other';
+    return `<span class="gear-table-category gear-table-category--icon-only" data-swrm-tip-html="${escAttr(tooltipHtml)}"><span class="gear-table-category__frame gear-table-category__frame--${gradeClass}"><img class="gear-table-category__icon" src="${src}" alt="" width="24" height="24" loading="lazy" decoding="async" referrerpolicy="no-referrer"${fallback} /></span></span>`;
   }
 
   window.SWRM = window.SWRM || {};

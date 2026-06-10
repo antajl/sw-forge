@@ -6711,15 +6711,22 @@
         : '';
     const tpl =
       loc.forgeScoreTooltip ||
-      'Main {mainPts} pts · Subs {subPts} · Innate {innatePts}. Synergy main↔sub ×{ms} · sub↔sub ×{ss} · cross-stat dup ×{dup}{archetypeSuffix}. Stat tiers + roll size — not Eff% or verdict.';
+      'Main: {mainPts}\nSubs: {subPts}\nInnate: {innatePts}\n\nBase total: {baseSum}\n\nSynergy: ×{mainSubSyn} ×{subSubSyn} ×{dupSub} = {totalMul}\n\nAfter synergy: {synergySum}{archetypeSuffix}\n\nFinal: {total}/100\n\nBased on stat tiers + roll size.';
+    const baseSum = b.mainPts + b.subPts + b.innatePts;
+    const totalMul = (b.mainSubSyn * b.subSubSyn * b.dupSub).toFixed(2);
+    const synergySum = Math.round(baseSum * b.mainSubSyn * b.subSubSyn * b.dupSub * b.archetypeMul);
     return tpl
       .replace(/\{mainPts\}/g, String(b.mainPts))
       .replace(/\{subPts\}/g, String(b.subPts))
       .replace(/\{innatePts\}/g, String(b.innatePts))
-      .replace(/\{ms\}/g, String(b.mainSubSyn))
-      .replace(/\{ss\}/g, String(b.subSubSyn))
-      .replace(/\{dup\}/g, String(b.dupSub))
-      .replace(/\{archetypeSuffix\}/g, archetypeSuffix);
+      .replace(/\{baseSum\}/g, String(baseSum))
+      .replace(/\{mainSubSyn\}/g, String(b.mainSubSyn))
+      .replace(/\{subSubSyn\}/g, String(b.subSubSyn))
+      .replace(/\{dupSub\}/g, String(b.dupSub))
+      .replace(/\{totalMul\}/g, String(totalMul))
+      .replace(/\{synergySum\}/g, String(synergySum))
+      .replace(/\{archetypeSuffix\}/g, archetypeSuffix)
+      .replace(/\{total\}/g, String(b.total));
   }
 
   function runeScoreTooltip(r, t) {
@@ -7089,8 +7096,14 @@
     const mainInner = highlightSearchInPlain(mainPlain, tableSearchHighlight);
 
     const setLevel = r.level || 0;
-    const ancientText = isAncient ? ' (Ancient)' : '';
-    const tooltipText = `Slot ${r.slot} | ${r.setName} +${setLevel}${ancientText}`;
+    const ancientText = isAncient ? '<span style="color: #ff6b6b; font-weight: 600;">Ancient</span>' : '';
+    const tooltipHtml = `<div style="display: grid; grid-template-columns: auto 1fr; gap: 4px 8px; line-height: 1.4;">
+      <span style="color: var(--text-dim);">Slot:</span><span style="font-weight: 600;">${r.slot}</span>
+      <span style="color: var(--text-dim);">Set:</span><span style="font-weight: 600;">${r.setName}</span>
+      <span style="color: var(--text-dim);">Grade:</span><span style="font-weight: 600;">${gradeLabel}</span>
+      <span style="color: var(--text-dim);">Level:</span><span style="font-weight: 600;">+${setLevel}</span>
+      ${isAncient ? `<span style="color: var(--text-dim);">Type:</span><span>${ancientText}</span>` : ''}
+    </div>`;
 
     // Calculate pentagon points based on slot
     const slotAngleMap = { 1: -90, 2: -30, 3: 30, 4: 90, 5: 150, 6: -150 };
@@ -7123,7 +7136,7 @@
       .replace(/\s+/g, '_');
     const setIconUrl = setKey ? `assets/runes/sets/${setKey}.png` : '';
     const setIconHtml = setIconUrl
-      ? `<div class="rune-table__set-wrapper${isAncient ? ' rune-table__set-wrapper--ancient' : ''}" data-swrm-tip="${escapeAttr(tooltipText)}">
+      ? `<div class="rune-table__set-wrapper${isAncient ? ' rune-table__set-wrapper--ancient' : ''}" data-swrm-tip-html="${escapeAttr(tooltipHtml)}">
         <svg class="rune-table__set-icon rune-table__set-icon--${gradeClass}${isAncient ? ' rune-table__set-icon--ancient' : ''}" width="48" height="48" viewBox="-16 -16 64 64">
           <defs>
             <clipPath id="clip-${r.id || Math.random().toString(36).substr(2, 9)}">
@@ -9769,6 +9782,36 @@
 
   let filteredArtifacts = [];
 
+  let deletedArtifacts = new Set();
+
+  const DELETED_ARTIFACTS_KEY = 'swrm_deleted_artifacts_v1';
+
+  function loadDeletedArtifacts() {
+    try {
+      const stored = localStorage.getItem(DELETED_ARTIFACTS_KEY);
+      if (stored) {
+        deletedArtifacts = new Set(JSON.parse(stored));
+      }
+    } catch (e) {
+      deletedArtifacts = new Set();
+    }
+  }
+
+  function saveDeletedArtifacts() {
+    try {
+      localStorage.setItem(DELETED_ARTIFACTS_KEY, JSON.stringify([...deletedArtifacts]));
+    } catch (e) {
+      // Ignore storage errors
+    }
+  }
+
+  function deleteArtifact(artifactId) {
+    if (!artifactId) return;
+    deletedArtifacts.add(String(artifactId));
+    saveDeletedArtifacts();
+    renderGearTables();
+  }
+
   let artifactFilterGrade = '';
 
   let artifactFilterType = '';
@@ -9854,6 +9897,8 @@
 
 
   function artifactPassesFilters(a) {
+
+    if (a.rid != null && deletedArtifacts.has(String(a.rid))) return false;
 
     if (artifactFilterVerdict && a.artifactVerdict !== artifactFilterVerdict) return false;
 
@@ -10360,21 +10405,9 @@
 
             typeof catFn === 'function'
 
-              ? catFn(iconUrl, a.category || '—')
+              ? catFn(iconUrl, a.category || '—', null, a.gradeStr)
 
               : escapeHtml(a.category || '—');
-
-          const gradeFn = window.SWRM && typeof window.SWRM.gearGradeTagHtml === 'function'
-
-            ? window.SWRM.gearGradeTagHtml
-
-            : null;
-
-          const gradeCell = gradeFn
-
-            ? gradeFn(a.gradeStr)
-
-            : escapeHtml(a.gradeStr || '—');
 
           const verdict = a.artifactVerdict || null;
 
@@ -10400,8 +10433,6 @@
 
           return `<tr class="gear-table__data-row ${evenClass}">
 
-            <td class="col-grade">${gradeCell}</td>
-
             <td class="col-category">${catCell}</td>
 
             <td class="col-main">${escapeHtml(main)}</td>
@@ -10417,6 +10448,8 @@
             <td class="col-art-verdict">${verdict ? `<span class="${escapeHtml(verdictClass)}">${escapeHtml(verdictLabel)}</span>` : '—'}</td>
 
             <td class="col-location col-block-gap">${escapeHtml(gearLocationLabel(a.occupiedId, t))}</td>
+
+            <td class="col-actions"><button type="button" class="gear-table__delete-btn btn-secondary btn-sm" data-delete-artifact="${escapeHtml(String(a.rid))}" title="Sell artifact">Sold</button></td>
 
           </tr>`;
 
@@ -10437,6 +10470,8 @@
     if (bindArtifactTableFilters._done) return;
 
     bindArtifactTableFilters._done = true;
+
+    loadDeletedArtifacts();
 
 
 
@@ -10490,6 +10525,18 @@
     document.getElementById('artifact-filters-drawer-reset')?.addEventListener('click', resetArtifactTableFilters);
 
     document.getElementById('btn-artifact-export-csv')?.addEventListener('click', exportArtifactsCsv);
+
+    document.getElementById('artifact-table-scroll')?.addEventListener('click', (e) => {
+      const deleteBtn = e.target.closest('[data-delete-artifact]');
+      if (deleteBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const artifactId = deleteBtn.getAttribute('data-delete-artifact');
+        if (artifactId && confirm('Sell this artifact from the current profile?')) {
+          deleteArtifact(artifactId);
+        }
+      }
+    });
 
 
 
@@ -10645,14 +10692,8 @@
             : '';
         const catCell =
           typeof catFn === 'function'
-            ? catFn(iconUrl, a.category || '—')
+            ? catFn(iconUrl, a.category || '—', null, a.gradeStr)
             : escapeHtml(a.category || '—');
-        const gradeFn = window.SWRM && typeof window.SWRM.gearGradeTagHtml === 'function'
-          ? window.SWRM.gearGradeTagHtml
-          : null;
-        const gradeCell = gradeFn
-          ? gradeFn(a.gradeStr)
-          : escapeHtml(a.gradeStr || '—');
         const verdict = a.artifactVerdict || null;
         const role = a.artifactRole || null;
         const ingameScore = Number(a.artifactIngameScore);
@@ -10666,7 +10707,6 @@
           : '—';
         const evenClass = (start + i) % 2 === 0 ? 'gear-table__data-row--even' : '';
         return `<tr class="gear-table__data-row ${evenClass}">
-          <td class="col-grade">${gradeCell}</td>
           <td class="col-category">${catCell}</td>
           <td class="col-main">${escapeHtml(main)}</td>
           <td class="col-subs-stack"><div class="gear-table-subs">${artifactSubStack(a, fmtSub)}</div></td>
@@ -10675,6 +10715,7 @@
           <td class="col-art-role col-block-gap">${escapeHtml(role || '—')}</td>
           <td class="col-art-verdict"><span class="${escapeHtml(verdictClass)}">${escapeHtml(verdictLabel)}</span></td>
           <td class="col-location col-block-gap">${escapeHtml(gearLocationLabel(a.occupiedId, t))}</td>
+          <td class="col-actions"><button type="button" class="gear-table__delete-btn btn-secondary btn-sm" data-delete-artifact="${escapeHtml(String(a.rid))}" title="Sell artifact">Sold</button></td>
         </tr>`;
       }).join('') +
       artifactTableVirtualSpacerRow(bottomPad);
@@ -10715,6 +10756,35 @@
   }
 
   let filteredRelics = [];
+  let deletedRelics = new Set();
+  const DELETED_RELICS_KEY = 'swrm_deleted_relics_v1';
+
+  function loadDeletedRelics() {
+    try {
+      const stored = localStorage.getItem(DELETED_RELICS_KEY);
+      if (stored) {
+        deletedRelics = new Set(JSON.parse(stored));
+      }
+    } catch (e) {
+      deletedRelics = new Set();
+    }
+  }
+
+  function saveDeletedRelics() {
+    try {
+      localStorage.setItem(DELETED_RELICS_KEY, JSON.stringify([...deletedRelics]));
+    } catch (e) {
+      // Ignore storage errors
+    }
+  }
+
+  function deleteRelic(relicId) {
+    if (!relicId) return;
+    deletedRelics.add(String(relicId));
+    saveDeletedRelics();
+    renderGearTables();
+  }
+
   let relicFilterGrade = '';
   let relicFilterCategory = '';
   let relicFilterLocation = '';
@@ -10792,6 +10862,7 @@
   }
 
   function relicPassesFilters(r) {
+    if (r.rid != null && deletedRelics.has(String(r.rid))) return false;
     if (relicFilterGrade && String(r.gradeStr || '') !== relicFilterGrade) return false;
     if (relicFilterCategory && String(r.category || '') !== relicFilterCategory) return false;
     if (relicFilterLocation === 'inventory') {
@@ -10966,7 +11037,7 @@
     sortRelicTableRows(filteredRelics);
     updateRelicSortHeaderClasses();
     if (!filteredRelics.length) {
-      tbody.innerHTML = `<tr><td colspan="6" class="table-empty">${escapeHtml(t.tableGearEmptyRelics || 'No relics')}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" class="table-empty">${escapeHtml(t.tableGearEmptyRelics || 'No relics')}</td></tr>`;
       if (typeof renderRelicTableRosterChips === 'function') renderRelicTableRosterChips();
       return;
     }
@@ -10997,6 +11068,7 @@
           <td class="col-main col-block-gap">${escapeHtml(main)}</td>
           <td class="col-sec">${escapeHtml(sec)}</td>
           <td class="col-equipped th-num col-block-gap">${escapeHtml(wear)}</td>
+          <td class="col-actions"><button type="button" class="gear-table__delete-btn btn-secondary btn-sm" data-delete-relic="${escapeHtml(String(r.rid))}" title="Sell relic">Sold</button></td>
         </tr>`;
       });
     tbody.innerHTML = rows.join('');
@@ -11006,6 +11078,8 @@
   function bindRelicTableFilters() {
     if (bindRelicTableFilters._done) return;
     bindRelicTableFilters._done = true;
+
+    loadDeletedRelics();
 
     if (typeof bindGearFilterChipsClear === 'function') bindGearFilterChipsClear();
 
@@ -11035,6 +11109,18 @@
 
     document.getElementById('relic-filters-drawer-reset')?.addEventListener('click', resetRelicTableFilters);
     document.getElementById('btn-relic-export-csv')?.addEventListener('click', exportRelicsCsv);
+
+    document.getElementById('relic-table-scroll')?.addEventListener('click', (e) => {
+      const deleteBtn = e.target.closest('[data-delete-relic]');
+      if (deleteBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const relicId = deleteBtn.getAttribute('data-delete-relic');
+        if (relicId && confirm('Sell this relic from the current profile?')) {
+          deleteRelic(relicId);
+        }
+      }
+    });
 
     ['filter-relic-grade', 'filter-relic-category', 'filter-relic-location'].forEach((id) => {
       document.getElementById(id)?.addEventListener('change', onRelicFilterChange);

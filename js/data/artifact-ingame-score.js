@@ -75,32 +75,10 @@
   }
 
   function artifactIngameScoreBreakdown(artifact) {
-    const secs = artifact && Array.isArray(artifact.secs) ? artifact.secs : [];
-    const lines = [];
-    let totalScore = 0;
-
-    for (let i = 0; i < secs.length; i++) {
-      const sec = secs[i];
-      const type = Number(sec && sec.type);
-      const val = Number(sec && sec.value);
-      if (!Number.isFinite(type) || !Number.isFinite(val) || val <= 0) continue;
-
-      const max = ARTIFACT_EFFECT_MAX[type];
-      if (max && max > 0) {
-        const ratio = val / max;
-        const points = ratio * 100;
-        totalScore += points;
-        const formatFn = window.SWRM && window.SWRM.ARTIFACT_SUB_FORMAT && window.SWRM.ARTIFACT_SUB_FORMAT[type];
-        const label = formatFn ? formatFn({ type, value: val }) : `type ${type}`;
-        lines.push(`${label}: ${val} / ${max} = ${ratio.toFixed(3)} → ${points.toFixed(0)} pts`);
-      } else {
-        lines.push(`type ${type}: ${val} (no max defined)`);
-      }
-    }
-
-    lines.push(`Total score: ${Math.round(totalScore)}`);
-
-    return lines;
+    // Artifact ingame score calculation disabled - formula is inaccurate.
+    // The game uses a complex roll-based system that is not fully documented.
+    // See docs/ARTIFACT_SCORING_RESEARCH.md for research findings.
+    return ['Score calculation disabled - formula is inaccurate'];
   }
 
   /**

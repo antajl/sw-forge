@@ -1,6 +1,8 @@
 // js/features/runes/table-filters.js — rune table filtering logic
   let filteredRunes = [];
   let runeTableRenderPending = false;
+  let debounceTimer = null;
+  const DEBOUNCE_DELAY = 150;
 
   function isRuneTableRunesTabActive() {
     if (typeof isRuneTablePaneVisible === 'function' && !isRuneTablePaneVisible()) return false;
@@ -13,6 +15,16 @@
     if (!isRuneTableRunesTabActive()) return;
     runeTableRenderPending = false;
     applyFiltersAndSort(getVisibleRunes(), { preserveTableExpansion: true });
+  }
+
+  function scheduleRuneTableRender() {
+    if (debounceTimer) {
+      clearTimeout(debounceTimer);
+    }
+    debounceTimer = setTimeout(() => {
+      debounceTimer = null;
+      flushRuneTableRenderIfNeeded();
+    }, DEBOUNCE_DELAY);
   }
 
   function isRuneEquipped(r) {
@@ -604,6 +616,7 @@
       return;
     }
     runeTableRenderPending = false;
+    scheduleRuneTableRender();
 
     const tbody = document.getElementById('rune-tbody');
     if (!tbody) return;

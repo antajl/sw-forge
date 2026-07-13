@@ -69,11 +69,18 @@ npm run watch:ui           # rebuild ui.js on save in js/features/
 
 | Question | File |
 |----------|------|
+| AI assistant guide, checklists, common pitfalls | [AI-ASSISTANT.md](AI-ASSISTANT.md) |
+| Architecture analysis and improvement roadmap | [ARCHITECTURE-ROADMAP.md](ARCHITECTURE-ROADMAP.md) |
 | Where code lives, build commands, load order, feature folders | [PROJECT-STRUCTURE.md](PROJECT-STRUCTURE.md) |
 | Game mechanics, stat names, gem/grind/reapp rules | [GAME-KNOWLEDGE.md](GAME-KNOWLEDGE.md) |
 | window.SWRM API + CSS variables | [API-REFERENCE.md](API-REFERENCE.md) |
-| Open bugs + feature backlog | [BACKLOG.md](BACKLOG.md) |
+| Open bugs + feature backlog (organized by priority) | [BACKLOG.md](BACKLOG.md) |
+| Step-by-step workflows for common tasks | [WORKFLOWS.md](WORKFLOWS.md) |
+| Module dependencies and load order | [DEPENDENCY-MAP.md](DEPENDENCY-MAP.md) |
+| Debugging guide and common issues | [DEBUGGING.md](DEBUGGING.md) |
+| Testing guide and checklists | [TESTING.md](TESTING.md) |
 | Artifact scoring research (incomplete) | [ARTIFACT_SCORING_RESEARCH.md](ARTIFACT_SCORING_RESEARCH.md) |
+| Developer map (Russian) | [README.md](README.md) |
 
 ---
 

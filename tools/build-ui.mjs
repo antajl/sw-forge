@@ -5,10 +5,13 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { SourceMapGenerator } from 'source-map';
+import { minify } from 'terser';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const featuresDir = path.join(root, 'js/features');
 const outPath = path.join(root, 'js/ui.js');
+const outMapPath = path.join(root, 'js/ui.js.map');
 
 /** Concat order — must match runtime dependencies inside the IIFE */
 const CHUNKS = [
@@ -129,5 +132,58 @@ const body = CHUNKS.flatMap((f) => {
   return [readPart(f, true)];
 }).join('\n');
 
-fs.writeFileSync(outPath, banner + body, 'utf8');
+// Generate source map
+const map = new SourceMapGenerator({ file: 'ui.js' });
+let lineOffset = banner.split('\n').length;
+
+for (const chunk of CHUNKS) {
+  if (chunk === 'monsters/bootstrap.js' && useMonsterModules) {
+    for (const mp of MONSTER_PARTS) {
+      const filePath = featurePath(mp);
+      const content = readPart(mp, true);
+      const lines = content.split('\n');
+      
+      for (let i = 0; i < lines.length; i++) {
+        map.addMapping({
+          source: `js/features/${mp}`,
+          original: { line: i + 1, column: 0 },
+          generated: { line: lineOffset + i + 1, column: 0 },
+        });
+      }
+      lineOffset += lines.length;
+    }
+  } else {
+    const filePath = featurePath(chunk);
+    const content = readPart(chunk, true);
+    const lines = content.split('\n');
+    
+    for (let i = 0; i < lines.length; i++) {
+      map.addMapping({
+        source: `js/features/${chunk}`,
+        original: { line: i + 1, column: 0 },
+        generated: { line: lineOffset + i + 1, column: 0 },
+      });
+    }
+    lineOffset += lines.length;
+  }
+}
+
+const mapContent = map.toString();
+const outputWithMap = banner + body + `\n//# sourceMappingURL=ui.js.map\n`;
+
+// Minify with terser
+const minified = await minify(outputWithMap, {
+  compress: true,
+  mangle: true,
+  sourceMap: {
+    content: mapContent,
+  },
+});
+
+fs.writeFileSync(outPath, minified.code, 'utf8');
+if (minified.map) {
+  fs.writeFileSync(outMapPath, minified.map, 'utf8');
+}
 console.log('wrote js/ui.js from', CHUNKS.length, 'chunks (', body.split('\n').length, 'lines )');
+console.log('wrote js/ui.js.map');
+console.log('Minified size:', outputWithMap.length, '→', minified.code.length, 'bytes (', Math.round((1 - minified.code.length / outputWithMap.length) * 100), '% reduction )');

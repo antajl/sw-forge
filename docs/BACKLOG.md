@@ -1,55 +1,176 @@
 # SW Forge — Backlog
 
-> Open bugs and planned features.
+> Open bugs and planned features organized by priority.
 > **Context:** [MASTER.md](MASTER.md)
 > After completing any item: remove it from this file and add it to the changelog.
 
-## Open bugs
+**Priority Levels:**
+- **P0 (Critical):** Blocks core functionality or major bugs
+- **P1 (High):** Important features or significant bugs
+- **P2 (Medium):** Improvements, nice-to-have features
+- **P3 (Low):** Long horizon, out of scope
+
+---
+
+## P0 (Critical)
+
+*No critical issues at this time.*
+
+---
+
+## P1 (High)
 
 ### Residual hex colors in `css/features/`
 
-**Status:** Partially closed  
+**Status:** Partially closed
 **Files:** `css/features/**/*.css`
 
-### Issue
+**Issue:**
 Some feature CSS files still contain hardcoded hex colors instead of CSS variables from `base.css`.
 
-### Impact
+**Impact:**
 Makes theme switching and color consistency harder to maintain.
 
-### Progress
+**Progress:**
 Most files migrated to `var(--…)` tokens. Search with:
 ```bash
 rg "#[0-9a-fA-F]{6}" css/features/ -g "*.css"
 ```
 
+---
+
 ### No JS/CSS minification
 
-**Status:** Open  
+**Status:** Open
 **Files:** `js/ui.js`, `css/dist/app.css`
 
-### Issue
+**Issue:**
 Build process does not minify JS or CSS, increasing bundle size.
 
-### Impact
+**Impact:**
 Larger download size for users; no functional impact.
 
-### Notes
+**Notes:**
 Intentional trade-off for easier debugging. Could add minification step in `tools/build-*.mjs` if needed.
+
+---
 
 ### No `npm run watch:css`
 
-**Status:** Open  
+**Status:** Open
 **Files:** `tools/`
 
-### Issue
+**Issue:**
 No watch mode for CSS changes; must manually run `npm run build:css`.
 
-### Impact
+**Impact:**
 Developer experience; no runtime impact.
 
-### Notes
+**Notes:**
 Could add `watch-css.mjs` similar to existing `watch-ui.mjs`.
+
+---
+
+## P2 (Medium)
+
+### Monsters — account-wide
+
+**Files:** `js/features/monsters/`
+
+1. **Monster Builder lite** — подсказка рун из инвентаря под архетип → открытие в Rune Table.
+2. **Teams** — ~~боевой SPD + тотем из SWEX~~; опционально: баф скорости в бою, нагляднее gap vs самый медленный слот.
+
+---
+
+### Monsters — Dashboard (опционально)
+
+**Files:** `js/features/monsters/`, `partials/tabs/monsters.html`
+
+1. Субтаб **Dashboard | Roster | Teams**.
+2. Score коробки, 2–3 графика (6/6, skill debt, опционально качество рун).
+3. Клик по графику → отфильтрованный Roster.
+4. Связка с Runes depth («rune box 68/100, но N 6★ без 6/6»).
+
+---
+
+### Share
+
+**Files:** `js/features/app/share.js`, `js/workers/`
+
+1. ~~**Mentor review** — клик из баннера → Roster~~ (см. Releases 2026-05-22).
+2. ~~Share в карточке Database slots~~; ~~глобус языка в шапке~~ (см. Releases 2026-05-23). Остаётся: полный share «all» при очень больших JSON (лимит Worker).
+
+---
+
+### Runes
+
+**Files:** `js/features/runes/`
+
+1. Сравнение двух слотов SWEX (Database Slots): diff вердиктов и ролей.
+2. Опционально жёстче правило Grind (eff / HR subs).
+
+---
+
+### Monsters — roster depth
+
+**Files:** `js/features/monsters/`
+
+1. ~~Side-by-side двух юнитов~~ — отложено (неочевидная ценность vs деталка + фильтры).
+2. ~~Дубликаты Nat5~~ — отложено (можно закрыть фильтром/тегом food вручную).
+3. **Content tags** — пользовательские пресеты (RTA, Siege, ToA) + фильтр по тегам (не встроенные теги игры). Фильтр и свободные теги уже работают; остаётся: встроенные пресеты-шаблоны.
+
+---
+
+### Artifacts & relics
+
+**Files:** `js/features/gear/`, `js/data/artifacts/`, `js/data/relics/`
+
+1. ~~Ingame score calculation~~ — отключён (формула неточна). Исследования в `docs/ARTIFACT_SCORING_RESEARCH.md`. Требуется больше данных для обратного инжиниринга системы роллов.
+2. ~~Движок правил Keep/Sell для gear (отдельно от рун).~~ — реализован (`artifact-verdict.js`, `artifact-rules-ui.js`, вердикты в таблице и dashboard).
+3. Опционально отдельная верхняя вкладка (vs только Runes → Table).
+4. Больше подтверждённых подписей типов реликтов.
+
+---
+
+### Guide & translations
+
+**Files:** `partials/tabs/guide.html`, `js/core/translations-*.js`
+
+1. ~~FR Guide для Monsters (позже Artifacts).~~ — реализован (секция `guide-lang--fr` в `index.html`).
+2. ~~Дополнительные FR-строки UI Monsters.~~ — реализованы (`translations-fr.js`).
+
+---
+
+## P3 (Low)
+
+### Локальные ассеты
+
+**Status:** Closed
+**Files:** `js/data/local-assets.js`
+
+Эпик закрыт. `SWRM_LOCAL_ASSETS_ONLY = true`. Все ассеты локальны.
+
+---
+
+### Долгий горизонт
+
+**Files:** Various
+
+1. RTA / Siege draft helpers из своей коробки (не уровень SWOP).
+2. Заметки по порядку ходов и скорости на основе статов из экспорта (не точь-в-точь как в игре; **как сделать — пока не определено**).
+
+---
+
+### Вне scope
+
+**Files:** N/A (not planned)
+
+- Свой бэкенд / облачные аккаунты / база профилей на сервере.
+- Логи дропа (Cairos / Rift / SD).
+- Полный клон bestiary SWARFARM.
+- Оптимизатор рун на миллионы перестановок (SWOP / SWLens).
+
+---
 
 ## Resolved bugs (archive)
 
@@ -57,7 +178,7 @@ Kept for context. Do not re-fix these.
 
 ### FR language breaks on page reload
 
-**Status:** Resolved (fixed 2026-06-01)  
+**Status:** Resolved (fixed 2026-06-01)
 **Files:** `js/features/shell/bootstrap.js`, `js/features/shell/language-bindings.js`
 
 #### Root cause
@@ -72,9 +193,11 @@ Kept for context. Do not re-fix these.
 - EN/RU: reload → language preserved, UI works ✓
 - First run (no localStorage): EN ✓
 
+---
+
 ### `index.html` monolithic (~250 KB)
 
-**Status:** Resolved (fixed 2026-06-03)  
+**Status:** Resolved (fixed 2026-06-03)
 **Files:** `index.html`, `index-shell.html`, `partials/`
 
 #### Issue
@@ -93,80 +216,12 @@ Developer experience improved: UI sections now editable in separate partial file
 #### Notes
 Player Guide text lives in `#tab-guide` within HTML by design (not moved to `docs/`).
 
+---
+
 ### Google Fonts → local
 
-**Status:** Closed  
+**Status:** Closed
 **Files:** `assets/fonts/`, `css/foundation/base.css`
 
 #### Resolution
 Migrated to system UI font stack (`system-ui` / Segoe UI / Roboto). Font files in `assets/fonts/` are legacy and not connected.
-
-## Feature backlog
-
-# SW Forge — открытые планы
-
-> **Сделанное** — Changelog → Releases в приложении.  
-> **Код и правила** — [`MASTER.md`](MASTER.md) · **Индекс** — [`README.md`](README.md)
-
-**Roadmap в приложении** — краткая копия этого файла для игроков (`STATIC_ROADMAP` в `js/core/changelog-data.js`): те же разделы и смысл, **без** путей, API и внутренних имён. EN + RU обязательно синхронны с BACKLOG; FR — тот же смысл, можно короче. После закрытия пункта — убрать отсюда и из Roadmap, записать в changelog.
-
----
-
-## 1. Monsters — account-wide
-
-1. ~~Fusion / hexagram tracker~~ — отложено (в игре уже есть нормальный трекер).
-2. **Monster Builder lite** — подсказка рун из инвентаря под архетип → открытие в Rune Table.
-3. **Teams** — ~~боевой SPD + тотем из SWEX~~; опционально: баф скорости в бою, нагляднее gap vs самый медленный слот.
-
-## 2. Monsters — Dashboard (опционально)
-
-1. Субтаб **Dashboard | Roster | Teams**.
-2. Score коробки, 2–3 графика (6/6, skill debt, опционально качество рун).
-3. Клик по графику → отфильтрованный Roster.
-4. Связка с Runes depth («rune box 68/100, но N 6★ без 6/6»).
-
-## 3. Share
-
-1. ~~**Mentor review** — клик из баннера → Roster~~ (см. Releases 2026-05-22).
-2. ~~Share в карточке Database slots~~; ~~глобус языка в шапке~~ (см. Releases 2026-05-23). Остаётся: полный share «all» при очень больших JSON (лимит Worker).
-
-## 4. Runes
-
-1. Сравнение двух слотов SWEX (Database Slots): diff вердиктов и ролей.
-2. Опционально жёстче правило Grind (eff / HR subs).
-
-## 5. Monsters — roster depth (низкий приоритет / уточнить)
-
-1. ~~Side-by-side двух юнитов~~ — отложено (неочевидная ценность vs деталка + фильтры).
-2. ~~Дубликаты Nat5~~ — отложено (можно закрыть фильтром/тегом food вручную).
-3. **Content tags** — пользовательские пресеты (RTA, Siege, ToA) + фильтр по тегам (не встроенные теги игры). Фильтр и свободные теги уже работают; остаётся: встроенные пресеты-шаблоны.
-
-## 6. Artifacts & relics
-
-1. ~~Ingame score calculation~~ — отключён (формула неточна). Исследования в `docs/ARTIFACT_SCORING_RESEARCH.md`. Требуется больше данных для обратного инжиниринга системы роллов.
-2. ~~Движок правил Keep/Sell для gear (отдельно от рун).~~ — реализован (`artifact-verdict.js`, `artifact-rules-ui.js`, вердикты в таблице и dashboard).
-3. Опционально отдельная верхняя вкладка (vs только Runes → Table).
-4. Больше подтверждённых подписей типов реликтов.
-
-## 7. Guide & translations
-
-1. ~~FR Guide для Monsters (позже Artifacts).~~ — реализован (секция `guide-lang--fr` в `index.html`).
-2. ~~Дополнительные FR-строки UI Monsters.~~ — реализованы (`translations-fr.js`).
-
-## 9. Локальные ассеты
-
-Эпик закрыт. `SWRM_LOCAL_ASSETS_ONLY = true`. Все ассеты локальны.
-
-## 8. Долгий горизонт
-
-1. RTA / Siege draft helpers из своей коробки (не уровень SWOP).
-2. Заметки по порядку ходов и скорости на основе статов из экспорта (не точь-в-точь как в игре; **как сделать — пока не определено**).
-
----
-
-## Вне scope
-
-- Свой бэкенд / облачные аккаунты / база профилей на сервере.
-- Логи дропа (Cairos / Rift / SD).
-- Полный клон bestiary SWARFARM.
-- Оптимизатор рун на миллионы перестановок (SWOP / SWLens).

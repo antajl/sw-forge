@@ -2,6 +2,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import * as csso from 'csso';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const outPath = path.join(root, 'css/dist/app.css');
@@ -87,5 +88,12 @@ if (missing.length) {
   process.exit(1);
 }
 
-fs.writeFileSync(outPath, body, 'utf8');
+// Minify with csso
+const minified = csso.minify(body);
+const originalSize = body.length;
+const minifiedSize = minified.css.length;
+const reduction = Math.round((1 - minifiedSize / originalSize) * 100);
+
+fs.writeFileSync(outPath, minified.css, 'utf8');
 console.log('wrote', path.relative(root, outPath), 'from', FILES.length, 'files');
+console.log('Minified size:', originalSize, '→', minifiedSize, 'bytes (', reduction, '% reduction )');

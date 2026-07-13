@@ -3,6 +3,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { createHash } from 'crypto';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -12,6 +13,11 @@ const shellPath = path.join(rootDir, 'index-shell.html');
 const outputPath = path.join(rootDir, 'index.html');
 
 const includePattern = /<!-- @include (.+?) -->/g;
+
+function getFileHash(filePath) {
+  const content = fs.readFileSync(filePath);
+  return createHash('md5').update(content).digest('hex').substring(0, 8);
+}
 
 function resolveIncludes(content) {
   let out = content;
@@ -41,5 +47,29 @@ function resolveIncludes(content) {
 
 let content = fs.readFileSync(shellPath, 'utf-8');
 content = resolveIncludes(content);
+
+// Add hash-based cache busting
+const cssPath = path.join(rootDir, 'css/dist/app.css');
+const uiJsPath = path.join(rootDir, 'js/ui.js');
+const translationsPath = path.join(rootDir, 'js/core/translations.js');
+
+if (fs.existsSync(cssPath)) {
+  const cssHash = getFileHash(cssPath);
+  content = content.replace(/css\/dist\/app\.css\?v=[^"]+/g, `css/dist/app.css?v=${cssHash}`);
+  console.log(`CSS hash: ${cssHash}`);
+}
+
+if (fs.existsSync(uiJsPath)) {
+  const jsHash = getFileHash(uiJsPath);
+  content = content.replace(/js\/ui\.js\?v=[^"]+/g, `js/ui.js?v=${jsHash}`);
+  console.log(`UI.js hash: ${jsHash}`);
+}
+
+if (fs.existsSync(translationsPath)) {
+  const translationsHash = getFileHash(translationsPath);
+  content = content.replace(/js\/core\/translations\.js\?v=[^"]+/g, `js/core/translations.js?v=${translationsHash}`);
+  console.log(`Translations.js hash: ${translationsHash}`);
+}
+
 fs.writeFileSync(outputPath, content, 'utf-8');
 console.log(`Build complete: ${outputPath}`);

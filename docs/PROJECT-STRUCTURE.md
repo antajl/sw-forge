@@ -12,7 +12,7 @@ SW Forge is a static browser app. Cloudflare Pages serves `index.html`, CSS, dat
 
 ### HTML Build
 
-`tools/build-html.mjs` assembles `index.html` from `index-shell.html` and partial files in `partials/`. The shell template contains `<!-- @include partials/... -->` markers that are replaced with partial content at build time.
+`tools/build-html.mjs` assembles `index.html` from `index-shell.html` and partial files in `partials/`. The shell template contains `<!-- @include partials/... -->` markers that are replaced with partial content at build time. It also adds hash-based cache busting to CSS, JS, and translations URLs.
 
 Common commands:
 
@@ -34,7 +34,7 @@ Edit EN/RU in source files, then run `npm run build:translations`. Edit FR direc
 
 ### UI Build
 
-`tools/build-ui.mjs` is the single manifest for concatenation order. It joins `js/features/**/*.js` into `js/ui.js` without transforms, preserving the historical single IIFE closure.
+`tools/build-ui.mjs` is the single manifest for concatenation order. It joins `js/features/**/*.js` into `js/ui.js` with minification (terser) and source maps, preserving the historical single IIFE closure.
 
 Common commands:
 
@@ -51,9 +51,10 @@ Use `npm run build:ui` after any edit under `js/features/`.
 
 | File | Why |
 |------|------|
-| `js/ui.js` | Artifact of `npm run build:ui` |
-| `css/dist/app.css` | Artifact of `npm run build:css` |
-| `index.html` | Artifact of `npm run build:html` (from `index-shell.html` + partials) |
+| `js/ui.js` | Artifact of `npm run build:ui` (minified with source map) |
+| `js/ui.js.map` | Source map for debugging minified code |
+| `css/dist/app.css` | Artifact of `npm run build:css` (minified) |
+| `index.html` | Artifact of `npm run build:html` (from `index-shell.html` + partials, with cache busting) |
 | `js/core/translations.js` | Artifact of `npm run build:translations` (from `translations-en.js` + `translations-ru.js`) |
 | Order of `<script defer>` in `index-shell.html` | Hard dependency contract |
 
@@ -119,6 +120,8 @@ See `tools/build-ui.mjs`: `CHUNKS` (shell → runes → gear → rules → app) 
 
 ### CSS Build Order (`tools/build-css.mjs` → `FILES` array)
 
+`tools/build-css.mjs` concatenates CSS partials into `css/dist/app.css` with minification (csso).
+
 1. `css/foundation/base.css`
 2. `css/foundation/header.css`
 3. `css/foundation/overlays.css`
@@ -164,7 +167,7 @@ See `tools/build-ui.mjs`: `CHUNKS` (shell → runes → gear → rules → app) 
 
 | Path | Purpose |
 |------|---------|
-| `css/dist/app.css` | **Prod** — bundled CSS |
+| `css/dist/app.css` | **Prod** — bundled CSS (minified) |
 | `css/style.css` | Dev: only `@import` statements |
 | `css/foundation/base.css` | `:root` variables, `@font-face`, light theme |
 | `css/foundation/header.css` | Header, navigation |
@@ -178,7 +181,7 @@ See `tools/build-ui.mjs`: `CHUNKS` (shell → runes → gear → rules → app) 
 | `css/features/guide/archive.css` | Guide |
 | `css/features/app/settings.css` | Settings |
 
-CSS build order: `tools/build-css.mjs` → `FILES` array.
+CSS build order: `tools/build-css.mjs` → `FILES` array (with minification).
 
 ### JS — core (before UI)
 
@@ -232,7 +235,7 @@ CSS build order: `tools/build-css.mjs` → `FILES` array.
 
 ### JS — features → `ui.js` (edit here)
 
-Concatenation order: `tools/build-ui.mjs` (`CHUNKS` + `MONSTER_PARTS`).
+Concatenation order: `tools/build-ui.mjs` (`CHUNKS` + `MONSTER_PARTS`). Output is minified with source maps.
 
 #### Shell / app
 
@@ -317,10 +320,13 @@ Concatenation order: `tools/build-ui.mjs` (`CHUNKS` + `MONSTER_PARTS`).
 
 | Active | |
 |--------|--|
-| `build-ui.mjs` | Build `js/ui.js` |
-| `build-css.mjs` | Build `css/dist/app.css` |
-| `build-html.mjs` | Build `index.html` from shell + partials |
+| `build-ui.mjs` | Build `js/ui.js` (with minification + source maps) |
+| `build-css.mjs` | Build `css/dist/app.css` (with minification) |
+| `build-html.mjs` | Build `index.html` from shell + partials (with hash-based cache busting) |
 | `build-translations.mjs` | Build `js/core/translations.js` from EN/RU sources |
+| `build-validate.mjs` | Validate build (hex colors, translations) |
+| `validate-data.mjs` | Validate data (JSON, missing assets) |
+| `optimize-assets.mjs` | Convert images to WebP |
 | `translations-audit.mjs` | Compare keys across EN/RU/FR source files |
 | `translations-extract-en.mjs` | Extract EN strings for missing FR keys |
 | `translations-build-fr.mjs` | Auto-add FR keys from EN missing list |

@@ -55,12 +55,20 @@ Vanilla JS + CSS · **Build:** `npm run build` (`build:html` + `build:css` + `bu
 ## Build Commands
 
 ```bash
-npm run build:html         # tools/build-html.mjs → index.html
+npm run dev                # local dev server (http://127.0.0.1:5500)
+npm run build:html         # tools/build-html.mjs → index.html (with hash-based cache busting)
 npm run build:translations # translations-en/ru → js/core/translations.js
-npm run build:ui           # tools/build-ui.mjs → js/ui.js
-npm run build:css          # tools/build-css.mjs → css/dist/app.css
-npm run build              # all four steps
+npm run build:ui           # tools/build-ui.mjs → js/ui.js (with minification + source maps)
+npm run build:css          # tools/build-css.mjs → css/dist/app.css (with minification)
+npm run build:validate     # validate build (hex colors, translations)
+npm run validate:data       # validate data (JSON, missing assets)
+npm run build              # all steps (parallel build + validation)
 npm run watch:ui           # rebuild ui.js on save in js/features/
+npm run lint               # lint JS and CSS
+npm run lint:fix           # auto-fix linting issues
+npm run format             # format code with Prettier
+npm run test               # run tests (Vitest)
+npm run optimize:assets    # convert images to WebP
 ```
 
 ---

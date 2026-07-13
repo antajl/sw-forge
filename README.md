@@ -1,5 +1,17 @@
 # SW Forge
 
+Architecture improvements implemented (July 2026):
+- CI/CD pipeline
+- Minification (JS -49%, CSS -20%)
+- Hash-based cache busting
+- Source maps
+- Build validation
+- Data validation
+- Testing framework
+- Linting
+- Runtime optimization
+
+
 A **browser-only** rune analyzer for **Summoners War**. Load your **[SWEX](https://github.com/Xzandro/sw-exporter/releases/latest)** JSON export and get **verdicts**, **role fits**, **dashboard stats**, and tunable **rules** — no server upload for the main workflow, no SWOP/CSV step.
 
 The project grew out of a **[community-driven Google Sheet](#google-sheet-alternative)** with the same pipeline mindset (pre-checks → scouting → archetypes → grind/gem/reapp). **This web app is now the primary surface**; the sheet remains a supported alternative if you prefer spreadsheets.

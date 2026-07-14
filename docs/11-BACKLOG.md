@@ -232,3 +232,55 @@ Significantly reduced bundle size while maintaining debug capability via source 
 
 #### Notes
 Minification is now part of standard build process. Source maps are generated for debugging (`js/ui.js.map`).
+
+---
+
+### GitHub Actions Node.js v18 → v20
+
+**Status:** Resolved (fixed 2026-07-14)
+**Files:** `.github/workflows/deploy.yml`, `docs/09-CI-CD.md`
+
+#### Issue
+GitHub Actions workflow used Node.js v18, but Wrangler requires Node.js v20+. Worker deployment failed with version error.
+
+#### Resolution
+Updated GitHub Actions workflow:
+- Changed Node.js version from 18 to 20 in `.github/workflows/deploy.yml`
+- Updated `actions/checkout` from v3 to v4
+- Updated `actions/setup-node` from v3 to v4
+- Updated Cloudflare API token permissions (Workers Scripts Edit, D1 Database Edit, Account Settings Read)
+- Updated documentation in `docs/09-CI-CD.md`
+
+#### Impact
+Worker deployment now works successfully. No functional impact on the application.
+
+#### Notes
+Node.js 20 is now the minimum required version for Wrangler deployment.
+
+---
+
+### SEO implementation
+
+**Status:** Resolved (fixed 2026-07-14)
+**Files:** `index-shell.html`, `robots.txt`, `sitemap.xml`
+
+#### Issue
+No SEO optimization for search engines (Google, Yandex).
+
+#### Resolution
+Implemented comprehensive SEO:
+- Added meta tags (title, description, keywords in EN/RU/FR)
+- Added Open Graph tags for social media
+- Added Twitter Cards
+- Added canonical tag pointing to sw-forge.ru
+- Added hreflang for multi-language support (EN/RU/FR)
+- Added JSON-LD structured data (WebSite + SoftwareApplication schemas)
+- Created `robots.txt` with sitemap reference and crawler rules
+- Created `sitemap.xml` for search engine indexing
+- Configured Google Search Console and Yandex Webmaster
+
+#### Impact
+Improved search engine visibility and social media sharing. No functional impact on the application.
+
+#### Notes
+OG image (assets/og-image.png) still needs to be created separately.

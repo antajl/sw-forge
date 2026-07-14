@@ -184,6 +184,8 @@ The monsters feature has been split into multiple modules for better maintainabi
 | `partials/tabs/changelog.html` | Changelog tab content |
 | `partials/tabs/app-settings.html` | App Settings tab content |
 | `_headers` | Cache-Control for Cloudflare Pages |
+| `robots.txt` | SEO: instructions for search engine crawlers |
+| `sitemap.xml` | SEO: sitemap for search engine indexing |
 | `assets/fonts/*.woff2` | Self-hosted fonts (legacy, not connected) |
 | `data/demo.json` | Demo SWEX (~5.5 MB) |
 | `data/monsters-index.json` | Monster names/icons/meta (SWARFARM cache, `fetch-monsters-index.mjs`) |

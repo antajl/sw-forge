@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://sw-forge.ru/sitemap.xml
+
+# Disallow build artifacts and internal files
+Disallow: /node_modules/
+Disallow: /js/ui.js
+Disallow: /css/dist/
+Disallow: /tools/
+Disallow: /data/demo.json
+Disallow: /worker/
+Disallow: /.github/
+Disallow: /docs/
+Disallow: /partials/
+Disallow: /_redirects

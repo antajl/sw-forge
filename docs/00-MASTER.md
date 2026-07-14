@@ -18,7 +18,7 @@ Vanilla JS + CSS · **Build:** `npm run build` (`build:html` + `build:css` + `bu
 
 | | |
 |---|---|
-| Prod | https://sw-forge.pages.dev |
+| Prod | https://sw-forge.ru |
 | Share API | https://sw-backend.antajltube.workers.dev |
 | Local | http://127.0.0.1:5500/ |
 

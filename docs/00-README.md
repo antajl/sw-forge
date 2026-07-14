@@ -175,5 +175,5 @@ Documentation files are numbered for reading order:
 ## Related Resources
 
 - **Project repository:** d:\Site\SW-Forge
-- **Production URL:** https://sw-forge.pages.dev
+- **Production URL:** https://sw-forge.ru
 - **Share API:** https://sw-backend.antajltube.workers.dev

@@ -16,7 +16,7 @@ A **browser-only** rune analyzer for **Summoners War**. Load your **[SWEX](https
 
 The project grew out of a **[community-driven Google Sheet](#google-sheet-alternative)** with the same pipeline mindset (pre-checks → scouting → archetypes → grind/gem/reapp). **This web app is now the primary surface**; the sheet remains a supported alternative if you prefer spreadsheets.
 
-**Live site:** https://sw-forge.pages.dev
+**Live site:** https://sw-forge.ru
 
 ---
 
@@ -103,7 +103,7 @@ On top of roles:
 ## Quick start
 
 1. Export your account with **SWEX** (JSON).
-2. Open the **[live site](https://sw-forge.pages.dev)** and choose **Load JSON**.
+2. Open the **[live site](https://sw-forge.ru)** and choose **Load JSON**.
 3. Set **Early / Mid / Late** if you want to override the suggestion from Depth v2.
 4. Use **Dashboard** for overview, **Rune Table** for row-level review, **Rune Rules** to tune logic.
 
@@ -129,7 +129,7 @@ npm run watch:ui
 1. Edit files in `js/features/**` or `css/**`
 2. Run `npm run build:ui`
 3. `git push` to `main` → Cloudflare Pages deploys automatically (~1 min)
-4. Verify at https://sw-forge.pages.dev
+4. Verify at https://sw-forge.ru
 
 See **`docs/03-PROJECT-STRUCTURE.md`** (feature folders) and **`docs/00-MASTER.md`** for script load order.
 

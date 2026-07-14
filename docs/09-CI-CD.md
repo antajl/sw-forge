@@ -36,12 +36,12 @@ jobs:
     
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
       
       - name: Install dependencies
         run: npm ci
@@ -64,7 +64,7 @@ jobs:
 ### Workflow Steps
 
 1. **Checkout** — Clones the repository
-2. **Setup Node.js** — Installs Node.js version 18
+2. **Setup Node.js** — Installs Node.js version 20
 3. **Install dependencies** — Runs `npm ci` for clean install
 4. **Build** — Runs `npm run build` to generate production assets
 5. **Deploy Worker** — Deploys the Cloudflare Worker using Wrangler
@@ -87,7 +87,8 @@ Configure these secrets in your GitHub repository settings (Settings → Secrets
 3. Click **Create Token**
 4. Use template: **Edit Cloudflare Workers** (custom template)
 5. Permissions:
-   - Account → Cloudflare Workers → Edit
+   - Account → Workers Scripts → Edit
+   - Account → D1 Database → Edit
    - Account → Account Settings → Read
 6. Set **Account Resources** to your account
 7. Set **TTL** as needed (recommended: no expiration for CI/CD)
@@ -165,7 +166,7 @@ ENVIRONMENT = "production"
 **Solutions:**
 - Check build logs for specific error
 - Ensure `package.json` scripts are correct
-- Verify Node.js version compatibility (currently 18)
+- Verify Node.js version compatibility (currently 20)
 - Run `npm run build` locally to reproduce
 
 ### Worker Deploy Fails

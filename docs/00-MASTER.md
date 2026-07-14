@@ -22,6 +22,18 @@ Vanilla JS + CSS · **Build:** `npm run build` (`build:html` + `build:css` + `bu
 | Share API | https://sw-backend.antajltube.workers.dev |
 | Local | http://127.0.0.1:5500/ |
 
+### SEO
+
+- Custom domain: sw-forge.ru
+- Canonical tag points to sw-forge.ru
+- Meta tags: title, description, keywords (EN/RU/FR)
+- Open Graph tags for social media
+- Twitter Cards
+- JSON-LD structured data (WebSite + SoftwareApplication)
+- robots.txt configured
+- sitemap.xml generated
+- Hreflang for multi-language support
+
 ### Where code is
 
 | Area | Path |

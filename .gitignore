@@ -1,2 +1,10 @@
 .claude/
 node_modules/
+.cursor/
+.devin/
+.vscode/
+.husky/
+pinegrow.json
+_pgbackup/
+_pginfo/
+worker/.wrangler/

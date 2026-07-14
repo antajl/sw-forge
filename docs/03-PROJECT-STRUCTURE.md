@@ -1,6 +1,6 @@
 # SW Forge — Project Structure
 
-> **Context:** [MASTER.md](MASTER.md)
+> **Context:** [00-MASTER.md](00-MASTER.md)
 > Read this file to understand where code lives, how it builds, and where to add
 > new features.
 
@@ -34,7 +34,7 @@ Edit EN/RU in source files, then run `npm run build:translations`. Edit FR direc
 
 ### UI Build
 
-`tools/build-ui.mjs` is the single manifest for concatenation order. It joins `js/features/**/*.js` into `js/ui.js` with minification (terser) and source maps, preserving the historical single IIFE closure.
+`tools/build-ui.mjs` is the single manifest for concatenation order. It joins `js/features/**/*.js` into `js/ui.js` with minification (terser) and source maps, preserving the historical single IIFE closure. The build reports size reduction percentage.
 
 Common commands:
 
@@ -109,6 +109,32 @@ All local scripts use **`defer`**, including GSAP.
 
 See `tools/build-ui.mjs`: `CHUNKS` (shell → runes → gear → rules → app) → `MONSTER_PARTS` → `monsters/bootstrap.js` (only file with closing `})();`).
 
+#### Modular Monsters Architecture
+
+The monsters feature has been split into multiple modules for better maintainability. `tools/build-ui.mjs` checks if all `MONSTER_PARTS` files exist:
+- If all modules exist → uses modular architecture (each file is a separate chunk)
+- If any module is missing → falls back to monolithic `monsters/bootstrap.js`
+
+**Monster modules (in order):**
+1. `monsters-state.js` — state management
+2. `monsters-hub.js` — hub coordination
+3. `monsters-stats-calc.js` — stats calculation
+4. `teams/storage.js` — teams storage
+5. `teams/ui.js` — teams UI
+6. `monsters-storage.js` — monsters storage
+7. `monsters-bulk.js` — bulk operations
+8. `monsters-filters.js` — filtering logic
+9. `box-overview.js` — box overview
+10. `skill-planner.js` — skill planning
+11. `monsters-gear.js` — gear integration
+12. `monsters-runes.js` — runes integration
+13. `monsters-detail.js` — detail view
+14. `monsters-card.js` — card rendering
+15. `monsters-table.js` — table rendering
+16. `monsters-list.js` — list rendering
+17. `monsters-events.js` — event handling
+18. `monsters/bootstrap.js` — bootstrap (closes IIFE)
+
 #### Build Order (`tools/build-ui.mjs`)
 
 1. **Shell:** `bootstrap.js`, `theme-nav.js`, `donate-dialog.js`, `language-bindings.js`, `mobile-nav.js`, `filters-popover.js`, `main-tabs.js`
@@ -120,7 +146,7 @@ See `tools/build-ui.mjs`: `CHUNKS` (shell → runes → gear → rules → app) 
 
 ### CSS Build Order (`tools/build-css.mjs` → `FILES` array)
 
-`tools/build-css.mjs` concatenates CSS partials into `css/dist/app.css` with minification (csso).
+`tools/build-css.mjs` concatenates CSS partials into `css/dist/app.css` with minification (csso). The build reports size reduction percentage.
 
 1. `css/foundation/base.css`
 2. `css/foundation/header.css`
@@ -342,12 +368,12 @@ One-time patches: `tools/archive/` (do not touch).
 
 | File | Role |
 |------|------|
-| `MASTER.md` | Main reference (includes project context) |
-| `PROJECT-STRUCTURE.md` | File map, load order, build system, feature folders |
-| `GAME-KNOWLEDGE.md` | Game mechanics, stat names, gem/grind/reapp rules |
-| `API-REFERENCE.md` | `window.SWRM` API + CSS variables |
-| `BACKLOG.md` | Open bugs + feature backlog |
-| `ARTIFACT_SCORING_RESEARCH.md` | Artifact scoring research (incomplete) |
+| `00-MASTER.md` | Main reference (includes project context) |
+| `03-PROJECT-STRUCTURE.md` | File map, load order, build system, feature folders |
+| `02-GAME-KNOWLEDGE.md` | Game mechanics, stat names, gem/grind/reapp rules |
+| `04-API-REFERENCE.md` | `window.SWRM` API + CSS variables |
+| `11-BACKLOG.md` | Open bugs + feature backlog |
+| `13-RESEARCH-ARTIFACT-SCORING.md` | Artifact scoring research (incomplete) |
 | `README.md` | Russian documentation map for developers/AI |
 
 ### worker/
@@ -525,3 +551,73 @@ Entry: `css/style.css` imports `runes`, `gear`, `teams`, `monsters` index files.
 - Prefer adding new UI code under the owning feature folder.
 - Keep engine and core changes outside UI files when behavior is not presentation-specific.
 - When splitting a large file, split by responsibility first: rendering, filters, chart helpers, persistence, or event wiring.
+
+---
+
+## Dependency Map
+
+### High-Level Architecture
+
+```
+Core (constants, i18n, defaults)
+  ↓
+Bootstrap (assembles window.SWRM)
+  ↓
+Data (parser, DBs, scoring)
+  ↓
+Engine (verdicts, processing)
+  ↓
+UI (features, concatenated)
+```
+
+### Module Dependencies
+
+**Core Layer (No dependencies)**
+- `js/core/meta.js` — STAT_NAMES, SET_NAMES, APP_VERSION
+- `js/core/translations.js` — TRANSLATIONS (EN+RU), updateLanguage()
+- `js/core/defaults.js` — DEFAULT_THRESHOLDS, DEFAULT_FORMULAS, DEFAULT_ROLES
+- `js/core/changelog-data.js` — STATIC_CHANGELOG, STATIC_ROADMAP
+- `js/core/bootstrap.js` — Assembles window.SWRM (depends on all core files)
+
+**Data Layer (Depends on Core)**
+- `js/data/artifacts/effects.js` — Artifact effects data
+- `js/data/artifact-ingame-score.js` — calcArtifactIngameScore() (disabled)
+- `js/data/relics/effects.js` — Relic types/labels
+- `js/data/gear/parse.js` — parseArtifact(), parseRelic()
+- `js/data/gear/icons.js` — Gear icon mappings
+- `js/data/parser.js` — parseSWEX(), parseRune(), parseUnits(), calcEfficiency()
+- `js/data/ingame-score.js` — calcIngameScore() (Com2uS Rating)
+- `js/data/local-assets.js` — Local asset URLs
+- `js/data/skill-db.js` — skill DB, metaById()
+- `js/data/monster-db.js` — monster DB
+
+**Engine Layer (Depends on Core + Data)**
+- `js/engine/engine-core.js` — statMap(), subRuneValue(), runeHasHrAnchor()
+- `js/engine/engine-legacy-roles.js` — checkRole(), checkHighRoll()
+- `js/engine/engine-gem-reapp-verdict.js` — grindVerdict(), gemVerdict(), reappVerdict()
+- `js/advanced-formulas.js` — getAdvancedVerdict()
+- `js/engine/engine-artifacts.js` — getArtifactVerdict(), getArtifactRole()
+- `js/engine/engine-process.js` — processRune(), processAll()
+
+**UI Layer (Depends on Core + Data + Engine)**
+- `js/features/shell/*` — Chrome, tabs, i18n
+- `js/features/runes/*` — Rune UI (dashboard, table, filters)
+- `js/features/gear/*` — Gear UI (artifacts, relics)
+- `js/features/monsters/*` — Monster UI (roster, detail, teams)
+- `js/features/rules/*` — Rules UI (formulas, panel, artifact rules)
+- `js/features/app/*` — App UI (settings, share, changelog)
+
+**Worker (Separate thread)**
+- `js/workers/rune-processor.worker.js` — Background rune processing
+
+**Lazy-Loaded**
+- `js/core/translations-fr.js` — French translations (loaded on demand)
+
+### Key Dependency Rules
+
+1. **window.SWRM** is assembled by bootstrap.js and available to all subsequent scripts
+2. **TRANSLATIONS** is loaded by translations.js and extended by lazy translations-fr.js
+3. **updateLanguage()** is defined in language-bindings.js (inside ui.js)
+4. All feature modules are in the same IIFE closure (see build-ui.mjs)
+5. Worker runs in separate thread but has same dependencies as main thread
+6. No circular dependencies exist in the current architecture

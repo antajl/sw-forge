@@ -1,7 +1,7 @@
 # SW Forge — API Reference
 
-> `window.SWRM` API and CSS variables.  
-> **Context:** [`MASTER.md`](MASTER.md) · **Project structure:** [`PROJECT-STRUCTURE.md`](PROJECT-STRUCTURE.md)
+> `window.SWRM` API and CSS variables.
+> **Context:** [`00-MASTER.md`](00-MASTER.md) · **Project structure:** [`03-PROJECT-STRUCTURE.md`](03-PROJECT-STRUCTURE.md)
 
 ---
 
@@ -14,6 +14,29 @@ Assembled by the script load chain; same object in `ui.js` plus UI helpers.
 | `APP_VERSION` | bootstrap | App version string |
 | `settings`, `saveSettings` | defaults | User settings persistence |
 | `TRANSLATIONS`, `STATIC_CHANGELOG`, `STATIC_ROADMAP` | translations / changelog | UI text strings |
+| `STAT_NAMES`, `SET_NAMES`, `GRADE_NAMES`, `GRADE_SHORT` | meta | Game constants |
+| `STAT_NAMES_UI_BY_LANG`, `statNamesUiForLang`, `displayStatForUi` | meta | Localized stat display |
+| `STAT_TYPE_IDS`, `statTypeIdFromCanonical` | meta | Stat type utilities |
+| `SLOT_MAIN_FIXED` | meta | Fixed main stats for odd slots |
+| `DEFAULT_THRESHOLDS`, `DEFAULT_HR_THRESHOLDS`, `DEFAULT_DUO_THRESHOLDS` | defaults | Threshold defaults |
+| `DEFAULT_STAT_CONSTANTS`, `EXPLICIT_DEFAULT_STAT_CONSTANTS` | defaults | Stat constants system |
+| `computeHrThresholds`, `computeDuoThresholds`, `mergeStatConstants` | defaults | Threshold computation |
+| `DEFAULT_GOD_CONSTANTS`, `mergeGodConstants`, `getGodThreshold` | defaults | God roll system |
+| `DEFAULT_FORMULAS` | defaults | Advanced formula system (6 archetypes) |
+| `FORMULA_MINSTAT_KEY_GROUPS`, `readFormulaMinStat`, `formulaMinStatWriteKey` | defaults | Formula min-stat utilities |
+| `DEFAULT_ROLE_PRIORITY` | defaults | Role priority order |
+| `DEFAULT_ROLES` | defaults | Legacy role definitions |
+| `DEFAULT_REAPP` | defaults | Reappraisal defaults |
+| `DEFAULT_GRIND` | defaults | Grind recommendation defaults |
+| `DEFAULT_GEM_META`, `mergeGemMeta` | defaults | Enchant Gem metadata |
+| `DEFAULT_EVAL_POLICY`, `DEFAULT_EVAL_POLICY_PRESETS`, `mergeEvalPolicy` | defaults | Evaluation policy |
+| `DEFAULT_FIT_MODEL`, `mergeFitModel` | defaults | Fit model |
+| `DEFAULT_BORDERLINE_POLICY`, `mergeBorderlinePolicy` | defaults | Borderline policy |
+| `ARTIFACT_PRI_MAIN`, `DEFAULT_ARTIFACT_TYPE_USEFUL`, `DEFAULT_ARTIFACT_ELEMENT_USEFUL` | defaults | Artifact type utilities |
+| `DEFAULT_ARTIFACT_ROLES`, `mergeArtifactRoles` | defaults | Artifact role definitions |
+| `DEFAULT_ARTIFACT_SYNERGY_PAIRS`, `DEFAULT_ARTIFACT_MAIN_SUB_SYNERGY` | defaults | Artifact synergy system |
+| `DEFAULT_ARTIFACT_RULES`, `mergeArtifactRules`, `saveArtifactRulesStorage` | defaults | Artifact rules system |
+| `loadArtifactRulesBundle` | defaults | Load artifact rules from storage |
 | `parseSWEX`, `parseRune`, `parseUnits` | parser | SWEX → runes/units |
 | `calcEfficiency`, `calcEfficiencyUncapped` | parser | SWOP Eff% (Depth, dashboard charts — **not** table column) |
 | `calcIngameScore`, `ingameScoreBreakdown` | ingame-score | Ingame Rating in rune table |
@@ -26,6 +49,11 @@ Assembled by the script load chain; same object in `ui.js` plus UI helpers.
 | `processRunesAsync` | rune-processor-worker | Worker + fallback |
 | `runSelfTests` | self-test | Self-test suite |
 | `isShareReadOnly`, `getShareIdFromUrl`, `getProfileLinkFromUrl` | share (ui) | Share mode detection |
+| `getArtifactVerdict`, `getArtifactRole`, `calcArtifactSynergyBonus` | engine-artifacts | Artifact verdicts |
+| `ARTIFACT_DEFAULT_SYNERGY_PAIRS`, `ARTIFACT_DEFAULT_MAIN_SUB_SYNERGY` | engine-artifacts | Artifact synergy defaults |
+| `ARTIFACT_SUB_FORMAT`, `formatArtifactSubLine` | artifacts/effects | Artifact sub formatting |
+| `RELIC_CATEGORY_BY_TYPE`, `isRelicCategoryVerified`, `relicCategoryName` | relics/effects | Relic category utilities |
+| `formatRelicPriLine`, `formatRelicSecLine` | relics/effects | Relic formatting |
 
 **Separate:** `window.SWRM_MONSTER_DB` — monster index (`loadMonsterIndex`, `monsterDisplayName`, `lookupMonster`).
 

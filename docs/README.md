@@ -6,12 +6,12 @@
 
 | Вопрос | Где смотреть |
 |--------|----------------|
-| С чего начать сессию правок | [`MASTER.md`](MASTER.md) — стек, build, правила правок |
-| **Игровая терминология, механика (статы, EN vs FR, gems/grinds)** | [`GAME-KNOWLEDGE.md`](GAME-KNOWLEDGE.md) — engine EN, display localized, game rules |
-| Где лежит файл / API `SWRM` | [`MASTER.md`](MASTER.md) — точка входа, правила правок, ссылки |
-| Карта файлов, порядок загрузки, фичи | [`PROJECT-STRUCTURE.md`](PROJECT-STRUCTURE.md) |
-| `window.SWRM` API + CSS переменные | [`API-REFERENCE.md`](API-REFERENCE.md) |
-| Открытые баги + feature backlog | [`BACKLOG.md`](BACKLOG.md) |
+| С чего начать сессию правок | [`00-MASTER.md`](00-MASTER.md) — стек, build, правила правок |
+| **Игровая терминология, механика (статы, EN vs FR, gems/grinds)** | [`02-GAME-KNOWLEDGE.md`](02-GAME-KNOWLEDGE.md) — engine EN, display localized, game rules |
+| Где лежит файл / API `SWRM` | [`00-MASTER.md`](00-MASTER.md) — точка входа, правила правок, ссылки |
+| Карта файлов, порядок загрузки, фичи | [`03-PROJECT-STRUCTURE.md`](03-PROJECT-STRUCTURE.md) |
+| `window.SWRM` API + CSS переменные | [`04-API-REFERENCE.md`](04-API-REFERENCE.md) |
+| Открытые баги + feature backlog | [`11-BACKLOG.md`](11-BACKLOG.md) |
 | Что уже вышло (игрокам) | Changelog → **Releases** (`js/core/changelog-data.js`) |
 | Справка для игроков (EN/RU в HTML) | **`index.html`** → `#tab-guide` (не в `docs/`) |
 
@@ -64,7 +64,7 @@
 | Тема | Код |
 |------|-----|
 | Roster, detail, gear на юните | `js/features/monsters/*` |
-| Combat SPD, totem | `monsters-stats-calc.js`, `teams/ui.js` — см. `PROJECT-STRUCTURE.md` |
+| Combat SPD, totem | `monsters-stats-calc.js`, `teams/ui.js` — см. `03-PROJECT-STRUCTURE.md` |
 | Share Worker | `js/features/app/share.js`, `worker/` |
 
 ### Правила рун (Expert)
@@ -81,9 +81,9 @@
 | Изменение | Обновить |
 |-----------|----------|
 | Видимая фича для игрока | `changelog-data.js` (en/ru/fr, одинаковое число пунктов) |
-| Колонки / формулы таблицы | `index.html` Guide (EN+RU) + при необходимости `MASTER.md` / `PROJECT-STRUCTURE.md` |
-| Новый модуль в load chain | `index.html` + `PROJECT-STRUCTURE.md` + `MASTER.md` § load order |
-| Новая папка в `js/features/` | `tools/build-ui.mjs` + `PROJECT-STRUCTURE.md` |
+| Колонки / формулы таблицы | `index.html` Guide (EN+RU) + при необходимости `00-MASTER.md` / `03-PROJECT-STRUCTURE.md` |
+| Новый модуль в load chain | `index.html` + `03-PROJECT-STRUCTURE.md` + `00-MASTER.md` § load order |
+| Новая папка в `js/features/` | `tools/build-ui.mjs` + `03-PROJECT-STRUCTURE.md` |
 | Строки UI | `translations-en.js` + `translations-ru.js` → `npm run build:translations`; FR → `translations-fr.js` |
 
 Не править вручную: `js/ui.js`, `css/dist/app.css`.

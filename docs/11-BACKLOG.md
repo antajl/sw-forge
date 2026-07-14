@@ -39,21 +39,6 @@ rg "#[0-9a-fA-F]{6}" css/features/ -g "*.css"
 
 ---
 
-### No JS/CSS minification
-
-**Status:** Open
-**Files:** `js/ui.js`, `css/dist/app.css`
-
-**Issue:**
-Build process does not minify JS or CSS, increasing bundle size.
-
-**Impact:**
-Larger download size for users; no functional impact.
-
-**Notes:**
-Intentional trade-off for easier debugging. Could add minification step in `tools/build-*.mjs` if needed.
-
----
 
 ### No `npm run watch:css`
 
@@ -225,3 +210,25 @@ Player Guide text lives in `#tab-guide` within HTML by design (not moved to `doc
 
 #### Resolution
 Migrated to system UI font stack (`system-ui` / Segoe UI / Roboto). Font files in `assets/fonts/` are legacy and not connected.
+
+---
+
+### No JS/CSS minification
+
+**Status:** Resolved (fixed 2026-07-14)
+**Files:** `tools/build-ui.mjs`, `tools/build-css.mjs`
+
+#### Issue
+Build process did not minify JS or CSS, increasing bundle size.
+
+#### Resolution
+Implemented minification in build tools:
+- `tools/build-ui.mjs` now uses `terser` for JS minification with source map generation
+- `tools/build-css.mjs` now uses `csso` for CSS minification
+- Both tools report size reduction percentages in build output
+
+#### Impact
+Significantly reduced bundle size while maintaining debug capability via source maps. No functional impact on runtime behavior.
+
+#### Notes
+Minification is now part of standard build process. Source maps are generated for debugging (`js/ui.js.map`).

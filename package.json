@@ -25,14 +25,12 @@
     "diagnose:missing-assets": "node tools/diagnose-missing-assets.mjs",
     "fetch:missing-assets": "node tools/fetch-missing-assets.mjs",
     "fetch:data": "node tools/fetch-skills-index.mjs --fresh && npm run fetch:monsters-index",
-    "watch:ui": "node tools/watch-ui.mjs",
-    "prepare": "husky"
+    "watch:ui": "node tools/watch-ui.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",
     "csso": "^5.0.5",
     "eslint": "^10.7.0",
-    "husky": "^9.1.7",
     "npm-run-all": "^4.1.5",
     "prettier": "^3.9.5",
     "sharp": "^0.35.3",

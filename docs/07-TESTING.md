@@ -231,7 +231,27 @@ Test in at least:
 
 ## Automated Testing
 
-Currently, SW Forge has no automated test suite. Self-tests are available via:
+SW Forge now has an automated test suite using Vitest.
+
+### Test Suite Overview
+- **Framework:** Vitest with jsdom environment
+- **Location:** `tests/` directory
+- **Setup:** `tests/setup.js` initializes `window.SWRM` globals
+- **Total Tests:** 50 tests (as of August 2026)
+
+### Test Files
+- `tests/parser.test.js` - SWEX parsing utilities (11 tests)
+- `tests/rune-efficiency.test.js` - SWOP efficiency calculations (15 tests)
+- `tests/utils.test.js` - General utility functions (24 tests)
+
+### Running Tests
+```bash
+npm test              # Run all tests
+npm run test          # Alternative command
+```
+
+### Self-Tests
+Legacy self-tests are still available via:
 
 ```javascript
 window.SWRM.runSelfTests();

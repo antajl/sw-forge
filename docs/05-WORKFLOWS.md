@@ -2,6 +2,170 @@
 
 Step-by-step instructions for common tasks in SW Forge development.
 
+## Workflow: Debug a Bug Report
+
+**Goal:** Systematically investigate and fix reported issues.
+
+**Files involved:** Varies by issue
+
+**Steps:**
+1. **Reproduce the issue:**
+   - Read the issue description carefully
+   - Try to reproduce locally with demo.json or real SWEX data
+   - Note exact steps to reproduce
+2. **Isolate the problem:**
+   - Use code search to find relevant code
+   - Read related files to understand patterns
+   - Check console for errors
+3. **Identify root cause:**
+   - Trace code execution path
+   - Check data flow
+   - Verify assumptions
+4. **Create minimal fix:**
+   - Implement smallest possible change
+   - Follow existing code conventions
+   - Don't refactor unrelated code
+5. **Test the fix:**
+   - Run `npm test` (if applicable)
+   - Run `npm run build`
+   - Test locally with dev server
+   - Verify the bug is fixed
+6. **Document if needed:**
+   - Update relevant documentation
+   - Add comments if logic is complex
+7. **Commit with reference:**
+   - Include issue number in commit message
+   - Explain "why" not "what"
+
+**Common mistakes:**
+- Fixing symptoms instead of root cause
+- Making unrelated changes while debugging
+- Not testing after fix
+- Committing without referencing the issue
+
+**Reference:** See `06-DEBUGGING.md` for detailed debugging guide.
+
+## Workflow: Add New Translation
+
+**Goal:** Add new UI strings for all supported languages.
+
+**Files to edit:**
+1. `js/core/translations-en.js` - English translation
+2. `js/core/translations-ru.js` - Russian translation
+3. `js/core/translations-fr.js` - French translation (optional)
+4. `js/core/translations-zh.js` - Chinese translation (optional)
+
+**Steps:**
+1. Add translation key to all language files:
+   ```javascript
+   // Example in translations-en.js
+   'newFeature': 'New Feature',
+   
+   // Example in translations-ru.js
+   'newFeature': 'Новая функция',
+   ```
+2. Run translation build:
+   ```bash
+   npm run build:translations
+   ```
+3. Test language switching:
+   - Start dev server: `npm run dev`
+   - Switch between languages
+   - Verify translation appears correctly
+4. Update documentation if needed:
+   - Update guide text if feature is user-facing
+   - Update workflows if translation workflow changes
+
+**Common mistakes:**
+- Adding key to only one language file
+- Forgetting to run build:translations
+- Using inconsistent key names across languages
+- Leaving empty translation strings
+
+## Workflow: Perform Browser Testing
+
+**Goal:** Test UI changes in a real browser environment.
+
+**Prerequisites:**
+- Dev server running: `npm run dev`
+- Chrome DevTools MCP configured
+
+**Steps:**
+1. Start dev server:
+   ```bash
+   npm run dev
+   ```
+2. Create browser preview:
+   - Use browser preview tool with URL (e.g., http://127.0.0.1:5500)
+3. Test the specific feature:
+   - Navigate to relevant page
+   - Perform the user action
+   - Verify visual behavior
+4. Check console:
+   - Open DevTools console
+   - Look for errors or warnings
+   - Fix any issues found
+5. Check performance:
+   - Check Network tab for slow requests
+   - Check Performance tab for render issues
+   - Verify smooth scrolling if applicable
+6. Test responsive design:
+   - Resize browser window
+   - Test on mobile viewport sizes
+   - Verify layout adapts correctly
+
+**Common mistakes:**
+- Testing only on one viewport size
+- Not checking console for errors
+- Assuming dev server behavior matches production
+- Not testing keyboard navigation
+
+**Reference:** Use `browser-testing-with-devtools` skill for comprehensive testing.
+
+## Workflow: Run Full Verification
+
+**Goal:** Complete project health check before major release.
+
+**Steps:**
+1. **Run tests:**
+   ```bash
+   npm test
+   ```
+   Verify all tests pass
+2. **Run build:**
+   ```bash
+   npm run build
+   ```
+   Verify build completes without errors
+3. **Run lint:**
+   ```bash
+   npm run lint
+   ```
+   Review warnings (fix critical ones)
+4. **Check dependencies:**
+   ```bash
+   npm audit
+   ```
+   Review vulnerabilities (do NOT auto-fix without approval)
+5. **Browser testing:**
+   - Test key user flows in real browser
+   - Check console for errors
+   - Verify performance
+6. **Documentation check:**
+   - Verify docs/ is up to date
+   - Check workflows are current
+   - Verify AGENTS.md reflects current state
+7. **Git status:**
+   - Review staged changes
+   - Verify commit messages are clear
+   - Ensure no sensitive data committed
+
+**Common mistakes:**
+- Skipping browser testing
+- Ignoring lint warnings
+- Running npm audit fix without review
+- Not updating documentation after changes
+
 ## Workflow: Add a New Rune Verdict
 
 **Goal:** Add a new verdict type or modify existing rune verdict logic.

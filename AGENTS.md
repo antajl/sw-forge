@@ -109,7 +109,8 @@ This document defines how AI agents should manage and contribute to the SW-Forge
   - Source type: module (ESM)
 - **Vitest**: Configured with jsdom environment and global test variables
   - Setup file: `tests/setup.js` initializes `window.SWRM` globals
-  - Tests currently check for global object existence only
+  - **Test Coverage:** 50 tests (parser, efficiency, utilities)
+  - **Test Files:** `tests/parser.test.js`, `tests/rune-efficiency.test.js`, `tests/utils.test.js`
 - **Dependencies**: 5 vulnerabilities currently reported (1 moderate, 4 high)
   - Do NOT run `npm audit fix` without user approval
   - Vulnerabilities are in dev dependencies (brace-expansion, fast-uri, js-yaml, nanoid, postcss)
@@ -126,6 +127,9 @@ This document defines how AI agents should manage and contribute to the SW-Forge
 - Verify build passes after changes
 - Test locally before deploying
 - Use browser preview for UI changes
+- **Test Coverage:** 50 tests in `tests/` directory (parser, efficiency, utilities)
+- **Test Framework:** Vitest with jsdom environment
+- **TDD:** Use test-driven development for new features (write failing test first, then implement)
 
 ### Code Style
 - Follow existing patterns in the codebase
@@ -133,6 +137,26 @@ This document defines how AI agents should manage and contribute to the SW-Forge
 - Prefer library versions published at least 7 days ago
 - Write compact code with minimal nesting
 - Follow language-specific idioms
+
+### Recommended Skills
+For SW-Forge development, the following skills are particularly useful:
+
+**Testing & Quality:**
+- `test-driven-development` - Use when implementing new logic or fixing bugs
+- `verification` - Run full project audit before major releases
+- `verify-security` - Check for security issues after dependency updates
+
+**Browser Testing:**
+- `browser-testing-with-devtools` - Test UI changes in real browser
+  - Essential for rune table, tooltip, and dashboard changes
+  - Use before deploying UI modifications
+  - Check console errors and performance metrics
+
+**Documentation:**
+- Repository-local skill: `.devin/skills/sw-forge/SKILL.md`
+  - Project-specific conventions and build details
+  - Reference this for module-specific information
+  - AGENTS.md provides broader agent guidelines
 
 ## Agent Performance Tracking
 

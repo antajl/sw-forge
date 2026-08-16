@@ -4,6 +4,7 @@
 }
 
 html[lang='en'] #tab-guide .guide-lang--en,
+html[lang='zh'] #tab-guide .guide-lang--en,
 html[lang='ru'] #tab-guide .guide-lang--ru,
 html[lang='fr'] #tab-guide .guide-lang--fr {
   display: grid;

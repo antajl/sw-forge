@@ -85,7 +85,7 @@
                   localStorage.getItem('swrm_app_lang_v1') ||
                   localStorage.getItem('swrm-lang') ||
                   'en';
-                return ['en', 'ru', 'fr'].includes(k) ? k : 'en';
+                return ['en', 'ru', 'fr', 'zh'].includes(k) ? k : 'en';
               } catch {
                 return 'en';
               }

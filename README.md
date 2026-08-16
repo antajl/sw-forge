@@ -71,7 +71,7 @@ The project grew out of a **[community-driven Google Sheet](#google-sheet-altern
 ### Interface
 
 - **Dark** theme by default; light/dark toggle in the header.
-- **English / Русский / Français** for UI strings (**App Settings**).
+- **English / Русский / Français / 中文** for UI strings (**App Settings**).
 - Centered content width (~1200px); Rune Rules uses the same chrome as Account progression on the Dashboard.
 
 ---

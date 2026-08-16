@@ -498,3 +498,54 @@ Step-by-step instructions for common tasks in SW Forge development.
 - Not following effect structure
 - Forgetting translations
 - Not testing with actual artifact data
+
+## Workflow: Update Documentation
+
+**Goal:** Add or update project documentation.
+
+**Files to edit:**
+- Varies by documentation type (see below)
+
+**Documentation Types:**
+
+### Feature Documentation
+- **When:** Adding new features or modifying existing ones
+- **Files:** `docs/05-WORKFLOWS.md` (add workflow), relevant docs
+- **Steps:**
+  1. Add workflow to `docs/05-WORKFLOWS.md` if new feature type
+  2. Update `docs/00-MASTER.md` if feature changes project structure
+  3. Update `docs/03-PROJECT-STRUCTURE.md` if adding new files/directories
+  4. Test documentation accuracy by following it yourself
+
+### API Documentation
+- **When:** Adding new window.SWRM functions or changing existing
+- **Files:** `docs/04-API-REFERENCE.md`
+- **Steps:**
+  1. Document function signature and parameters
+  2. Document return values and error conditions
+  3. Add usage examples
+  4. Document dependencies on other SWRM functions
+
+### Testing Documentation
+- **When:** Adding new tests or changing test infrastructure
+- **Files:** `docs/07-TESTING.md`
+- **Steps:**
+  1. Document test purpose and coverage
+  2. Add test setup instructions if needed
+  3. Document how to run new tests
+  4. Update test coverage statistics
+
+### Changelog Documentation
+- **When:** Player-facing changes
+- **Files:** `js/core/changelog-data.js`
+- **Steps:**
+  1. Add entry to STATIC_CHANGELOG with today's date
+  2. Keep descriptions player-facing (not technical)
+  3. Remove from BACKLOG.md if applicable
+  4. Run `npm run build:ui`
+
+**Common mistakes:**
+- Writing technical details in player-facing changelog
+- Not updating all relevant documentation files
+- Adding workflows that don't match actual implementation
+- Forgetting to test documentation by following it

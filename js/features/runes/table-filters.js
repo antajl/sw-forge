@@ -133,22 +133,6 @@
   function replaceRuneTableLocationFromState() {
     // TEMPORARILY DISABLED - causing address bar flickering even with debounce
     return;
-    
-    if (runeTableApplyingHash) return;
-    if (!isRuneTablePaneVisible()) return;
-    
-    // Debounce to prevent rapid URL changes during hover
-    if (replaceRuneTableLocationDebounceTimer) {
-      clearTimeout(replaceRuneTableLocationDebounceTimer);
-    }
-    
-    replaceRuneTableLocationDebounceTimer = setTimeout(() => {
-      try {
-        const base = window.location.pathname + window.location.search;
-        const suf = buildRuneTableQuerySuffix();
-        history.replaceState(null, '', `${base}#gear/runetable${suf}`);
-      } catch (e) { /* ignore */ }
-    }, 100); // 100ms debounce to prevent flickering
   }
 
   function applyRuneTableQueryParams(params) {

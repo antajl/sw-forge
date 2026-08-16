@@ -895,6 +895,11 @@
       t.classList.toggle('active', isActive);
     });
 
+    // Hide floating tooltip when switching tabs to prevent stickiness
+    if (typeof hideSwrmFloatTip === 'function') {
+      hideSwrmFloatTip(true);
+    }
+
     if (useGsap && currentTabContent && nextTabContent && currentTabContent !== nextTabContent) {
       const started = motionApi.animateMainTabTransition({
         current: currentTabContent,

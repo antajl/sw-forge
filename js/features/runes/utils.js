@@ -292,6 +292,7 @@
   let swrmFloatTipShowTimer = null;
   let swrmFloatTipHideTimer = null;
   let swrmFloatTipAnchor = null;
+  let swrmFloatTipIsVisible = false; // Track visibility state to prevent flickering
 
   function ensureSwrmFloatTipEl() {
     if (swrmFloatTipEl) return swrmFloatTipEl;
@@ -311,9 +312,7 @@
     const r = anchor.getBoundingClientRect();
     const pad = 8;
     const gap = 10;
-    tip.style.left = '0px';
-    tip.style.top = '0px';
-    tip.hidden = false;
+    // Don't change opacity - just position directly to prevent flickering
     const tw = tip.offsetWidth;
     const th = tip.offsetHeight;
     let left = r.left + r.width / 2 - tw / 2;
@@ -335,13 +334,14 @@
     }
     const tip = swrmFloatTipEl;
     if (!tip) return;
+    if (!swrmFloatTipIsVisible) return; // Already hidden, prevent flickering
     const finish = () => {
       tip.hidden = true;
-      tip.classList.remove('swrm-floating-tip--in');
       tip.textContent = '';
       tip.innerHTML = '';
       tip.classList.remove('swrm-floating-tip--rich', 'swrm-floating-tip--pre');
       swrmFloatTipAnchor = null;
+      swrmFloatTipIsVisible = false;
     };
     if (immediate) {
       finish();
@@ -349,7 +349,6 @@
     }
     const motionApi = window.SWRM_MOTION;
     if (motionApi && motionApi.floatTipOut(tip, finish)) return;
-    tip.classList.remove('swrm-floating-tip--in');
     swrmFloatTipHideTimer = window.setTimeout(finish, SWRM_FLOAT_TIP_HIDE_MS);
   }
 
@@ -373,11 +372,11 @@
       tip.classList.add('swrm-floating-tip--pre');
     }
     tip.hidden = false;
+    swrmFloatTipIsVisible = true;
     requestAnimationFrame(() => {
       if (swrmFloatTipAnchor !== anchor) return;
       positionSwrmFloatTip(anchor);
-      const motionApi = window.SWRM_MOTION;
-      if (!motionApi || !motionApi.floatTipIn(tip)) tip.classList.add('swrm-floating-tip--in');
+      // Removed swrm-floating-tip--in class since we're not using opacity/transform
     });
   }
 
@@ -454,33 +453,42 @@
       if (t && swrmFloatTipAnchor === t) hideSwrmFloatTip(false);
     };
 
-    const onPointerOver = (e) => {
-      const tip = findSwrmTipTarget(e.target);
-      if (!tip) return;
-      const from = findSwrmTipTarget(e.relatedTarget);
-      if (from === tip) return;
-      if (swrmFloatTipAnchor === tip && swrmFloatTipEl && !swrmFloatTipEl.hidden) {
-        positionSwrmFloatTip(tip);
-        return;
-      }
-      showSwrmFloatTipFromTarget(tip);
-    };
-    const onPointerOut = (e) => {
-      const tip = findSwrmTipTarget(e.target);
-      if (!tip) return;
-      const to = findSwrmTipTarget(e.relatedTarget);
-      if (to === tip) return;
-      const { clientX: x, clientY: y } = e;
-      requestAnimationFrame(() => {
-        if (!tip.isConnected) return;
-        const r = tip.getBoundingClientRect();
-        if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return;
-        if (swrmFloatTipAnchor === tip) hideSwrmFloatTip(true);
+    // Simple approach: use mouseenter/mouseleave on tooltip targets directly
+    function attachTooltipToElement(el) {
+      if (!el || el.hasAttribute('data-swrm-tip-attached')) return;
+      el.setAttribute('data-swrm-tip-attached', 'true');
+      
+      el.addEventListener('mouseenter', () => {
+        showSwrmFloatTipFromTarget(el);
       });
-    };
-
-    document.addEventListener('pointerover', onPointerOver);
-    document.addEventListener('pointerout', onPointerOut);
+      
+      el.addEventListener('mouseleave', () => {
+        if (swrmFloatTipAnchor === el) {
+          hideSwrmFloatTip(true);
+        }
+      });
+    }
+    
+    // Use MutationObserver to attach tooltip to dynamically added elements
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        for (const node of mutation.addedNodes) {
+          if (node.nodeType === 1) { // Element node
+            const tipTargets = node.querySelectorAll('[data-swrm-tip],[data-swrm-tip-html]');
+            tipTargets.forEach(attachTooltipToElement);
+            if (node.hasAttribute && (node.hasAttribute('data-swrm-tip') || node.hasAttribute('data-swrm-tip-html'))) {
+              attachTooltipToElement(node);
+            }
+          }
+        }
+      }
+    });
+    
+    observer.observe(document.body, { childList: true, subtree: true });
+    
+    // Attach to existing elements
+    document.querySelectorAll('[data-swrm-tip],[data-swrm-tip-html]').forEach(attachTooltipToElement);
+    
     document.addEventListener('focusin', onFocusIn);
     document.addEventListener('focusout', onFocusOut);
     window.addEventListener(

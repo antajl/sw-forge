@@ -14,18 +14,15 @@
   line-height: 1.45;
   color: var(--text-hi);
   pointer-events: none;
-  opacity: 0;
-  transform: translateY(4px);
-  transition: opacity 0.14s ease, transform 0.14s ease;
+  /* Removed opacity and transform to prevent flickering - use only hidden attribute */
 }
 
 html.swrm-has-gsap .swrm-floating-tip {
-  transition: none;
+  /* Removed transition to prevent flickering */
 }
 
 .swrm-floating-tip.swrm-floating-tip--in {
-  opacity: 1;
-  transform: translateY(0);
+  /* Removed opacity and transform changes to prevent flickering */
 }
 
 .light-theme .swrm-floating-tip {

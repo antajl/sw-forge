@@ -31,6 +31,7 @@
   <link rel="alternate" hreflang="en" href="https://sw-forge.ru/">
   <link rel="alternate" hreflang="ru" href="https://sw-forge.ru/">
   <link rel="alternate" hreflang="fr" href="https://sw-forge.ru/">
+  <link rel="alternate" hreflang="zh" href="https://sw-forge.ru/">
   <link rel="alternate" hreflang="x-default" href="https://sw-forge.ru/">
   
   <!-- JSON-LD Structured Data -->
@@ -42,7 +43,7 @@
     "alternateName": "Summoners War Rune Analyzer",
     "url": "https://sw-forge.ru/",
     "description": "Browser-based Summoners War rune analyzer with efficiency calculator, optimizer, and SWEX parser. Privacy-focused tool with verdicts, grindstone calculator, gem calculator, and re-appraisal analysis.",
-    "inLanguage": ["en", "ru", "fr"],
+    "inLanguage": ["en", "ru", "fr", "zh"],
     "potentialAction": {
       "@type": "SearchAction",
       "target": "https://sw-forge.ru/",
@@ -82,7 +83,7 @@
       "Monster stats analysis",
       "Gear analysis",
       "Account progression tracking",
-      "Multi-language support (EN/RU/FR)"
+      "Multi-language support (EN/RU/FR/ZH)"
     ],
     "keywords": "Summoners War rune analyzer, rune calculator, rune efficiency, rune optimizer, SWEX parser, rune build, monster stats, gear analysis, rune verdict, rune scoring, grindstone calculator, gem calculator, re-appraisal calculator"
   }
@@ -101,7 +102,7 @@
     .stage-metric-icon svg { width: 18px; height: 18px; max-width: 18px; max-height: 18px; display: block; }
     #stage-advisor.is-compact .stage-advisor-expanded-wrap { max-height: 0 !important; overflow: hidden !important; visibility: hidden; }
   </style>
-  <link rel="stylesheet" href="css/dist/app.css?v=162c7700" />
+  <link rel="stylesheet" href="css/dist/app.css?v=b078c8ae" />
 </head>
 <body>
 
@@ -197,11 +198,13 @@
               <button type="button" class="header-lang__option" role="menuitemradio" data-lang="en">English</button>
               <button type="button" class="header-lang__option" role="menuitemradio" data-lang="ru">Русский</button>
               <button type="button" class="header-lang__option" role="menuitemradio" data-lang="fr">Français</button>
+              <button type="button" class="header-lang__option" role="menuitemradio" data-lang="zh">中文</button>
             </div>
             <select id="app-language" class="sr-only" tabindex="-1" aria-hidden="true">
               <option value="en">English</option>
               <option value="ru">Русский</option>
               <option value="fr">Français</option>
+              <option value="zh">中文</option>
             </select>
           </div>
           <div class="header-donate-group">
@@ -4443,7 +4446,7 @@
 
   <!-- settings: meta → translations → defaults → changelog → bootstrap -->
   <script defer src="js/core/meta.js?v=1.2.19"></script>
-  <script defer src="js/core/translations.js?v=a3b22b95"></script>
+  <script defer src="js/core/translations.js?v=67603b01"></script>
   <script defer src="js/core/defaults.js?v=1.2.19"></script>
   <script defer src="js/core/changelog-data.js?v=1.2.19"></script>
   <script defer src="js/core/bootstrap.js?v=1.2.19"></script>
@@ -4466,6 +4469,6 @@
   <script defer src="js/self-test.js?v=1.2.19"></script>
   <script src="assets/gsap.min.js"></script>
   <script defer src="js/swrm-motion.js?v=1.2.19"></script>
-  <script defer src="js/ui.js?v=ed22cfc9"></script>
+  <script defer src="js/ui.js?v=08bed097"></script>
 </body>
 </html>

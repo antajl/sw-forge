@@ -1,46 +1,63 @@
 // js/features/shell/language-bindings.js — UI translation bindings
   // ===================== LANGUAGE =====================
-  /** FR is lazy-loaded; ignore empty placeholder from old builds. */
-  function frTranslationsReady() {
-    const fr = TRANSLATIONS.fr;
-    return fr && typeof fr === 'object' && fr.title && fr.guideSubtabStart;
+  const LAZY_TRANSLATION_SOURCES = {
+    fr: {
+      globalName: 'TRANSLATIONS_FR',
+      src: 'js/core/translations-fr.js',
+      label: 'French',
+    },
+    zh: {
+      globalName: 'TRANSLATIONS_ZH',
+      src: 'js/core/translations-zh.js',
+      label: 'Chinese',
+    },
+  };
+
+  /** Lazy locale bundles ignore empty placeholders from old builds. */
+  function lazyTranslationsReady(lang) {
+    const pack = TRANSLATIONS[lang];
+    return pack && typeof pack === 'object' && pack.title && pack.guideSubtabStart;
   }
 
   function getTranslationsForLang(lang) {
-    if (lang === 'fr') {
-      return frTranslationsReady() ? TRANSLATIONS.fr : TRANSLATIONS.en;
+    if (LAZY_TRANSLATION_SOURCES[lang]) {
+      return lazyTranslationsReady(lang) ? TRANSLATIONS[lang] : TRANSLATIONS.en;
     }
     return TRANSLATIONS[lang] || TRANSLATIONS.en;
   }
 
-  function loadFrTranslations() {
-    if (frTranslationsReady()) return Promise.resolve();
-    if (window.TRANSLATIONS_FR) {
-      TRANSLATIONS.fr = { ...TRANSLATIONS.en, ...window.TRANSLATIONS_FR };
+  function loadLazyTranslations(lang) {
+    const config = LAZY_TRANSLATION_SOURCES[lang];
+    if (!config) return Promise.resolve();
+    if (lazyTranslationsReady(lang)) return Promise.resolve();
+    const existing = window[config.globalName];
+    if (existing) {
+      TRANSLATIONS[lang] = { ...TRANSLATIONS.en, ...existing };
       return Promise.resolve();
     }
     return new Promise((resolve, reject) => {
       const s = document.createElement('script');
-      s.src = 'js/core/translations-fr.js';
+      s.src = config.src;
       s.onload = () => {
-        TRANSLATIONS.fr = {
+        TRANSLATIONS[lang] = {
           ...TRANSLATIONS.en,
-          ...(window.TRANSLATIONS_FR || {}),
+          ...(window[config.globalName] || {}),
         };
         resolve();
       };
-      s.onerror = () => reject(new Error('Failed to load French translations'));
+      s.onerror = () => reject(new Error(`Failed to load ${config.label} translations`));
       document.head.appendChild(s);
     });
   }
 
   async function updateLanguage(lang) {
-    if (lang === 'fr') await loadFrTranslations();
+    if (LAZY_TRANSLATION_SOURCES[lang]) await loadLazyTranslations(lang);
     currentLang = lang;
     localStorage.setItem(APP_LANG_KEY, lang);
     const t = getTranslationsForLang(lang);
 
-    document.documentElement.lang = lang === 'ru' ? 'ru' : lang === 'fr' ? 'fr' : 'en';
+    document.documentElement.lang =
+      lang === 'ru' ? 'ru' : lang === 'fr' ? 'fr' : lang === 'zh' ? 'zh' : 'en';
 
     updateStageAdvisorLabels(t);
 

@@ -16,7 +16,7 @@ A **browser-only** rune analyzer for **Summoners War**. Load your **[SWEX](https
 
 The project grew out of a **[community-driven Google Sheet](#google-sheet-alternative)** with the same pipeline mindset (pre-checks → scouting → archetypes → grind/gem/reapp). **This web app is now the primary surface**; the sheet remains a supported alternative if you prefer spreadsheets.
 
-**Live site:** https://sw-forge.ru · **SEO:** Google Search Console + Yandex Webmaster configured
+**Live site:** https://sw-forge.ru
 
 ---
 
@@ -71,7 +71,7 @@ The project grew out of a **[community-driven Google Sheet](#google-sheet-altern
 ### Interface
 
 - **Dark** theme by default; light/dark toggle in the header.
-- **English / Русский / Français** for UI strings (**App Settings**).
+- **English / Русский / Français / 中文** for UI strings (**App Settings**).
 - Centered content width (~1200px); Rune Rules uses the same chrome as Account progression on the Dashboard.
 
 ---

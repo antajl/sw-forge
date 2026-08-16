@@ -74,5 +74,5 @@
   const DASH_DIST_TAB_LEGACY_KEY = 'swrm_dashboard_dist_tab_v1';
   const DASH_DIST_KIND_KEY = 'swrm_dashboard_dist_kind_v1';
   let currentLang = localStorage.getItem(APP_LANG_KEY) || localStorage.getItem('swrm-lang') || 'en';
-  if (!['en', 'ru', 'fr'].includes(currentLang)) currentLang = 'en';
+  if (!['en', 'ru', 'fr', 'zh'].includes(currentLang)) currentLang = 'en';
   let currentTheme = localStorage.getItem('swrm-theme') || 'dark';

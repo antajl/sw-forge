@@ -1,6 +1,6 @@
 // js/core/translations.js — Combined EN/RU translations (build artifact)
 // Generated from translations-en.js + translations-ru.js — DO NOT EDIT MANUALLY
-// French: js/core/translations-fr.js (lazy-loaded on language switch)
+// Lazy locale bundles: js/core/translations-fr.js, js/core/translations-zh.js
 
 const TRANSLATIONS = {
   en: {

@@ -2,7 +2,7 @@
 
 /**
  * Combine translations-en.js + translations-ru.js → js/core/translations.js (build artifact).
- * FR stays in translations-fr.js and loads lazily — not bundled here.
+ * FR/ZH stay in language-specific files and load lazily — not bundled here.
  */
 import fs from 'fs';
 import path from 'path';
@@ -35,7 +35,7 @@ const ruBody = extractObjectBody(ruPath, 'translations-ru.js');
 
 const output = `// js/core/translations.js — Combined EN/RU translations (build artifact)
 // Generated from translations-en.js + translations-ru.js — DO NOT EDIT MANUALLY
-// French: js/core/translations-fr.js (lazy-loaded on language switch)
+// Lazy locale bundles: js/core/translations-fr.js, js/core/translations-zh.js
 
 const TRANSLATIONS = {
   en: {

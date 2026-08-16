@@ -230,7 +230,7 @@
       opt.addEventListener('click', async (e) => {
         e.preventDefault();
         let v = opt.dataset.lang || 'en';
-        if (!['en', 'ru', 'fr'].includes(v)) v = 'en';
+        if (!['en', 'ru', 'fr', 'zh'].includes(v)) v = 'en';
         closeHeaderLangMenu();
         await updateLanguage(v);
         select.value = currentLang;
@@ -252,7 +252,7 @@
     appLangSelect.value = currentLang;
     appLangSelect.addEventListener('change', async () => {
       let v = appLangSelect.value || 'en';
-      if (!['en', 'ru', 'fr'].includes(v)) v = 'en';
+      if (!['en', 'ru', 'fr', 'zh'].includes(v)) v = 'en';
       await updateLanguage(v);
       appLangSelect.value = currentLang;
       syncHeaderLangMenu();

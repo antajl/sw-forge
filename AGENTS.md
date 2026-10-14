@@ -93,31 +93,32 @@ This document defines how AI agents should manage and contribute to the SW-Forge
 ## Project-Specific Conventions
 
 ### Build Commands
-- `npm run dev` - Fast local development server with Vite (HMR on http://localhost:5500)
-- `npm run build` - Full production build (translations, CSS, UI, HTML, validation)
-- `npm run build:vite` - Clean Vite build (`tsc && vite build`)
-- `npm run type-check` - Strict TypeScript type check (`tsc --noEmit`)
-- `npm run build:ui` - Build JavaScript UI bundle
-- `npm run build:css` - Build CSS bundle
-- `npm run build:translations` - Build translation files
-- `npm test` / `npm run test` - Run full Vitest test suite (91 tests across 8 suites)
-- `npm run lint` - Run ESLint linter (Flat Config)
-- `npm audit` - Check for security vulnerabilities in dependencies
+- `pnpm dev` / `pnpm run dev` - Fast local development server with Vite (HMR on http://localhost:5500, auto-HMR for partials)
+- `pnpm run build` - Full production build (translations, CSS, UI, HTML, validation)
+- `pnpm run build:vite` - Clean Vite build (`tsc && vite build`)
+- `pnpm run type-check` - Strict TypeScript type check (`tsc --noEmit`)
+- `pnpm run build:ui` - Build JavaScript UI bundle
+- `pnpm run build:css` - Build CSS bundle
+- `pnpm run build:translations` - Build translation files
+- `pnpm test` / `pnpm run test` - Run full Vitest test suite (106 tests across 9 suites)
+- `pnpm run lint` - Run ESLint linter (Flat Config)
+- `pnpm audit` - Check for security vulnerabilities in dependencies
 
 ### Build and Test Configuration
+- **Package Manager**: pnpm (`12.11.2`) with `pnpm-lock.yaml`
 - **ESLint**: Configured with flat config (`eslint.config.js`)
   - Ignores generated files: `js/ui.js`, `js/ui.js.map`
   - Ignores IIFE bootstrap files: `js/features/shell/bootstrap.js`, `js/features/monsters/bootstrap.js`
   - Source type: module (ESM)
 - **Vitest**: Configured with jsdom environment and global test variables
   - Setup file: `tests/setup.js` initializes `window.SWRM` globals
-  - **Test Coverage:** 91 tests across 8 test suites (parser, efficiency, depth, utils, types, runes, core, basic)
-  - **Test Files:** `tests/parser.test.js`, `tests/rune-efficiency.test.js`, `tests/utils.test.js`, `tests/depth.test.js`, `tests/basic.test.ts`, `tests/types.test.ts`, `tests/runes.test.ts`, `tests/core.test.ts`
+  - **Test Coverage:** 106 tests across 9 test suites (parser, efficiency, depth, utils, types, runes, core, basic, game-data-sync)
+  - **Test Files:** `tests/parser.test.js`, `tests/rune-efficiency.test.js`, `tests/utils.test.js`, `tests/depth.test.js`, `tests/basic.test.ts`, `tests/types.test.ts`, `tests/runes.test.ts`, `tests/core.test.ts`, `tests/game-data-sync.test.js`
 - **TypeScript**: Configured via `tsconfig.json` with strict type checking in `src/types/`
 - **PWA & Offline**: Service worker (`public/sw.js`) and manifest (`public/manifest.webmanifest`)
 - **Hosting Static Assets**: `public/` folder contains `_headers`, `robots.txt`, `sitemap.xml`, `sw.js`, `manifest.webmanifest`
 - **Dependencies**: 5 vulnerabilities currently reported in dev dependencies (brace-expansion, fast-uri, js-yaml, nanoid, postcss)
-  - Do NOT run `npm audit fix` without user approval
+  - Do NOT run `pnpm audit fix` without user approval
 
 ### Git Workflow & Multi-Agent Safety
 - **Solo Developer Project**: Antal is the sole creator and developer.
@@ -128,10 +129,10 @@ This document defines how AI agents should manage and contribute to the SW-Forge
 - Use Windows-compatible command syntax for commits.
 
 ### Testing
-- Run tests before committing code changes (`npm test`).
-- Verify build passes after changes (`npm run build` or `npm run type-check`).
+- Run tests before committing code changes (`pnpm test`).
+- Verify build passes after changes (`pnpm run build` or `pnpm run type-check`).
 - Test locally before deploying.
-- **Test Coverage:** 91 tests in `tests/` directory.
+- **Test Coverage:** 106 tests in `tests/` directory.
 - **Test Framework:** Vitest with jsdom environment.
 
 ### Code Style

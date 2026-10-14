@@ -12,7 +12,7 @@ SW Forge — Summoners War rune analyzer + monster hub. Static site on **Cloudfl
 
 ### Stack
 
-Vanilla JS + CSS + TypeScript Types (`src/types/`) · **Build:** Vite (`npm run build:vite`) & Legacy (`npm run build`) · **Prod CSS:** `css/dist/app.css` · **Prod UI:** `js/ui.js` · **PWA:** `public/sw.js` + `public/manifest.webmanifest` · **No external CDN dependencies** (GSAP local in `assets/`)
+Vanilla JS + CSS + TypeScript Types (`src/types/`) · **Build:** Vite (`pnpm run build:vite`) & Legacy (`pnpm run build`) · **Prod CSS:** `css/dist/app.css` · **Prod UI:** `js/ui.js` · **PWA:** `public/sw.js` + `public/manifest.webmanifest` · **Package Manager:** `pnpm@12.11.2` · **No external CDN dependencies** (GSAP local in `assets/`)
 
 ### URLs
 
@@ -27,6 +27,7 @@ Vanilla JS + CSS + TypeScript Types (`src/types/`) · **Build:** Vite (`npm run 
 | Area | Path |
 |------|------|
 | Types | `src/types/` (`rune.ts`, `monster.ts`, `swex.ts`, `guards.ts`, `engine.ts`) |
+| Modern App Entry | `src/app.ts` · Vite entry point with ESM and typed domain modules |
 | Runes engine | `js/engine/` |
 | Runes UI | `js/features/runes/` |
 | Monsters | `js/features/monsters/` |
@@ -45,10 +46,10 @@ Vanilla JS + CSS + TypeScript Types (`src/types/`) · **Build:** Vite (`npm run 
 
 ## Edit Rules (6 points)
 
-1. `partials/` changes → `npm run build:html`
-2. `js/features/` changes → `npm run build:ui`
-3. CSS from `tools/build-css.mjs` list → `npm run build:css`
-4. UI strings EN/RU → `translations-en.js` + `translations-ru.js` → `npm run build:translations`; FR → `translations-fr.js` (lazy)
+1. `partials/` changes → auto-reloaded in `pnpm dev` via `partialsWatcherPlugin` (or `pnpm run build:html`)
+2. `js/features/` changes → `pnpm run build:ui` (or bundled via Vite `src/app.ts`)
+3. CSS from `tools/build-css.mjs` list → `pnpm run build:css`
+4. UI strings EN/RU → `translations-en.js` + `translations-ru.js` → `pnpm run build:translations`; FR → `translations-fr.js` (lazy)
 5. Player-facing changes → changelog **today's date only**; then remove from `11-BACKLOG.md`
 6. **Do not edit manually:** `js/ui.js`, `css/dist/app.css`, `index.html`, `js/core/translations.js` (build artifact), `<script defer>` order in `index-shell.html`
 
@@ -57,21 +58,21 @@ Vanilla JS + CSS + TypeScript Types (`src/types/`) · **Build:** Vite (`npm run 
 ## Build Commands
 
 ```bash
-npm run dev                # fast Vite dev server with HMR (http://localhost:5500)
-npm run type-check         # strict TypeScript type check (tsc --noEmit)
-npm run build:vite         # clean Vite production build (tsc && vite build)
-npm run build              # legacy pipeline (all steps: translations + css + ui + html + validate)
-npm run build:html         # tools/build-html.mjs → index.html (with hash-based cache busting)
-npm run build:translations # translations-en/ru → js/core/translations.js
-npm run build:ui           # tools/build-ui.mjs → js/ui.js (with minification + source maps)
-npm run build:css          # tools/build-css.mjs → css/dist/app.css (with minification)
-npm run build:validate     # validate build (hex colors, translations)
-npm run validate:data      # validate data (JSON, missing assets)
-npm run lint               # lint JS and CSS (ESLint Flat Config)
-npm run lint:fix           # auto-fix linting issues
-npm run format             # format code with Prettier
-npm run test               # run all 91 Vitest tests
-npm run optimize:assets    # convert images to WebP
+pnpm dev                 # fast Vite dev server with HMR & partials watcher (http://localhost:5500)
+pnpm run type-check      # strict TypeScript type check (tsc --noEmit)
+pnpm run build:vite      # clean Vite production build (tsc && vite build)
+pnpm run build           # legacy pipeline (all steps: translations + css + ui + html + validate)
+pnpm run build:html      # tools/build-html.mjs → index.html (with hash-based cache busting)
+pnpm run build:translations # translations-en/ru → js/core/translations.js
+pnpm run build:ui        # tools/build-ui.mjs → js/ui.js (with minification + source maps)
+pnpm run build:css       # tools/build-css.mjs → css/dist/app.css (with minification)
+pnpm run build:validate  # validate build (hex colors, translations)
+pnpm run validate:data   # validate data (JSON, missing assets)
+pnpm run lint            # lint JS and CSS (ESLint Flat Config)
+pnpm run lint:fix        # auto-fix linting issues
+pnpm run format          # format code with Prettier
+pnpm test                # run all 106 Vitest tests across 9 test suites
+pnpm run optimize:assets # convert images to WebP
 ```
 
 ---

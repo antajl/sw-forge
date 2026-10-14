@@ -8,3 +8,8 @@ pinegrow.json
 _pgbackup/
 _pginfo/
 worker/.wrangler/
+SWFORGE_TS/
+dist/
+*.log
+.DS_Store
+Thumbs.db

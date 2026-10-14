@@ -2,9 +2,9 @@
 .dash-unified-pane .panel-top-spd {
   margin-top: 14px;
   padding: 12px 14px 14px;
-  border: 1px solid color-mix(in srgb, var(--border2) 82%, var(--accent));
-  border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--dash-inner-well) 82%, var(--surface));
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius);
+  background: var(--bg-surface);
 }
 
 .dash-unified-pane .panel-top-spd .rules-page-title {
@@ -34,10 +34,10 @@
 
 .top-spd-sort-metric {
   display: inline-flex;
-  border: 1px solid var(--border2);
+  border: 1px solid var(--border-default);
   border-radius: var(--radius);
   overflow: hidden;
-  background: var(--bg3);
+  background: var(--bg-subtle);
 }
 
 .top-spd-sort-btn {

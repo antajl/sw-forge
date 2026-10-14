@@ -52,9 +52,9 @@ html[lang='ru'] .slot-pane-title {
 }
 
 .slot-dist-var-block {
-  background: color-mix(in srgb, var(--dash-inner-well) 78%, var(--surface));
-  border: 1px solid color-mix(in srgb, var(--border2) 78%, var(--accent));
-  border-radius: var(--radius-lg);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius);
   padding: 12px 14px 14px;
   min-width: 0;
 }

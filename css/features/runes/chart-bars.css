@@ -67,10 +67,10 @@
   display: flex;
   align-items: center;
   min-height: 20px;
-  background: var(--surface);
-  border-radius: 4px;
+  background: var(--bg-surface);
+  border-radius: var(--radius-sm, 3px);
   overflow: hidden;
-  border: 1px solid var(--border2);
+  border: 1px solid var(--border-default);
 }
 #tab-dashboard.hidden .chart-bar-fill,
 #tab-dashboard.hidden .eff-bar,

@@ -1,4 +1,4 @@
-﻿      <div class="monsters-shell">
+      <div class="monsters-shell">
         <div id="monsters-stats" hidden aria-live="polite" class="visually-hidden"></div>
         <nav class="rules-subtabs monsters-hub-tabs" id="monsters-hub-tabs" role="tablist" aria-label="Monsters">
           <span class="monsters-hub-tabs__indicator" aria-hidden="true"></span>
@@ -93,7 +93,7 @@
               <form method="dialog" class="teams-editor-dialog__form">
                 <header class="teams-editor-dialog__head">
                   <h3 class="teams-editor-dialog__title" id="lbl-teams-editor-title">Edit team</h3>
-                  <button type="button" class="teams-editor-dialog__close" id="teams-editor-cancel" aria-label="Close">✕</button>
+                  <button type="button" class="teams-editor-dialog__close" id="teams-editor-cancel" aria-label="Close"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
                 </header>
                 <div class="teams-editor-dialog__body">
                   <label class="teams-editor__field">
@@ -158,14 +158,14 @@
                 <div class="table-toolbar__buttons">
                   <div class="filters-popover-host">
                     <button type="button" class="monsters-toolbar-btn monsters-toolbar-btn--filters" id="monsters-more-filters-btn" aria-haspopup="true" aria-controls="monsters-filters-popover" aria-expanded="false">
-                      <span id="lbl-monsters-more-filters">More Filters ⚙</span>
+                      <span id="lbl-monsters-more-filters">More Filters</span> <svg class="monsters-toolbar-btn__icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></svg>
                       <span class="monsters-toolbar-btn__badge" id="monsters-filters-active-count" hidden></span>
                     </button>
                     <div id="monsters-filters-popover" class="filters-popover filters-popover--wide" role="dialog" aria-labelledby="lbl-monsters-filters-drawer-title" hidden data-anchor-btn="monsters-more-filters-btn">
                       <div class="filters-popover__panel">
                         <header class="filters-popover__head">
                           <h3 class="filters-popover__title" id="lbl-monsters-filters-drawer-title">More filters</h3>
-                          <button type="button" class="filters-popover__close" data-filters-popover-close aria-label="Close">✕</button>
+                          <button type="button" class="filters-popover__close" data-filters-popover-close aria-label="Close"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
                         </header>
                         <div class="filters-popover__body">
               <div class="monsters-toolbar__filters-grid monsters-toolbar__filters-grid--primary">
@@ -223,8 +223,8 @@
                   <span id="lbl-monsters-filter-mark">Marks</span>
                   <select id="monsters-filter-mark">
                     <option value="">All</option>
-                    <option value="favorite">★ Favorites</option>
-                    <option value="food">🍖 Food</option>
+                    <option value="favorite">Favorites</option>
+                    <option value="food">Food</option>
                   </select>
                 </label>
               </div>
@@ -266,10 +266,10 @@
                   <button type="button" id="btn-monsters-export-csv" class="btn-ghost btn-toolbar">Export CSV</button>
                   <div class="share-split share-split--compact" data-share-split>
                     <button type="button" class="share-split__main" id="monsters-share-main">
-                      <span class="share-split__icon" aria-hidden="true">🔗</span>
+                      <span class="share-split__icon" aria-hidden="true"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
                       <span class="share-split__label" data-share-split-label>Share</span>
                     </button>
-                    <button type="button" class="share-split__caret" id="monsters-share-caret" aria-expanded="false" aria-haspopup="true" aria-controls="monsters-share-menu" title="Share options">▼</button>
+                    <button type="button" class="share-split__caret" id="monsters-share-caret" aria-expanded="false" aria-haspopup="true" aria-controls="monsters-share-menu" title="Share options"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
                     <div class="share-split__menu" id="monsters-share-menu" role="menu" hidden>
                       <p class="share-split__menu-title" id="lbl-share-menu-title">Share roster</p>
                       <button type="button" class="share-split__menu-item" role="menuitemradio" data-share-mode="all">All monsters + all runes</button>
@@ -295,11 +295,24 @@
         <div class="monsters-bulk-bar monsters-selection-bar" id="monsters-bulk-bar" hidden>
           <span class="monsters-selection-bar__count" id="monsters-bulk-count">0 selected</span>
           <div class="monsters-selection-bar__actions">
-            <button type="button" id="monsters-bulk-favorite" class="monsters-selection-btn">★ <span id="lbl-monsters-bulk-favorite">Add to Favorites</span></button>
-            <button type="button" id="monsters-bulk-food" class="monsters-selection-btn">🍖 <span id="lbl-monsters-bulk-food">Mark as Fodder</span></button>
-            <button type="button" id="monsters-bulk-storage" class="monsters-selection-btn">▣ <span id="lbl-monsters-bulk-storage">Move to Storage</span></button>
+            <button type="button" id="monsters-bulk-favorite" class="monsters-selection-btn">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <span class="monsters-bulk-mark-btn__label" id="lbl-monsters-bulk-favorite">Add to Favorites</span>
+            </button>
+            <button type="button" id="monsters-bulk-food" class="monsters-selection-btn">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+              <span class="monsters-bulk-mark-btn__label" id="lbl-monsters-bulk-food">Mark as Fodder</span>
+            </button>
+            <button type="button" id="monsters-bulk-storage" class="monsters-selection-btn">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+              <span class="monsters-bulk-mark-btn__label" id="lbl-monsters-bulk-storage">Move to Storage</span>
+            </button>
             <div class="monsters-selection-tag" id="monsters-bulk-tag-wrap">
-              <button type="button" class="monsters-selection-btn" id="monsters-bulk-tag-toggle" aria-haspopup="listbox" aria-expanded="false">🏷 <span id="lbl-monsters-bulk-tag">Add Tag</span> ▾</button>
+              <button type="button" class="monsters-selection-btn" id="monsters-bulk-tag-toggle" aria-haspopup="listbox" aria-expanded="false">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><circle cx="7" cy="7" r=".5" fill="currentColor"/></svg>
+                <span class="monsters-bulk-mark-btn__label" id="lbl-monsters-bulk-tag">Add Tag</span>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+              </button>
               <div class="monsters-selection-tag__menu" id="monsters-bulk-tag-menu" hidden role="listbox"></div>
               <input type="text" id="monsters-bulk-tag-input" class="visually-hidden" maxlength="32" autocomplete="off" spellcheck="false" tabindex="-1" aria-hidden="true" />
             </div>

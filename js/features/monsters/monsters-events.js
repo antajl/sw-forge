@@ -343,7 +343,7 @@
     host.innerHTML = chips
       .map(
         (c) =>
-          `<span class="monsters-filter-chip">${escapeHtml(c.label)}<button type="button" class="monsters-filter-chip__remove" data-filter-chip-remove="${escapeHtml(c.key)}" aria-label="Remove">✕</button></span>`,
+          `<span class="monsters-filter-chip">${escapeHtml(c.label)}<button type="button" class="monsters-filter-chip__remove" data-filter-chip-remove="${escapeHtml(c.key)}" aria-label="Remove"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></span>`,
       )
       .join('');
   }

@@ -22,6 +22,21 @@ function teamUnitLabel(unitId: number | null): string {
   return `#${unitId}`;
 }
 
+function teamUnitDisplaySpeed(unitId: number | null, team: Team): number | null {
+  if (!unitId || typeof window === 'undefined') return null;
+  const swrm = (window as any).SWRM;
+  if (!swrm) return null;
+  const opts = {
+    team,
+    totemSpdPct: typeof swrm.getAccountTotemSpdPct === 'function' ? swrm.getAccountTotemSpdPct() : 15,
+    leaderUnitId: team.leaderUnitId,
+  };
+  if (typeof swrm.computeUnitSpeedForTeam === 'function') {
+    return Math.round(Number(swrm.computeUnitSpeedForTeam(unitId, opts)) || 0);
+  }
+  return null;
+}
+
 function buildTeamSlotIcons(team: Team): string {
   const slots = team.slots || [];
   const size = slots.length;
@@ -31,9 +46,12 @@ function buildTeamSlotIcons(team: Team): string {
       const label = uid ? teamUnitLabel(uid) : '';
       const unitAttr = uid ? ` data-unit-id="${escapeHtml(String(uid))}"` : '';
       const aria = label ? ` aria-label="${escapeHtml(label)}"` : '';
+      const spd = uid ? teamUnitDisplaySpeed(uid, team) : null;
+      const spdBadge = spd ? `<span class="team-card__spd" title="Combat SPD">${spd}</span>` : '';
+      const crownIcon = `<svg class="team-card__crown-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/></svg>`;
       return `<div class="team-card__slot${leader ? ' team-card__slot--leader' : ''}" data-slot-idx="${i}"${unitAttr}${aria} tabindex="${uid ? '0' : '-1'}">
-        ${leader ? '<span class="team-card__crown" aria-hidden="true">👑</span>' : ''}
-        ${uid ? `<span class="team-card__portrait-label">${escapeHtml(label)}</span>` : '<span class="team-card__slot-empty">+</span>'}
+        ${leader ? `<span class="team-card__crown" aria-hidden="true">${crownIcon}</span>` : ''}
+        ${uid ? `<span class="team-card__portrait-label">${escapeHtml(label)}</span>${spdBadge}` : '<span class="team-card__slot-empty">+</span>'}
       </div>`;
     })
     .join('');
@@ -51,7 +69,7 @@ function buildTeamCardHtml(team: Team, t: Translation, opts?: { readOnly?: boole
   const name = team.name || (t as any).teamsUntitled || 'New Team';
   const publicBadge =
     team.shareInProfile || (ro && opts && opts.fromShare)
-      ? `<span class="team-card__public" title="${escapeHtml((t as any).teamsSharePublic || 'Public in profile')}">◉</span>`
+      ? `<span class="team-card__public" title="${escapeHtml((t as any).teamsSharePublic || 'Public in profile')}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg></span>`
       : '';
   const actions = ro
     ? ''

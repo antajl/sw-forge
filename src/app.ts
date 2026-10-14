@@ -3,7 +3,8 @@ import * as Core from './core';
 import * as Features from './features';
 import * as Types from './types';
 
-// Bundle legacy UI bundle through Vite
+// Bundle legacy UI bundle and styles through Vite
+import '../css/dist/app.css';
 import '../js/ui.js';
 
 // Hydrate and guarantee window.SWRM namespace with TypeScript types and modules

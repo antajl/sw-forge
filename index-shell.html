@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -92,6 +92,8 @@
   <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png" />
   <link rel="shortcut icon" href="assets/favicon-32.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="theme-color" content="#0f1318" />
   <!-- Inline: SVGs have a huge default intrinsic size before css/dist/app.css loads (e.g. live reload). -->
   <style>
     .logo__img { height: 42px; max-width: min(220px, 48vw); }
@@ -179,9 +181,17 @@
   <script defer src="js/engine/engine-artifacts.js?v=1.2.19"></script>
   <script defer src="js/advanced-formulas.js?v=1.2.19"></script>
   <script defer src="js/engine/engine-process.js?v=1.2.19"></script>
+  <script defer src="js/engine/engine-depth.js?v=1.2.19"></script>
   <script defer src="js/self-test.js?v=1.2.19"></script>
   <script src="assets/gsap.min.js"></script>
   <script defer src="js/swrm-motion.js?v=1.2.19"></script>
   <script defer src="js/ui.js?v=1.2.19"></script>
+  <script>
+    if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+      });
+    }
+  </script>
 </body>
 </html>

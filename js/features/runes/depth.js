@@ -4,7 +4,10 @@
    * Absolute depth metrics over the full exported rune list (Rare+ as in SWEX parse, rank ≥3).
    * Does not use Mid processing or verdicts.
    */
-  function analyzeGameStage(runes) {
+  function analyzeGameStage(runes, units) {
+    if (window.SWRM && typeof window.SWRM.analyzeGameStage === 'function') {
+      return window.SWRM.analyzeGameStage(runes, units !== undefined ? units : (typeof allUnits !== 'undefined' ? allUnits : []));
+    }
     // ----- Depth v2 tuning: edit all knobs here -----
     const CFG = {
       spdSubMin: 18,
@@ -128,6 +131,9 @@
    * @returns {Object} Roster depth metrics
    */
   function analyzeRosterDepth(units, opts = {}) {
+    if (window.SWRM && typeof window.SWRM.analyzeRosterDepth === 'function') {
+      return window.SWRM.analyzeRosterDepth(units, opts);
+    }
     const CFG = opts.CFG || {
       rosterDepthCap: 50,
       rosterEffMin: 60,

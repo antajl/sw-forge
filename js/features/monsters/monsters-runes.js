@@ -604,7 +604,6 @@
     const label = skillDb && s.upgradeable !== false ? skillDb.formatSkillLevelDetail(s) : '';
     const fbAttr = fb ? ' data-fallback="' + escapeHtml(fb) + '"' : '';
     const isPassive = s.isPassive === true || (s.passive === true);
-    if (isPassive) console.log('Passive skill found:', s.skillId, s);
     const passiveClass = isPassive ? ' sw-passive-vortex' : '';
     const passivePseudo = isPassive ? '<div class="sw-passive-vortex__pseudo"></div>' : '';
     const passiveInner = isPassive ? '<div class="sw-passive-vortex__inner">' : '';

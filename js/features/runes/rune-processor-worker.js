@@ -1,4 +1,4 @@
-// js/features/runes/rune-processor-worker.js — optional Web Worker for processAll()
+// js/features/runes/rune-processor-worker.js — Web Worker for processAll() & off-thread metrics
   const SWRM_NS = window.SWRM || (window.SWRM = {});
   let runeWorker = null;
   let workerFailed = false;
@@ -23,7 +23,7 @@
         if (!h) return;
         handlers.delete(data.requestId);
         if (data.error) h.reject(new Error(data.error));
-        else h.resolve(data.result);
+        else h.resolve(data);
       };
       runeWorker.onerror = () => {
         workerFailed = true;
@@ -39,11 +39,15 @@
     return runeWorker;
   }
 
-  function processRunesAsync(runes, stage, settings) {
-    const sync = () =>
-      typeof processAll === 'function'
+  function processRunesAsync(runes, stage, settings, options = {}) {
+    const units = options.units || (typeof allUnits !== 'undefined' ? allUnits : []);
+    const sync = () => {
+      const p = typeof processAll === 'function'
         ? processAll(runes, stage, settings)
         : SWRM_NS.processAll(runes, stage, settings);
+      if (typeof attachForgeScoresToRunes === 'function') attachForgeScoresToRunes(p);
+      return p;
+    };
 
     const w = getRuneWorker();
     if (!w) return Promise.resolve(sync());
@@ -52,11 +56,19 @@
       const requestId = ++pendingId;
       handlers.set(requestId, { resolve, reject });
       try {
-        w.postMessage({ runes, stage, settings, requestId });
+        w.postMessage({ runes, stage, settings, units, requestId });
       } catch (e) {
         handlers.delete(requestId);
         reject(e);
       }
+    }).then((data) => {
+      const result = data && data.result ? data.result : data;
+      if (data && data.gameStageMetrics && typeof gameStageMetricsCache !== 'undefined') {
+        const key = `${typeof swrmAllRunesRev !== 'undefined' ? swrmAllRunesRev : 0}:${Array.isArray(runes) ? runes.length : 0}:${Array.isArray(units) ? units.length : 0}`;
+        gameStageMetricsCache.key = key;
+        gameStageMetricsCache.value = data.gameStageMetrics;
+      }
+      return result;
     }).catch((err) => {
       console.warn('processRunesAsync: worker unavailable, using main thread', err);
       return sync();

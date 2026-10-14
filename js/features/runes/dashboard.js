@@ -46,25 +46,9 @@
     if (gameStageMetricsCache.key === key && gameStageMetricsCache.value) {
       return gameStageMetricsCache.value;
     }
-    const runeMetrics = analyzeGameStage(runes);
-    const rosterMetrics = analyzeRosterDepth(allUnits);
-
-    // Merge roster metrics into rune metrics
-    const merged = {
-      ...runeMetrics,
-      rosterDepthCount: rosterMetrics.rosterDepthCount,
-      rosterPoints: rosterMetrics.rosterPoints,
-      rosterCap: rosterMetrics.rosterCap,
-    };
-
-    // Recalculate total score with roster points
-    const spdPoints = parseFloat(runeMetrics.spdPoints) || 0;
-    const plus15Points = parseFloat(runeMetrics.plus15Points) || 0;
-    const elitePoints = parseFloat(runeMetrics.elitePoints) || 0;
-    const rosterPoints = parseFloat(rosterMetrics.rosterPoints) || 0;
-    const totalScore = spdPoints + plus15Points + elitePoints + rosterPoints;
-
-    merged.score = (Math.round(totalScore * 10) / 10).toFixed(1);
+    const merged = typeof analyzeGameStage === 'function'
+      ? analyzeGameStage(runes, allUnits)
+      : (window.SWRM?.analyzeGameStage ? window.SWRM.analyzeGameStage(runes, allUnits) : {});
 
     gameStageMetricsCache.key = key;
     gameStageMetricsCache.value = merged;
@@ -75,7 +59,7 @@
     if (!Array.isArray(runes) || typeof computeRuneScore !== 'function') return;
     for (let i = 0; i < runes.length; i++) {
       const r = runes[i];
-      if (!r) continue;
+      if (!r || r.forgeScore != null) continue;
       r.forgeScore = computeRuneScore(r);
     }
   }

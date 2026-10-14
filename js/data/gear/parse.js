@@ -325,10 +325,8 @@
       r.wearCount = wearCounts.get(r.rid) || 0;
     }
     
-    // Debug logging
-    console.log('[SWRM Gear Parse] Artifacts: inventory=' + invArtCount + ', unit-equipped=' + unitArtCount + ', total=' + artMap.size + ', duplicates=' + duplicateRids.size);
     if (duplicateRids.size > 0) {
-      console.log('[SWRM Gear Parse] Duplicate artifact RIDs:', Array.from(duplicateRids));
+      console.warn('[SWRM Gear Parse] Duplicate artifact RIDs:', Array.from(duplicateRids));
     }
     
     return {

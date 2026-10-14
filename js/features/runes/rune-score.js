@@ -423,6 +423,7 @@
   const S = SWRM_REF();
   if (S) {
     S.computeForgeScore = computeForgeScore;
+    S.computeRuneScore = computeRuneScore;
     S.computeForgeScoreBreakdown = computeForgeScoreBreakdown;
     S.formatForgeScoreTooltip = formatForgeScoreTooltip;
     S.FORGE_SCORE_MAIN_VALUE = MAIN_STAT_VALUE;

@@ -438,59 +438,32 @@
     if (initSwrmFloatingTips._done) return;
     initSwrmFloatingTips._done = true;
 
-    const onFocusIn = (e) => {
-      const t =
-        e.target && e.target.closest
-          ? e.target.closest('[data-swrm-tip],[data-swrm-tip-html]')
-          : null;
-      if (t) showSwrmFloatTipFromTarget(t);
-    };
-    const onFocusOut = (e) => {
-      const t =
-        e.target && e.target.closest
-          ? e.target.closest('[data-swrm-tip],[data-swrm-tip-html]')
-          : null;
-      if (t && swrmFloatTipAnchor === t) hideSwrmFloatTip(false);
-    };
+    // Delegated pointer events — zero MutationObserver overhead, zero memory leaks
+    document.addEventListener('pointerover', (e) => {
+      const target = e.target && e.target.closest ? e.target.closest('[data-swrm-tip],[data-swrm-tip-html]') : null;
+      if (!target) return;
+      if (swrmFloatTipAnchor === target && swrmFloatTipIsVisible) return;
+      showSwrmFloatTipFromTarget(target);
+    }, { passive: true });
 
-    // Simple approach: use mouseenter/mouseleave on tooltip targets directly
-    function attachTooltipToElement(el) {
-      if (!el || el.hasAttribute('data-swrm-tip-attached')) return;
-      el.setAttribute('data-swrm-tip-attached', 'true');
-      
-      el.addEventListener('mouseenter', () => {
-        showSwrmFloatTipFromTarget(el);
-      });
-      
-      el.addEventListener('mouseleave', () => {
-        if (swrmFloatTipAnchor === el) {
-          hideSwrmFloatTip(true);
-        }
-      });
-    }
-    
-    // Use MutationObserver to attach tooltip to dynamically added elements
-    const observer = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        for (const node of mutation.addedNodes) {
-          if (node.nodeType === 1) { // Element node
-            const tipTargets = node.querySelectorAll('[data-swrm-tip],[data-swrm-tip-html]');
-            tipTargets.forEach(attachTooltipToElement);
-            if (node.hasAttribute && (node.hasAttribute('data-swrm-tip') || node.hasAttribute('data-swrm-tip-html'))) {
-              attachTooltipToElement(node);
-            }
-          }
-        }
-      }
-    });
-    
-    observer.observe(document.body, { childList: true, subtree: true });
-    
-    // Attach to existing elements
-    document.querySelectorAll('[data-swrm-tip],[data-swrm-tip-html]').forEach(attachTooltipToElement);
-    
-    document.addEventListener('focusin', onFocusIn);
-    document.addEventListener('focusout', onFocusOut);
+    document.addEventListener('pointerout', (e) => {
+      const target = e.target && e.target.closest ? e.target.closest('[data-swrm-tip],[data-swrm-tip-html]') : null;
+      if (!target || target !== swrmFloatTipAnchor) return;
+      const related = e.relatedTarget && e.relatedTarget.closest ? e.relatedTarget.closest('[data-swrm-tip],[data-swrm-tip-html]') : null;
+      if (related === target) return; // Cursor moved between children within the same tooltip anchor
+      hideSwrmFloatTip(true);
+    }, { passive: true });
+
+    document.addEventListener('focusin', (e) => {
+      const t = e.target && e.target.closest ? e.target.closest('[data-swrm-tip],[data-swrm-tip-html]') : null;
+      if (t) showSwrmFloatTipFromTarget(t);
+    }, { passive: true });
+
+    document.addEventListener('focusout', (e) => {
+      const t = e.target && e.target.closest ? e.target.closest('[data-swrm-tip],[data-swrm-tip-html]') : null;
+      if (t && swrmFloatTipAnchor === t) hideSwrmFloatTip(false);
+    }, { passive: true });
+
     window.addEventListener(
       'scroll',
       () => {

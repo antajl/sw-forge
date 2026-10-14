@@ -17,6 +17,8 @@ const out = [
   { file: 'favicon-16.png', size: 16 },
   { file: 'favicon-32.png', size: 32 },
   { file: 'apple-touch-icon.png', size: 180 },
+  { file: 'icon-192.png', size: 192 },
+  { file: 'icon-512.png', size: 512 },
 ];
 
 for (const { file, size } of out) {

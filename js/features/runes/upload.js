@@ -28,7 +28,9 @@
   async function reprocess(options = {}) {
     const settings = window.SWRM.settings;
     if (typeof window.SWRM.processRunesAsync === 'function') {
-      processedRunes = await window.SWRM.processRunesAsync(allRunes, stage, settings);
+      processedRunes = await window.SWRM.processRunesAsync(allRunes, stage, settings, {
+        units: typeof allUnits !== 'undefined' ? allUnits : [],
+      });
     } else {
       processedRunes = processAll(allRunes, stage, settings);
     }
@@ -197,12 +199,7 @@
         slots.find((s) => s && Number.isFinite(Number(s.id))) ||
         null;
 
-      console.log('=== INITIALIZATION DEBUG ===');
-      console.log('Slots from loadDbSlots():', slots);
-      console.log('hasSlotMeta:', hasSlotMeta, 'activeSlot:', activeSlot);
-
       if (!Array.isArray(slots) || slots.length === 0) {
-        console.error('Invalid slots array:', slots);
         if (!userHasLoadedRealExport()) {
           const demoOk = await installEmbeddedDemoDataset({ skipUiAfter: true });
           if (!demoOk) return { restored: false };
@@ -214,11 +211,6 @@
         }
         return { restored: false };
       }
-
-      console.log(
-        'Slots metadata key present:',
-        !!localStorage.getItem(DB_SLOTS_META_KEY),
-      );
 
       let restored = false;
       let meta = null;

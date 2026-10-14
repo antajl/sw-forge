@@ -271,7 +271,6 @@
     
     const action = btn.dataset.dbAction;
     const slotId = Number(btn.dataset.slot);
-    console.log('Slot action:', action, 'slotId:', slotId);
     
     const slots = loadDbSlots();
     const idx = slots.findIndex(s => s.id === slotId);
@@ -303,7 +302,6 @@
     }
     
     if (action === 'upload') {
-      console.log('Upload clicked for slot', slotId);
       const inp = document.createElement('input');
       inp.type = 'file';
       inp.accept = '.json';
@@ -311,18 +309,12 @@
       document.body.appendChild(inp);
       
       inp.addEventListener('change', async ev => {
-        console.log('File selected');
         const file = ev.target.files?.[0];
-        if (!file) {
-          console.log('No file selected');
-          return;
-        }
-        console.log('Reading file:', file.name);
+        if (!file) return;
         const reader = new FileReader();
         reader.onload = async event => {
           try {
             const text = event.target.result;
-            console.log('File read successfully, length:', text.length);
             const jsonObj = JSON.parse(text);
             await saveSlotData(slotId, text);
             applySlotSummaryFromJson(slot, file.name, jsonObj);
@@ -330,7 +322,6 @@
             saveDbSlots(slots);
             await processJsonData(text);
             renderDbSlots();
-            console.log('Slot saved and rendered');
           } catch(err) {
             console.error('Error saving to IndexedDB:', err);
             alert('Failed to save file: ' + err.message);

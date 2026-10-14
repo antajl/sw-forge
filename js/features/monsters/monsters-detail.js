@@ -46,20 +46,12 @@
   }
 
   function initPassiveSkillVortex() {
-    if (typeof gsap === 'undefined') {
-      console.log('GSAP is not defined');
-      return;
-    }
+    if (typeof gsap === 'undefined') return;
     requestAnimationFrame(() => {
       const vortexElements = document.querySelectorAll('.sw-passive-vortex');
-      console.log('Found vortex elements:', vortexElements.length);
       vortexElements.forEach((el) => {
         const pseudo = el.querySelector('.sw-passive-vortex__pseudo');
-        if (!pseudo) {
-          console.log('No pseudo element found for vortex');
-          return;
-        }
-        console.log('Starting GSAP animation for pseudo element');
+        if (!pseudo) return;
         gsap.to(pseudo, {
           rotation: 360,
           duration: 3,

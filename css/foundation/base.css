@@ -36,9 +36,20 @@
 
   /* Accent Gold / Forge (Extracted from SW FORGE logo) */
   --accent-gold:    #c9861a;
-  --accent-gold-hi: #e09924;
+  --accent-gold-hi: #e5a93b;
+  --accent-gold-deep: #9e6314;
   --accent-gold-bg: rgba(201, 134, 26, 0.12);
-  --slate-stone:    #56697a;
+  --accent-gold-border: color-mix(in srgb, var(--accent-gold) 45%, var(--border-default));
+
+  /* Slate stone from Blade rune */
+  --slate-stone:        #5c6f84;
+  --slate-stone-light:  #7b8e9f;
+  --slate-stone-dark:   #3d4b59;
+  --slate-stone-bg:     rgba(92, 111, 132, 0.08);
+
+  /* Tab indicator gradient (preserving the dynamic line the user loves, with forged gold + cyan/sapphire crystal) */
+  --indicator-gradient: linear-gradient(90deg, #c9861a 0%, #e5a93b 40%, #0284c7 100%);
+  --indicator-shadow:   0 0 12px rgba(201, 134, 26, 0.35), 0 0 4px rgba(2, 132, 199, 0.3);
 
   /* Canonical Game Rarities */
   --grade-legend:   #b45309;

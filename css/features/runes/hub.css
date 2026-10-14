@@ -6,12 +6,8 @@
   gap: 6px;
   position: static;
   z-index: 12;
-  background: color-mix(in srgb, var(--bg-main) 92%, transparent);
-  backdrop-filter: blur(8px);
-}
-
-body.light-theme #tab-runes > .runes-hub-tabs.rules-subtabs {
-  background: color-mix(in srgb, var(--bg-main) 94%, transparent);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-default);
 }
 
 .runes-hub-tabs .runes-hub-tab {

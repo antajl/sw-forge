@@ -90,13 +90,8 @@ html[lang='ru'] .panel-dash-distributions-head .rules-page-lead.dash-unified-blo
   gap: 6px;
   position: static;
   z-index: 12;
-  background: color-mix(in srgb, var(--bg-main) 92%, transparent);
-  backdrop-filter: blur(8px);
-}
-
-body.light-theme .dash-unified-tabs.rules-subtabs,
-body.light-theme .dashboard-hub-tabs.rules-subtabs {
-  background: color-mix(in srgb, var(--bg-main) 94%, transparent);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-default);
 }
 
 #tab-dashboard > .dashboard-hub-tabs.rules-subtabs {
@@ -106,12 +101,8 @@ body.light-theme .dashboard-hub-tabs.rules-subtabs {
   gap: 6px;
   position: static;
   z-index: 12;
-  background: color-mix(in srgb, var(--bg-main) 92%, transparent);
-  backdrop-filter: blur(8px);
-}
-
-body.light-theme #tab-dashboard > .dashboard-hub-tabs.rules-subtabs {
-  background: color-mix(in srgb, var(--bg-main) 94%, transparent);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-default);
 }
 
 .dash-unified-tabs__indicator,
@@ -124,8 +115,8 @@ body.light-theme #tab-dashboard > .dashboard-hub-tabs.rules-subtabs {
   border-radius: 2px;
   pointer-events: none;
   z-index: 4;
-  background: linear-gradient(90deg, var(--accent), var(--accent2));
-  box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 40%, transparent);
+  background: var(--indicator-gradient);
+  box-shadow: var(--indicator-shadow);
   opacity: 0.95;
 }
 
@@ -142,8 +133,8 @@ html:not(.swrm-has-gsap) .dash-unified-tabs__indicator {
   border-radius: 2px;
   pointer-events: none;
   z-index: 4;
-  background: linear-gradient(90deg, var(--accent), var(--accent2));
-  box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 40%, transparent);
+  background: var(--indicator-gradient);
+  box-shadow: var(--indicator-shadow);
   opacity: 0.95;
 }
 
@@ -156,8 +147,8 @@ html:not(.swrm-has-gsap) .dash-unified-tabs__indicator {
   border-radius: 2px;
   pointer-events: none;
   z-index: 4;
-  background: linear-gradient(180deg, var(--accent), var(--accent2));
-  box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 40%, transparent);
+  background: linear-gradient(180deg, var(--accent-gold), var(--accent));
+  box-shadow: var(--indicator-shadow);
   opacity: 0.95;
 }
 

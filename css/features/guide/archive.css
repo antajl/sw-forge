@@ -30,12 +30,8 @@ html[lang='fr'] #tab-guide .guide-lang--fr {
   padding-bottom: 8px;
   gap: 6px;
   position: static;
-  background: color-mix(in srgb, var(--bg-main) 92%, transparent);
-}
-
-body.light-theme #tab-guide .rules-subtabs,
-body.light-theme #tab-changelog .rules-subtabs {
-  background: color-mix(in srgb, var(--bg-main) 94%, transparent);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-default);
 }
 
 #tab-guide .rules-subtabs .rules-subtab,
@@ -76,8 +72,8 @@ body.light-theme #tab-changelog .rules-subtabs {
   border-radius: 2px;
   pointer-events: none;
   z-index: 4;
-  background: linear-gradient(90deg, var(--accent), var(--accent2));
-  box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 40%, transparent);
+  background: var(--indicator-gradient);
+  box-shadow: var(--indicator-shadow);
   opacity: 0.95;
 }
 

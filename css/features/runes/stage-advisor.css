@@ -296,10 +296,23 @@
 
 .dashboard-stage-wrap .stage-advisor-bar-suggest {
   align-items: center;
-  padding: 6px 12px;
+  padding: 6px 14px;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--border2) 92%, var(--accent));
-  background: color-mix(in srgb, var(--surface) 94%, var(--accent) 6%);
+  border: 1px solid var(--accent-gold-border);
+  background: color-mix(in srgb, var(--accent-gold-bg) 60%, var(--surface));
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.dashboard-stage-wrap .stage-advisor-suggestion-label {
+  font-size: 0.76rem;
+  color: var(--text-dim);
+  font-weight: 500;
+}
+
+.dashboard-stage-wrap .stage-advisor-suggestion-value {
+  color: var(--accent-gold-deep);
+  font-weight: 700;
+  font-size: 0.88rem;
 }
 
 .dashboard-stage-wrap .stage-advisor-bar .btn-auto-stage {
@@ -351,12 +364,14 @@
 
 .dashboard-strictness-inline #dashboard-policy-strictness {
   width: min(128px, 26vw);
-  accent-color: var(--accent);
+  accent-color: var(--accent-gold);
 }
 
 .dashboard-strictness-inline__hint {
   min-width: 2.25rem;
   font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--text-hi);
 }
 
 .dashboard-stage-wrap .dashboard-strictness-preview {
@@ -846,23 +861,25 @@ html[lang="ru"] .stage-metric-name {
 }
 
 .dashboard-stage-wrap .btn-auto-stage {
-  padding: 6px 11px;
-  font-size: 0.72rem;
+  padding: 6px 14px;
+  font-size: 0.74rem;
   font-family: var(--font-head);
   font-weight: 700;
   letter-spacing: 0.04em;
-  color: var(--text-hi);
-  border: none;
+  color: #ffffff;
+  border: 1px solid var(--accent-gold-deep);
   border-radius: var(--radius);
   cursor: pointer;
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
-  box-shadow: 0 4px 16px rgba(78, 158, 255, 0.3);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  background: linear-gradient(180deg, var(--accent-gold-hi) 0%, var(--accent-gold) 60%, var(--accent-gold-deep) 100%);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
 }
 
 .dashboard-stage-wrap .btn-auto-stage:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(78, 158, 255, 0.45);
+  filter: brightness(1.06);
+  box-shadow: 0 4px 12px rgba(201, 134, 26, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.45);
 }
 
 html[lang="ru"] .dashboard-stage-wrap .btn-auto-stage {

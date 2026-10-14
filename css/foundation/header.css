@@ -373,10 +373,10 @@ html[lang="ru"] #header-donate-btn.header-theme-btn--wide {
   bottom: 4px;
   height: 2px;
   width: 0;
-  background: var(--accent);
+  background: var(--indicator-gradient);
   border-radius: 1px;
   opacity: 0.95;
-  box-shadow: 0 0 8px var(--accent);
+  box-shadow: var(--indicator-shadow);
 }
 
 html:not(.swrm-has-gsap) .tabs__indicator {
@@ -473,29 +473,26 @@ html:not(.swrm-has-gsap) .tabs__indicator {
 }
 
 .tab:hover {
-  color: var(--text);
-  background: var(--surface);
+  color: var(--text-hi);
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
 }
 .tab.active {
-  color: var(--accent);
-  background: rgba(78, 158, 255, 0.1);
+  color: var(--accent-gold-deep);
+  font-weight: 700;
+  background: color-mix(in srgb, var(--accent-gold) 10%, var(--surface));
 }
 
 /* Dashboard tab: shared panel chrome (inherits into nested components) */
 #tab-dashboard {
-  --dash-chrome-fill: linear-gradient(
-    160deg,
-    color-mix(in srgb, var(--surface) 92%, var(--accent) 8%) 0%,
-    var(--surface) 62%
-  );
-  --dash-chrome-border: 1px solid color-mix(in srgb, var(--border2) 88%, var(--accent));
+  --dash-chrome-fill: var(--surface);
+  --dash-chrome-border: 1px solid var(--border-default);
   --dash-chrome-shadow:
-    0 1px 3px color-mix(in srgb, var(--text-hi) 5%, transparent),
-    0 0 28px color-mix(in srgb, var(--accent) 7%, transparent);
+    0 1px 3px rgba(0, 0, 0, 0.04),
+    0 0 16px rgba(201, 134, 26, 0.04);
   --dash-chrome-shadow-hover:
-    0 4px 22px color-mix(in srgb, var(--accent) 16%, transparent),
-    0 0 36px color-mix(in srgb, var(--accent) 11%, transparent);
-  --dash-inner-well: color-mix(in srgb, var(--surface) 93%, var(--bg3));
+    0 4px 16px rgba(0, 0, 0, 0.08),
+    0 0 20px rgba(201, 134, 26, 0.1);
+  --dash-inner-well: var(--bg-subtle);
 }
 
 @media (max-width: 720px) {

@@ -746,7 +746,7 @@ html[lang="ru"] .stage-metric-name {
 }
 
 #stage-advisor.stage-accent-mid .stage-metric-weight {
-  color: color-mix(in srgb, var(--stage-mid) 82%, #222);
+  color: color-mix(in srgb, var(--stage-mid) 82%, var(--bg-base));
   background: color-mix(in srgb, var(--stage-mid) 18%, var(--surface));
   border-color: color-mix(in srgb, var(--stage-mid) 45%, var(--border2));
 }

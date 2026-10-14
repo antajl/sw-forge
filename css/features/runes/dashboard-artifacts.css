@@ -116,7 +116,7 @@ html:not(.swrm-has-gsap) .dash-dist-kind-tabs__indicator {
   margin: 0 0 10px;
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--text-muted, #9aa3b2);
+  color: var(--text-muted);
   text-align: center;
   letter-spacing: 0.02em;
 }
@@ -148,13 +148,13 @@ html:not(.swrm-has-gsap) .dash-dist-kind-tabs__indicator {
 .dash-artifact-cell__muted {
   margin: 0;
   font-size: 0.875rem;
-  color: var(--text-muted, #9aa3b2);
+  color: var(--text-muted);
 }
 
 .dash-artifact-empty {
   margin: 12px 0 0;
   font-size: 0.9375rem;
-  color: var(--text-muted, #9aa3b2);
+  color: var(--text-muted);
   text-align: center;
   padding: 24px 16px;
 }
@@ -177,20 +177,20 @@ html:not(.swrm-has-gsap) .dash-dist-kind-tabs__indicator {
   align-items: baseline;
   gap: 6px 8px;
   padding: 8px 10px;
-  border-radius: var(--radius, 8px);
-  border: 1px solid var(--border2, rgba(255, 255, 255, 0.1));
-  background: var(--bg3, rgba(0, 0, 0, 0.2));
+  border-radius: var(--radius);
+  border: 1px solid var(--border-default);
+  background: var(--bg-subtle);
   font-size: 0.8125rem;
 }
 
 .dash-artifact-verdict-pill--keep {
   border-color: color-mix(in srgb, var(--tint-keep) 45%, transparent);
-  background: color-mix(in srgb, var(--tint-keep) 12%, var(--bg3, #1a1f2e));
+  background: color-mix(in srgb, var(--tint-keep) 12%, var(--bg-subtle));
 }
 
 .dash-artifact-verdict-pill--sell {
   border-color: color-mix(in srgb, var(--tint-sell) 45%, transparent);
-  background: color-mix(in srgb, var(--tint-sell) 12%, var(--bg3, #1a1f2e));
+  background: color-mix(in srgb, var(--tint-sell) 12%, var(--bg-subtle));
 }
 
 .dash-runes-breakdown-grid {
@@ -227,7 +227,7 @@ html:not(.swrm-has-gsap) .dash-dist-kind-tabs__indicator {
 
 .dash-artifact-verdict-pill__lbl {
   font-weight: 600;
-  color: var(--text-hi, #e8ecf1);
+  color: var(--text-hi);
 }
 
 .dash-artifact-verdict-pill__val {
@@ -237,7 +237,7 @@ html:not(.swrm-has-gsap) .dash-dist-kind-tabs__indicator {
 
 .dash-artifact-verdict-pill__pct {
   margin-left: auto;
-  color: var(--text-muted, #9aa3b2);
+  color: var(--text-muted);
   font-size: 0.75rem;
   font-variant-numeric: tabular-nums;
 }

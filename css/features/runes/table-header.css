@@ -128,21 +128,21 @@
 }
 
 .light-theme .th-text {
-  background: #ffffff;
+  background: var(--surface);
   border-color: var(--border);
 }
 
 .light-theme .th-text:hover {
-  background: #f0f4f8;
+  background: var(--bg-hover);
   border-color: var(--accent);
 }
 
 .light-theme .th-filter {
-  background: #ffffff;
+  background: var(--surface);
   border-color: var(--accent);
 }
 
 .light-theme .th-filter option {
-  background-color: var(--text-hi);
-  color: #2a2a2a;
+  background-color: var(--surface);
+  color: var(--text-primary);
 }

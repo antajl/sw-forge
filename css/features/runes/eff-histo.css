@@ -77,25 +77,25 @@
 /* Слабые значения (уводим в тень, чтобы не мозолили глаза) */
 .eff-bar.low,
 .eff-bar--score.low {
-  background: #A0AAB5;
+  background: var(--text-muted);
 }
 
-/* Основная масса / Средний уровень (твой любимый мятный) */
+/* Основная масса / Средний уровень */
 .eff-bar,
 .eff-bar--score {
-  background: #66EBE3;
+  background: var(--teal);
 }
 
-/* Хорошие проки (сочный зеленый) */
+/* Хорошие проки */
 .eff-bar.good,
 .eff-bar--score.good {
-  background: #8CE6A4;
+  background: var(--green);
 }
 
-/* Топовые проки (леденцовое золото) */
+/* Топовые проки */
 .eff-bar.great,
 .eff-bar--score.great {
-  background: #FFE45E;
+  background: var(--accent-gold);
 }
 
 .eff-chart {

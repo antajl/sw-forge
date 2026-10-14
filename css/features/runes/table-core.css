@@ -405,28 +405,28 @@ td {
   line-height: 1;
 }
 .rune-table__set-icon--legend {
-  color: var(--grade-legend, #FF9900);
+  color: var(--grade-legend);
 }
 .rune-table__set-icon--legend.rune-table__set-icon--ancient {
-  filter: drop-shadow(0 0 8px 2px rgba(255, 153, 0, 0.6));
+  filter: drop-shadow(0 0 6px var(--grade-legend));
 }
 .rune-table__set-icon--hero {
-  color: var(--grade-hero, #AA44DD);
+  color: var(--grade-hero);
 }
 .rune-table__set-icon--hero.rune-table__set-icon--ancient {
-  filter: drop-shadow(0 0 8px 2px rgba(170, 68, 221, 0.6));
+  filter: drop-shadow(0 0 6px var(--grade-hero));
 }
 .rune-table__set-icon--rare {
-  color: var(--grade-rare, #3399FF);
+  color: var(--grade-rare);
 }
 .rune-table__set-icon--rare.rune-table__set-icon--ancient {
-  filter: drop-shadow(0 0 8px 2px rgba(51, 153, 255, 0.6));
+  filter: drop-shadow(0 0 6px var(--grade-rare));
 }
 .rune-table__set-icon--grade-tag--other {
-  color: var(--grade-other, #888);
+  color: var(--grade-normal);
 }
 .rune-table__set-icon--grade-tag--other.rune-table__set-icon--ancient {
-  filter: drop-shadow(0 0 8px 2px rgba(136, 136, 136, 0.6));
+  filter: drop-shadow(0 0 6px var(--grade-normal));
 }
 
 /* Multi-line stats cells */

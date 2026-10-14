@@ -72,9 +72,9 @@ html.swrm-has-gsap .swrm-floating-tip {
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
-  color: color-mix(in srgb, #ffd49a 88%, var(--text-hi));
-  background: color-mix(in srgb, #c47a20 22%, var(--surface));
-  border: 1px solid color-mix(in srgb, #e8a84a 35%, transparent);
+  color: var(--text-hi);
+  background: color-mix(in srgb, var(--gold) 20%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--gold) 35%, transparent);
 }
 
 .swrm-skill-tip__desc {
@@ -138,11 +138,11 @@ html.swrm-has-gsap .swrm-floating-tip {
 
 .swrm-skill-tip__level--done {
   color: var(--text);
-  background: color-mix(in srgb, var(--ok, #6fcf97) 8%, var(--bg3));
+  background: color-mix(in srgb, var(--keep) 12%, var(--bg3));
 }
 
 .swrm-skill-tip__level--cd:not(.swrm-skill-tip__level--done) {
-  background: color-mix(in srgb, #c47a20 10%, var(--bg3));
+  background: color-mix(in srgb, var(--gold) 15%, var(--bg3));
 }
 
 .swrm-skill-tip__mark {
@@ -162,7 +162,7 @@ html.swrm-has-gsap .swrm-floating-tip {
 }
 
 .swrm-skill-tip__mark--done {
-  color: var(--ok, #6fcf97);
+  color: var(--keep);
   font-weight: 700;
 }
 
@@ -183,9 +183,9 @@ html.swrm-has-gsap .swrm-floating-tip {
   text-transform: uppercase;
   padding: 0.1rem 0.35rem;
   border-radius: 4px;
-  color: #ffd49a;
-  background: color-mix(in srgb, #c47a20 28%, transparent);
-  border: 1px solid color-mix(in srgb, #e8a84a 30%, transparent);
+  color: var(--gold);
+  background: color-mix(in srgb, var(--gold) 20%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gold) 35%, transparent);
 }
 
 

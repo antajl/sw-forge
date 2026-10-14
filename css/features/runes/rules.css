@@ -3,8 +3,8 @@
   margin: 0 0 16px;
   padding: 0.85rem 1rem;
   border-radius: var(--radius-lg);
-  border: 1px solid color-mix(in srgb, var(--warn, #e8b84a) 35%, var(--border2));
-  background: color-mix(in srgb, var(--warn, #e8b84a) 10%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--gold) 35%, var(--border2));
+  background: color-mix(in srgb, var(--gold) 10%, var(--surface));
 }
 
 .rules-expert-banner__title {
@@ -748,7 +748,7 @@
 }
 
 .role-nav-item.active {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, #000), var(--accent2));
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, var(--bg-base)), var(--accent2));
   color: var(--text-hi);
   font-weight: 600;
   border-color: color-mix(in srgb, var(--accent) 70%, var(--border2));

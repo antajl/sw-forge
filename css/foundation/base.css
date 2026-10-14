@@ -5,39 +5,43 @@
 :root {
   color-scheme: dark;
 
-  /* Surfaces & Backgrounds — Clean neutral dark workstation */
-  --bg-canvas:  #111215;
-  --bg-surface: #181a1f;
-  --bg-subtle:  #20232a;
-  --bg-hover:   #272b34;
+  /* Surfaces & Backgrounds — Workstation Design System */
+  --bg-base:    #0b0e14;
+  --bg-canvas:  var(--bg-base);
+  --bg-surface: #111620;
+  --bg-subtle:  #161c28;
+  --bg-hover:   #1f2637;
 
-  --bg:       var(--bg-canvas);
+  --bg:       var(--bg-base);
   --bg2:      var(--bg-surface);
   --bg3:      var(--bg-subtle);
   --surface:  var(--bg-surface);
   --surface-hover: var(--bg-hover);
 
   /* Borders & Dividers */
-  --border-subtle:  #292d36;
-  --border-default: #373d49;
-  --border-focus:   #586377;
+  --border-subtle:  #1a2230;
+  --border-default: #232d40;
+  --border-focus:   #3b82f6;
   --border:   var(--border-subtle);
   --border2:  var(--border-default);
 
   /* Typography & High Contrast (WCAG AA compliant) */
-  --text-primary:   #f3f4f6;
-  --text-secondary: #9ca3af;
-  --text-muted:     #6b7280;
+  --text-primary:   #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted:     #6e7681;
   --text:     var(--text-primary);
   --text-dim: var(--text-secondary);
   --text-hi:  #ffffff;
 
+  /* Accent Gold / Forge */
+  --accent-gold:  #d4a359;
+
   /* Canonical Game Rarities */
-  --grade-legend: #f59e0b;
+  --grade-legend: var(--accent-gold);
   --grade-hero:   #a855f7;
   --grade-rare:   #3b82f6;
   --grade-magic:  #22c55e;
-  --grade-normal: #9ca3af;
+  --grade-normal: #8b949e;
 
   /* Canonical Game Elements */
   --elem-fire:    #ef4444;

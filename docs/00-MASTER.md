@@ -12,7 +12,7 @@ SW Forge — Summoners War rune analyzer + monster hub. Static site on **Cloudfl
 
 ### Stack
 
-Vanilla JS + CSS · **Build:** `npm run build` (`build:html` + `build:css` + `build:ui`) · **Prod CSS:** `css/dist/app.css` · **Prod UI:** `js/ui.js` · **No external CDN dependencies** (GSAP local in `assets/`)
+Vanilla JS + CSS + TypeScript Types (`src/types/`) · **Build:** Vite (`npm run build:vite`) & Legacy (`npm run build`) · **Prod CSS:** `css/dist/app.css` · **Prod UI:** `js/ui.js` · **PWA:** `public/sw.js` + `public/manifest.webmanifest` · **No external CDN dependencies** (GSAP local in `assets/`)
 
 ### URLs
 
@@ -20,17 +20,19 @@ Vanilla JS + CSS · **Build:** `npm run build` (`build:html` + `build:css` + `bu
 |---|---|
 | Prod | https://sw-forge.ru |
 | Share API | https://sw-backend.antajltube.workers.dev |
-| Local | http://127.0.0.1:5500/ |
+| Local Dev | http://localhost:5500/ |
 
 ### Where code is
 
 | Area | Path |
 |------|------|
+| Types | `src/types/` (`rune.ts`, `monster.ts`, `swex.ts`, `guards.ts`, `engine.ts`) |
 | Runes engine | `js/engine/` |
 | Runes UI | `js/features/runes/` |
 | Monsters | `js/features/monsters/` |
 | Gear tables | `js/features/gear/` |
 | Teams | `js/features/teams/` · combat SPD + totem via `monsters-stats-calc.js` |
+| Static / PWA | `public/` (`_headers`, `robots.txt`, `sitemap.xml`, `sw.js`, `manifest.webmanifest`) |
 | SWEX / indexes | `js/data/` · bundled `data/*.json` (see `data/README.md`) |
 | translations, changelog | `js/core/` (`translations-en.js`, `translations-ru.js`, `translations-fr.js`, `translations-zh.js`) |
 | Rune stat labels (EN engine / FR display) | `js/core/meta.js` — see [`GAME-KNOWLEDGE.md`](GAME-KNOWLEDGE.md) |
@@ -47,7 +49,7 @@ Vanilla JS + CSS · **Build:** `npm run build` (`build:html` + `build:css` + `bu
 2. `js/features/` changes → `npm run build:ui`
 3. CSS from `tools/build-css.mjs` list → `npm run build:css`
 4. UI strings EN/RU → `translations-en.js` + `translations-ru.js` → `npm run build:translations`; FR → `translations-fr.js` (lazy)
-5. Player-facing changes → changelog **today's date only**; then remove from `PLANS.md`
+5. Player-facing changes → changelog **today's date only**; then remove from `11-BACKLOG.md`
 6. **Do not edit manually:** `js/ui.js`, `css/dist/app.css`, `index.html`, `js/core/translations.js` (build artifact), `<script defer>` order in `index-shell.html`
 
 ---
@@ -55,19 +57,20 @@ Vanilla JS + CSS · **Build:** `npm run build` (`build:html` + `build:css` + `bu
 ## Build Commands
 
 ```bash
-npm run dev                # local dev server (http://127.0.0.1:5500)
+npm run dev                # fast Vite dev server with HMR (http://localhost:5500)
+npm run type-check         # strict TypeScript type check (tsc --noEmit)
+npm run build:vite         # clean Vite production build (tsc && vite build)
+npm run build              # legacy pipeline (all steps: translations + css + ui + html + validate)
 npm run build:html         # tools/build-html.mjs → index.html (with hash-based cache busting)
 npm run build:translations # translations-en/ru → js/core/translations.js
 npm run build:ui           # tools/build-ui.mjs → js/ui.js (with minification + source maps)
 npm run build:css          # tools/build-css.mjs → css/dist/app.css (with minification)
 npm run build:validate     # validate build (hex colors, translations)
-npm run validate:data       # validate data (JSON, missing assets)
-npm run build              # all steps (parallel build + validation)
-npm run watch:ui           # rebuild ui.js on save in js/features/
-npm run lint               # lint JS and CSS
+npm run validate:data      # validate data (JSON, missing assets)
+npm run lint               # lint JS and CSS (ESLint Flat Config)
 npm run lint:fix           # auto-fix linting issues
 npm run format             # format code with Prettier
-npm run test               # run tests (Vitest)
+npm run test               # run all 91 Vitest tests
 npm run optimize:assets    # convert images to WebP
 ```
 

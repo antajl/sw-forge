@@ -237,17 +237,22 @@ SW Forge now has an automated test suite using Vitest.
 - **Framework:** Vitest with jsdom environment
 - **Location:** `tests/` directory
 - **Setup:** `tests/setup.js` initializes `window.SWRM` globals
-- **Total Tests:** 50 tests (as of August 2026)
+- **Total Tests:** 91 tests across 8 test suites (100% passing)
 
 ### Test Files
 - `tests/parser.test.js` - SWEX parsing utilities (11 tests)
 - `tests/rune-efficiency.test.js` - SWOP efficiency calculations (15 tests)
 - `tests/utils.test.js` - General utility functions (24 tests)
+- `tests/depth.test.js` - Account Depth calculation (6 tests)
+- `tests/basic.test.ts` - Basic TypeScript integration (3 tests)
+- `tests/types.test.ts` - TypeScript type guards and schemas (8 tests)
+- `tests/runes.test.ts` - Rune model and potential calculations (14 tests)
+- `tests/core.test.ts` - Core formulas and engine integration (10 tests)
 
 ### Running Tests
 ```bash
-npm test              # Run all tests
-npm run test          # Alternative command
+npm test              # Run all 91 tests via Vitest
+npm run type-check    # Strict TypeScript type check (tsc --noEmit)
 ```
 
 ### Self-Tests

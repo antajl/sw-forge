@@ -93,53 +93,59 @@ This document defines how AI agents should manage and contribute to the SW-Forge
 ## Project-Specific Conventions
 
 ### Build Commands
-- `npm run build` - Full build (translations, CSS, UI, HTML, validation)
+- `npm run dev` - Fast local development server with Vite (HMR on http://localhost:5500)
+- `npm run build` - Full production build (translations, CSS, UI, HTML, validation)
+- `npm run build:vite` - Clean Vite build (`tsc && vite build`)
+- `npm run type-check` - Strict TypeScript type check (`tsc --noEmit`)
 - `npm run build:ui` - Build JavaScript UI bundle
 - `npm run build:css` - Build CSS bundle
 - `npm run build:translations` - Build translation files
-- `npm test` / `npm run test` - Run tests via Vitest
-- `npm run lint` - Run ESLint linter (JavaScript only)
+- `npm test` / `npm run test` - Run full Vitest test suite (91 tests across 8 suites)
+- `npm run lint` - Run ESLint linter (Flat Config)
 - `npm audit` - Check for security vulnerabilities in dependencies
 
 ### Build and Test Configuration
-- **ESLint**: Configured with flat config (eslint.config.js)
+- **ESLint**: Configured with flat config (`eslint.config.js`)
   - Ignores generated files: `js/ui.js`, `js/ui.js.map`
   - Ignores IIFE bootstrap files: `js/features/shell/bootstrap.js`, `js/features/monsters/bootstrap.js`
-  - Rules downgraded to warnings for legacy code compatibility
   - Source type: module (ESM)
 - **Vitest**: Configured with jsdom environment and global test variables
   - Setup file: `tests/setup.js` initializes `window.SWRM` globals
-  - **Test Coverage:** 50 tests (parser, efficiency, utilities)
-  - **Test Files:** `tests/parser.test.js`, `tests/rune-efficiency.test.js`, `tests/utils.test.js`
-- **Dependencies**: 5 vulnerabilities currently reported (1 moderate, 4 high)
+  - **Test Coverage:** 91 tests across 8 test suites (parser, efficiency, depth, utils, types, runes, core, basic)
+  - **Test Files:** `tests/parser.test.js`, `tests/rune-efficiency.test.js`, `tests/utils.test.js`, `tests/depth.test.js`, `tests/basic.test.ts`, `tests/types.test.ts`, `tests/runes.test.ts`, `tests/core.test.ts`
+- **TypeScript**: Configured via `tsconfig.json` with strict type checking in `src/types/`
+- **PWA & Offline**: Service worker (`public/sw.js`) and manifest (`public/manifest.webmanifest`)
+- **Hosting Static Assets**: `public/` folder contains `_headers`, `robots.txt`, `sitemap.xml`, `sw.js`, `manifest.webmanifest`
+- **Dependencies**: 5 vulnerabilities currently reported in dev dependencies (brace-expansion, fast-uri, js-yaml, nanoid, postcss)
   - Do NOT run `npm audit fix` without user approval
-  - Vulnerabilities are in dev dependencies (brace-expansion, fast-uri, js-yaml, nanoid, postcss)
 
-### Git Workflow
-- Feature branches for significant changes
-- Clear commit messages explaining "why" not "what"
-- Attribution preservation for external contributions
-- Never commit secrets or credentials
-- Use Windows-compatible command syntax for commits
+### Git Workflow & Multi-Agent Safety
+- **Solo Developer Project**: Antal is the sole creator and developer.
+- **Multi-Agent Safety**: When multiple AI agents work on the project, NEVER run broad `git commit -a` or `git checkout <branch>` across active working sessions. Always stage files explicitly with `git add <file>`.
+- Feature branches for significant changes.
+- Clear commit messages explaining "why" not "what".
+- Never commit secrets or credentials.
+- Use Windows-compatible command syntax for commits.
 
 ### Testing
-- Run tests before committing code changes
-- Verify build passes after changes
-- Test locally before deploying
-- Use browser preview for UI changes
-- **Test Coverage:** 50 tests in `tests/` directory (parser, efficiency, utilities)
-- **Test Framework:** Vitest with jsdom environment
-- **TDD:** Use test-driven development for new features (write failing test first, then implement)
+- Run tests before committing code changes (`npm test`).
+- Verify build passes after changes (`npm run build` or `npm run type-check`).
+- Test locally before deploying.
+- **Test Coverage:** 91 tests in `tests/` directory.
+- **Test Framework:** Vitest with jsdom environment.
 
 ### Code Style
-- Follow existing patterns in the codebase
-- Check package.json/cargo.toml before adding dependencies
-- Prefer library versions published at least 7 days ago
-- Write compact code with minimal nesting
-- Follow language-specific idioms
+- Follow existing patterns in the codebase.
+- Check `package.json` before adding dependencies.
+- Prefer library versions published at least 7 days ago.
+- Write compact code with minimal nesting.
 
 ### Recommended Skills
 For SW-Forge development, the following skills are particularly useful:
+
+**Documentation & Rules:**
+- Repository-local skill: `.agents/skills/sw-forge/SKILL.md`
+- Workflows: `.agents/workflows/`
 
 **Testing & Quality:**
 - `test-driven-development` - Use when implementing new logic or fixing bugs

@@ -1,26 +1,26 @@
 # AI Assistant Guide for SW Forge
 
-This document provides specific instructions for AI assistants working on the SW Forge project.
+> **Primary Guidelines:** See root [`AGENTS.md`](../AGENTS.md) and [`.agents/skills/sw-forge/SKILL.md`](../.agents/skills/sw-forge/SKILL.md).
 
 ## Project Summary
 
-SW Forge is a browser-only Summoners War rune analyzer and monster hub. It's a static site on Cloudflare Pages that processes SWEX JSON exports entirely client-side. The stack is Vanilla JS + CSS (no frameworks), with a custom build system that concatenates feature files into production artifacts.
+SW Forge is a browser-only Summoners War rune analyzer and monster hub. It processes SWEX JSON exports entirely client-side. The stack is Vanilla JS + CSS with modern TypeScript types (`src/types/`), Vite bundler, PWA offline capability, and a comprehensive 91-test Vitest suite.
 
 **Key URLs:**
-- Prod: https://sw-forge.pages.dev
+- Prod: https://sw-forge.ru
 - Share API: https://sw-backend.antajltube.workers.dev
-- Local: http://127.0.0.1:5500/
+- Local: http://localhost:5500/
 
-**Stack:** Vanilla JS + CSS, GSAP local (no external CDN)
+---
 
 ## 6 Edit Rules (CRITICAL)
 
-1. **partials/ changes** → Run `npm run build:html`
-2. **js/features/ changes** → Run `npm run build:ui`
-3. **CSS changes** (from build-css.mjs list) → Run `npm run build:css`
-4. **UI strings EN/RU** → Edit translations-en.js + translations-ru.js → Run `npm run build:translations`
-5. **Player-facing changes** → Update changelog with today's date only; then remove from BACKLOG.md
-6. **NEVER edit manually:** js/ui.js, css/dist/app.css, index.html, js/core/translations.js, script order in index-shell.html
+1. **`partials/` changes** → Run `npm run build:html`
+2. **`js/features/` changes** → Run `npm run build:ui`
+3. **CSS changes** (from `tools/build-css.mjs` list) → Run `npm run build:css`
+4. **UI strings EN/RU** → Edit `translations-en.js` + `translations-ru.js` → Run `npm run build:translations`; FR → `translations-fr.js`; ZH → `translations-zh.js`
+5. **Player-facing changes** → Update changelog with today's date only; then remove from `11-BACKLOG.md`
+6. **NEVER edit manually:** `js/ui.js`, `css/dist/app.css`, `index.html`, `js/core/translations.js`, script order in `index-shell.html`
 
 ## Build Commands
 

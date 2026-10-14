@@ -1,7 +1,7 @@
 # SW Forge — Backlog
 
 > Open bugs and planned features organized by priority.
-> **Context:** [MASTER.md](MASTER.md)
+> **Context:** [00-MASTER.md](00-MASTER.md)
 > After completing any item: remove it from this file and add it to the changelog.
 
 **Priority Levels:**
@@ -42,17 +42,11 @@ rg "#[0-9a-fA-F]{6}" css/features/ -g "*.css"
 
 ### No `npm run watch:css`
 
-**Status:** Open
-**Files:** `tools/`
+**Status:** Closed (Resolved via Vite dev server `npm run dev` with instant CSS/JS HMR)
+**Files:** `vite.config.ts`
 
-**Issue:**
-No watch mode for CSS changes; must manually run `npm run build:css`.
-
-**Impact:**
-Developer experience; no runtime impact.
-
-**Notes:**
-Could add `watch-css.mjs` similar to existing `watch-ui.mjs`.
+**Resolution:**
+Vite provides native instant Hot Module Replacement for all CSS and JS files out of the box. No manual watch scripts required.
 
 ---
 

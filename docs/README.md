@@ -15,13 +15,14 @@
 | **04** | [`04-API-REFERENCE.md`](04-API-REFERENCE.md) | **Справочник API**: методы `window.SWRM` и CSS-переменные |
 | **05** | [`05-WORKFLOWS.md`](05-WORKFLOWS.md) | **Сценарии работы**: добавление фич, переводов, отладка |
 | **06** | [`06-DEBUGGING.md`](06-DEBUGGING.md) | **Отладка**: частые ошибки и чек-листы |
-| **07** | [`07-TESTING.md`](07-TESTING.md) | **Тестирование**: набор Vitest (50 тестов), запуск и TDD |
-| **08** | [`08-DEVELOPMENT-TOOLS.md`](08-DEVELOPMENT-TOOLS.md) | **Инструменты**: ESLint, Prettier, Stylelint, скрипты сборки |
+| **07** | [`07-TESTING.md`](07-TESTING.md) | **Тестирование**: набор Vitest (91 тест в 8 сьютах), запуск и TDD |
+| **08** | [`08-DEVELOPMENT-TOOLS.md`](08-DEVELOPMENT-TOOLS.md) | **Инструменты**: Vite, ESLint Flat Config, Prettier, Stylelint, скрипты сборки |
 | **09** | [`09-CI-CD.md`](09-CI-CD.md) | **Деплой**: GitHub Actions, Cloudflare Pages и Workers |
 | **11** | [`11-BACKLOG.md`](11-BACKLOG.md) | **Бэклог**: список задач и багов |
-| **12** | [`12-AI-ASSISTANT.md`](12-AI-ASSISTANT.md) | **Памятка для AI-агентов** |
+| **12** | [`12-AI-ASSISTANT.md`](12-AI-ASSISTANT.md) | **Памятка для AI-агентов** (см. также корневой [`AGENTS.md`](../AGENTS.md)) |
 | **13** | [`13-RESEARCH-ARTIFACT-SCORING.md`](13-RESEARCH-ARTIFACT-SCORING.md) | **Исследования**: формула очков артефактов |
 | — | [`DEFAULTS-REFATORING-ANALYSIS.md`](DEFAULTS-REFATORING-ANALYSIS.md) | **Анализ**: разбор сложностей распила `defaults.js` |
+| — | [`CONTRIBUTING.md`](CONTRIBUTING.md) | **Разработка**: правила внесения правок и код-стайл |
 
 ---
 

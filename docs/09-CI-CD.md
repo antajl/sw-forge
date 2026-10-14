@@ -1,6 +1,6 @@
 # SW Forge — CI/CD Deployment
 
-> **Context:** [MASTER.md](MASTER.md)
+> **Context:** [00-MASTER.md](00-MASTER.md)
 > Guide for continuous integration and deployment using GitHub Actions and Cloudflare Workers.
 
 ---
@@ -249,7 +249,7 @@ npx wrangler deployments list
 
 ## Related Documentation
 
-- [MASTER.md](MASTER.md) — Project overview and build commands
+- [00-MASTER.md](00-MASTER.md) — Project overview and build commands
 - [DEVELOPMENT-TOOLS.md](DEVELOPMENT-TOOLS.md) — Development tools reference
 - Cloudflare Workers Documentation: https://developers.cloudflare.com/workers/
 - GitHub Actions Documentation: https://docs.github.com/en/actions

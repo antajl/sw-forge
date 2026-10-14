@@ -255,10 +255,10 @@
   align-items: center;
   gap: 10px 12px;
   margin: 6px 0 8px;
-  padding: 10px 12px;
+  padding: 8px 12px;
   border-radius: var(--radius);
-  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border2));
-  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  border: 1px solid var(--border-default);
+  background: var(--bg-subtle);
 }
 
 .monsters-selection-bar[hidden] {
@@ -266,36 +266,51 @@
 }
 
 .monsters-selection-bar__count {
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-weight: 700;
-  color: var(--text-hi);
+  color: var(--text-primary);
   min-width: 6rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .monsters-selection-bar__actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 6px;
 }
 
 .monsters-selection-btn {
-  border: 1px solid var(--border2);
-  background: var(--surface);
-  color: var(--text-hi);
-  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--border-default);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border-radius: var(--radius);
   padding: 6px 10px;
   font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
 }
 
 .monsters-selection-btn:hover {
-  border-color: color-mix(in srgb, var(--accent) 40%, var(--border2));
+  background: var(--bg-hover);
+  border-color: var(--border-focus);
 }
 
 .monsters-selection-btn--ghost {
   background: transparent;
+  border-color: transparent;
+  color: var(--text-secondary);
   font-weight: 500;
+}
+
+.monsters-selection-btn--ghost:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-subtle);
+  color: var(--text-primary);
 }
 
 .monsters-selection-tag {
@@ -310,10 +325,10 @@
   min-width: 10rem;
   max-height: 12rem;
   overflow: auto;
-  border: 1px solid var(--border2);
-  border-radius: 8px;
-  background: var(--surface);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius);
+  background: var(--bg-surface);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
   padding: 4px;
 }
 
@@ -328,68 +343,80 @@
   border: none;
   background: transparent;
   padding: 6px 8px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-size: 0.78rem;
   cursor: pointer;
-  color: var(--text-hi);
+  color: var(--text-primary);
+  transition: background 0.1s ease;
 }
 
 .monsters-selection-tag__option:hover {
-  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  background: var(--bg-hover);
 }
 
-/* Share split */
+/* Share split — Workstation refined split button */
 .share-split {
   position: relative;
   display: inline-flex;
   align-items: stretch;
-  border-radius: 10px;
+  border-radius: var(--radius);
   overflow: visible;
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 55%, transparent),
-    0 4px 14px color-mix(in srgb, var(--accent) 25%, transparent);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .share-split__main {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  border: none;
-  border-radius: 10px 0 0 10px;
-  padding: 8px 12px;
+  border: 1px solid var(--border-default);
+  border-right: none;
+  border-radius: var(--radius) 0 0 var(--radius);
+  padding: 6px 12px;
   font-size: 0.8rem;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
-  color: var(--text-hi);
-  background: linear-gradient(135deg, #4f8cff 0%, #3a6fd8 100%);
-  min-height: 34px;
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  min-height: 32px;
+  transition: background 0.12s ease, border-color 0.12s ease;
 }
 
 .share-split__main:hover {
-  filter: brightness(1.06);
+  background: var(--bg-hover);
+  border-color: var(--border-focus);
 }
 
 .share-split__caret {
-  border: none;
-  border-left: 1px solid color-mix(in srgb, #fff 25%, transparent);
-  border-radius: 0 10px 10px 0;
-  padding: 8px 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-default);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 6px 8px;
   font-size: 0.65rem;
   cursor: pointer;
-  color: var(--text-hi);
-  background: linear-gradient(135deg, #457fe8 0%, #3568c4 100%);
-  min-height: 34px;
+  color: var(--text-secondary);
+  background: var(--bg-surface);
+  min-height: 32px;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+
+.share-split__caret:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--border-focus);
 }
 
 .share-split__menu {
   position: absolute;
-  top: calc(100% + 6px);
+  top: calc(100% + 4px);
   right: 0;
   z-index: 12060;
   min-width: 15.5rem;
-  border: 1px solid var(--border2);
-  border-radius: 10px;
-  background: var(--surface);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius);
+  background: var(--bg-surface);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
   padding: 6px;
 }
 
@@ -403,11 +430,11 @@
 
 .share-split__menu-title {
   margin: 4px 8px 6px;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--text-dim);
+  color: var(--text-muted);
 }
 
 .share-split__menu-item,
@@ -417,35 +444,37 @@
   text-align: left;
   border: none;
   background: transparent;
-  border-radius: 8px;
-  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  padding: 7px 10px;
   font-size: 0.8rem;
-  color: var(--text-hi);
+  color: var(--text-primary);
   cursor: pointer;
+  transition: background 0.1s ease;
 }
 
 .share-split__menu-item:hover,
 .share-split__menu-copy:hover {
-  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  background: var(--bg-hover);
 }
 
 .share-split__menu-item.is-active {
-  background: color-mix(in srgb, var(--accent) 18%, var(--surface));
+  background: var(--bg-subtle);
+  color: var(--accent);
   font-weight: 600;
 }
 
 .share-split__menu-copy {
   margin-top: 4px;
-  border-top: 1px solid var(--border2);
-  border-radius: 0 0 8px 8px;
+  border-top: 1px solid var(--border-subtle);
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
   font-weight: 700;
   color: var(--accent);
 }
 
 .share-split--compact .share-split__main,
 .share-split--compact .share-split__caret {
-  min-height: 30px;
-  padding: 6px 10px;
+  min-height: 28px;
+  padding: 5px 9px;
   font-size: 0.75rem;
 }
 

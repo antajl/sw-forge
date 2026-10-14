@@ -17,19 +17,17 @@
   const RUNE_SET_PANEL_BONUSES = {
     Energy: { need: 2, hpPct: 15 },
     Guard: { need: 2, defPct: 15 },
-    Swift: { need: 4, spdFlat: 25 },
+    Swift: { need: 4, spdPct: 25 },
     Blade: { need: 2, critRatePct: 12 },
     Rage: { need: 4, critDmgPct: 40 },
     Focus: { need: 2, accPct: 20 },
     Endure: { need: 2, resPct: 20 },
     Fatal: { need: 4, atkPct: 35 },
-    Despair: { need: 4, accPct: 25 },
-    Vampire: { need: 4, hpPct: 35 },
     Fight: { need: 2, atkPct: 8 },
     Determination: { need: 2, defPct: 8 },
     Enhance: { need: 2, hpPct: 8 },
-    Accuracy: { need: 2, accPct: 20 },
-    Tolerance: { need: 2, resPct: 20 },
+    Accuracy: { need: 2, accPct: 10 },
+    Tolerance: { need: 2, resPct: 10 },
   };
 
   function statKeyForTypeId(typeId) {
@@ -90,22 +88,84 @@
     return { flat, pct };
   }
 
-  function countRuneSets(runesArray) {
+  /**
+   * Resolves active rune sets from a list of runes/slots (handles 2-piece, 4-piece, and Intangible wildcards).
+   * In Summoners War:
+   * - 4-piece sets: Swift, Fatal, Despair, Vampire, Violent, Rage.
+   * - 2-piece sets: Energy, Guard, Blade, Focus, Endure, Shield, Revenge, Will, Nemesis, Destroy,
+   *                 Fight, Determination, Enhance, Accuracy, Tolerance, Seal.
+   * - Intangible: max 1 per monster; wildcard that completes any 1 set missing 1 piece (4-piece prioritized over 2-piece).
+   *
+   * @param {Array<object>} runesArray Array of rune objects (or slot objects with .rune)
+   * @returns {Array<{ name: string, pieces: number }>} Active sets
+   */
+  function computeActiveSetBonusesFromRunes(runesArray) {
     const counts = {};
-    for (const rune of runesArray || []) {
-      if (!rune || !rune.setName) continue;
-      counts[rune.setName] = (counts[rune.setName] || 0) + 1;
+    for (const item of runesArray || []) {
+      const r = (item && item.rune) ? item.rune : item;
+      const name = r && r.setName;
+      if (!name) continue;
+      counts[name] = (counts[name] || 0) + 1;
     }
-    return counts;
+
+    const fourPiece = (window.SWRM && window.SWRM.FOUR_PIECE_SETS) || new Set(['Swift', 'Fatal', 'Despair', 'Vampire', 'Violent', 'Rage']);
+    const twoPiece = (window.SWRM && window.SWRM.TWO_PIECE_SETS) || new Set([
+      'Energy', 'Guard', 'Blade', 'Focus', 'Endure',
+      'Shield', 'Revenge', 'Will', 'Nemesis', 'Destroy',
+      'Fight', 'Determination', 'Enhance', 'Accuracy', 'Tolerance', 'Seal'
+    ]);
+
+    // Handle Intangible wildcard (max 1 per monster)
+    const intangibleCount = counts['Intangible'] || 0;
+    if (intangibleCount > 0) {
+      let usedIntangible = false;
+      // Check 4-piece sets first (if count === 3, complete it)
+      for (const name of Object.keys(counts)) {
+        if (fourPiece.has(name) && counts[name] === 3) {
+          counts[name] = 4;
+          usedIntangible = true;
+          break;
+        }
+      }
+      // If not used on 4-piece, check 2-piece sets (if odd count, complete it)
+      if (!usedIntangible) {
+        for (const name of Object.keys(counts)) {
+          if (twoPiece.has(name) && (counts[name] % 2 === 1)) {
+            counts[name] += 1;
+            usedIntangible = true;
+            break;
+          }
+        }
+      }
+    }
+
+    const out = [];
+    for (const [name, total] of Object.entries(counts)) {
+      if (name === 'Intangible') continue;
+      if (fourPiece.has(name)) {
+        if (total >= 4) {
+          out.push({ name, pieces: 4 });
+        }
+      } else if (twoPiece.has(name)) {
+        const numSets = Math.floor(total / 2);
+        for (let i = 0; i < numSets; i++) {
+          out.push({ name, pieces: 2 });
+        }
+      }
+    }
+
+    out.sort((a, b) => b.pieces - a.pieces || String(a.name).localeCompare(String(b.name)));
+    return out;
   }
 
   function sumSetBonusesForKey(statKey, runesArray) {
     let flat = 0;
     let pct = 0;
-    const counts = countRuneSets(runesArray);
-    for (const [setName, total] of Object.entries(counts)) {
-      const rule = RUNE_SET_PANEL_BONUSES[setName];
-      if (!rule || total < rule.need) continue;
+    const activeSets = computeActiveSetBonusesFromRunes(runesArray);
+    for (const set of activeSets) {
+      const rule = RUNE_SET_PANEL_BONUSES[set.name];
+      if (!rule) continue;
+      if (rule.spdPct && statKey === 'spd') pct += rule.spdPct;
       if (rule.spdFlat && statKey === 'spd') flat += rule.spdFlat;
       if (rule.hpPct && statKey === 'hp') pct += rule.hpPct;
       if (rule.atkPct && statKey === 'atk') pct += rule.atkPct;
@@ -477,6 +537,11 @@
   }
 
   window.SWRM = window.SWRM || {};
+  window.SWRM.computeActiveSetBonusesFromRunes = computeActiveSetBonusesFromRunes;
+  window.SWRM.sumSetBonusesForKey = sumSetBonusesForKey;
+  window.SWRM.calculateTotalStatForKey = calculateTotalStatForKey;
+  window.SWRM.roundStatTotal = roundStatTotal;
+  window.SWRM.RUNE_SET_PANEL_BONUSES = RUNE_SET_PANEL_BONUSES;
   window.SWRM.totemSpdPctFromSwexJson = totemSpdPctFromSwexJson;
   window.SWRM.findAccountSpeedTotemBonus = findAccountSpeedTotemBonus;
   window.SWRM.findSkyTribeTotemInJson = findSkyTribeTotemInJson;

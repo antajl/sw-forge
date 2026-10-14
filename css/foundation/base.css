@@ -5,66 +5,91 @@
 :root {
   color-scheme: dark;
 
-  /* Neutral warm dark (less blue-grey than before) */
-  --bg:       #161514;
-  --bg2:      #1b1b1a;
-  --bg3:      #222221;
-  --surface:  #2c2c2c;
-  --border:   #474543;
-  --border2:  #585652;
-  --text:     #ebe8e2;
-  --text-dim: #a59e94;
-  --text-hi:  #f7f5f1;
+  /* Surfaces & Backgrounds — Clean neutral dark workstation */
+  --bg-canvas:  #111215;
+  --bg-surface: #181a1f;
+  --bg-subtle:  #20232a;
+  --bg-hover:   #272b34;
 
-  --accent:   #8ec5ff;
-  --accent2:  #c9b8ff;
-  --gold:     #e3c76a;
-  --green:    #69d6a9;
-  --red:      #ff8a93;
-  --orange:   #ffb86b;
-  --purple:   #cfa8ff;
-  --star-awaken: #FF46A2; /* awakened unit ★ (game pink — not --purple) */
-  --teal:     #62d8d2;
+  --bg:       var(--bg-canvas);
+  --bg2:      var(--bg-surface);
+  --bg3:      var(--bg-subtle);
+  --surface:  var(--bg-surface);
+  --surface-hover: var(--bg-hover);
 
-  /* Verdict colors */
-  --keep:    #8CE6A4;
-  --sell:    #FF9AAA;
-  --grind:   #6AE7E7;
-  --finish:  #70B9FF;
-  --reapp:   #FFE45E;
-  --upgrade: #FFAE63;
-  --gem:     #E59BFF;
+  /* Borders & Dividers */
+  --border-subtle:  #292d36;
+  --border-default: #373d49;
+  --border-focus:   #586377;
+  --border:   var(--border-subtle);
+  --border2:  var(--border-default);
 
-  /* Monster grades */
-  --grade-normal: #ffffff;
-  --grade-magic: #55BB44;
-  --grade-rare: #3399FF;
-  --grade-hero: #AA44DD;
-  --grade-legend: #FF9900;
+  /* Typography & High Contrast (WCAG AA compliant) */
+  --text-primary:   #f3f4f6;
+  --text-secondary: #9ca3af;
+  --text-muted:     #6b7280;
+  --text:     var(--text-primary);
+  --text-dim: var(--text-secondary);
+  --text-hi:  #ffffff;
+
+  /* Canonical Game Rarities */
+  --grade-legend: #f59e0b;
+  --grade-hero:   #a855f7;
+  --grade-rare:   #3b82f6;
+  --grade-magic:  #22c55e;
+  --grade-normal: #9ca3af;
+
+  /* Canonical Game Elements */
+  --elem-fire:    #ef4444;
+  --elem-water:   #0ea5e9;
+  --elem-wind:    #84cc16;
+  --elem-light:   #facc15;
+  --elem-dark:    #a855f7;
+
+  /* Canonical Verdicts */
+  --keep:    #10b981;
+  --sell:    #f43f5e;
+  --grind:   #06b6d4;
+  --finish:  #38bdf8;
+  --reapp:   #f59e0b;
+  --upgrade: #f97316;
+  --gem:     #c084fc;
+
+  /* Semantic Stat & UI Accents */
+  --accent:   #38bdf8;
+  --accent2:  #a855f7;
+  --gold:     #f59e0b;
+  --green:    #10b981;
+  --red:      #f43f5e;
+  --orange:   #f97316;
+  --purple:   #c084fc;
+  --star-awaken: #f43f5e; /* awakened unit ★ */
+  --teal:     #06b6d4;
 
   /* Native OS UI font — no bundled sans/mono (readability feedback) */
   --font-ui: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-head: var(--font-ui);
-  --font-mono: var(--font-ui);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
+  --radius-sm: 4px;
   --radius: 6px;
-  --radius-lg: 10px;
-  --glow-accent: 0 0 24px rgba(142, 197, 255, 0.22);
+  --radius-lg: 8px;
+  --glow-accent: 0 0 20px rgba(56, 189, 248, 0.18);
 
   --app-content-max: 1320px;
   --content-max: 1320px;
   --app-gutter: 20px;
 
   /* Chart colors */
-  --chart-sets: #66EBE3;
+  --chart-sets: #06b6d4;
 
   /* Progression stages (Early / Mid / Late) — shared accents */
   --stage-early: var(--green);
   --stage-mid: var(--gold);
   --stage-late: var(--red);
 
-  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%23a59e94' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  --stage-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%23f7f5f1' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%239ca3af' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --stage-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%23ffffff' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 
   /*
    * Chip design system — one shell (surface + border + semantic tint).
@@ -101,14 +126,14 @@
   --tint-upgrade: var(--upgrade);
   --tint-gem: var(--gem);
 
-  --tint-highroll:   #FFE45E;
-  --tint-bruiser:    #FF9AAA;
-  --tint-fastcc:     #6AE7E7;
-  --tint-tank:       #B993FF;
-  --tint-bomber:     #FFAE63;
-  --tint-classicdps: #7CD2FF;
-  --tint-slowdps:    #70B9FF;
-  --tint-duoroll:    #FFE45E;
+  --tint-highroll:   #f59e0b;
+  --tint-bruiser:    #f43f5e;
+  --tint-fastcc:     #06b6d4;
+  --tint-tank:       #a855f7;
+  --tint-bomber:     #f97316;
+  --tint-classicdps: #38bdf8;
+  --tint-slowdps:    #0284c7;
+  --tint-duoroll:    #f59e0b;
 
   --tint-eff-hi: var(--green);
   --tint-eff-mid: var(--gold);
@@ -118,49 +143,63 @@
 .light-theme {
   color-scheme: light;
 
-  --bg:       #efece6;
-  --bg2:      #faf8f5;
+  --bg-canvas:  #f6f7f9;
+  --bg-surface: #ffffff;
+  --bg-subtle:  #edf0f5;
+  --bg-hover:   #e4e7ed;
+
+  --bg:       var(--bg-canvas);
+  --bg2:      var(--bg-subtle);
   --bg3:      #ffffff;
   --surface:  #ffffff;
-  --border:   #dbd5cd;
-  --border2:  #ccc5bb;
-  --text:     #362f28;
-  --text-dim: #696257;
-  --text-hi:  #1b1612;
+  --surface-hover: var(--bg-hover);
 
-  --accent:   #2d6aad;
-  --accent2:  #5a3f8c;
-  --gold:     #9a7218;
-  --green:    #1f7348;
-  --red:      #b83242;
-  --orange:   #b85c18;
-  --purple:   #634090;
-  --teal:     #157a74;
+  --border-subtle:  #dbe0ea;
+  --border-default: #c4cddb;
+  --border-focus:   #2563eb;
+  --border:   var(--border-subtle);
+  --border2:  var(--border-default);
+
+  --text-primary:   #111827;
+  --text-secondary: #4b5563;
+  --text-muted:     #6b7280;
+  --text:     var(--text-primary);
+  --text-dim: var(--text-secondary);
+  --text-hi:  #030712;
+
+  --accent:   #0284c7;
+  --accent2:  #7c3aed;
+  --gold:     #b45309;
+  --green:    #059669;
+  --red:      #e11d48;
+  --orange:   #ea580c;
+  --purple:   #9333ea;
+  --teal:     #0891b2;
 
   /* Verdict colors */
-  --keep:    #8CE6A4;
-  --sell:    #FF9AAA;
-  --grind:   #6AE7E7;
-  --finish:  #70B9FF;
-  --reapp:   #FFE45E;
-  --upgrade: #FFAE63;
-  --gem:     #E59BFF;
+  --keep:    #059669;
+  --sell:    #e11d48;
+  --grind:   #0891b2;
+  --finish:  #0284c7;
+  --reapp:   #b45309;
+  --upgrade: #ea580c;
+  --gem:     #9333ea;
 
   /* Monster grades */
-  --grade-normal: #ffffff;
-  --grade-magic: #55BB44;
-  --grade-rare: #3399FF;
-  --grade-hero: #AA44DD;
-  --grade-legend: #FF9900;
+  --grade-normal: #6b7280;
+  --grade-magic:  #059669;
+  --grade-rare:   #0284c7;
+  --grade-hero:   #7c3aed;
+  --grade-legend: #b45309;
 
-  --glow-accent: 0 0 20px rgba(58, 123, 200, 0.16);
+  --glow-accent: 0 0 20px rgba(2, 132, 199, 0.16);
 
   --stage-early: var(--green);
   --stage-mid: var(--gold);
   --stage-late: var(--red);
 
-  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%23696257' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  --stage-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%23f7f5f1' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%234b5563' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --stage-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%23111827' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 
   /* Stronger chip tint on white surface */
   --chip-surface-pct: 58%;
@@ -199,7 +238,6 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background-image: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(255, 205, 150, 0.05) 0%, transparent 72%);
 }
 
 /* ---- SCROLLBAR ---- */

@@ -107,7 +107,7 @@ export function initializeShellState(): void {
     shellState.currentLang = 'en';
   }
 
-  shellState.currentTheme = (localStorage.getItem('swrm-theme') || 'dark') as 'light' | 'dark';
+  shellState.currentTheme = 'light';
 }
 
 export function initBootstrap(): ShellState {

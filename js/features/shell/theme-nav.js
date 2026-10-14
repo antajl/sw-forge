@@ -1,43 +1,23 @@
 // js/features/shell/theme-nav.js — theme, header, and navigation bindings
-  // ===================== THEME (header sun / moon slider) =====================
+  // ===================== THEME (unified light workstation) =====================
   function applyThemeDom() {
-    const toggle = document.getElementById('theme-toggle');
-    const isLight = currentTheme === 'light';
-    document.body.classList.toggle('light-theme', isLight);
-    if (toggle) {
-      toggle.classList.toggle('is-light', isLight);
-      toggle.classList.toggle('is-dark', !isLight);
-      toggle.setAttribute('aria-pressed', isLight ? 'true' : 'false');
-    }
+    // Single light workstation theme is active
   }
 
-  function setTheme(mode) {
-    currentTheme = mode === 'dark' ? 'dark' : 'light';
-    localStorage.setItem('swrm-theme', currentTheme);
-    applyThemeDom();
-    const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en || {};
-    updateHeaderThemeA11y(t);
+  function setTheme(_mode) {
+    currentTheme = 'light';
   }
 
   function toggleTheme() {
-    setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+    // Single light workstation theme is active
   }
 
   function initTheme() {
-    applyThemeDom();
+    // Single light workstation theme is active
   }
 
-  function updateHeaderThemeA11y(t) {
-    const group = document.getElementById('header-theme-group');
-    const toggle = document.getElementById('theme-toggle');
-    if (group) group.setAttribute('aria-label', t.themeGroupAria || t.theme || 'Theme');
-    if (!toggle) return;
-    const isLight = currentTheme === 'light';
-    const label = isLight
-      ? (t.themeDarkTitle || 'Dark theme')
-      : (t.themeLightTitle || 'Light theme');
-    toggle.setAttribute('title', label);
-    toggle.setAttribute('aria-label', label);
+  function updateHeaderThemeA11y(_t) {
+    // No-op: theme toggle removed
   }
 
   function stageDisplayName(tr, stageKey) {

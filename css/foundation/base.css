@@ -3,74 +3,78 @@
    ============================================= */
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
-  /* Surfaces & Backgrounds — Workstation Design System */
-  --bg-base:    #0b0e14;
-  --bg-canvas:  var(--bg-base);
-  --bg-surface: #111620;
-  --bg-subtle:  #161c28;
-  --bg-hover:   #1f2637;
+  /* Surfaces & Backgrounds — Unified Light Workstation Palette */
+  /* Soft light stone/ice-paper canvas matching SW-FORGE logo background (#edf2f7 / #f0f3f6) */
+  --bg-base:        #f0f3f6;
+  --bg-canvas:      var(--bg-base);
+  --bg-surface:     #ffffff;
+  --bg-subtle:      #e6ecf2;
+  --bg-hover:       #dbe4ed;
 
-  --bg:       var(--bg-base);
-  --bg2:      var(--bg-surface);
-  --bg3:      var(--bg-subtle);
-  --surface:  var(--bg-surface);
-  --surface-hover: var(--bg-hover);
+  --bg:             var(--bg-canvas);
+  --bg2:            var(--bg-subtle);
+  --bg3:            var(--bg-surface);
+  --surface:        var(--bg-surface);
+  --surface-hover:  var(--bg-hover);
 
-  /* Borders & Dividers */
-  --border-subtle:  #1a2230;
-  --border-default: #232d40;
-  --border-focus:   #3b82f6;
-  --border:   var(--border-subtle);
-  --border2:  var(--border-default);
+  /* Borders & Dividers (Crisp 1px workstation contours) */
+  --border-subtle:  #e2e8f0;
+  --border-default: #d2dbe5;
+  --border-focus:   #2563eb;
+  --border:         var(--border-subtle);
+  --border2:        var(--border-default);
 
-  /* Typography & High Contrast (WCAG AA compliant) */
-  --text-primary:   #e6edf3;
-  --text-secondary: #8b949e;
-  --text-muted:     #6e7681;
-  --text:     var(--text-primary);
-  --text-dim: var(--text-secondary);
-  --text-hi:  #ffffff;
+  /* Typography & High Contrast (Deep charcoal-slate, WCAG AAA compliant) */
+  --text-primary:   #1e2631;
+  --text-secondary: #596979;
+  --text-muted:     #7c8c9e;
+  --text:           var(--text-primary);
+  --text-dim:       var(--text-secondary);
+  --text-hi:        #0f172a;
 
-  /* Accent Gold / Forge */
-  --accent-gold:  #d4a359;
+  /* Accent Gold / Forge (Extracted from SW FORGE logo) */
+  --accent-gold:    #c9861a;
+  --accent-gold-hi: #e09924;
+  --accent-gold-bg: rgba(201, 134, 26, 0.12);
+  --slate-stone:    #56697a;
 
   /* Canonical Game Rarities */
-  --grade-legend: var(--accent-gold);
-  --grade-hero:   #a855f7;
-  --grade-rare:   #3b82f6;
-  --grade-magic:  #22c55e;
-  --grade-normal: #8b949e;
+  --grade-legend:   #b45309;
+  --grade-hero:     #7c3aed;
+  --grade-rare:     #0284c7;
+  --grade-magic:    #059669;
+  --grade-normal:   #6b7280;
 
   /* Canonical Game Elements */
-  --elem-fire:    #ef4444;
-  --elem-water:   #0ea5e9;
-  --elem-wind:    #84cc16;
-  --elem-light:   #facc15;
-  --elem-dark:    #a855f7;
+  --elem-fire:      #dc2626;
+  --elem-water:     #0284c7;
+  --elem-wind:      #65a30d;
+  --elem-light:     #d97706;
+  --elem-dark:      #7c3aed;
 
   /* Canonical Verdicts */
-  --keep:    #10b981;
-  --sell:    #f43f5e;
-  --grind:   #06b6d4;
-  --finish:  #38bdf8;
-  --reapp:   #f59e0b;
-  --upgrade: #f97316;
-  --gem:     #c084fc;
+  --keep:           #059669;
+  --sell:           #e11d48;
+  --grind:          #0891b2;
+  --finish:         #0284c7;
+  --reapp:          #b45309;
+  --upgrade:        #ea580c;
+  --gem:            #9333ea;
 
   /* Semantic Stat & UI Accents */
-  --accent:   #38bdf8;
-  --accent2:  #a855f7;
-  --gold:     #f59e0b;
-  --green:    #10b981;
-  --red:      #f43f5e;
-  --orange:   #f97316;
-  --purple:   #c084fc;
-  --star-awaken: #f43f5e; /* awakened unit ★ */
-  --teal:     #06b6d4;
+  --accent:         #0284c7;
+  --accent2:        #7c3aed;
+  --gold:           #b45309;
+  --green:          #059669;
+  --red:            #e11d48;
+  --orange:         #ea580c;
+  --purple:         #9333ea;
+  --star-awaken:    #e11d48; /* awakened unit ★ */
+  --teal:           #0891b2;
 
-  /* Native OS UI font — no bundled sans/mono (readability feedback) */
+  /* Native OS UI font — no bundled sans/mono */
   --font-ui: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-head: var(--font-ui);
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -78,30 +82,28 @@
   --radius-sm: 4px;
   --radius: 6px;
   --radius-lg: 8px;
-  --glow-accent: 0 0 20px rgba(56, 189, 248, 0.18);
+  --glow-accent: 0 0 20px rgba(2, 132, 199, 0.16);
 
   --app-content-max: 1320px;
   --content-max: 1320px;
   --app-gutter: 20px;
 
   /* Chart colors */
-  --chart-sets: #06b6d4;
+  --chart-sets: #0891b2;
 
   /* Progression stages (Early / Mid / Late) — shared accents */
   --stage-early: var(--green);
   --stage-mid: var(--gold);
   --stage-late: var(--red);
 
-  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%239ca3af' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  --stage-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%23ffffff' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%23596979' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --stage-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%231e2631' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 
   /*
    * Chip design system — one shell (surface + border + semantic tint).
-   * Override only --chip-tint (and optionally --chip-surface-pct) per modifier.
-   * Light theme inherits the same tokens via remapped base hues below.
    */
-  --chip-surface-pct: 74%;
-  --chip-border-base-pct: 42%;
+  --chip-surface-pct: 58%;
+  --chip-border-base-pct: 22%;
 
   --tint-neutral: var(--accent);
   --tint-muted: var(--text-dim);
@@ -130,84 +132,18 @@
   --tint-upgrade: var(--upgrade);
   --tint-gem: var(--gem);
 
-  --tint-highroll:   #f59e0b;
-  --tint-bruiser:    #f43f5e;
-  --tint-fastcc:     #06b6d4;
-  --tint-tank:       #a855f7;
-  --tint-bomber:     #f97316;
-  --tint-classicdps: #38bdf8;
-  --tint-slowdps:    #0284c7;
-  --tint-duoroll:    #f59e0b;
+  --tint-highroll:   #b45309;
+  --tint-bruiser:    #e11d48;
+  --tint-fastcc:     #0891b2;
+  --tint-tank:       #7c3aed;
+  --tint-bomber:     #ea580c;
+  --tint-classicdps: #0284c7;
+  --tint-slowdps:    #0369a1;
+  --tint-duoroll:    #b45309;
 
   --tint-eff-hi: var(--green);
   --tint-eff-mid: var(--gold);
   --tint-eff-lo: var(--accent);
-}
-
-.light-theme {
-  color-scheme: light;
-
-  --bg-canvas:  #f6f7f9;
-  --bg-surface: #ffffff;
-  --bg-subtle:  #edf0f5;
-  --bg-hover:   #e4e7ed;
-
-  --bg:       var(--bg-canvas);
-  --bg2:      var(--bg-subtle);
-  --bg3:      #ffffff;
-  --surface:  #ffffff;
-  --surface-hover: var(--bg-hover);
-
-  --border-subtle:  #dbe0ea;
-  --border-default: #c4cddb;
-  --border-focus:   #2563eb;
-  --border:   var(--border-subtle);
-  --border2:  var(--border-default);
-
-  --text-primary:   #111827;
-  --text-secondary: #4b5563;
-  --text-muted:     #6b7280;
-  --text:     var(--text-primary);
-  --text-dim: var(--text-secondary);
-  --text-hi:  #030712;
-
-  --accent:   #0284c7;
-  --accent2:  #7c3aed;
-  --gold:     #b45309;
-  --green:    #059669;
-  --red:      #e11d48;
-  --orange:   #ea580c;
-  --purple:   #9333ea;
-  --teal:     #0891b2;
-
-  /* Verdict colors */
-  --keep:    #059669;
-  --sell:    #e11d48;
-  --grind:   #0891b2;
-  --finish:  #0284c7;
-  --reapp:   #b45309;
-  --upgrade: #ea580c;
-  --gem:     #9333ea;
-
-  /* Monster grades */
-  --grade-normal: #6b7280;
-  --grade-magic:  #059669;
-  --grade-rare:   #0284c7;
-  --grade-hero:   #7c3aed;
-  --grade-legend: #b45309;
-
-  --glow-accent: 0 0 20px rgba(2, 132, 199, 0.16);
-
-  --stage-early: var(--green);
-  --stage-mid: var(--gold);
-  --stage-late: var(--red);
-
-  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%234b5563' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  --stage-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%23111827' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-
-  /* Stronger chip tint on white surface */
-  --chip-surface-pct: 58%;
-  --chip-border-base-pct: 22%;
 }
 
 .btn-ghost,
@@ -216,13 +152,13 @@
   white-space: nowrap;
 }
 
-/* Light theme header fix */
-.light-theme .site-header {
+/* Header shell styling */
+.site-header {
   background: var(--bg2);
   border-bottom: 1px solid var(--border);
 }
 
-.light-theme .header-shell {
+.header-shell {
   background: transparent;
 }
 

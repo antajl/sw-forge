@@ -1,49 +1,15 @@
-// src/features/shell/theme-nav.ts — theme, header, and navigation bindings
-import { getShellState, updateShellState } from './bootstrap';
+import { updateShellState } from './bootstrap';
 
-function applyThemeDom(): void {
-  const toggle = document.getElementById('theme-toggle');
-  const { currentTheme } = getShellState();
-  const isLight = currentTheme === 'light';
-  document.body.classList.toggle('light-theme', isLight);
-  if (toggle) {
-    toggle.classList.toggle('is-light', isLight);
-    toggle.classList.toggle('is-dark', !isLight);
-    toggle.setAttribute('aria-pressed', isLight ? 'true' : 'false');
-  }
-}
-
-export function setTheme(mode: 'light' | 'dark'): void {
-  const theme = mode === 'dark' ? 'dark' : 'light';
-  updateShellState({ currentTheme: theme });
-  localStorage.setItem('swrm-theme', theme);
-  applyThemeDom();
-  const { currentLang } = getShellState();
-  const t = (window.SWRM?.TRANSLATIONS?.[currentLang] || window.SWRM?.TRANSLATIONS?.en || {}) as Translation;
-  updateHeaderThemeA11y(t);
+export function setTheme(_mode: 'light' | 'dark'): void {
+  updateShellState({ currentTheme: 'light' });
 }
 
 export function toggleTheme(): void {
-  const { currentTheme } = getShellState();
-  setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+  // Single light workstation theme is active
 }
 
 export function initTheme(): void {
-  applyThemeDom();
-}
-
-function updateHeaderThemeA11y(t: Translation): void {
-  const group = document.getElementById('header-theme-group');
-  const toggle = document.getElementById('theme-toggle');
-  if (group) group.setAttribute('aria-label', t.themeGroupAria || t.theme || 'Theme');
-  if (!toggle) return;
-  const { currentTheme } = getShellState();
-  const isLight = currentTheme === 'light';
-  const label = isLight
-    ? (t.themeDarkTitle || 'Dark theme')
-    : (t.themeLightTitle || 'Light theme');
-  toggle.setAttribute('title', label);
-  toggle.setAttribute('aria-label', label);
+  // Single light workstation theme is active
 }
 
 export function stageDisplayName(tr: Translation, stageKey: string): string {

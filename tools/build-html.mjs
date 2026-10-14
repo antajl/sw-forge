@@ -45,31 +45,39 @@ function resolveIncludes(content) {
   return out;
 }
 
-let content = fs.readFileSync(shellPath, 'utf-8');
-content = resolveIncludes(content);
+export function buildHtml({ silent = false } = {}) {
+  let content = fs.readFileSync(shellPath, 'utf-8');
+  content = resolveIncludes(content);
 
-// Add hash-based cache busting
-const cssPath = path.join(rootDir, 'css/dist/app.css');
-const uiJsPath = path.join(rootDir, 'js/ui.js');
-const translationsPath = path.join(rootDir, 'js/core/translations.js');
+  // Add hash-based cache busting
+  const cssPath = path.join(rootDir, 'css/dist/app.css');
+  const uiJsPath = path.join(rootDir, 'js/ui.js');
+  const translationsPath = path.join(rootDir, 'js/core/translations.js');
 
-if (fs.existsSync(cssPath)) {
-  const cssHash = getFileHash(cssPath);
-  content = content.replace(/css\/dist\/app\.css\?v=[^"]+/g, `css/dist/app.css?v=${cssHash}`);
-  console.log(`CSS hash: ${cssHash}`);
+  if (fs.existsSync(cssPath)) {
+    const cssHash = getFileHash(cssPath);
+    content = content.replace(/css\/dist\/app\.css\?v=[^"]+/g, `css/dist/app.css?v=${cssHash}`);
+    if (!silent) console.log(`CSS hash: ${cssHash}`);
+  }
+
+  if (fs.existsSync(uiJsPath)) {
+    const jsHash = getFileHash(uiJsPath);
+    content = content.replace(/js\/ui\.js\?v=[^"]+/g, `js/ui.js?v=${jsHash}`);
+    if (!silent) console.log(`UI.js hash: ${jsHash}`);
+  }
+
+  if (fs.existsSync(translationsPath)) {
+    const translationsHash = getFileHash(translationsPath);
+    content = content.replace(/js\/core\/translations\.js\?v=[^"]+/g, `js/core/translations.js?v=${translationsHash}`);
+    if (!silent) console.log(`Translations.js hash: ${translationsHash}`);
+  }
+
+  fs.writeFileSync(outputPath, content, 'utf-8');
+  if (!silent) console.log(`Build complete: ${outputPath}`);
+  return outputPath;
 }
 
-if (fs.existsSync(uiJsPath)) {
-  const jsHash = getFileHash(uiJsPath);
-  content = content.replace(/js\/ui\.js\?v=[^"]+/g, `js/ui.js?v=${jsHash}`);
-  console.log(`UI.js hash: ${jsHash}`);
+const isDirectRun = process.argv[1] && path.resolve(process.argv[1]) === path.resolve(__filename);
+if (isDirectRun) {
+  buildHtml();
 }
-
-if (fs.existsSync(translationsPath)) {
-  const translationsHash = getFileHash(translationsPath);
-  content = content.replace(/js\/core\/translations\.js\?v=[^"]+/g, `js/core/translations.js?v=${translationsHash}`);
-  console.log(`Translations.js hash: ${translationsHash}`);
-}
-
-fs.writeFileSync(outputPath, content, 'utf-8');
-console.log(`Build complete: ${outputPath}`);

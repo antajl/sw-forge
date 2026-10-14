@@ -1,4 +1,4 @@
 // src/features/app/index.ts — app settings exports
-export * from './settings-ui';
+export { initIndexedDB, saveSlotData, loadSlotData, deleteSlotData, loadDbSlots, saveDbSlots, type DbSlot } from './settings-ui';
 export * from './changelog';
 export * from './share';

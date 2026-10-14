@@ -1,6 +1,7 @@
 {
   "name": "sw-forge",
   "private": true,
+  "packageManager": "pnpm@12.11.2",
   "type": "module",
   "scripts": {
     "dev": "vite",

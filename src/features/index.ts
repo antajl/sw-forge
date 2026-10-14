@@ -23,4 +23,3 @@ export * from './rules';
 
 // Re-export types with explicit export type to avoid conflicts
 export type { DbSlot } from './app/settings-ui';
-export type { defaultEmptyDbSlotsMeta } from './app/settings-ui';

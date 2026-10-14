@@ -29,26 +29,29 @@
   }
 
   function computeActiveSetBonuses(u) {
+    if (window.SWRM && typeof window.SWRM.computeActiveSetBonusesFromRunes === 'function') {
+      return window.SWRM.computeActiveSetBonusesFromRunes(u.runeSlots);
+    }
     const counts = {};
     for (const slot of u.runeSlots || []) {
       const name = slot.rune && slot.rune.setName;
       if (!name) continue;
       counts[name] = (counts[name] || 0) + 1;
     }
+    const fourPiece = new Set(['Swift', 'Fatal', 'Despair', 'Vampire', 'Violent', 'Rage']);
+    const twoPiece = new Set([
+      'Energy', 'Guard', 'Blade', 'Focus', 'Endure',
+      'Shield', 'Revenge', 'Will', 'Nemesis', 'Destroy',
+      'Fight', 'Determination', 'Enhance', 'Accuracy', 'Tolerance', 'Seal'
+    ]);
     const out = [];
     for (const [name, total] of Object.entries(counts)) {
-      let left = total;
-      const parts = [];
-      while (left >= 4) {
-        parts.push(4);
-        left -= 4;
-      }
-      if (left >= 2) {
-        parts.push(2);
-        left -= 2;
-      }
-      for (const pieces of parts) {
-        out.push({ name, pieces });
+      if (name === 'Intangible') continue;
+      if (fourPiece.has(name)) {
+        if (total >= 4) out.push({ name, pieces: 4 });
+      } else if (twoPiece.has(name)) {
+        const numSets = Math.floor(total / 2);
+        for (let i = 0; i < numSets; i++) out.push({ name, pieces: 2 });
       }
     }
     out.sort((a, b) => b.pieces - a.pieces || String(a.name).localeCompare(String(b.name)));

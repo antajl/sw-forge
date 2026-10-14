@@ -185,7 +185,9 @@
   <script defer src="js/self-test.js?v=1.2.19"></script>
   <script src="assets/gsap.min.js"></script>
   <script defer src="js/swrm-motion.js?v=1.2.19"></script>
-  <script defer src="js/ui.js?v=1.2.19"></script>
+
+  <!-- Vite & TypeScript Modern Entry Point (Bundles UI and TS modules) -->
+  <script type="module" src="/src/app.ts"></script>
   <script>
     if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
       window.addEventListener('load', () => {

@@ -179,7 +179,7 @@
       occupiedId: raw.occupied_id != null ? Number(raw.occupied_id) : null,
       relicType,
       category: relicCategory(relicType),
-      categoryVerified: relicCategoryIsVerified(relicCategory(relicType)),
+      categoryVerified: relicCategoryIsVerified(relicType),
       level: Number(raw.upgrade_curr) || 0,
       grade,
       gradeStr: grade > 0 ? gearGradeStr(rankRaw) : '',

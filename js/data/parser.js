@@ -3,7 +3,11 @@
 // =============================================
 
 (function() {
-  const { STAT_NAMES, SET_NAMES, GRADE_SHORT, GRADE_NAMES } = window.SWRM;
+  const SWRM = (typeof window !== 'undefined' ? window.SWRM : self.SWRM) || {};
+  const STAT_NAMES = SWRM.STAT_NAMES || {};
+  const SET_NAMES = SWRM.SET_NAMES || {};
+  const GRADE_SHORT = SWRM.GRADE_SHORT || { 3: 'Rare', 4: 'Hero', 5: 'Legend' };
+  const GRADE_NAMES = SWRM.GRADE_NAMES || { 1: 'Common', 2: 'Magic', 3: 'Rare', 4: 'Hero', 5: 'Legend' };
 
   /**
    * SWEX / Com2US rarity: normally 1–5 (Common…Legend). Some payloads (often unit_list runes)
@@ -95,7 +99,7 @@
    * Parse a single rune object from SWEX JSON
    */
   function parseRune(raw) {
-    const gradeRaw = raw.extra;
+    const gradeRaw = (raw.extra != null && Number(raw.extra) > 0) ? raw.extra : raw.rank;
     const grade = normalizeGradeRank(gradeRaw);
     const slot  = raw.slot_no;        // 1–6
     const setId = raw.set_id;
@@ -245,11 +249,13 @@
    * We collect inventory runes + equipped runes from unit_list
    */
   function parseSWEX(json) {
+    if (!json || typeof json !== 'object') return [];
     const runeMap = new Map();
 
     // 1. Inventory runes
     const inv = json.runes || json.rune_list || [];
     for (const r of inv) {
+      if (!r || r.rune_id == null) continue;
       const rune = parseRune(r);
       if (rune.grade >= 3 && rune.grade <= 5) runeMap.set(rune.id, rune); // Rare–Legend only
     }
@@ -258,7 +264,7 @@
     const units = json.unit_list || [];
     for (const unit of units) {
       for (const r of (unit.runes || [])) {
-        if (!r || !r.rune_id) continue;
+        if (!r || r.rune_id == null) continue;
         const rune = parseRune(r);
         rune.equipped_to = unit.unit_id;
         rune.equipped_name = unit.unit_master_id; // monster master id

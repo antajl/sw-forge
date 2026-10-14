@@ -1,13 +1,36 @@
 # Документация SW Forge
 
-Карта для **разработчика**: где искать правила, код и тексты для игроков.
+Единая карта документации проекта: где искать правила, код, тесты и игровые механики.
 
-## Быстрый маршрут
+---
+
+## Порядок изучения документации
+
+| № | Документ | Описание |
+|---|---|---|
+| **00** | [`00-MASTER.md`](00-MASTER.md) | **Точка входа**: стек, пути к коду, порядок загрузки скриптов, правила правок |
+| **01** | [`01-GAME-OVERVIEW.md`](01-GAME-OVERVIEW.md) | **Контекст игры**: руны, артефакты, монстры, термины SWEX |
+| **02** | [`02-GAME-KNOWLEDGE.md`](02-GAME-KNOWLEDGE.md) | **Игровая логика**: правила слотов, заточки (grind), переточки (gem) |
+| **03** | [`03-PROJECT-STRUCTURE.md`](03-PROJECT-STRUCTURE.md) | **Архитектура**: карта всех JS/CSS модулей и зависимости `window.SWRM` |
+| **04** | [`04-API-REFERENCE.md`](04-API-REFERENCE.md) | **Справочник API**: методы `window.SWRM` и CSS-переменные |
+| **05** | [`05-WORKFLOWS.md`](05-WORKFLOWS.md) | **Сценарии работы**: добавление фич, переводов, отладка |
+| **06** | [`06-DEBUGGING.md`](06-DEBUGGING.md) | **Отладка**: частые ошибки и чек-листы |
+| **07** | [`07-TESTING.md`](07-TESTING.md) | **Тестирование**: набор Vitest (50 тестов), запуск и TDD |
+| **08** | [`08-DEVELOPMENT-TOOLS.md`](08-DEVELOPMENT-TOOLS.md) | **Инструменты**: ESLint, Prettier, Stylelint, скрипты сборки |
+| **09** | [`09-CI-CD.md`](09-CI-CD.md) | **Деплой**: GitHub Actions, Cloudflare Pages и Workers |
+| **11** | [`11-BACKLOG.md`](11-BACKLOG.md) | **Бэклог**: список задач и багов |
+| **12** | [`12-AI-ASSISTANT.md`](12-AI-ASSISTANT.md) | **Памятка для AI-агентов** |
+| **13** | [`13-RESEARCH-ARTIFACT-SCORING.md`](13-RESEARCH-ARTIFACT-SCORING.md) | **Исследования**: формула очков артефактов |
+| — | [`DEFAULTS-REFATORING-ANALYSIS.md`](DEFAULTS-REFATORING-ANALYSIS.md) | **Анализ**: разбор сложностей распила `defaults.js` |
+
+---
+
+## Быстрый маршрут для разработчика
 
 | Вопрос | Где смотреть |
 |--------|----------------|
 | С чего начать сессию правок | [`00-MASTER.md`](00-MASTER.md) — стек, build, правила правок |
-| **Игровая терминология, механика (статы, EN vs FR, gems/grinds)** | [`02-GAME-KNOWLEDGE.md`](02-GAME-KNOWLEDGE.md) — engine EN, display localized, game rules |
+| **Игровая терминология, механика** | [`02-GAME-KNOWLEDGE.md`](02-GAME-KNOWLEDGE.md) — engine EN, display localized, game rules |
 | Где лежит файл / API `SWRM` | [`00-MASTER.md`](00-MASTER.md) — точка входа, правила правок, ссылки |
 | Карта файлов, порядок загрузки, фичи | [`03-PROJECT-STRUCTURE.md`](03-PROJECT-STRUCTURE.md) |
 | `window.SWRM` API + CSS переменные | [`04-API-REFERENCE.md`](04-API-REFERENCE.md) |

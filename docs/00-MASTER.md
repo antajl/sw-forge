@@ -32,7 +32,7 @@ Vanilla JS + CSS · **Build:** `npm run build` (`build:html` + `build:css` + `bu
 | Gear tables | `js/features/gear/` |
 | Teams | `js/features/teams/` · combat SPD + totem via `monsters-stats-calc.js` |
 | SWEX / indexes | `js/data/` · bundled `data/*.json` (see `data/README.md`) |
-| translations, changelog | `js/core/` (`translations-en.js`, `translations-ru.js`, `translations-fr.js`) |
+| translations, changelog | `js/core/` (`translations-en.js`, `translations-ru.js`, `translations-fr.js`, `translations-zh.js`) |
 | Rune stat labels (EN engine / FR display) | `js/core/meta.js` — see [`GAME-KNOWLEDGE.md`](GAME-KNOWLEDGE.md) |
 | Dashboard consolidation (completed) | Dashboard tab now hosts Runes | Monsters hub; Gear/Monsters hubs removed Dashboard subtabs |
 | Ingame rune Rating | `js/data/ingame-score.js` |

@@ -11,13 +11,13 @@
   }
 
   function flushRuneTableRenderIfNeeded() {
-    if (!runeTableRenderPending && !isRuneTableRunesTabActive()) return;
-    if (!isRuneTableRunesTabActive()) return;
+    if (!runeTableRenderPending || !isRuneTableRunesTabActive()) return;
     runeTableRenderPending = false;
     applyFiltersAndSort(getVisibleRunes(), { preserveTableExpansion: true });
   }
 
   function scheduleRuneTableRender() {
+    runeTableRenderPending = true;
     if (debounceTimer) {
       clearTimeout(debounceTimer);
     }
@@ -613,7 +613,6 @@
       return;
     }
     runeTableRenderPending = false;
-    scheduleRuneTableRender();
 
     const tbody = document.getElementById('rune-tbody');
     if (!tbody) return;

@@ -237,7 +237,7 @@ SW Forge now has an automated test suite using Vitest.
 - **Framework:** Vitest with jsdom environment
 - **Location:** `tests/` directory
 - **Setup:** `tests/setup.js` initializes `window.SWRM` globals
-- **Total Tests:** 106 tests across 9 test suites (100% passing)
+- **Total Tests:** 111 tests across 10 test suites (100% passing)
 
 ### Test Files
 - `tests/parser.test.js` - SWEX parsing utilities (11 tests)
@@ -249,10 +249,11 @@ SW Forge now has an automated test suite using Vitest.
 - `tests/runes.test.ts` - Rune model and potential calculations (14 tests)
 - `tests/core.test.ts` - Core formulas and engine integration (10 tests)
 - `tests/game-data-sync.test.js` - Game data, SWEX demo.json parsing, Intangible wildcard & set logic (15 tests)
+- `tests/teams-storage.test.ts` - Teams state, sets, slots clamping and persistence (5 tests)
 
 ### Running Tests
 ```bash
-pnpm test              # Run all 106 tests via Vitest
+pnpm test              # Run all 111 tests via Vitest
 pnpm run type-check    # Strict TypeScript type check (tsc --noEmit)
 ```
 

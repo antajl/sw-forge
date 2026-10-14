@@ -100,7 +100,7 @@ This document defines how AI agents should manage and contribute to the SW-Forge
 - `pnpm run build:ui` - Build JavaScript UI bundle
 - `pnpm run build:css` - Build CSS bundle
 - `pnpm run build:translations` - Build translation files
-- `pnpm test` / `pnpm run test` - Run full Vitest test suite (106 tests across 9 suites)
+- `pnpm test` / `pnpm run test` - Run full Vitest test suite (111 tests across 10 suites)
 - `pnpm run lint` - Run ESLint linter (Flat Config)
 - `pnpm audit` - Check for security vulnerabilities in dependencies
 
@@ -112,8 +112,8 @@ This document defines how AI agents should manage and contribute to the SW-Forge
   - Source type: module (ESM)
 - **Vitest**: Configured with jsdom environment and global test variables
   - Setup file: `tests/setup.js` initializes `window.SWRM` globals
-  - **Test Coverage:** 106 tests across 9 test suites (parser, efficiency, depth, utils, types, runes, core, basic, game-data-sync)
-  - **Test Files:** `tests/parser.test.js`, `tests/rune-efficiency.test.js`, `tests/utils.test.js`, `tests/depth.test.js`, `tests/basic.test.ts`, `tests/types.test.ts`, `tests/runes.test.ts`, `tests/core.test.ts`, `tests/game-data-sync.test.js`
+  - **Test Coverage:** 111 tests across 10 test suites (parser, efficiency, depth, utils, types, runes, core, basic, game-data-sync, teams-storage)
+  - **Test Files:** `tests/parser.test.js`, `tests/rune-efficiency.test.js`, `tests/utils.test.js`, `tests/depth.test.js`, `tests/basic.test.ts`, `tests/types.test.ts`, `tests/runes.test.ts`, `tests/core.test.ts`, `tests/game-data-sync.test.js`, `tests/teams-storage.test.ts`
 - **TypeScript**: Configured via `tsconfig.json` with strict type checking in `src/types/`
 - **PWA & Offline**: Service worker (`public/sw.js`) and manifest (`public/manifest.webmanifest`)
 - **Hosting Static Assets**: `public/` folder contains `_headers`, `robots.txt`, `sitemap.xml`, `sw.js`, `manifest.webmanifest`
@@ -132,7 +132,7 @@ This document defines how AI agents should manage and contribute to the SW-Forge
 - Run tests before committing code changes (`pnpm test`).
 - Verify build passes after changes (`pnpm run build` or `pnpm run type-check`).
 - Test locally before deploying.
-- **Test Coverage:** 106 tests in `tests/` directory.
+- **Test Coverage:** 111 tests in `tests/` directory.
 - **Test Framework:** Vitest with jsdom environment.
 
 ### Code Style

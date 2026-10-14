@@ -24,3 +24,17 @@ window.SWRM.SET_NAMES = {
 
 window.SWRM.GRADE_NAMES = { 1: 'Common', 2: 'Magic', 3: 'Rare', 4: 'Hero', 5: 'Legend' };
 window.SWRM.GRADE_SHORT = { 3: 'Rare', 4: 'Hero', 5: 'Legend' };
+
+// In-memory mock for localStorage in testing environment
+if (typeof window.localStorage === 'undefined' || typeof window.localStorage.getItem !== 'function') {
+  let store = {};
+  window.localStorage = {
+    getItem: (key) => store[key] !== undefined ? store[key] : null,
+    setItem: (key, val) => { store[key] = String(val); },
+    removeItem: (key) => { delete store[key]; },
+    clear: () => { store = {}; },
+    get length() { return Object.keys(store).length; },
+    key: (i) => Object.keys(store)[i] || null,
+  };
+}
+

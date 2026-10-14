@@ -71,7 +71,7 @@ pnpm run validate:data   # validate data (JSON, missing assets)
 pnpm run lint            # lint JS and CSS (ESLint Flat Config)
 pnpm run lint:fix        # auto-fix linting issues
 pnpm run format          # format code with Prettier
-pnpm test                # run all 106 Vitest tests across 9 test suites
+pnpm test                # run all 111 Vitest tests across 10 test suites
 pnpm run optimize:assets # convert images to WebP
 ```
 

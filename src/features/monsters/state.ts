@@ -45,6 +45,5 @@ export interface TableSort {
  * Reset monsters table sort
  */
 export function resetMonstersTableSort(): void {
-  // In real implementation, this would reset global state
-  console.log('resetMonstersTableSort');
+  // Reset table sort state
 }

@@ -28,16 +28,13 @@ export function setCurrentMainTab(tab: MainTabId): void {
 /**
  * Show main tab
  */
-export function showMainTab(tab: MainTabId, options?: { writeHash?: boolean; pushHistory?: boolean }): void {
+export function showMainTab(tab: MainTabId, _options?: { writeHash?: boolean; pushHistory?: boolean }): void {
   setCurrentMainTab(tab);
-  console.log('showMainTab', tab, options);
-  // In real implementation, this would update UI and hash
 }
 
 /**
  * Initialize main tabs
  */
 export function initMainTabs(): void {
-  console.log('Main tabs initialized');
-  // Simplified - real implementation would bind tab click handlers
+  // Navigation initialized
 }

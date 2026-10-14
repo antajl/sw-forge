@@ -1,6 +1,6 @@
 // js/features/runes/table-virtual.js — windowed tbody render for large rune lists
   const RUNE_TABLE_VIRTUAL_COLS = 15;
-  const RUNE_TABLE_VIRTUAL_OVERSCAN = 3;
+  const RUNE_TABLE_VIRTUAL_OVERSCAN = 8;
   const RUNE_TABLE_VIRTUAL_ROW_FALLBACK = 44;
   const RUNE_TABLE_VIRTUAL_SPACER_COL_CLASSES = [
     'col-slot',
@@ -103,17 +103,17 @@
       slice.map((r, i) => runeRow(r, { rowIndex: start + i })).join('') +
       runeTableVirtualSpacerRow(bottomPad);
 
-    const measured = measureRuneVirtualRowHeight(tbody);
-    if (measured && measured !== runeVirtualRowHeight) {
-      runeVirtualRowHeight = measured;
-      scroller.style.setProperty('--rune-virtual-row-h', `${measured}px`);
-      runeVirtualLastKey = '';
-      scheduleRuneTableVirtualRepaint();
-      return;
-    }
-    if (!runeVirtualRowHeight && measured) {
-      runeVirtualRowHeight = measured;
-      scroller.style.setProperty('--rune-virtual-row-h', `${measured}px`);
+    if (!runeVirtualRowHeight) {
+      const measured = measureRuneVirtualRowHeight(tbody);
+      if (measured) {
+        runeVirtualRowHeight = measured;
+        scroller.style.setProperty('--rune-virtual-row-h', `${measured}px`);
+        if (Math.abs(measured - RUNE_TABLE_VIRTUAL_ROW_FALLBACK) > 4) {
+          runeVirtualLastKey = '';
+          scheduleRuneTableVirtualRepaint();
+          return;
+        }
+      }
     }
 
     if (typeof replaceRuneTableLocationFromState === 'function') {
@@ -135,6 +135,7 @@
       { passive: true },
     );
     window.addEventListener('resize', () => {
+      runeVirtualRowHeight = 0;
       runeVirtualLastKey = '';
       scheduleRuneTableVirtualRepaint();
     });

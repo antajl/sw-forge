@@ -1,6 +1,6 @@
 // js/features/gear/artifacts-virtual.js — windowed tbody render for large artifact lists
   const ARTIFACT_TABLE_VIRTUAL_COLS = 8;
-  const ARTIFACT_TABLE_VIRTUAL_OVERSCAN = 3;
+  const ARTIFACT_TABLE_VIRTUAL_OVERSCAN = 8;
   const ARTIFACT_TABLE_VIRTUAL_ROW_FALLBACK = 44;
   const ARTIFACT_TABLE_VIRTUAL_SPACER_COL_CLASSES = [
     'col-location',
@@ -156,17 +156,17 @@
       setupArtifactSubsScrollAnimation(tbody);
     }
 
-    const measured = measureArtifactVirtualRowHeight(tbody);
-    if (measured && measured !== artifactVirtualRowHeight) {
-      artifactVirtualRowHeight = measured;
-      scroller.style.setProperty('--artifact-virtual-row-h', `${measured}px`);
-      artifactVirtualLastKey = '';
-      scheduleArtifactTableVirtualRepaint();
-      return;
-    }
-    if (!artifactVirtualRowHeight && measured) {
-      artifactVirtualRowHeight = measured;
-      scroller.style.setProperty('--artifact-virtual-row-h', `${measured}px`);
+    if (!artifactVirtualRowHeight) {
+      const measured = measureArtifactVirtualRowHeight(tbody);
+      if (measured) {
+        artifactVirtualRowHeight = measured;
+        scroller.style.setProperty('--artifact-virtual-row-h', `${measured}px`);
+        if (Math.abs(measured - ARTIFACT_TABLE_VIRTUAL_ROW_FALLBACK) > 4) {
+          artifactVirtualLastKey = '';
+          scheduleArtifactTableVirtualRepaint();
+          return;
+        }
+      }
     }
 
     if (typeof renderArtifactTableRosterChips === 'function') renderArtifactTableRosterChips();
@@ -186,6 +186,7 @@
       { passive: true },
     );
     window.addEventListener('resize', () => {
+      artifactVirtualRowHeight = 0;
       artifactVirtualLastKey = '';
       scheduleArtifactTableVirtualRepaint();
     });

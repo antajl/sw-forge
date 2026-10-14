@@ -4,8 +4,8 @@
   overflow-x: hidden;
   overflow-y: auto;
   max-height: calc(100vh - 400px);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  border: 1px solid var(--border-default);
 }
 
 #rune-table {
@@ -89,20 +89,20 @@
   --rt-c-verdict: 4.65rem;
   --rt-c-role: 5.25rem;
   --rt-c-location: 5.5rem;
-  --rt-row-bg: var(--bg2);
-  --rt-row-bg-even: color-mix(in srgb, var(--surface) 40%, var(--bg2));
-  --rt-row-bg-hover: var(--surface);
+  --rt-row-bg: var(--bg-surface);
+  --rt-row-bg-even: var(--bg-subtle);
+  --rt-row-bg-hover: var(--bg-hover);
 }
 
 thead tr {
-  background: var(--bg3); border-bottom: 1px solid var(--border2);
+  background: var(--bg-subtle); border-bottom: 1px solid var(--border-default);
 }
 #rune-table thead th {
   position: sticky;
   top: 0;
   z-index: 20;
-  background: var(--bg3);
-  box-shadow: 0 1px 0 var(--border2);
+  background: var(--bg-subtle);
+  box-shadow: 0 1px 0 var(--border-default);
   text-align: center;
 }
 #rune-table thead th.th-has-filter {
@@ -142,7 +142,7 @@ th {
 }
 
 tbody tr {
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-subtle);
   /* TEMPORARILY DISABLED TO TEST FLICKERING: transition: background 0.1s; */
   transition: none;
 }
@@ -160,7 +160,8 @@ tbody tr {
   border: none;
 }
 td {
-  padding: 6px 8px; font-size: 0.85rem; color: var(--text);
+  padding: 5px 8px; font-size: 0.8rem; color: var(--text-hi);
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 

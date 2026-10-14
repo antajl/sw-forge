@@ -27,7 +27,7 @@
   min-height: 44px;
   box-sizing: border-box;
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-default);
   border-radius: var(--radius-lg);
 }
 
@@ -52,15 +52,15 @@
   font-weight: 600;
   letter-spacing: 0.03em;
   text-transform: none;
-  padding: 8px 14px;
+  padding: 8px 16px;
   min-height: 44px;
   box-sizing: border-box;
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-default);
   border-radius: var(--radius-lg);
   color: var(--text-dim);
   cursor: pointer;
-  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
@@ -69,13 +69,14 @@
 }
 
 .btn-dashboard-export-standalone:hover {
-  color: var(--text);
-  border-color: var(--accent);
-  background: var(--bg3);
+  color: var(--text-hi);
+  border-color: var(--accent-gold-border);
+  background: color-mix(in srgb, var(--accent-gold-bg) 40%, var(--surface));
+  box-shadow: 0 2px 8px rgba(201, 134, 26, 0.12);
 }
 
 .btn-dashboard-export-standalone:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--accent-gold);
   outline-offset: 2px;
 }
 
@@ -129,8 +130,19 @@ html[lang="ru"] .btn-dashboard-export-standalone {
 }
 
 #tab-dashboard .dashboard-scope-controls select {
-  background-color: var(--dash-inner-well);
-  border-color: color-mix(in srgb, var(--border2) 78%, var(--accent));
+  background-color: var(--surface);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  font-family: var(--font-ui);
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: border-color 0.15s ease;
+}
+
+#tab-dashboard .dashboard-scope-controls select:hover {
+  border-color: var(--accent-gold);
 }
 
 .dashboard-account-run-inline {

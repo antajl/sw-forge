@@ -19,9 +19,9 @@
   padding: 6px;
   padding-bottom: 10px;
   border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--bg3) 55%, transparent);
-  border: 1px solid var(--border);
-  position: relative;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-default);
+  position: relative !important;
 }
 
 .dash-dist-kind-tabs__indicator {
@@ -60,16 +60,16 @@ html:not(.swrm-has-gsap) .dash-dist-kind-tabs__indicator {
 }
 
 .dash-dist-kind-tab:hover {
-  color: var(--text);
-  background: color-mix(in srgb, var(--surface) 70%, transparent);
-  border-color: var(--border2);
+  color: var(--text-hi);
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
+  border-color: var(--border-default);
 }
 
 .dash-dist-kind-tab.is-active {
   color: var(--text-hi);
   background: var(--surface);
-  border-color: color-mix(in srgb, var(--accent) 45%, var(--border2));
-  box-shadow: 0 2px 14px color-mix(in srgb, var(--accent) 16%, transparent);
+  border-color: var(--accent-gold-border);
+  box-shadow: 0 2px 10px rgba(201, 134, 26, 0.12), 0 1px 3px rgba(0, 0, 0, 0.05);
   transition: background 0.14s ease, border-color 0.14s ease, color 0.14s ease, box-shadow 0.24s ease;
 }
 

@@ -14,10 +14,17 @@
 }
 
 #tab-dashboard .panel-title {
-  border-bottom-color: color-mix(in srgb, var(--border2) 62%, var(--accent));
+  border-bottom-color: var(--border-default);
   font-size: 0.92rem;
   letter-spacing: 0.06em;
   padding-bottom: 12px;
+}
+
+#tab-dashboard #panel-dash-distributions {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
 }
 
 #tab-dashboard .panel-title--inline {
@@ -55,9 +62,9 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 6px 16px;
-  margin-bottom: 18px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--border);
+  margin-bottom: 12px;
+  padding-bottom: 0;
+  border-bottom: none;
 }
 
 .panel-dash-distributions-head .dash-dist-kind-tabs {
@@ -88,7 +95,7 @@ html[lang='ru'] .panel-dash-distributions-head .rules-page-lead.dash-unified-blo
   padding: 4px;
   padding-bottom: 8px;
   gap: 6px;
-  position: static;
+  position: relative !important;
   z-index: 12;
   background: var(--bg-subtle);
   border: 1px solid var(--border-default);
@@ -99,7 +106,7 @@ html[lang='ru'] .panel-dash-distributions-head .rules-page-lead.dash-unified-blo
   padding: 4px;
   padding-bottom: 8px;
   gap: 6px;
-  position: static;
+  position: relative !important;
   z-index: 12;
   background: var(--bg-subtle);
   border: 1px solid var(--border-default);

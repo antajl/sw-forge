@@ -5,13 +5,13 @@
 :root {
   color-scheme: light;
 
-  /* Surfaces & Backgrounds — Unified Light Workstation Palette */
-  /* Soft light stone/ice-paper canvas matching SW-FORGE logo background (#edf2f7 / #f0f3f6) */
-  --bg-base:        #f0f3f6;
+  /* Surfaces & Backgrounds — Modern Warm Forge & Stone Palette */
+  /* Warm honed ivory/parchment stone matching SW-FORGE logo aesthetic */
+  --bg-base:        #f6f3ed;
   --bg-canvas:      var(--bg-base);
   --bg-surface:     #ffffff;
-  --bg-subtle:      #e6ecf2;
-  --bg-hover:       #dbe4ed;
+  --bg-subtle:      #ebe5d8;
+  --bg-hover:       #dfd7c6;
 
   --bg:             var(--bg-canvas);
   --bg2:            var(--bg-subtle);
@@ -19,37 +19,37 @@
   --surface:        var(--bg-surface);
   --surface-hover:  var(--bg-hover);
 
-  /* Borders & Dividers (Crisp 1px workstation contours) */
-  --border-subtle:  #e2e8f0;
-  --border-default: #d2dbe5;
-  --border-focus:   #2563eb;
+  /* Borders & Dividers (Warm Forged Bronze & Stone Contours) */
+  --border-subtle:  #e7dfd1;
+  --border-default: #d8cdba;
+  --border-focus:   #c9861a;
   --border:         var(--border-subtle);
   --border2:        var(--border-default);
 
-  /* Typography & High Contrast (Deep charcoal-slate, WCAG AAA compliant) */
-  --text-primary:   #1e2631;
-  --text-secondary: #596979;
-  --text-muted:     #7c8c9e;
+  /* Typography & High Contrast (Deep charcoal-amber slate, WCAG AAA compliant) */
+  --text-primary:   #221e1a;
+  --text-secondary: #5e574c;
+  --text-muted:     #847c70;
   --text:           var(--text-primary);
   --text-dim:       var(--text-secondary);
-  --text-hi:        #0f172a;
+  --text-hi:        #14110e;
 
-  /* Accent Gold / Forge (Extracted from SW FORGE logo) */
+  /* Accent Gold / Forge (Extracted directly from SW FORGE logo) */
   --accent-gold:    #c9861a;
   --accent-gold-hi: #e5a93b;
   --accent-gold-deep: #9e6314;
   --accent-gold-bg: rgba(201, 134, 26, 0.12);
-  --accent-gold-border: color-mix(in srgb, var(--accent-gold) 45%, var(--border-default));
+  --accent-gold-border: color-mix(in srgb, var(--accent-gold) 48%, var(--border-default));
 
   /* Slate stone from Blade rune */
-  --slate-stone:        #5c6f84;
-  --slate-stone-light:  #7b8e9f;
-  --slate-stone-dark:   #3d4b59;
-  --slate-stone-bg:     rgba(92, 111, 132, 0.08);
+  --slate-stone:        #4e6074;
+  --slate-stone-light:  #708397;
+  --slate-stone-dark:   #2b3846;
+  --slate-stone-bg:     rgba(78, 96, 116, 0.08);
 
-  /* Tab indicator gradient (preserving the dynamic line the user loves, with forged gold + cyan/sapphire crystal) */
-  --indicator-gradient: linear-gradient(90deg, #c9861a 0%, #e5a93b 40%, #0284c7 100%);
-  --indicator-shadow:   0 0 12px rgba(201, 134, 26, 0.35), 0 0 4px rgba(2, 132, 199, 0.3);
+  /* Tab indicator gradient (preserving signature dynamic line: warm forged gold -> bright gold -> sapphire crystal) */
+  --indicator-gradient: linear-gradient(90deg, #c9861a 0%, #e5a93b 45%, #0284c7 100%);
+  --indicator-shadow:   0 0 10px rgba(201, 134, 26, 0.4), 0 0 3px rgba(2, 132, 199, 0.3);
 
   /* Canonical Game Rarities */
   --grade-legend:   #b45309;

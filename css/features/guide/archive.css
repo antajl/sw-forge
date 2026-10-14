@@ -29,7 +29,7 @@ html[lang='fr'] #tab-guide .guide-lang--fr {
   padding: 4px;
   padding-bottom: 8px;
   gap: 6px;
-  position: static;
+  position: relative !important;
   background: var(--bg-subtle);
   border: 1px solid var(--border-default);
 }

@@ -79,7 +79,7 @@
 .monsters-grid-head__select input {
   width: 14px;
   height: 14px;
-  accent-color: var(--accent, #6a9);
+  accent-color: var(--accent-gold);
   cursor: pointer;
 }
 

@@ -1,10 +1,10 @@
-/* Element accents — border / bar only, no full fill */
+/* Element accents — workstation design tokens, border / bar only */
 :root {
-  --monsters-el-fire:  #FF9AAA; /* Твой леденцово-розовый */
-  --monsters-el-water: #7CD2FF; /* Яркий небесно-голубой (вместо блеклого) */
-  --monsters-el-wind:  #FFDF70; /* Сочный лимонно-жёлтый (не уходит в грязь) */
-  --monsters-el-light: #E2E9F0; /* Контрастный стальной (чтобы не сливался с белым фоном) */
-  --monsters-el-dark:  #B993FF; /* Насыщенный неоново-фиолетовый (чётко отделим от воды) */
+  --monsters-el-fire:  var(--el-fire, #f87171);
+  --monsters-el-water: var(--el-water, #38bdf8);
+  --monsters-el-wind:  var(--el-wind, #4ade80);
+  --monsters-el-light: var(--el-light, #fbbf24);
+  --monsters-el-dark:  var(--el-dark, #c084fc);
 }
 
 .monsters-card--fire {

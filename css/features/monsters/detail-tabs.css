@@ -1,7 +1,7 @@
 /* Split from css/monsters.css */
 .monsters-detail-rune {
   border-radius: 50%;
-  border: 1px solid color-mix(in srgb, #6a5c40 55%, var(--border2));
+  border: 1px solid var(--border-default);
   background: radial-gradient(
     circle at 30% 25%,
     color-mix(in srgb, var(--accent) 8%, var(--bg3)) 0%,
@@ -11,9 +11,9 @@
 
 .monsters-detail-rune:hover,
 .monsters-detail-rune:focus-visible {
-  border-color: color-mix(in srgb, var(--accent) 55%, #8a7a50);
+  border-color: var(--accent-gold);
   outline: none;
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 22%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-gold) 22%, transparent);
 }
 
 .monsters-detail__tab.is-active {

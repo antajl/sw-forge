@@ -68,19 +68,19 @@
 }
 
 .monsters-rune-slot--fire {
-  border-color: color-mix(in srgb, #c44 35%, var(--border2));
+  border-color: color-mix(in srgb, var(--monsters-el-fire) 35%, var(--border-default));
 }
 .monsters-rune-slot--water {
-  border-color: color-mix(in srgb, #48a 35%, var(--border2));
+  border-color: color-mix(in srgb, var(--monsters-el-water) 35%, var(--border-default));
 }
 .monsters-rune-slot--wind {
-  border-color: color-mix(in srgb, #5a5 35%, var(--border2));
+  border-color: color-mix(in srgb, var(--monsters-el-wind) 35%, var(--border-default));
 }
 .monsters-rune-slot--light {
-  border-color: color-mix(in srgb, #ca4 35%, var(--border2));
+  border-color: color-mix(in srgb, var(--monsters-el-light) 35%, var(--border-default));
 }
 .monsters-rune-slot--dark {
-  border-color: color-mix(in srgb, #a6a 35%, var(--border2));
+  border-color: color-mix(in srgb, var(--monsters-el-dark) 35%, var(--border-default));
 }
 
 .monsters-attrib {

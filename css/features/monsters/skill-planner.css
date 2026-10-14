@@ -8,7 +8,7 @@
 
 .skill-planner__lead {
   margin: 0;
-  color: var(--text-muted, #9aa3b2);
+  color: var(--text-dim);
   font-size: 0.92rem;
   line-height: 1.45;
   max-width: 52rem;
@@ -34,7 +34,7 @@
   font-size: 1.35rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: var(--text-primary, #e8ecf1);
+  color: var(--text-hi);
 }
 
 .skill-planner__card-label {
@@ -42,12 +42,12 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--text-muted, #9aa3b2);
+  color: var(--text-dim);
 }
 
 .skill-planner__card-sub {
   font-size: 0.8rem;
-  color: var(--text-secondary, #b8c0cc);
+  color: var(--text-dim);
 }
 
 .skill-planner__toolbar {
@@ -62,7 +62,7 @@
   flex-direction: column;
   gap: 0.25rem;
   font-size: 0.82rem;
-  color: var(--text-muted, #9aa3b2);
+  color: var(--text-dim);
 }
 
 .skill-planner__filter select {
@@ -75,7 +75,7 @@
   border-radius: 6px;
   border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.12));
   background: var(--surface-raised, rgba(255, 255, 255, 0.04));
-  color: var(--text-primary, #e8ecf1);
+  color: var(--text-hi);
   font-size: 0.82rem;
   font-family: inherit;
   transition: border-color 0.15s, background 0.15s;
@@ -83,25 +83,25 @@
 
 .skill-planner__search:focus {
   outline: none;
-  border-color: var(--accent, #6eb5ff);
+  border-color: var(--accent-gold);
   background: var(--surface-raised, rgba(255, 255, 255, 0.06));
 }
 
 .skill-planner__search::placeholder {
-  color: var(--text-muted, #9aa3b2);
+  color: var(--text-dim);
 }
 
 .skill-planner__hint {
   margin: -0.35rem 0 0;
   font-size: 0.82rem;
-  color: var(--text-muted, #9aa3b2);
+  color: var(--text-dim);
   line-height: 1.4;
   max-width: 52rem;
 }
 
 .skill-planner__toggle.is-active {
-  border-color: var(--accent, #6eb5ff);
-  color: var(--accent, #6eb5ff);
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
 }
 
 .skill-planner__tabs {
@@ -127,7 +127,7 @@
 }
 
 .skill-planner__card--clickable:hover {
-  border-color: var(--accent, #6eb5ff);
+  border-color: var(--accent-gold);
 }
 
 .skill-planner__th--sortable {
@@ -136,7 +136,7 @@
 }
 
 .skill-planner__th--sortable:hover {
-  color: var(--text-primary, #e8ecf1);
+  color: var(--text-hi);
 }
 
 .skill-planner__th-inner {
@@ -152,7 +152,7 @@
 
 .skill-planner__th--sorted .skill-planner__sort-icon {
   opacity: 1;
-  color: var(--accent, #6eb5ff);
+  color: var(--accent-gold);
 }
 
 .skill-planner__table-wrap {
@@ -180,7 +180,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  color: var(--text-muted, #9aa3b2);
+  color: var(--text-dim);
   background: var(--surface-raised, rgba(255, 255, 255, 0.02));
 }
 
@@ -214,7 +214,7 @@
 }
 
 .skill-planner__monster-btn:hover .skill-planner__monster-name {
-  color: var(--accent, #6eb5ff);
+  color: var(--accent-gold);
 }
 
 .skill-planner__thumb {
@@ -268,11 +268,11 @@
 .skill-planner__skill-chip-lv {
   font-size: 0.72rem;
   font-variant-numeric: tabular-nums;
-  color: var(--text-muted, #9aa3b2);
+  color: var(--text-dim);
 }
 
 .skill-planner__skill-chip--cd .skill-planner__skill-chip-lv {
-  color: #ffd49a;
+  color: var(--accent-gold);
 }
 
 .skill-planner__ups-cell {
@@ -296,18 +296,18 @@
 
 .skill-planner__cd-skill-name {
   font-size: 0.82rem;
-  color: var(--text-secondary, #b8c0cc);
+  color: var(--text-dim);
 }
 
 .skill-planner__stuck-deficit {
   font-size: 0.78rem;
-  color: var(--text-muted, #9aa3b2);
+  color: var(--text-dim);
 }
 
 .skill-planner__loading {
   margin: 0;
   padding: 1rem;
-  color: var(--text-muted, #9aa3b2);
+  color: var(--text-dim);
   font-size: 0.9rem;
 }
 
@@ -315,7 +315,7 @@
 .skill-planner__empty {
   margin: 0;
   padding: 1rem;
-  color: var(--text-muted, #9aa3b2);
+  color: var(--text-dim);
   font-size: 0.9rem;
 }
 

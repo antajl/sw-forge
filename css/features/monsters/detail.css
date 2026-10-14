@@ -28,8 +28,8 @@
     from 0deg,
     transparent 0deg,
     transparent 270deg,
-    #00bcd4 300deg,
-    #2196f3 330deg,
+    var(--teal, #2dd4bf) 300deg,
+    var(--blue, #38bdf8) 330deg,
     transparent 360deg
   );
   will-change: transform;
@@ -294,11 +294,11 @@
   font-weight: 700;
 }
 
-.monsters-detail__portrait-wrap--fire { border-color: #c44; }
-.monsters-detail__portrait-wrap--water { border-color: #48a; }
-.monsters-detail__portrait-wrap--wind { border-color: var(--gold); }
-.monsters-detail__portrait-wrap--light { border-color: #c5cad3; }
-.monsters-detail__portrait-wrap--dark { border-color: #a6a; }
+.monsters-detail__portrait-wrap--fire { border-color: var(--monsters-el-fire); }
+.monsters-detail__portrait-wrap--water { border-color: var(--monsters-el-water); }
+.monsters-detail__portrait-wrap--wind { border-color: var(--monsters-el-wind); }
+.monsters-detail__portrait-wrap--light { border-color: var(--monsters-el-light); }
+.monsters-detail__portrait-wrap--dark { border-color: var(--monsters-el-dark); }
 
 .monsters-detail__hero .monsters-detail__portrait {
   width: 100%;
@@ -470,7 +470,7 @@
 }
 
 .monsters-card__loc--on {
-  color: #8ab4f8;
+  color: var(--blue, #38bdf8);
 }
 
 .monsters-card__loc--on .monsters-card__loc-icon {

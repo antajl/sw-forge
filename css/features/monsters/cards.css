@@ -218,7 +218,7 @@
 .monsters-list-info__skill-n {
   font-family: var(--font-mono);
   font-weight: 700;
-  color: #e8a030;
+  color: var(--accent-gold);
 }
 
 .monsters-card--list .monsters-card__list-meta {
@@ -286,24 +286,14 @@
 
 .monsters-runes--hex.monsters-runes--game {
   margin-top: 6px;
-  padding: 10px 8px 8px;
-  background:
-    radial-gradient(ellipse 80% 60% at 50% 40%, rgba(120, 90, 40, 0.18), transparent 70%),
-    linear-gradient(165deg, #3a3224 0%, #1e1a14 55%, #2a2418 100%);
-  border: 2px solid #9a7d42;
-  border-radius: 8px;
-  box-shadow:
-    inset 0 2px 8px rgba(0, 0, 0, 0.45),
-    0 1px 0 rgba(255, 220, 140, 0.12);
+  padding: 8px 6px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius);
 }
 
 .monsters-runes--game::before {
-  content: '';
-  position: absolute;
-  inset: 4px;
-  border: 1px solid rgba(180, 140, 70, 0.25);
-  border-radius: 6px;
-  pointer-events: none;
+  display: none;
 }
 
 .monsters-runes--game .monsters-rune-slot,
@@ -318,15 +308,14 @@
   align-items: center;
   justify-content: center;
   clip-path: polygon(50% 0%, 92% 25%, 92% 75%, 50% 100%, 8% 75%, 8% 25%);
-  background: linear-gradient(180deg, #5a5040 0%, #2e2820 48%, #1a1612 100%);
+  background: var(--bg-subtle);
   border: none;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .monsters-runes--game .monsters-rune-slot--empty,
 .monsters-runes--game .monsters-detail-rune--empty {
-  opacity: 0.45;
-  background: linear-gradient(180deg, #3a342c 0%, #221e18 100%);
+  opacity: 0.35;
+  background: var(--bg-base);
 }
 
 .monsters-runes--game .monsters-rune-slot__icon,
@@ -387,11 +376,11 @@
   background: var(--border2);
 }
 
-.monsters-card__bar--fire { background: #c44; }
-.monsters-card__bar--water { background: #48a; }
-.monsters-card__bar--wind { background: var(--gold); }
-.monsters-card__bar--light { background: #c5cad3; }
-.monsters-card__bar--dark { background: #a6a; }
+.monsters-card__bar--fire { background: var(--monsters-el-fire); }
+.monsters-card__bar--water { background: var(--monsters-el-water); }
+.monsters-card__bar--wind { background: var(--monsters-el-wind); }
+.monsters-card__bar--light { background: var(--monsters-el-light); }
+.monsters-card__bar--dark { background: var(--monsters-el-dark); }
 
 .monsters-card__actions {
   position: absolute;
@@ -453,7 +442,7 @@
   padding: 0;
   border: 1px solid var(--border2);
   border-radius: 6px;
-  background: color-mix(in srgb, var(--bg2) 90%, #000 10%);
+  background: var(--bg-surface);
   color: var(--text-dim);
   font-size: 0.78rem;
   line-height: 1;
@@ -488,7 +477,7 @@
 }
 
 .monsters-mark-btn--storage.monsters-mark-btn--on {
-  color: #9ec8ff;
+  color: var(--blue, #38bdf8);
   border-color: color-mix(in srgb, var(--accent) 50%, var(--border2));
   background: color-mix(in srgb, var(--accent) 24%, var(--bg3));
 }
@@ -516,8 +505,8 @@
   padding: 2px 5px;
   font-size: 0.82rem;
   line-height: 1;
-  border: 1px solid color-mix(in srgb, var(--border2) 80%, #fff 8%);
-  background: color-mix(in srgb, var(--bg2) 88%, #000 12%);
+  border: 1px solid var(--border-default);
+  background: var(--bg-surface);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
   color: var(--text-hi);
 }
@@ -538,7 +527,7 @@
 
 .monsters-card--grid .monsters-card__actions .monsters-tag-btn[data-unit-tag='storageMark'].monsters-tag-btn--on,
 .monsters-card--grid .monsters-card__actions .monsters-tag-btn[data-unit-tag='storageMark'].monsters-tag-btn--swex.monsters-tag-btn--on {
-  color: #9ec8ff;
+  color: var(--blue, #38bdf8);
   background: color-mix(in srgb, var(--accent) 32%, var(--bg3));
   border-color: color-mix(in srgb, var(--accent) 55%, var(--border2));
   box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 38%, transparent);
@@ -594,9 +583,9 @@
 }
 
 .monsters-tag-btn--swex.monsters-tag-btn--on {
-  color: #c8863a;
-  background: color-mix(in srgb, #c8863a 22%, var(--bg3));
-  box-shadow: 0 0 0 1px color-mix(in srgb, #c8863a 40%, transparent);
+  color: var(--orange, #c8863a);
+  background: color-mix(in srgb, var(--orange, #c8863a) 22%, var(--bg3));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--orange, #c8863a) 40%, transparent);
 }
 
 .monsters-tag-btn--swex:disabled {
@@ -771,7 +760,7 @@
 
 .monsters-card--grid .monsters-card__element--light {
   background: var(--monsters-el-light);
-  color: #1a1a1a;
+  color: var(--bg-base);
 }
 
 .monsters-card--grid .monsters-card__element--dark {
@@ -780,20 +769,20 @@
 
 .monsters-card__level {
   font-variant-numeric: tabular-nums;
-  color: #f7f5f1;
-  background: color-mix(in srgb, #121110 82%, transparent);
-  border: 1px solid color-mix(in srgb, #000 55%, var(--border2));
-  box-shadow: 0 1px 4px color-mix(in srgb, #000 45%, transparent);
+  color: var(--text-hi);
+  background: color-mix(in srgb, var(--bg-base) 85%, transparent);
+  border: 1px solid var(--border-default);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm, 3px);
   line-height: 1.2;
   pointer-events: none;
 }
 
 .light-theme .monsters-card__level {
-  color: #f7f5f1;
-  background: color-mix(in srgb, #1a1918 88%, transparent);
-  border-color: color-mix(in srgb, #000 40%, var(--border));
+  color: var(--text-hi);
+  background: color-mix(in srgb, var(--bg-base) 90%, transparent);
+  border-color: var(--border-default);
 }
 
 .monsters-card--grid .monsters-card__level {
@@ -876,9 +865,9 @@
   width: 1.35rem;
   height: 1.35rem;
   padding: 0;
-  border: 1px solid var(--border2);
-  border-radius: 6px;
-  background: color-mix(in srgb, var(--surface) 92%, #000 8%);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm, 4px);
+  background: var(--bg-surface);
   color: var(--text-hi);
   font-size: 0.9rem;
   line-height: 1;
@@ -996,10 +985,10 @@
   font-weight: 700;
   line-height: 1.2;
   border-radius: 0 5px 5px 0;
-  background: color-mix(in srgb, #a6a 22%, var(--bg3));
-  border: 1px solid color-mix(in srgb, #a6a 45%, var(--border2));
+  background: color-mix(in srgb, var(--purple, #c084fc) 22%, var(--bg-surface));
+  border: 1px solid color-mix(in srgb, var(--purple, #c084fc) 45%, var(--border-default));
   border-left: none;
-  color: color-mix(in srgb, #e8d4ff 90%, var(--text-hi));
+  color: color-mix(in srgb, var(--purple, #c084fc) 90%, var(--text-hi));
 }
 
 .monsters-card__skill-deficit-n {
